@@ -1,5 +1,39 @@
 # Repository Guidelines
 
+## Agent Boot Instructions (CTHub)
+
+### Startup Checklist (run once per session)
+1. Run `/mcp` and cache the available servers & tools.
+2. Prefer MCP tools over raw shell when they exist (less brittle, richer context).
+3. Use the project root: `E:\workspace\cthub-bsaas` (Nx monorepo).
+4. Keep approvals “on-request” unless user changes it.
+
+### MCP Preference & Fallbacks
+- **Prisma** → use MCP tools (Studio, `migrate-status`, `migrate-dev`, `migrate-reset`) for DB schema, migrations, local data.  
+  Fallback: Prisma CLI only if MCP tool is unavailable.
+- **Postgres** → use `postgres.query` for SQL. Fallback: `psql` only with explicit approval.
+- **ESLint** → use `eslint.lint-files` for lint/fix tasks. Fallback: `npx eslint` if tool is missing.
+- **Git** → prefer Git MCP tools (`git_*`) for branch, commit, diff, etc. Fallback: shell `git` if MCP tooling is unavailable.
+- **Filesystem** → use FS MCP tools for reading/writing/editing/searching files inside the repo. Fallback: shell commands only for tasks MCP can’t express.
+
+### When to Ask vs. Act
+- If an MCP tool is available, use it without asking (respect approvals).
+- Ask for approval before running non-trusted shell commands or anything outside the repo root.
+
+### Common Tasks
+- “Use **Prisma MCP** → `migrate-status` and summarize drift/unapplied migrations.”
+- “Use **Prisma MCP → Prisma-Studio** to inspect data in `bsaas_test`.”
+- “Use **ESLint MCP** to lint `libs/server/**` and apply autofixes.”
+- “Use **Git MCP**: create branch `feat/{ticket}`, stage changes in `libs/server/features/...`, commit, push.”
+- “Use **Postgres MCP** to run: `SELECT COUNT(*) FROM \"User\";` and report the count.”
+- “Use **Filesystem MCP** to read `libs/server/features/appointment/src/lib/services/*.ts` and propose refactors.”
+
+### Guardrails
+- Stay inside `E:\workspace\cthub-bsaas` unless explicitly told otherwise.
+- Surface diffs before committing large changes.
+- For Nx projects, preserve workspace.json / tsconfig paths / generators.
+
+
 ## Environment & Shell
 - Confirm runtime environment before running commands:
   - OS and shell: On Windows, prefer PowerShell Core (`pwsh`). Some POSIX tools like `sed` may be unavailable by default.
