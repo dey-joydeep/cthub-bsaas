@@ -1,122 +1,169 @@
-# Auth API - Low-Level Design (LLD)
+# Auth API — Low-Level Design (LLD)
+**Status:** Authoritative (merged; supersedes dated “Updates” entries)  
+**Scope:** Non-registration authentication — DTOs, validation, error handling, services, ENV, data access, and tests.  
+**Locales:** en/bn/hi
 
-Status: Draft v1 (aligned with current implementation)
+## 1) DTOs & Validation (Server-Side)
+- **/auth/login**
+```json
+{
+  "email": "user@example.com",
+  "password": "S3curePass!",
+  "rememberMe": true
+}
+```
+  - `email`: RFC 5322, ≤254  
+  - `password`: 8..128  
+  - Throttle per IP & per account; lockout after `AUTH_LOGIN_MAX_ATTEMPTS` for `AUTH_LOCKOUT_MINUTES`
 
-Conventions
-- Media type: application/json
-- Cookies: set/clear by server as side effects (see HLD).
-- Errors: { code: string, message?: string, details?: Record<string,string> }; message is optional and not intended for UI; clients map code to i18n.
+- **/auth/mfa/totp/verify**
+```json
+{
+  "challengeId": "ch_abc",
+  "code": "123456"
+}
+```
+  - `code`: 6 digits; skew ±`AUTH_TOTP_SKEW_STEPS`
 
-## 1) POST /auth/login
-Purpose: Password login; may require TOTP.
-
-Request
-- Headers: Content-Type: application/json
-- Body:
-  {
-    "email": "user@example.com",
-    "password": "S3curePass!"
+- **/auth/mfa/totp/enroll** → **Response**
+```json
+{
+  "success": true,
+  "data": {
+    "qrCodeDataUrl": "data:image/png;base64,...",
+    "issuer": "CTHub",
+    "label": "user@example.com"
   }
-Validation
-- email: required, valid email format, lowercased.
-- password: required, min 8.
+}
+```
 
-Success 200
-- Cookies set: bsaas_at, bsaas_rt, XSRF-TOKEN
-- Body (no TOTP): { "totpRequired": false }
-- Body (TOTP req): { "totpRequired": true, "tempToken": "<jwt>" }
+- **/auth/mfa/totp/confirm**
+```json
+{
+  "code": "123456"
+}
+```
+  - Require **2 consecutive** valid codes
 
-Errors
-- 400 { code: "error.validation", details: { email?: string, password?: string } }
-- 401 { code: "error.auth.invalid_credentials" }
-- 429 { code: "error.rate_limited" } with Retry-After header
+- **/auth/mfa/webauthn/attestation|assertion/options** → **Response**
+```json
+{
+  "success": true,
+  "data": {
+    "publicKey": { "challenge": "base64url", "timeout": 60000 }
+  }
+}
+```
 
-## 2) POST /auth/login/totp
-Purpose: Complete TOTP challenge.
+- **/auth/password/reset/request**
+```json
+{
+  "email": "user@example.com"
+}
+```
 
-Request
-- Body: { "tempToken": "<jwt>", "totpCode": "123456" }
-Validation: totpCode matches /^\d{6}$/.
+- **/auth/password/reset/confirm**
+```json
+{
+  "token": "reset_abc",
+  "newPassword": "N3wS3curePass!"
+}
+```
 
-Success 200
-- Cookies set: bsaas_at, bsaas_rt
-- Body: {}
+- **/auth/email/change/request**
+```json
+{
+  "newEmail": "new@example.com"
+}
+```
 
-Errors
-- 401 { code: "error.auth.invalid_totp_code" | "error.auth.invalid_or_expired_totp" }
-- 429 { code: "error.rate_limited" }
+- **/auth/email/change/confirm**
+```json
+{
+  "otp": "654321"
+}
+```
 
-## 3) POST /auth/refresh
-Purpose: Rotate refresh token; issue new AT/RT.
+- **/auth/devices/revoke**
+```json
+{
+  "deviceId": "dev_1"
+}
+```
 
-Request
-- Usually empty; server reads RT cookie. Optional: { "refreshToken": "..." }
+## 2) Error Handling (Authoritative)
+Unified error filter returns:
+```json
+{
+  "success": false,
+  "code": "auth.error.generic",
+  "message": "Human readable message",
+  "details": [
+    {
+      "field": "password",
+      "reason": "tooWeak"
+    }
+  ],
+  "meta": {
+    "correlationId": "c-01HZZ..."
+  }
+}
+```
+**Status→Situation**
+- `200`: OK / next step provided
+- `201`: resource created (recovery codes)
+- `202`: accepted (email dispatched)
+- `400`: malformed / missing fields
+- `401`: auth failure / wrong user or session
+- `403`: forbidden/CSRF (e.g., refresh misuse)
+- `404`: not found (device/session)
+- `410`: expired link/challenge
+- `422`: validation error / invalid OTP/assertion
+- `429`: rate limited / attempts exhausted / cooldown (include `Retry-After`)
+- `500`: unexpected (log correlationId)
 
-Success 200
-- Cookies rotated; Body: {}
+## 3) Services & Dependencies
+- **AuthService** — verify credentials; emit `next` state; set cookies.  
+- **MfaService** — TOTP (enroll/confirm/verify), Passkeys (attestation/assertion via `@simplewebauthn/server`).  
+- **VerificationChallengeService** — email OTP issuance/confirm for password reset, email change (purpose-driven).  
+- **SessionService** — AT/RT creation/rotation, device registry, logout flows.  
+- **RateLimiter** — IP/account scopes with exponential backoff; stores in Redis.  
+- **EmailAdapter** — transactional emails (reset sent, email change sent); i18n templates for en/bn/hi.  
+- **AuditLogService** — structured events with masked identifiers and `correlationId` propagation.
 
-Errors
-- 400 { code: "error.auth.missing_refresh_token" }
-- 401 { code: "error.auth.invalid_refresh_token" }
-- 429 { code: "error.rate_limited" }
+## 4) ENV (Configuration)
+```json
+{
+  "AUTH_LOGIN_MAX_ATTEMPTS": 10,
+  "AUTH_LOCKOUT_MINUTES": 15,
+  "AUTH_TOTP_SKEW_STEPS": 1,
+  "AUTH_PASSKEY_RPID": "cthub.in",
+  "AUTH_RESET_TTL_HOURS": 72,
+  "AUTH_EMAIL_CHANGE_TTL_HOURS": 24
+}
+```
 
-## 4) POST /auth/logout
-Success 200
-- Cookies cleared; Body: { "success": true }
+## 5) Prisma Touchpoints (Read/Write)
+- **User** — read by email; update `lastLoginAt`, MFA flags; enforce uniqueness on email change.  
+- **RefreshToken** — rotate (new `jti`); deny-list old on refresh.  
+- **CredentialTOTP / CredentialPasskey** — CRUD for enroll/remove; verify on login.  
+- **PasswordReset** — single-use token, TTL; mark used on confirm.  
+- **EmailVerification** — `purpose=password_reset|email_change`; attempts counter; TTL; mark used.  
+- **Session/Device** — list and revoke; ownership checks.  
+- **RecoveryCode** — issue (hashed), list masked hints, verify (rotate on use).
 
-## 5) GET /auth/sessions
-Success 200
-- Body: [ { "id": "...", "deviceUA": "...", "deviceOS": "...", "lastSeenAt": "2025-09-01T12:00:00Z", "createdAt": "..." } ]
+## 6) Cookies & CSRF
+- Set/clear/rotate HttpOnly AT/RT; rotate `XSRF-TOKEN` on login/refresh.  
+- FE sends `X-XSRF-TOKEN` header (double-submit).
 
-## 6) POST /auth/sessions/revoke
-Request
-- Body: { "id": "sessionId" }
-Success 200
-- { "success": true }
-Errors: 403 if not owner.
+## 7) Tests
+- **Unit** — DTO validators; rate limiter policies; TOTP skew; WebAuthn verification; error mapper.  
+- **Integration** — login→mfa→signed in; reset confirm revokes sessions; email change uniqueness; devices revoke.  
+- **E2E** — passkey assertion happy path; TOTP enroll+verify; recovery codes issue+use; refresh rotation.
 
-## 7) POST /auth/register (placeholder)
-Request: { "email": "...", "password"?: "..." }
-Success 202 { "success": true, "message": "Registration accepted" }
-Errors 501 { code: "error.not_implemented" } (if configured as stub)
+## 8) Observability
+- Correlation IDs on all requests; structured logs (pino).  
+- Metrics: `login_failures_total`, `mfa_prompts_total`, `refresh_rotations_total`, `reset_requests_total`.
 
-## 8) Email Verification
-- Request: POST /auth/email/verify/request { email }
-  - 202 { success: true }
-  - 429 { code: "error.rate_limited" }
-- Confirm: POST /auth/email/verify/confirm { email, otp }
-  - 200 { success: true }
-  - 401/410 { code: "error.auth.invalid_otp" | "error.auth.otp_expired" }
-
-## 9) Password Reset
-- Forgot: POST /auth/password/forgot { email } → 202 { success: true }
-- Reset: POST /auth/password/reset { token, newPassword }
-  - 200 { success: true }
-  - 401 { code: "error.auth.invalid_or_expired_reset_token" }
-
-## 10) TOTP Enroll
-- Start: POST /auth/totp/enroll/start → 200 { qrCodeDataUrl }
-- Finish: POST /auth/totp/enroll/finish { code } → 200 { success: true }
-
-## 11) Recovery Codes
-- Generate: POST /auth/recovery/codes → 200 string[] (show once)
-- Verify: POST /auth/recovery/verify { code } → 200 { success: true }
-
-## 12) WebAuthn (Passkeys)
-- Register start: POST /auth/webauthn/register/start → 200 PublicKeyCredentialCreationOptions
-- Register finish: POST /auth/webauthn/register/finish (attestation) → 200 { success: true }
-- Login start: POST /auth/webauthn/login/start → 200 PublicKeyCredentialRequestOptions
-- Login finish: POST /auth/webauthn/login/finish (assertion) → 200 {}
-  - Cookies set: bsaas_at, bsaas_rt
-
-## 13) Social Login (Customer)
-- Start: GET /auth/oauth/:provider/start?redirect=/target → 302 to provider (server-managed)
-- Callback: GET /auth/oauth/:provider/callback?... → sets cookies (sign-in) or links when already authenticated; 302 back to redirect
-- Unlink: POST /auth/oauth/:provider/unlink → 200 { success: true }
-  - Authenticated callback behaviour:
-    - If the user is signed in, the callback links the provider to the current account and returns 200 {}
-    - If the user is not signed in and no existing link is found, returns 401 { code: "error.auth.oauth_link_required" }
-
-Notes
-- All error codes enumerated in error-codes.md. Clients map to i18n per frontend HLD.
-- Include Retry-After header on 429.
+## 9) Compatibility
+If existing controllers use different paths (`/auth/login/totp`, `/auth/sessions`), expose **aliases** to these canonical routes and enable a **response-normalizing interceptor** to enforce the success/error envelope without breaking current clients.

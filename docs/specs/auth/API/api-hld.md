@@ -1,68 +1,482 @@
 # Auth API — High-Level Design (HLD)
-- New:  `error.auth.strong_auth_required` — returned when a protected Admin route requires Passkey/TOTP and the user has neither. 
+**Status:** Authoritative (merged; supersedes dated “Updates” entries)  
+**Scope:** Non-registration authentication flows (Sign-in, MFA, Recovery Codes, Sessions/Devices, Password Reset, Email Change, Social).  
+**Locales:** en/bn/hi
 
-Status: Draft v1 (aligned with `auth-http.md` and current implementation)
+## Response Envelopes (Canonical)
+- **Success**
+```json
+{
+  "success": true,
+  "data": {}
+}
+```
+- **Error**
+```json
+{
+  "success": false,
+  "code": "auth.error.generic",
+  "message": "Human readable message (localized on FE)",
+  "details": [
+    {
+      "field": "email",
+      "reason": "invalidFormat"
+    }
+  ],
+  "meta": {
+    "correlationId": "c-01HZZ..."
+  }
+}
+```
 
 ## Cross-Cutting
-- Cookies: `bsaas_at` (AT 10–15m), `bsaas_rt` (RT 14–30d), `XSRF-TOKEN`.
-  - Attributes: HttpOnly (AT/RT), Secure, SameSite=Lax; paths: AT `/`, RT `/auth`; domain via `AUTH_COOKIE_DOMAIN`.
-  - Platform-agnostic controllers: cookie issuance/clearing is handled by a server-core CookiesInterceptor (via `HttpAdapterHost`), keeping controllers free of `@Res`/Express types and returning plain JSON bodies.
-- Cookie flags: HttpOnly, Secure, SameSite=Lax, domain `.cthub.in`; RT path `/auth`.
-- CSRF: double-submit; Angular clients send `X-XSRF-TOKEN` header.
-  - `XSRF-TOKEN` cookie is issued on password login and rotated on refresh.
-- AuthZ: Bearer AT in header for non-browser clients only; first‑party browsers rely on cookies.
-- Rate limits: login, OTP/TOTP issuance/verify with Retry-After.
-- Audit: login/logout/refresh, 2FA enroll/verify, passkey register/login, recovery, reset, email verify, OAuth link/unlink.
+- **Cookies:** AT/RT HttpOnly cookies (`bsaas_at`, `bsaas_rt`) and non-HttpOnly `XSRF-TOKEN`.  
+  Flags: `HttpOnly` (AT/RT), `Secure`, `SameSite=Lax`, `Domain=.cthub.in` (configurable via `AUTH_COOKIE_DOMAIN`).  
+  AT TTL 10–15m; RT TTL 14–30d with rotation (deny-list old jti).
+- **CSRF:** Double-submit token (Angular sends `X-XSRF-TOKEN`).
+- **Rate limiting:** Login and OTP/TOTP issue/verify endpoints; include `Retry-After` on `429`.
+- **Audit:** login/logout/refresh, MFA enroll/verify, passkey register/login, recovery issue/verify, reset, email verify/change, OAuth link/unlink.
 
-## Endpoints Matrix (summary)
-- Login: `POST /auth/login` → cookies; TOTP challenge variant.
-- TOTP challenge: `POST /auth/login/totp`.
-- Refresh: `POST /auth/refresh` → rotate RT, new AT.
-- Logout: `POST /auth/logout` → clear cookies.
-- Sessions: `GET /auth/sessions`, `POST /auth/sessions/revoke`.
-- Registration (Customer): `POST /auth/register` (placeholder now; OTP verify follows).
-- Email verify: `POST /auth/email/verify/request`, `POST /auth/email/verify/confirm`.
-- Password reset: `POST /auth/password/forgot`, `POST /auth/password/reset`.
-- TOTP enroll: `POST /auth/totp/enroll/start`, `POST /auth/totp/enroll/finish`.
-- Recovery codes: `POST /auth/recovery/codes`, `POST /auth/recovery/verify`.
-- WebAuthn: register/login `start|finish` pairs.
-- Social (Customer): `GET /auth/oauth/:provider/start|callback`, link/unlink endpoints.
+---
 
-## Role-based 2FA Policy
+## Endpoints & Contracts (Authoritative)
 
-| Role            | App      | Policy                                                         |
-|-----------------|----------|----------------------------------------------------------------|
-| Platform Admin  | Admin    | 2FA required (Passkey preferred, TOTP allowed)                |
-| Salon Owner     | Partner  | 2FA recommended; tenant policy may require for staff          |
-| Staff           | Partner  | 2FA optional unless tenant policy enforces                    |
-| Customer        | Customer | 2FA optional (may enroll Passkey/TOTP for added security)     |
+### 1) Sign-in (Email + Password)
+`POST /auth/login` → **200**, **401**, **422**, **429**, **500**
 
-Enforcement
-- Admin app protected routes must enforce a “strong-auth required” guard (Passkey or verified TOTP). Owners may enable the same guard for Partner staff via tenant policy.
-- Challenge initiation follows the login flow: `POST /auth/login` returns `{ totpRequired, tempToken? }` when a second factor is needed; completion is `POST /auth/login/totp`.
+**Request**
+```json
+{
+  "email": "user@example.com",
+  "password": "S3curePass!",
+  "rememberMe": true
+}
+```
 
-## Status Codes Policy
-- 200 OK: successful actions returning data or completing flows.
-- 201 Created: future use (e.g., completed registration) — not used in current iteration.
-- 202 Accepted: request accepted (e.g., register placeholder, forgot/verify request issued).
-- 204 No Content: optional success without body (not used now).
-- 400 Bad Request: validation errors; include `details` for fields when applicable.
-- 401 Unauthorized: invalid credentials/tokens/OTP; avoid enumeration.
-- 403 Forbidden: CSRF failure, policy violation, or ownership constraints.
-- 404 Not Found: not used for auth validity (prefer 401 to avoid leaks).
-- 409 Conflict: duplicate credential/passkey.
-- 410 Gone: expired OTP/reset tokens.
-- 429 Too Many Requests: rate-limits; send `Retry-After`.
-- 5xx: unexpected server error; respond with `{ code: 'error.generic' }`.
+**Responses**
+- **200 (Password-only success; no MFA required)**
+```json
+{
+  "success": true,
+  "data": {
+    "next": "signedIn",
+    "user": {
+      "id": "u_123",
+      "email": "user@example.com",
+      "fullName": "A B"
+    }
+  }
+}
+```
+- **200 (MFA required)**
+```json
+{
+  "success": true,
+  "data": {
+    "next": "mfa",
+    "methods": [
+      "webauthn",
+      "totp",
+      "recovery"
+    ],
+    "mfa": {
+      "challengeId": "ch_abc",
+      "allowed": "totp|webauthn|recovery"
+    }
+  }
+}
+```
+
+**HTTP code usage**
+- `200` valid credentials → either `next=signedIn` or `next=mfa`
+- `401` invalid credentials (generic message; anti-enumeration)
+- `422` input invalid
+- `429` rate limited (per IP + per account)
+- `500` unexpected
+
+---
+
+### 2) MFA — TOTP Verify (Sign-in challenge)
+`POST /auth/mfa/totp/verify` → **200**, **400**, **401**, **410**, **422**, **429**, **500**
+
+**Request**
+```json
+{
+  "challengeId": "ch_abc",
+  "code": "123456"
+}
+```
+
+**Response**
+```json
+{
+  "success": true,
+  "data": {
+    "next": "signedIn"
+  }
+}
+```
+
+**HTTP codes**
+- `200` verified; proceed signed-in
+- `400` malformed payload
+- `401` wrong context/user
+- `410` challenge expired
+- `422` invalid code
+- `429` attempts exhausted / cooldown
+- `500` unexpected
+
+---
+
+### 3) MFA — Passkey (WebAuthn) Assertion (Sign-in)
+- `POST /auth/mfa/webauthn/assertion/options` → **200**, **401**, **429**, **500**  
+- `POST /auth/mfa/webauthn/assertion/result` → **200**, **400**, **401**, **410**, **422**, **429**, **500**
+
+**Responses**
+- **options**
+```json
+{
+  "success": true,
+  "data": {
+    "publicKey": {
+      "challenge": "base64url-challenge",
+      "rpId": "cthub.in",
+      "allowCredentials": [
+        {
+          "type": "public-key",
+          "id": "base64url-cred-id"
+        }
+      ],
+      "timeout": 60000,
+      "userVerification": "preferred"
+    },
+    "challengeId": "ch_abc"
+  }
+}
+```
+- **result**
+```json
+{
+  "success": true,
+  "data": {
+    "next": "signedIn"
+  }
+}
+```
+
+**HTTP codes**
+- options: `200` ok; `401` unauthenticated context; `429` limited; `500` error  
+- result: `200` ok; `400` payload invalid; `401` wrong context; `410` expired; `422` assertion invalid; `429` limited; `500` error
+
+---
+
+### 4) MFA — Enrollment (Security settings / first-run gate)
+**TOTP**
+- `POST /auth/mfa/totp/enroll` → **200**, **401**, **429**, **500**  
+  **Response**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "qrCodeDataUrl": "data:image/png;base64,iVBOR...",
+      "issuer": "CTHub",
+      "label": "user@example.com"
+    }
+  }
+  ```
+- `POST /auth/mfa/totp/confirm` → **200**, **400**, **401**, **422**, **429**, **500**  
+  **Request**
+  ```json
+  {
+    "code": "123456"
+  }
+  ```
+  **Response**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "enrolled": true
+    }
+  }
+  ```
+
+**Passkeys**
+- `POST /auth/mfa/webauthn/attestation/options` → **200**, **401**, **429**, **500**  
+  **Response**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "publicKey": {
+        "challenge": "base64url-challenge",
+        "rp": {
+          "name": "CTHub",
+          "id": "cthub.in"
+        },
+        "user": {
+          "id": "base64url-user-id",
+          "name": "user@example.com",
+          "displayName": "A B"
+        },
+        "pubKeyCredParams": [
+          { "type": "public-key", "alg": -7 }
+        ],
+        "timeout": 60000,
+        "attestation": "none"
+      }
+    }
+  }
+  ```
+- `POST /auth/mfa/webauthn/attestation/result` → **200**, **400**, **401**, **422**, **429**, **500**  
+  **Request (sample)**  
+  ```json
+  {
+    "id": "base64url-cred-id",
+    "rawId": "base64url-raw-id",
+    "response": {
+      "clientDataJSON": "base64url",
+      "attestationObject": "base64url"
+    },
+    "type": "public-key"
+  }
+  ```
+  **Response**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "enrolled": true
+    }
+  }
+  ```
+
+**HTTP codes (both)**
+- `200` successful step
+- `400` malformed body
+- `401` not authenticated
+- `422` invalid OTP/assertion
+- `429` rate-limited
+- `500` unexpected
+
+---
+
+### 5) Recovery Codes
+- `POST /auth/recovery-codes/issue` → **201**, **401**, **429**, **500**  
+  **Response**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "codes": [
+        "abcd-efgh-ijkl",
+        "mnop-qrst-uvwx",
+        "yz12-3456-7890"
+      ]
+    }
+  }
+  ```
+- `GET /auth/recovery-codes` → **200**, **401**, **500**  
+  **Response (masked hints)**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "hints": [
+        "a***-****-****",
+        "m***-****-****"
+      ]
+    }
+  }
+  ```
+- `POST /auth/recovery-codes/verify` → **200**, **401**, **422**, **429**, **500**  
+  **Request**
+  ```json
+  {
+    "code": "abcd-efgh-ijkl"
+  }
+  ```
+  **Response**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "verified": true
+    }
+  }
+  ```
+
+---
+
+### 6) Sessions / Devices
+- `POST /auth/refresh` → **200**, **401**, **403**, **429**, **500**  
+  **Response**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "refreshed": true
+    }
+  }
+  ```
+- `POST /auth/logout` → **200**, **401**, **500**  
+  **Response**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "loggedOut": true
+    }
+  }
+  ```
+- `POST /auth/logout-others` → **200**, **401**, **500**  
+  **Response**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "loggedOutOthers": true
+    }
+  }
+  ```
+- `GET /auth/devices` → **200**, **401**, **500**  
+  **Response**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "devices": [
+        {
+          "id": "dev_1",
+          "ua": "Chrome 126 / macOS",
+          "ip": "203.0.113.5",
+          "lastSeen": "2025-09-07T12:34:56Z",
+          "current": true
+        }
+      ]
+    }
+  }
+  ```
+- `POST /auth/devices/revoke` → **200**, **401**, **404**, **500**  
+  **Request**
+  ```json
+  {
+    "deviceId": "dev_1"
+  }
+  ```
+  **Response**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "revoked": true
+    }
+  }
+  ```
+
+---
+
+### 7) Password Reset
+- `POST /auth/password/reset/request` → **202**, **429**, **500**  
+  **Request**
+  ```json
+  {
+    "email": "user@example.com"
+  }
+  ```
+  **Response**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "sent": true
+    }
+  }
+  ```
+- `POST /auth/password/reset/confirm` → **200**, **400**, **410**, **422**, **429**, **500**  
+  **Request**
+  ```json
+  {
+    "token": "reset_abc",
+    "newPassword": "N3wS3curePass!"
+  }
+  ```
+  **Response**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "reset": true
+    }
+  }
+  ```
+
+---
+
+### 8) Email Change
+- `POST /auth/email/change/request` → **202**, **401**, **429**, **500**  
+  **Request**
+  ```json
+  {
+    "newEmail": "new@example.com"
+  }
+  ```
+  **Response**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "sent": true
+    }
+  }
+  ```
+- `POST /auth/email/change/confirm` → **200**, **400**, **410**, **422**, **401**, **429**, **500**  
+  **Request**
+  ```json
+  {
+    "otp": "654321"
+  }
+  ```
+  **Response**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "changed": true
+    }
+  }
+  ```
+
+---
+
+### 9) Social (Customer)
+- `GET /auth/oauth/:provider/start` → **302** to provider  
+- `GET /auth/oauth/:provider/callback` → **302** to app on success or **200** (link step)  
+- `POST /auth/social/unlink` → **200**, **401**, **409**, **422**, **500**  
+  **Request**
+  ```json
+  {
+    "provider": "google"
+  }
+  ```
+  **Response**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "unlinked": true
+    }
+  }
+  ```
 
 ## Cookies & Headers Effects
-- Login/Challenge success: set AT/RT, issue/rotate XSRF.
-- Refresh: rotate RT, set AT, rotate XSRF.
-- Logout: clear AT/RT.
-- TOTP/Passkeys successful auth: set AT/RT.
+- **Login/Challenge success:** set AT/RT; issue or rotate `XSRF-TOKEN`.  
+- **Refresh:** rotate RT, set AT, rotate `XSRF-TOKEN`.  
+- **Logout:** clear AT/RT.  
+- **MFA (TOTP/Passkeys) success:** set/refresh AT/RT.
 
-## Error Codes
-- Centralized in `error-codes.md`; clients map codes → i18n keys per frontend HLD.
+## i18n Codes
+All error `code` values map to en/bn/hi translations: e.g., `auth.login.invalid`, `auth.mfa.required`, `auth.mfa.totp.invalid`, `auth.passwordReset.sent`, `auth.emailChange.sent`, `auth.error.rateLimited`, `auth.error.generic`.
 
-## Flows
-- See `../FLOWS/*.md` for Admin/Partner/Customer and `../FLOWS/customer-social-login.md` for OAuth.
+## Compatibility Note
+If current controllers expose different paths (e.g., `/auth/login/totp`, `/auth/sessions`), add **aliases** forwarding to these canonical routes, or migrate progressively. A small response-normalizing interceptor can enforce the success/error envelope.
