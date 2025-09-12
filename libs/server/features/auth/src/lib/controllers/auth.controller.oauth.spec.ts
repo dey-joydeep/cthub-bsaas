@@ -1,7 +1,6 @@
 import { AuthController } from './auth.controller';
 import type { WebAuthnPort, RecoveryCodesPort, OAuthPort } from '@cthub-bsaas/server-contracts-auth';
 import { AuthService } from '../services/auth.service';
-import { ConfigService } from '@nestjs/config';
 import { AuthCookiesService } from '../services/auth-cookies.service';
 
 describe('AuthController OAuth endpoints (unit)', () => {
@@ -30,9 +29,8 @@ describe('AuthController OAuth endpoints (unit)', () => {
       start: jest.fn(() => ({ redirectUrl: 'https://example.com/oauth' })),
       exchangeCode: jest.fn(() => ({ provider: 'google', providerUserId: 'pid' })),
     } as unknown as typeof oauth;
-    const config = { get: jest.fn().mockReturnValue(undefined) } as unknown as ConfigService;
     cookies = { issue: jest.fn(), rotateOnRefresh: jest.fn(), clear: jest.fn() } as unknown as jest.Mocked<AuthCookiesService>;
-    controller = new AuthController(authSvc as unknown as AuthService, webAuthn, recovery, (oauth as unknown) as OAuthPort, config, cookies);
+    controller = new AuthController(authSvc as unknown as AuthService, webAuthn, recovery, (oauth as unknown) as OAuthPort, cookies);
   });
 
   it('oauthStart returns redirect instruction with 302', async () => {

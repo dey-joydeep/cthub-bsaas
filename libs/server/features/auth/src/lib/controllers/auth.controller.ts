@@ -19,7 +19,6 @@ import type { Request as ExpressRequest } from 'express';
 import type { SignInHttpResponse, SimpleOk } from '../types/auth.types';
 import { WEB_AUTHN_PORT, RECOVERY_CODES_PORT, WebAuthnPort, RecoveryCodesPort, OAUTH_PORT, OAuthPort } from '@cthub-bsaas/server-contracts-auth';
 import { Inject } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
 import { CookiesInterceptor } from '@cthub-bsaas/server-core';
 import { AuthCookiesService } from '../services/auth-cookies.service';
@@ -38,7 +37,6 @@ export class AuthController {
     @Inject(WEB_AUTHN_PORT) private readonly webAuthn: WebAuthnPort,
     @Inject(RECOVERY_CODES_PORT) private readonly recovery: RecoveryCodesPort,
     @Inject(OAUTH_PORT) private readonly oauth: OAuthPort,
-    private readonly config: ConfigService,
     private readonly authCookies: AuthCookiesService,
   ) {}
 
@@ -89,7 +87,7 @@ export class AuthController {
       for (const part of cookieHeader.split(';')) {
         const [k, v] = part.trim().split('=');
         if (k === 'bsaas_rt' || k === 'refreshToken') {
-          tokenFromCookie = v ? decodeURIComponent(v) : decodeURIComponent('');
+          tokenFromCookie = decodeURIComponent(v ?? '');
           break;
         }
       }
@@ -429,6 +427,7 @@ export class AuthController {
    * OAuth callback: exchange code and sign-in or link.
    */
   @Public()
+  @UseGuards(JwtAuthGuard)
   @Get('oauth/:provider/callback')
   @SkipCsrf()
   async oauthCallback(
@@ -452,6 +451,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
   @Post('oauth/:provider/unlink')
   async oauthUnlink(@Param('provider') provider: string, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
     await this.authService.unlinkSocialAccount(req.user.userId, provider);

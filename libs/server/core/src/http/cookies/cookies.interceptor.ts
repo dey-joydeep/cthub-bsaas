@@ -22,11 +22,15 @@ export class CookiesInterceptor implements NestInterceptor {
         const commands = this.registry.drain();
         if (!commands.length) return;
 
-        const headerValues = commands.map(buildSetCookie);
-        // Use adapter to set the Set-Cookie header; adapters accept string|string[]
-        adapter.setHeader(res, 'Set-Cookie', headerValues);
+        const values = commands.map(buildSetCookie);
+        if (typeof (res as any).append === 'function') {
+          values.forEach((v) => (res as any).append('Set-Cookie', v));
+        } else if (typeof (res as any).header === 'function') {
+          (res as any).header('Set-Cookie', values);
+        } else {
+          (adapter as any).setHeader(res, 'Set-Cookie', values.length === 1 ? values[0] : values);
+        }
       }),
     );
   }
 }
-

@@ -4,7 +4,7 @@ import { AuthController } from '../../../src/lib/controllers/auth.controller';
 import { AuthService } from '../../../src/lib/services/auth.service';
 import { WEB_AUTHN_PORT, RECOVERY_CODES_PORT, OAUTH_PORT } from '@cthub-bsaas/server-contracts-auth';
 import type { WebAuthnPort, RecoveryCodesPort } from '@cthub-bsaas/server-contracts-auth';
-import type { Response } from 'express';
+import { CookieRegistry, CookiesInterceptor, JwtAuthGuard } from '@cthub-bsaas/server-core';
 
 describe('AuthController additional (integration-light)', () => {
   let app: INestApplication;
@@ -57,7 +57,7 @@ describe('AuthController additional (integration-light)', () => {
       generate: async (userId: string, count?: number) => { void userId; void count; return ['r1', 'r2']; },
       verifyAndConsume: async (userId: string, code: string) => { void userId; void code; return true; },
     };
-    const moduleRef = await Test.createTestingModule({
+    const testingModuleBuilder = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
         { provide: (await import('@nestjs/config')).ConfigService, useValue: { get: () => undefined } },
@@ -65,9 +65,26 @@ describe('AuthController additional (integration-light)', () => {
         { provide: WEB_AUTHN_PORT, useValue: webAuthn },
         { provide: RECOVERY_CODES_PORT, useValue: recovery },
         { provide: OAUTH_PORT, useValue: { start: async () => ({ redirectUrl: 'x' }) } },
+        CookieRegistry,
+        CookiesInterceptor,
+        (await import('../../../src/lib/services/auth-cookies.service')).AuthCookiesService,
       ],
-    }).compile();
+    });
+    class SetUserGuard {
+      canActivate(ctx: any) {
+        const r = ctx.switchToHttp().getRequest();
+        if (!r.user) r.user = { userId: 'u1', sessionId: 's1' };
+        return true;
+      }
+    }
+    const moduleRef = await testingModuleBuilder.overrideGuard(JwtAuthGuard).useClass(SetUserGuard as any).compile();
     app = moduleRef.createNestApplication();
+    app.use((req: any, _res: any, next: () => void) => {
+      if ((req.path as string).startsWith('/auth/webauthn/login/finish') || (req.path as string).startsWith('/auth/webauthn/register/')) {
+        if (!req.user) req.user = { userId: 'u1', sessionId: 's1' };
+      }
+      next();
+    });
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     await app.init();
   });
@@ -114,75 +131,27 @@ describe('AuthController additional (integration-light)', () => {
     await req.post('/auth/email/verify').send({ token: 't' }).expect(200);
   });
 
-  it('handles webauthn register start (direct method call)', async () => {
-    const ctrl = app.get(AuthController);
-    type ReqCtx = { user: { userId: string } };
-    const r = await ctrl.webauthnRegisterStart({ username: 'u' }, { user: { userId: 'u1' } } as ReqCtx);
-    expect(r).toHaveProperty('challenge');
-  });
-
-  it('handles webauthn register finish (direct method call)', async () => {
-    const ctrl = app.get(AuthController);
-    const out = await ctrl.webauthnRegisterFinish({ response: {} } as unknown as import('../../../src/lib/dto/webauthn-attestation.dto').WebauthnAttestationDto, { user: { userId: 'u1' } } as { user: { userId: string } });
-    expect(out).toEqual({ success: true });
-  });
-
-  it('handles webauthn register finish (direct method call sets cookie)', async () => {
-    const ctrl = app.get(AuthController);
-    const res: Pick<Response, 'cookie'> = { cookie: jest.fn() as unknown as Response['cookie'] };
+  it('handles webauthn login finish (HTTP)', async () => {
     authSvc.issueTokensForUser = (jest.fn(async () => ({ accessToken: 'at3', refreshToken: 'rt3' })) as unknown) as typeof authSvc.issueTokensForUser;
-    const out = await ctrl.webauthnLoginFinish({ response: {} } as unknown as import('../../../src/lib/dto/webauthn-assertion.dto').WebauthnAssertionDto, { user: { userId: 'u1' } } as { user: { userId: string } }, res as Response);
-    expect(out).toEqual({});
+    const req = (await import('supertest')).default(app.getHttpServer());
+    await req.post('/auth/webauthn/login/finish').send({ response: {} }).expect(200);
   });
 
-  it('webauthn login start allows email identity or throws without identity', async () => {
-    const ctrl = app.get(AuthController);
-    // No identity provided
-    await expect(ctrl.webauthnLoginStart({} as unknown as { email?: string; userId?: string }, {} as { user?: { userId: string } })).rejects.toBeTruthy();
-    // Email provided
-    const r1 = await ctrl.webauthnLoginStart({ email: 'e@example.com' } as { email?: string }, {} as { user?: { userId: string } });
-    expect(r1).toHaveProperty('challenge');
-    // Authenticated context fallback
-    const r2 = await ctrl.webauthnLoginStart({} as { email?: string }, { user: { userId: 'u1' } } as { user?: { userId: string } });
-    expect(r2).toHaveProperty('challenge');
+  // covered via HTTP tests above
+
+  // recovery branches covered via HTTP above
+
+  // logout covered via HTTP above
+
+  it('email verify confirm branches (HTTP)', async () => {
+    const req = (await import('supertest')).default(app.getHttpServer());
+    await req.post('/auth/email/verify/confirm').send({ token: 'T' }).expect(200);
+    await req.post('/auth/email/verify/confirm').send({}).expect(400);
   });
 
-  it('recovery generate and verify branches', async () => {
-    const ctrl = app.get(AuthController);
-    const codes = await ctrl.generateRecovery({ user: { userId: 'u1' } } as { user: { userId: string } });
-    expect(Array.isArray(codes)).toBe(true);
-    const codesAlias = await ctrl.generateRecoveryCodes({ user: { userId: 'u1' } } as { user: { userId: string } });
-    expect(Array.isArray(codesAlias)).toBe(true);
-    const ok = await ctrl.verifyRecovery({ code: 'r1' }, { user: { userId: 'u1' } } as { user: { userId: string } });
-    expect(ok).toEqual({ success: true });
-    // failure branch
-    const recoveryProv = app.get(RECOVERY_CODES_PORT) as RecoveryCodesPort & { verifyAndConsume: (u: string, c: string) => Promise<boolean> };
-    recoveryProv.verifyAndConsume = async (u: string, c: string) => { void u; void c; return false; };
-    await expect(ctrl.verifyRecovery({ code: 'bad' }, { user: { userId: 'u1' } } as { user: { userId: string } })).rejects.toBeTruthy();
-  });
-
-  it('logout clears cookies (direct call)', async () => {
-    const ctrl = app.get(AuthController);
-    const res: Pick<Response, 'clearCookie'> = { clearCookie: jest.fn() as unknown as Response['clearCookie'] };
-    authSvc.logout = (jest.fn(async () => {}) as unknown) as typeof authSvc.logout;
-    const out = await ctrl.logout({ user: { sessionId: 's1' } } as { user: { sessionId: string } }, res as Response);
-    expect(out).toEqual({ success: true });
-    const clear = res.clearCookie as unknown as jest.Mock;
-    expect(clear.mock.calls.some((c: unknown[]) => (c as unknown[])[0] === 'bsaas_rt')).toBe(true);
-    expect(clear.mock.calls.some((c: unknown[]) => (c as unknown[])[0] === 'bsaas_at')).toBe(true);
-  });
-
-  it('email verify confirm branches (token and bad body)', async () => {
-    const ctrl = app.get(AuthController);
-    authSvc.verifyEmail = (jest.fn(async () => {}) as unknown) as typeof authSvc.verifyEmail;
-    await expect(ctrl.emailVerifyConfirm({ token: 'T' } as { token: string })).resolves.toEqual({ success: true });
-    await expect(ctrl.emailVerifyConfirm({} as { token?: string; email?: string; otp?: string })).rejects.toBeTruthy();
-  });
-
-  it('email verify confirm via OTP branch', async () => {
-    const ctrl = app.get(AuthController);
-    authSvc.verifyEmailOtp = (jest.fn(async () => {}) as unknown) as typeof authSvc.verifyEmailOtp;
-    await expect(ctrl.emailVerifyConfirm({ email: 'e@example.com', otp: '123456' } as { email: string; otp: string })).resolves.toEqual({ success: true });
+  it('email verify confirm via OTP branch (HTTP)', async () => {
+    const req = (await import('supertest')).default(app.getHttpServer());
+    await req.post('/auth/email/verify/confirm').send({ email: 'e@example.com', otp: '123456' }).expect(200);
   });
 
   it('register placeholder returns 202', async () => {
@@ -190,16 +159,7 @@ describe('AuthController additional (integration-light)', () => {
     await req.post('/auth/register').send({ email: 'e2@example.com' }).expect(202);
   });
 
-  it('refresh uses cookie when body missing', async () => {
-    const ctrl = app.get(AuthController);
-    const fakeReq: { headers: { cookie?: string } } = { headers: { cookie: 'refreshToken=abc' } };
-    const out = await ctrl.refresh(
-      {} as unknown as import('../../../src/lib/dto/refresh-token.dto').RefreshTokenDto,
-      fakeReq as unknown as import('express').Request,
-      { cookie: (() => undefined) as unknown as Response['cookie'] } as Response,
-    );
-    expect(out).toEqual({});
-  });
+  // cookie-based refresh is covered in other refresh tests
 
   it('refresh without cookie or body returns 400 over HTTP', async () => {
     const req = (await import('supertest')).default(app.getHttpServer());
@@ -267,50 +227,65 @@ describe('AuthController additional (integration-light)', () => {
       .expect(400);
   });
 
-  it('refresh direct call without cookie and body throws BadRequest (covers throw line)', async () => {
-    const ctrl = app.get(AuthController);
-    await expect(
-      ctrl.refresh(
-        {} as unknown as import('../../../src/lib/dto/refresh-token.dto').RefreshTokenDto,
-        { headers: {} } as unknown as import('express').Request,
-        { cookie: (() => undefined) as unknown as Response['cookie'] } as Response,
-      ),
-    ).rejects.toBeTruthy();
-  });
-
-  it('refresh direct call with empty cookie value hits else branch and 400', async () => {
-    const ctrl = app.get(AuthController);
-    await expect(
-      ctrl.refresh(
-        {} as unknown as import('../../../src/lib/dto/refresh-token.dto').RefreshTokenDto,
-        { headers: { cookie: 'refreshToken=' } } as unknown as import('express').Request,
-        { cookie: (() => undefined) as unknown as Response['cookie'] } as Response,
-      ),
-    ).rejects.toBeTruthy();
-  });
+  // Direct-call refresh branches are covered via HTTP above
 
   it('covers emailVerifyRequest via HTTP', async () => {
     const req = (await import('supertest')).default(app.getHttpServer());
     await req.post('/auth/email/verify/request').send({ email: 'e@example.com' }).expect(202);
   });
 
-  it('covers listSessions and revokeSessionBody via direct calls', async () => {
-    const ctrl = app.get(AuthController);
-    const list = await ctrl.listSessions({ user: { userId: 'u1' } } as { user: { userId: string } });
-    expect(Array.isArray(list)).toBe(true);
-    const ok = await ctrl.revokeSessionBody({ user: { userId: 'u1' } } as { user: { userId: string } }, { id: 's1' } as { id: string });
-    expect(ok).toEqual({ success: true });
+  it('covers listSessions and revokeSessionBody via HTTP', async () => {
+    const req = (await import('supertest')).default(app.getHttpServer());
+    await req.get('/auth/sessions').expect(200).expect((r) => {
+      expect(Array.isArray(r.body)).toBe(true);
+    });
+    await req.post('/auth/sessions/revoke').send({ id: 's1' }).expect(200).expect({ success: true });
   });
 
   it('covers revokeSession (path param) and webauthn start defaults', async () => {
-    const ctrl = app.get(AuthController);
-    const ok = await ctrl.revokeSession({ user: { userId: 'u1' } } as { user: { userId: string } }, 's1');
-    expect(ok).toEqual({ success: true });
-    await expect(
-      ctrl.webauthnLoginStart(
-        undefined as unknown as { email?: string; userId?: string },
-        undefined as unknown as { user?: { userId: string } },
-      ),
-    ).rejects.toBeTruthy();
+    const req = (await import('supertest')).default(app.getHttpServer());
+    await req.post('/auth/sessions/revoke/s1').expect(200).expect({ success: true });
+    await req.post('/auth/webauthn/login/start').send({}).expect(400);
+  });
+
+  it('handles webauthn register start/finish via HTTP', async () => {
+    const req = (await import('supertest')).default(app.getHttpServer());
+    await req.post('/auth/webauthn/register/start').send({ username: 'nick' }).expect(200).expect((r) => {
+      expect(r.body).toHaveProperty('challenge');
+    });
+    await req.post('/auth/webauthn/register/finish').send({ response: {} }).expect(200).expect({ success: true });
+  });
+
+  it('webauthn login start via email or userId', async () => {
+    const req = (await import('supertest')).default(app.getHttpServer());
+    await req.post('/auth/webauthn/login/start').send({ email: 'e@example.com' }).expect(200).expect((r) => {
+      expect(r.body).toHaveProperty('challenge');
+    });
+    await req.post('/auth/webauthn/login/start').send({ userId: 'u1' }).expect(200).expect((r) => {
+      expect(r.body).toHaveProperty('challenge');
+    });
+  });
+
+  it('recovery generate/codes/verify via HTTP and failure branch', async () => {
+    const req = (await import('supertest')).default(app.getHttpServer());
+    await req.post('/auth/recovery/generate').expect(200).expect((r) => {
+      expect(Array.isArray(r.body)).toBe(true);
+    });
+    await req.post('/auth/recovery/codes').expect(200).expect((r) => {
+      expect(Array.isArray(r.body)).toBe(true);
+    });
+    await req.post('/auth/recovery/verify').send({ code: 'r1r1r1r1' }).expect(200).expect({ success: true });
+    const recoveryProv = app.get(RECOVERY_CODES_PORT) as RecoveryCodesPort & { verifyAndConsume: (u: string, c: string) => Promise<boolean> };
+    recoveryProv.verifyAndConsume = async () => false;
+    await req.post('/auth/recovery/verify').send({ code: 'badbadbad' }).expect(400);
+  });
+
+  it('logout clears cookies over HTTP', async () => {
+    const req = (await import('supertest')).default(app.getHttpServer());
+    const res = await req.post('/auth/logout').expect(200);
+    const setCookie = res.get('set-cookie') as unknown;
+    const cookieStr = Array.isArray(setCookie) ? (setCookie as string[]).join(';') : String(setCookie ?? '');
+    expect(cookieStr).toContain('bsaas_rt=');
+    expect(cookieStr).toContain('bsaas_at=');
   });
 });

@@ -8,6 +8,8 @@ import { WEB_AUTHN_PORT, RECOVERY_CODES_PORT, OAUTH_PORT } from '@cthub-bsaas/se
 import type { WebAuthnPort, RecoveryCodesPort } from '@cthub-bsaas/server-contracts-auth';
 import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { AuthCookiesService } from '../../../src/lib/services/auth-cookies.service';
+import { CookieRegistry, CookiesInterceptor } from '@cthub-bsaas/server-core';
 import { Catch, ExceptionFilter, ArgumentsHost, HttpStatus } from '@nestjs/common';
 
 @Catch(ThrottlerException)
@@ -47,6 +49,9 @@ describe('Rate limiting (edge-case)', () => {
         { provide: OAUTH_PORT, useValue: { start: async () => ({ redirectUrl: 'x' }) } },
         { provide: APP_GUARD, useClass: ThrottlerGuard },
         { provide: APP_FILTER, useClass: TestRetryAfterFilter },
+        CookieRegistry,
+        CookiesInterceptor,
+        AuthCookiesService,
       ],
     }).compile();
     app = modRef.createNestApplication();

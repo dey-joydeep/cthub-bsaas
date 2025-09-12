@@ -5,7 +5,8 @@ import request from 'supertest';
 import cookieParser from 'cookie-parser';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthController } from '../../src/lib/controllers/auth.controller';
-import { CsrfGuard, JwtAuthGuard } from '@cthub-bsaas/server-core';
+import { CsrfGuard, JwtAuthGuard, CookieRegistry, CookiesInterceptor } from '@cthub-bsaas/server-core';
+import { AuthCookiesService } from '../../src/lib/services/auth-cookies.service';
 import { WEB_AUTHN_PORT, RECOVERY_CODES_PORT, OAUTH_PORT } from '@cthub-bsaas/server-contracts-auth';
 import { AuthService } from '../../src/lib/services/auth.service';
 
@@ -28,6 +29,9 @@ describe('AuthController CSRF (integration)', () => {
       providers: [
         { provide: APP_GUARD, useClass: CsrfGuard },
         { provide: APP_GUARD, useClass: AllowAllJwtGuard },
+        CookieRegistry,
+        CookiesInterceptor,
+        AuthCookiesService,
         // Provide minimal AuthService focused on session endpoints used in test
         {
           provide: AuthService,

@@ -4,6 +4,8 @@ import { AuthController } from '../../../src/lib/controllers/auth.controller';
 import { AuthService } from '../../../src/lib/services/auth.service';
 import { OAUTH_PORT, OAuthPort, WEB_AUTHN_PORT, RECOVERY_CODES_PORT } from '@cthub-bsaas/server-contracts-auth';
 import { ConfigService } from '@nestjs/config';
+import { CookieRegistry, CookiesInterceptor } from '@cthub-bsaas/server-core';
+import { AuthCookiesService } from '../../../src/lib/services/auth-cookies.service';
 
 describe('OAuth start (edge-case)', () => {
   let app: INestApplication;
@@ -21,6 +23,9 @@ describe('OAuth start (edge-case)', () => {
             start: async (provider: string) => ({ redirectUrl: `https://example.com/${provider}` }),
           } as Pick<OAuthPort, 'start'>,
         },
+        CookieRegistry,
+        CookiesInterceptor,
+        AuthCookiesService,
       ],
     }).compile();
     app = modRef.createNestApplication();

@@ -1,7 +1,6 @@
 import { AuthController } from './auth.controller';
 import { AuthService } from '../services/auth.service';
 import type { WebAuthnPort, RecoveryCodesPort, OAuthPort } from '@cthub-bsaas/server-contracts-auth';
-import { ConfigService } from '@nestjs/config';
 import { LoginDto } from '../dto/login.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import type { Request as ExpressRequest } from 'express';
@@ -42,10 +41,9 @@ describe('AuthController branches (unit)', () => {
       generate: jest.fn().mockResolvedValue(['r1', 'r2']),
       verifyAndConsume: jest.fn().mockResolvedValue(true),
     } as unknown as jest.Mocked<RecoveryCodesPort>;
-    const config = { get: jest.fn().mockReturnValue(undefined) } as unknown as ConfigService;
     const oauth = { start: jest.fn() } as unknown as OAuthPort;
     cookies = { issue: jest.fn(), rotateOnRefresh: jest.fn(), clear: jest.fn() } as unknown as jest.Mocked<AuthCookiesService>;
-    controller = new AuthController(service, webAuthn, recovery, oauth, config, cookies);
+    controller = new AuthController(service, webAuthn, recovery, oauth, cookies);
   });
 
   it('signIn branches: totpRequired false and true', async () => {
@@ -90,6 +88,10 @@ describe('AuthController branches (unit)', () => {
     // missing token entirely -> error
     const req5 = { headers: {} } as unknown as ExpressRequest;
     await expect(controller.refresh({} as RefreshTokenDto, req5)).rejects.toThrow();
+
+    // cookie header present but empty refreshToken value -> error branch
+    const req6 = { headers: { cookie: 'refreshToken=' } } as unknown as ExpressRequest;
+    await expect(controller.refresh({} as RefreshTokenDto, req6)).rejects.toThrow();
   });
 
   it('logout clears cookies', async () => {
@@ -160,6 +162,8 @@ describe('AuthController branches (unit)', () => {
   it('recovery generate/verify branches', async () => {
     const codes = await controller.generateRecovery({ user: { userId: 'u1' } } as { user: { userId: string } });
     expect(codes).toEqual(['r1', 'r2']);
+    const codesAlias = await controller.generateRecoveryCodes({ user: { userId: 'u1' } } as { user: { userId: string } });
+    expect(codesAlias).toEqual(['r1', 'r2']);
     // success branch
     recovery.verifyAndConsume.mockResolvedValueOnce(true);
     await expect(controller.verifyRecovery({ code: 'ok' }, { user: { userId: 'u1' } } as { user: { userId: string } })).resolves.toEqual({ success: true });

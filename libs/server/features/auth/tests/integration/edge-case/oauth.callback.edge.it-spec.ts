@@ -4,6 +4,8 @@ import { AuthController } from '../../../src/lib/controllers/auth.controller';
 import { AuthService } from '../../../src/lib/services/auth.service';
 import { OAUTH_PORT, OAuthPort, SOCIAL_ACCOUNT_REPOSITORY, ISocialAccountRepository, WEB_AUTHN_PORT, RECOVERY_CODES_PORT } from '@cthub-bsaas/server-contracts-auth';
 import { ConfigService } from '@nestjs/config';
+import { CookieRegistry, CookiesInterceptor, JwtAuthGuard } from '@cthub-bsaas/server-core';
+import { AuthCookiesService } from '../../../src/lib/services/auth-cookies.service';
 
 describe('OAuth callback (edge-case)', () => {
   let app: INestApplication;
@@ -21,6 +23,9 @@ describe('OAuth callback (edge-case)', () => {
         { provide: WEB_AUTHN_PORT, useValue: {} },
         { provide: RECOVERY_CODES_PORT, useValue: {} },
         { provide: SOCIAL_ACCOUNT_REPOSITORY, useValue: {} as ISocialAccountRepository },
+        CookieRegistry,
+        CookiesInterceptor,
+        AuthCookiesService,
       ],
     }).compile();
     app = modRef.createNestApplication();
@@ -40,7 +45,7 @@ describe('OAuth callback (edge-case)', () => {
   });
 
   it('links account when authenticated user present', async () => {
-    // Direct controller call to simulate req.user
+    class SetUserGuard { canActivate(ctx: any) { const r = ctx.switchToHttp().getRequest(); r.user = { userId: 'u1' }; return true; } }
     const mod = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
@@ -50,13 +55,18 @@ describe('OAuth callback (edge-case)', () => {
         { provide: SOCIAL_ACCOUNT_REPOSITORY, useValue: {} as ISocialAccountRepository },
         { provide: WEB_AUTHN_PORT, useValue: {} },
         { provide: RECOVERY_CODES_PORT, useValue: {} },
+        CookieRegistry,
+        CookiesInterceptor,
+        AuthCookiesService,
       ],
-    }).compile();
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useClass(SetUserGuard as any)
+      .compile();
     const app2 = mod.createNestApplication();
     await app2.init();
-    const ctrl = app2.get(AuthController);
-    const result = await ctrl.oauthCallback('google', { user: { userId: 'u1' } }, {} as unknown as import('express').Response, 'c');
-    expect(result).toEqual({});
+    const agent = (await import('supertest')).default(app2.getHttpServer());
+    await agent.get('/auth/oauth/google/callback').query({ code: 'c' }).expect(200).expect({});
     await app2.close();
   });
 
