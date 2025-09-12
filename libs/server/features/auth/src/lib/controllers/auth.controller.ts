@@ -16,6 +16,7 @@ import { WebauthnRegisterStartDto } from '../dto/webauthn-register-start.dto';
 import { WebauthnAttestationDto } from '../dto/webauthn-attestation.dto';
 import { WebauthnAssertionDto } from '../dto/webauthn-assertion.dto';
 import { TotpLoginDto } from '../dto/totp-login.dto';
+import { PasswordChangeDto } from '../dto/password-change.dto';
 import type { Request as ExpressRequest } from 'express';
 import type { SignInHttpResponse, SimpleOk } from '../types/auth.types';
 import { WEB_AUTHN_PORT, RECOVERY_CODES_PORT, WebAuthnPort, RecoveryCodesPort, OAUTH_PORT, OAuthPort } from '@cthub-bsaas/server-contracts-auth';
@@ -247,6 +248,21 @@ export class AuthController {
     return { success: true };
   }
 
+  /**
+   * Change password for the authenticated user.
+   *
+   * @public
+   * @returns {Promise<{ success: true }>} OK response after update.
+   */
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('password/change')
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  async changePassword(@Body() body: PasswordChangeDto, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
+    await this.authService.changePassword(req.user.userId, body.currentPassword, body.newPassword);
+    return { success: true };
+  }
+
   // Spec-aligned email verify routes (current implementation uses token under the hood)
   @Public()
   @HttpCode(HttpStatus.ACCEPTED)
@@ -431,6 +447,16 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async revokeDeviceAlias(@Request() req: { user: { userId: string } }, @Body() body: { id: string }): Promise<SimpleOk> {
     return this.authService.revokeSession(req.user.userId, body.id);
+  }
+
+  /**
+   * Alias: Idempotent session revoke via DELETE /auth/sessions/:id
+   */
+  @UseGuards(JwtAuthGuard)
+  @Delete('sessions/:id')
+  @HttpCode(HttpStatus.OK)
+  async revokeSessionDelete(@Request() req: { user: { userId: string } }, @Param('id') id: string): Promise<SimpleOk> {
+    return this.authService.revokeSession(req.user.userId, id);
   }
 
   /**

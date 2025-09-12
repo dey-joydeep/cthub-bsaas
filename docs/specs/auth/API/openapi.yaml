@@ -1212,6 +1212,26 @@ content:
 
 
 
+  /auth/password/change:
+
+      post:
+        summary: POST /auth/password/change
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  currentPassword: { type: string }
+                  newPassword: { type: string, minLength: 8 }
+                required: [currentPassword, newPassword]
+        responses:
+        200:
+          description: OK
+
+
+
   /auth/oauth/{provider}:
 
       delete:
@@ -1219,6 +1239,22 @@ content:
         parameters:
           - in: path
             name: provider
+            required: true
+            schema:
+              type: string
+        responses:
+        200:
+          description: OK
+
+
+
+  /auth/sessions/{id}:
+
+      delete:
+        summary: DELETE /auth/sessions/{id} (idempotent revoke)
+        parameters:
+          - in: path
+            name: id
             required: true
             schema:
               type: string

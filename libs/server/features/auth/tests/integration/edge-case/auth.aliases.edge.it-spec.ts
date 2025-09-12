@@ -71,6 +71,11 @@ describe('Auth alias routes (edge-case)', () => {
     await req.post('/auth/devices/revoke').send({ id: 's1' }).expect(200).expect({ success: true });
   });
 
+  it('DELETE /auth/sessions/:id returns {success:true}', async () => {
+    const req = (await import('supertest')).default(app!.getHttpServer());
+    await req.delete('/auth/sessions/s1').expect(200).expect({ success: true });
+  });
+
   it('DELETE /auth/oauth/google returns {success:true}', async () => {
     const req = (await import('supertest')).default(app!.getHttpServer());
     await req.delete('/auth/oauth/google').expect(200).expect({ success: true });

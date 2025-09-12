@@ -166,6 +166,13 @@ describe('AuthController', () => {
     expect(ok).toEqual({ success: true });
   });
 
+  it('changePassword proxies to service', async () => {
+    (service.changePassword as unknown as jest.Mock) = jest.fn(async () => {});
+    const ok = await controller.changePassword({ currentPassword: 'Old#1', newPassword: 'New#1Password' } as unknown as import('../dto/password-change.dto').PasswordChangeDto, { user: { userId: 'u1' } } as { user: { userId: string } });
+    expect(service.changePassword).toHaveBeenCalledWith('u1', 'Old#1', 'New#1Password');
+    expect(ok).toEqual({ success: true });
+  });
+
   it('devices alias proxies to listSessions', async () => {
     service.listSessions.mockResolvedValue([{ id: 's1' }]);
     const result = await controller.listDevicesAlias({ user: { userId: 'u1' } } as { user: { userId: string } });
@@ -181,6 +188,12 @@ describe('AuthController', () => {
   it('recovery-codes verify alias returns success', async () => {
     (recovery.verifyAndConsume as unknown as jest.Mock).mockResolvedValue(true);
     const ok = await controller.verifyRecoveryAlias({ code: 'ok' } as unknown as import('../dto/verify-recovery.dto').VerifyRecoveryDto, { user: { userId: 'u1' } } as { user: { userId: string } });
+    expect(ok).toEqual({ success: true });
+  });
+
+  it('revokeSessionDelete proxies to service', async () => {
+    (service.revokeSession as unknown as jest.Mock).mockResolvedValue({ success: true });
+    const ok = await controller.revokeSessionDelete({ user: { userId: 'u1' } } as { user: { userId: string } }, 's1');
     expect(ok).toEqual({ success: true });
   });
 

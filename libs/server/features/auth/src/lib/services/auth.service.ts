@@ -93,6 +93,29 @@ export class AuthService {
     this.audit.log('register_success', { userId: user.id });
   }
 
+  /**
+   * Change password for a user after validating the current password.
+   * @param userId current user id
+   * @param currentPassword current password
+   * @param newPassword new password
+   */
+  public async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const user = await this.userRepository.findById(userId);
+    if (!user || !user.passwordHash) {
+      throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_CREDENTIALS);
+    }
+    const ok = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!ok) {
+      throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_CREDENTIALS);
+    }
+    if (currentPassword === newPassword) {
+      throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_CREDENTIALS);
+    }
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await this.userRepository.update(user.id, { passwordHash });
+    this.audit.log('password_change_success', { userId });
+  }
+
     /**
      * Sign in with email/password. If TOTP is enabled, returns a temp token for second factor.
      *

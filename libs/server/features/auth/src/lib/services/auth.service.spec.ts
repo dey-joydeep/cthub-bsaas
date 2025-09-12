@@ -189,6 +189,30 @@ describe('AuthService', () => {
     });
   });
 
+  describe('changePassword', () => {
+    it('changes password when current matches', async () => {
+      userRepository.findById.mockResolvedValue(mockUserWithRoles);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('new-hash');
+      userRepository.update.mockResolvedValue({ ...mockUser } as User);
+      await expect(service.changePassword('user-id', 'Old#1', 'New#1Password')).resolves.toBeUndefined();
+      expect(userRepository.update).toHaveBeenCalledWith('user-id', { passwordHash: 'new-hash' });
+    });
+
+    it('throws Unauthorized when current invalid or same as new', async () => {
+      userRepository.findById.mockResolvedValue(mockUserWithRoles);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+      await expect(service.changePassword('user-id', 'wrong', 'New#1Password')).rejects.toThrow(UnauthorizedException);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      await expect(service.changePassword('user-id', 'Same#1', 'Same#1')).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('throws Unauthorized when user not found or missing hash', async () => {
+      userRepository.findById.mockResolvedValue(null as unknown as User & { roles: { role: { name: string } }[] });
+      await expect(service.changePassword('user-missing', 'x', 'New#1Password')).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
   describe('account recovery (DB-backed)', () => {
     it('requests password reset (no disclosure)', async () => {
       userRepository.findByEmail.mockResolvedValue({ ...mockUserWithRoles });
