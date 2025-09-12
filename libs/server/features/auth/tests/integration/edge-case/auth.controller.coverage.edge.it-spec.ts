@@ -148,7 +148,7 @@ describe('AuthController coverage (edge-case direct calls)', () => {
     await req.post('/auth/sessions/revoke').send({ id: 'sid' }).expect(200);
   });
 
-  it('covers recovery, email, register, oauth (HTTP)', async () => {
+  it('covers recovery, email, customer register, oauth (HTTP)', async () => {
     const req = (await import('supertest')).default(app.getHttpServer());
     await req.post('/auth/password/forgot').send({ email: 'e@example.com' }).expect(202);
     await req.post('/auth/password/reset').send({ token: 't', newPassword: 'Abcd1234!' }).expect(200);

@@ -394,10 +394,12 @@ export class AuthController {
   }
 
   /**
-   * Customer registration endpoint.
+   * Customer registration endpoint (self‑serve Customer only).
    *
-   * Note: This endpoint is intended for Customer self‑registration only.
-   * Partner/Admin onboarding uses invite or internal tooling and is not handled here.
+   * @remarks
+   * CUSTOMER-ONLY: This controller action supports Customer self‑registration.
+   * Partner/Admin onboarding flows are handled separately via invites/internal tooling
+   * and MUST NOT call this endpoint.
    */
   @Public()
   @HttpCode(HttpStatus.CREATED)

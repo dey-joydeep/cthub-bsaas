@@ -196,7 +196,7 @@ describe('AuthController branches (unit)', () => {
     await expect(controller.verifyRecovery({ code: 'x' }, { user: { userId: 'u1' } } as { user: { userId: string } })).rejects.toThrow();
   });
 
-  it('register calls service', async () => {
+  it('customer register calls service', async () => {
     (service.register as unknown as jest.Mock).mockResolvedValue(undefined);
     await expect(controller.register({ email: 'a@b.com', password: 'Password#1' } as unknown as import('../dto/register.dto').RegisterDto)).resolves.toEqual({ success: true });
   });

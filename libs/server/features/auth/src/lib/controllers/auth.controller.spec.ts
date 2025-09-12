@@ -166,7 +166,7 @@ describe('AuthController', () => {
     expect(ok).toEqual({ success: true });
   });
 
-  it('register calls service and returns success', async () => {
+  it('customer register calls service and returns success', async () => {
     (service.register as unknown as jest.Mock).mockResolvedValue(undefined);
     const ok = await controller.register({ email: 'e@example.com', password: 'Password#1' } as unknown as import('../dto/register.dto').RegisterDto);
     expect(ok).toEqual({ success: true });

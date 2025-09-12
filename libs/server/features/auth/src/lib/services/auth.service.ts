@@ -48,15 +48,16 @@ export class AuthService {
   ) {}
 
   /**
-   * Register a new user (Customer only).
+   * Register a new Customer (Customer‑only registration).
    *
    * - Customer self‑service registration
    * - Hashes password
    * - Assigns default CUSTOMER role
    * - Issues email verification OTP
    *
-   * Note: Partner/Admin onboarding is out of scope here; those flows
-   * use invites/links or internal provisioning and different endpoints.
+   * @remarks
+   * CUSTOMER-ONLY: Partner/Admin onboarding is handled via invite/internal provisioning
+   * in separate flows/endpoints; not supported by this method.
    *
    * @public
    * @param email new user's email
