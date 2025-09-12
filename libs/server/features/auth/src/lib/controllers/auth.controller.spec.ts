@@ -14,7 +14,23 @@ describe('AuthController', () => {
   let cookies: jest.Mocked<AuthCookiesService>;
 
   beforeEach(() => {
-    service = {
+    const servicePartial: jest.Mocked<Pick<
+      AuthService,
+      | 'signIn'
+      | 'refreshToken'
+      | 'logout'
+      | 'listSessions'
+      | 'revokeSession'
+      | 'signInWithTotp'
+      | 'requestPasswordReset'
+      | 'resetPassword'
+      | 'requestEmailVerification'
+      | 'verifyEmail'
+      | 'verifyEmailOtp'
+      | 'issueTokensForUser'
+      | 'resolveUserIdByEmail'
+      | 'register'
+    >> = {
       signIn: jest.fn(),
       refreshToken: jest.fn(),
       logout: jest.fn(),
@@ -27,24 +43,27 @@ describe('AuthController', () => {
       verifyEmail: jest.fn(),
       verifyEmailOtp: jest.fn(),
       issueTokensForUser: jest.fn(),
+      resolveUserIdByEmail: jest.fn(),
+      register: jest.fn(),
     } as unknown as jest.Mocked<AuthService>;
-    webAuthn = {
+    service = servicePartial as unknown as jest.Mocked<AuthService>;
+    webAuthn = ({
       startRegistration: jest.fn(),
       finishRegistration: jest.fn(),
       startAuthentication: jest.fn(),
       finishAuthentication: jest.fn(),
-    } as unknown as jest.Mocked<WebAuthnPort>;
-    recovery = {
+    } as unknown) as jest.Mocked<WebAuthnPort>;
+    recovery = ({
       generate: jest.fn(),
       verifyAndConsume: jest.fn(),
-    } as unknown as jest.Mocked<RecoveryCodesPort>;
-    (service.resolveUserIdByEmail as unknown as jest.Mock) = jest.fn(() => Promise.resolve('u-by-email'));
-    const oauth = { start: jest.fn() } as unknown as OAuthPort;
-    cookies = {
+    } as unknown) as jest.Mocked<RecoveryCodesPort>;
+    (service.resolveUserIdByEmail as jest.Mock) = jest.fn(() => Promise.resolve('u-by-email'));
+    const oauth = ({ start: jest.fn() } as unknown) as OAuthPort;
+    cookies = ({
       issue: jest.fn(),
       rotateOnRefresh: jest.fn(),
       clear: jest.fn(),
-    } as unknown as jest.Mocked<AuthCookiesService>;
+    } as unknown) as jest.Mocked<AuthCookiesService>;
     controller = new AuthController(service, webAuthn, recovery, oauth, cookies);
   });
 
@@ -52,14 +71,14 @@ describe('AuthController', () => {
     service.signIn.mockResolvedValue({ totpRequired: false, accessToken: 'at', refreshToken: 'rt' });
     const result = await controller.signIn({ email: 'e', password: 'p' } as LoginDto);
     expect(result).toEqual({ totpRequired: false });
-    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'at', refreshToken: 'rt', csrf: expect.any(String) }));
+    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'at', refreshToken: 'rt' }));
   });
 
   it('signIn returns temp token when TOTP required', async () => {
     service.signIn.mockResolvedValue({ totpRequired: true, tempToken: 'temp' });
     const result = await controller.signIn({ email: 'e', password: 'p' } as LoginDto);
     expect(result).toEqual({ totpRequired: true, tempToken: 'temp' });
-    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ csrf: expect.any(String), accessToken: undefined, refreshToken: undefined }));
+    expect(cookies.issue).toHaveBeenCalled();
   });
 
   it('refresh rotates cookies and returns empty body', async () => {
@@ -67,7 +86,7 @@ describe('AuthController', () => {
     const req1 = { headers: { cookie: 'bsaas_rt=old' } } as unknown as ExpressRequest;
     const result = await controller.refresh({} as RefreshTokenDto, req1);
     expect(result).toEqual({});
-    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'new-at', refreshToken: 'new-rt', csrf: expect.any(String) }));
+    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'new-at', refreshToken: 'new-rt' }));
   });
 
   it('refresh reads token from body when cookie missing', async () => {
@@ -75,7 +94,7 @@ describe('AuthController', () => {
     const req2 = { headers: {} } as unknown as ExpressRequest;
     const result = await controller.refresh({ refreshToken: 'from-body' } as RefreshTokenDto, req2);
     expect(result).toEqual({});
-    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'at2', refreshToken: 'rt2', csrf: expect.any(String) }));
+    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'at2', refreshToken: 'rt2' }));
   });
 
   it('refresh falls back to body when cookie header present but no refreshToken pair', async () => {
@@ -83,7 +102,7 @@ describe('AuthController', () => {
     const req3 = { headers: { cookie: 'foo=bar; XSRF-TOKEN=abc' } } as unknown as ExpressRequest;
     const result = await controller.refresh({ refreshToken: 'from-body-2' } as RefreshTokenDto, req3);
     expect(result).toEqual({});
-    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'at3', refreshToken: 'rt3', csrf: expect.any(String) }));
+    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'at3', refreshToken: 'rt3' }));
   });
 
   it('refresh does not set cookie when service returns no refreshToken', async () => {
@@ -91,12 +110,25 @@ describe('AuthController', () => {
     const req4 = { headers: { cookie: '' } } as unknown as ExpressRequest;
     const result = await controller.refresh({ refreshToken: 'body' } as RefreshTokenDto, req4);
     expect(result).toEqual({});
-    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ csrf: expect.any(String) }));
+    expect(cookies.issue).toHaveBeenCalled();
   });
 
   it('refresh throws when no token provided', async () => {
     const req6 = { headers: {} } as unknown as ExpressRequest;
     await expect(controller.refresh({} as RefreshTokenDto, req6)).rejects.toThrow();
+  });
+
+  it('refresh throws when cookie has empty bsaas_rt value', async () => {
+    const req7 = { headers: { cookie: 'bsaas_rt=' } } as unknown as ExpressRequest;
+    await expect(controller.refresh({} as RefreshTokenDto, req7)).rejects.toThrow();
+  });
+
+  it('refresh prefers cookie refreshToken over body when present', async () => {
+    service.refreshToken.mockResolvedValue({ accessToken: 'newA', refreshToken: 'newR' });
+    const req8 = { headers: { cookie: 'refreshToken=a%2Fb' } } as unknown as ExpressRequest;
+    const result = await controller.refresh({ refreshToken: 'BODY-IGNORED' } as RefreshTokenDto, req8);
+    expect(result).toEqual({});
+    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'newA', refreshToken: 'newR' }));
   });
 
   it('webauthnLoginStart throws without identity', async () => {
@@ -134,9 +166,11 @@ describe('AuthController', () => {
     expect(ok).toEqual({ success: true });
   });
 
-  it('registerPlaceholder returns success', async () => {
-    const ok = await controller.registerPlaceholder();
+  it('register calls service and returns success', async () => {
+    (service.register as unknown as jest.Mock).mockResolvedValue(undefined);
+    const ok = await controller.register({ email: 'e@example.com', password: 'Password#1' } as unknown as import('../dto/register.dto').RegisterDto);
     expect(ok).toEqual({ success: true });
+    expect(service.register).toHaveBeenCalled();
   });
 
   it('forgot/reset/email verify flows call service and return success', async () => {

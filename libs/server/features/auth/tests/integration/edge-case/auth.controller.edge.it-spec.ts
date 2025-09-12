@@ -1,4 +1,4 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication, ValidationPipe, ExecutionContext } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AuthController } from '../../../src/lib/controllers/auth.controller';
 import { AuthService } from '../../../src/lib/services/auth.service';
@@ -24,6 +24,7 @@ describe('AuthController additional (integration-light)', () => {
       | 'verifyEmailOtp'
       | 'issueTokensForUser'
       | 'resolveUserIdByEmail'
+      | 'register'
     >
   >;
   const authSvc: AuthSvcMock = {
@@ -40,6 +41,7 @@ describe('AuthController additional (integration-light)', () => {
     verifyEmailOtp: (jest.fn(async () => {}) as unknown) as AuthSvcMock['verifyEmailOtp'],
     issueTokensForUser: (jest.fn(async () => ({ accessToken: 'a', refreshToken: 'r' })) as unknown) as AuthSvcMock['issueTokensForUser'],
     resolveUserIdByEmail: (jest.fn(async (e: string) => { void e; return 'u-by-email'; }) as unknown) as AuthSvcMock['resolveUserIdByEmail'],
+    register: (jest.fn(async () => {}) as unknown) as AuthSvcMock['register'],
   };
 
   beforeAll(async () => {
@@ -71,15 +73,15 @@ describe('AuthController additional (integration-light)', () => {
       ],
     });
     class SetUserGuard {
-      canActivate(ctx: any) {
-        const r = ctx.switchToHttp().getRequest();
+      canActivate(ctx: ExecutionContext) {
+        const r = ctx.switchToHttp().getRequest<{ user?: { userId: string; sessionId: string } }>();
         if (!r.user) r.user = { userId: 'u1', sessionId: 's1' };
         return true;
       }
     }
-    const moduleRef = await testingModuleBuilder.overrideGuard(JwtAuthGuard).useClass(SetUserGuard as any).compile();
+    const moduleRef = await testingModuleBuilder.overrideGuard(JwtAuthGuard).useClass(SetUserGuard as unknown as typeof JwtAuthGuard).compile();
     app = moduleRef.createNestApplication();
-    app.use((req: any, _res: any, next: () => void) => {
+    app.use((req: { path?: string; user?: { userId: string; sessionId: string } }, _res: unknown, next: () => void) => {
       if ((req.path as string).startsWith('/auth/webauthn/login/finish') || (req.path as string).startsWith('/auth/webauthn/register/')) {
         if (!req.user) req.user = { userId: 'u1', sessionId: 's1' };
       }
@@ -154,9 +156,9 @@ describe('AuthController additional (integration-light)', () => {
     await req.post('/auth/email/verify/confirm').send({ email: 'e@example.com', otp: '123456' }).expect(200);
   });
 
-  it('register placeholder returns 202', async () => {
+  it('register returns 201 and calls service', async () => {
     const req = (await import('supertest')).default(app.getHttpServer());
-    await req.post('/auth/register').send({ email: 'e2@example.com' }).expect(202);
+    await req.post('/auth/register').send({ email: 'e2@example.com', password: 'Password#1' }).expect(201);
   });
 
   // cookie-based refresh is covered in other refresh tests

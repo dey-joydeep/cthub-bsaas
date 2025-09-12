@@ -45,7 +45,7 @@ describe('OAuth callback (edge-case)', () => {
   });
 
   it('links account when authenticated user present', async () => {
-    class SetUserGuard { canActivate(ctx: any) { const r = ctx.switchToHttp().getRequest(); r.user = { userId: 'u1' }; return true; } }
+    class SetUserGuard { canActivate(ctx: import('@nestjs/common').ExecutionContext) { const r = ctx.switchToHttp().getRequest<{ user?: { userId: string } }>(); r.user = { userId: 'u1' }; return true; } }
     const mod = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
@@ -61,7 +61,7 @@ describe('OAuth callback (edge-case)', () => {
       ],
     })
       .overrideGuard(JwtAuthGuard)
-      .useClass(SetUserGuard as any)
+      .useClass(SetUserGuard as unknown as typeof JwtAuthGuard)
       .compile();
     const app2 = mod.createNestApplication();
     await app2.init();

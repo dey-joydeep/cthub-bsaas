@@ -81,6 +81,38 @@ describe('AuthService', () => {
     expect(service).toBeDefined();
   });
 
+  describe('register', () => {
+    it('creates user, assigns role, and sends verification', async () => {
+      userRepository.findByEmail.mockResolvedValue(null);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hp');
+      userRepository.create.mockResolvedValue({ ...mockUser } as User);
+      await expect(service.register('new@example.com', 'Password#1', 'New User')).resolves.toBeUndefined();
+      expect(userRepository.create).toHaveBeenCalled();
+    });
+
+    it('creates user with null name when not provided', async () => {
+      userRepository.findByEmail.mockResolvedValue(null);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hp');
+      userRepository.create.mockResolvedValue({ ...mockUser } as User);
+      await expect(service.register('noname@example.com', 'Password#1')).resolves.toBeUndefined();
+      expect(userRepository.create).toHaveBeenCalledWith(expect.objectContaining({ name: null }));
+    });
+
+    it('is idempotent on existing user and may re-send verification', async () => {
+      userRepository.findByEmail.mockResolvedValue({ ...mockUserWithRoles, emailVerifiedAt: null });
+      const spy = jest.spyOn(service, 'requestEmailVerification').mockResolvedValue(undefined);
+      await expect(service.register('test@example.com', 'Password#1')).resolves.toBeUndefined();
+      expect(spy).toHaveBeenCalledWith('test@example.com');
+    });
+
+    it('existing user already verified does not re-send verification', async () => {
+      userRepository.findByEmail.mockResolvedValue({ ...mockUserWithRoles, emailVerifiedAt: new Date() });
+      const spy = jest.spyOn(service, 'requestEmailVerification').mockResolvedValue(undefined);
+      await expect(service.register('test@example.com', 'Password#1')).resolves.toBeUndefined();
+      expect(spy).not.toHaveBeenCalled();
+    });
+  });
+
   describe('signIn', () => {
     const email = 'test@example.com';
     const password = 'password';

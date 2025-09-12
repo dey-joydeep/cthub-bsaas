@@ -5,32 +5,29 @@ import { AuthCookiesService } from '../services/auth-cookies.service';
 
 describe('AuthController OAuth endpoints (unit)', () => {
   let controller: AuthController;
-  let authSvc: jest.Mocked<
-    Pick<
-      AuthService,
-      'linkSocialAccount' | 'unlinkSocialAccount' | 'signInWithSocial' | 'logout' | 'revokeSession' | 'listSessions'
-    >
-  >;
+  let authSvc: jest.Mocked<Pick<AuthService, 'linkSocialAccount' | 'unlinkSocialAccount' | 'signInWithSocial' | 'logout' | 'revokeSession' | 'listSessions'>>;
   let oauth: jest.Mocked<Pick<OAuthPort, 'start' | 'exchangeCode'>>;
-  const webAuthn = {} as unknown as jest.Mocked<WebAuthnPort>;
-  const recovery = {} as unknown as jest.Mocked<RecoveryCodesPort>;
-  let cookies: jest.Mocked<AuthCookiesService>;
+  let webAuthn: jest.Mocked<Pick<WebAuthnPort, never>>;
+  let recovery: jest.Mocked<Pick<RecoveryCodesPort, never>>;
+  let cookies: jest.Mocked<Pick<AuthCookiesService, 'issue' | 'rotateOnRefresh' | 'clear'>>;
 
   beforeEach(() => {
     authSvc = {
-      linkSocialAccount: jest.fn(() => {}),
-      signInWithSocial: jest.fn(() => ({ accessToken: 'AT', refreshToken: 'RT' })),
-      logout: jest.fn(() => {}),
-      revokeSession: jest.fn(() => ({ success: true } as const)),
-      listSessions: jest.fn(() => []),
-      unlinkSocialAccount: jest.fn(() => {}),
+      linkSocialAccount: jest.fn(() => Promise.resolve()),
+      signInWithSocial: jest.fn(() => Promise.resolve({ accessToken: 'AT', refreshToken: 'RT' })),
+      logout: jest.fn(() => Promise.resolve()),
+      revokeSession: jest.fn(() => Promise.resolve({ success: true } as const)),
+      listSessions: jest.fn(() => Promise.resolve([])),
+      unlinkSocialAccount: jest.fn(() => Promise.resolve()),
     } as unknown as typeof authSvc;
     oauth = {
-      start: jest.fn(() => ({ redirectUrl: 'https://example.com/oauth' })),
-      exchangeCode: jest.fn(() => ({ provider: 'google', providerUserId: 'pid' })),
+      start: jest.fn(() => Promise.resolve({ redirectUrl: 'https://example.com/oauth' })),
+      exchangeCode: jest.fn(() => Promise.resolve({ provider: 'google', providerUserId: 'pid' })),
     } as unknown as typeof oauth;
-    cookies = { issue: jest.fn(), rotateOnRefresh: jest.fn(), clear: jest.fn() } as unknown as jest.Mocked<AuthCookiesService>;
-    controller = new AuthController(authSvc as unknown as AuthService, webAuthn, recovery, (oauth as unknown) as OAuthPort, cookies);
+    webAuthn = {} as unknown as jest.Mocked<Pick<WebAuthnPort, never>>;
+    recovery = {} as unknown as jest.Mocked<Pick<RecoveryCodesPort, never>>;
+    cookies = { issue: jest.fn(), rotateOnRefresh: jest.fn(), clear: jest.fn() } as unknown as jest.Mocked<Pick<AuthCookiesService, 'issue' | 'rotateOnRefresh' | 'clear'>>;
+    controller = new AuthController(authSvc as unknown as AuthService, webAuthn as unknown as WebAuthnPort, recovery as unknown as RecoveryCodesPort, oauth as unknown as OAuthPort, cookies as unknown as AuthCookiesService);
   });
 
   it('oauthStart returns redirect instruction with 302', async () => {
@@ -55,7 +52,7 @@ describe('AuthController OAuth endpoints (unit)', () => {
     const out = await controller.oauthCallback('google', {}, 'code123', 'state');
     expect(out).toEqual({});
     expect(authSvc.signInWithSocial).toHaveBeenCalled();
-    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'AT', refreshToken: 'RT', csrf: expect.any(String) }));
+    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'AT', refreshToken: 'RT' }));
   });
 
   it('oauthUnlink unlinks and returns success', async () => {

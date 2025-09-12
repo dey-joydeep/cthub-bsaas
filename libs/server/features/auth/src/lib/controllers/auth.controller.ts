@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '@cthub-bsaas/server-core';
 import { AuthService } from '../services/auth.service';
 import { SkipCsrf } from '@cthub-bsaas/server-core';
 import { LoginDto } from '../dto/login.dto';
+import { RegisterDto } from '../dto/register.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
@@ -22,6 +23,7 @@ import { Inject } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { CookiesInterceptor } from '@cthub-bsaas/server-core';
 import { AuthCookiesService } from '../services/auth-cookies.service';
+import { parseRefreshCookie } from '../utils/cookie.util';
 // Public decorator is already imported at file top
 
 /**
@@ -81,17 +83,7 @@ export class AuthController {
     @Body() refreshTokenDto: RefreshTokenDto,
     @Request() req: ExpressRequest,
   ): Promise<Record<string, never>> {
-    const cookieHeader = req.headers['cookie'];
-    let tokenFromCookie: string | undefined;
-    if (typeof cookieHeader === 'string') {
-      for (const part of cookieHeader.split(';')) {
-        const [k, v] = part.trim().split('=');
-        if (k === 'bsaas_rt' || k === 'refreshToken') {
-          tokenFromCookie = decodeURIComponent(v ?? '');
-          break;
-        }
-      }
-    }
+    const tokenFromCookie = parseRefreshCookie(req.headers['cookie']);
     const token = tokenFromCookie ?? refreshTokenDto.refreshToken;
     if (!token) {
       throw new BadRequestException('error.auth.missing_refresh_token');
@@ -401,12 +393,19 @@ export class AuthController {
     return this.authService.revokeSession(req.user.userId, body.id);
   }
 
-  // Registration placeholder endpoint
+  /**
+   * Customer registration endpoint.
+   *
+   * Note: This endpoint is intended for Customer self‑registration only.
+   * Partner/Admin onboarding uses invite or internal tooling and is not handled here.
+   */
   @Public()
-  @HttpCode(HttpStatus.ACCEPTED)
+  @HttpCode(HttpStatus.CREATED)
   @Post('register')
   @SkipCsrf()
-  registerPlaceholder(): SimpleOk {
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  async register(@Body() body: RegisterDto): Promise<SimpleOk> {
+    await this.authService.register(body.email, body.password, body.name);
     return { success: true };
   }
 

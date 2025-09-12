@@ -10,11 +10,13 @@ import { AuthCookiesService } from '../services/auth-cookies.service';
 
 describe('AuthController branches (unit)', () => {
   let controller: AuthController;
-  let service: jest.Mocked<AuthService>;
-  let webAuthn: jest.Mocked<WebAuthnPort>;
-  let recovery: jest.Mocked<RecoveryCodesPort>;
-
-  let cookies: jest.Mocked<AuthCookiesService>;
+  let service: jest.Mocked<Pick<AuthService,
+    | 'signIn' | 'refreshToken' | 'logout' | 'listSessions' | 'revokeSession' | 'signInWithTotp'
+    | 'requestPasswordReset' | 'resetPassword' | 'requestEmailVerification' | 'verifyEmail' | 'verifyEmailOtp'
+    | 'issueTokensForUser' | 'resolveUserIdByEmail' | 'register'>>;
+  let webAuthn: jest.Mocked<Pick<WebAuthnPort, 'startRegistration' | 'finishRegistration' | 'startAuthentication' | 'finishAuthentication'>>;
+  let recovery: jest.Mocked<Pick<RecoveryCodesPort, 'generate' | 'verifyAndConsume'>>;
+  let cookies: jest.Mocked<Pick<AuthCookiesService, 'issue' | 'rotateOnRefresh' | 'clear'>>;
 
   beforeEach(() => {
     service = {
@@ -30,20 +32,29 @@ describe('AuthController branches (unit)', () => {
       verifyEmail: jest.fn(),
       verifyEmailOtp: jest.fn(),
       issueTokensForUser: jest.fn(),
-    } as unknown as jest.Mocked<AuthService>;
-    webAuthn = {
-      startRegistration: jest.fn().mockResolvedValue({ ok: 1 } as unknown as Record<string, unknown>),
-      finishRegistration: jest.fn().mockResolvedValue(undefined as unknown as void),
-      startAuthentication: jest.fn().mockResolvedValue({ request: true } as unknown as Record<string, unknown>),
-      finishAuthentication: jest.fn().mockResolvedValue(undefined as unknown as void),
-    } as unknown as jest.Mocked<WebAuthnPort>;
+      resolveUserIdByEmail: jest.fn(),
+      register: jest.fn(),
+    };
+    const startRegistration = jest.fn<Promise<Record<string, unknown>>, [string, string]>(
+      (_u, _n) => Promise.resolve({ ok: 1 } as Record<string, unknown>),
+    );
+    const finishRegistration = jest.fn<Promise<{ credentialId: string; counter: number }>, [string, Record<string, unknown>]>(
+      (_u, _r) => Promise.resolve({ credentialId: 'cid', counter: 0 }),
+    );
+    const startAuthentication = jest.fn<Promise<Record<string, unknown>>, [string]>(
+      (_u) => Promise.resolve({ request: true } as Record<string, unknown>),
+    );
+    const finishAuthentication = jest.fn<Promise<{ credentialId: string; counter: number }>, [string, Record<string, unknown>]>(
+      (_u, _r) => Promise.resolve({ credentialId: 'cid', counter: 1 }),
+    );
+    webAuthn = { startRegistration, finishRegistration, startAuthentication, finishAuthentication } as unknown as typeof webAuthn;
     recovery = {
-      generate: jest.fn().mockResolvedValue(['r1', 'r2']),
-      verifyAndConsume: jest.fn().mockResolvedValue(true),
-    } as unknown as jest.Mocked<RecoveryCodesPort>;
-    const oauth = { start: jest.fn() } as unknown as OAuthPort;
-    cookies = { issue: jest.fn(), rotateOnRefresh: jest.fn(), clear: jest.fn() } as unknown as jest.Mocked<AuthCookiesService>;
-    controller = new AuthController(service, webAuthn, recovery, oauth, cookies);
+      generate: jest.fn<Promise<string[]>, [string, (number | undefined)]>(() => Promise.resolve(['r1', 'r2'])),
+      verifyAndConsume: jest.fn<Promise<boolean>, [string, string]>(() => Promise.resolve(true)),
+    };
+    const oauth = { start: jest.fn() };
+    cookies = { issue: jest.fn(), rotateOnRefresh: jest.fn(), clear: jest.fn() };
+    controller = new AuthController(service as unknown as AuthService, webAuthn as unknown as WebAuthnPort, recovery as unknown as RecoveryCodesPort, oauth as unknown as OAuthPort, cookies as unknown as AuthCookiesService);
   });
 
   it('signIn branches: totpRequired false and true', async () => {
@@ -51,7 +62,7 @@ describe('AuthController branches (unit)', () => {
     service.signIn.mockResolvedValueOnce({ totpRequired: false, accessToken: 'at', refreshToken: 'rt' });
     const out1 = await controller.signIn({ email: 'e', password: 'p' } as LoginDto);
     expect(out1).toEqual({ totpRequired: false });
-    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'at', refreshToken: 'rt', csrf: expect.any(String) }));
+    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'at', refreshToken: 'rt' }));
 
     // TOTP required path
     service.signIn.mockResolvedValueOnce({ totpRequired: true, tempToken: 'tmp' });
@@ -65,25 +76,25 @@ describe('AuthController branches (unit)', () => {
     const req1 = { headers: { cookie: 'bsaas_rt=x' } } as unknown as ExpressRequest;
     const out1 = await controller.refresh({} as RefreshTokenDto, req1);
     expect(out1).toEqual({});
-    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'A1', refreshToken: 'R1', csrf: expect.any(String) }));
+    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'A1', refreshToken: 'R1' }));
 
     // fall back to body token
     service.refreshToken.mockResolvedValueOnce({ accessToken: 'A2', refreshToken: 'R2' });
     const req2 = { headers: {} } as unknown as ExpressRequest;
     await controller.refresh({ refreshToken: 'from-body' } as RefreshTokenDto, req2);
-    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'A2', refreshToken: 'R2', csrf: expect.any(String) }));
+    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'A2', refreshToken: 'R2' }));
 
     // unrelated cookie header, use body
     service.refreshToken.mockResolvedValueOnce({ accessToken: 'A3', refreshToken: 'R3' });
     const req3 = { headers: { cookie: 'foo=bar; XSRF-TOKEN=abc' } } as unknown as ExpressRequest;
     await controller.refresh({ refreshToken: 'from-body-2' } as RefreshTokenDto, req3);
-    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'A3', refreshToken: 'R3', csrf: expect.any(String) }));
+    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'A3', refreshToken: 'R3' }));
 
     // service returns no refreshToken
     service.refreshToken.mockResolvedValueOnce(undefined as unknown as { accessToken: string; refreshToken: string });
     const req4 = { headers: {} } as unknown as ExpressRequest;
     await controller.refresh({ refreshToken: 'body' } as RefreshTokenDto, req4);
-    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ csrf: expect.any(String) }));
+    expect(cookies.issue).toHaveBeenCalled();
 
     // missing token entirely -> error
     const req5 = { headers: {} } as unknown as ExpressRequest;
@@ -92,6 +103,20 @@ describe('AuthController branches (unit)', () => {
     // cookie header present but empty refreshToken value -> error branch
     const req6 = { headers: { cookie: 'refreshToken=' } } as unknown as ExpressRequest;
     await expect(controller.refresh({} as RefreshTokenDto, req6)).rejects.toThrow();
+
+    // cookie header present with refreshToken key but no '=' (undefined value) -> error
+    const req6b = { headers: { cookie: 'refreshToken' } } as unknown as ExpressRequest;
+    await expect(controller.refresh({} as RefreshTokenDto, req6b)).rejects.toThrow();
+
+    // cookie present path using 'refreshToken' key and URL-encoded value
+    service.refreshToken.mockResolvedValueOnce({ accessToken: 'A4', refreshToken: 'R4' });
+    const req7 = { headers: { cookie: 'refreshToken=a%2Fb' } } as unknown as ExpressRequest;
+    await controller.refresh({ refreshToken: 'ignored' } as RefreshTokenDto, req7);
+    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'A4', refreshToken: 'R4' }));
+  });
+
+  it('webauthnLoginStart uses default params and errors when none provided', async () => {
+    await expect(controller.webauthnLoginStart()).rejects.toThrow();
   });
 
   it('logout clears cookies', async () => {
@@ -117,7 +142,7 @@ describe('AuthController branches (unit)', () => {
     service.signInWithTotp.mockResolvedValueOnce({ accessToken: 'AT', refreshToken: 'RT' });
     const out = await controller.signInWithTotp({ tempToken: 't', totpCode: '123456' } as { tempToken: string; totpCode: string });
     expect(out).toEqual({});
-    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'AT', refreshToken: 'RT', csrf: expect.any(String) }));
+    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'AT', refreshToken: 'RT' }));
   });
 
   it('account recovery and email flows', async () => {
@@ -156,7 +181,7 @@ describe('AuthController branches (unit)', () => {
     service.issueTokensForUser.mockResolvedValueOnce({ accessToken: 'A', refreshToken: 'R' });
     const done = await controller.webauthnLoginFinish({ response: {} } as unknown as WebauthnAssertionDto, { user: { userId: 'u1' } } as { user: { userId: string } });
     expect(done).toEqual({});
-    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'A', refreshToken: 'R', csrf: expect.any(String) }));
+    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'A', refreshToken: 'R' }));
   });
 
   it('recovery generate/verify branches', async () => {
@@ -171,7 +196,8 @@ describe('AuthController branches (unit)', () => {
     await expect(controller.verifyRecovery({ code: 'x' }, { user: { userId: 'u1' } } as { user: { userId: string } })).rejects.toThrow();
   });
 
-  it('register placeholder', () => {
-    expect(controller.registerPlaceholder()).toEqual({ success: true });
+  it('register calls service', async () => {
+    (service.register as unknown as jest.Mock).mockResolvedValue(undefined);
+    await expect(controller.register({ email: 'a@b.com', password: 'Password#1' } as unknown as import('../dto/register.dto').RegisterDto)).resolves.toEqual({ success: true });
   });
 });

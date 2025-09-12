@@ -1,14 +1,16 @@
 import { AuthCookiesService } from './auth-cookies.service';
+import type { CookieRegistry } from '@cthub-bsaas/server-core';
+import type { ConfigService } from '@nestjs/config';
 
 describe('AuthCookiesService', () => {
   let service: AuthCookiesService;
-  let registry: { set: jest.Mock; clear: jest.Mock };
-  let config: { get: jest.Mock };
+  let registry: jest.Mocked<Pick<CookieRegistry, 'set' | 'clear'>>;
+  let config: Pick<ConfigService, 'get'>;
 
   beforeEach(() => {
-    registry = { set: jest.fn(), clear: jest.fn() } as unknown as typeof registry;
-    config = { get: jest.fn(() => 'example.com') } as unknown as typeof config;
-    service = new AuthCookiesService(registry as any, config as any);
+    registry = { set: jest.fn(), clear: jest.fn() } as unknown as jest.Mocked<Pick<CookieRegistry, 'set' | 'clear'>>;
+    config = { get: jest.fn(() => 'example.com') };
+    service = new AuthCookiesService(registry as unknown as CookieRegistry, config as unknown as ConfigService);
   });
 
   it('issues csrf + auth cookies when tokens provided', () => {
@@ -34,6 +36,24 @@ describe('AuthCookiesService', () => {
     expect(registry.set).toHaveBeenCalledWith('XSRF-TOKEN', 'c2', expect.any(Object));
     expect(registry.set).toHaveBeenCalledWith('bsaas_at', 'A2', expect.any(Object));
     expect(registry.set).toHaveBeenCalledWith('bsaas_rt', 'R2', expect.any(Object));
+  });
+
+  it('issues when only accessToken provided', () => {
+    registry.set.mockClear();
+    service.issue({ csrf: 'c3', accessToken: 'A3' });
+    const calls = (registry.set as unknown as jest.Mock).mock.calls.map((c: unknown[]) => c[0]);
+    expect(calls).toContain('XSRF-TOKEN');
+    expect(calls).toContain('bsaas_at');
+    expect(calls).not.toContain('bsaas_rt');
+  });
+
+  it('issues when only refreshToken provided', () => {
+    registry.set.mockClear();
+    service.issue({ csrf: 'c4', refreshToken: 'R4' });
+    const calls = (registry.set as unknown as jest.Mock).mock.calls.map((c: unknown[]) => c[0]);
+    expect(calls).toContain('XSRF-TOKEN');
+    expect(calls).not.toContain('bsaas_at');
+    expect(calls).toContain('bsaas_rt');
   });
 
   it('clear deletes both auth cookies with configured domain and paths', () => {

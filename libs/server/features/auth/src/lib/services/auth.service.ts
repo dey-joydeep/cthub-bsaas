@@ -19,6 +19,7 @@ import type { AuthSignInResult, TokenPair } from '../types/auth.types';
 import { SOCIAL_ACCOUNT_REPOSITORY } from '@cthub-bsaas/server-contracts-auth';
 import type { OAuthProfile } from '@cthub-bsaas/server-contracts-auth';
 import { AUTH_ERROR_CODES } from '@cthub-bsaas/shared';
+import { Prisma } from '@prisma/client';
 
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
@@ -45,6 +46,51 @@ export class AuthService {
     @Inject(PASSWORD_RESET_REPOSITORY) private readonly pwdResetRepo: IPasswordResetRepository,
     private readonly audit: AuditService,
   ) {}
+
+  /**
+   * Register a new user (Customer only).
+   *
+   * - Customer self‑service registration
+   * - Hashes password
+   * - Assigns default CUSTOMER role
+   * - Issues email verification OTP
+   *
+   * Note: Partner/Admin onboarding is out of scope here; those flows
+   * use invites/links or internal provisioning and different endpoints.
+   *
+   * @public
+   * @param email new user's email
+   * @param password plain text password
+   * @param name optional display name
+   */
+  public async register(email: string, password: string, name?: string): Promise<void> {
+    const existing = await this.userRepository.findByEmail(email);
+    if (existing) {
+      // Do not reveal existence; optionally re-send verification if unverified
+      if (!existing.emailVerifiedAt) {
+        await this.requestEmailVerification(email);
+      }
+      this.audit.log('register_existing', { userId: existing.id });
+      return;
+    }
+    const passwordHash = await bcrypt.hash(password, 10);
+    const data: Prisma.UserCreateInput = {
+      email,
+      passwordHash,
+      name: name ?? null,
+      isActive: true,
+      roles: {
+        create: [{
+          role: {
+            connect: { name: 'CUSTOMER' },
+          },
+        }],
+      },
+    } as unknown as Prisma.UserCreateInput;
+    const user = await this.userRepository.create(data as unknown as Omit<User, 'id' | 'createdAt' | 'updatedAt'>);
+    await this.requestEmailVerification(user.email);
+    this.audit.log('register_success', { userId: user.id });
+  }
 
     /**
      * Sign in with email/password. If TOTP is enabled, returns a temp token for second factor.
