@@ -1169,3 +1169,59 @@ content:
         responses:
         200:
           description: OK
+
+
+
+  /auth/devices:
+
+      get:
+        summary: GET /auth/devices (alias of /auth/sessions)
+        responses:
+        200:
+          description: OK
+
+
+
+  /auth/devices/revoke:
+
+      post:
+        summary: POST /auth/devices/revoke (alias of /auth/sessions/revoke)
+        responses:
+        200:
+          description: OK
+
+
+
+  /auth/recovery-codes/issue:
+
+      post:
+        summary: POST /auth/recovery-codes/issue (201)
+        responses:
+        201:
+          description: Created
+
+
+
+  /auth/recovery-codes/verify:
+
+      post:
+        summary: POST /auth/recovery-codes/verify
+        responses:
+        200:
+          description: OK
+
+
+
+  /auth/oauth/{provider}:
+
+      delete:
+        summary: DELETE /auth/oauth/{provider} (unlink)
+        parameters:
+          - in: path
+            name: provider
+            required: true
+            schema:
+              type: string
+        responses:
+        200:
+          description: OK
