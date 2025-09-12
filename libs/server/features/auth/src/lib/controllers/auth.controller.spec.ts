@@ -166,6 +166,30 @@ describe('AuthController', () => {
     expect(ok).toEqual({ success: true });
   });
 
+  it('devices alias proxies to listSessions', async () => {
+    service.listSessions.mockResolvedValue([{ id: 's1' }]);
+    const result = await controller.listDevicesAlias({ user: { userId: 'u1' } } as { user: { userId: string } });
+    expect(result).toEqual([{ id: 's1' }]);
+  });
+
+  it('recovery-codes issue alias proxies to recovery.generate', async () => {
+    (recovery.generate as unknown as jest.Mock).mockResolvedValue(['c1', 'c2']);
+    const res = await controller.issueRecoveryCodesAlias({ user: { userId: 'u1' } } as { user: { userId: string } });
+    expect(res).toEqual(['c1', 'c2']);
+  });
+
+  it('recovery-codes verify alias returns success', async () => {
+    (recovery.verifyAndConsume as unknown as jest.Mock).mockResolvedValue(true);
+    const ok = await controller.verifyRecoveryAlias({ code: 'ok' } as unknown as import('../dto/verify-recovery.dto').VerifyRecoveryDto, { user: { userId: 'u1' } } as { user: { userId: string } });
+    expect(ok).toEqual({ success: true });
+  });
+
+  it('devices revoke alias proxies to service', async () => {
+    (service.revokeSession as unknown as jest.Mock).mockResolvedValue({ success: true });
+    const ok = await controller.revokeDeviceAlias({ user: { userId: 'u1' } } as { user: { userId: string } }, { id: 's1' });
+    expect(ok).toEqual({ success: true });
+  });
+
   it('customer register calls service and returns success', async () => {
     (service.register as unknown as jest.Mock).mockResolvedValue(undefined);
     const ok = await controller.register({ email: 'e@example.com', password: 'Password#1' } as unknown as import('../dto/register.dto').RegisterDto);

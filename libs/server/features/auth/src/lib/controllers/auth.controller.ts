@@ -1,5 +1,5 @@
 import { Public } from '@cthub-bsaas/server-core';
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards, Request, Get, Param, BadRequestException, UseInterceptors, Redirect, Query } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards, Request, Get, Param, BadRequestException, UseInterceptors, Redirect, Query, Delete } from '@nestjs/common';
 import { COMMON_ERROR_CODES } from '@cthub-bsaas/shared';
 import { JwtAuthGuard } from '@cthub-bsaas/server-core';
 import { AuthService } from '../services/auth.service';
@@ -131,6 +131,15 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('sessions')
   async listSessions(@Request() req: { user: { userId: string } }): Promise<unknown> {
+    return this.authService.listSessions(req.user.userId);
+  }
+
+  /**
+   * Alias: Devices list (canonical name in specs).
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('devices')
+  async listDevicesAlias(@Request() req: { user: { userId: string } }): Promise<unknown> {
     return this.authService.listSessions(req.user.userId);
   }
 
@@ -357,6 +366,16 @@ export class AuthController {
   }
 
   /**
+   * Alias: Recovery codes issue (canonical path).
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('recovery-codes/issue')
+  @HttpCode(HttpStatus.CREATED)
+  async issueRecoveryCodesAlias(@Request() req: { user: { userId: string } }): Promise<string[]> {
+    return this.recovery.generate(req.user.userId, 10);
+  }
+
+  /**
    * Alias for recovery codes generation per spec: POST /auth/recovery/codes
    * @public
    * @returns {Promise<string[]>} Plain-text recovery codes.
@@ -385,11 +404,31 @@ export class AuthController {
     return { success: true };
   }
 
+  /**
+   * Alias: Recovery codes verify (canonical path).
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('recovery-codes/verify')
+  @HttpCode(HttpStatus.OK)
+  async verifyRecoveryAlias(@Body() body: VerifyRecoveryDto, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
+    return this.verifyRecovery(body, req);
+  }
+
   // Body-based session revoke endpoint (alias without path param)
   @UseGuards(JwtAuthGuard)
   @Post('sessions/revoke')
   @HttpCode(HttpStatus.OK)
   async revokeSessionBody(@Request() req: { user: { userId: string } }, @Body() body: { id: string }): Promise<SimpleOk> {
+    return this.authService.revokeSession(req.user.userId, body.id);
+  }
+
+  /**
+   * Alias: Devices revoke (canonical name in specs).
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('devices/revoke')
+  @HttpCode(HttpStatus.OK)
+  async revokeDeviceAlias(@Request() req: { user: { userId: string } }, @Body() body: { id: string }): Promise<SimpleOk> {
     return this.authService.revokeSession(req.user.userId, body.id);
   }
 
@@ -455,6 +494,17 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('oauth/:provider/unlink')
   async oauthUnlink(@Param('provider') provider: string, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
+    await this.authService.unlinkSocialAccount(req.user.userId, provider);
+    return { success: true };
+  }
+
+  /**
+   * Alias: OAuth unlink (canonical DELETE method).
+   */
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Delete('oauth/:provider')
+  async oauthUnlinkAlias(@Param('provider') provider: string, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
     await this.authService.unlinkSocialAccount(req.user.userId, provider);
     return { success: true };
   }

@@ -60,4 +60,10 @@ describe('AuthController OAuth endpoints (unit)', () => {
     expect(authSvc.unlinkSocialAccount).toHaveBeenCalledWith('u1', 'google');
     expect(ok).toEqual({ success: true });
   });
+
+  it('oauthUnlinkAlias (DELETE) unlinks and returns success', async () => {
+    const ok = await controller.oauthUnlinkAlias('google', { user: { userId: 'u1' } } as { user: { userId: string } });
+    expect(authSvc.unlinkSocialAccount).toHaveBeenCalledWith('u1', 'google');
+    expect(ok).toEqual({ success: true });
+  });
 });

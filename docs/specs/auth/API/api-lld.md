@@ -73,6 +73,17 @@
 ## 3) Service Contracts (API)
 Authoritative routes/methods → see `openapi.yaml`. LLD mirrors the same paths and methods for each domain.
 
+Implementation route aliases (current)
+- Recovery codes: `POST /auth/recovery/generate`, `POST /auth/recovery/verify`
+- Sessions/devices: `GET /auth/sessions`, `POST /auth/sessions/revoke`, `POST /auth/sessions/revoke/:id`
+- OAuth unlink: `POST /auth/oauth/:provider/unlink`
+- TOTP verify after password: `POST /auth/login/totp`
+- WebAuthn register/login:
+  - `POST /auth/webauthn/register/start`, `POST /auth/webauthn/register/finish`
+  - `POST /auth/webauthn/login/start`, `POST /auth/webauthn/login/finish`
+
+> Maintain these during transition; add canonical aliases; update OpenAPI thereafter.
+
 ## 4) Schemas / DTOs (from OpenAPI)
 - **LoginDto**: `email` (email, max 254), `password` (min 8), `rememberMe?` (boolean)
 - **ForgotDto**: `email`
@@ -91,6 +102,13 @@ Authoritative routes/methods → see `openapi.yaml`. LLD mirrors the same paths 
 - **Refresh:** rotate **RT**, set **AT**; rotate `XSRF-TOKEN`
 - **Logout:** clear **AT/RT**
 - **All 429:** include **`Retry-After`** (seconds)
+
+Implementation cookie names (current)
+- Access: `bsaas_at` (HttpOnly, SameSite=Lax, Secure, path=/)
+- Refresh: `bsaas_rt` (HttpOnly, SameSite=Lax, Secure, path=/auth)
+- CSRF: `XSRF-TOKEN` (non‑HttpOnly, SameSite=Lax, Secure, path=/)
+
+> OpenAPI cookieAuth uses `access_token` as name; harmonize during normalization.
 
 ## 6) Error Handling & Mapping
 - Map domain exceptions → `ApiError` (`code`, `message`, `correlationId`), never leak account existence.

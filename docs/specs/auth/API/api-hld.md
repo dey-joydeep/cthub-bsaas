@@ -227,3 +227,37 @@ A response‑normalizing interceptor can enforce the success/error envelope cons
 - **Source of truth:** `openapi.yaml` (OpenAPI 3.1)  
 - **Error catalog:** `error-catalog.md` (code → HTTP → i18n → UX)  
 - **FE summary:** `fe-service-contracts.md`
+
+## 11) Implementation Notes (Aliases/Parity with Code)
+These reflect current backend routes/behaviors that differ from the canonical paths above. They MUST be supported (aliases) or normalized during migration.
+
+- Recovery Codes
+  - Implemented: `POST /auth/recovery/generate` (issue), `POST /auth/recovery/verify`
+  - Canonical: `POST /auth/recovery-codes/issue` (201), `POST /auth/recovery-codes/verify`
+
+- Sessions / Devices
+  - Implemented: `GET /auth/sessions`, `POST /auth/sessions/revoke`, `POST /auth/sessions/revoke/:id`
+  - Canonical: `GET /auth/devices`, `POST /auth/devices/revoke`
+
+- OAuth Unlink
+  - Implemented: `POST /auth/oauth/:provider/unlink`
+  - Canonical: `DELETE /auth/oauth/{provider}`
+
+- MFA: TOTP & WebAuthn endpoints (AuthN/AuthZ)
+  - Implemented:
+    - `POST /auth/login/totp` (TOTP verify after password)
+    - WebAuthn register: `POST /auth/webauthn/register/start`, `POST /auth/webauthn/register/finish`
+    - WebAuthn login: `POST /auth/webauthn/login/start`, `POST /auth/webauthn/login/finish`
+  - Canonical (LLD):
+    - TOTP: `POST /auth/mfa/totp/verify`
+    - WebAuthn assertion: `POST /auth/mfa/webauthn/assertion/options`, `POST /auth/mfa/webauthn/assertion/result`
+
+- Cookies (names)
+  - Implemented: `bsaas_at` (access), `bsaas_rt` (refresh), `XSRF-TOKEN` (non‑HttpOnly)
+  - Canonical/OpenAPI cookieAuth currently refers to `access_token`; align during normalization.
+
+- OAuth Callback
+  - Implemented: returns 200 with cookies for login; 200 for link; guard allows both modes
+  - Canonical: 302 redirect to app on success (login); 200 for link
+
+> Migration plan: expose canonical paths as aliases, keep current paths during transition; update OpenAPI accordingly.
