@@ -21,7 +21,7 @@ import type { SignInHttpResponse, SimpleOk } from '../types/auth.types';
 import { WEB_AUTHN_PORT, RECOVERY_CODES_PORT, WebAuthnPort, RecoveryCodesPort, OAUTH_PORT, OAuthPort } from '@cthub-bsaas/server-contracts-auth';
 import { Inject } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { CookiesInterceptor } from '@cthub-bsaas/server-core';
+import { CookiesInterceptor, ResponseEnvelopeInterceptor } from '@cthub-bsaas/server-core';
 import { AuthCookiesService } from '../services/auth-cookies.service';
 import { parseRefreshCookie } from '../utils/cookie.util';
 // Public decorator is already imported at file top
@@ -32,7 +32,7 @@ import { parseRefreshCookie } from '../utils/cookie.util';
  * and account recovery endpoints.
  */
 @Controller('auth')
-@UseInterceptors(CookiesInterceptor)
+@UseInterceptors(CookiesInterceptor, ResponseEnvelopeInterceptor)
 export class AuthController {
   constructor(
     private readonly authService: AuthService,

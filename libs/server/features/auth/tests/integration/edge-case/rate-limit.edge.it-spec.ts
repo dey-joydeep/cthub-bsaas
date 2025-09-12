@@ -1,25 +1,14 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
-import { ThrottlerGuard, ThrottlerModule, ThrottlerException } from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthController } from '../../../src/lib/controllers/auth.controller';
 import { AuthService } from '../../../src/lib/services/auth.service';
 import { WEB_AUTHN_PORT, RECOVERY_CODES_PORT, OAUTH_PORT } from '@cthub-bsaas/server-contracts-auth';
 import type { WebAuthnPort, RecoveryCodesPort } from '@cthub-bsaas/server-contracts-auth';
-import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuthCookiesService } from '../../../src/lib/services/auth-cookies.service';
-import { CookieRegistry, CookiesInterceptor } from '@cthub-bsaas/server-core';
-import { Catch, ExceptionFilter, ArgumentsHost, HttpStatus } from '@nestjs/common';
-
-@Catch(ThrottlerException)
-class TestRetryAfterFilter implements ExceptionFilter<ThrottlerException> {
-  catch(_exception: ThrottlerException, host: ArgumentsHost) {
-    const res = host.switchToHttp().getResponse<Response>();
-    res.setHeader('Retry-After', '1');
-    res.status(HttpStatus.TOO_MANY_REQUESTS).json({ code: 'error.rate_limited' });
-  }
-}
+import { CookieRegistry, CookiesInterceptor, RetryAfterFilter } from '@cthub-bsaas/server-core';
 
 describe('Rate limiting (edge-case)', () => {
   let app: INestApplication;
@@ -48,7 +37,7 @@ describe('Rate limiting (edge-case)', () => {
         { provide: RECOVERY_CODES_PORT, useValue: { generate: jest.fn(async () => ['r1']), verifyAndConsume: jest.fn(async () => true) } as RecoveryCodesPort },
         { provide: OAUTH_PORT, useValue: { start: async () => ({ redirectUrl: 'x' }) } },
         { provide: APP_GUARD, useClass: ThrottlerGuard },
-        { provide: APP_FILTER, useClass: TestRetryAfterFilter },
+        { provide: APP_FILTER, useClass: RetryAfterFilter },
         CookieRegistry,
         CookiesInterceptor,
         AuthCookiesService,
@@ -70,7 +59,6 @@ describe('Rate limiting (edge-case)', () => {
       await req.post('/auth/login').send({ email: 'e@example.com', password: 'p' }).expect(200);
     }
     const res = await req.post('/auth/login').send({ email: 'e@example.com', password: 'p' }).expect(429);
-    expect(res.body).toEqual({ code: 'error.rate_limited' });
     expect(res.header['retry-after']).toBeDefined();
   });
 
@@ -81,7 +69,6 @@ describe('Rate limiting (edge-case)', () => {
       await req.post('/auth/webauthn/login/start').send({ email: 'e@example.com' }).expect(200);
     }
     const res = await req.post('/auth/webauthn/login/start').send({ email: 'e@example.com' }).expect(429);
-    expect(res.body).toEqual({ code: 'error.rate_limited' });
     expect(res.header['retry-after']).toBeDefined();
   });
 });

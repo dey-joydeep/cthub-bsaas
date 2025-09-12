@@ -100,7 +100,7 @@ describe('AuthController additional (integration-light)', () => {
       .post('/auth/login/totp')
       .send({ tempToken: 'a.b.c', totpCode: '123456' })
       .expect(200);
-    expect(res.body).toEqual({});
+    expect(res.body).toEqual({ success: true });
   });
 
   it('login sets temp token branch (no cookies)', async () => {
@@ -108,7 +108,7 @@ describe('AuthController additional (integration-light)', () => {
     // Override signIn to simulate TOTP-required response
     authSvc.signIn = (jest.fn(async () => ({ totpRequired: true as const, tempToken: 'tmp' })) as unknown) as typeof authSvc.signIn;
     const res = await req.post('/auth/login').send({ email: 'e@example.com', password: 'p' }).expect(200);
-    expect(res.body).toEqual({ totpRequired: true, tempToken: 'tmp' });
+    expect(res.body).toEqual({ success: true, data: { totpRequired: true, tempToken: 'tmp' } });
   });
 
   it('login success sets cookies (non-TOTP)', async () => {
@@ -123,20 +123,20 @@ describe('AuthController additional (integration-light)', () => {
 
   it('handles password reset request and reset', async () => {
     const req = (await import('supertest')).default(app.getHttpServer());
-    await req.post('/auth/password/forgot').send({ email: 'e@example.com' }).expect(202);
-    await req.post('/auth/password/reset').send({ token: 't', newPassword: 'N3w!Pass' }).expect(200);
+    await req.post('/auth/password/forgot').send({ email: 'e@example.com' }).expect(202).expect({ success: true });
+    await req.post('/auth/password/reset').send({ token: 't', newPassword: 'N3w!Pass' }).expect(200).expect({ success: true });
   });
 
   it('handles email verification request and verify', async () => {
     const req = (await import('supertest')).default(app.getHttpServer());
-    await req.post('/auth/email/send-verification').send({ email: 'e@example.com' }).expect(202);
-    await req.post('/auth/email/verify').send({ token: 't' }).expect(200);
+    await req.post('/auth/email/send-verification').send({ email: 'e@example.com' }).expect(202).expect({ success: true });
+    await req.post('/auth/email/verify').send({ token: 't' }).expect(200).expect({ success: true });
   });
 
   it('handles webauthn login finish (HTTP)', async () => {
     authSvc.issueTokensForUser = (jest.fn(async () => ({ accessToken: 'at3', refreshToken: 'rt3' })) as unknown) as typeof authSvc.issueTokensForUser;
     const req = (await import('supertest')).default(app.getHttpServer());
-    await req.post('/auth/webauthn/login/finish').send({ response: {} }).expect(200);
+    await req.post('/auth/webauthn/login/finish').send({ response: {} }).expect(200).expect({ success: true });
   });
 
   // covered via HTTP tests above
@@ -147,18 +147,18 @@ describe('AuthController additional (integration-light)', () => {
 
   it('email verify confirm branches (HTTP)', async () => {
     const req = (await import('supertest')).default(app.getHttpServer());
-    await req.post('/auth/email/verify/confirm').send({ token: 'T' }).expect(200);
+    await req.post('/auth/email/verify/confirm').send({ token: 'T' }).expect(200).expect({ success: true });
     await req.post('/auth/email/verify/confirm').send({}).expect(400);
   });
 
   it('email verify confirm via OTP branch (HTTP)', async () => {
     const req = (await import('supertest')).default(app.getHttpServer());
-    await req.post('/auth/email/verify/confirm').send({ email: 'e@example.com', otp: '123456' }).expect(200);
+    await req.post('/auth/email/verify/confirm').send({ email: 'e@example.com', otp: '123456' }).expect(200).expect({ success: true });
   });
 
   it('register returns 201 and calls service', async () => {
     const req = (await import('supertest')).default(app.getHttpServer());
-    await req.post('/auth/register').send({ email: 'e2@example.com', password: 'Password#1' }).expect(201);
+    await req.post('/auth/register').send({ email: 'e2@example.com', password: 'Password#1' }).expect(201).expect({ success: true });
   });
 
   // cookie-based refresh is covered in other refresh tests
@@ -239,7 +239,7 @@ describe('AuthController additional (integration-light)', () => {
   it('covers listSessions and revokeSessionBody via HTTP', async () => {
     const req = (await import('supertest')).default(app.getHttpServer());
     await req.get('/auth/sessions').expect(200).expect((r) => {
-      expect(Array.isArray(r.body)).toBe(true);
+      expect(r.body).toEqual({ success: true, data: expect.any(Array) });
     });
     await req.post('/auth/sessions/revoke').send({ id: 's1' }).expect(200).expect({ success: true });
   });
@@ -253,7 +253,7 @@ describe('AuthController additional (integration-light)', () => {
   it('handles webauthn register start/finish via HTTP', async () => {
     const req = (await import('supertest')).default(app.getHttpServer());
     await req.post('/auth/webauthn/register/start').send({ username: 'nick' }).expect(200).expect((r) => {
-      expect(r.body).toHaveProperty('challenge');
+      expect(r.body).toEqual({ success: true, data: expect.objectContaining({ challenge: expect.any(String) }) });
     });
     await req.post('/auth/webauthn/register/finish').send({ response: {} }).expect(200).expect({ success: true });
   });
@@ -261,20 +261,20 @@ describe('AuthController additional (integration-light)', () => {
   it('webauthn login start via email or userId', async () => {
     const req = (await import('supertest')).default(app.getHttpServer());
     await req.post('/auth/webauthn/login/start').send({ email: 'e@example.com' }).expect(200).expect((r) => {
-      expect(r.body).toHaveProperty('challenge');
+      expect(r.body).toEqual({ success: true, data: expect.objectContaining({ challenge: expect.any(String) }) });
     });
     await req.post('/auth/webauthn/login/start').send({ userId: 'u1' }).expect(200).expect((r) => {
-      expect(r.body).toHaveProperty('challenge');
+      expect(r.body).toEqual({ success: true, data: expect.objectContaining({ challenge: expect.any(String) }) });
     });
   });
 
   it('recovery generate/codes/verify via HTTP and failure branch', async () => {
     const req = (await import('supertest')).default(app.getHttpServer());
     await req.post('/auth/recovery/generate').expect(200).expect((r) => {
-      expect(Array.isArray(r.body)).toBe(true);
+      expect(r.body).toEqual({ success: true, data: expect.any(Array) });
     });
     await req.post('/auth/recovery/codes').expect(200).expect((r) => {
-      expect(Array.isArray(r.body)).toBe(true);
+      expect(r.body).toEqual({ success: true, data: expect.any(Array) });
     });
     await req.post('/auth/recovery/verify').send({ code: 'r1r1r1r1' }).expect(200).expect({ success: true });
     const recoveryProv = app.get(RECOVERY_CODES_PORT) as RecoveryCodesPort & { verifyAndConsume: (u: string, c: string) => Promise<boolean> };
@@ -289,5 +289,6 @@ describe('AuthController additional (integration-light)', () => {
     const cookieStr = Array.isArray(setCookie) ? (setCookie as string[]).join(';') : String(setCookie ?? '');
     expect(cookieStr).toContain('bsaas_rt=');
     expect(cookieStr).toContain('bsaas_at=');
+    expect(res.body).toEqual({ success: true });
   });
 });

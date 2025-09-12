@@ -42,17 +42,23 @@ describe('Auth alias routes (edge-case)', () => {
 
   it('GET /auth/sessions returns list', async () => {
     const req = (await import('supertest')).default(app!.getHttpServer());
-    await req.get('/auth/sessions').expect(200).expect((r) => Array.isArray(r.body));
+    await req.get('/auth/sessions').expect(200).expect((r) => {
+      expect(r.body).toEqual({ success: true, data: expect.any(Array) });
+    });
   });
 
   it('GET /auth/devices returns list (alias)', async () => {
     const req = (await import('supertest')).default(app!.getHttpServer());
-    await req.get('/auth/devices').expect(200).expect((r) => Array.isArray(r.body));
+    await req.get('/auth/devices').expect(200).expect((r) => {
+      expect(r.body).toEqual({ success: true, data: expect.any(Array) });
+    });
   });
 
   it('POST /auth/recovery-codes/issue returns 201', async () => {
     const req = (await import('supertest')).default(app!.getHttpServer());
-    await req.post('/auth/recovery-codes/issue').expect(201).expect((r) => Array.isArray(r.body));
+    await req.post('/auth/recovery-codes/issue').expect(201).expect((r) => {
+      expect(r.body).toEqual({ success: true, data: expect.any(Array) });
+    });
   });
 
   it('POST /auth/recovery-codes/verify returns {success:true}', async () => {

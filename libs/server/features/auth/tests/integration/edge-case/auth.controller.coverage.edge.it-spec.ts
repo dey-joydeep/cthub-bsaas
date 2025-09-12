@@ -97,7 +97,7 @@ describe('AuthController coverage (edge-case direct calls)', () => {
     const req = (await import('supertest')).default(app.getHttpServer());
     await req.post('/auth/login').send({ email: 'ok@example.com', password: 'p' }).expect(200);
     const r2 = await req.post('/auth/login').send({ email: 'totp@example.com', password: 'p' }).expect(200);
-    expect(r2.body).toEqual({ totpRequired: true, tempToken: 'tmp' });
+    expect(r2.body).toEqual({ success: true, data: { totpRequired: true, tempToken: 'tmp' } });
   });
 
   it('covers refresh branches (HTTP)', async () => {

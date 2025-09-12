@@ -100,7 +100,7 @@ describe('AuthController CSRF (integration)', () => {
       .set('X-XSRF-TOKEN', 't4')
       .expect(200)
       .expect(({ body }) => {
-        expect(body).toEqual({});
+        expect(body).toEqual({ success: true });
       });
   });
 });
