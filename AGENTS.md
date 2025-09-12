@@ -259,7 +259,7 @@
 ## Commits & Pull Requests
 - Conventional Commits: `feat:`, `fix:`, `chore:`, `refactor:`, `test:`, `docs:`.
 - PRs include description, linked issues, screenshots/logs when relevant, and call out breaking changes.
-- Agent policy: Do not commit any changes unless the user explicitly instructs you to commit. Prefer to stage and show diffs first; commit only on request.
+- Agent policy: Do not commit any changes unless the user explicitly instructs you to commit. Prefer to stage and show diffs first; commit only on request. Commit authorization is scoped to the immediately preceding task/change only and must not be inferred for subsequent or follow‑up changes; request fresh approval before any new commit.
 
 ### Branching
 - Branch naming: `<type>/<short-description>`
