@@ -3,13 +3,24 @@
 ## Agent Boot Instructions (CTHub)
 
 ### Startup Checklist (run once per session)
+
 1. Run `/mcp` and cache the available servers & tools.
 2. Prefer MCP tools over raw shell when they exist (less brittle, richer context).
 3. Use the project root: `E:\workspace\cthub-bsaas` (Nx monorepo).
 4. Keep approvals “on-request” unless user changes it.
 
+### Safe Filesystem Usage (Large Repo)
+
+- **Never** call `filesystem.directory_tree` on the repo root.
+- When exploring structure, use `list_directory_with_sizes` at depth 1 (top-level only).
+- Drill down **one folder at a time** with `list_directory` (not `directory_tree`) and only when needed.
+- To find files, prefer `search_files` with narrow patterns (e.g., `*.spec.ts`, `*/services/*.ts`), then open only matches you need.
+- If you need a tree, limit it to a **specific subfolder** and stop after the first ~200 entries; summarize instead of pasting the full listing.
+- Do **not** include raw listings > 200 lines in your messages. Summarize directory names and counts instead.
+
 ### MCP Preference & Fallbacks
-- **Prisma** → use MCP tools (Studio, `migrate-status`, `migrate-dev`, `migrate-reset`) for DB schema, migrations, local data.  
+
+- **Prisma** → use MCP tools (Studio, `migrate-status`, `migrate-dev`, `migrate-reset`) for DB schema, migrations, local data.
   Fallback: Prisma CLI only if MCP tool is unavailable.
 - **Postgres** → use `postgres.query` for SQL. Fallback: `psql` only with explicit approval.
 - **ESLint** → use `eslint.lint-files` for lint/fix tasks. Fallback: `npx eslint` if tool is missing.
@@ -17,10 +28,12 @@
 - **Filesystem** → use FS MCP tools for reading/writing/editing/searching files inside the repo. Fallback: shell commands only for tasks MCP can’t express.
 
 ### When to Ask vs. Act
+
 - If an MCP tool is available, use it without asking (respect approvals).
 - Ask for approval before running non-trusted shell commands or anything outside the repo root.
 
 ### Common Tasks
+
 - “Use **Prisma MCP** → `migrate-status` and summarize drift/unapplied migrations.”
 - “Use **Prisma MCP → Prisma-Studio** to inspect data in `bsaas_test`.”
 - “Use **ESLint MCP** to lint `libs/server/**` and apply autofixes.”
@@ -29,12 +42,13 @@
 - “Use **Filesystem MCP** to read `libs/server/features/appointment/src/lib/services/*.ts` and propose refactors.”
 
 ### Guardrails
+
 - Stay inside `E:\workspace\cthub-bsaas` unless explicitly told otherwise.
 - Surface diffs before committing large changes.
 - For Nx projects, preserve workspace.json / tsconfig paths / generators.
 
-
 ## Environment & Shell
+
 - Confirm runtime environment before running commands:
   - OS and shell: On Windows, prefer PowerShell Core (`pwsh`). Some POSIX tools like `sed` may be unavailable by default.
   - Node and npm: Match engines in `package.json` (Node >= 18, npm >= 9).
@@ -46,6 +60,7 @@
   - Path separators: use forward slashes (`/`) in Nx targets; PowerShell accepts them.
 
 ## Tech Stack & Tools
+
 - Backend: NestJS 11; Monorepo: Nx 21.
 - Frontend: Angular 20 (Standalone + SSR), Material v3, Tailwind v4.
 - Testing: Jest 29 (server and web).
@@ -53,16 +68,19 @@
 - Research policy: Always use official documentation for references.
 
 ## Project Structure & Modules
+
 - Apps: separate Angular apps for Admin, Partner, Customer under `libs/web/*` (runnable wrappers under `apps/`). Single backend API under `apps/`.
 - Libraries: common code and the entire backend logic live in `libs/` (e.g., `server/*`, `shared/`). Always check and reuse existing libs before adding new code.
 - Output: `dist/` mirrors sources; TS path aliases resolve dist-first (see `tsconfig.base.json`). Example: `@cthub-bsaas/server-contracts-auth`.
 
 ## Docs & Specs
+
 - User Stories (US): `docs/us/<feature>` — per-feature user stories and acceptance criteria.
 - Specifications/Design: `docs/specs/<feature>` — per-feature technical specs, designs, and API contracts.
 - Cross-link PRs to the relevant US and spec docs; keep them up to date with implementation.
 
 ## Build, Test, and Development
+
 - Build: `npx nx build <project>`; multiple: `npx nx run-many -t build -p <a,b>`
 - Type check: `npx nx run <project>:type-check`
 - Lint: `npx nx lint <project>`
@@ -70,6 +88,7 @@
 - Affected: `npx nx affected -t build,test,lint`
 
 ### Testing (Server) — Unit vs Integration
+
 - Default: `npx nx test <project>` runs both unit (UT) and integration (IT) suites.
 - Split runs per project via Nx configurations:
   - UT only: `npx nx test <project> --configuration=ut`
@@ -82,12 +101,14 @@
 - Coverage: backend feature libs must maintain 100% statements/lines/functions and ≥95% branches for both UT and IT. Exceptions require explicit TODO and follow‑up task.
 
 ### Testing (Server) — Patterns and Conventions
+
 - Shared IT helpers live in `libs/server/core/src/testing/{global-setup.ts,global-teardown.ts}` and are reused by feature libs. They handle Prisma schema sync and seed/cleanup for a deterministic test user and roles.
 - Prefer typed mocks in tests (e.g., `Pick<Port, 'method'>`) over `any`. If a boundary makes typing impractical, keep the `any` usage narrowly scoped and local to tests.
 - Error handling in controllers should return appropriate HTTP errors. Example: missing refresh token must return 400 (Bad Request), not 500.
 - CSRF policy: the double-submit guard enforces header/cookie match only when the server has issued an `XSRF-TOKEN` cookie; safe methods (GET/HEAD/OPTIONS) and `@SkipCsrf()` are permitted.
 
 #### IT Spec File Pattern & File Moves
+
 - IT spec naming: place integration tests under `tests/integration/**` and name files `*.it-spec.ts` (e.g., `auth.e2e.it-spec.ts`). Do not use `*.int-spec.ts`.
 - Jest config: ensure `testMatch` includes `'<rootDir>/tests/**/*.it-spec.ts'`.
 - Renaming/moving test files:
@@ -96,6 +117,7 @@
   - After renames, update any references (e.g., `testMatch` patterns, imports) and re-run `nx test <project> --configuration=it`.
 
 #### Edge-Case Integration Specs
+
 - Purpose: separate supplemental/edge-case/branch-coverage specs from primary, acceptance-style ITs.
 - Location: place them under `tests/integration/edge-case/` within the project.
 - Naming: keep the standard suffix so discovery still works, and add an intent hint before it. Examples:
@@ -106,18 +128,22 @@
 - Run only edge cases: `npx nx test <project> --configuration=it --testPathPattern edge-case`
 
 ### Security & Secrets in Tests
+
 - Encryption: `EncryptionService` uses `ENCRYPTION_KEY` by default. In tests, it will fall back to `ENCRYPTION_TEST_KEY` or a deterministic test key when `NODE_ENV=test` to keep ITs hermetic. Do not rely on this fallback in production; provide real keys.
 - JWT: access/refresh/reset/verify tokens accept env-based secrets. Tests may use fallbacks (e.g., `JWT_SECRET`) for repeatability; production should configure explicit secrets.
 
 ### Data Access Notes (Server)
+
 - Session deletion must respect FK constraints. If refresh tokens reference sessions, delete dependent refresh tokens before removing the session (or configure proper DB cascades).
 
 ## Coding Style & Naming
+
 - TypeScript strict; ES modules.
 - ESLint + Prettier; 2‑space indent; single quotes.
 - Names: files `kebab-case.ts`; types/classes `PascalCase`; values `camelCase`.
 
 ## Server-Side Function Signatures
+
 - Parameter objects ≥3 properties: extract to a named `interface`/`type` or DTO `class` (prefer `class` for NestJS DTOs with validation/serialization).
 - Return objects ≥3 properties: define a named `interface`/`type` and use it as the function return type.
 - ≥3 primitive params (e.g., `string`, `number`, `boolean`): refactor into a single parameter object typed via `interface`/`type`.
@@ -125,12 +151,14 @@
 - Avoid anonymous object shapes in public APIs; keep function signatures self-documenting and reusable.
 
 ## Client-Side Function Signatures
+
 - Any object parameter or object return: use a named `interface`/`type` or model/DTO `class` (do not inline anonymous object types), regardless of property count.
 - ≥3 primitive params (e.g., `string`, `number`, `boolean`): consolidate into a single parameter object with a named `interface`/`type`.
 - Place UI-facing models in `libs/web/*` near the feature, or in `libs/shared/*` when reused across apps.
 - Prefer domain-oriented names; keep signatures stable and self-documenting for services, signals/stores, and component inputs/outputs.
 
 ## Frontend (Angular) & SSR
+
 - Use Angular 20 standalone components for new code; avoid new NgModules.
 - All web apps are SSR-enabled; code must be SSR-safe.
 - SSR safety: guard browser-only APIs (`window`, `document`, `localStorage`, `ResizeObserver`, etc.) using `inject(PLATFORM_ID)` + `isPlatformBrowser()`; avoid top-level access to globals.
@@ -139,6 +167,7 @@
 - Use SSR-compatible libraries; if not, lazy-load or guard initialization behind browser checks.
 
 ## Web Architecture Rules
+
 - Layering (web):
   - `libs/web/config`: environment/config tokens and helpers for web only.
   - `libs/web/core/*`: core web capabilities (auth, http, testing) shared across web apps.
@@ -162,6 +191,7 @@
   - Keep UI in `web/ui`; do not duplicate UI in app-specific libs.
 
 ## Shared Library Rules (`libs/shared`)
+
 - Purpose: pure, framework-agnostic TypeScript used by both server and client (e.g., types, validators, pure utils, feature-agnostic models).
 - Restrictions:
   - No Angular or NestJS imports; avoid Node-only APIs (fs, path, crypto) unless browser-safe fallbacks exist and are guarded.
@@ -174,6 +204,7 @@
   - Unit tests colocated under `src/**/*.spec.ts`; keep fast and framework-free.
 
 ## JSDoc & API Documentation
+
 - DTOs/Models (`class`/`interface`/`type`): include a top-level JSDoc (`/** ... */`) describing purpose and usage; each property must also have a JSDoc describing semantics, units, and constraints.
 - Classes (all): include a top-level JSDoc describing responsibility, invariants, and examples when helpful.
 - Functions (all server and client): include JSDoc with description, `@param {Type} name` — concise description per parameter, `@returns {Type}` — what is returned, and visibility tag (`@public`, `@protected`, `@private`) as appropriate. Add `@throws` for error cases and `@deprecated` when relevant. Use `@typeParam` for generics.
@@ -181,6 +212,7 @@
 - NestJS DTOs: document class and each decorated property; Angular models/services: document public API, component Inputs/Outputs, and any browser-only behavior or SSR caveats.
 
 ## Model/DTO Standards
+
 - Separate concerns: do not expose persistence entities as API; map Entity ↔ DTO ↔ UI Model explicitly.
 - One type per file; organize under `models/` and `dtos/` folders per module; re-export via a local `index.ts` barrel.
 - Naming: suffix `Dto` (transport), `Entity` (DB/persistence), `Model` (UI/state), `Response` (API output); all in PascalCase.
@@ -189,6 +221,7 @@
 - No anonymous shapes in public APIs; prefer `Pick`/`Omit`/composed named types for projections.
 
 ## Data Types & Serialization
+
 - Dates: use UTC ISO-8601 strings (`toISOString()`) at API boundaries; convert to `Date` within services as needed; on Angular, parse on demand.
 - Numbers with precision (money/decimal): use strings in DTOs; map to Decimal/Prisma types server-side; document currency/scale.
 - IDs: prefer UUIDv4 strings; define aliases (e.g., `type UserId = string`) for clarity and future branding.
@@ -197,18 +230,21 @@
 - TransferState/SSR: ensure models/DTOs are JSON-serializable; avoid class instances/methods crossing the wire.
 
 ## Mapping & Versioning
+
 - Centralize mappers in `*-mappers.ts` (e.g., `toDto`, `fromDto`, `toEntity`, `toModel`); keep normalization in one place.
 - Output normalization: standardize list responses and metadata; prefer generic wrappers like `Paginated<T>` and `WithMeta<T, M>`.
 - Versioning: favor additive changes; for breaking changes create versioned DTOs (e.g., `UserDtoV2`); mark legacy fields `@deprecated` with migration notes.
 - Security: mappers must omit internal-only fields (secrets, internal IDs, audit flags) by default.
 
 ## Client Models
+
 - State models should be `DeepReadonly<T>` where feasible; avoid accidental mutation; consider `Object.freeze` in dev.
 - Component APIs: strongly type `@Input`/`@Output` with named models; avoid `any` and inline shapes.
 - Serialization: prefer plain objects in stores/state; avoid persisting `Date`/`Map`/class instances through hydration; store ISO strings or POJOs.
 - Unions: represent variants as discriminated unions with a stable `kind`/`type` field for easy narrowing.
 
 ## Testing Guidelines
+
 - Unit tests: Jest `*.spec.ts` colocated next to source under `src/`.
 - Integration tests: place under each project `tests/integration/**/*.it-spec.ts` (not inside `src/`). Use Nest `TestingModule` with in-memory/test doubles; avoid real external services. Integration tests must run via `nx test <lib>`.
 - E2E tests: live under `apps/e2e/**` as dedicated Nx projects.
@@ -219,6 +255,7 @@
     - Partner: `npx nx run web-partner-e2e:e2e`
 
 ### E2E Projects (Detected)
+
 - api-e2e: apps/e2e/api (Jest)
 - web-admin-e2e: apps/e2e/web/admin
 - web-customer-e2e: apps/e2e/web/customer
@@ -227,6 +264,7 @@
 - Coverage: backend feature libs must maintain 100% coverage (statements, branches, functions, lines). Any temporary exception must include a TODO with justification and a follow-up task.
 
 ## Server Architecture Rules
+
 - Layering:
   - `libs/server/core`: cross-cutting concerns and shared building blocks (guards, decorators, filters, config, encryption, common services, validation). No app/feature-specific logic here.
   - `libs/server/contracts-*`: DI tokens and TypeScript ports/interfaces that define boundaries (e.g., repositories, adapters). No implementations.
@@ -242,6 +280,7 @@
   - Never import from `infrastructure` inside `core` or `contracts-*`; avoid circular deps.
 
 ### External Integrations (General)
+
 - Ports/Adapters: Feature libraries declare ports; infrastructure provides concrete adapters; apps wire adapters via DI.
 - No stubs in production: Feature modules must not bind stub/test adapters. Tests may override providers with doubles in TestingModules.
 - Naming: Ports use `<Domain>Port` (e.g., `EmailPort`) with UPPER_SNAKE tokens (e.g., `EMAIL_PORT`). Adapters use provider/service‑specific names (e.g., `GoogleOAuthAdapter`, `SmtpEmailAdapter`).
@@ -257,23 +296,26 @@
   - Exceptions require TODO with justification and a follow-up task.
 
 ## Commits & Pull Requests
+
 - Conventional Commits: `feat:`, `fix:`, `chore:`, `refactor:`, `test:`, `docs:`.
 - PRs include description, linked issues, screenshots/logs when relevant, and call out breaking changes.
 - Agent policy: Do not commit any changes unless the user explicitly instructs you to commit. Prefer to stage and show diffs first; commit only on request. Commit authorization is scoped to the immediately preceding task/change only and must not be inferred for subsequent or follow‑up changes; request fresh approval before any new commit.
 
 ### Branching
+
 - Branch naming: `<type>/<short-description>`
   - `type`: one of `feature|fix|chore|docs|test|refactor|style`
   - `short-description`: kebab-case, <= 50 chars, lowercase letters/numbers/hyphens
 - Example: `feature/add-user-profile`
 - Workflow (confirmation required):
-  1) `git fetch origin` → `git checkout <base>` → `git pull --ff-only`
-  2) If working tree not clean, optionally `git stash push -u -m "pre-branch: <branch>"`
-  3) `git checkout -b <branch> <base>`
-  4) Optionally `git push -u origin <branch>`
+  1. `git fetch origin` → `git checkout <base>` → `git pull --ff-only`
+  2. If working tree not clean, optionally `git stash push -u -m "pre-branch: <branch>"`
+  3. `git checkout -b <branch> <base>`
+  4. Optionally `git push -u origin <branch>`
 - Never create or switch branches without explicit user confirmation.
 
 ## Definition of Completion (Auth & Similar Tasks)
+
 1. Coding is production‑grade with no stubs or placeholder/minimal implementations, and follows the approved spec.
 2. When the model suggests improvements, obtain approval and update the relevant spec(s) first (API/WEB/etc.) before updating code.
 3. Tests: add/maintain UT, IT, and Edge‑case tests (when applicable); all must pass with 100% coverage for each category and for the overall feature.
@@ -283,9 +325,11 @@
 7. Error/warning code mapping for both server and client is centralized under `libs/shared`, e.g., `libs/shared/src/lib/errors/auth-error-codes.ts` (CAPITAL_SNAKE_CASE keys) and common codes in `libs/shared/src/lib/errors/common-error-codes.ts`.
 
 ## Roles & Workflow
+
 - Agent responsibilities: Product Owner, Business Analyst, System Architect, Code Reviewer, Technical Guide-clarify requirements, propose architecture, enforce quality, and guide implementation.
 
 ## Security, Cost & Config
+
 - Do not commit secrets; use env files or secret managers.
 - Prefer free‑tier services and OSS tooling when integrating dependencies.
 - Prisma schema/migrations: `libs/server/data-access/src/`; commit meaningful migrations.
