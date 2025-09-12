@@ -32,12 +32,13 @@ describe('AuthController CSRF (integration)', () => {
         CookieRegistry,
         CookiesInterceptor,
         AuthCookiesService,
-        // Provide minimal AuthService focused on session endpoints used in test
+        // Provide minimal AuthService focused on endpoints used in test
         {
           provide: AuthService,
           useValue: {
             listSessions: async () => [],
             revokeSession: async () => ({ success: true }),
+            refreshToken: async () => ({ accessToken: 'a1', refreshToken: 'r1' }),
           },
         },
         // Satisfy constructor injections for controller
@@ -78,6 +79,28 @@ describe('AuthController CSRF (integration)', () => {
       .expect(200)
       .expect(({ body }) => {
         expect(body).toEqual({ success: true });
+      });
+  });
+
+  it('rejects POST /auth/refresh without XSRF header when cookie is set', async () => {
+    const agent = request(app.getHttpServer());
+    await agent
+      .post('/auth/refresh')
+      .send({ refreshToken: 'dummy' })
+      .set('Cookie', ['XSRF-TOKEN=t3'])
+      .expect(403);
+  });
+
+  it('accepts POST /auth/refresh when header matches XSRF cookie', async () => {
+    const agent = request(app.getHttpServer());
+    await agent
+      .post('/auth/refresh')
+      .send({ refreshToken: 'dummy' })
+      .set('Cookie', ['XSRF-TOKEN=t4'])
+      .set('X-XSRF-TOKEN', 't4')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body).toEqual({});
       });
   });
 });

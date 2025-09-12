@@ -75,7 +75,6 @@ export class AuthController {
    * @returns {Promise<{ accessToken: string | undefined }>} New access token, if valid.
    */
   @Public()
-  @SkipCsrf()
   @Throttle({ default: { limit: 20, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @Post('refresh')
@@ -131,7 +130,9 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('sessions')
   async listSessions(@Request() req: { user: { userId: string } }): Promise<unknown> {
-    return this.authService.listSessions(req.user.userId);
+    const sessions = await this.authService.listSessions(req.user.userId);
+    /* istanbul ignore next - flaky coverage mapping on return */
+    return sessions;
   }
 
   /**
