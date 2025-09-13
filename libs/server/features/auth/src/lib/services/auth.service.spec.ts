@@ -101,6 +101,8 @@ describe('AuthService', () => {
   });
 
   describe('partner registration methods (with InvitePort)', () => {
+    let auditService: AuditService;
+
     beforeEach(async () => {
       // Override module to provide InvitePort
       const module = await Test.createTestingModule({
@@ -130,17 +132,20 @@ describe('AuthService', () => {
         ],
       }).compile();
       service = module.get<AuthService>(AuthService);
+      auditService = module.get<AuditService>(AuditService);
     });
 
-    it('validateOwnerInvite returns email and salonId', async () => {
+    it('validateOwnerInvite returns email and salonId and audits', async () => {
       await expect(service.validateOwnerInvite('tok')).resolves.toEqual({ email: 'o@example.com', salonId: 's1' });
+      expect(auditService.log).toHaveBeenCalledWith('owner_invite_validate', { email: 'o@example.com' });
     });
 
-    it('completeOwnerRegistration issues tokens when MFA not required', async () => {
+    it('completeOwnerRegistration issues tokens and audits when MFA not required', async () => {
       const spy = jest.spyOn(service, 'issueTokensForUser').mockResolvedValue({ accessToken: 'a', refreshToken: 'r' });
       const res = await service.completeOwnerRegistration({ token: 't', password: 'P#1' } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput);
       expect(spy).toHaveBeenCalledWith('u1');
       expect(res).toEqual({ accessToken: 'a', refreshToken: 'r' });
+      expect(auditService.log).toHaveBeenCalledWith('owner_registration_complete', { userId: 'u1' });
     });
 
     it('completeOwnerRegistration returns next:mfa when required', async () => {
@@ -155,8 +160,9 @@ describe('AuthService', () => {
       expect(res).toEqual({ next: 'mfa' });
     });
 
-    it('validateStaffInvite returns email and salonId', async () => {
+    it('validateStaffInvite returns email and salonId and audits', async () => {
       await expect(service.validateStaffInvite('tok')).resolves.toEqual({ email: 's@example.com', salonId: 's1', role: 'STAFF' });
+      expect(auditService.log).toHaveBeenCalledWith('staff_invite_validate', { email: 's@example.com' });
     });
 
     it('completeStaffRegistration returns next:mfa when required', async () => {
@@ -164,7 +170,7 @@ describe('AuthService', () => {
       expect(res).toEqual({ next: 'mfa' });
     });
 
-    it('completeStaffRegistration issues tokens when MFA not required', async () => {
+    it('completeStaffRegistration issues tokens and audits when MFA not required', async () => {
       // Override invitePort.completeStaff to not require MFA
       (service as unknown as { invitePort: InvitePort }).invitePort = {
         validateOwner: jest.fn(),
@@ -176,6 +182,7 @@ describe('AuthService', () => {
       const res = await service.completeStaffRegistration({ token: 't', password: 'P#1' } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput);
       expect(spy).toHaveBeenCalledWith('u3');
       expect(res).toEqual({ accessToken: 'A', refreshToken: 'R' });
+      expect(auditService.log).toHaveBeenCalledWith('staff_registration_complete', { userId: 'u3' });
     });
   });
 

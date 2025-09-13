@@ -355,6 +355,7 @@ export class AuthService {
     if (!this.invitePort) throw new BadRequestException('error.not_implemented');
     const res = await this.invitePort.validateOwner(token);
     
+    this.audit.log('owner_invite_validate', { email: res.email });
     return { email: res.email, salonId: res.salonId };
   }
 
@@ -366,12 +367,14 @@ export class AuthService {
       return { next: 'mfa' } as const;
     }
     const tokens = await this.issueTokensForUser(res.userId);
+    this.audit.log('owner_registration_complete', { userId: res.userId });
     return tokens;
   }
 
   public async validateStaffInvite(token: string): Promise<{ email: string; salonId: string; role?: string }> {
     if (!this.invitePort) throw new BadRequestException('error.not_implemented');
     const res = await this.invitePort.validateStaff(token);
+    this.audit.log('staff_invite_validate', { email: res.email });
     return { email: res.email, salonId: res.salonId, role: res.role };
     }
 
@@ -383,6 +386,7 @@ export class AuthService {
       return { next: 'mfa' } as const;
     }
     const tokens = await this.issueTokensForUser(res.userId);
+    this.audit.log('staff_registration_complete', { userId: res.userId });
     return tokens;
   }
 
