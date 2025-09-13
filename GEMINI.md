@@ -31,6 +31,7 @@
 
 - If an MCP tool is available, use it without asking (respect approvals).
 - Ask for approval before running non-trusted shell commands or anything outside the repo root.
+- **Explain File Deletions:** Before deleting any non-temporary file, you *must* provide a brief explanation of the reason for the deletion. This is to ensure that the user understands the impact of the deletion and can make an informed decision.
 
 ### Common Tasks
 
