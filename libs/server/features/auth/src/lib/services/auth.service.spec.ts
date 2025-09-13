@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { mock, MockProxy } from 'jest-mock-extended';
-import { User, CredentialTOTP, Session, RefreshToken } from '@prisma/client';
+import { User, CredentialTOTP, Session, RefreshToken, RegistrationStatus } from '@prisma/client';
 import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
-import { ICredentialTotpRepository, IRefreshTokenRepository, ISessionRepository, IUserRepository, TotpPort, EMAIL_PORT, EmailPort, USER_REPOSITORY, SESSION_REPOSITORY, REFRESH_TOKEN_REPOSITORY, CREDENTIAL_TOTP_REPOSITORY, TOTP_PORT, EMAIL_VERIFICATION_REPOSITORY, IEmailVerificationRepository, EmailVerificationRecord, PASSWORD_RESET_REPOSITORY, IPasswordResetRepository, PasswordResetRecord, SOCIAL_ACCOUNT_REPOSITORY, OAuthProfile } from '@cthub-bsaas/server-contracts-auth';
+import { ICredentialTotpRepository, IRefreshTokenRepository, ISessionRepository, IUserRepository, TotpPort, EMAIL_PORT, EmailPort, USER_REPOSITORY, SESSION_REPOSITORY, REFRESH_TOKEN_REPOSITORY, CREDENTIAL_TOTP_REPOSITORY, TOTP_PORT, EMAIL_VERIFICATION_REPOSITORY, IEmailVerificationRepository, EmailVerificationRecord, PASSWORD_RESET_REPOSITORY, IPasswordResetRepository, PasswordResetRecord, SOCIAL_ACCOUNT_REPOSITORY, OAuthProfile, INVITE_PORT, InvitePort } from '@cthub-bsaas/server-contracts-auth';
 import { AuditService } from '../services/audit.service';
 import { AuthService } from './auth.service';
 
@@ -32,6 +32,10 @@ describe('AuthService', () => {
     passwordHash: 'hashed-password',
     phone: null,
     isVerified: true,
+    registrationStatus: RegistrationStatus.PENDING,
+    isMFAEnrollRequired: false,
+    mfaReminderFirstAt: null,
+    mfaReminderLastAt: null,
     isActive: true,
     avatarUrl: null,
     lastLoginAt: null,
@@ -79,6 +83,100 @@ describe('AuthService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('partner registration methods (no InvitePort)', () => {
+    it('validateOwnerInvite throws when no port provided', async () => {
+      await expect(service.validateOwnerInvite('t')).rejects.toThrow();
+    });
+    it('completeOwnerRegistration throws when no port provided', async () => {
+      await expect(service.completeOwnerRegistration({ token: 't', password: 'P#1' } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput)).rejects.toThrow();
+    });
+    it('validateStaffInvite throws when no port provided', async () => {
+      await expect(service.validateStaffInvite('t')).rejects.toThrow();
+    });
+    it('completeStaffRegistration throws when no port provided', async () => {
+      await expect(service.completeStaffRegistration({ token: 't', password: 'P#1' } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput)).rejects.toThrow();
+    });
+  });
+
+  describe('partner registration methods (with InvitePort)', () => {
+    beforeEach(async () => {
+      // Override module to provide InvitePort
+      const module = await Test.createTestingModule({
+        providers: [
+          AuthService,
+          { provide: USER_REPOSITORY, useValue: userRepository },
+          { provide: SESSION_REPOSITORY, useValue: sessionRepository },
+          { provide: REFRESH_TOKEN_REPOSITORY, useValue: refreshTokenRepository },
+          { provide: CREDENTIAL_TOTP_REPOSITORY, useValue: credentialTotpRepository },
+          { provide: SOCIAL_ACCOUNT_REPOSITORY, useValue: socialRepo },
+          { provide: JwtService, useValue: jwtService },
+          { provide: ConfigService, useValue: configService },
+          { provide: TOTP_PORT, useValue: totpService },
+          { provide: EMAIL_PORT, useValue: emailPort },
+          { provide: EMAIL_VERIFICATION_REPOSITORY, useValue: emailVerRepo },
+          { provide: PASSWORD_RESET_REPOSITORY, useValue: pwdResetRepo },
+          { provide: AuditService, useValue: { log: jest.fn() } },
+          {
+            provide: INVITE_PORT,
+            useValue: {
+              validateOwner: jest.fn(() => Promise.resolve({ email: 'o@example.com', salonId: 's1' })),
+              completeOwner: jest.fn(() => Promise.resolve({ userId: 'u1' })),
+              validateStaff: jest.fn(() => Promise.resolve({ email: 's@example.com', salonId: 's1', role: 'STAFF' })),
+              completeStaff: jest.fn(() => Promise.resolve({ userId: 'u2', requireMfa: true })),
+            } as unknown as InvitePort,
+          },
+        ],
+      }).compile();
+      service = module.get<AuthService>(AuthService);
+    });
+
+    it('validateOwnerInvite returns email and salonId', async () => {
+      await expect(service.validateOwnerInvite('tok')).resolves.toEqual({ email: 'o@example.com', salonId: 's1' });
+    });
+
+    it('completeOwnerRegistration issues tokens when MFA not required', async () => {
+      const spy = jest.spyOn(service, 'issueTokensForUser').mockResolvedValue({ accessToken: 'a', refreshToken: 'r' });
+      const res = await service.completeOwnerRegistration({ token: 't', password: 'P#1' } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput);
+      expect(spy).toHaveBeenCalledWith('u1');
+      expect(res).toEqual({ accessToken: 'a', refreshToken: 'r' });
+    });
+
+    it('completeOwnerRegistration returns next:mfa when required', async () => {
+      // Override invitePort.completeOwner to require MFA
+      (service as unknown as { invitePort: InvitePort }).invitePort = {
+        validateOwner: jest.fn(),
+        completeOwner: jest.fn(() => Promise.resolve({ userId: 'uX', requireMfa: true })),
+        validateStaff: jest.fn(),
+        completeStaff: jest.fn(),
+      } as unknown as InvitePort;
+      const res = await service.completeOwnerRegistration({ token: 't', password: 'P#1' } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput);
+      expect(res).toEqual({ next: 'mfa' });
+    });
+
+    it('validateStaffInvite returns email and salonId', async () => {
+      await expect(service.validateStaffInvite('tok')).resolves.toEqual({ email: 's@example.com', salonId: 's1', role: 'STAFF' });
+    });
+
+    it('completeStaffRegistration returns next:mfa when required', async () => {
+      const res = await service.completeStaffRegistration({ token: 't', password: 'P#1' } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput);
+      expect(res).toEqual({ next: 'mfa' });
+    });
+
+    it('completeStaffRegistration issues tokens when MFA not required', async () => {
+      // Override invitePort.completeStaff to not require MFA
+      (service as unknown as { invitePort: InvitePort }).invitePort = {
+        validateOwner: jest.fn(),
+        completeOwner: jest.fn(),
+        validateStaff: jest.fn(),
+        completeStaff: jest.fn(() => Promise.resolve({ userId: 'u3' })),
+      } as unknown as InvitePort;
+      const spy = jest.spyOn(service, 'issueTokensForUser').mockResolvedValue({ accessToken: 'A', refreshToken: 'R' });
+      const res = await service.completeStaffRegistration({ token: 't', password: 'P#1' } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput);
+      expect(spy).toHaveBeenCalledWith('u3');
+      expect(res).toEqual({ accessToken: 'A', refreshToken: 'R' });
+    });
   });
 
   describe('register (Customer)', () => {

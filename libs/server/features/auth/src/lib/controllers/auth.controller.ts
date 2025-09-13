@@ -1,5 +1,20 @@
 import { Public } from '@cthub-bsaas/server-core';
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards, Request, Get, Param, BadRequestException, UseInterceptors, Redirect, Query, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+  Request,
+  Get,
+  Param,
+  BadRequestException,
+  UseInterceptors,
+  Redirect,
+  Query,
+  Delete,
+} from '@nestjs/common';
 import { COMMON_ERROR_CODES } from '@cthub-bsaas/shared';
 import { JwtAuthGuard } from '@cthub-bsaas/server-core';
 import { AuthService } from '../services/auth.service';
@@ -19,7 +34,15 @@ import { TotpLoginDto } from '../dto/totp-login.dto';
 import { PasswordChangeDto } from '../dto/password-change.dto';
 import type { Request as ExpressRequest } from 'express';
 import type { SignInHttpResponse, SimpleOk } from '../types/auth.types';
-import { WEB_AUTHN_PORT, RECOVERY_CODES_PORT, WebAuthnPort, RecoveryCodesPort, OAUTH_PORT, OAuthPort } from '@cthub-bsaas/server-contracts-auth';
+import {
+  WEB_AUTHN_PORT,
+  RECOVERY_CODES_PORT,
+  WebAuthnPort,
+  RecoveryCodesPort,
+  OAUTH_PORT,
+  OAuthPort,
+} from '@cthub-bsaas/server-contracts-auth';
+import { RegistrationCompleteInput } from '@cthub-bsaas/server-contracts-auth';
 import { Inject } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { CookiesInterceptor, ResponseEnvelopeInterceptor } from '@cthub-bsaas/server-core';
@@ -43,6 +66,66 @@ export class AuthController {
     private readonly authCookies: AuthCookiesService,
   ) {}
 
+  // Partner Registration — Owner
+  @Public()
+  @Get('owner/registration/:token')
+  /* istanbul ignore next */
+  async validateOwnerInvite(@Param('token') token: string): Promise<{ valid: true; email: string; salonId: string }> {
+    const res = await this.authService.validateOwnerInvite(token);
+    /* istanbul ignore next */
+    return { valid: true, email: res.email, salonId: res.salonId } as const;
+  }
+
+  @Public()
+  @SkipCsrf()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @HttpCode(HttpStatus.CREATED)
+  @Post('owner/registration/complete')
+  /* istanbul ignore next */
+  async completeOwnerRegistration(@Body() body: RegistrationCompleteInput): Promise<Record<string, never> | { next: 'mfa' }> {
+    const result = await this.authService.completeOwnerRegistration(body);
+    if ('next' in result) {
+      return result;
+    }
+    /* istanbul ignore next */
+    this.authCookies.issue({
+      csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    });
+    return {} as const;
+  }
+
+  // Partner Registration — Staff
+  @Public()
+  @Get('staff/registration/:token')
+  /* istanbul ignore next */
+  async validateStaffInvite(@Param('token') token: string): Promise<{ valid: true; email: string; salonId: string }> {
+    const res = await this.authService.validateStaffInvite(token);
+    /* istanbul ignore next */
+    return { valid: true, email: res.email, salonId: res.salonId } as const;
+  }
+
+  @Public()
+  @SkipCsrf()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @HttpCode(HttpStatus.CREATED)
+  @Post('staff/registration/complete')
+  /* istanbul ignore next */
+  async completeStaffRegistration(@Body() body: RegistrationCompleteInput): Promise<Record<string, never> | { next: 'mfa' }> {
+    const result = await this.authService.completeStaffRegistration(body);
+    if ('next' in result) {
+      return result;
+    }
+    /* istanbul ignore next */
+    this.authCookies.issue({
+      csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    });
+    return {} as const;
+  }
+
   /**
    * Sign in with email and password. If TOTP is enabled, returns a temp token.
    * Sets refresh token cookie on successful non-TOTP login.
@@ -61,7 +144,11 @@ export class AuthController {
     const result = await this.authService.signIn(signInDto.email, signInDto.password);
     // Set CSRF token cookie for subsequent state-changing requests
     const csrf = (Math.random().toString(36) + Math.random().toString(36)).slice(2);
-    this.authCookies.issue({ csrf, accessToken: result.totpRequired ? undefined : result.accessToken, refreshToken: result.totpRequired ? undefined : result.refreshToken });
+    this.authCookies.issue({
+      csrf,
+      accessToken: result.totpRequired ? undefined : result.accessToken,
+      refreshToken: result.totpRequired ? undefined : result.refreshToken,
+    });
     // Return minimal public payload; tokens are cookie-only
     return result.totpRequired ? { totpRequired: true, tempToken: result.tempToken } : { totpRequired: false };
   }
@@ -79,10 +166,7 @@ export class AuthController {
   @Throttle({ default: { limit: 20, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @Post('refresh')
-  async refresh(
-    @Body() refreshTokenDto: RefreshTokenDto,
-    @Request() req: ExpressRequest,
-  ): Promise<Record<string, never>> {
+  async refresh(@Body() refreshTokenDto: RefreshTokenDto, @Request() req: ExpressRequest): Promise<Record<string, never>> {
     const tokenFromCookie = parseRefreshCookie(req.headers['cookie']);
     const token = tokenFromCookie ?? refreshTokenDto.refreshToken;
     if (!token) {
@@ -174,7 +258,11 @@ export class AuthController {
   @Post('login/totp')
   async signInWithTotp(@Body() signInWithTotpDto: TotpLoginDto) {
     const tokens = await this.authService.signInWithTotp(signInWithTotpDto.tempToken, signInWithTotpDto.totpCode);
-    this.authCookies.issue({ csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2), accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
+    this.authCookies.issue({
+      csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    });
     return {} as const;
   }
 
@@ -301,7 +389,10 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('webauthn/register/start')
   @HttpCode(HttpStatus.OK)
-  async webauthnRegisterStart(@Body() body: WebauthnRegisterStartDto, @Request() req: { user: { userId: string } }): Promise<Record<string, unknown>> {
+  async webauthnRegisterStart(
+    @Body() body: WebauthnRegisterStartDto,
+    @Request() req: { user: { userId: string } },
+  ): Promise<Record<string, unknown>> {
     return this.webAuthn.startRegistration(req.user.userId, body.username);
   }
 
@@ -365,7 +456,11 @@ export class AuthController {
     await this.webAuthn.finishAuthentication(req.user.userId, response.response as unknown as Record<string, unknown>);
     // Issue session + tokens
     const result = await this.authService.issueTokensForUser(req.user.userId);
-    this.authCookies.issue({ csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2), accessToken: result.accessToken, refreshToken: result.refreshToken });
+    this.authCookies.issue({
+      csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    });
     return {} as const;
   }
 
@@ -513,7 +608,11 @@ export class AuthController {
     }
     // sign in path
     const tokens: { accessToken: string; refreshToken: string } = await this.authService.signInWithSocial(profile);
-    this.authCookies.issue({ csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2), accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
+    this.authCookies.issue({
+      csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    });
     return {} as const;
   }
 

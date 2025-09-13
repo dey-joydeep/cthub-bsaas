@@ -245,4 +245,44 @@ describe('AuthController', () => {
 
     await expect(controller.emailVerifyConfirm({} as { token?: string; email?: string; otp?: string })).rejects.toThrow();
   });
+
+  it('validateOwnerInvite returns valid with email and salonId', async () => {
+    (service.validateOwnerInvite as unknown as jest.Mock) = jest.fn(() => Promise.resolve({ email: 'o@example.com', salonId: 'salon-1' }));
+    const res = await controller.validateOwnerInvite('token-owner');
+    expect(res).toEqual({ valid: true, email: 'o@example.com', salonId: 'salon-1' });
+  });
+
+  it('completeOwnerRegistration issues cookies on success and returns empty body', async () => {
+    (service.completeOwnerRegistration as unknown as jest.Mock) = jest.fn(() => Promise.resolve({ accessToken: 'a', refreshToken: 'r' }));
+    const res = await controller.completeOwnerRegistration({ token: 't', password: 'P#1x' } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput);
+    expect(res).toEqual({});
+    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'a', refreshToken: 'r' }));
+  });
+
+  it('completeOwnerRegistration returns next:mfa branch when required', async () => {
+    (service.completeOwnerRegistration as unknown as jest.Mock) = jest.fn(() => Promise.resolve({ next: 'mfa' }));
+    const res = await controller.completeOwnerRegistration({ token: 't', password: 'P#1x' } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput);
+    expect(res).toEqual({ next: 'mfa' });
+    expect(cookies.issue).not.toHaveBeenCalled();
+  });
+
+  it('validateStaffInvite returns valid with email and salonId', async () => {
+    (service.validateStaffInvite as unknown as jest.Mock) = jest.fn(() => Promise.resolve({ email: 's@example.com', salonId: 'salon-1' }));
+    const res = await controller.validateStaffInvite('token-staff');
+    expect(res).toEqual({ valid: true, email: 's@example.com', salonId: 'salon-1' });
+  });
+
+  it('completeStaffRegistration issues cookies on success', async () => {
+    (service.completeStaffRegistration as unknown as jest.Mock) = jest.fn(() => Promise.resolve({ accessToken: 'a', refreshToken: 'r' }));
+    const res = await controller.completeStaffRegistration({ token: 't', password: 'P#1x' } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput);
+    expect(res).toEqual({});
+    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'a', refreshToken: 'r' }));
+  });
+
+  it('completeStaffRegistration returns next:mfa branch when required', async () => {
+    (service.completeStaffRegistration as unknown as jest.Mock) = jest.fn(() => Promise.resolve({ next: 'mfa' }));
+    const res = await controller.completeStaffRegistration({ token: 't', password: 'P#1x' } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput);
+    expect(res).toEqual({ next: 'mfa' });
+    expect(cookies.issue).not.toHaveBeenCalled();
+  });
 });

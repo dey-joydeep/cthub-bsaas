@@ -21,7 +21,7 @@ import { EmailVerificationRepository } from '@cthub-bsaas/server-data-access';
 import { AuthService } from './services/auth.service';
 import { AuditService } from './services/audit.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { EmailModule, TotpModule, WebAuthnModule, RecoveryModule, OAuthModule } from '@cthub-bsaas/server-infrastructure';
+import { EmailModule, TotpModule, WebAuthnModule, RecoveryModule, OAuthModule, InviteModule } from '@cthub-bsaas/server-infrastructure';
 import { CookieRegistry, CookiesInterceptor } from '@cthub-bsaas/server-core';
 import { AuthCookiesService } from './services/auth-cookies.service';
 
@@ -73,6 +73,7 @@ const providers = [
     WebAuthnModule,
     RecoveryModule,
     OAuthModule,
+    InviteModule,
     EmailModule,
     PassportModule,
     JwtModule.registerAsync({

@@ -8,7 +8,7 @@ import {
   SESSION_REPOSITORY,
   USER_REPOSITORY,
 } from '@cthub-bsaas/server-contracts-auth';
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Optional, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { TOTP_PORT, TotpPort, EMAIL_PORT, EmailPort } from '@cthub-bsaas/server-contracts-auth';
@@ -20,6 +20,7 @@ import { SOCIAL_ACCOUNT_REPOSITORY } from '@cthub-bsaas/server-contracts-auth';
 import type { OAuthProfile } from '@cthub-bsaas/server-contracts-auth';
 import { AUTH_ERROR_CODES } from '@cthub-bsaas/shared';
 import { Prisma } from '@prisma/client';
+import { INVITE_PORT, InvitePort, RegistrationCompleteInput } from '@cthub-bsaas/server-contracts-auth';
 
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
@@ -45,6 +46,7 @@ export class AuthService {
     @Inject(EMAIL_VERIFICATION_REPOSITORY) private readonly emailVerRepo: IEmailVerificationRepository,
     @Inject(PASSWORD_RESET_REPOSITORY) private readonly pwdResetRepo: IPasswordResetRepository,
     private readonly audit: AuditService,
+    @Optional() @Inject(INVITE_PORT) private readonly invitePort?: InvitePort,
   ) {}
 
   /**
@@ -346,6 +348,42 @@ export class AuthService {
     if (!user) throw new UnauthorizedException(AUTH_ERROR_CODES.USER_NOT_FOUND);
     const session = await this.sessionRepository.create({ userId: user.id });
     return this.generateTokens(user, session.id);
+  }
+
+  // Partner Registration (Owner/Staff)
+  public async validateOwnerInvite(token: string): Promise<{ email: string; salonId: string }> {
+    if (!this.invitePort) throw new BadRequestException('error.not_implemented');
+    const res = await this.invitePort.validateOwner(token);
+    /* istanbul ignore next */
+    return { email: res.email, salonId: res.salonId };
+  }
+
+  public async completeOwnerRegistration(input: RegistrationCompleteInput): Promise<TokenPair | { next: 'mfa' }> {
+    if (!this.invitePort) throw new BadRequestException('error.not_implemented');
+    const res = await this.invitePort.completeOwner(input);
+    if (res.requireMfa) {
+      this.audit.log('owner_registration_requires_mfa', { userId: res.userId });
+      return { next: 'mfa' } as const;
+    }
+    const tokens = await this.issueTokensForUser(res.userId);
+    return tokens;
+  }
+
+  public async validateStaffInvite(token: string): Promise<{ email: string; salonId: string; role?: string }> {
+    if (!this.invitePort) throw new BadRequestException('error.not_implemented');
+    const res = await this.invitePort.validateStaff(token);
+    return { email: res.email, salonId: res.salonId, role: res.role };
+    }
+
+  public async completeStaffRegistration(input: RegistrationCompleteInput): Promise<TokenPair | { next: 'mfa' }> {
+    if (!this.invitePort) throw new BadRequestException('error.not_implemented');
+    const res = await this.invitePort.completeStaff(input);
+    if (res.requireMfa) {
+      this.audit.log('staff_registration_requires_mfa', { userId: res.userId });
+      return { next: 'mfa' } as const;
+    }
+    const tokens = await this.issueTokensForUser(res.userId);
+    return tokens;
   }
 
   /**
