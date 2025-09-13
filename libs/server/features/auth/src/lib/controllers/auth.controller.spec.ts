@@ -30,6 +30,10 @@ describe('AuthController', () => {
       | 'issueTokensForUser'
       | 'resolveUserIdByEmail'
       | 'register'
+      | 'validateOwnerInvite'
+      | 'completeOwnerRegistration'
+      | 'validateStaffInvite'
+      | 'completeStaffRegistration'
     >> = {
       signIn: jest.fn(),
       refreshToken: jest.fn(),
@@ -45,6 +49,10 @@ describe('AuthController', () => {
       issueTokensForUser: jest.fn(),
       resolveUserIdByEmail: jest.fn(),
       register: jest.fn(),
+      validateOwnerInvite: jest.fn(),
+      completeOwnerRegistration: jest.fn(),
+      validateStaffInvite: jest.fn(),
+      completeStaffRegistration: jest.fn(),
     } as unknown as jest.Mocked<AuthService>;
     service = servicePartial as unknown as jest.Mocked<AuthService>;
     webAuthn = ({

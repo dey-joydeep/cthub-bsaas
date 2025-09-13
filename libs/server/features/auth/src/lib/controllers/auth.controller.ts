@@ -69,10 +69,10 @@ export class AuthController {
   // Partner Registration — Owner
   @Public()
   @Get('owner/registration/:token')
-  /* istanbul ignore next */
+  
   async validateOwnerInvite(@Param('token') token: string): Promise<{ valid: true; email: string; salonId: string }> {
     const res = await this.authService.validateOwnerInvite(token);
-    /* istanbul ignore next */
+    
     return { valid: true, email: res.email, salonId: res.salonId } as const;
   }
 
@@ -81,13 +81,13 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.CREATED)
   @Post('owner/registration/complete')
-  /* istanbul ignore next */
+  
   async completeOwnerRegistration(@Body() body: RegistrationCompleteInput): Promise<Record<string, never> | { next: 'mfa' }> {
     const result = await this.authService.completeOwnerRegistration(body);
     if ('next' in result) {
       return result;
     }
-    /* istanbul ignore next */
+    
     this.authCookies.issue({
       csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
       accessToken: result.accessToken,
@@ -99,10 +99,10 @@ export class AuthController {
   // Partner Registration — Staff
   @Public()
   @Get('staff/registration/:token')
-  /* istanbul ignore next */
+  
   async validateStaffInvite(@Param('token') token: string): Promise<{ valid: true; email: string; salonId: string }> {
     const res = await this.authService.validateStaffInvite(token);
-    /* istanbul ignore next */
+    
     return { valid: true, email: res.email, salonId: res.salonId } as const;
   }
 
@@ -111,13 +111,13 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.CREATED)
   @Post('staff/registration/complete')
-  /* istanbul ignore next */
+  
   async completeStaffRegistration(@Body() body: RegistrationCompleteInput): Promise<Record<string, never> | { next: 'mfa' }> {
     const result = await this.authService.completeStaffRegistration(body);
     if ('next' in result) {
       return result;
     }
-    /* istanbul ignore next */
+    
     this.authCookies.issue({
       csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
       accessToken: result.accessToken,
@@ -216,7 +216,7 @@ export class AuthController {
   @Get('sessions')
   async listSessions(@Request() req: { user: { userId: string } }): Promise<unknown> {
     const sessions = await this.authService.listSessions(req.user.userId);
-    /* istanbul ignore next - flaky coverage mapping on return */
+    
     return sessions;
   }
 

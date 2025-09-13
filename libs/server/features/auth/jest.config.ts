@@ -2,12 +2,8 @@ export default {
   displayName: 'server-feature-auth',
   preset: '../../../../jest.preset.cjs',
   testEnvironment: 'node',
-  testMatch: [
-    '<rootDir>/src/**/*.spec.ts',
-    '<rootDir>/src/**/*.test.ts',
-    '<rootDir>/tests/**/*.spec.ts',
-    '<rootDir>/tests/**/*.it-spec.ts',
-  ],
+  // testMatch is intentionally left undefined.
+  // It is defined in jest.unit.config.ts and jest.int.config.ts respectively.
   globalSetup: '<rootDir>/../../core/src/testing/global-setup.ts',
   globalTeardown: '<rootDir>/../../core/src/testing/global-teardown.ts',
   testTimeout: 30000,

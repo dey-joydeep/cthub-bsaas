@@ -354,7 +354,7 @@ export class AuthService {
   public async validateOwnerInvite(token: string): Promise<{ email: string; salonId: string }> {
     if (!this.invitePort) throw new BadRequestException('error.not_implemented');
     const res = await this.invitePort.validateOwner(token);
-    /* istanbul ignore next */
+    
     return { email: res.email, salonId: res.salonId };
   }
 
