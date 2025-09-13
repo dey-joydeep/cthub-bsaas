@@ -168,9 +168,9 @@ Notes
    3. [ ] Add quick grep in CI to ensure no guard classes in feature libs (`class .*Guard`)
 
 6. Partner Registration (Owner/Staff)
-   1. [ ] Add ports (interfaces only) and wire providers in Auth module for tests
-   2. [ ] Implement validate/complete controller + service flows (no DB changes)
-   3. [ ] Add UT/IT; ensure cookies + CSRF policy and rate limits
+   1. [x] Add ports (interfaces only) and wire providers in Auth module for tests
+   2. [x] Implement validate/complete controller + service flows (no DB changes)
+   3. [x] Add UT/IT; ensure cookies + CSRF policy and rate limits
 
 ## Current Status Snapshot
 
