@@ -149,8 +149,8 @@ Notes
 4. Email change + Password change
    1. [x] Implement Password Change (controller/service/DTO + rate limit)
    2. [x] Add UT/IT with 100% coverage for Password Change
-   3. [ ] Implement Email Change (request/confirm + rate limit)
-   4. [ ] Add UT/IT with 100% coverage for Email Change
+   3. [x] Implement Email Change (request/confirm + rate limit)
+   4. [x] Add UT/IT with 100% coverage for Email Change
 
 5. CorrelationId in audit + responses
    1. [ ] Add middleware to assign `correlationId`; include in AuditService logs
