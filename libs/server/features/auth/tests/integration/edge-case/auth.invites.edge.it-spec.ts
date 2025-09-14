@@ -70,7 +70,7 @@ describe('AuthController Invites (integration)', () => {
       .send({ token: 'some-token', password: 'password' })
       .expect(201)
       .then(res => {
-        expect(res.body).toEqual({ success: true });
+        expect(res.body).toEqual({ success: true, data: {} });
       });
   });
 
@@ -107,7 +107,7 @@ describe('AuthController Invites (integration)', () => {
       .send({ token: 'some-token', password: 'password' })
       .expect(201)
       .then(res => {
-        expect(res.body).toEqual({ success: true });
+        expect(res.body).toEqual({ success: true, data: {} });
       });
   });
 

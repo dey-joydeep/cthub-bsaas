@@ -35,7 +35,7 @@ describe('Password change (edge-case)', () => {
 
   it('POST /auth/password/change returns success', async () => {
     const req = (await import('supertest')).default(app.getHttpServer());
-    await req.post('/auth/password/change').send({ currentPassword: 'Old#1', newPassword: 'New#1Password' }).expect(200).expect({ success: true });
+    await req.post('/auth/password/change').send({ currentPassword: 'Old#1', newPassword: 'New#1Password' }).expect(200).expect({ success: true, data: { success: true } });
   });
 
   it('POST /auth/password/change returns 400 on service error', async () => {

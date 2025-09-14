@@ -118,6 +118,77 @@ export class AuthService {
     this.audit.log('password_change_success', { userId });
   }
 
+  /**
+   * Request an email change for a user.
+   * @param userId current user id
+   * @param newEmail new email address
+   */
+  public async requestEmailChange(userId: string, newEmail: string): Promise<void> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException(AUTH_ERROR_CODES.USER_NOT_FOUND);
+    }
+
+    const existingUser = await this.userRepository.findByEmail(newEmail);
+    if (existingUser) {
+      throw new BadRequestException(AUTH_ERROR_CODES.EMAIL_ALREADY_EXISTS);
+    }
+
+    const token = await this.jwtService.signAsync(
+      { sub: userId, aud: 'email-change', email: newEmail },
+      {
+        secret:
+          this.configService.get<string>('JWT_EMAIL_CHANGE_SECRET') ||
+          this.configService.get<string>('JWT_SECRET') ||
+          'test-email-change-secret',
+        expiresIn: '10m',
+      },
+    );
+
+    await this.emailPort.sendMail(
+      newEmail,
+      'Confirm your new email address',
+      `Use this token to confirm your new email address: ${token}`,
+    );
+
+    this.audit.log('email_change_requested', { userId });
+  }
+
+  /**
+   * Confirm an email change using a token.
+   * @param token the token from the email
+   */
+  public async confirmEmailChange(token: string): Promise<void> {
+    try {
+      const { sub, aud, email } = await this.jwtService.verifyAsync<{ sub: string; aud: string; email: string }>(
+        token,
+        {
+          secret:
+            this.configService.get<string>('JWT_EMAIL_CHANGE_SECRET') ||
+            this.configService.get<string>('JWT_SECRET') ||
+            'test-email-change-secret',
+        },
+      );
+
+      if (aud !== 'email-change') {
+        this.audit.log('email_change_failure', { result: 'failure', reason: 'invalid_audience' });
+        throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_VERIFY_TOKEN);
+      }
+
+      const user = await this.userRepository.findById(sub);
+      if (!user) {
+        this.audit.log('email_change_failure', { result: 'failure', reason: 'user_not_found' });
+        throw new UnauthorizedException(AUTH_ERROR_CODES.USER_NOT_FOUND);
+      }
+
+      await this.userRepository.update(user.id, { email, emailVerifiedAt: new Date() } as Partial<User>);
+      this.audit.log('email_change_success', { userId: user.id });
+    } catch {
+      this.audit.log('email_change_failure', { result: 'failure', reason: 'invalid_or_expired_token' });
+      throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_OR_EXPIRED_VERIFY_TOKEN);
+    }
+  }
+
     /**
      * Sign in with email/password. If TOTP is enabled, returns a temp token for second factor.
      *

@@ -63,21 +63,21 @@ describe('Auth alias routes (edge-case)', () => {
 
   it('POST /auth/recovery-codes/verify returns {success:true}', async () => {
     const req = (await import('supertest')).default(app!.getHttpServer());
-    await req.post('/auth/recovery-codes/verify').send({ code: 'abc' }).expect(200).expect({ success: true });
+    await req.post('/auth/recovery-codes/verify').send({ code: 'abc' }).expect(200).expect({ success: true, data: { success: true } });
   });
 
   it('POST /auth/devices/revoke returns {success:true}', async () => {
     const req = (await import('supertest')).default(app!.getHttpServer());
-    await req.post('/auth/devices/revoke').send({ id: 's1' }).expect(200).expect({ success: true });
+    await req.post('/auth/devices/revoke').send({ id: 's1' }).expect(200).expect({ success: true, data: { success: true } });
   });
 
   it('DELETE /auth/sessions/:id returns {success:true}', async () => {
     const req = (await import('supertest')).default(app!.getHttpServer());
-    await req.delete('/auth/sessions/s1').expect(200).expect({ success: true });
+    await req.delete('/auth/sessions/s1').expect(200).expect({ success: true, data: { success: true } });
   });
 
   it('DELETE /auth/oauth/google returns {success:true}', async () => {
     const req = (await import('supertest')).default(app!.getHttpServer());
-    await req.delete('/auth/oauth/google').expect(200).expect({ success: true });
+    await req.delete('/auth/oauth/google').expect(200).expect({ success: true, data: { success: true } });
   });
 });

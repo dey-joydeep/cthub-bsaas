@@ -21,17 +21,14 @@ export class ResponseEnvelopeInterceptor implements NestInterceptor {
           }
         }
         if (value === undefined || value === null) {
-          return { success: true } as const;
+          return { success: true, data: value } as const;
         }
         if (isPlainObject(value)) {
           const keys = Object.keys(value);
-          // If controller already returned canonical success-only, keep it
-          if (keys.length === 1 && (value as Record<string, unknown>).success === true) {
-            return value;
-          }
-          // Treat empty object as no data
+          
+          // Treat empty object as empty data
           if (keys.length === 0) {
-            return { success: true } as const;
+            return { success: true, data: {} } as const;
           }
         }
         return { success: true, data: value } as const;

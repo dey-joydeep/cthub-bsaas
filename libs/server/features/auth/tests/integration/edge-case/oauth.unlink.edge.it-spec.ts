@@ -43,6 +43,6 @@ describe('OAuth unlink (edge-case)', () => {
   it('POST /auth/oauth/google/unlink returns {success:true}', async () => {
     const req = (await import('supertest')).default(app.getHttpServer());
     const res = await req.post('/auth/oauth/google/unlink').send({}).expect(200);
-    expect(res.body).toEqual({ success: true });
+    expect(res.body).toEqual({ success: true, data: { success: true } });
   });
 });

@@ -66,7 +66,7 @@ describe('OAuth callback (edge-case)', () => {
     const app2 = mod.createNestApplication();
     await app2.init();
     const agent = (await import('supertest')).default(app2.getHttpServer());
-    await agent.get('/auth/oauth/google/callback').query({ code: 'c' }).expect(200).expect({ success: true });
+        await agent.get('/auth/oauth/google/callback').query({ code: 'c' }).expect(200).expect({ success: true, data: {} });
     await app2.close();
   });
 

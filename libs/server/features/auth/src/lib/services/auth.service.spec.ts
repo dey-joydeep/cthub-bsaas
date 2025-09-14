@@ -582,6 +582,66 @@ describe('AuthService', () => {
     });
   });
 
+  describe('Email Change', () => {
+    it('should request an email change and send an email', async () => {
+      userRepository.findById.mockResolvedValue(mockUserWithRoles);
+      userRepository.findByEmail.mockResolvedValue(null);
+      jwtService.signAsync.mockResolvedValue('test-token');
+
+      await service.requestEmailChange('user-id', 'new@example.com');
+
+      expect(emailPort.sendMail).toHaveBeenCalledWith(
+        'new@example.com',
+        'Confirm your new email address',
+        'Use this token to confirm your new email address: test-token',
+      );
+    });
+
+    it('should throw an error if the user is not found when requesting an email change', async () => {
+      userRepository.findById.mockResolvedValue(null);
+
+      await expect(service.requestEmailChange('user-id', 'new@example.com')).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw an error if the new email already exists when requesting an email change', async () => {
+      userRepository.findById.mockResolvedValue(mockUserWithRoles);
+      userRepository.findByEmail.mockResolvedValue(mockUserWithRoles);
+
+      await expect(service.requestEmailChange('user-id', 'new@example.com')).rejects.toThrow('error.auth.email_already_exists');
+    });
+
+    it('should confirm an email change with a valid token', async () => {
+      jwtService.verifyAsync.mockResolvedValue({ sub: 'user-id', aud: 'email-change', email: 'new@example.com' });
+      userRepository.findById.mockResolvedValue(mockUserWithRoles);
+
+      await service.confirmEmailChange('test-token');
+
+      expect(userRepository.update).toHaveBeenCalledWith('user-id', {
+        email: 'new@example.com',
+        emailVerifiedAt: expect.any(Date),
+      });
+    });
+
+    it('should throw an error if the token is invalid when confirming an email change', async () => {
+      jwtService.verifyAsync.mockRejectedValue(new Error());
+
+      await expect(service.confirmEmailChange('invalid-token')).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw an error if the token audience is invalid when confirming an email change', async () => {
+      jwtService.verifyAsync.mockResolvedValue({ sub: 'user-id', aud: 'invalid-audience', email: 'new@example.com' });
+
+      await expect(service.confirmEmailChange('test-token')).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw an error if the user is not found when confirming an email change', async () => {
+      jwtService.verifyAsync.mockResolvedValue({ sub: 'user-id', aud: 'email-change', email: 'new@example.com' });
+      userRepository.findById.mockResolvedValue(null);
+
+      await expect(service.confirmEmailChange('test-token')).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
   describe('social auth', () => {
     it('signInWithSocial returns tokens for existing link', async () => {
       socialRepo.findByProviderAccount.mockResolvedValue({ userId: mockUser.id });

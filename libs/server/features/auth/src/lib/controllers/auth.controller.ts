@@ -32,6 +32,8 @@ import { WebauthnAttestationDto } from '../dto/webauthn-attestation.dto';
 import { WebauthnAssertionDto } from '../dto/webauthn-assertion.dto';
 import { TotpLoginDto } from '../dto/totp-login.dto';
 import { PasswordChangeDto } from '../dto/password-change.dto';
+import { EmailChangeRequestDto } from '../dto/email-change-request.dto';
+import { EmailChangeConfirmDto } from '../dto/email-change-confirm.dto';
 import type { Request as ExpressRequest } from 'express';
 import type { SignInHttpResponse, SimpleOk } from '../types/auth.types';
 import {
@@ -348,6 +350,38 @@ export class AuthController {
   @Throttle({ default: { limit: 3, ttl: 60000 } })
   async changePassword(@Body() body: PasswordChangeDto, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
     await this.authService.changePassword(req.user.userId, body.currentPassword, body.newPassword);
+    return { success: true };
+  }
+
+  /**
+   * Request an email change for the authenticated user.
+   *
+   * @public
+   * @returns {Promise<{ success: true }>} Accepted response.
+   */
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.ACCEPTED)
+  @Post('email/change/request')
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  async requestEmailChange(@Body() body: EmailChangeRequestDto, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
+    await this.authService.requestEmailChange(req.user.userId, body.newEmail);
+    return { success: true };
+  }
+
+  /**
+   * Confirm an email change using a one-time token.
+   *
+   * @public
+   * @param {{ token: string }} body - Email change token.
+   * @returns {Promise<{ success: true }>} OK response after update.
+   */
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @Post('email/change/confirm')
+  @SkipCsrf()
+  @Throttle({ default: { limit: 3, ttl: 60 } })
+  async confirmEmailChange(@Body() body: EmailChangeConfirmDto): Promise<SimpleOk> {
+    await this.authService.confirmEmailChange(body.token);
     return { success: true };
   }
 

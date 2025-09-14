@@ -20,6 +20,7 @@ export const AUTH_ERROR_CODES = {
   OTP_EXPIRED: 'error.auth.otp_expired',
   INVALID_OTP: 'error.auth.invalid_otp',
   STRONG_AUTH_REQUIRED: 'error.auth.strong_auth_required',
+  EMAIL_ALREADY_EXISTS: 'error.auth.email_already_exists',
 } as const;
 
 export type AuthErrorCode = (typeof AUTH_ERROR_CODES)[keyof typeof AUTH_ERROR_CODES];
