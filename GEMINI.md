@@ -128,6 +128,28 @@
 - Scope: use lightweight Nest TestingModules with mocked ports/services to hit controller/service branches without full e2e setup.
 - Run only edge cases: `npx nx test <project> --configuration=it --testPathPattern edge-case`
 
+#### Integration Test (IT) Pattern for Stateful Services
+
+When writing integration tests for services that interact with a database, it is critical to ensure tests are isolated and can run in parallel without race conditions. The file `libs/server/features/auth/tests/integration/auth.controller.login.spec.ts` should be used as the Single Source of Truth (SSoT) for this pattern.
+
+The established pattern involves the following hooks and strategies:
+
+-   **`beforeAll`:** Used to set up static, non-mutating master data that is required by the entire test suite.
+    -   **Example:** Populating the `Role` table from a shared enum using a `createRoles(prisma)` helper.
+
+-   **`beforeEach`:** Used to set up the specific, unique data required for a single test case.
+    -   **Example:** Creating a new `User` with a guaranteed-unique email (`test-${randomUUID()}@example.com`) using a `createTestUser(prisma, uniqueEmail)` helper.
+
+-   **`afterEach`:** Used to clean up the specific data created in the corresponding `beforeEach` hook. This ensures each test within the file is isolated from the others.
+    -   **Example:** Deleting the specific `User` (and their dependent records like `Session`, `UserRole`, etc.) using a `deleteTestUser(prisma, user)` helper.
+
+-   **`afterAll`:** Used to clean up the master data that was created in the `beforeAll` hook.
+    -   **Example:** Deleting all `Role` records using a `deleteRoles(prisma)` helper.
+
+-   **Helpers:** Common setup and teardown logic should be extracted into helper functions (e.g., `createRoles`, `createTestUser`, `deleteTestUser`) and placed in the shared `libs/server/core/src/testing/` directory. This promotes code reuse and maintainability.
+
+This pattern ensures that tests are independent and the database does not accumulate stale data, while still allowing for parallel execution.
+
 ### Security & Secrets in Tests
 
 - Encryption: `EncryptionService` uses `ENCRYPTION_KEY` by default. In tests, it will fall back to `ENCRYPTION_TEST_KEY` or a deterministic test key when `NODE_ENV=test` to keep ITs hermetic. Do not rely on this fallback in production; provide real keys.
@@ -247,7 +269,7 @@
 ## Testing Guidelines
 
 - Unit tests: Jest `*.spec.ts` colocated next to source under `src/`.
-- Integration tests: place under each project `tests/integration/**/*.it-spec.ts` (not inside `src/`). Use Nest `TestingModule` with in-memory/test doubles; avoid real external services. Integration tests must run via `nx test <lib>`.
+- Integration tests: place under each project `tests/integration/**/*.it-spec.ts` (not inside `src/`). These are end-to-end tests that use a real database. They should use `beforeAll`/`beforeEach` to seed the database and `afterAll`/`afterEach` to clean up. Integration tests must run via `nx test <lib>`.
 - E2E tests: live under `apps/e2e/**` as dedicated Nx projects.
   - API E2E: Jest specs in `apps/e2e/api/src/*.e2e-spec.ts`; run with `npx nx run api-e2e:e2e`.
   - Web E2E: per app under `apps/e2e/web/<app>`.
