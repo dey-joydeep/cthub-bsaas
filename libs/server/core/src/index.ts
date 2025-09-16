@@ -29,6 +29,9 @@ export * from './filters/retry-after.filter';
 // Models
 export * from './models/notification.model';
 
+// Testing - Not for production builds, but useful for integration tests
+export * from './testing';
+
 // Types
 export * from './types/api.types';
 
