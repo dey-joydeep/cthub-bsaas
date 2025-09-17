@@ -12,6 +12,9 @@ export { CsrfGuard, SkipCsrf, SKIP_CSRF_KEY } from './auth/guards/csrf.guard';
 
 // Config
 export * from './config/core.module';
+export * from './config/config.module';
+export * from './config/config.service';
+export * from './config/configuration';
 
 // Decorators
 export * from './decorators/user.decorator';
@@ -29,8 +32,7 @@ export * from './filters/retry-after.filter';
 // Models
 export * from './models/notification.model';
 
-// Testing - Not for production builds, but useful for integration tests
-export * from './testing';
+// Models
 
 // Types
 export * from './types/api.types';

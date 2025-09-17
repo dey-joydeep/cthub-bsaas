@@ -1,5 +1,5 @@
 import { Module, ValidationPipe } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@cthub-bsaas/server-core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
@@ -16,10 +16,7 @@ import { ThrottlerRetryAfterGuard } from './http/guards/throttler-retry-after.gu
 @Module({
   imports: [
     // Core configuration
-    ConfigModule.forRoot({
-      isGlobal: true,
-      load: [appConfig, throttleConfig],
-    }),
+    ConfigModule,
 
     // Core module (imports all core services)
     CoreModule,

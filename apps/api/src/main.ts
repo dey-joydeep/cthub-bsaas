@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { JwtAuthGuard, RolesGuard } from '@cthub-bsaas/server-core/auth';
-import { ConfigService } from './config/config.service';
+import { ConfigService } from '@cthub-bsaas/server-core';
 import { ClassSerializerInterceptor, Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -10,7 +10,7 @@ import { json, urlencoded } from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { AppModule } from './app.module';
-import { ConfigModule } from './config/config.module';
+import { ConfigModule } from '@cthub-bsaas/server-core';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
