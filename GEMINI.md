@@ -323,6 +323,7 @@ This pattern ensures that tests are independent and the database does not accumu
 - Conventional Commits: `feat:`, `fix:`, `chore:`, `refactor:`, `test:`, `docs:`.
 - PRs include description, linked issues, screenshots/logs when relevant, and call out breaking changes.
 - Agent policy: Do not commit any changes unless the user explicitly instructs you to commit. Prefer to stage and show diffs first; commit only on request. Commit authorization is scoped to the immediately preceding task/change only and must not be inferred for subsequent or follow‑up changes; request fresh approval before any new commit.
+- For multi-line commit messages, the full message will be written to `tmp/commit-message.txt`. The new message will completely overwrite any existing content in that file. The commit will then be made using `git commit -F tmp/commit-message.txt`.
 
 ### Branching
 
