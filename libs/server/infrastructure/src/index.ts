@@ -6,3 +6,6 @@ export * from './lib/recovery/recovery.module';
 export * from './lib/oauth/oauth.adapter';
 export * from './lib/oauth/oauth.module';
 export * from './lib/invite/invite.module';
+export * from './lib/webauthn/webauthn.stub.adapter';
+export * from './lib/recovery/recovery.memory.adapter';
+export * from './lib/totp/totp.otplib.adapter';
