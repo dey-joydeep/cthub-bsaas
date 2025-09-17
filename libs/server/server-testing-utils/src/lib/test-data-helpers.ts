@@ -2,32 +2,7 @@ import { PrismaClient, User } from '@prisma/client';
 import { UserRole } from '@cthub-bsaas/shared';
 import * as bcrypt from 'bcryptjs';
 
-/**
- * Populates the Role table with all possible roles from the UserRole enum.
- * Uses upsert to avoid errors on subsequent runs.
- * @param prisma The PrismaClient instance.
- */
-export async function createRoles(prisma: PrismaClient) {
-  const roles = Object.values(UserRole).map(name => ({
-    where: { name },
-    update: {},
-    create: { name },
-  }));
 
-  // Cannot use createMany with upsert, so we loop.
-  for (const role of roles) {
-    await prisma.role.upsert(role);
-  }
-}
-
-/**
- * Deletes all records from the Role and UserRole tables.
- * @param prisma The PrismaClient instance.
- */
-export async function deleteRoles(prisma: PrismaClient) {
-  await prisma.userRole.deleteMany({});
-  await prisma.role.deleteMany({});
-}
 
 /**
  * Deletes a test user and all their dependent records.
