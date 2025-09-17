@@ -1,19 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ConfigService } from '@cthub-bsaas/server-core';
 import { CookieRegistry } from '@cthub-bsaas/server-core';
 
-/**
- * @public
- * Encapsulates auth cookie issuance and clearing via CookieRegistry.
- */
 @Injectable()
 export class AuthCookiesService {
   constructor(private readonly registry: CookieRegistry, private readonly config: ConfigService) {}
 
-  /** Issue CSRF and optionally access/refresh cookies */
   issue(params: { csrf: string; accessToken?: string; refreshToken?: string }): void {
-    const domain = this.config.get<string>('AUTH_COOKIE_DOMAIN');
-    // CSRF: non-HttpOnly, SameSite=Lax, Secure, path '/'
+    const domain = this.config.auth.cookieDomain;
     this.registry.set('XSRF-TOKEN', params.csrf, {
       httpOnly: false,
       secure: true,
@@ -42,16 +36,13 @@ export class AuthCookiesService {
     }
   }
 
-  /** Rotate cookies on refresh: same as issue() */
   rotateOnRefresh(params: { csrf: string; accessToken: string; refreshToken: string }): void {
     this.issue(params);
   }
 
-  /** Clear auth cookies */
   clear(): void {
-    const domain = this.config.get<string>('AUTH_COOKIE_DOMAIN');
+    const domain = this.config.auth.cookieDomain;
     this.registry.clear('bsaas_rt', { path: '/auth', domain });
     this.registry.clear('bsaas_at', { path: '/', domain });
   }
 }
-

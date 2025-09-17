@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { PrismaClient, Prisma, PrismaPromise } from '@prisma/client';
-import { ConfigService } from '@nestjs/config';
+import { ConfigService } from '@cthub-bsaas/server-core';
 
 type UnwrapTuple<T extends readonly unknown[]> = {
   [K in keyof T]: T[K] extends Promise<infer U> ? U : T[K];
@@ -17,7 +17,6 @@ type QueryEvent = {
 @Injectable()
 export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'query' | 'error'> implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
-  private readonly isDevelopment: boolean;
 
   constructor(private configService: ConfigService) {
     super({
@@ -30,10 +29,10 @@ export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'que
       errorFormat: 'pretty',
     });
 
-    this.isDevelopment = this.configService.get('NODE_ENV') === 'development';
+    const isDevelopment = this.configService.app.isDevelopment;
 
     // Log query events in development
-    if (this.isDevelopment) {
+    if (isDevelopment) {
       this.$on('query', (e: QueryEvent) => {
         this.logger.debug(`Query: ${e.query}`);
         this.logger.debug(`Params: ${e.params}`);
