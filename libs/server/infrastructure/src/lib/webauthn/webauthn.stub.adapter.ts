@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { WebAuthnPort, CreationOptionsJSON, RequestOptionsJSON } from '@cthub-bsaas/server-contracts-auth';
 
+// TODO Review the stub implementation
 /**
  * @public
  * Minimal, deterministic stub for WebAuthn flows to enable API wiring and tests.
@@ -27,4 +28,3 @@ export class WebAuthnStubAdapter implements WebAuthnPort {
     return { credentialId: `cred-${userId}`, counter: 1 };
   }
 }
-
