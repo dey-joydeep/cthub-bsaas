@@ -121,6 +121,7 @@
     "@typescript-eslint/eslint-plugin": "8.38.0",
     "@typescript-eslint/parser": "8.38.0",
     "@typescript-eslint/utils": "^8.29.0",
+    "@golevelup/ts-jest": "^0.4.0",
     "angular-eslint": "^20.0.0",
     "autoprefixer": "^10.4.21",
     "eslint": "9.32.0",

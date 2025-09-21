@@ -7,7 +7,7 @@
     "declarationMap": true,
     "types": ["node"],
     "sourceMap": true,
-    "baseUrl": ".",
+
     "paths": {},
     "isolatedModules": false,
     "experimentalDecorators": true,
@@ -17,5 +17,10 @@
     "tsBuildInfoFile": "../../../../dist/.tsbuildinfo/server/contracts-auth.tsbuildinfo"
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["**/*.test.ts", "**/*.spec.ts"]
+  "exclude": ["**/*.test.ts", "**/*.spec.ts"],
+  "references": [
+    {
+      "path": "../../shared/tsconfig.lib.json"
+    }
+  ]
 }

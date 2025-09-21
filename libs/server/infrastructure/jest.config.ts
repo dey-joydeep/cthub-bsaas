@@ -27,7 +27,7 @@ const config: Config = {
     },
 
     // Setup files
-    setupFilesAfterEnv: ['<rootDir>/src/testing/setup.ts'],
+
 
     // Clear mocks between tests
     clearMocks: true,
