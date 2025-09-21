@@ -38,6 +38,10 @@ export class ConfigService {
     return this.configService.get<Config['encryption']>('config.encryption')!;
   }
 
+  get log(): Config['log'] {
+    return this.configService.get<Config['log']>('config.log')!;
+  }
+
   /**
    * Get a configuration value by key
    * @param key The configuration key in dot notation (e.g., 'app.port')

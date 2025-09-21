@@ -57,6 +57,22 @@ export interface EncryptionConfig {
   key: string;
 }
 
+export interface LogTargetConfig {
+  /** Absolute or relative filename for the log target. */
+  file: string;
+  /** Minimum log level threshold for the target. */
+  level: string;
+}
+
+export interface LogConfig {
+  /** Directory where log files are stored. */
+  dir: string;
+  /** Application log configuration. */
+  app: LogTargetConfig;
+  /** Access/security log configuration. */
+  access: LogTargetConfig;
+}
+
 export interface Config {
   app: AppConfig;
   database: DatabaseConfig;
@@ -66,6 +82,7 @@ export interface Config {
   rateLimit: RateLimitConfig;
   email: EmailConfig;
   encryption: EncryptionConfig;
+  log: LogConfig;
 }
 
 export const configuration = registerAs('config', () => ({
@@ -127,5 +144,16 @@ export const configuration = registerAs('config', () => ({
       process.env.ENCRYPTION_KEY ||
       process.env.ENCRYPTION_TEST_KEY ||
       (process.env.NODE_ENV === 'test' ? '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef' : ''),
+  },
+  log: {
+    dir: process.env.LOG_DIR || 'logs',
+    app: {
+      file: process.env.LOG_APP_FILE || 'app.log',
+      level: process.env.LOG_APP_LEVEL || process.env.LOG_LEVEL || 'info',
+    },
+    access: {
+      file: process.env.LOG_ACCESS_FILE || 'access.log',
+      level: process.env.LOG_ACCESS_LEVEL || process.env.LOG_LEVEL || 'info',
+    },
   },
 }));

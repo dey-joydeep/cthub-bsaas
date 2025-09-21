@@ -26,15 +26,14 @@ const ROLE_HIERARCHY: Record<UserRole, UserRole[]> = {
  * @param roles Array of UserRole that are allowed to access the route
  */
 export const Roles = (...roles: UserRole[]) => {
-  return (target: object, descriptor?: PropertyDescriptor) => {
+  return (target: any, key?: string, descriptor?: PropertyDescriptor) => {
     if (descriptor) {
       // Method decorator
-      Reflect.defineMetadata(ROLES_KEY, roles, descriptor.value as object);
+      Reflect.defineMetadata(ROLES_KEY, roles, descriptor.value);
       return descriptor;
     }
     // Class decorator
-    Reflect.defineMetadata(ROLES_KEY, roles, target as object);
-    return undefined;
+    Reflect.defineMetadata(ROLES_KEY, roles, target);
   };
 };
 
@@ -57,7 +56,7 @@ export class RolesGuard extends AuthGuard('jwt') {
       }
 
       // Check role hierarchy
-      return ROLE_HIERARCHY[userRole]?.some((higherRole) => requiredRoles.includes(higherRole)) || false;
+      return ROLE_HIERARCHY[userRole].some((higherRole) => requiredRoles.includes(higherRole));
     });
   }
 

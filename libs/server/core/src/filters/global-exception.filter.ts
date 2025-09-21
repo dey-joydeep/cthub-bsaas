@@ -1,76 +1,60 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus } from '@nestjs/common';
-import { Response, Request } from 'express';
-import { AppError } from '../errors/app.error';
+import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
+import { Request, Response } from 'express';
 
+import { ErrorService, NormalizedError } from '../errors/error.service';
+
+/**
+ * @public
+ * Global NestJS exception filter that normalizes errors via ErrorService and shapes HTTP responses.
+ */
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
-  catch(exception: unknown, host: ArgumentsHost) {
+  constructor(private readonly errorService: ErrorService) {}
+
+  catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
+    const isProduction = process.env['NODE_ENV'] === 'production';
 
-    // Default error response
-    let status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = 'Internal server error';
-    let code = 'INTERNAL_SERVER_ERROR';
-    let details: Record<string, unknown> | undefined;
-    let stack: string | undefined;
-
-    // Handle our custom AppError
-    if (exception instanceof AppError) {
-      status = exception.statusCode as HttpStatus;
-      message = exception.message;
-      code = exception.code;
-      details = exception.details;
-
-      // Log operational errors (not 5xx) at a lower level
-      if (status >= 500) {
-        console.error('Server Error:', {
-          timestamp: new Date().toISOString(),
-          path: request.url,
-          error: exception,
-          stack: exception.stack,
-        });
-      } else {
-        console.log('Client Error:', {
-          timestamp: new Date().toISOString(),
-          path: request.url,
-          status,
-          code,
-          message,
-          details,
-        });
-      }
-    }
-    // Handle NestJS HTTP exceptions
-    else if (exception instanceof Error) {
-      message = exception.message;
-      code = 'UNHANDLED_ERROR';
-      stack = process.env['NODE_ENV'] !== 'production' ? exception.stack : undefined;
-
-      console.error('Unhandled Error:', {
-        timestamp: new Date().toISOString(),
-        path: request.url,
-        error: exception,
-        stack: exception.stack,
-      });
-    }
-
-    // In production, don't expose internal errors
-    if (process.env['NODE_ENV'] === 'production' && status >= 500) {
-      message = 'An internal server error occurred';
-      details = undefined;
-      stack = undefined;
-    }
-
-    response.status(status).json({
-      statusCode: status,
-      message,
-      code,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-      ...(details && { details }),
-      ...(stack && { stack }),
+    const normalized = this.errorService.handle(exception, {
+      context: 'GlobalExceptionFilter',
+      requestUrl: request.url,
+      includeStack: !isProduction,
     });
+
+    const timestamp = new Date().toISOString();
+    const body = this.buildResponseBody(normalized, request.url, timestamp, isProduction);
+
+    response.status(normalized.status).json(body);
+  }
+
+  private buildResponseBody(
+    normalized: NormalizedError,
+    path: string,
+    timestamp: string,
+    isProduction: boolean,
+  ): Record<string, unknown> {
+    const shouldMaskDetails = normalized.shouldMaskResponse;
+    const body: Record<string, unknown> = {
+      statusCode: normalized.status,
+      message:
+        isProduction && shouldMaskDetails
+          ? 'An internal server error occurred'
+          : normalized.message,
+      code: normalized.code,
+      timestamp,
+      path,
+    };
+
+    if (!shouldMaskDetails && normalized.details) {
+      body.details = normalized.details;
+    }
+
+    if (!isProduction && normalized.stack) {
+      body.stack = normalized.stack;
+    }
+
+    return body;
   }
 }

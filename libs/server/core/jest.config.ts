@@ -1,44 +1,40 @@
 import type { Config } from 'jest';
+import { pathsToModuleNameMapper } from 'ts-jest';
+import tsconfig from '../../../tsconfig.base.json';
+
+const compilerOptions = tsconfig.compilerOptions ?? {};
+const moduleNameMapper = pathsToModuleNameMapper(compilerOptions.paths ?? {}, {
+  prefix: '<rootDir>/../../../',
+});
 
 const config: Config = {
-  // Use TypeScript preset
-  preset: 'ts-jest',
-
-  // Test environment
+  displayName: 'server-core',
+  preset: '../../../jest.preset.cjs',
   testEnvironment: 'node',
-
-  // Test file patterns
   testMatch: ['**/*.spec.ts', '**/*.test.ts'],
-
-  // Module name mapper for path aliases
-  moduleNameMapper: {
-    '^@cthub-bsaas/(.*)$': '<rootDir>/../../$1/src',
-  },
-
-  // Transform settings
+  moduleNameMapper,
   transform: {
     '^.+\\.ts$': [
       'ts-jest',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
-        isolatedModules: true,
       },
     ],
   },
 
-  // Setup files
-  setupFilesAfterEnv: ['<rootDir>/src/testing/setup.ts'],
-
-  // Clear mocks between tests
   clearMocks: true,
   resetMocks: true,
-
-  // Module handling
-  moduleFileExtensions: ['js', 'json', 'ts'],
-
-  // Coverage: not enforced at core level (feature libs enforce thresholds)
-
-  // No extra watch plugins required in CI/envs without TTY
+  moduleFileExtensions: ['ts', 'js', 'json'],
+  collectCoverageFrom: ['src/**/*.ts', '!src/**/index.ts', '!src/**/*.module.ts'],
+  coverageThreshold: {
+    global: {
+      statements: 80,
+      branches: 80,
+      functions: 80,
+      lines: 80,
+    },
+  },
+  coverageDirectory: '../../../coverage/libs/server/core',
 };
 
 export default config;

@@ -42,6 +42,17 @@ const structuredConfigSchema = Joi.object<Config, true>({
   encryption: Joi.object({
     key: Joi.string().hex().length(64).required(),
   }).required(),
+  log: Joi.object({
+    dir: Joi.string().required(),
+    app: Joi.object({
+      file: Joi.string().required(),
+      level: Joi.string().required(),
+    }).required(),
+    access: Joi.object({
+      file: Joi.string().required(),
+      level: Joi.string().required(),
+    }).required(),
+  }).required(),
 });
 
 @Module({

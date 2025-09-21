@@ -23,6 +23,9 @@ export * from './decorators/current-user.decorator';
 // Errors
 export * from './errors/app.error';
 export * from './errors/http-errors';
+export * from './errors/error.service';
+export * from './logger/logger.module';
+export * from './logger/logger.service';
 
 // Filters
 export * from './filters/global-exception.filter';
