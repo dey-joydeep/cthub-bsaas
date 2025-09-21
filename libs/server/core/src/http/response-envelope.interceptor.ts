@@ -8,13 +8,13 @@ function isPlainObject(val: unknown): val is Record<string, unknown> {
 
 @Injectable()
 export class ResponseEnvelopeInterceptor implements NestInterceptor {
-  intercept(_context: ExecutionContext, next: CallHandler): Observable<unknown> {
+  intercept(_context: ExecutionContext, next: CallHandler<unknown>): Observable<unknown> {
     return next.handle().pipe(
-      map((value: unknown) => {
+      map((value) => {
         // Preserve Nest @Redirect return shape { url, statusCode }
         // const http = context.switchToHttp();
         if (isPlainObject(value)) {
-          const v = value as Record<string, unknown>;
+          const v = value;
           const keys = Object.keys(v);
           if (keys.includes('url') && keys.includes('statusCode')) {
             return value;
@@ -25,7 +25,7 @@ export class ResponseEnvelopeInterceptor implements NestInterceptor {
         }
         if (isPlainObject(value)) {
           const keys = Object.keys(value);
-          
+
           // Treat empty object as empty data
           if (keys.length === 0) {
             return { success: true, data: {} } as const;

@@ -77,9 +77,9 @@ export class RolesGuard extends AuthGuard('jwt') {
     const userRoleNames = (user.roles || [])
       .map((role) => {
         if (typeof role === 'string') {
-          return role as UserRole;
+          return role;
         }
-        return (role as UserRoleInfo).name;
+        return (role).name;
       })
       .filter((role): role is UserRole => role !== undefined && Object.values<string>(UserRole).includes(role));
 

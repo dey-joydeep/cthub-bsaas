@@ -23,10 +23,10 @@ export class CookiesInterceptor implements NestInterceptor {
         if (!commands.length) return;
 
         const values = commands.map(buildSetCookie);
-        if (typeof (res as any).append === 'function') {
-          values.forEach((v) => (res as any).append('Set-Cookie', v));
-        } else if (typeof (res as any).header === 'function') {
-          (res as any).header('Set-Cookie', values);
+        if (typeof (res).append === 'function') {
+          values.forEach((v) => (res).append('Set-Cookie', v));
+        } else if (typeof (res).header === 'function') {
+          (res).header('Set-Cookie', values);
         } else {
           (adapter as any).setHeader(res, 'Set-Cookie', values.length === 1 ? values[0] : values);
         }
