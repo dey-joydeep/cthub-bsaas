@@ -1,14 +1,13 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerModule, ThrottlerStorageService } from '@nestjs/throttler';
 import { AuthController } from '../../../src/lib/controllers/auth.controller';
 import { AuthService } from '../../../src/lib/services/auth.service';
 import { WEB_AUTHN_PORT, RECOVERY_CODES_PORT, OAUTH_PORT } from '@cthub-bsaas/server-contracts-auth';
 import type { WebAuthnPort, RecoveryCodesPort } from '@cthub-bsaas/server-contracts-auth';
-import { ConfigService } from '@nestjs/config';
 import { AuthCookiesService } from '../../../src/lib/services/auth-cookies.service';
-import { CookieRegistry, CookiesInterceptor, RetryAfterFilter } from '@cthub-bsaas/server-core';
+import { CookieRegistry, CookiesInterceptor, RetryAfterFilter, ConfigModule } from '@cthub-bsaas/server-core';
 
 describe('Rate limiting (edge-case)', () => {
   let app: INestApplication;
@@ -27,11 +26,11 @@ describe('Rate limiting (edge-case)', () => {
     } as unknown as typeof webAuthn;
     const modRef = await Test.createTestingModule({
       imports: [
+        ConfigModule,
         ThrottlerModule.forRoot({ throttlers: [{ ttl: 1, limit: 1 }] }),
       ],
       controllers: [AuthController],
       providers: [
-        { provide: ConfigService, useValue: { get: () => undefined } },
         { provide: AuthService, useValue: authSvc },
         { provide: WEB_AUTHN_PORT, useValue: webAuthn },
         { provide: RECOVERY_CODES_PORT, useValue: { generate: jest.fn(async () => ['r1']), verifyAndConsume: jest.fn(async () => true) } as RecoveryCodesPort },
@@ -50,6 +49,15 @@ describe('Rate limiting (edge-case)', () => {
 
   afterAll(async () => {
     await app.close();
+  });
+
+  afterEach(async () => {
+    try {
+      const storage = app.get(ThrottlerStorageService);
+      await Promise.resolve(storage.reset());
+    } catch {
+      // Guard not registered; ignore.
+    }
   });
 
   it('POST /auth/login returns 429 when exceeding method-level limit', async () => {
