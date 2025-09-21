@@ -170,22 +170,17 @@ export class AuthController {
   @Post('refresh')
   async refresh(@Body() refreshTokenDto: RefreshTokenDto, @Request() req: ExpressRequest): Promise<Record<string, never>> {
     const tokenFromCookie = parseRefreshCookie(req.headers['cookie']);
-    const token = tokenFromCookie ?? refreshTokenDto.refreshToken;
+    const bodyToken = refreshTokenDto.refreshToken?.trim();
+    const token = tokenFromCookie ?? (bodyToken ? bodyToken : undefined);
     if (!token) {
       throw new BadRequestException('error.auth.missing_refresh_token');
     }
     const result = await this.authService.refreshToken(token);
-    if (result?.refreshToken) {
-      this.authCookies.rotateOnRefresh({
-        csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
-      });
-      return {} as const;
-    }
-    // rotate CSRF token as well
-    const csrf = (Math.random().toString(36) + Math.random().toString(36)).slice(2);
-    this.authCookies.issue({ csrf });
+    this.authCookies.rotateOnRefresh({
+      csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
+      accessToken: result!.accessToken,
+      refreshToken: result!.refreshToken,
+    });
     return {} as const;
   }
 
@@ -458,12 +453,13 @@ export class AuthController {
   @SkipCsrf()
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   async webauthnLoginStart(
-    @Body() body: { email?: string; userId?: string } = {},
-    @Request() req: { user?: { userId: string } } = {},
+    @Body() body: { email?: string; userId?: string },
+    @Request() req: { user?: { userId: string } },
   ): Promise<Record<string, unknown>> {
     // Allow unauthenticated start by identity (email or userId). Fallback to authenticated user if present.
-    const providedUserId = req.user?.userId ?? body.userId;
-    const userId = providedUserId ?? (body.email ? await this.authService.resolveUserIdByEmail(body.email) : undefined);
+    const payload = body ?? {};
+    const providedUserId = req?.user?.userId ?? payload.userId;
+    const userId = providedUserId ?? (payload.email ? await this.authService.resolveUserIdByEmail(payload.email) : undefined);
     if (!userId) {
       throw new BadRequestException('error.validation');
     }

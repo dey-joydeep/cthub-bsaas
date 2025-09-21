@@ -1,7 +1,6 @@
 import { CredentialTotpRepository, RefreshTokenRepository, SessionRepository, UserRepository, PrismaModule, PasswordResetRepository, SocialAccountRepository, CredentialPasskeyRepository } from '@cthub-bsaas/server-data-access';
-import { EncryptionModule } from '@cthub-bsaas/server-core';
 import { Module } from '@nestjs/common';
-import { ConfigService } from '@cthub-bsaas/server-core';
+import { ConfigService, CookieRegistry, CookiesInterceptor, EncryptionModule, LoggerModule } from '@cthub-bsaas/server-core';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './controllers/auth.controller';
@@ -20,8 +19,8 @@ import { EmailVerificationRepository } from '@cthub-bsaas/server-data-access';
 import { AuthService } from './services/auth.service';
 import { AuditService } from './services/audit.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { EmailModule, TotpModule, WebAuthnModule, RecoveryModule, OAuthModule, InviteModule } from '@cthub-bsaas/server-infrastructure';
-import { CookieRegistry, CookiesInterceptor } from '@cthub-bsaas/server-core';
+import { EmailModule, TotpModule, WebAuthnModule, RecoveryModule, OAuthModule, InviteModule, PrismaLastAdminAdapter } from '@cthub-bsaas/server-infrastructure';
+import { LAST_ADMIN_VALIDATOR_PORT } from '@cthub-bsaas/server-contracts-auth';
 import { AuthCookiesService } from './services/auth-cookies.service';
 
 const providers = [
@@ -57,6 +56,10 @@ const providers = [
     provide: CREDENTIAL_PASSKEY_REPOSITORY,
     useClass: CredentialPasskeyRepository,
   },
+  {
+    provide: LAST_ADMIN_VALIDATOR_PORT,
+    useClass: PrismaLastAdminAdapter,
+  },
 ];
 
 /**
@@ -68,6 +71,7 @@ const providers = [
   imports: [
     PrismaModule,
     EncryptionModule,
+    LoggerModule,
     TotpModule,
     WebAuthnModule,
     RecoveryModule,
