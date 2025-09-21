@@ -1,6 +1,7 @@
 import { HasPermissionToAssignRoleConstraint, HasPermissionToAssignRole } from './has-permission.validator';
 import { UserRole } from '@cthub-bsaas/shared';
 import { ValidationArguments, validate } from 'class-validator';
+import { AuthenticatedUser } from '@cthub-bsaas/shared';
 
 describe('HasPermissionToAssignRoleConstraint', () => {
   let constraint: HasPermissionToAssignRoleConstraint;
@@ -9,7 +10,7 @@ describe('HasPermissionToAssignRoleConstraint', () => {
     constraint = new HasPermissionToAssignRoleConstraint();
   });
 
-  const createMockArgs = (user: any): ValidationArguments => ({
+  const createMockArgs = (user: Partial<AuthenticatedUser> | null): ValidationArguments => ({
     value: UserRole.STAFF,
     constraints: [],
     targetName: '',

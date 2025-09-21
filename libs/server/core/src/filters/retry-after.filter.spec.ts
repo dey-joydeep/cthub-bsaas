@@ -32,7 +32,13 @@ describe('RetryAfterFilter', () => {
     };
 
     const exception = new ThrottlerException();
-    filter.catch(exception, host as any);
+interface MockArgumentsHost extends ArgumentsHost {
+  switchToHttp: () => {
+    getResponse: () => Response;
+  };
+}
+
+    filter.catch(exception, host as MockArgumentsHost);
 
     expect(response.setHeader).toHaveBeenCalledWith('Retry-After', '60');
     expect(response.status).toHaveBeenCalledWith(HttpStatus.TOO_MANY_REQUESTS);

@@ -1,7 +1,15 @@
 import { Test } from '@nestjs/testing';
 import { HttpExceptionFilter } from './http-exception.filter';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, ArgumentsHost } from '@nestjs/common';
 import { LoggerService } from '../logger/logger.service';
+import { Request, Response } from 'express';
+
+interface MockArgumentsHost extends ArgumentsHost {
+  switchToHttp: () => {
+    getResponse: () => Response;
+    getRequest: () => Request;
+  };
+}
 
 describe('HttpExceptionFilter', () => {
   let filter: HttpExceptionFilter;
@@ -40,15 +48,15 @@ describe('HttpExceptionFilter', () => {
     };
     response.status.mockReturnValue(response);
 
-    const host = {
+    const host: MockArgumentsHost = {
       switchToHttp: () => ({
         getResponse: () => response,
-        getRequest: () => ({ url: '/', method: 'GET' }),
+        getRequest: () => ({ url: '/', method: 'GET' }) as Request,
       }),
-    };
+    } as MockArgumentsHost;
 
     const exception = new HttpException('Test Exception', HttpStatus.BAD_REQUEST);
-    filter.catch(exception, host as any);
+    filter.catch(exception, host);
 
     expect(response.status).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
     expect(response.json).toHaveBeenCalledWith({
@@ -67,15 +75,15 @@ describe('HttpExceptionFilter', () => {
     };
     response.status.mockReturnValue(response);
 
-    const host = {
+    const host: MockArgumentsHost = {
       switchToHttp: () => ({
         getResponse: () => response,
-        getRequest: () => ({ url: '/', method: 'GET' }),
+        getRequest: () => ({ url: '/', method: 'GET' }) as Request,
       }),
-    };
+    } as MockArgumentsHost;
 
     const exception = new Error('Generic error');
-    filter.catch(exception, host as any);
+    filter.catch(exception, host);
 
     expect(response.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
     expect(response.json).toHaveBeenCalledWith({
@@ -98,15 +106,15 @@ describe('HttpExceptionFilter', () => {
     };
     response.status.mockReturnValue(response);
 
-    const host = {
+    const host: MockArgumentsHost = {
       switchToHttp: () => ({
         getResponse: () => response,
-        getRequest: () => ({ url: '/', method: 'GET' }),
+        getRequest: () => ({ url: '/', method: 'GET' }) as Request,
       }),
-    };
+    } as MockArgumentsHost;
 
     const exception = 'a string error';
-    filter.catch(exception, host as any);
+    filter.catch(exception, host);
 
     expect(response.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
     expect(response.json).toHaveBeenCalledWith({
@@ -129,15 +137,15 @@ describe('HttpExceptionFilter', () => {
     };
     response.status.mockReturnValue(response);
 
-    const host = {
+    const host: MockArgumentsHost = {
       switchToHttp: () => ({
         getResponse: () => response,
-        getRequest: () => ({ url: '/', method: 'POST' }),
+        getRequest: () => ({ url: '/', method: 'POST' }) as Request,
       }),
-    };
+    } as MockArgumentsHost;
 
     const exception = new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
-    filter.catch(exception, host as any);
+    filter.catch(exception, host);
 
     expect(logger.error).toHaveBeenCalledWith(
       'HTTP Exception: POST /',

@@ -1,18 +1,33 @@
 import { Test } from '@nestjs/testing';
 import { CookiesInterceptor } from './cookies.interceptor';
 import { CookieRegistry } from './cookie-commands';
-import { HttpAdapterHost } from '@nestjs/core';
-import { of } from 'rxjs';
+import { HttpAdapterHost, ExecutionContext, CallHandler } from '@nestjs/core'; // Import ExecutionContext and CallHandler
+import { of, Observable } from 'rxjs'; // Import Observable
+
+interface MockResponse {
+  append?: (name: string, value: string) => void;
+  header?: (name: string, value: string[]) => void;
+}
+
+interface MockExecutionContext extends ExecutionContext {
+  switchToHttp: () => {
+    getResponse: () => MockResponse;
+  };
+}
+
+interface MockCallHandler extends CallHandler {
+  handle: () => Observable<any>; // This 'any' is acceptable as it's a generic observable
+}
 
 describe('CookiesInterceptor', () => {
   it('should do nothing if registry is empty', (done) => {
     const registry = new CookieRegistry();
     const interceptor = new CookiesInterceptor(registry, {} as HttpAdapterHost);
-    const handler = { handle: () => of('ok') };
-    const mockResponse = { append: jest.fn() };
-    const host = { switchToHttp: () => ({ getResponse: () => mockResponse }) };
+    const handler: MockCallHandler = { handle: () => of('ok') };
+    const mockResponse: MockResponse = { append: jest.fn() };
+    const host: MockExecutionContext = { switchToHttp: () => ({ getResponse: () => mockResponse }) } as MockExecutionContext;
 
-    interceptor.intercept(host as any, handler).subscribe(() => {
+    interceptor.intercept(host, handler).subscribe(() => {
       expect(mockResponse.append).not.toHaveBeenCalled();
       done();
     });
@@ -22,11 +37,11 @@ describe('CookiesInterceptor', () => {
     const registry = new CookieRegistry();
     const interceptor = new CookiesInterceptor(registry, {} as HttpAdapterHost);
     registry.set('test', 'value');
-    const handler = { handle: () => of('ok') };
-    const mockResponse = { append: jest.fn() };
-    const host = { switchToHttp: () => ({ getResponse: () => mockResponse }) };
+    const handler: MockCallHandler = { handle: () => of('ok') };
+    const mockResponse: MockResponse = { append: jest.fn() };
+    const host: MockExecutionContext = { switchToHttp: () => ({ getResponse: () => mockResponse }) } as MockExecutionContext;
 
-    interceptor.intercept(host as any, handler).subscribe(() => {
+    interceptor.intercept(host, handler).subscribe(() => {
       expect(mockResponse.append).toHaveBeenCalledWith('Set-Cookie', 'test=value');
       done();
     });
@@ -37,11 +52,11 @@ describe('CookiesInterceptor', () => {
     const interceptor = new CookiesInterceptor(registry, {} as HttpAdapterHost);
     registry.set('test1', 'value1');
     registry.set('test2', 'value2');
-    const handler = { handle: () => of('ok') };
-    const mockResponse = { header: jest.fn() };
-    const host = { switchToHttp: () => ({ getResponse: () => mockResponse }) };
+    const handler: MockCallHandler = { handle: () => of('ok') };
+    const mockResponse: MockResponse = { header: jest.fn() };
+    const host: MockExecutionContext = { switchToHttp: () => ({ getResponse: () => mockResponse }) } as MockExecutionContext;
 
-    interceptor.intercept(host as any, handler).subscribe(() => {
+    interceptor.intercept(host, handler).subscribe(() => {
       expect(mockResponse.header).toHaveBeenCalledWith('Set-Cookie', ['test1=value1', 'test2=value2']);
       done();
     });
@@ -50,13 +65,13 @@ describe('CookiesInterceptor', () => {
   it('should use httpAdapter as a fallback', (done) => {
     const registry = new CookieRegistry();
     const mockAdapter = { setHeader: jest.fn() };
-    const interceptor = new CookiesInterceptor(registry, { httpAdapter: mockAdapter } as any);
+    const interceptor = new CookiesInterceptor(registry, { httpAdapter: mockAdapter } as HttpAdapterHost); // Keep as HttpAdapterHost for now
     registry.set('test', 'value');
-    const handler = { handle: () => of('ok') };
-    const mockResponse = {}; // No append or header methods
-    const host = { switchToHttp: () => ({ getResponse: () => mockResponse }) };
+    const handler: MockCallHandler = { handle: () => of('ok') };
+    const mockResponse: MockResponse = {}; // No append or header methods
+    const host: MockExecutionContext = { switchToHttp: () => ({ getResponse: () => mockResponse }) } as MockExecutionContext;
 
-    interceptor.intercept(host as any, handler).subscribe(() => {
+    interceptor.intercept(host, handler).subscribe(() => {
       expect(mockAdapter.setHeader).toHaveBeenCalledWith(mockResponse, 'Set-Cookie', 'test=value');
       done();
     });

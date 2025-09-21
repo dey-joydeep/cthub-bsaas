@@ -3,7 +3,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { StrongAuthGuard } from './strong-auth.guard';
 import { CREDENTIAL_TOTP_REPOSITORY, ICredentialTotpRepository, CREDENTIAL_PASSKEY_REPOSITORY, ICredentialPasskeyRepository } from '@cthub-bsaas/server-contracts-auth';
 
-const makeCtx = (user?: { userId: string; roles?: string[] }): ExecutionContext =>
+import { AuthenticatedUser } from '@cthub-bsaas/shared';
+
+const makeCtx = (user?: Partial<AuthenticatedUser>): ExecutionContext =>
   ({
     switchToHttp: () => ({ getRequest: () => ({ user }) }),
   } as unknown as ExecutionContext);

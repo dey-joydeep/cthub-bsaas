@@ -13,6 +13,14 @@ jest.mock('node:fs', () => ({
 
 import { LoggerService } from './logger.service';
 
+interface MockConfigService {
+  log: {
+    dir: string;
+    app: { file: string; level: string };
+    access: { file: string; level: string };
+  };
+}
+
 describe('LoggerService', () => {
   const configService = {
     log: {
@@ -53,7 +61,7 @@ describe('LoggerService', () => {
   });
 
   it('configures log4js using config service settings', () => {
-    const service = new LoggerService(configService as any);
+    const service = new LoggerService(configService as MockConfigService);
 
     service.onModuleInit();
 
@@ -76,7 +84,7 @@ describe('LoggerService', () => {
   });
 
   it('provides helpers for each log level and channel', () => {
-    const service = new LoggerService(configService as any);
+    const service = new LoggerService(configService as MockConfigService);
     service.onModuleInit();
 
     service.info('hello', 'Context');

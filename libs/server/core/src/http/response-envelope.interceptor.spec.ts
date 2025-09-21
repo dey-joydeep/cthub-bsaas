@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { ResponseEnvelopeInterceptor } from './response-envelope.interceptor';
 import { of } from 'rxjs';
+import { ExecutionContext } from '@nestjs/common';
 
 describe('ResponseEnvelopeInterceptor', () => {
   let interceptor: ResponseEnvelopeInterceptor<any>;
@@ -19,7 +20,7 @@ describe('ResponseEnvelopeInterceptor', () => {
 
   it('should wrap a plain object response', (done) => {
     const handler = { handle: () => of({ test: 'data' }) };
-    interceptor.intercept({} as any, handler).subscribe((result) => {
+    interceptor.intercept({} as ExecutionContext, handler).subscribe((result) => {
       expect(result).toEqual({ success: true, data: { test: 'data' } });
       done();
     });
@@ -28,7 +29,7 @@ describe('ResponseEnvelopeInterceptor', () => {
   it('should not wrap a @Redirect response object', (done) => {
     const redirectObject = { url: '/test', statusCode: 302 };
     const handler = { handle: () => of(redirectObject) };
-    interceptor.intercept({} as any, handler).subscribe((result) => {
+    interceptor.intercept({} as ExecutionContext, handler).subscribe((result) => {
       expect(result).toEqual(redirectObject);
       done();
     });
@@ -36,7 +37,7 @@ describe('ResponseEnvelopeInterceptor', () => {
 
   it('should wrap a null response', (done) => {
     const handler = { handle: () => of(null) };
-    interceptor.intercept({} as any, handler).subscribe((result) => {
+    interceptor.intercept({} as ExecutionContext, handler).subscribe((result) => {
       expect(result).toEqual({ success: true, data: null });
       done();
     });
@@ -44,7 +45,7 @@ describe('ResponseEnvelopeInterceptor', () => {
 
   it('should wrap an undefined response', (done) => {
     const handler = { handle: () => of(undefined) };
-    interceptor.intercept({} as any, handler).subscribe((result) => {
+    interceptor.intercept({} as ExecutionContext, handler).subscribe((result) => {
       expect(result).toEqual({ success: true, data: undefined });
       done();
     });
@@ -52,7 +53,7 @@ describe('ResponseEnvelopeInterceptor', () => {
 
   it('should wrap an empty object response', (done) => {
     const handler = { handle: () => of({}) };
-    interceptor.intercept({} as any, handler).subscribe((result) => {
+    interceptor.intercept({} as ExecutionContext, handler).subscribe((result) => {
       expect(result).toEqual({ success: true, data: {} });
       done();
     });
@@ -61,7 +62,7 @@ describe('ResponseEnvelopeInterceptor', () => {
   it('should wrap an array response', (done) => {
     const arrayData = [{ id: 1 }, { id: 2 }];
     const handler = { handle: () => of(arrayData) };
-    interceptor.intercept({} as any, handler).subscribe((result) => {
+    interceptor.intercept({} as ExecutionContext, handler).subscribe((result) => {
       expect(result).toEqual({ success: true, data: arrayData });
       done();
     });

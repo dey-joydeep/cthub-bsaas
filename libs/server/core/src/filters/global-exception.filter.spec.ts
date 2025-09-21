@@ -1,9 +1,16 @@
-import { HttpStatus } from '@nestjs/common';
+import { HttpStatus, ArgumentsHost } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import type { Response } from 'express';
+import type { Response, Request } from 'express';
 
 import { GlobalExceptionFilter } from './global-exception.filter';
 import { ErrorService, NormalizedError } from '../errors/error.service';
+
+interface MockArgumentsHost extends ArgumentsHost {
+  switchToHttp: () => {
+    getResponse: () => Response;
+    getRequest: () => Request;
+  };
+}
 
 describe('GlobalExceptionFilter', () => {
   let filter: GlobalExceptionFilter;
@@ -50,14 +57,14 @@ describe('GlobalExceptionFilter', () => {
       json: jest.fn(),
     } as unknown as Response;
 
-    const host = {
+    const host: MockArgumentsHost = {
       switchToHttp: () => ({
         getResponse: () => response,
-        getRequest: () => ({ url: '/test' }),
+        getRequest: () => ({ url: '/test' }) as Request,
       }),
-    };
+    } as MockArgumentsHost;
 
-    filter.catch(new Error('oops'), host as any);
+    filter.catch(new Error('oops'), host);
 
     expect(errorService.handle).toHaveBeenCalledWith(expect.any(Error), {
       context: 'GlobalExceptionFilter',
@@ -92,14 +99,14 @@ describe('GlobalExceptionFilter', () => {
       json: jest.fn(),
     } as unknown as Response;
 
-    const host = {
+    const host: MockArgumentsHost = {
       switchToHttp: () => ({
         getResponse: () => response,
-        getRequest: () => ({ url: '/secure' }),
+        getRequest: () => ({ url: '/secure' }) as Request,
       }),
-    };
+    } as MockArgumentsHost;
 
-    filter.catch(new Error('oops'), host as any);
+    filter.catch(new Error('oops'), host);
 
     expect(errorService.handle).toHaveBeenCalledWith(expect.any(Error), {
       context: 'GlobalExceptionFilter',
@@ -133,14 +140,14 @@ describe('GlobalExceptionFilter', () => {
       json: jest.fn(),
     } as unknown as Response;
 
-    const host = {
+    const host: MockArgumentsHost = {
       switchToHttp: () => ({
         getResponse: () => response,
-        getRequest: () => ({ url: '/test' }),
+        getRequest: () => ({ url: '/test' }) as Request,
       }),
-    };
+    } as MockArgumentsHost;
 
-    filter.catch(new Error('validation'), host as any);
+    filter.catch(new Error('validation'), host);
 
     expect(response.json).toHaveBeenCalledWith({
       statusCode: HttpStatus.BAD_REQUEST,
@@ -168,14 +175,14 @@ describe('GlobalExceptionFilter', () => {
       json: jest.fn(),
     } as unknown as Response;
 
-    const host = {
+    const host: MockArgumentsHost = {
       switchToHttp: () => ({
         getResponse: () => response,
-        getRequest: () => ({ url: '/test' }),
+        getRequest: () => ({ url: '/test' }) as Request,
       }),
-    };
+    } as MockArgumentsHost;
 
-    filter.catch(new Error('validation'), host as any);
+    filter.catch(new Error('validation'), host);
 
     expect(response.json).toHaveBeenCalledWith({
       statusCode: HttpStatus.BAD_REQUEST,

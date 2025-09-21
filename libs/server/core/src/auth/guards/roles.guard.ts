@@ -26,7 +26,7 @@ const ROLE_HIERARCHY: Record<UserRole, UserRole[]> = {
  * @param roles Array of UserRole that are allowed to access the route
  */
 export const Roles = (...roles: UserRole[]) => {
-  return (target: any, key?: string, descriptor?: PropertyDescriptor) => {
+  return (target: Function | object, key?: string, descriptor?: PropertyDescriptor) => {
     if (descriptor) {
       // Method decorator
       Reflect.defineMetadata(ROLES_KEY, roles, descriptor.value);

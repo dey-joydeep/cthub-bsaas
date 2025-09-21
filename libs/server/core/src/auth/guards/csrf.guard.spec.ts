@@ -1,19 +1,23 @@
-import { ForbiddenException, ExecutionContext } from '@nestjs/common';
+import { ForbiddenException, ExecutionContext, HttpArgumentsHost } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { CsrfGuard, SKIP_CSRF_KEY, SkipCsrf } from './csrf.guard';
 
-const createMockExecutionContext = (
-  req: Partial<{
-    method: string;
-    headers: Record<string, string>;
-    cookies?: Record<string, string>;
-  }>,
-): ExecutionContext =>
+interface MockRequest {
+  method?: string;
+  headers?: Record<string, string | undefined>;
+  cookies?: Record<string, string>;
+}
+
+interface MockExecutionContext extends ExecutionContext {
+  switchToHttp: () => HttpArgumentsHost & { getRequest: () => MockRequest };
+}
+
+const makeCtx = (req: Partial<MockRequest>): MockExecutionContext =>
   ({
-    switchToHttp: () => ({ getRequest: () => req }),
+    switchToHttp: () => ({ getRequest: () => req as MockRequest }),
     getHandler: () => ({}),
     getClass: () => ({}),
-  } as any);
+  }) as MockExecutionContext;
 
 describe('CsrfGuard', () => {
   let guard: CsrfGuard;
@@ -25,24 +29,21 @@ describe('CsrfGuard', () => {
   });
 
   // Test for safe methods
-  test.each(['GET', 'HEAD', 'OPTIONS'])(
-    'should allow safe method: %s',
-    (method) => {
-      const context = createMockExecutionContext({ method });
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
-      expect(guard.canActivate(context)).toBe(true);
-    },
-  );
+  test.each(['GET', 'HEAD', 'OPTIONS'])('should allow safe method: %s', (method) => {
+    const context = makeCtx({ method });
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
+    expect(guard.canActivate(context)).toBe(true);
+  });
 
   it('should default to GET and allow if method is not present', () => {
-    const context = createMockExecutionContext({});
+    const context = makeCtx({});
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
     expect(guard.canActivate(context)).toBe(true);
   });
 
   // Test for CSRF skip decorator
   it('should bypass check if SkipCsrf decorator is present', () => {
-    const context = createMockExecutionContext({ method: 'POST' });
+    const context = makeCtx({ method: 'POST' });
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(true); // Simulate decorator presence
     expect(guard.canActivate(context)).toBe(true);
   });
@@ -60,32 +61,27 @@ describe('CsrfGuard', () => {
       { headerName: 'x-xsrf-token', headerValue: token },
       { headerName: 'x-csrf-token', headerValue: token },
       { headerName: 'X-CSRF-Token', headerValue: token },
-    ])(
-      'should allow POST when $headerName header matches cookie',
-      ({ headerName, headerValue }) => {
-        const context = createMockExecutionContext({
-          method: 'POST',
-          headers: { [headerName]: headerValue },
-          cookies: { 'XSRF-TOKEN': token },
-        });
-        expect(guard.canActivate(context)).toBe(true);
-      },
-    );
+    ])('should allow POST when $headerName header matches cookie', ({ headerName, headerValue }) => {
+      const context = makeCtx({
+        method: 'POST',
+        headers: { [headerName]: headerValue },
+        cookies: { 'XSRF-TOKEN': token },
+      });
+      expect(guard.canActivate(context)).toBe(true);
+    });
 
     it('should throw ForbiddenException if tokens mismatch', () => {
-      const context = createMockExecutionContext({
+      const context = makeCtx({
         method: 'POST',
         headers: { 'x-xsrf-token': 'wrong-token' },
         cookies: { 'XSRF-TOKEN': token },
       });
       expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
-      expect(() => guard.canActivate(context)).toThrow(
-        'error.security.csrf_failed',
-      );
+      expect(() => guard.canActivate(context)).toThrow('error.security.csrf_failed');
     });
 
     it('should throw ForbiddenException if header is missing but cookie is present', () => {
-      const context = createMockExecutionContext({
+      const context = makeCtx({
         method: 'POST',
         headers: {},
         cookies: { 'XSRF-TOKEN': token },
@@ -94,7 +90,7 @@ describe('CsrfGuard', () => {
     });
 
     it('should allow POST if CSRF cookie is not present', () => {
-      const context = createMockExecutionContext({
+      const context = makeCtx({
         method: 'POST',
         headers: { 'x-xsrf-token': token },
         cookies: {}, // No XSRF-TOKEN cookie
@@ -103,7 +99,7 @@ describe('CsrfGuard', () => {
     });
 
     it('should allow POST if cookies object is undefined', () => {
-      const context = createMockExecutionContext({
+      const context = makeCtx({
         method: 'POST',
         headers: { 'x-xsrf-token': token },
         cookies: undefined, // cookies object does not exist
@@ -112,7 +108,7 @@ describe('CsrfGuard', () => {
     });
 
     it('should throw ForbiddenException if header is an empty string and cookie is not', () => {
-      const context = createMockExecutionContext({
+      const context = makeCtx({
         method: 'POST',
         headers: { 'x-xsrf-token': '' },
         cookies: { 'XSRF-TOKEN': token },
@@ -121,7 +117,7 @@ describe('CsrfGuard', () => {
     });
 
     it('should allow request if both header and cookie are matching empty strings', () => {
-      const context = createMockExecutionContext({
+      const context = makeCtx({
         method: 'POST',
         headers: { 'x-xsrf-token': '' },
         cookies: { 'XSRF-TOKEN': '' },

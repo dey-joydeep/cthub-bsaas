@@ -13,7 +13,7 @@ describe('IsNotLastAdminConstraint', () => {
     constraint = new IsNotLastAdminConstraint(dbMock);
   });
 
-  const createMockArgs = (roleToSet?: UserRole, constraints?: any[]): ValidationArguments => ({
+  const createMockArgs = (roleToSet?: UserRole, constraints?: (Error | LastAdminValidationError)[]): ValidationArguments => ({
     value: 'user-id-123',
     constraints: constraints || [],
     targetName: '',
