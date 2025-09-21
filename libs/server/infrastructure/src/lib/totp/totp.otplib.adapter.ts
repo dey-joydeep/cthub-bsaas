@@ -9,6 +9,7 @@ import { TotpPort } from '@cthub-bsaas/server-contracts-auth';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { authenticator } from 'otplib';
 import { toDataURL } from 'qrcode';
+import { Buffer } from 'node:buffer';
 
 /**
  * @public
@@ -66,7 +67,8 @@ export class TotpOtplibAdapter implements TotpPort {
             return false;
         }
 
-        const secret = this.encryptionService.decrypt(credential.secretEncrypted.toString());
+        const encryptedHex = Buffer.from(credential.secretEncrypted).toString();
+        const secret = this.encryptionService.decrypt(encryptedHex);
         const isValid = authenticator.verify({ token, secret });
 
         if (isValid && !credential.verified) {
