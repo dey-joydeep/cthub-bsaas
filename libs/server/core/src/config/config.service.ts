@@ -4,8 +4,9 @@ import { Config } from './configuration';
 
 @Injectable()
 export class ConfigService {
-  constructor(private configService: NestConfigService) {}
+  constructor(private readonly configService: NestConfigService) {}
 
+  // -------- Section getters (preserve existing public API) --------
   get app(): Config['app'] {
     return this.configService.get<Config['app']>('config.app')!;
   }
@@ -42,22 +43,21 @@ export class ConfigService {
     return this.configService.get<Config['log']>('config.log')!;
   }
 
+  // -------- Generic getters (typed; keep spec expectations) --------
   /**
-   * Get a configuration value by key
-   * @param key The configuration key in dot notation (e.g., 'app.port')
-   * @returns The configuration value or undefined if not found
+   * Get a configuration value by key.
+   * Accepts either "app.port" or "config.app.port".
    */
-  get<T = any>(key: string): T | undefined {
-    return this.configService.get<T>(`config.${key}`);
+  get<T = unknown>(key: string): T | undefined {
+    const k = key.startsWith('config.') ? key : `config.${key}`;
+    return this.configService.get<T>(k);
   }
 
   /**
-   * Get a required configuration value by key
-   * @param key The configuration key in dot notation
-   * @returns The configuration value
-   * @throws Error if the configuration value is not found
+   * Get a required configuration value by key.
+   * Throws if the key is not present.
    */
-  getRequired<T = any>(key: string): T {
+  getRequired<T = unknown>(key: string): T {
     const value = this.get<T>(key);
     if (value === undefined) {
       throw new Error(`Configuration key '${key}' is required but was not found`);
