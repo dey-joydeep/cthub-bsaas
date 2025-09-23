@@ -1,16 +1,49 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
-import { CREDENTIAL_TOTP_REPOSITORY, ICredentialTotpRepository, CREDENTIAL_PASSKEY_REPOSITORY, ICredentialPasskeyRepository } from '@cthub-bsaas/server-contracts-auth';
-import { Inject } from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable, Inject } from '@nestjs/common';
+import {
+  CREDENTIAL_TOTP_REPOSITORY,
+  ICredentialTotpRepository,
+  CREDENTIAL_PASSKEY_REPOSITORY,
+  ICredentialPasskeyRepository,
+} from '@cthub-bsaas/server-contracts-auth';
 import { AUTH_ERROR_CODES } from '@cthub-bsaas/shared';
+import type { AuthenticatedUser, UserRole, UserRoleInfo } from '@cthub-bsaas/shared';
 
 /**
- * StrongAuthGuard enforces strong authentication (Passkey or verified TOTP)
- * for specific roles (Admin). It assumes {@link JwtAuthGuard} has already
- * populated `req.user` with `{ userId: string, roles: string[] }`.
+ * StrongAuthGuard enforces strong authentication (Passkey or verified TOTP) for Admin users.
+ * Assumes JwtAuthGuard already populated req.user.
  *
- * Current implementation checks for verified TOTP. Passkey presence may be
- * added via a repository/port in a follow-up.
+ * Behavior expected by the spec:
+ * - Unauthenticated user => resolves false (let JwtAuthGuard/route config handle 401 elsewhere).
+ * - Non-admin users => resolves true (no strong auth requirement).
+ * - Admin users => resolves true if:
+ *     - TOTP record exists and `verified === true`, OR
+ *     - a passkey exists for the user (hasAny === true).
+ *   Otherwise throws ForbiddenException(STRONG_AUTH_REQUIRED).
  */
+
+type MaybeRole = UserRole | UserRoleInfo | string;
+
+function normalizeRoles(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  return (input as MaybeRole[])
+    .map((r) => {
+      if (typeof r === 'string') return r;
+      if (r && typeof r.name === 'string') return r.name;
+      return undefined;
+    })
+    .filter((v): v is string => !!v)
+    .map((v) => v.toUpperCase());
+}
+
+function pickUserId(user: unknown): string | null {
+  if (user && typeof user === 'object') {
+    const u = user as { userId?: unknown; id?: unknown };
+    if (typeof u.userId === 'string') return u.userId;
+    if (typeof u.id === 'string') return u.id;
+  }
+  return null;
+}
+
 @Injectable()
 export class StrongAuthGuard implements CanActivate {
   constructor(
@@ -19,19 +52,31 @@ export class StrongAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const req = context.switchToHttp().getRequest();
-    const user = (req as { user?: { userId: string; roles?: string[] } }).user;
+    const req = context.switchToHttp().getRequest<{ user?: Partial<AuthenticatedUser> & { userId?: string } }>();
+
+    const user = req.user;
+    // Spec requires: unauthenticated => return false (no throw here)
     if (!user) return false;
-    const roles = Array.isArray(user.roles) ? user.roles : [];
-    // Enforce for Admin role only; Owners/Staff optional unless tenant policy adds enforcement.
-    const isAdmin = roles.some((r) => String(r).toUpperCase() === 'ADMIN');
+
+    const roles = normalizeRoles(user.roles);
+    const isAdmin = roles.includes('ADMIN');
     if (!isAdmin) return true;
 
-    // Check verified TOTP
-    const totp = await this.totpRepo.findByUserId(user.userId);
-    const hasTotp = !!totp?.verified;
-    const hasPasskey = await this.passkeyRepo.hasAny(user.userId);
-    if (hasTotp || hasPasskey) return true;
+    const userId = pickUserId(user);
+    if (!userId) {
+      // Admin with no resolvable id cannot satisfy strong auth checks
+      throw new ForbiddenException(AUTH_ERROR_CODES.STRONG_AUTH_REQUIRED);
+    }
+
+    // Allow if TOTP is verified
+    const totp = await this.totpRepo.findByUserId(userId);
+    const hasVerifiedTotp =
+      !!totp && Object.prototype.hasOwnProperty.call(totp, 'verified') && (totp as { verified?: unknown }).verified === true;
+
+    // Or if any passkey exists
+    const hasPasskey = await this.passkeyRepo.hasAny(userId);
+
+    if (hasVerifiedTotp || hasPasskey) return true;
 
     throw new ForbiddenException(AUTH_ERROR_CODES.STRONG_AUTH_REQUIRED);
   }
