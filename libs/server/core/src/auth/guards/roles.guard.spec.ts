@@ -1,22 +1,25 @@
+import 'reflect-metadata';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
-import { UserRole, AuthenticatedUser } from '@cthub-bsaas/shared';
-import { RolesGuard, Roles, ROLES_KEY } from './roles.guard';
+import { AuthenticatedUser, UserRole } from '@cthub-bsaas/shared';
+import { RolesGuard } from './roles.guard';
+import { Roles, ROLES_KEY } from '../decorators/roles.decorator';
 
-// Helper to create a mock ExecutionContext
+// Create a mock ExecutionContext with roles metadata stamped on the handler
 const createMockExecutionContext = (
   user: Partial<AuthenticatedUser> | null,
-  reflector: Reflector,
+  _reflector: Reflector, // kept in signature so call sites don’t change
   requiredRoles: UserRole[] = [],
 ): ExecutionContext => {
-  jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(requiredRoles);
+  const handler = function noop() {};
+  Reflect.defineMetadata(ROLES_KEY, requiredRoles, handler);
 
   return {
     switchToHttp: () => ({
       getRequest: () => ({ user }),
     }),
-    getHandler: () => null,
+    getHandler: () => handler,
     getClass: () => null,
   } as unknown as ExecutionContext;
 };
@@ -49,6 +52,11 @@ describe('RolesGuard', () => {
       expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
     });
 
+    it('should deny access if user has no roles', () => {
+      const context = createMockExecutionContext({ roles: [] }, reflector, [UserRole.CUSTOMER]);
+      expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
+    });
+
     it('should allow access for direct role match', () => {
       const context = createMockExecutionContext({ roles: [UserRole.STAFF] }, reflector, [UserRole.STAFF]);
       expect(guard.canActivate(context)).toBe(true);
@@ -59,40 +67,48 @@ describe('RolesGuard', () => {
       expect(guard.canActivate(context)).toBe(true);
     });
 
-    it('should deny access for insufficient permissions', () => {
+    it('should deny access for insufficient permissions (CUSTOMER vs ADMIN)', () => {
       const context = createMockExecutionContext({ roles: [UserRole.CUSTOMER] }, reflector, [UserRole.ADMIN]);
       expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
     });
 
     it('should handle user roles as objects', () => {
-      const user = { roles: [{ name: UserRole.OWNER }] };
+      const user = { roles: [{ name: UserRole.OWNER }] } as Partial<AuthenticatedUser>;
       const context = createMockExecutionContext(user, reflector, [UserRole.STAFF]);
+      // OWNER implies STAFF
       expect(guard.canActivate(context)).toBe(true);
     });
 
-    it('should deny access if user has no roles', () => {
-      const context = createMockExecutionContext({ roles: [] }, reflector, [UserRole.CUSTOMER]);
-      expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
-    });
-
-    it('should ignore invalid roles in user object and still grant access', () => {
-      const user = { roles: ['invalid-role', UserRole.STAFF] };
+    it('should ignore invalid roles in user object and still grant access if one valid role exists', () => {
+      const user = {
+        // Intentionally mix invalid strings with one valid role
+        roles: ['invalid-role', UserRole.STAFF] as unknown as UserRole[],
+      } as Partial<AuthenticatedUser>;
       const context = createMockExecutionContext(user, reflector, [UserRole.STAFF]);
       expect(guard.canActivate(context)).toBe(true);
     });
 
     it('should deny access if user has only invalid roles', () => {
-        const user = { roles: ['invalid-role', 'another-invalid'] };
-        const context = createMockExecutionContext(user, reflector, [UserRole.STAFF]);
-        expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
-      });
+      const user = {
+        // Only invalid strings; normalization yields no valid roles -> Forbidden
+        roles: ['invalid-role', 'another-invalid'] as unknown as UserRole[],
+      } as Partial<AuthenticatedUser>;
+      const context = createMockExecutionContext(user, reflector, [UserRole.STAFF]);
+      expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
+    });
+
+    it('should allow access when multiple required roles include one that user effectively has (via hierarchy)', () => {
+      const context = createMockExecutionContext({ roles: [UserRole.OWNER] }, reflector, [UserRole.ADMIN, UserRole.STAFF]);
+      // OWNER implies STAFF
+      expect(guard.canActivate(context)).toBe(true);
+    });
   });
 
   describe('Roles Decorator', () => {
     it('should apply roles to a class', () => {
       @Roles(UserRole.ADMIN)
       class TestClass {}
-      const roles = Reflect.getMetadata(ROLES_KEY, TestClass);
+      const roles = Reflect.getMetadata(ROLES_KEY, TestClass) as UserRole[];
       expect(roles).toEqual([UserRole.ADMIN]);
     });
 
@@ -101,7 +117,7 @@ describe('RolesGuard', () => {
         @Roles(UserRole.CUSTOMER)
         testMethod() {}
       }
-      const roles = Reflect.getMetadata(ROLES_KEY, TestClass.prototype.testMethod);
+      const roles = Reflect.getMetadata(ROLES_KEY, TestClass.prototype.testMethod) as UserRole[];
       expect(roles).toEqual([UserRole.CUSTOMER]);
     });
   });

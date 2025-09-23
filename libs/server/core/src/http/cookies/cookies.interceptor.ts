@@ -1,47 +1,62 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
-import type { Response } from 'express';
+import { HttpAdapterHost } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { CookieRegistry, buildSetCookie } from './cookie-commands';
 
-/**
- * CookiesInterceptor
- *
- * - Applies cookies/headers prepared in res.locals in a type-safe way.
- * - Avoids using Response.prototype.header (sticks to setHeader/append).
- * - Returns Observable<unknown> to avoid unsafe "any" returns.
- */
-interface CookieLocals {
-  /** Pre-formatted Set-Cookie strings, e.g., "name=value; Path=/; HttpOnly; SameSite=Lax" */
-  cookiesToSet?: string[];
-  /** Arbitrary headers to set on the HTTP response */
-  headersToSet?: Record<string, string>;
+type ExpressLikeResponse = { append(name: string, value: string): void };
+type FastifyLikeResponse = { header(name: string, value: string | string[]): void };
+
+function isExpressResponse(res: unknown): res is ExpressLikeResponse {
+  return typeof (res as { append?: unknown }).append === 'function';
 }
 
-// Response<ResBody = any, Locals extends Record<string, any> = Record<string, any>>
-type ExpressResponse = Response<unknown, CookieLocals>;
+function isFastifyResponse(res: unknown): res is FastifyLikeResponse {
+  return typeof (res as { header?: unknown }).header === 'function';
+}
 
+interface HeaderCapableAdapter {
+  setHeader(res: unknown, name: string, value: string | string[]): void;
+}
+
+/**
+ * @public
+ * Interceptor that applies queued cookie commands to the underlying response
+ * using the current HTTP adapter (Express or Fastify).
+ */
 @Injectable()
 export class CookiesInterceptor implements NestInterceptor {
-  intercept(context: ExecutionContext, next: CallHandler<unknown>): Observable<unknown> {
-    const res = context.switchToHttp().getResponse<ExpressResponse>();
+  constructor(
+    private readonly registry: CookieRegistry,
+    private readonly httpAdapterHost: HttpAdapterHost,
+  ) {}
 
+  intercept(context: ExecutionContext, next: CallHandler<unknown>): Observable<unknown> {
     return next.handle().pipe(
       tap(() => {
-        // Apply cookies (if any)
-        const cookies = res.locals.cookiesToSet;
-        if (Array.isArray(cookies) && cookies.length > 0) {
-          for (const c of cookies) {
-            res.append('Set-Cookie', c);
+        const http = context.switchToHttp();
+        const res = http.getResponse<unknown>();
+        const commands = this.registry.drain();
+        if (commands.length === 0) return;
+
+        const values = commands.map(buildSetCookie);
+
+        if (isExpressResponse(res)) {
+          for (const v of values) {
+            res.append('Set-Cookie', v);
           }
+          return;
         }
 
-        // Apply headers (if any)
-        const headers = res.locals.headersToSet;
-        if (headers && typeof headers === 'object') {
-          for (const [key, value] of Object.entries(headers)) {
-            res.setHeader(key, value);
-          }
+        if (isFastifyResponse(res)) {
+          res.header('Set-Cookie', values);
+          return;
         }
+
+        // Fallback: use adapter to set header (typed via a local interface)
+        const adapter = this.httpAdapterHost.httpAdapter as unknown as HeaderCapableAdapter;
+        const merged: string | string[] = values.length === 1 ? values[0] : values;
+        adapter.setHeader(res, 'Set-Cookie', merged);
       }),
     );
   }
