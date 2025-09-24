@@ -40,7 +40,7 @@ describe('NotificationService', () => {
 
   it('should mark a notification as read', async () => {
     const notification = service.addNotification({ title: 'Test' });
-    await service.markAsRead(notification.id);
+    service.markAsRead(notification.id);
 
     const notifications = await firstValueFrom(service.notifications$);
     const unreadCount = await firstValueFrom(service.unreadCount$);
@@ -49,27 +49,29 @@ describe('NotificationService', () => {
     expect(unreadCount).toBe(0);
   });
 
-  it('should throw an error if notification to mark as read is not found', async () => {
-    await expect(service.markAsRead('non-existent-id')).rejects.toThrow('Notification not found');
+  it('should throw an error if notification to mark as read is not found', () => {
+    expect(() => service.markAsRead('nope')).toThrow('Notification not found');
   });
 
   it('should mark all notifications as read', async () => {
     service.addNotification({ title: 'Test 1' });
     service.addNotification({ title: 'Test 2' });
-    await service.markAllAsRead();
+    service.markAllAsRead();
 
     const notifications = await firstValueFrom(service.notifications$);
     const unreadCount = await firstValueFrom(service.unreadCount$);
 
-    expect(notifications.every(n => n.read)).toBe(true);
+    expect(notifications.every((n) => n.read)).toBe(true);
     expect(unreadCount).toBe(0);
   });
 
-  it('should update loading state during getNotifications', async () => {
+  it('should update loading state during getNotifications', () => {
     const loadingValues: boolean[] = [];
-    const sub = service.loading$.subscribe(v => loadingValues.push(v));
+    const sub = service.loading$.subscribe((v) => loadingValues.push(v));
 
-    await service.getNotifications();
+    service.addNotification({ title: 'seed', message: 'seed' });
+    const list = service.getNotifications();
+    expect(list.length).toBeGreaterThan(0);
     sub.unsubscribe();
 
     expect(loadingValues).toEqual([false, true, false]);
