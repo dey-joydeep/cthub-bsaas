@@ -3,6 +3,8 @@
 
 Status: ok
 
+**Guarding Note:** Public endpoints are decorated with `@Public()` and resolved via the new `JwtOptionalAuthGuard`, allowing anonymous access while still hydrating `@OptionalUser()` when a JWT cookie/header is present. Strict routes retain `@UseGuards(JwtAuthGuard)`.
+
 Discovered endpoints (subset):
 - GET /auth/oauth/:provider/callback
 - GET /auth/oauth/:provider/start
