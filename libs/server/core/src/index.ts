@@ -17,7 +17,7 @@ export * from './config/config.service';
 export * from './config/configuration';
 
 // Decorators
-export * from './decorators/user.decorator';
+export * from './decorators/optional-user.decorator';
 export * from './decorators/current-user.decorator';
 
 // Errors

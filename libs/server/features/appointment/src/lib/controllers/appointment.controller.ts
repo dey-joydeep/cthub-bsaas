@@ -15,8 +15,8 @@ import {
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 // Core imports
-import { AuthUser, User } from '@cthub-bsaas/server-core';
-import { JwtAuthGuard, Roles, RolesGuard } from '@cthub-bsaas/server-core';
+import { CurrentUser, JwtAuthGuard, Roles, RolesGuard } from '@cthub-bsaas/server-core';
+import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 
 // Feature imports
 import { CreateAppointmentDto, FilterAppointmentsDto } from '../dto/requests';
@@ -32,6 +32,12 @@ import { AppointmentService } from '../services/appointment.service';
 @ApiTags('Appointments')
 export class AppointmentController {
   constructor(private readonly appointmentService: AppointmentService) {}
+
+  private hasRole(user: AuthenticatedUser, role: AppUserRole): boolean {
+    return user.roles.some((entry) =>
+      typeof entry === 'string' ? entry === role : entry.name === role,
+    );
+  }
 
   @Post()
   @Roles(AppUserRole.ADMIN, AppUserRole.OWNER, AppUserRole.STAFF, AppUserRole.CUSTOMER)
@@ -56,9 +62,9 @@ export class AppointmentController {
     status: HttpStatus.FORBIDDEN,
     description: 'Forbidden: Insufficient permissions',
   })
-  async create(@Body() createAppointmentDto: CreateAppointmentDto, @User() user: AuthUser): Promise<AppointmentDetailsDto> {
+  async create(@Body() createAppointmentDto: CreateAppointmentDto, @CurrentUser() user: AuthenticatedUser): Promise<AppointmentDetailsDto> {
     // Customers can only create appointments for themselves
-    if (user.roles.some((role) => role.name === AppUserRole.CUSTOMER)) {
+    if (this.hasRole(user, AppUserRole.CUSTOMER)) {
       createAppointmentDto.customerId = user.id;
     }
 
@@ -83,11 +89,11 @@ export class AppointmentController {
     status: HttpStatus.FORBIDDEN,
     description: 'Forbidden: Insufficient permissions',
   })
-  async findAll(@Query() filterDto: FilterAppointmentsDto, @User() user: AuthUser): Promise<PaginatedAppointmentsDto> {
+  async findAll(@Query() filterDto: FilterAppointmentsDto, @CurrentUser() user: AuthenticatedUser): Promise<PaginatedAppointmentsDto> {
     // Non-admin users can only see their own appointments
-    if (user.roles.some((role) => role.name === AppUserRole.CUSTOMER)) {
+    if (this.hasRole(user, AppUserRole.CUSTOMER)) {
       filterDto.customerId = user.id;
-    } else if (user.roles.some((role) => role.name === AppUserRole.STAFF)) {
+    } else if (this.hasRole(user, AppUserRole.STAFF)) {
       filterDto.staffId = user.id;
     }
 
@@ -119,7 +125,7 @@ export class AppointmentController {
     required: false,
     description: 'Filter criteria for appointments',
   })
-  async getAppointmentsOverview(@Query() filter: Partial<FilterAppointmentsDto>, @User() user: AuthUser): Promise<AppointmentStatsDto> {
+  async getAppointmentsOverview(@Query() filter: Partial<FilterAppointmentsDto>, @CurrentUser() user: AuthenticatedUser): Promise<AppointmentStatsDto> {
     // Create a new filter instance with default values
     const filterDto = new FilterAppointmentsDto();
     Object.assign(filterDto, filter);
@@ -163,7 +169,7 @@ export class AppointmentController {
     description: 'Optional user ID to get appointments for (admin/owner/staff only)',
   })
   async getUserAppointments(
-    @User() user: AuthUser,
+    @CurrentUser() user: AuthenticatedUser,
     @Query('userId') targetUserId?: string,
     @Query() filters: Partial<FilterAppointmentsDto> = {} as Partial<FilterAppointmentsDto>,
   ): Promise<AppointmentResponseDto[]> {
@@ -172,9 +178,8 @@ export class AppointmentController {
 
     // If a user is trying to access another user's appointments, check permissions
     if (userId !== user.id) {
-      const hasPermission = user.roles.some((role) =>
-        [AppUserRole.ADMIN, AppUserRole.OWNER, AppUserRole.STAFF].includes(role.name as AppUserRole),
-      );
+      const allowedRoles = [AppUserRole.ADMIN, AppUserRole.OWNER, AppUserRole.STAFF];
+      const hasPermission = allowedRoles.some((role) => this.hasRole(user, role));
 
       if (!hasPermission) {
         throw new ForbiddenException('You do not have permission to view these appointments');
@@ -215,14 +220,14 @@ export class AppointmentController {
   async getTenantAppointments(
     @Param('tenantId') tenantId: string,
     @Query() filters: Partial<FilterAppointmentsDto> = {},
-    @User() user: AuthUser,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<AppointmentResponseDto[]> {
     // Create a new filter instance with default values
     const filterDto = new FilterAppointmentsDto();
     Object.assign(filterDto, filters);
 
     // For customers, only show their own appointments for this tenant
-    if (user.roles.some((role) => role.name === AppUserRole.CUSTOMER)) {
+    if (this.hasRole(user, AppUserRole.CUSTOMER)) {
       filterDto.customerId = user.id;
       return this.appointmentService.getAppointmentsByUser(user.id, filterDto);
     }
@@ -274,10 +279,10 @@ export class AppointmentController {
   async getUserEligibleToReview(
     @Param('userId') userId: string,
     @Param('tenantId') tenantId: string,
-    @User() user: AuthUser,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<{ eligible: boolean; message?: string }> {
     // Only allow users to check their own eligibility or admins to check any user
-    const isAdmin = user.roles.some((role) => role.name === AppUserRole.ADMIN);
+    const isAdmin = this.hasRole(user, AppUserRole.ADMIN);
     if (!isAdmin && user.id !== userId) {
       throw new ForbiddenException('You do not have permission to check review eligibility for this user');
     }

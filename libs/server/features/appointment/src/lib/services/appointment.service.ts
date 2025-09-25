@@ -1,4 +1,4 @@
-import type { AuthUser } from '@cthub-bsaas/server-core';
+import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 import { PrismaService } from '@cthub-bsaas/server-data-access';
 import { AppointmentStatus, isAppointmentStatus } from '@cthub-bsaas/shared';
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
@@ -71,7 +71,7 @@ export class AppointmentService {
   /**
    * Create a new appointment
    */
-  async createAppointment(createAppointmentDto: CreateAppointmentDto, user: AuthUser): Promise<AppointmentDetailsDto> {
+  async createAppointment(createAppointmentDto: CreateAppointmentDto, user: AuthenticatedUser): Promise<AppointmentDetailsDto> {
     this.logger.warn('Using stubbed implementation for createAppointment - Appointment model not found in schema');
 
     try {
@@ -186,7 +186,7 @@ export class AppointmentService {
   /**
    * Get all appointments with pagination
    */
-  async findAllAppointments(filters: FilterAppointmentsDto, user: AuthUser): Promise<PaginatedAppointmentsDto> {
+  async findAllAppointments(filters: FilterAppointmentsDto, user: AuthenticatedUser): Promise<PaginatedAppointmentsDto> {
     this.logger.warn('Using stubbed implementation for findAllAppointments - Appointment model not found in schema');
 
     // Return empty paginated result
@@ -212,7 +212,7 @@ export class AppointmentService {
   /**
    * Update an appointment
    */
-  async updateAppointment(id: string, updateAppointmentDto: UpdateAppointmentDto, user: AuthUser): Promise<AppointmentDetailsDto> {
+  async updateAppointment(id: string, updateAppointmentDto: UpdateAppointmentDto, user: AuthenticatedUser): Promise<AppointmentDetailsDto> {
     this.logger.warn(`Using stubbed implementation for updateAppointment - Appointment model not found in schema (ID: ${id})`);
     throw new BadRequestException('Cannot update appointment - Appointment model not found in schema');
   }
@@ -220,7 +220,7 @@ export class AppointmentService {
   /**
    * Cancel an appointment
    */
-  async cancelAppointment(id: string, user: AuthUser): Promise<AppointmentDetailsDto> {
+  async cancelAppointment(id: string, user: AuthenticatedUser): Promise<AppointmentDetailsDto> {
     this.logger.warn(`Using stubbed implementation for cancelAppointment - Appointment model not found in schema (ID: ${id})`);
     throw new BadRequestException('Cannot cancel appointment - Appointment model not found in schema');
   }
@@ -228,7 +228,7 @@ export class AppointmentService {
   /**
    * Get appointment statistics
    */
-  async getAppointmentStats(filters: FilterAppointmentsDto, user: AuthUser): Promise<AppointmentStatsDto> {
+  async getAppointmentStats(filters: FilterAppointmentsDto, user: AuthenticatedUser): Promise<AppointmentStatsDto> {
     this.logger.warn('Using stubbed implementation for getAppointmentStats - Appointment model not found in schema');
 
     return {
