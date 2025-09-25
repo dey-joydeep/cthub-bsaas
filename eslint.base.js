@@ -37,6 +37,7 @@ export default [
     plugins: { '@nx': nxEslintPlugin },
     files: ['**/*.{ts,tsx,js,jsx,mts,cts}'],
     rules: {
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       '@nx/enforce-module-boundaries': [
         'error',
         {
