@@ -25,7 +25,7 @@ export class IsNotLastAdminConstraint implements ValidatorConstraintInterface {
     }
 
     const userRoles = await this.db.getUserRoles(userId);
-    const isAdmin = userRoles.some(r => r.role.name === UserRole.ADMIN);
+    const isAdmin = userRoles.some((roleRecord) => roleRecord.role.name === UserRole.ADMIN);
 
     if (!isAdmin) {
       return true;
@@ -50,9 +50,9 @@ export class IsNotLastAdminConstraint implements ValidatorConstraintInterface {
   }
 
   defaultMessage(args: ValidationArguments): string {
-    const error = args.constraints?.[0];
-    if (error instanceof LastAdminValidationError) {
-      return error.message;
+    const constraintError = Array.isArray(args.constraints) ? (args.constraints[0] as unknown) : undefined;
+    if (constraintError instanceof LastAdminValidationError) {
+      return constraintError.message;
     }
     return 'Validation failed while checking admin status';
   }

@@ -131,7 +131,7 @@ describe('CsrfGuard', () => {
       @SkipCsrf()
       class TestClass {}
 
-      const metadata = Reflect.getMetadata(SKIP_CSRF_KEY, TestClass);
+      const metadata = Reflect.getMetadata(SKIP_CSRF_KEY, TestClass) as boolean | undefined;
       expect(metadata).toBe(true);
     });
   });

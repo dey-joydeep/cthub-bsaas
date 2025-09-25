@@ -4,7 +4,6 @@ import { Test } from '@nestjs/testing';
 import { from, lastValueFrom, of } from 'rxjs';
 import { IS_PUBLIC_KEY } from '../../lib/auth/decorators/public.decorator';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { AuthGuard } from '@nestjs/passport'; // Import AuthGuard
 import { AuthenticatedUser } from '@cthub-bsaas/shared';
 
 // Define a mock interface for AuthGuard to provide type safety for handleRequest
@@ -12,16 +11,31 @@ interface MockAuthGuard {
   handleRequest(
     err: Error | null,
     user: AuthenticatedUser | null,
-    info: any, // Still 'any' due to external library
+    info: unknown,
     context: ExecutionContext,
-    status?: any // Still 'any' due to external library
+    status?: unknown
   ): AuthenticatedUser;
 }
 
 describe('JwtAuthGuard', () => {
   let guard: JwtAuthGuard;
   let reflector: Reflector;
-  let parentProto: Partial<{ canActivate: (context: ExecutionContext) => boolean | Promise<boolean> | Observable<boolean>; handleRequest: (err: Error | undefined, user: AuthenticatedUser | undefined, info: any, context: ExecutionContext, status?: any) => AuthenticatedUser; }>; // prototype of the anonymous class returned by AuthGuard('jwt')
+  type ParentCanActivate = (context: ExecutionContext) => boolean | Promise<boolean> | Observable<boolean>;
+  let parentProto: Partial<{ canActivate: ParentCanActivate; handleRequest: MockAuthGuard['handleRequest'] }>; // prototype of the anonymous class returned by AuthGuard('jwt')
+
+  const getParentGuard = () =>
+    parentProto as {
+      canActivate: ParentCanActivate;
+      handleRequest: MockAuthGuard['handleRequest'];
+    };
+
+  const invokeHandleRequest = (
+    err: Error | null,
+    user: AuthenticatedUser | null,
+    info: unknown,
+    context: ExecutionContext,
+    status?: unknown,
+  ) => (guard as unknown as MockAuthGuard).handleRequest(err, user, info, context, status);
 
   // Mock ExecutionContext for simplicity
   const mockExecutionContext = {
@@ -70,7 +84,7 @@ describe('JwtAuthGuard', () => {
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
 
       // Spy on the TRUE parent prototype so the override executes and calls super
-      const superCanActivate = jest.spyOn(parentProto, 'canActivate').mockReturnValue(true);
+      const superCanActivate = jest.spyOn(getParentGuard(), 'canActivate').mockReturnValue(true);
 
       const result = guard.canActivate(mockExecutionContext);
 
@@ -81,7 +95,7 @@ describe('JwtAuthGuard', () => {
     it('should call and return super.canActivate for non-public routes (Promise)', async () => {
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
 
-      const superCanActivate = jest.spyOn(parentProto, 'canActivate').mockResolvedValue(true);
+      const superCanActivate = jest.spyOn(getParentGuard(), 'canActivate').mockResolvedValue(true);
 
       const result = await guard.canActivate(mockExecutionContext);
 
@@ -92,7 +106,7 @@ describe('JwtAuthGuard', () => {
     it('should call and return super.canActivate for non-public routes (Observable)', async () => {
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
 
-      const superCanActivate = jest.spyOn(parentProto, 'canActivate').mockReturnValue(of(true));
+      const superCanActivate = jest.spyOn(getParentGuard(), 'canActivate').mockReturnValue(of(true));
 
       const result = guard.canActivate(mockExecutionContext);
       const finalResult = await lastValueFrom(from(result as unknown));
@@ -105,7 +119,7 @@ describe('JwtAuthGuard', () => {
       // Simulate no @Public() metadata found (distinct from false)
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(undefined as unknown);
 
-      const superSpy = jest.spyOn(parentProto, 'canActivate').mockResolvedValue(true);
+      const superSpy = jest.spyOn(getParentGuard(), 'canActivate').mockResolvedValue(true);
 
       const result = await guard.canActivate(mockExecutionContext);
 
