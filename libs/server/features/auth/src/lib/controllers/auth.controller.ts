@@ -1,4 +1,12 @@
-import { Public } from '@cthub-bsaas/server-core';
+import {
+  CookiesInterceptor,
+  JwtAuthGuard,
+  JwtOptionalAuthGuard,
+  OptionalUser,
+  Public,
+  ResponseEnvelopeInterceptor,
+  SkipCsrf,
+} from '@cthub-bsaas/server-core';
 import {
   Body,
   Controller,
@@ -14,11 +22,10 @@ import {
   Redirect,
   Query,
   Delete,
+  UnauthorizedException,
 } from '@nestjs/common';
-import { COMMON_ERROR_CODES } from '@cthub-bsaas/shared';
-import { JwtAuthGuard } from '@cthub-bsaas/server-core';
+import { COMMON_ERROR_CODES, type AuthenticatedUser } from '@cthub-bsaas/shared';
 import { AuthService } from '../services/auth.service';
-import { SkipCsrf } from '@cthub-bsaas/server-core';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
@@ -47,7 +54,6 @@ import {
 import { RegistrationCompleteInput } from '@cthub-bsaas/server-contracts-auth';
 import { Inject } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { CookiesInterceptor, ResponseEnvelopeInterceptor } from '@cthub-bsaas/server-core';
 import { AuthCookiesService } from '../services/auth-cookies.service';
 import { parseRefreshCookie } from '../utils/cookie.util';
 // Public decorator is already imported at file top
@@ -58,6 +64,7 @@ import { parseRefreshCookie } from '../utils/cookie.util';
  * and account recovery endpoints.
  */
 @Controller('auth')
+@UseGuards(JwtOptionalAuthGuard)
 @UseInterceptors(CookiesInterceptor, ResponseEnvelopeInterceptor)
 export class AuthController {
   constructor(
@@ -454,12 +461,14 @@ export class AuthController {
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   async webauthnLoginStart(
     @Body() body: { email?: string; userId?: string },
-    @Request() req: { user?: { userId: string } },
+    @OptionalUser() user?: AuthenticatedUser,
   ): Promise<Record<string, unknown>> {
     // Allow unauthenticated start by identity (email or userId). Fallback to authenticated user if present.
     const payload = body ?? {};
-    const providedUserId = req?.user?.userId ?? payload.userId;
-    const userId = providedUserId ?? (payload.email ? await this.authService.resolveUserIdByEmail(payload.email) : undefined);
+    const providedUserId = this.extractUserId(user) ?? payload.userId;
+    const userId =
+      providedUserId ??
+      (payload.email ? await this.authService.resolveUserIdByEmail(payload.email) : undefined);
     if (!userId) {
       throw new BadRequestException('error.validation');
     }
@@ -481,11 +490,15 @@ export class AuthController {
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   async webauthnLoginFinish(
     @Body() response: WebauthnAssertionDto,
-    @Request() req: { user: { userId: string } },
+    @OptionalUser() user?: AuthenticatedUser,
   ): Promise<Record<string, never>> {
-    await this.webAuthn.finishAuthentication(req.user.userId, response.response as unknown as Record<string, unknown>);
+    const userId = this.extractUserId(user);
+    if (!userId) {
+      throw new UnauthorizedException();
+    }
+    await this.webAuthn.finishAuthentication(userId, response.response as unknown as Record<string, unknown>);
     // Issue session + tokens
-    const result = await this.authService.issueTokensForUser(req.user.userId);
+    const result = await this.authService.issueTokensForUser(userId);
     this.authCookies.issue({
       csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
       accessToken: result.accessToken,
@@ -619,12 +632,12 @@ export class AuthController {
    * OAuth callback: exchange code and sign-in or link.
    */
   @Public()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtOptionalAuthGuard)
   @Get('oauth/:provider/callback')
   @SkipCsrf()
   async oauthCallback(
     @Param('provider') provider: string,
-    @Request() req: { user?: { userId: string } },
+    @OptionalUser() user?: AuthenticatedUser,
     @Query('code') code?: string,
     @Query('state') state?: string,
   ): Promise<Record<string, never>> {
@@ -632,8 +645,9 @@ export class AuthController {
       throw new BadRequestException(COMMON_ERROR_CODES.VALIDATION);
     }
     const profile = await this.oauth.exchangeCode(provider, code, state);
-    if (req.user?.userId) {
-      await this.authService.linkSocialAccount(req.user.userId, profile.provider, profile.providerUserId);
+    const linkedUserId = this.extractUserId(user);
+    if (linkedUserId) {
+      await this.authService.linkSocialAccount(linkedUserId, profile.provider, profile.providerUserId);
       return {} as const;
     }
     // sign in path
@@ -663,5 +677,15 @@ export class AuthController {
   async oauthUnlinkAlias(@Param('provider') provider: string, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
     await this.authService.unlinkSocialAccount(req.user.userId, provider);
     return { success: true };
+  }
+
+  private extractUserId(user?: AuthenticatedUser): string | undefined {
+    if (!user) {
+      return undefined;
+    }
+
+    const record = user as Record<string, unknown>;
+    const candidate = (record.userId ?? record.id) as unknown;
+    return typeof candidate === 'string' && candidate.length > 0 ? candidate : undefined;
   }
 }

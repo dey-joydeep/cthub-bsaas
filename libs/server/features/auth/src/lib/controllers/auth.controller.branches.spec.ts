@@ -1,6 +1,7 @@
 import { AuthController } from './auth.controller';
 import { AuthService } from '../services/auth.service';
 import type { WebAuthnPort, RecoveryCodesPort, OAuthPort } from '@cthub-bsaas/server-contracts-auth';
+import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 import { LoginDto } from '../dto/login.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import type { Request as ExpressRequest } from 'express';
@@ -174,12 +175,15 @@ describe('AuthController branches (unit)', () => {
     const finish = await controller.webauthnRegisterFinish({ response: {} } as unknown as WebauthnAttestationDto, { user: { userId: 'u1' } } as { user: { userId: string } });
     expect(finish).toEqual({ success: true });
 
-    await expect(controller.webauthnLoginStart({}, {} as { user?: { userId: string } })).rejects.toThrow();
-    const reqStart = await controller.webauthnLoginStart({}, { user: { userId: 'u1' } } as { user?: { userId: string } });
+    await expect(controller.webauthnLoginStart({}, {} as AuthenticatedUser)).rejects.toThrow();
+    const reqStart = await controller.webauthnLoginStart({}, { userId: 'u1' } as unknown as AuthenticatedUser);
     expect(reqStart).toEqual({ request: true });
 
     service.issueTokensForUser.mockResolvedValueOnce({ accessToken: 'A', refreshToken: 'R' });
-    const done = await controller.webauthnLoginFinish({ response: {} } as unknown as WebauthnAssertionDto, { user: { userId: 'u1' } } as { user: { userId: string } });
+    const done = await controller.webauthnLoginFinish(
+      { response: {} } as unknown as WebauthnAssertionDto,
+      { userId: 'u1' } as unknown as AuthenticatedUser,
+    );
     expect(done).toEqual({});
     expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'A', refreshToken: 'R' }));
   });

@@ -1,5 +1,6 @@
 import { AuthController } from './auth.controller';
 import type { WebAuthnPort, RecoveryCodesPort, OAuthPort } from '@cthub-bsaas/server-contracts-auth';
+import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 import { AuthService } from '../services/auth.service';
 import { AuthCookiesService } from '../services/auth-cookies.service';
 
@@ -38,18 +39,18 @@ describe('AuthController OAuth endpoints (unit)', () => {
   });
 
   it('oauthCallback throws on missing code', async () => {
-    await expect(controller.oauthCallback('google', {}, undefined, undefined)).rejects.toBeTruthy();
+    await expect(controller.oauthCallback('google', undefined, undefined, undefined)).rejects.toBeTruthy();
   });
 
   it('oauthCallback links provider when user is authenticated', async () => {
-    const out = await controller.oauthCallback('google', { user: { userId: 'u1' } }, 'c', 's');
+    const out = await controller.oauthCallback('google', { userId: 'u1' } as unknown as AuthenticatedUser, 'c', 's');
     expect(oauth.exchangeCode).toHaveBeenCalledWith('google', 'c', 's');
     expect(authSvc.linkSocialAccount).toHaveBeenCalledWith('u1', 'google', 'pid');
     expect(out).toEqual({});
   });
 
   it('oauthCallback signs in unauthenticated user and sets cookies', async () => {
-    const out = await controller.oauthCallback('google', {}, 'code123', 'state');
+    const out = await controller.oauthCallback('google', undefined, 'code123', 'state');
     expect(out).toEqual({});
     expect(authSvc.signInWithSocial).toHaveBeenCalled();
     expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'AT', refreshToken: 'RT' }));
