@@ -45,7 +45,14 @@ export interface HandleErrorOptions {
  */
 @Injectable()
 export class ErrorService {
-  constructor(private readonly logger: LoggerService) {}
+  private readonly logger: LoggerService;
+
+  constructor(logger: LoggerService) {
+    if (!logger) {
+      throw new Error('LoggerService required');
+    }
+    this.logger = logger;
+  }
 
   /**
    * Normalize and log an error.
@@ -53,10 +60,11 @@ export class ErrorService {
    * @param {HandleErrorOptions} [options] Caller specific options.
    * @returns {NormalizedError} Normalized error payload.
    */
-  public handle(exception: unknown, options: HandleErrorOptions = {}): NormalizedError {
-    const includeStack = options.includeStack ?? false;
+  public handle(exception: unknown, options?: HandleErrorOptions | null): NormalizedError {
+    const resolvedOptions = options ?? {};
+    const includeStack = resolvedOptions.includeStack ?? false;
     const normalized = this.normalize(exception, includeStack);
-    this.logException(exception, normalized, options);
+    this.logException(exception, normalized, resolvedOptions);
     return normalized;
   }
 
