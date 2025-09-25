@@ -17,6 +17,18 @@ See also the User Stories:
 - `partner-auth-user-story.md`
 - `customer-auth-user-story.md`
 
+## Route Access & Decorators
+
+We run the JWT guard globally on API routes. Decorators control how each handler participates:
+
+| Use case | Decorators & guards | Behavior |
+| --- | --- | --- |
+| **Strict member-only** | `@UseGuards(JwtAuthGuard)` + `@CurrentUser()` | Guard enforces a valid JWT; handler receives the authenticated user. Missing/invalid token → 401/403. |
+| **Public with perks** | `@Public()` + `@UseGuards(JwtOptionalAuthGuard)` + `@OptionalUser()` *(planned)* | Endpoint stays accessible without a token. If a JWT is supplied, the guard sets `req.user` so the handler can personalize the response. |
+| **Fully open** | No guard + no decorators | Everyone gets through; used rarely (mostly internal tooling). |
+
+`@Public()` already marks login/registration/reset/etc. routes in `auth.controller.ts`. The new optional guard will let those endpoints surface member extras without breaking anonymous access.
+
 ## Folder Map (specs)
 ```
 auth-specs-updated/
