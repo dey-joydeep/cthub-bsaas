@@ -1,8 +1,8 @@
 // Core library public API
 
 // Auth
-export { ROLES_KEY, Roles } from './auth/decorators/roles.decorator';
-export { IS_PUBLIC_KEY, Public } from './lib/auth/decorators/public.decorator';
+export { ROLES_KEY, Roles } from './decorators/roles.decorator';
+export { IS_PUBLIC_KEY, Public } from './decorators/public.decorator';
 export * from './lib/encryption/encryption.module';
 export * from './lib/encryption/encryption.service';
 export { JwtAuthGuard } from './auth/guards/jwt-auth.guard';

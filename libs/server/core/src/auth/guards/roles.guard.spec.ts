@@ -4,7 +4,7 @@ import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { AuthenticatedUser, UserRole } from '@cthub-bsaas/shared';
 import { RolesGuard } from './roles.guard';
-import { Roles, ROLES_KEY } from '../decorators/roles.decorator';
+import { Roles, ROLES_KEY } from '../../decorators/roles.decorator';
 
 // Create a mock ExecutionContext with roles metadata stamped on the handler
 const createMockExecutionContext = (

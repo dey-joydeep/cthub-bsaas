@@ -2,7 +2,7 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthenticatedUser, UserRole } from '@cthub-bsaas/shared';
-import { ROLES_KEY } from '../decorators/roles.decorator';
+import { ROLES_KEY } from '../../decorators/roles.decorator';
 
 /**
  * Role hierarchy: expanding a user's roles "downward" (ADMIN ⇒ OWNER ⇒ STAFF ⇒ CUSTOMER ⇒ GUEST).
