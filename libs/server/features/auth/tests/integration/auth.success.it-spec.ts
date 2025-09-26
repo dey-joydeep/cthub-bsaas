@@ -8,8 +8,7 @@ import { TOTP_PORT, WEB_AUTHN_PORT } from '@cthub-bsaas/server-contracts-auth';
 import { TotpOtplibAdapter, WebAuthnStubAdapter } from '@cthub-bsaas/server-infrastructure';
 import { ConfigService, IS_PUBLIC_KEY } from '@cthub-bsaas/server-core';
 import { AuthController } from '../../src/lib/controllers/auth.controller';
-import { setupAuthIntegrationHarness, AuthIntegrationHarness } from './utils/auth-integration.harness';
-import { ensureAuthRoles } from '@cthub-bsaas/server-testing-utils';
+import { setupAuthIntegrationHarness, AuthIntegrationHarness, ensureAuthRoles } from './utils/auth-integration.harness';
 
 import 'reflect-metadata';
 

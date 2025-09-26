@@ -1,19 +1,116 @@
 import { randomUUID } from 'crypto';
 import type { INestApplication } from '@nestjs/common';
 import type { JwtService } from '@nestjs/jwt';
-import type { User, PrismaClient } from '@prisma/client';
+import type { PrismaClient, User } from '@prisma/client';
+import { Prisma, RegistrationStatus } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 import type supertest from 'supertest';
-import {
-  createAuthTestUser,
-  CreateAuthTestUserOptions,
-  deleteTestUser,
-  ensureAuthRoles,
-} from '@cthub-bsaas/server-testing-utils';
 import type { EmailPort } from '@cthub-bsaas/server-contracts-auth';
 import { createAuthTestContext } from './auth-test-app';
 import type { EncryptionService } from '@cthub-bsaas/server-core';
 import { UserRole } from '@cthub-bsaas/shared';
 import { ThrottlerStorageService } from '@nestjs/throttler';
+
+export interface CreateAuthTestUserOptions {
+  readonly email?: string;
+  readonly password?: string;
+  readonly name?: string;
+  readonly isVerified?: boolean;
+  readonly emailVerifiedAt?: Date | null;
+  readonly registrationStatus?: RegistrationStatus;
+  readonly overrides?: Prisma.UserUpdateInput;
+}
+
+async function ensureAuthRoles(prisma: PrismaClient, roles: UserRole[] = Object.values(UserRole)): Promise<void> {
+  for (const role of roles) {
+    const name = role.toUpperCase();
+    await prisma.role.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
+  }
+}
+
+async function deleteTestUser(prisma: PrismaClient, user: User | null | undefined): Promise<void> {
+  if (!user) {
+    return;
+  }
+
+  await prisma.saasOwner.deleteMany({ where: { userId: user.id } });
+
+  const sessions = await prisma.session.findMany({
+    where: { userId: user.id },
+    select: { id: true },
+  });
+  const sessionIds = sessions.map((session) => session.id);
+
+  if (sessionIds.length > 0) {
+    await prisma.refreshToken.deleteMany({ where: { sessionId: { in: sessionIds } } });
+  }
+
+  await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
+  await prisma.session.deleteMany({ where: { userId: user.id } });
+  await prisma.socialAccount.deleteMany({ where: { userId: user.id } });
+  await prisma.credentialPasskey.deleteMany({ where: { userId: user.id } });
+  await prisma.credentialTOTP.deleteMany({ where: { userId: user.id } });
+  await prisma.recoveryCode.deleteMany({ where: { userId: user.id } });
+  await prisma.passwordReset.deleteMany({ where: { userId: user.id } });
+  await prisma.emailVerification.deleteMany({ where: { email: user.email } });
+  await prisma.userRole.deleteMany({ where: { userId: user.id } });
+  await prisma.salonTenantStaff.deleteMany({ where: { userId: user.id } });
+
+  await prisma.user.delete({ where: { id: user.id } });
+}
+
+async function createAuthTestUser(
+  prisma: PrismaClient,
+  roles: UserRole[],
+  options: CreateAuthTestUserOptions = {},
+): Promise<User> {
+  const uniqueRoles = Array.from(new Set(roles));
+  if (uniqueRoles.length === 0) {
+    throw new Error('createAuthTestUser requires at least one role.');
+  }
+
+  await ensureAuthRoles(prisma, uniqueRoles);
+
+  const email = options.email ?? `test-${randomUUID()}@example.com`;
+  const passwordHash = await bcrypt.hash(options.password ?? 'password', 10);
+  const isVerified = options.isVerified ?? true;
+  const emailVerifiedAt =
+    typeof options.emailVerifiedAt === 'undefined' ? (isVerified ? new Date() : null) : options.emailVerifiedAt;
+  const registrationStatus = options.registrationStatus ?? RegistrationStatus.COMPLETED;
+
+  const user = await prisma.user.create({
+    data: {
+      email,
+      passwordHash,
+      name: options.name ?? 'Test User',
+      isVerified,
+      emailVerifiedAt,
+      registrationStatus,
+      roles: {
+        create: uniqueRoles.map((role) => ({
+          role: {
+            connect: { name: role.toUpperCase() },
+          },
+        })),
+      },
+    },
+  });
+
+  if (options.overrides && Object.keys(options.overrides).length > 0) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: options.overrides,
+    });
+  }
+
+  return prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+}
+
+export { ensureAuthRoles };
 
 export interface CapturedEmail {
   to: string;

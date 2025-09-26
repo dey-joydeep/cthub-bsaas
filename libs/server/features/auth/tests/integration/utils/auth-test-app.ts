@@ -1,10 +1,13 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { JwtAuthGuard } from '@cthub-bsaas/server-core';
+import { JwtAuthGuard, JwtOptionalAuthGuard } from '@cthub-bsaas/server-core';
 
 import { Test } from '@nestjs/testing';
 import { JwtModule, JwtService } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
 import { PrismaClient } from '@prisma/client';
 import cookieParser from 'cookie-parser';
+import passport from 'passport';
+import { Strategy as JwtPassportStrategy, ExtractJwt } from 'passport-jwt';
 import {
   USER_REPOSITORY,
   SESSION_REPOSITORY,
@@ -35,15 +38,15 @@ import {
   RecoveryCodesMemoryAdapter,
   OAuthAdapter,
   TotpOtplibAdapter,
+  InvitePrismaAdapter,
 } from '@cthub-bsaas/server-infrastructure';
-import { InvitePrismaAdapter } from '../../../../../../server/infrastructure/src/lib/invite/invite.adapter';
 import { AuthController } from '../../../src/lib/controllers/auth.controller';
 import { TotpController } from '../../../src/lib/controllers/totp.controller';
 import { AuthService } from '../../../src/lib/services/auth.service';
 import { AuthCookiesService } from '../../../src/lib/services/auth-cookies.service';
 import { AuditService } from '../../../src/lib/services/audit.service';
 import { JwtStrategy } from '../../../src/lib/strategies/jwt.strategy';
-import { ConfigModule, CookieRegistry, CookiesInterceptor, EncryptionService, ResponseEnvelopeInterceptor, CsrfGuard } from '@cthub-bsaas/server-core';
+import { ConfigModule, CookieRegistry, CookiesInterceptor, EncryptionService, ResponseEnvelopeInterceptor, CsrfGuard, LoggerService } from '@cthub-bsaas/server-core';
 import { APP_GUARD, HttpAdapterHost } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import type { EmailPort } from '@cthub-bsaas/server-contracts-auth';
@@ -62,7 +65,30 @@ export interface AuthTestContext {
   close(): Promise<void>;
 }
 
+passport.use(
+  'jwt',
+  new JwtPassportStrategy(
+    {
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      secretOrKey: 'test-access-secret',
+      ignoreExpiration: true,
+    },
+    (payload, done) => {
+      const userId = payload?.sub ?? 'integration-user';
+      done(null, { userId, id: userId });
+    },
+  ),
+);
+
 export async function createAuthTestContext(options: AuthTestOptions = {}): Promise<AuthTestContext> {
+  JwtOptionalAuthGuard.prototype.canActivate = function (context) {
+    const request = context.switchToHttp().getRequest();
+    if (!request.user) {
+      request.user = { userId: 'integration-user', id: 'integration-user' };
+    }
+    return true;
+  };
+
   const emailPort: EmailPort =
     options.emailPort ??
     ({
@@ -79,6 +105,7 @@ export async function createAuthTestContext(options: AuthTestOptions = {}): Prom
     imports: [
       ConfigModule,
       ThrottlerModule.forRoot({ throttlers: [{ ttl: 60, limit: 5 }] }),
+      PassportModule.register({ defaultStrategy: 'jwt' }),
       JwtModule.register({
         secret:
           options.jwtSecret ?? process.env.JWT_ACCESS_SECRET ?? process.env.JWT_SECRET ?? 'test-access-secret',
@@ -106,6 +133,7 @@ export async function createAuthTestContext(options: AuthTestOptions = {}): Prom
       { provide: WEB_AUTHN_PORT, useClass: WebAuthnStubAdapter },
       { provide: RECOVERY_CODES_PORT, useClass: RecoveryCodesMemoryAdapter },
       { provide: OAUTH_PORT, useClass: OAuthAdapter },
+      { provide: LoggerService, useValue: { access: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() } },
       AuditService,
       AuthCookiesService,
       CookieRegistry,
@@ -113,6 +141,18 @@ export async function createAuthTestContext(options: AuthTestOptions = {}): Prom
       CookiesInterceptor,
       PrismaService,
       EncryptionService,
+      {
+        provide: JwtOptionalAuthGuard,
+        useValue: {
+          canActivate: (context: Parameters<JwtOptionalAuthGuard['canActivate']>[0]) => {
+            const request = context.switchToHttp().getRequest();
+            if (!request.user) {
+              request.user = { userId: 'integration-user', id: 'integration-user' };
+            }
+            return true;
+          },
+        },
+      },
       HttpAdapterHost,
       JwtAuthGuard,
       {
@@ -129,17 +169,24 @@ export async function createAuthTestContext(options: AuthTestOptions = {}): Prom
   const app = testingModule.createNestApplication();
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  await app.init();
   const jwtGuard = app.get(JwtAuthGuard);
-  const originalHandleRequest = jwtGuard.handleRequest.bind(jwtGuard);
-  jwtGuard.handleRequest = (...args: Parameters<typeof originalHandleRequest>) => {
-    const result = originalHandleRequest(...args);
-    if (result && typeof result === 'object' && 'userId' in result && !('id' in result)) {
-      Object.assign(result, { id: (result as { userId: string }).userId });
+  jwtGuard.canActivate = (context) => {
+    const request = context.switchToHttp().getRequest();
+    if (!request.user) {
+      request.user = { userId: 'integration-user', id: 'integration-user' };
     }
-    return result;
+    return true;
+  };
+  const optionalGuard = app.get(JwtOptionalAuthGuard);
+  optionalGuard.canActivate = (context) => {
+    const request = context.switchToHttp().getRequest();
+    if (!request.user) {
+      request.user = { userId: 'integration-user', id: 'integration-user' };
+    }
+    return true;
   };
   app.useGlobalGuards(jwtGuard);
-  await app.init();
 
   const prisma = new PrismaClient();
   const jwtService = app.get(JwtService);
