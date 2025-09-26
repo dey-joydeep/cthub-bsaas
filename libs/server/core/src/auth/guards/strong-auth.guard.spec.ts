@@ -9,6 +9,9 @@ import {
 } from '@cthub-bsaas/server-contracts-auth';
 
 import { AdminRoles, AuthenticatedUser, UserRole } from '@cthub-bsaas/shared';
+import { mock, MockProxy } from 'jest-mock-extended';
+import type { HttpArgumentsHost } from '@nestjs/common/interfaces';
+import type { CredentialTOTP } from '@prisma/client';
 
 const coverBranchesForStrongAuth = () => {
   const coverage = (
@@ -36,25 +39,36 @@ const coverBranchesForStrongAuth = () => {
   }
 };
 
-const makeCtx = (user?: Partial<AuthenticatedUser>): ExecutionContext =>
-  ({
-    switchToHttp: () => ({ getRequest: () => ({ user }) }),
-  }) as unknown as ExecutionContext;
+const makeCtx = (user?: Partial<AuthenticatedUser>): ExecutionContext => {
+  const httpHost = mock<HttpArgumentsHost>();
+  httpHost.getRequest.mockReturnValue({ user });
+
+  const context = mock<ExecutionContext>();
+  context.switchToHttp.mockReturnValue(httpHost);
+
+  return context;
+};
+
+const buildCredential = (overrides: Partial<CredentialTOTP> = {}): CredentialTOTP => ({
+  id: overrides.id ?? 'totp-id',
+  createdAt: overrides.createdAt ?? new Date('2020-01-01T00:00:00Z'),
+  userId: overrides.userId ?? 'admin1',
+  lastUsedAt: overrides.lastUsedAt ?? null,
+  secretEncrypted: overrides.secretEncrypted ?? Buffer.from('secret'),
+  secretVersion: overrides.secretVersion ?? 1,
+  verified: overrides.verified ?? false,
+});
 
 describe('StrongAuthGuard', () => {
   let guard: StrongAuthGuard;
 
-  const mockTotpRepo = {
-    findByUserId: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-  } as jest.Mocked<ICredentialTotpRepository>;
-
-  const mockPasskeyRepo = {
-    hasAny: jest.fn(),
-  } as jest.Mocked<ICredentialPasskeyRepository>;
+  let mockTotpRepo: MockProxy<ICredentialTotpRepository>;
+  let mockPasskeyRepo: MockProxy<ICredentialPasskeyRepository>;
 
   beforeEach(async () => {
+    mockTotpRepo = mock<ICredentialTotpRepository>();
+    mockPasskeyRepo = mock<ICredentialPasskeyRepository>();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         StrongAuthGuard,
@@ -92,13 +106,13 @@ describe('StrongAuthGuard', () => {
     const adminUser = { userId: 'admin1', roles: AdminRoles } as unknown as AuthenticatedUser;
 
     it('should allow admin with a verified TOTP', async () => {
-      mockTotpRepo.findByUserId.mockResolvedValue({ verified: true });
+      mockTotpRepo.findByUserId.mockResolvedValue(buildCredential({ verified: true }));
       mockPasskeyRepo.hasAny.mockResolvedValue(false);
       await expect(guard.canActivate(makeCtx(adminUser))).resolves.toBe(true);
     });
 
     it('should allow admin with role objects that normalize to ADMIN', async () => {
-      mockTotpRepo.findByUserId.mockResolvedValue({ verified: true });
+      mockTotpRepo.findByUserId.mockResolvedValue(buildCredential({ verified: true }));
       mockPasskeyRepo.hasAny.mockResolvedValue(false);
       const userWithRoleObjects = { userId: 'admin-object', roles: AdminRoles } as Partial<AuthenticatedUser>;
       await expect(guard.canActivate(makeCtx(userWithRoleObjects))).resolves.toBe(true);
@@ -129,13 +143,13 @@ describe('StrongAuthGuard', () => {
     });
 
     it('should allow admin with both verified TOTP and a passkey', async () => {
-      mockTotpRepo.findByUserId.mockResolvedValue({ verified: true });
+      mockTotpRepo.findByUserId.mockResolvedValue(buildCredential({ verified: true }));
       mockPasskeyRepo.hasAny.mockResolvedValue(true);
       await expect(guard.canActivate(makeCtx(adminUser))).resolves.toBe(true);
     });
 
     it('should reject admin with an unverified TOTP and no passkey', async () => {
-      mockTotpRepo.findByUserId.mockResolvedValue({ verified: false });
+      mockTotpRepo.findByUserId.mockResolvedValue(buildCredential({ verified: false }));
       mockPasskeyRepo.hasAny.mockResolvedValue(false);
       await expect(guard.canActivate(makeCtx(adminUser))).rejects.toThrow(ForbiddenException);
     });
@@ -147,7 +161,7 @@ describe('StrongAuthGuard', () => {
     });
 
     it('should reject admin with a TOTP record missing the verified property', async () => {
-      mockTotpRepo.findByUserId.mockResolvedValue({}); // Missing 'verified' property
+      mockTotpRepo.findByUserId.mockResolvedValue({} as CredentialTOTP);
       mockPasskeyRepo.hasAny.mockResolvedValue(false);
       await expect(guard.canActivate(makeCtx(adminUser))).rejects.toThrow(ForbiddenException);
     });

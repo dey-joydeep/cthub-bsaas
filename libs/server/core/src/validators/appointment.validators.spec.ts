@@ -4,12 +4,12 @@ import { validate } from 'class-validator';
 
 class TestStatusDto {
   @IsValidAppointmentStatus()
-  status: string;
+  status!: string;
 }
 
 class TestTimeDto {
   @IsValidAppointmentTime()
-  time: string;
+  time!: string;
 }
 
 describe('Appointment Validators', () => {

@@ -1,6 +1,8 @@
-import { ForbiddenException, ExecutionContext, HttpArgumentsHost } from '@nestjs/common';
+import { ForbiddenException, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { CsrfGuard, SKIP_CSRF_KEY, SkipCsrf } from './csrf.guard';
+import { mock } from 'jest-mock-extended';
+import type { HttpArgumentsHost } from '@nestjs/common/interfaces';
 
 interface MockRequest {
   method?: string;
@@ -8,16 +10,18 @@ interface MockRequest {
   cookies?: Record<string, string>;
 }
 
-interface MockExecutionContext extends ExecutionContext {
-  switchToHttp: () => HttpArgumentsHost & { getRequest: () => MockRequest };
-}
+const makeCtx = (req: Partial<MockRequest>): ExecutionContext => {
+  const httpHost = mock<HttpArgumentsHost>();
+  httpHost.getRequest.mockReturnValue(req as MockRequest);
 
-const makeCtx = (req: Partial<MockRequest>): MockExecutionContext =>
-  ({
-    switchToHttp: () => ({ getRequest: () => req as MockRequest }),
-    getHandler: () => ({}),
-    getClass: () => ({}),
-  }) as MockExecutionContext;
+  const context = mock<ExecutionContext>();
+  context.switchToHttp.mockReturnValue(httpHost);
+  context.getHandler.mockReturnValue(() => undefined);
+  class Dummy {}
+  context.getClass.mockReturnValue(Dummy);
+
+  return context;
+};
 
 describe('CsrfGuard', () => {
   let guard: CsrfGuard;

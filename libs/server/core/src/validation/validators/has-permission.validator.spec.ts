@@ -10,6 +10,8 @@ describe('HasPermissionToAssignRoleConstraint', () => {
     constraint = new HasPermissionToAssignRoleConstraint();
   });
 
+  const roleInfo = (id: number, name: UserRole) => ({ id, name });
+
   const createMockArgs = (user: Partial<AuthenticatedUser> | null): ValidationArguments => ({
     value: UserRole.STAFF,
     constraints: [],
@@ -23,12 +25,12 @@ describe('HasPermissionToAssignRoleConstraint', () => {
   });
 
   it('should return true if user has permission to assign role', () => {
-    const args = createMockArgs({ roles: [{ name: UserRole.ADMIN }] });
+    const args = createMockArgs({ roles: [roleInfo(1, UserRole.ADMIN)] });
     expect(constraint.validate(UserRole.OWNER, args)).toBeTruthy();
   });
 
   it('should return false if user does not have permission to assign role', () => {
-    const args = createMockArgs({ roles: [{ name: UserRole.STAFF }] });
+    const args = createMockArgs({ roles: [roleInfo(2, UserRole.STAFF)] });
     expect(constraint.validate(UserRole.OWNER, args)).toBeFalsy();
   });
 
@@ -52,7 +54,7 @@ describe('HasPermissionToAssignRoleConstraint', () => {
       return baseValues as unknown[];
     });
 
-    const args = createMockArgs({ roles: [{ name: 'unknown-role' as unknown as UserRole }] } as Partial<AuthenticatedUser>);
+    const args = createMockArgs({ roles: [roleInfo(3, 'unknown-role' as unknown as UserRole)] } as Partial<AuthenticatedUser>);
 
     try {
       expect(constraint.validate(UserRole.CUSTOMER, args)).toBeFalsy();
@@ -62,12 +64,14 @@ describe('HasPermissionToAssignRoleConstraint', () => {
   });
 
   it('should filter out undefined roles', () => {
-    const args = createMockArgs({ roles: [undefined, { name: UserRole.STAFF }] });
+    const args = createMockArgs({
+      roles: [undefined as unknown as AuthenticatedUser['roles'][number], roleInfo(4, UserRole.STAFF)] as unknown as AuthenticatedUser['roles'],
+    });
     expect(constraint.validate(UserRole.CUSTOMER, args)).toBeTruthy();
   });
 
   it('should return a default error message', () => {
-    const args = createMockArgs({ roles: [{ name: UserRole.CUSTOMER }] });
+    const args = createMockArgs({ roles: [roleInfo(5, UserRole.CUSTOMER)] });
     args.value = UserRole.STAFF;
     expect(constraint.defaultMessage(args)).toBe("You don't have permission to assign the role: staff");
   });
@@ -75,7 +79,7 @@ describe('HasPermissionToAssignRoleConstraint', () => {
   it('should register the decorator', async () => {
     class TestDto {
       @HasPermissionToAssignRole()
-      role: UserRole;
+      role!: UserRole;
     }
     const dto = new TestDto();
     dto.role = UserRole.ADMIN;

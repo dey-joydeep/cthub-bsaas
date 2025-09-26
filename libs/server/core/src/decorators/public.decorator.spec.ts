@@ -7,7 +7,7 @@ describe('Public Decorator', () => {
       public testMethod() {}
     }
 
-    const isPublic = Reflect.getMetadata(IS_PUBLIC_KEY, TestClass.prototype.testMethod);
+    const isPublic = Reflect.getMetadata(IS_PUBLIC_KEY, TestClass.prototype.testMethod) as boolean;
 
     expect(isPublic).toBe(true);
   });

@@ -8,7 +8,7 @@ describe('Roles Decorator', () => {
       public testMethod() {}
     }
 
-    const roles = Reflect.getMetadata(ROLES_KEY, TestClass.prototype.testMethod);
+    const roles = Reflect.getMetadata(ROLES_KEY, TestClass.prototype.testMethod) as UserRole[];
 
     expect(roles).toEqual([UserRole.ADMIN, UserRole.OWNER]);
   });
@@ -19,7 +19,7 @@ describe('Roles Decorator', () => {
       public testMethod() {}
     }
 
-    const roles = Reflect.getMetadata(ROLES_KEY, TestClass.prototype.testMethod);
+    const roles = Reflect.getMetadata(ROLES_KEY, TestClass.prototype.testMethod) as UserRole[];
 
     expect(roles).toEqual([UserRole.STAFF]);
   });
@@ -30,7 +30,7 @@ describe('Roles Decorator', () => {
       public testMethod() {}
     }
 
-    const roles = Reflect.getMetadata(ROLES_KEY, TestClass.prototype.testMethod);
+    const roles = Reflect.getMetadata(ROLES_KEY, TestClass.prototype.testMethod) as UserRole[];
 
     expect(roles).toEqual([]);
   });

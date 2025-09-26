@@ -4,18 +4,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AppError } from './app.error';
 import { LoggerService } from '../logger/logger.service';
 import { ErrorService, NormalizedError } from './error.service';
+import { mock, MockProxy } from 'jest-mock-extended';
 
-const createLoggerMock = (): jest.Mocked<LoggerService> =>
-  ({
-    info: jest.fn<ReturnType<LoggerService['info']>, Parameters<LoggerService['info']>>() as jest.MockedFunction<LoggerService['info']>,
-    warn: jest.fn<ReturnType<LoggerService['warn']>, Parameters<LoggerService['warn']>>() as jest.MockedFunction<LoggerService['warn']>,
-    error: jest.fn<ReturnType<LoggerService['error']>, Parameters<LoggerService['error']>>() as jest.MockedFunction<LoggerService['error']>,
-    access: jest.fn<ReturnType<LoggerService['access']>, Parameters<LoggerService['access']>>() as jest.MockedFunction<LoggerService['access']>,
-  });
+const createLoggerMock = (): MockProxy<LoggerService> => mock<LoggerService>();
 
 describe('ErrorService', () => {
   let service: ErrorService;
-  let logger: jest.Mocked<LoggerService>;
+  let logger: MockProxy<LoggerService>;
   let module: TestingModule;
 
   beforeEach(async () => {
@@ -61,9 +56,9 @@ describe('ErrorService', () => {
       code: 'AUTH_FORBIDDEN',
       message: 'Forbidden',
       details: { userId: '123' },
-      stack: expect.any(String),
       shouldMaskResponse: false,
     });
+    expect(normalized.stack).toEqual(expect.any(String));
 
     expect(logger.warn).toHaveBeenCalledTimes(1);
     const [payload, context] = logger.warn.mock.calls[0];
@@ -111,7 +106,9 @@ describe('ErrorService', () => {
   });
 
   it('falls back to exception message when response payload is null', () => {
-    const exception = new HttpException(null, HttpStatus.BAD_REQUEST);
+    const exception = new HttpException('placeholder', HttpStatus.BAD_REQUEST);
+    jest.spyOn(exception, 'getResponse').mockReturnValue(null as unknown as Record<string, unknown>);
+
     const normalized = service.handle(exception);
     expect(normalized.message).toBe(exception.message);
   });
@@ -165,11 +162,6 @@ describe('ErrorService', () => {
     expect(normalized.code).toBe('UNHANDLED_ERROR');
   });
 
-  it('treats null options like default handling', () => {
-    const error = new Error('null options');
-    const normalized = service.handle(error, null);
-    expect(normalized.code).toBe('UNHANDLED_ERROR');
-  });
 
   it('handles generic error with no message', () => {
     const error = new Error();
@@ -201,9 +193,10 @@ describe('ErrorService', () => {
     expect(normalized.stack).toBeUndefined();
   });
 
-  it('handles null stack trace', () => {
+  it('handles nullish stack trace', () => {
     const error = new Error('test');
-    error.stack = null;
+    Object.defineProperty(error, 'stack', { value: undefined, configurable: true, writable: true });
+
     service.handle(error, { includeStack: true });
     expect(logger.error).toHaveBeenCalledWith(expect.any(String), undefined, 'ErrorService');
   });

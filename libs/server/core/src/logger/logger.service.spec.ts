@@ -1,6 +1,13 @@
-const configureMock = jest.fn();
-const getLoggerMock = jest.fn();
-const mkdirSyncMock = jest.fn();
+import type { Logger } from 'log4js';
+import { mock, MockProxy } from 'jest-mock-extended';
+
+type ConfigureFn = typeof import('log4js')['configure'];
+type GetLoggerFn = typeof import('log4js')['getLogger'];
+type MkdirSyncFn = typeof import('node:fs')['mkdirSync'];
+
+const configureMock = jest.fn<ReturnType<ConfigureFn>, Parameters<ConfigureFn>>();
+const getLoggerMock = jest.fn<ReturnType<GetLoggerFn>, Parameters<GetLoggerFn>>();
+const mkdirSyncMock = jest.fn<ReturnType<MkdirSyncFn>, Parameters<MkdirSyncFn>>();
 
 jest.mock('log4js', () => ({
   configure: configureMock,
@@ -12,14 +19,8 @@ jest.mock('node:fs', () => ({
 }));
 
 import { LoggerService } from './logger.service';
-
-interface MockConfigService {
-  log: {
-    dir: string;
-    app: { file: string; level: string };
-    access: { file: string; level: string };
-  };
-}
+import type { Config } from '../config/configuration';
+import type { ConfigService } from '../config/config.service';
 
 const coverBranchesForLogger = () => {
   const coverage = (globalThis as Record<string, unknown> & {
@@ -46,89 +47,118 @@ const coverBranchesForLogger = () => {
   }
 };
 
-describe('LoggerService', () => {
-  const configService = {
-    log: {
-      dir: 'logs',
-      app: { file: 'app.log', level: 'debug' },
-      access: { file: 'access.log', level: 'info' },
-    },
-  } as const;
+type LoggerDouble = {
+  logger: MockProxy<Logger>;
+  infoCalls: unknown[][];
+  warnCalls: unknown[][];
+  errorCalls: unknown[][];
+};
 
-  let defaultLogger: Record<string, jest.Mock>;
-  let accessLogger: Record<string, jest.Mock>;
+const createLoggerDouble = (): LoggerDouble => {
+  const logger = mock<Logger>();
+  const infoCalls: unknown[][] = [];
+  const warnCalls: unknown[][] = [];
+  const errorCalls: unknown[][] = [];
+
+  logger.info.mockImplementation((...args: unknown[]) => {
+    infoCalls.push(args);
+  });
+  logger.warn.mockImplementation((...args: unknown[]) => {
+    warnCalls.push(args);
+  });
+  logger.error.mockImplementation((...args: unknown[]) => {
+    errorCalls.push(args);
+  });
+
+  return { logger, infoCalls, warnCalls, errorCalls };
+};
+
+describe('LoggerService', () => {
+  const baseLogConfig: Config['log'] = {
+    dir: 'logs',
+    app: { file: 'app.log', level: 'debug' },
+    access: { file: 'access.log', level: 'info' },
+  };
+
+  let defaultLogger: LoggerDouble;
+  let accessLogger: LoggerDouble;
+  let configService: MockProxy<ConfigService>;
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    defaultLogger = {
-      level: jest.fn(),
-      isLevelEnabled: jest.fn(),
-      log: jest.fn(),
-      addContext: jest.fn(),
-      removeContext: jest.fn(),
-      setParseCallStackFunction: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      fatal: jest.fn(),
-      debug: jest.fn(),
-      trace: jest.fn(),
-      mark: jest.fn(),
-    };
+    defaultLogger = createLoggerDouble();
+    accessLogger = createLoggerDouble();
 
-    accessLogger = {
-      ...defaultLogger,
-      info: jest.fn(),
-    };
+    configService = mock<ConfigService>();
+    Object.defineProperty(configService, 'log', {
+      configurable: true,
+      get: () => baseLogConfig,
+    });
 
-    getLoggerMock.mockImplementation((category?: string) => (category === 'access' ? accessLogger : defaultLogger));
+    getLoggerMock.mockImplementation((category?: string) =>
+      category === 'access' ? accessLogger.logger : defaultLogger.logger,
+    );
   });
 
   it('configures log4js using config service settings', () => {
-    const service = new LoggerService(configService as MockConfigService);
+    const service = new LoggerService(configService);
 
     service.onModuleInit();
 
     expect(mkdirSyncMock).toHaveBeenCalledWith('logs', { recursive: true });
-    expect(configureMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        appenders: expect.objectContaining({
-          app: expect.objectContaining({ filename: expect.stringContaining('app.log') }),
-          access: expect.objectContaining({ filename: expect.stringContaining('access.log') }),
-        }),
-        categories: {
-          default: { appenders: ['console', 'app'], level: 'debug' },
-          access: { appenders: ['console', 'access'], level: 'info' },
-        },
-      }),
-    );
 
-    expect(getLoggerMock).toHaveBeenCalledWith('access');
-    expect(getLoggerMock).toHaveBeenCalledWith();
+    const firstCall = configureMock.mock.calls[0];
+    expect(firstCall).toBeDefined();
+    const [configuration] = firstCall as Parameters<ConfigureFn>;
+
+    const appenders = configuration.appenders as Record<string, unknown> | undefined;
+    const appAppender = appenders?.['app'] as Record<string, unknown> | undefined;
+    const accessAppender = appenders?.['access'] as Record<string, unknown> | undefined;
+
+    expect(typeof appAppender?.['filename']).toBe('string');
+    expect(String(appAppender?.['filename'])).toContain('app.log');
+    expect(typeof accessAppender?.['filename']).toBe('string');
+    expect(String(accessAppender?.['filename'])).toContain('access.log');
+    expect(configuration.categories).toEqual({
+      default: { appenders: ['console', 'app'], level: 'debug' },
+      access: { appenders: ['console', 'access'], level: 'info' },
+    });
+
+    expect(getLoggerMock.mock.calls).toEqual([
+      [],
+      ['access'],
+    ]);
   });
 
   it('provides helpers for each log level and channel', () => {
-    const service = new LoggerService(configService as MockConfigService);
+    const service = new LoggerService(configService);
     service.onModuleInit();
 
     service.info('hello', 'Context');
-    expect(defaultLogger.info).toHaveBeenCalledWith('[Context] hello');
-
     service.info('hello no context');
-    expect(defaultLogger.info).toHaveBeenCalledWith('hello no context');
 
     service.warn('watch out', 'Context');
-    expect(defaultLogger.warn).toHaveBeenCalledWith('[Context] watch out');
 
     service.error('fail', 'trace', 'Context');
-    expect(defaultLogger.error).toHaveBeenCalledWith('[Context] fail', 'trace');
-
     service.error('fail no trace', undefined, 'Context');
-    expect(defaultLogger.error).toHaveBeenCalledWith('[Context] fail no trace');
 
     service.access('login', 'Security');
-    expect(accessLogger.info).toHaveBeenCalledWith('[Security] login');
+
+    expect(defaultLogger.infoCalls).toEqual([
+      ['[Context] hello'],
+      ['hello no context'],
+    ]);
+    expect(defaultLogger.warnCalls).toEqual([
+      ['[Context] watch out'],
+    ]);
+    expect(defaultLogger.errorCalls).toEqual([
+      ['[Context] fail', 'trace'],
+      ['[Context] fail no trace'],
+    ]);
+    expect(accessLogger.infoCalls).toEqual([
+      ['[Security] login'],
+    ]);
   });
 
   afterAll(coverBranchesForLogger);
