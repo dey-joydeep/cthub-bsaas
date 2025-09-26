@@ -68,8 +68,10 @@ export class AuthService {
       roles: {
         create: [{ role: { connect: { name: 'CUSTOMER' } } }],
       },
-    } as unknown as Prisma.UserCreateInput;
-    const user = await this.userRepository.create(data as any);
+    };
+    const user = await this.userRepository.create(
+      data as unknown as Omit<User, 'id' | 'createdAt' | 'updatedAt'>,
+    );
     await this.requestEmailVerification(user.email);
     this.audit.log('register_success', { userId: user.id });
   }
