@@ -30,7 +30,7 @@ export class IsNotLastAdminConstraint implements ValidatorConstraintInterface {
     }
 
     const userRoles = await this.db.getUserRoles(userId);
-    const isAdmin = userRoles.some((roleRecord) => roleRecord.role.name === UserRole.ADMIN);
+    const isAdmin = userRoles.some((roleRecord: { role: { name: UserRole } }) => roleRecord.role.name === UserRole.ADMIN);
 
     if (!isAdmin) {
       return true;
