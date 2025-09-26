@@ -13,7 +13,7 @@
     "include": ["src/testing/**/*.ts", "**/*.spec.ts", "**/*.test.ts", "**/*.d.ts", "**/*.fixture.ts"],
     "references": [
         {
-            "path": "../../contracts-auth/tsconfig.lib.json"
+            "path": "../contracts-auth/tsconfig.lib.json"
         }
     ]
 }
