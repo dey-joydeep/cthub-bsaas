@@ -685,7 +685,7 @@ export class AuthController {
     }
 
     const record = user as Record<string, unknown>;
-    const candidate = (record.userId ?? record.id) as unknown;
+    const candidate = record.userId ?? record.id;
     return typeof candidate === 'string' && candidate.length > 0 ? candidate : undefined;
   }
 }

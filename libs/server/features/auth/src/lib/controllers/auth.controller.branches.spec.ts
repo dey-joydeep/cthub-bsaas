@@ -92,10 +92,12 @@ describe('AuthController branches (unit)', () => {
     expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'A3', refreshToken: 'R3' }));
 
     // service returns no refreshToken
-    service.refreshToken.mockResolvedValueOnce(undefined as unknown as { accessToken: string; refreshToken: string });
+    service.refreshToken.mockResolvedValueOnce(
+      undefined as unknown as Awaited<ReturnType<AuthService['refreshToken']>>,
+    );
     const req4 = { headers: {} } as unknown as ExpressRequest;
-    await controller.refresh({ refreshToken: 'body' } as RefreshTokenDto, req4);
-    expect(cookies.issue).toHaveBeenCalled();
+    await expect(controller.refresh({ refreshToken: 'body' } as RefreshTokenDto, req4)).rejects.toThrow();
+    expect(cookies.issue).not.toHaveBeenCalled();
 
     // missing token entirely -> error
     const req5 = { headers: {} } as unknown as ExpressRequest;
@@ -117,7 +119,12 @@ describe('AuthController branches (unit)', () => {
   });
 
   it('webauthnLoginStart uses default params and errors when none provided', async () => {
-    await expect(controller.webauthnLoginStart()).rejects.toThrow();
+    await expect(
+      controller.webauthnLoginStart(
+        {} as { email?: string; userId?: string },
+        undefined as unknown as AuthenticatedUser,
+      ),
+    ).rejects.toThrow();
   });
 
   it('logout clears cookies', async () => {
@@ -186,6 +193,16 @@ describe('AuthController branches (unit)', () => {
     );
     expect(done).toEqual({});
     expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'A', refreshToken: 'R' }));
+  });
+
+  it('webauthnLoginFinish throws when user context missing', async () => {
+    await expect(
+      controller.webauthnLoginFinish(
+        { response: {} } as unknown as WebauthnAssertionDto,
+        undefined as unknown as AuthenticatedUser,
+      ),
+    ).rejects.toThrow();
+    expect(cookies.issue).not.toHaveBeenCalled();
   });
 
   it('recovery generate/verify branches', async () => {
