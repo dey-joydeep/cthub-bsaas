@@ -1,16 +1,34 @@
 import { AuthCookiesService } from './auth-cookies.service';
-import type { CookieRegistry } from '@cthub-bsaas/server-core';
-import type { ConfigService } from '@nestjs/config';
+import type { CookieRegistry, ConfigService, AuthConfig } from '@cthub-bsaas/server-core';
+
+type CookieRegistryMock = jest.Mocked<Pick<CookieRegistry, 'set' | 'clear'>>;
+
+const BASE_AUTH_CONFIG: AuthConfig = {
+  jwtAccessSecret: 'access-secret',
+  jwtRefreshSecret: 'refresh-secret',
+  jwtEmailChangeSecret: 'email-change-secret',
+  jwtVerifyEmailSecret: 'verify-secret',
+  jwtExpiresIn: '1h',
+  refreshTokenExpiresIn: '7d',
+  cookieDomain: 'example.com',
+};
+
+const createConfig = (overrides: Partial<AuthConfig> = {}): ConfigService => ({
+  auth: {
+    ...BASE_AUTH_CONFIG,
+    ...overrides,
+  },
+}) as unknown as ConfigService;
 
 describe('AuthCookiesService', () => {
   let service: AuthCookiesService;
-  let registry: jest.Mocked<Pick<CookieRegistry, 'set' | 'clear'>>;
-  let config: Pick<ConfigService, 'get'>;
+  let registry: CookieRegistryMock;
+  let config: ConfigService;
 
   beforeEach(() => {
-    registry = { set: jest.fn(), clear: jest.fn() } as unknown as jest.Mocked<Pick<CookieRegistry, 'set' | 'clear'>>;
-    config = { get: jest.fn(() => 'example.com') };
-    service = new AuthCookiesService(registry as unknown as CookieRegistry, config as unknown as ConfigService);
+    registry = { set: jest.fn(), clear: jest.fn() } as unknown as CookieRegistryMock;
+    config = createConfig();
+    service = new AuthCookiesService(registry as unknown as CookieRegistry, config);
   });
 
   it('issues csrf + auth cookies when tokens provided', () => {

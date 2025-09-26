@@ -1,15 +1,16 @@
 import { AuditService } from './audit.service';
-import { Logger } from '@nestjs/common';
+import type { LoggerService } from '@cthub-bsaas/server-core';
+
+type LoggerMock = jest.Mocked<Pick<LoggerService, 'access'>>;
 
 describe('AuditService', () => {
   it('logs structured audit entries', () => {
-    const svc = new AuditService();
-    const spy = jest.spyOn(Logger.prototype, 'log').mockImplementation(() => undefined);
+    const logger = { access: jest.fn() } as unknown as LoggerMock;
+    const svc = new AuditService(logger as unknown as LoggerService);
     svc.log('event_key', { userId: 'u1', sessionId: 's1' });
-    expect(spy).toHaveBeenCalled();
-    const callArg = (spy.mock.calls[0]?.[0] as string) || '';
-    expect(callArg).toContain('event_key');
-    expect(callArg).toContain('userId');
-    spy.mockRestore();
+    expect(logger.access).toHaveBeenCalledWith(expect.stringContaining('event_key'), 'AuthAudit');
+    const payload = (logger.access.mock.calls[0]?.[0] as string) ?? '';
+    expect(payload).toContain('userId');
+    expect(payload).toContain('s1');
   });
 });
