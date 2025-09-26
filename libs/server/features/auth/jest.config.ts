@@ -1,11 +1,4 @@
 import type { Config } from 'jest';
-import { pathsToModuleNameMapper } from 'ts-jest';
-import tsconfig from '../../../../tsconfig.base.json';
-
-const compilerOptions = tsconfig.compilerOptions ?? {};
-const moduleNameMapper = pathsToModuleNameMapper(compilerOptions.paths ?? {}, {
-  prefix: '<rootDir>/../../../../',
-});
 
 const config: Config = {
   displayName: 'server-feature-auth',
@@ -16,7 +9,6 @@ const config: Config = {
   globalSetup: '<rootDir>/../../server-testing-utils/src/lib/global-setup.ts',
   globalTeardown: '<rootDir>/../../server-testing-utils/src/lib/global-teardown.ts',
   testTimeout: 30000,
-  moduleNameMapper,
   transform: {
     '^.+\\.[tj]s$': [
       'ts-jest',
