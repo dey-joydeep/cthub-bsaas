@@ -19,5 +19,23 @@
   // Match our EOL/indent preferences at the editor level too
   "files.eol": "\n",
   "editor.tabSize": 2,
-  "editor.insertSpaces": true
+  "editor.insertSpaces": true,
+
+  // Keep VS Code from watching Nx build outputs so cache cleanup can delete them
+  "files.watcherExclude": {
+    "**/dist/**": true,
+    "**/.nx/**": true
+  },
+
+  // Also hide generated artifacts from search/UIs
+  "search.exclude": {
+    "**/dist/**": true,
+    "**/.nx/**": true
+  },
+
+  // Tweak tsserver watcher so it ignores dist outputs
+  "typescript.tsserver.watchOptions": {
+    "excludeDirectories": ["**/dist", "**/.nx", "**/tmp"],
+    "watchFile": "useFsEventsOnParentDirectory"
+  }
 }
