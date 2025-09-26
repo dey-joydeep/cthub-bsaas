@@ -5,18 +5,21 @@ import { AppError } from './app.error';
 import { LoggerService } from '../logger/logger.service';
 import { ErrorService, NormalizedError } from './error.service';
 
+const createLoggerMock = (): jest.Mocked<LoggerService> =>
+  ({
+    info: jest.fn<ReturnType<LoggerService['info']>, Parameters<LoggerService['info']>>() as jest.MockedFunction<LoggerService['info']>,
+    warn: jest.fn<ReturnType<LoggerService['warn']>, Parameters<LoggerService['warn']>>() as jest.MockedFunction<LoggerService['warn']>,
+    error: jest.fn<ReturnType<LoggerService['error']>, Parameters<LoggerService['error']>>() as jest.MockedFunction<LoggerService['error']>,
+    access: jest.fn<ReturnType<LoggerService['access']>, Parameters<LoggerService['access']>>() as jest.MockedFunction<LoggerService['access']>,
+  });
+
 describe('ErrorService', () => {
   let service: ErrorService;
   let logger: jest.Mocked<LoggerService>;
   let module: TestingModule;
 
   beforeEach(async () => {
-    logger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      access: jest.fn(),
-    } as unknown as jest.Mocked<LoggerService>;
+    logger = createLoggerMock();
 
     module = await Test.createTestingModule({
       providers: [
@@ -29,6 +32,15 @@ describe('ErrorService', () => {
     }).compile();
 
     service = module.get(ErrorService);
+  });
+
+  it('can be constructed directly', () => {
+    const directService = new ErrorService(logger);
+    expect(directService).toBeInstanceOf(ErrorService);
+  });
+
+  it('throws if constructed without a logger', () => {
+    expect(() => new ErrorService(undefined as unknown as LoggerService)).toThrow('LoggerService required');
   });
 
   afterEach(async () => {
@@ -98,6 +110,12 @@ describe('ErrorService', () => {
     expect(normalized.code).toBe('HTTP_EXCEPTION');
   });
 
+  it('falls back to exception message when response payload is null', () => {
+    const exception = new HttpException(null, HttpStatus.BAD_REQUEST);
+    const normalized = service.handle(exception);
+    expect(normalized.message).toBe(exception.message);
+  });
+
   it('handles HttpException with a string message in object response', () => {
     const exception = new HttpException({ message: 'String message' }, HttpStatus.BAD_REQUEST);
     const normalized = service.handle(exception);
@@ -108,6 +126,12 @@ describe('ErrorService', () => {
     const exception = new HttpException({ message: ['First error', 'Second error'] }, HttpStatus.BAD_REQUEST);
     const normalized = service.handle(exception);
     expect(normalized.message).toBe('First error, Second error');
+  });
+
+  it('includes stack trace for HttpException when includeStack is true', () => {
+    const exception = new HttpException('boom', HttpStatus.INTERNAL_SERVER_ERROR);
+    const normalized = service.handle(exception, { includeStack: true });
+    expect(normalized.stack).toBe(exception.stack);
   });
 
   it('handles HttpException with non-object details', () => {
@@ -133,6 +157,18 @@ describe('ErrorService', () => {
     expect(payload).toContain('"code":"UNHANDLED_ERROR"');
     expect(context).toBe('ErrorService');
     expect(typeof trace === 'string' || trace === undefined).toBeTruthy();
+  });
+
+  it('treats explicit undefined options the same as default', () => {
+    const error = new Error('explicit');
+    const normalized = service.handle(error, undefined);
+    expect(normalized.code).toBe('UNHANDLED_ERROR');
+  });
+
+  it('treats null options like default handling', () => {
+    const error = new Error('null options');
+    const normalized = service.handle(error, null);
+    expect(normalized.code).toBe('UNHANDLED_ERROR');
   });
 
   it('handles generic error with no message', () => {

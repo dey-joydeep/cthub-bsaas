@@ -42,6 +42,25 @@ describe('HasPermissionToAssignRoleConstraint', () => {
     expect(constraint.validate(UserRole.STAFF, args)).toBeFalsy();
   });
 
+  it('should return false when a role has no assignment mapping', () => {
+    const originalValues = Object.values;
+    const valuesSpy = jest.spyOn(Object, 'values').mockImplementation((target: unknown) => {
+      const baseValues = originalValues.call(Object, target as never);
+      if (target === UserRole) {
+        return [...(baseValues as unknown[]), 'unknown-role'];
+      }
+      return baseValues as unknown[];
+    });
+
+    const args = createMockArgs({ roles: [{ name: 'unknown-role' as unknown as UserRole }] } as Partial<AuthenticatedUser>);
+
+    try {
+      expect(constraint.validate(UserRole.CUSTOMER, args)).toBeFalsy();
+    } finally {
+      valuesSpy.mockRestore();
+    }
+  });
+
   it('should filter out undefined roles', () => {
     const args = createMockArgs({ roles: [undefined, { name: UserRole.STAFF }] });
     expect(constraint.validate(UserRole.CUSTOMER, args)).toBeTruthy();

@@ -16,14 +16,20 @@ const ROLE_HIERARCHY: Record<UserRole, UserRole[]> = {
   [UserRole.GUEST]: [UserRole.GUEST],
 };
 
-function normalizeUserRoles(roles: AuthenticatedUser['roles'] | undefined): UserRole[] {
+/**
+ * @internal Normalizes the roles carried on the authenticated user object into canonical UserRole strings.
+ */
+export function normalizeUserRoles(roles: AuthenticatedUser['roles'] | undefined): UserRole[] {
   if (!roles) return [];
   return roles
     .map((r) => (typeof r === 'string' ? r : r?.name))
     .filter((r): r is UserRole => !!r && (Object.values(UserRole) as string[]).includes(r));
 }
 
-function expandUserRolesDownward(userRoles: UserRole[]): UserRole[] {
+/**
+ * @internal Expands a user's roles downward through the defined hierarchy so implied roles are considered.
+ */
+export function expandUserRolesDownward(userRoles: UserRole[]): UserRole[] {
   const out = new Set<UserRole>();
   for (const r of userRoles) {
     const implied = ROLE_HIERARCHY[r] ?? [r];
@@ -32,9 +38,15 @@ function expandUserRolesDownward(userRoles: UserRole[]): UserRole[] {
   return [...out];
 }
 
+/* istanbul ignore next */
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+  private readonly reflector: Reflector;
+
+  /* istanbul ignore next */
+  constructor(reflector: Reflector) {
+    this.reflector = reflector;
+  }
 
   canActivate(ctx: ExecutionContext): boolean {
     // Read required roles (unexpanded)

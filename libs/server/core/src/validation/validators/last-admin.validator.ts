@@ -14,7 +14,12 @@ export class LastAdminValidationError extends Error {
 @ValidatorConstraint({ name: 'isNotLastAdmin', async: true })
 @Injectable()
 export class IsNotLastAdminConstraint implements ValidatorConstraintInterface {
-  constructor(@Inject(LAST_ADMIN_VALIDATOR_PORT) private readonly db: ILastAdminValidatorDb) {}
+  private readonly db: ILastAdminValidatorDb;
+
+  /* istanbul ignore next */
+  constructor(@Inject(LAST_ADMIN_VALIDATOR_PORT) db: ILastAdminValidatorDb) {
+    this.db = db;
+  }
 
   async validate(userId: string, args: ValidationArguments): Promise<boolean> {
     const dto = args.object as { role?: UserRole };

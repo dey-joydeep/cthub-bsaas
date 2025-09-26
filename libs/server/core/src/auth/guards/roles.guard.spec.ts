@@ -3,24 +3,32 @@ import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { AuthenticatedUser, UserRole } from '@cthub-bsaas/shared';
-import { RolesGuard } from './roles.guard';
+import { RolesGuard, expandUserRolesDownward, normalizeUserRoles } from './roles.guard';
 import { Roles, ROLES_KEY } from '../../decorators/roles.decorator';
+
+interface MockContextOptions {
+  readonly skipMetadata?: boolean;
+}
 
 // Create a mock ExecutionContext with roles metadata stamped on the handler
 const createMockExecutionContext = (
   user: Partial<AuthenticatedUser> | null,
   _reflector: Reflector, // kept in signature so call sites don’t change
   requiredRoles: UserRole[] = [],
+  options?: MockContextOptions,
 ): ExecutionContext => {
   const handler = function noop() {};
-  Reflect.defineMetadata(ROLES_KEY, requiredRoles, handler);
+  const handlerClass = class MockHandler {};
+  if (!options?.skipMetadata) {
+    Reflect.defineMetadata(ROLES_KEY, requiredRoles, handler);
+  }
 
   return {
     switchToHttp: () => ({
       getRequest: () => ({ user }),
     }),
     getHandler: () => handler,
-    getClass: () => null,
+    getClass: () => handlerClass,
   } as unknown as ExecutionContext;
 };
 
@@ -47,6 +55,11 @@ describe('RolesGuard', () => {
       expect(guard.canActivate(context)).toBe(true);
     });
 
+    it('should allow access when no @Roles metadata is defined', () => {
+      const context = createMockExecutionContext({ roles: [UserRole.CUSTOMER] }, reflector, undefined, { skipMetadata: true });
+      expect(guard.canActivate(context)).toBe(true);
+    });
+
     it('should throw ForbiddenException if user is not authenticated', () => {
       const context = createMockExecutionContext(null, reflector, [UserRole.ADMIN]);
       expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
@@ -54,6 +67,11 @@ describe('RolesGuard', () => {
 
     it('should deny access if user has no roles', () => {
       const context = createMockExecutionContext({ roles: [] }, reflector, [UserRole.CUSTOMER]);
+      expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
+    });
+
+    it('should deny access when user roles are undefined', () => {
+      const context = createMockExecutionContext({} as Partial<AuthenticatedUser>, reflector, [UserRole.CUSTOMER]);
       expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
     });
 
@@ -102,6 +120,32 @@ describe('RolesGuard', () => {
       // OWNER implies STAFF
       expect(guard.canActivate(context)).toBe(true);
     });
+
+    it('should fallback to the raw role value when hierarchy has no mapping', () => {
+      const originalValues = Object.values;
+      const valuesSpy = jest
+        .spyOn(Object, 'values')
+        .mockImplementation((target: unknown) => {
+          const baseResult = originalValues.call(Object, target as never);
+          if (target === UserRole) {
+            return [...(baseResult as unknown[]), 'mystery-role'];
+          }
+          return baseResult as unknown[];
+        });
+
+      const mysteriousRole = 'mystery-role' as unknown as UserRole;
+      const context = createMockExecutionContext(
+        { roles: [mysteriousRole] as unknown as AuthenticatedUser['roles'] },
+        reflector,
+        [mysteriousRole],
+      );
+
+      try {
+        expect(guard.canActivate(context)).toBe(true);
+      } finally {
+        valuesSpy.mockRestore();
+      }
+    });
   });
 
   describe('Roles Decorator', () => {
@@ -119,6 +163,17 @@ describe('RolesGuard', () => {
       }
       const roles = Reflect.getMetadata(ROLES_KEY, TestClass.prototype.testMethod) as UserRole[];
       expect(roles).toEqual([UserRole.CUSTOMER]);
+    });
+  });
+
+  describe('helper exports', () => {
+    it('normalizeUserRoles handles undefined inputs', () => {
+      expect(normalizeUserRoles(undefined)).toEqual([]);
+    });
+
+    it('expandUserRolesDownward falls back to original role when hierarchy lacks mapping', () => {
+      const mysteryRole = 'mystery-role' as UserRole;
+      expect(expandUserRolesDownward([mysteryRole])).toEqual([mysteryRole]);
     });
   });
 });

@@ -4,14 +4,14 @@ import { of } from 'rxjs';
 import { ExecutionContext } from '@nestjs/common';
 
 describe('ResponseEnvelopeInterceptor', () => {
-  let interceptor: ResponseEnvelopeInterceptor<any>;
+  let interceptor: ResponseEnvelopeInterceptor;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       providers: [ResponseEnvelopeInterceptor],
     }).compile();
 
-    interceptor = module.get<ResponseEnvelopeInterceptor<any>>(ResponseEnvelopeInterceptor);
+    interceptor = module.get<ResponseEnvelopeInterceptor>(ResponseEnvelopeInterceptor);
   });
 
   it('should be defined', () => {

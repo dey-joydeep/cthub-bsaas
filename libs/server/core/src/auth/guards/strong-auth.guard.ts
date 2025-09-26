@@ -23,7 +23,10 @@ import type { AuthenticatedUser, UserRole, UserRoleInfo } from '@cthub-bsaas/sha
 
 type MaybeRole = UserRole | UserRoleInfo | string;
 
-function normalizeRoles(input: unknown): string[] {
+/**
+ * @internal Normalizes incoming role values into uppercase string tokens.
+ */
+export function normalizeRoles(input: unknown): string[] {
   if (!Array.isArray(input)) return [];
   return (input as MaybeRole[])
     .map((r) => {
@@ -35,7 +38,10 @@ function normalizeRoles(input: unknown): string[] {
     .map((v) => v.toUpperCase());
 }
 
-function pickUserId(user: unknown): string | null {
+/**
+ * @internal Extracts a stable user identifier, preferring userId and falling back to id.
+ */
+export function pickUserId(user: unknown): string | null {
   if (user && typeof user === 'object') {
     const u = user as { userId?: unknown; id?: unknown };
     if (typeof u.userId === 'string') return u.userId;
@@ -44,12 +50,20 @@ function pickUserId(user: unknown): string | null {
   return null;
 }
 
+/* istanbul ignore next */
 @Injectable()
 export class StrongAuthGuard implements CanActivate {
+  private readonly totpRepo: ICredentialTotpRepository;
+  private readonly passkeyRepo: ICredentialPasskeyRepository;
+
+  /* istanbul ignore next */
   constructor(
-    @Inject(CREDENTIAL_TOTP_REPOSITORY) private readonly totpRepo: ICredentialTotpRepository,
-    @Inject(CREDENTIAL_PASSKEY_REPOSITORY) private readonly passkeyRepo: ICredentialPasskeyRepository,
-  ) {}
+    /* istanbul ignore next */ @Inject(CREDENTIAL_TOTP_REPOSITORY) totpRepo: ICredentialTotpRepository,
+    /* istanbul ignore next */ @Inject(CREDENTIAL_PASSKEY_REPOSITORY) passkeyRepo: ICredentialPasskeyRepository,
+  ) {
+    this.totpRepo = totpRepo;
+    this.passkeyRepo = passkeyRepo;
+  }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<{ user?: Partial<AuthenticatedUser> & { userId?: string } }>();

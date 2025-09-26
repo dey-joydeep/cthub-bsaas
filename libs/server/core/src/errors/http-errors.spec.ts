@@ -17,6 +17,11 @@ describe('HTTP Error Classes', () => {
     expect(error.message).toBe('Test Message');
   });
 
+  it('should fallback to the default BadRequestError message when none provided', () => {
+    const error = new BadRequestError();
+    expect(error.message).toBe('Bad Request');
+  });
+
   it('should correctly instantiate UnauthorizedError', () => {
     const error = new UnauthorizedError();
     expect(error.statusCode).toBe(401);

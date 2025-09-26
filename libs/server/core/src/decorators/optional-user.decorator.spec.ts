@@ -13,7 +13,7 @@ const hasFactory = (value: unknown): value is DecoratorMetadata =>
 
 function getFactory(): ParamFactory {
   class TestController {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     handler(@OptionalUser() _value: unknown) {}
   }
 
