@@ -48,6 +48,14 @@
         "codeCoverage": true,
         "coverageReporters": ["text", "lcov"],
         "coverageDirectory": "coverage/libs/server/features/theme"
+      },
+      "configurations": {
+        "ut": {
+          "jestConfig": "libs/server/features/theme/jest.unit.config.ts"
+        },
+        "it": {
+          "jestConfig": "libs/server/features/theme/jest.int.config.ts"
+        }
       }
     },
     "deploy": {

@@ -48,6 +48,14 @@
         "codeCoverage": true,
         "coverageReporters": ["text", "lcov"],
         "coverageDirectory": "coverage/libs/server/features/salon"
+      },
+      "configurations": {
+        "ut": {
+          "jestConfig": "libs/server/features/salon/jest.unit.config.ts"
+        },
+        "it": {
+          "jestConfig": "libs/server/features/salon/jest.int.config.ts"
+        }
       }
     },
     "deploy": {

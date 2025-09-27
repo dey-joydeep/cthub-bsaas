@@ -50,6 +50,14 @@
         "codeCoverage": true,
         "coverageReporters": ["text", "lcov"],
         "coverageDirectory": "coverage/libs/server/features/appointment"
+      },
+      "configurations": {
+        "ut": {
+          "jestConfig": "libs/server/features/appointment/jest.unit.config.ts"
+        },
+        "it": {
+          "jestConfig": "libs/server/features/appointment/jest.int.config.ts"
+        }
       }
     },
     "deploy": {

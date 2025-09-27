@@ -41,16 +41,21 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/libs/server/features/dashboard"],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "libs/server/features/dashboard/jest.config.ts",
         "passWithNoTests": true,
         "codeCoverage": true,
         "coverageReporters": ["text", "lcov"],
-        "coverageDirectory": "coverage/libs/server/features/dashboard",
-        "testMatch": ["libs/server/features/dashboard/**/*.spec.ts"],
-        "preset": "ts-jest",
-        "testEnvironment": "node"
+        "coverageDirectory": "coverage/libs/server/features/dashboard"
+      },
+      "configurations": {
+        "ut": {
+          "jestConfig": "libs/server/features/dashboard/jest.unit.config.ts"
+        },
+        "it": {
+          "jestConfig": "libs/server/features/dashboard/jest.int.config.ts"
+        }
       }
     },
     "deploy": {
