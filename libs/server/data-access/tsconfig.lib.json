@@ -15,5 +15,10 @@
         "tsBuildInfoFile": "../../../dist/.tsbuildinfo/server/data-access.tsbuildinfo"
     },
     "include": ["src/**/*.ts"],
-    "exclude": ["**/*.test.ts", "**/*.spec.ts"]
+    "exclude": ["**/*.test.ts", "**/*.spec.ts"],
+    "references": [
+        { "path": "../core/tsconfig.lib.json" },
+        { "path": "../contracts-auth/tsconfig.lib.json" },
+        { "path": "../../shared/tsconfig.lib.json" }
+    ]
 }
