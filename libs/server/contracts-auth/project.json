@@ -15,6 +15,16 @@
                 "assets": ["libs/server/contracts-auth/*.md"],
                 "rootDir": "libs/server/contracts-auth/src"
             }
+        },
+        "test": {
+            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "executor": "@nx/jest:jest",
+            "options": {
+                "passWithNoTests": true,
+                "jestConfig": "libs/server/contracts-auth/jest.config.ts",
+                "codeCoverage": true,
+                "coverageReporters": ["text", "lcov"]
+            }
         }
     }
 }

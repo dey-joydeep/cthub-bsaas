@@ -1,14 +1,10 @@
 {
-    "extends": "./tsconfig.json",
-    "compilerOptions": {
-        "outDir": "../../../dist/out-tsc",
-        "module": "commonjs",
-        "moduleResolution": "node",
-        "types": ["jest", "node"],
-        "esModuleInterop": true,
-        "target": "es2022",
-        "isolatedModules": false,
-        "useDefineForClassFields": false
-    },
-    "include": ["**/*.spec.ts", "**/*.test.ts", "**/*.d.ts", "**/*.fixture.ts"]
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/out-tsc",
+    "module": "commonjs",
+    "types": ["jest", "node"]
+  },
+  "include": ["src/testing/**/*.spec.ts", "src/lib/ports/**/*.spec.ts", "src/**/*.d.ts"],
+  "exclude": ["jest.config.ts", "src/**/*.test.ts"]
 }
