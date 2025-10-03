@@ -249,5 +249,26 @@ describe('AuthService (integration edge cases)', () => {
       });
       await expect(service.verifyEmailOtp(orphanEmail, '123456')).rejects.toThrow(UnauthorizedException);
     });
+
+    it('marks OTP records as used and verifies the user when the code matches', async () => {
+      const email = `otp-success-${randomUUID()}@example.com`;
+      const user = await harness.registerUser({ email, isVerified: false, emailVerifiedAt: null });
+      const otp = '789012';
+      const record = await harness.prisma.emailVerification.create({
+        data: {
+          email,
+          codeHash: await bcrypt.hash(otp, 10),
+          expiresAt: new Date(Date.now() + 60_000),
+        },
+      });
+
+      await service.verifyEmailOtp(email, otp);
+
+      const updatedUser = await harness.prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+      expect(updatedUser.emailVerifiedAt).toBeInstanceOf(Date);
+
+      const updatedRecord = await harness.prisma.emailVerification.findUnique({ where: { id: record.id } });
+      expect(updatedRecord?.usedAt).toBeInstanceOf(Date);
+    });
   });
 });

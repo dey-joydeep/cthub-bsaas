@@ -9,8 +9,11 @@ import { LoggerService } from '@cthub-bsaas/server-core';
 @Injectable()
 export class AuditService {
   private static readonly CONTEXT = 'AuthAudit';
+  private readonly logger: LoggerService;
 
-  constructor(private readonly logger: LoggerService) {}
+  constructor(logger: LoggerService) {
+    this.logger = logger;
+  }
 
   /**
    * Write a structured audit entry to the access log channel.

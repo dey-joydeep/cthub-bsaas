@@ -10,8 +10,8 @@ describe('TotpController', () => {
       verifyToken: jest.fn(),
     };
     const ctrl = new TotpController(service);
-    const req: { user: { id: string } } = { user: { id: 'u1' } };
-    const res = await ctrl.setup(req);
+    const req: { user: { userId: string } } = { user: { userId: 'u1' } };
+    const res = await ctrl.setup(req as unknown as { user: { userId: string } });
     expect(res.qrCodeDataUrl).toContain('data:image/png');
     expect(service.generateSecret).toHaveBeenCalledWith('u1');
   });
@@ -22,7 +22,7 @@ describe('TotpController', () => {
       verifyToken: jest.fn().mockResolvedValue(true),
     };
     const ctrl = new TotpController(service);
-    const req: { user: { id: string } } = { user: { id: 'u1' } };
+    const req = { user: { userId: 'u1' } } as { user: { userId: string } };
     const dto: VerifyTotpDto = { token: '123456' } as VerifyTotpDto;
     const res = await ctrl.verify(req, dto);
     expect(res).toEqual({ success: true });
@@ -35,7 +35,7 @@ describe('TotpController', () => {
       verifyToken: jest.fn().mockResolvedValue(false),
     };
     const ctrl = new TotpController(service);
-    const req: { user: { id: string } } = { user: { id: 'u1' } };
+    const req = { user: { userId: 'u1' } } as { user: { userId: string } };
     const dto: VerifyTotpDto = { token: '000000' } as VerifyTotpDto;
     await expect(ctrl.verify(req, dto)).rejects.toThrow(UnauthorizedException);
   });
@@ -46,7 +46,7 @@ describe('TotpController', () => {
       verifyToken: jest.fn(),
     };
     const ctrl = new TotpController(service);
-    const req: { user: { id: string } } = { user: { id: 'u2' } };
+    const req = { user: { userId: 'u2' } } as { user: { userId: string } };
     const res = await ctrl.enrollStart(req);
     expect(res.qrCodeDataUrl).toContain('data:image/png');
     expect(service.generateSecret).toHaveBeenCalledWith('u2');
@@ -58,7 +58,7 @@ describe('TotpController', () => {
       verifyToken: jest.fn().mockResolvedValue(true),
     };
     const ctrl = new TotpController(service);
-    const req: { user: { id: string } } = { user: { id: 'u3' } };
+    const req = { user: { userId: 'u3' } } as { user: { userId: string } };
     await expect(ctrl.enrollFinish(req, { token: '123456' } as VerifyTotpDto)).resolves.toEqual({ success: true });
 
     service.verifyToken.mockResolvedValue(false);

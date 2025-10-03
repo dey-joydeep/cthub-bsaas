@@ -142,6 +142,12 @@ describe('AuthController (Integration) - validation failures', () => {
         .expect(400);
     });
 
+    it('rejects webauthn login start when payload is omitted', async () => {
+      await request(harness.app.getHttpServer())
+        .post('/auth/webauthn/login/start')
+        .expect(400);
+    });
+
     it('rejects webauthn login start when no identity is provided', async () => {
       await request(harness.app.getHttpServer())
         .post('/auth/webauthn/login/start')

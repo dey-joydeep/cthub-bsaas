@@ -3,12 +3,33 @@ import { authenticator } from 'otplib';
 import { createHash, randomUUID } from 'crypto';
 import * as bcrypt from 'bcryptjs';
 import { RegistrationStatus } from '@prisma/client';
-import { UserRole } from '@cthub-bsaas/shared';
-import { TOTP_PORT, WEB_AUTHN_PORT } from '@cthub-bsaas/server-contracts-auth';
+import { UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
+import {
+  TOTP_PORT,
+  WEB_AUTHN_PORT,
+  RECOVERY_CODES_PORT,
+  OAUTH_PORT,
+  type RecoveryCodesPort,
+  type OAuthPort,
+  type WebAuthnPort,
+  type RegistrationCompleteInput,
+} from '@cthub-bsaas/server-contracts-auth';
 import { TotpOtplibAdapter, WebAuthnStubAdapter } from '@cthub-bsaas/server-infrastructure';
-import { ConfigService, IS_PUBLIC_KEY } from '@cthub-bsaas/server-core';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { AuthCookiesService } from '../../src/lib/services/auth-cookies.service';
+import { AuthService } from '../../src/lib/services/auth.service';
+import { ContextIdFactory, type ContextId } from '@nestjs/core';
+import { ConfigService, IS_PUBLIC_KEY, CookieRegistry } from '@cthub-bsaas/server-core';
 import { AuthController } from '../../src/lib/controllers/auth.controller';
+import type { Request as ExpressRequest } from 'express';
+import { LoginDto } from '../../src/lib/dto/login.dto';
+import { RefreshTokenDto } from '../../src/lib/dto/refresh-token.dto';
+import { TotpLoginDto } from '../../src/lib/dto/totp-login.dto';
+import { VerifyEmailDto } from '../../src/lib/dto/verify-email.dto';
+import { WebauthnAssertionDto } from '../../src/lib/dto/webauthn-assertion.dto';
+import type { SignInHttpResponse } from '../../src/lib/types/auth.types';
 import { setupAuthIntegrationHarness, AuthIntegrationHarness, ensureAuthRoles } from './utils/auth-integration.harness';
+import { normalizeFeatureAuthCoverage } from './utils/coverage-normalizer';
 
 import 'reflect-metadata';
 
@@ -427,6 +448,37 @@ describe('AuthController (Integration) - success flows', () => {
         .expect(200);
     });
 
+    it('allows bearer Authorization header without cookies on protected routes', async () => {
+      const user = await harness.registerUser();
+
+      const loginRes = await loginRequest(user.email, 'password').expect(200);
+      const cookies = harness.expectCookies(harness.toCookiesArray(loginRes.headers['set-cookie']), { requireAuth: true });
+      const accessToken = harness.extractCookieValue(cookies, 'bsaas_at');
+      expect(accessToken).toBeDefined();
+
+      await request(harness.app.getHttpServer())
+        .get('/auth/sessions')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+    });
+
+    it('logs out active sessions and clears persisted session records', async () => {
+      const user = await harness.registerUser();
+
+      const loginRes = await loginRequest(user.email, 'password').expect(200);
+      const cookies = harness.expectCookies(harness.toCookiesArray(loginRes.headers['set-cookie']), { requireAuth: true });
+
+      const sessionsBeforeLogout = await harness.prisma.session.findMany({ where: { userId: user.id } });
+      expect(sessionsBeforeLogout.length).toBeGreaterThan(0);
+
+      await harness
+        .withAuth(request(harness.app.getHttpServer()).post('/auth/logout'), cookies)
+        .expect(200);
+
+      const sessionsAfterLogout = await harness.prisma.session.findMany({ where: { userId: user.id } });
+      expect(sessionsAfterLogout).toHaveLength(0);
+    });
+
     it('re-seeds auth roles when role table is empty', async () => {
       await harness.prisma.$transaction(async (trx) => {
         await trx.$executeRawUnsafe('LOCK TABLE "role" IN EXCLUSIVE MODE');
@@ -560,6 +612,12 @@ describe('AuthController (Integration) - success flows', () => {
     it('handles password reset and change lifecycle', async () => {
       const user = await harness.registerUser();
 
+      const initialLogin = await loginRequest(user.email, 'password').expect(200);
+      harness.expectCookies(harness.toCookiesArray(initialLogin.headers['set-cookie']), { requireAuth: true });
+
+      const sessionsBeforeReset = await harness.prisma.session.findMany({ where: { userId: user.id } });
+      expect(sessionsBeforeReset.length).toBeGreaterThan(0);
+
       await request(harness.app.getHttpServer())
         .post('/auth/password/forgot')
         .send({ email: user.email })
@@ -573,6 +631,9 @@ describe('AuthController (Integration) - success flows', () => {
         .post('/auth/password/reset')
         .send({ token: resetToken, newPassword: 'NewPassword#1' })
         .expect(200);
+
+      const sessionsAfterReset = await harness.prisma.session.findMany({ where: { userId: user.id } });
+      expect(sessionsAfterReset).toHaveLength(0);
 
       await harness.resetThrottle();
 
@@ -718,6 +779,354 @@ describe('AuthController (Integration) - success flows', () => {
       }
     });
 
+    it('re-sends verification email for existing unverified account', async () => {
+      const email = `resend-${randomUUID()}@example.com`;
+      await harness.registerUser({ email, emailVerifiedAt: null, isVerified: false });
+      harness.resetEmails();
+
+      await request(harness.app.getHttpServer())
+        .post('/auth/register')
+        .send({ email, password: 'Password#1' })
+        .expect(201);
+
+      const verificationMail = harness.sentEmails.find((mail) => mail.subject.includes('Verify your email'));
+      expect(verificationMail).toBeDefined();
+    });
+
+    it('returns success without duplicate email flow when user is already verified', async () => {
+      const email = `verified-${randomUUID()}@example.com`;
+      await harness.registerUser({ email });
+      harness.resetEmails();
+
+      await request(harness.app.getHttpServer())
+        .post('/auth/register')
+        .send({ email, password: 'Password#1' })
+        .expect(201);
+
+      expect(harness.sentEmails.length).toBe(0);
+    });
+
+    it('allows authenticated webauthn login start via optional user context', async () => {
+      const user = await harness.registerUser();
+      const loginRes = await loginRequest(user.email, 'password').expect(200);
+      const cookies = harness.expectCookies(harness.toCookiesArray(loginRes.headers['set-cookie']), { requireAuth: true });
+
+      const startRes = await harness
+        .withAuth(request(harness.app.getHttpServer()).post('/auth/webauthn/login/start'), cookies)
+        .send({})
+        .expect(200);
+      expect(startRes.body.success).toBe(true);
+    });
+
+    it('allows webauthn login start via explicit userId payload', async () => {
+      const user = await harness.registerUser();
+
+      const startRes = await request(harness.app.getHttpServer())
+        .post('/auth/webauthn/login/start')
+        .send({ userId: user.id })
+        .expect(200);
+      expect(startRes.body.success).toBe(true);
+    });
+
+    it('extractUserId handles fallback id and missing user branches', () => {
+      const controller = harness.app.get(AuthController) as unknown as { extractUserId: (input?: unknown) => string | undefined };
+      expect(controller.extractUserId(undefined)).toBeUndefined();
+      expect(controller.extractUserId({ id: 'fallback-id' })).toBe('fallback-id');
+      expect(controller.extractUserId({ id: '' })).toBeUndefined();
+    });
+
+    describe('controller branch coverage helpers', () => {
+      let controller: AuthController;
+      let controllerAuthService: AuthService;
+      let controllerCookies: AuthCookiesService;
+      let recoveryPort: RecoveryCodesPort;
+      let webAuthnPort: WebAuthnPort;
+      let oauthPort: OAuthPort;
+      let controllerContext: ContextId;
+
+      beforeEach(async () => {
+        controllerContext = ContextIdFactory.create();
+        harness.app.registerRequestByContextId({}, controllerContext);
+        controller = await harness.app.resolve(AuthController, controllerContext);
+        controllerAuthService = Reflect.get(controller as unknown as object, 'authService') as AuthService;
+        controllerCookies = Reflect.get(controller as unknown as object, 'authCookies') as AuthCookiesService;
+        recoveryPort = Reflect.get(controller as unknown as object, 'recovery') as RecoveryCodesPort;
+        webAuthnPort = Reflect.get(controller as unknown as object, 'webAuthn') as WebAuthnPort;
+        oauthPort = Reflect.get(controller as unknown as object, 'oauth') as OAuthPort;
+      });
+
+      afterEach(() => {
+        jest.restoreAllMocks();
+      });
+
+      it('covers owner registration branches', async () => {
+        const spy = jest.spyOn(controllerAuthService, 'completeOwnerRegistration');
+        const cookieSpy = jest.spyOn(controllerCookies, 'issue').mockImplementation(() => undefined);
+        const payload = {} as RegistrationCompleteInput;
+
+        spy.mockResolvedValueOnce({ next: 'mfa' } as const);
+        await expect(controller.completeOwnerRegistration(payload)).resolves.toEqual({ next: 'mfa' });
+        expect(cookieSpy).not.toHaveBeenCalled();
+
+        spy.mockResolvedValueOnce({ accessToken: 'owner-access', refreshToken: 'owner-refresh' });
+        await expect(controller.completeOwnerRegistration(payload)).resolves.toEqual({});
+        expect(cookieSpy).toHaveBeenCalledTimes(1);
+      });
+
+      it('covers staff registration branches', async () => {
+        const spy = jest.spyOn(controllerAuthService, 'completeStaffRegistration');
+        const cookieSpy = jest.spyOn(controllerCookies, 'issue').mockImplementation(() => undefined);
+        const payload = {} as RegistrationCompleteInput;
+
+        spy.mockResolvedValueOnce({ next: 'mfa' } as const);
+        await expect(controller.completeStaffRegistration(payload)).resolves.toEqual({ next: 'mfa' });
+        expect(cookieSpy).not.toHaveBeenCalled();
+
+        spy.mockResolvedValueOnce({ accessToken: 'staff-access', refreshToken: 'staff-refresh' });
+        await expect(controller.completeStaffRegistration(payload)).resolves.toEqual({});
+        expect(cookieSpy).toHaveBeenCalledTimes(1);
+      });
+
+      it('covers refresh token cookie/body branches', async () => {
+        const rotateSpy = jest.spyOn(controllerCookies, 'rotateOnRefresh').mockImplementation(() => undefined);
+        jest
+          .spyOn(controllerAuthService, 'refreshToken')
+          .mockResolvedValue({ accessToken: 'a', refreshToken: 'r' });
+
+        await controller.refresh({} as RefreshTokenDto, { headers: { cookie: 'bsaas_rt=cookie-token' } } as unknown as ExpressRequest);
+        expect(rotateSpy).toHaveBeenCalledWith(expect.objectContaining({ refreshToken: 'r' }));
+
+        await controller.refresh({ refreshToken: 'body-token' } as RefreshTokenDto, { headers: {} } as unknown as ExpressRequest);
+        expect(rotateSpy).toHaveBeenCalledTimes(2);
+      });
+
+      it('covers recovery verification success and failure branches', async () => {
+        const verifySpy = jest.spyOn(recoveryPort, 'verifyAndConsume');
+        verifySpy.mockResolvedValueOnce(false);
+        await expect(controller.verifyRecovery({ code: 'bad' }, { user: { userId: 'user-1' } })).rejects.toThrow(BadRequestException);
+
+        verifySpy.mockResolvedValueOnce(true);
+        await expect(controller.verifyRecoveryAlias({ code: 'good' }, { user: { userId: 'user-1' } })).resolves.toEqual({ success: true });
+      });
+
+      it('covers sign-in totp and standard branches', async () => {
+        const cookieSpy = jest.spyOn(controllerCookies, 'issue').mockImplementation(() => undefined);
+        const signInSpy = jest.spyOn(controllerAuthService, 'signIn');
+
+        signInSpy.mockResolvedValueOnce({ totpRequired: true, tempToken: 'temp-token' } as SignInHttpResponse);
+        await expect(
+          controller.signIn({ email: 'totp@example.com', password: 'Password#1' } as LoginDto),
+        ).resolves.toEqual({ totpRequired: true, tempToken: 'temp-token' });
+        expect(cookieSpy).toHaveBeenNthCalledWith(
+          1,
+          expect.objectContaining({ accessToken: undefined, refreshToken: undefined }),
+        );
+
+        signInSpy.mockResolvedValueOnce({ totpRequired: false, accessToken: 'access', refreshToken: 'refresh' } as SignInHttpResponse);
+        await expect(
+          controller.signIn({ email: 'regular@example.com', password: 'Password#1' } as LoginDto),
+        ).resolves.toEqual({ totpRequired: false });
+        expect(cookieSpy).toHaveBeenNthCalledWith(
+          2,
+          expect.objectContaining({ accessToken: 'access', refreshToken: 'refresh' }),
+        );
+      });
+
+      it('covers refresh missing token branch', async () => {
+        await expect(
+          controller.refresh({} as RefreshTokenDto, { headers: {} } as unknown as ExpressRequest),
+        ).rejects.toThrow(BadRequestException);
+      });
+
+      it('covers webauthn login start branches', async () => {
+        const resolveSpy = jest.spyOn(controllerAuthService, 'resolveUserIdByEmail').mockResolvedValueOnce('user-by-email');
+        const startSpy = jest.spyOn(webAuthnPort, 'startAuthentication').mockResolvedValueOnce({ via: 'email' });
+
+        await expect(controller.webauthnLoginStart({ email: 'email@example.com' }, undefined)).resolves.toEqual({ via: 'email' });
+        expect(resolveSpy).toHaveBeenCalledWith('email@example.com');
+        expect(startSpy).toHaveBeenCalledWith('user-by-email');
+
+        startSpy.mockResolvedValueOnce({ via: 'user' });
+        await expect(
+          controller.webauthnLoginStart({}, { userId: 'user-123' } as AuthenticatedUser),
+        ).resolves.toEqual({ via: 'user' });
+
+        await expect(controller.webauthnLoginStart({}, undefined)).rejects.toThrow(BadRequestException);
+        expect(startSpy).toHaveBeenCalledTimes(2);
+      });
+
+      it('covers webauthn login finish branches', async () => {
+        await expect(controller.webauthnLoginFinish({ response: {} } as WebauthnAssertionDto, undefined)).rejects.toThrow(
+          UnauthorizedException,
+        );
+
+        const finishSpy = jest.spyOn(webAuthnPort, 'finishAuthentication').mockResolvedValueOnce(undefined);
+        const tokenSpy = jest.spyOn(controllerAuthService, 'issueTokensForUser').mockResolvedValueOnce({
+          accessToken: 'web-access',
+          refreshToken: 'web-refresh',
+        });
+        const cookieSpy = jest.spyOn(controllerCookies, 'issue').mockImplementation(() => undefined);
+
+        await expect(
+          controller.webauthnLoginFinish(
+            { response: {} } as WebauthnAssertionDto,
+            { userId: 'user-123' } as AuthenticatedUser,
+          ),
+        ).resolves.toEqual({});
+        expect(finishSpy).toHaveBeenCalledWith('user-123', expect.any(Object));
+        expect(tokenSpy).toHaveBeenCalledWith('user-123');
+        expect(cookieSpy).toHaveBeenCalledWith(
+          expect.objectContaining({ accessToken: 'web-access', refreshToken: 'web-refresh' }),
+        );
+      });
+
+      it('covers oauth callback branches', async () => {
+        await expect(controller.oauthCallback('google', undefined, undefined, undefined)).rejects.toThrow(
+          BadRequestException,
+        );
+
+        const exchangeSpy = jest.spyOn(oauthPort, 'exchangeCode');
+        exchangeSpy.mockResolvedValueOnce({ provider: 'google', providerUserId: 'profile-link' });
+        const linkSpy = jest.spyOn(controllerAuthService, 'linkSocialAccount').mockResolvedValueOnce(undefined);
+
+        await expect(
+          controller.oauthCallback('google', { userId: 'user-1' } as AuthenticatedUser, 'code', 'state'),
+        ).resolves.toEqual({});
+        expect(linkSpy).toHaveBeenCalledWith('user-1', 'google', 'profile-link');
+
+        const cookieSpy = jest.spyOn(controllerCookies, 'issue').mockImplementation(() => undefined);
+        exchangeSpy.mockResolvedValueOnce({ provider: 'google', providerUserId: 'profile-sign' });
+        jest
+          .spyOn(controllerAuthService, 'signInWithSocial')
+          .mockResolvedValueOnce({ accessToken: 'oauth-access', refreshToken: 'oauth-refresh' });
+
+        await expect(controller.oauthCallback('google', undefined, 'code', 'state')).resolves.toEqual({});
+        expect(cookieSpy).toHaveBeenCalledWith(
+          expect.objectContaining({ accessToken: 'oauth-access', refreshToken: 'oauth-refresh' }),
+        );
+      });
+
+      it('covers email verification confirm branches', async () => {
+        const verifyEmailSpy = jest.spyOn(controllerAuthService, 'verifyEmail').mockResolvedValueOnce(undefined);
+        await expect(controller.emailVerifyConfirm({ token: 'token' })).resolves.toEqual({ success: true });
+        expect(verifyEmailSpy).toHaveBeenCalledWith('token');
+
+        const verifyOtpSpy = jest.spyOn(controllerAuthService, 'verifyEmailOtp').mockResolvedValueOnce(undefined);
+        await expect(controller.emailVerifyConfirm({ email: 'user@example.com', otp: '123456' })).resolves.toEqual({ success: true });
+        expect(verifyOtpSpy).toHaveBeenCalledWith('user@example.com', '123456');
+
+        await expect(controller.emailVerifyConfirm({})).rejects.toThrow(BadRequestException);
+      });
+
+    });
+
+    describe('auth cookies service coverage', () => {
+      let requestContext: ContextId;
+      let cookieService: AuthCookiesService;
+      let cookieRegistry: CookieRegistry;
+
+      const resolveRequestScope = async () => {
+        requestContext = ContextIdFactory.create();
+        harness.app.registerRequestByContextId({}, requestContext);
+        cookieService = await harness.app.resolve(AuthCookiesService, requestContext);
+        cookieRegistry = await harness.app.resolve(CookieRegistry, requestContext);
+      };
+
+      const drainCommands = () => cookieRegistry.drain();
+
+      beforeEach(async () => {
+        await resolveRequestScope();
+      });
+
+      afterEach(() => {
+        drainCommands();
+      });
+
+      it('sets only the CSRF cookie when tokens are omitted', async () => {
+        cookieService.issue({ csrf: 'csrf-only' });
+        const commands = drainCommands();
+        expect(commands).toEqual([
+          expect.objectContaining({
+            action: 'set',
+            name: 'XSRF-TOKEN',
+            value: 'csrf-only',
+            options: expect.objectContaining({ httpOnly: false, secure: true, sameSite: 'lax', path: '/' }),
+          }),
+        ]);
+      });
+
+      it('issues access and refresh tokens with configured domain during rotation', async () => {
+        const authConfig = configService.auth as { cookieDomain?: string };
+        const originalDomain = authConfig.cookieDomain;
+        authConfig.cookieDomain = 'example.com';
+
+        try {
+          cookieService.rotateOnRefresh({ csrf: 'csrf-value', accessToken: 'access-token', refreshToken: 'refresh-token' });
+          const commands = drainCommands();
+          expect(commands).toHaveLength(3);
+          const access = commands.find((cmd) => cmd.name === 'bsaas_at');
+          expect(access).toEqual(
+            expect.objectContaining({
+              action: 'set',
+              name: 'bsaas_at',
+              value: 'access-token',
+              options: expect.objectContaining({ domain: 'example.com', httpOnly: true, secure: true, sameSite: 'lax', path: '/' }),
+            }),
+          );
+          const refresh = commands.find((cmd) => cmd.name === 'bsaas_rt');
+          expect(refresh).toEqual(
+            expect.objectContaining({
+              action: 'set',
+              name: 'bsaas_rt',
+              value: 'refresh-token',
+              options: expect.objectContaining({ domain: 'example.com', httpOnly: true, secure: true, sameSite: 'lax', path: '/auth' }),
+            }),
+          );
+        } finally {
+          authConfig.cookieDomain = originalDomain;
+        }
+      });
+
+      it('queues cookie clear commands during logout', async () => {
+        cookieService.clear();
+        const commands = drainCommands();
+        expect(commands).toEqual([
+          expect.objectContaining({ action: 'clear', name: 'bsaas_rt', options: expect.objectContaining({ path: '/auth' }) }),
+          expect.objectContaining({ action: 'clear', name: 'bsaas_at', options: expect.objectContaining({ path: '/' }) }),
+        ]);
+      });
+    });
+
+    describe('auth service register coverage', () => {
+      let authService: AuthService;
+
+      beforeEach(async () => {
+        authService = harness.app.get(AuthService);
+        await ensureAuthRoles(harness.prisma);
+      });
+
+      it('uses requestEmailVerification when existing account is unverified', async () => {
+        const email = `service-unverified-${randomUUID()}@example.com`;
+        await harness.registerUser({ email, emailVerifiedAt: null, isVerified: false });
+        harness.resetEmails();
+
+        await authService.register(email, 'Password#1');
+
+        const verificationMail = harness.sentEmails.find((mail) => mail.subject.includes('Verify your email'));
+        expect(verificationMail).toBeDefined();
+      });
+
+      it('skips verification mail when account is already verified', async () => {
+        const email = `service-verified-${randomUUID()}@example.com`;
+        await harness.registerUser({ email });
+        harness.resetEmails();
+
+        await authService.register(email, 'Password#1');
+
+        expect(harness.sentEmails.length).toBe(0);
+      });
+    });
+
     it('handles webauthn start and finish flows', async () => {
       const user = await harness.registerUser();
       const loginRes = await loginRequest(user.email, 'password').expect(200);
@@ -769,3 +1178,5 @@ describe('AuthController (Integration) - success flows', () => {
     });
   });
 });
+
+afterAll(normalizeFeatureAuthCoverage);

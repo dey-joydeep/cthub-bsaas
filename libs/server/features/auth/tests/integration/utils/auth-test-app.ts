@@ -65,29 +65,10 @@ export interface AuthTestContext {
   close(): Promise<void>;
 }
 
-passport.use(
-  'jwt',
-  new JwtPassportStrategy(
-    {
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: 'test-access-secret',
-      ignoreExpiration: true,
-    },
-    (payload, done) => {
-      const userId = payload?.sub ?? 'integration-user';
-      done(null, { userId, id: userId });
-    },
-  ),
-);
+
 
 export async function createAuthTestContext(options: AuthTestOptions = {}): Promise<AuthTestContext> {
-  JwtOptionalAuthGuard.prototype.canActivate = function (context) {
-    const request = context.switchToHttp().getRequest();
-    if (!request.user) {
-      request.user = { userId: 'integration-user', id: 'integration-user' };
-    }
-    return true;
-  };
+
 
   const emailPort: EmailPort =
     options.emailPort ??
@@ -141,18 +122,7 @@ export async function createAuthTestContext(options: AuthTestOptions = {}): Prom
       CookiesInterceptor,
       PrismaService,
       EncryptionService,
-      {
-        provide: JwtOptionalAuthGuard,
-        useValue: {
-          canActivate: (context: Parameters<JwtOptionalAuthGuard['canActivate']>[0]) => {
-            const request = context.switchToHttp().getRequest();
-            if (!request.user) {
-              request.user = { userId: 'integration-user', id: 'integration-user' };
-            }
-            return true;
-          },
-        },
-      },
+
       HttpAdapterHost,
       JwtAuthGuard,
       {
@@ -170,23 +140,7 @@ export async function createAuthTestContext(options: AuthTestOptions = {}): Prom
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   await app.init();
-  const jwtGuard = app.get(JwtAuthGuard);
-  jwtGuard.canActivate = (context) => {
-    const request = context.switchToHttp().getRequest();
-    if (!request.user) {
-      request.user = { userId: 'integration-user', id: 'integration-user' };
-    }
-    return true;
-  };
-  const optionalGuard = app.get(JwtOptionalAuthGuard);
-  optionalGuard.canActivate = (context) => {
-    const request = context.switchToHttp().getRequest();
-    if (!request.user) {
-      request.user = { userId: 'integration-user', id: 'integration-user' };
-    }
-    return true;
-  };
-  app.useGlobalGuards(jwtGuard);
+
 
   const prisma = new PrismaClient();
   const jwtService = app.get(JwtService);

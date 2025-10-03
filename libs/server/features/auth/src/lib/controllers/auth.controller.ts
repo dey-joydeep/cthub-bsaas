@@ -67,22 +67,36 @@ import { parseRefreshCookie } from '../utils/cookie.util';
 @UseGuards(JwtOptionalAuthGuard)
 @UseInterceptors(CookiesInterceptor, ResponseEnvelopeInterceptor)
 export class AuthController {
+  private readonly authService: AuthService;
+  private readonly webAuthn: WebAuthnPort;
+  private readonly recovery: RecoveryCodesPort;
+  private readonly oauth: OAuthPort;
+  private readonly authCookies: AuthCookiesService;
+
   constructor(
-    private readonly authService: AuthService,
-    @Inject(WEB_AUTHN_PORT) private readonly webAuthn: WebAuthnPort,
-    @Inject(RECOVERY_CODES_PORT) private readonly recovery: RecoveryCodesPort,
-    @Inject(OAUTH_PORT) private readonly oauth: OAuthPort,
-    private readonly authCookies: AuthCookiesService,
-  ) {}
+    authService: AuthService,
+    @Inject(WEB_AUTHN_PORT) webAuthn: WebAuthnPort,
+    @Inject(RECOVERY_CODES_PORT) recovery: RecoveryCodesPort,
+    @Inject(OAUTH_PORT) oauth: OAuthPort,
+    authCookies: AuthCookiesService,
+  ) {
+    this.authService = authService;
+    this.webAuthn = webAuthn;
+    this.recovery = recovery;
+    this.oauth = oauth;
+    this.authCookies = authCookies;
+  }
 
   // Partner Registration — Owner
   @Public()
   @Get('owner/registration/:token')
   
-  async validateOwnerInvite(@Param('token') token: string): Promise<{ valid: true; email: string; salonId: string }> {
-    const res = await this.authService.validateOwnerInvite(token);
-    
-    return { valid: true, email: res.email, salonId: res.salonId } as const;
+  validateOwnerInvite(@Param('token') token: string): Promise<{ valid: true; email: string; salonId: string }> {
+    return this.authService.validateOwnerInvite(token).then((res) => ({
+      valid: true,
+      email: res.email,
+      salonId: res.salonId,
+    } as const));
   }
 
   @Public()
@@ -91,28 +105,31 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @Post('owner/registration/complete')
   
-  async completeOwnerRegistration(@Body() body: RegistrationCompleteInput): Promise<Record<string, never> | { next: 'mfa' }> {
-    const result = await this.authService.completeOwnerRegistration(body);
-    if ('next' in result) {
-      return result;
-    }
-    
-    this.authCookies.issue({
-      csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
+  completeOwnerRegistration(@Body() body: RegistrationCompleteInput): Promise<Record<string, never> | { next: 'mfa' }> {
+    return this.authService.completeOwnerRegistration(body).then((result) => {
+      if ('next' in result) {
+        return result;
+      }
+
+      this.authCookies.issue({
+        csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+      });
+      return {} as const;
     });
-    return {} as const;
   }
 
   // Partner Registration — Staff
   @Public()
   @Get('staff/registration/:token')
   
-  async validateStaffInvite(@Param('token') token: string): Promise<{ valid: true; email: string; salonId: string }> {
-    const res = await this.authService.validateStaffInvite(token);
-    
-    return { valid: true, email: res.email, salonId: res.salonId } as const;
+  validateStaffInvite(@Param('token') token: string): Promise<{ valid: true; email: string; salonId: string }> {
+    return this.authService.validateStaffInvite(token).then((res) => ({
+      valid: true,
+      email: res.email,
+      salonId: res.salonId,
+    } as const));
   }
 
   @Public()
@@ -121,18 +138,19 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @Post('staff/registration/complete')
   
-  async completeStaffRegistration(@Body() body: RegistrationCompleteInput): Promise<Record<string, never> | { next: 'mfa' }> {
-    const result = await this.authService.completeStaffRegistration(body);
-    if ('next' in result) {
-      return result;
-    }
-    
-    this.authCookies.issue({
-      csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
+  completeStaffRegistration(@Body() body: RegistrationCompleteInput): Promise<Record<string, never> | { next: 'mfa' }> {
+    return this.authService.completeStaffRegistration(body).then((result) => {
+      if ('next' in result) {
+        return result;
+      }
+
+      this.authCookies.issue({
+        csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+      });
+      return {} as const;
     });
-    return {} as const;
   }
 
   /**
@@ -149,17 +167,16 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  async signIn(@Body() signInDto: LoginDto): Promise<SignInHttpResponse> {
-    const result = await this.authService.signIn(signInDto.email, signInDto.password);
-    // Set CSRF token cookie for subsequent state-changing requests
-    const csrf = (Math.random().toString(36) + Math.random().toString(36)).slice(2);
-    this.authCookies.issue({
-      csrf,
-      accessToken: result.totpRequired ? undefined : result.accessToken,
-      refreshToken: result.totpRequired ? undefined : result.refreshToken,
+  signIn(@Body() signInDto: LoginDto): Promise<SignInHttpResponse> {
+    return this.authService.signIn(signInDto.email, signInDto.password).then((result) => {
+      const csrf = (Math.random().toString(36) + Math.random().toString(36)).slice(2);
+      this.authCookies.issue({
+        csrf,
+        accessToken: result.totpRequired ? undefined : result.accessToken,
+        refreshToken: result.totpRequired ? undefined : result.refreshToken,
+      });
+      return result.totpRequired ? { totpRequired: true, tempToken: result.tempToken } : { totpRequired: false };
     });
-    // Return minimal public payload; tokens are cookie-only
-    return result.totpRequired ? { totpRequired: true, tempToken: result.tempToken } : { totpRequired: false };
   }
 
   /**
@@ -175,20 +192,21 @@ export class AuthController {
   @Throttle({ default: { limit: 20, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @Post('refresh')
-  async refresh(@Body() refreshTokenDto: RefreshTokenDto, @Request() req: ExpressRequest): Promise<Record<string, never>> {
+  refresh(@Body() refreshTokenDto: RefreshTokenDto, @Request() req: ExpressRequest): Promise<Record<string, never>> {
     const tokenFromCookie = parseRefreshCookie(req.headers['cookie']);
     const bodyToken = refreshTokenDto.refreshToken?.trim();
     const token = tokenFromCookie ?? (bodyToken ? bodyToken : undefined);
     if (!token) {
-      throw new BadRequestException('error.auth.missing_refresh_token');
+      return Promise.reject(new BadRequestException('error.auth.missing_refresh_token'));
     }
-    const result = await this.authService.refreshToken(token);
-    this.authCookies.rotateOnRefresh({
-      csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
-      accessToken: result!.accessToken,
-      refreshToken: result!.refreshToken,
+    return this.authService.refreshToken(token).then((result) => {
+      this.authCookies.rotateOnRefresh({
+        csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
+        accessToken: result!.accessToken,
+        refreshToken: result!.refreshToken,
+      });
+      return {} as const;
     });
-    return {} as const;
   }
 
   /**
@@ -203,10 +221,11 @@ export class AuthController {
   @Throttle({ default: { limit: 10, ttl: 60 } })
   @HttpCode(HttpStatus.OK)
   @Post('logout')
-  async logout(@Request() req: { user: { sessionId: string } }): Promise<SimpleOk> {
-    await this.authService.logout(req.user.sessionId);
-    this.authCookies.clear();
-    return { success: true };
+  logout(@Request() req: { user: { sessionId: string } }): Promise<SimpleOk> {
+    return this.authService.logout(req.user.sessionId).then(() => {
+      this.authCookies.clear();
+      return { success: true };
+    });
   }
 
   /**
@@ -218,10 +237,8 @@ export class AuthController {
    */
   @UseGuards(JwtAuthGuard)
   @Get('sessions')
-  async listSessions(@Request() req: { user: { userId: string } }): Promise<unknown> {
-    const sessions = await this.authService.listSessions(req.user.userId);
-    
-    return sessions;
+  listSessions(@Request() req: { user: { userId: string } }): Promise<unknown> {
+    return this.authService.listSessions(req.user.userId);
   }
 
   /**
@@ -229,7 +246,7 @@ export class AuthController {
    */
   @UseGuards(JwtAuthGuard)
   @Get('devices')
-  async listDevicesAlias(@Request() req: { user: { userId: string } }): Promise<unknown> {
+  listDevicesAlias(@Request() req: { user: { userId: string } }): Promise<unknown> {
     return this.authService.listSessions(req.user.userId);
   }
 
@@ -245,7 +262,7 @@ export class AuthController {
   @Throttle({ default: { limit: 10, ttl: 60 } })
   @HttpCode(HttpStatus.OK)
   @Post('sessions/revoke/:id')
-  async revokeSession(@Request() req: { user: { userId: string } }, @Param('id') id: string): Promise<SimpleOk> {
+  revokeSession(@Request() req: { user: { userId: string } }, @Param('id') id: string): Promise<SimpleOk> {
     return this.authService.revokeSession(req.user.userId, id);
   }
 
@@ -260,14 +277,17 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60 } })
   @HttpCode(HttpStatus.OK)
   @Post('login/totp')
-  async signInWithTotp(@Body() signInWithTotpDto: TotpLoginDto) {
-    const tokens = await this.authService.signInWithTotp(signInWithTotpDto.tempToken, signInWithTotpDto.totpCode);
-    this.authCookies.issue({
-      csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-    });
-    return {} as const;
+  signInWithTotp(@Body() signInWithTotpDto: TotpLoginDto): Promise<Record<string, never>> {
+    return this.authService
+      .signInWithTotp(signInWithTotpDto.tempToken, signInWithTotpDto.totpCode)
+      .then((tokens) => {
+        this.authCookies.issue({
+          csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+        });
+        return {} as const;
+      });
   }
 
   // Account recovery endpoints
@@ -283,9 +303,8 @@ export class AuthController {
   @Post('password/forgot')
   @SkipCsrf()
   @Throttle({ default: { limit: 3, ttl: 60000 } })
-  async forgotPassword(@Body() body: ForgotPasswordDto): Promise<SimpleOk> {
-    await this.authService.requestPasswordReset(body.email);
-    return { success: true };
+  forgotPassword(@Body() body: ForgotPasswordDto): Promise<SimpleOk> {
+    return this.authService.requestPasswordReset(body.email).then(() => ({ success: true }));
   }
 
   /**
@@ -301,9 +320,8 @@ export class AuthController {
   @SkipCsrf()
   @Throttle({ default: { limit: 3, ttl: 60 } })
   @HttpCode(HttpStatus.OK)
-  async resetPassword(@Body() body: ResetPasswordDto): Promise<SimpleOk> {
-    await this.authService.resetPassword(body.token, body.newPassword);
-    return { success: true };
+  resetPassword(@Body() body: ResetPasswordDto): Promise<SimpleOk> {
+    return this.authService.resetPassword(body.token, body.newPassword).then(() => ({ success: true }));
   }
 
   /**
@@ -318,9 +336,8 @@ export class AuthController {
   @Post('email/send-verification')
   @SkipCsrf()
   @Throttle({ default: { limit: 3, ttl: 60 } })
-  async sendEmailVerification(@Body() body: SendVerificationDto): Promise<SimpleOk> {
-    await this.authService.requestEmailVerification(body.email);
-    return { success: true };
+  sendEmailVerification(@Body() body: SendVerificationDto): Promise<SimpleOk> {
+    return this.authService.requestEmailVerification(body.email).then(() => ({ success: true }));
   }
 
   /**
@@ -335,9 +352,8 @@ export class AuthController {
   @Post('email/verify')
   @SkipCsrf()
   @HttpCode(HttpStatus.OK)
-  async verifyEmail(@Body() body: VerifyEmailDto): Promise<SimpleOk> {
-    await this.authService.verifyEmail(body.token);
-    return { success: true };
+  verifyEmail(@Body() body: VerifyEmailDto): Promise<SimpleOk> {
+    return this.authService.verifyEmail(body.token).then(() => ({ success: true }));
   }
 
   /**
@@ -350,9 +366,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('password/change')
   @Throttle({ default: { limit: 3, ttl: 60000 } })
-  async changePassword(@Body() body: PasswordChangeDto, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
-    await this.authService.changePassword(req.user.userId, body.currentPassword, body.newPassword);
-    return { success: true };
+  changePassword(@Body() body: PasswordChangeDto, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
+    return this.authService
+      .changePassword(req.user.userId, body.currentPassword, body.newPassword)
+      .then(() => ({ success: true }));
   }
 
   /**
@@ -365,9 +382,8 @@ export class AuthController {
   @HttpCode(HttpStatus.ACCEPTED)
   @Post('email/change/request')
   @Throttle({ default: { limit: 3, ttl: 60000 } })
-  async requestEmailChange(@Body() body: EmailChangeRequestDto, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
-    await this.authService.requestEmailChange(req.user.userId, body.newEmail);
-    return { success: true };
+  requestEmailChange(@Body() body: EmailChangeRequestDto, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
+    return this.authService.requestEmailChange(req.user.userId, body.newEmail).then(() => ({ success: true }));
   }
 
   /**
@@ -382,9 +398,8 @@ export class AuthController {
   @Post('email/change/confirm')
   @SkipCsrf()
   @Throttle({ default: { limit: 3, ttl: 60 } })
-  async confirmEmailChange(@Body() body: EmailChangeConfirmDto): Promise<SimpleOk> {
-    await this.authService.confirmEmailChange(body.token);
-    return { success: true };
+  confirmEmailChange(@Body() body: EmailChangeConfirmDto): Promise<SimpleOk> {
+    return this.authService.confirmEmailChange(body.token).then(() => ({ success: true }));
   }
 
   // Spec-aligned email verify routes (current implementation uses token under the hood)
@@ -393,9 +408,8 @@ export class AuthController {
   @Post('email/verify/request')
   @SkipCsrf()
   @Throttle({ default: { limit: 3, ttl: 60 } })
-  async emailVerifyRequest(@Body() body: { email: string }): Promise<SimpleOk> {
-    await this.authService.requestEmailVerification(body.email);
-    return { success: true };
+  emailVerifyRequest(@Body() body: { email: string }): Promise<SimpleOk> {
+    return this.authService.requestEmailVerification(body.email).then(() => ({ success: true }));
   }
 
   @Public()
@@ -403,16 +417,14 @@ export class AuthController {
   @Post('email/verify/confirm')
   @SkipCsrf()
   @Throttle({ default: { limit: 5, ttl: 60000 } })
-  async emailVerifyConfirm(@Body() body: { token?: string; email?: string; otp?: string }): Promise<SimpleOk> {
+  emailVerifyConfirm(@Body() body: { token?: string; email?: string; otp?: string }): Promise<SimpleOk> {
     if (body.token) {
-      await this.authService.verifyEmail(body.token);
-      return { success: true };
+      return this.authService.verifyEmail(body.token).then(() => ({ success: true }));
     }
     if (body.email && body.otp) {
-      await this.authService.verifyEmailOtp(body.email, body.otp);
-      return { success: true };
+      return this.authService.verifyEmailOtp(body.email, body.otp).then(() => ({ success: true }));
     }
-    throw new BadRequestException('error.validation');
+    return Promise.reject(new BadRequestException('error.validation'));
   }
 
   /**
@@ -425,7 +437,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('webauthn/register/start')
   @HttpCode(HttpStatus.OK)
-  async webauthnRegisterStart(
+  webauthnRegisterStart(
     @Body() body: WebauthnRegisterStartDto,
     @Request() req: { user: { userId: string } },
   ): Promise<Record<string, unknown>> {
@@ -442,9 +454,10 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('webauthn/register/finish')
   @HttpCode(HttpStatus.OK)
-  async webauthnRegisterFinish(@Body() response: WebauthnAttestationDto, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
-    await this.webAuthn.finishRegistration(req.user.userId, response.response as unknown as Record<string, unknown>);
-    return { success: true };
+  webauthnRegisterFinish(@Body() response: WebauthnAttestationDto, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
+    return this.webAuthn
+      .finishRegistration(req.user.userId, response.response as unknown as Record<string, unknown>)
+      .then(() => ({ success: true }));
   }
 
   /**
@@ -459,20 +472,21 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @SkipCsrf()
   @Throttle({ default: { limit: 10, ttl: 60000 } })
-  async webauthnLoginStart(
+  webauthnLoginStart(
     @Body() body: { email?: string; userId?: string },
     @OptionalUser() user?: AuthenticatedUser,
   ): Promise<Record<string, unknown>> {
-    // Allow unauthenticated start by identity (email or userId). Fallback to authenticated user if present.
     const payload = body ?? {};
     const providedUserId = this.extractUserId(user) ?? payload.userId;
-    const userId =
-      providedUserId ??
-      (payload.email ? await this.authService.resolveUserIdByEmail(payload.email) : undefined);
-    if (!userId) {
-      throw new BadRequestException('error.validation');
+    if (providedUserId) {
+      return this.webAuthn.startAuthentication(providedUserId);
     }
-    return this.webAuthn.startAuthentication(userId);
+    if (payload.email) {
+      return this.authService
+        .resolveUserIdByEmail(payload.email)
+        .then((userId) => this.webAuthn.startAuthentication(userId));
+    }
+    return Promise.reject(new BadRequestException('error.validation'));
   }
 
   /**
@@ -488,23 +502,25 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @SkipCsrf()
   @Throttle({ default: { limit: 10, ttl: 60000 } })
-  async webauthnLoginFinish(
+  webauthnLoginFinish(
     @Body() response: WebauthnAssertionDto,
     @OptionalUser() user?: AuthenticatedUser,
   ): Promise<Record<string, never>> {
     const userId = this.extractUserId(user);
     if (!userId) {
-      throw new UnauthorizedException();
+      return Promise.reject(new UnauthorizedException());
     }
-    await this.webAuthn.finishAuthentication(userId, response.response as unknown as Record<string, unknown>);
-    // Issue session + tokens
-    const result = await this.authService.issueTokensForUser(userId);
-    this.authCookies.issue({
-      csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
-    });
-    return {} as const;
+    return this.webAuthn
+      .finishAuthentication(userId, response.response as unknown as Record<string, unknown>)
+      .then(() => this.authService.issueTokensForUser(userId))
+      .then((result) => {
+        this.authCookies.issue({
+          csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+        });
+        return {} as const;
+      });
   }
 
   /**
@@ -516,7 +532,7 @@ export class AuthController {
   @Post('recovery/generate')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 2, ttl: 60000 } })
-  async generateRecovery(@Request() req: { user: { userId: string } }): Promise<string[]> {
+  generateRecovery(@Request() req: { user: { userId: string } }): Promise<string[]> {
     return this.recovery.generate(req.user.userId, 10);
   }
 
@@ -526,7 +542,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('recovery-codes/issue')
   @HttpCode(HttpStatus.CREATED)
-  async issueRecoveryCodesAlias(@Request() req: { user: { userId: string } }): Promise<string[]> {
+  issueRecoveryCodesAlias(@Request() req: { user: { userId: string } }): Promise<string[]> {
     return this.recovery.generate(req.user.userId, 10);
   }
 
@@ -539,7 +555,7 @@ export class AuthController {
   @Post('recovery/codes')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 2, ttl: 60000 } })
-  async generateRecoveryCodes(@Request() req: { user: { userId: string } }): Promise<string[]> {
+  generateRecoveryCodes(@Request() req: { user: { userId: string } }): Promise<string[]> {
     return this.recovery.generate(req.user.userId, 10);
   }
 
@@ -553,10 +569,13 @@ export class AuthController {
   @Post('recovery/verify')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 5, ttl: 60000 } })
-  async verifyRecovery(@Body() body: VerifyRecoveryDto, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
-    const ok = await this.recovery.verifyAndConsume(req.user.userId, body.code);
-    if (!ok) throw new BadRequestException(COMMON_ERROR_CODES.VALIDATION);
-    return { success: true };
+  verifyRecovery(@Body() body: VerifyRecoveryDto, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
+    return this.recovery.verifyAndConsume(req.user.userId, body.code).then((ok) => {
+      if (!ok) {
+        throw new BadRequestException(COMMON_ERROR_CODES.VALIDATION);
+      }
+      return { success: true };
+    });
   }
 
   /**
@@ -565,7 +584,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('recovery-codes/verify')
   @HttpCode(HttpStatus.OK)
-  async verifyRecoveryAlias(@Body() body: VerifyRecoveryDto, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
+  verifyRecoveryAlias(@Body() body: VerifyRecoveryDto, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
     return this.verifyRecovery(body, req);
   }
 
@@ -573,7 +592,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('sessions/revoke')
   @HttpCode(HttpStatus.OK)
-  async revokeSessionBody(@Request() req: { user: { userId: string } }, @Body() body: { id: string }): Promise<SimpleOk> {
+  revokeSessionBody(@Request() req: { user: { userId: string } }, @Body() body: { id: string }): Promise<SimpleOk> {
     return this.authService.revokeSession(req.user.userId, body.id);
   }
 
@@ -583,7 +602,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('devices/revoke')
   @HttpCode(HttpStatus.OK)
-  async revokeDeviceAlias(@Request() req: { user: { userId: string } }, @Body() body: { id: string }): Promise<SimpleOk> {
+  revokeDeviceAlias(@Request() req: { user: { userId: string } }, @Body() body: { id: string }): Promise<SimpleOk> {
     return this.authService.revokeSession(req.user.userId, body.id);
   }
 
@@ -593,7 +612,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Delete('sessions/:id')
   @HttpCode(HttpStatus.OK)
-  async revokeSessionDelete(@Request() req: { user: { userId: string } }, @Param('id') id: string): Promise<SimpleOk> {
+  revokeSessionDelete(@Request() req: { user: { userId: string } }, @Param('id') id: string): Promise<SimpleOk> {
     return this.authService.revokeSession(req.user.userId, id);
   }
 
@@ -610,9 +629,8 @@ export class AuthController {
   @Post('register')
   @SkipCsrf()
   @Throttle({ default: { limit: 5, ttl: 60000 } })
-  async register(@Body() body: RegisterDto): Promise<SimpleOk> {
-    await this.authService.register(body.email, body.password, body.name);
-    return { success: true };
+  register(@Body() body: RegisterDto): Promise<SimpleOk> {
+    return this.authService.register(body.email, body.password, body.name).then(() => ({ success: true }));
   }
 
   /**
@@ -623,9 +641,8 @@ export class AuthController {
   @Get('oauth/:provider/start')
   @SkipCsrf()
   @Redirect(undefined, HttpStatus.FOUND)
-  async oauthStart(@Param('provider') provider: string): Promise<{ url: string; statusCode: number }> {
-    const { redirectUrl } = await this.oauth.start(provider);
-    return { url: redirectUrl, statusCode: HttpStatus.FOUND };
+  oauthStart(@Param('provider') provider: string): Promise<{ url: string; statusCode: number }> {
+    return this.oauth.start(provider).then(({ redirectUrl }) => ({ url: redirectUrl, statusCode: HttpStatus.FOUND }));
   }
 
   /**
@@ -635,37 +652,38 @@ export class AuthController {
   @UseGuards(JwtOptionalAuthGuard)
   @Get('oauth/:provider/callback')
   @SkipCsrf()
-  async oauthCallback(
+  oauthCallback(
     @Param('provider') provider: string,
     @OptionalUser() user?: AuthenticatedUser,
     @Query('code') code?: string,
     @Query('state') state?: string,
   ): Promise<Record<string, never>> {
     if (!code) {
-      throw new BadRequestException(COMMON_ERROR_CODES.VALIDATION);
+      return Promise.reject(new BadRequestException(COMMON_ERROR_CODES.VALIDATION));
     }
-    const profile = await this.oauth.exchangeCode(provider, code, state);
-    const linkedUserId = this.extractUserId(user);
-    if (linkedUserId) {
-      await this.authService.linkSocialAccount(linkedUserId, profile.provider, profile.providerUserId);
-      return {} as const;
-    }
-    // sign in path
-    const tokens: { accessToken: string; refreshToken: string } = await this.authService.signInWithSocial(profile);
-    this.authCookies.issue({
-      csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
+    return this.oauth.exchangeCode(provider, code, state).then((profile) => {
+      const linkedUserId = this.extractUserId(user);
+      if (linkedUserId) {
+        return this.authService
+          .linkSocialAccount(linkedUserId, profile.provider, profile.providerUserId)
+          .then(() => ({} as const));
+      }
+      return this.authService.signInWithSocial(profile).then((tokens) => {
+        this.authCookies.issue({
+          csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+        });
+        return {} as const;
+      });
     });
-    return {} as const;
   }
 
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('oauth/:provider/unlink')
-  async oauthUnlink(@Param('provider') provider: string, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
-    await this.authService.unlinkSocialAccount(req.user.userId, provider);
-    return { success: true };
+  oauthUnlink(@Param('provider') provider: string, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
+    return this.authService.unlinkSocialAccount(req.user.userId, provider).then(() => ({ success: true }));
   }
 
   /**
@@ -674,9 +692,8 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Delete('oauth/:provider')
-  async oauthUnlinkAlias(@Param('provider') provider: string, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
-    await this.authService.unlinkSocialAccount(req.user.userId, provider);
-    return { success: true };
+  oauthUnlinkAlias(@Param('provider') provider: string, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
+    return this.authService.unlinkSocialAccount(req.user.userId, provider).then(() => ({ success: true }));
   }
 
   private extractUserId(user?: AuthenticatedUser): string | undefined {

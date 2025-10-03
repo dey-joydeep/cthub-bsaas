@@ -1,6 +1,6 @@
 import { AuthController } from './auth.controller';
 import { AuthService } from '../services/auth.service';
-import type { WebAuthnPort, RecoveryCodesPort, OAuthPort } from '@cthub-bsaas/server-contracts-auth';
+import type { WebAuthnPort, RecoveryCodesPort, OAuthPort, RegistrationCompleteInput } from '@cthub-bsaas/server-contracts-auth';
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 import { LoginDto } from '../dto/login.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
@@ -14,27 +14,40 @@ describe('AuthController branches (unit)', () => {
   let service: jest.Mocked<Pick<AuthService,
     | 'signIn' | 'refreshToken' | 'logout' | 'listSessions' | 'revokeSession' | 'signInWithTotp'
     | 'requestPasswordReset' | 'resetPassword' | 'requestEmailVerification' | 'verifyEmail' | 'verifyEmailOtp'
-    | 'issueTokensForUser' | 'resolveUserIdByEmail' | 'register'>>;
+    | 'issueTokensForUser' | 'resolveUserIdByEmail' | 'register' | 'validateOwnerInvite' | 'completeOwnerRegistration'
+    | 'validateStaffInvite' | 'completeStaffRegistration' | 'changePassword' | 'requestEmailChange' | 'confirmEmailChange'
+    | 'signInWithSocial' | 'linkSocialAccount' | 'unlinkSocialAccount'>>;
   let webAuthn: jest.Mocked<Pick<WebAuthnPort, 'startRegistration' | 'finishRegistration' | 'startAuthentication' | 'finishAuthentication'>>;
   let recovery: jest.Mocked<Pick<RecoveryCodesPort, 'generate' | 'verifyAndConsume'>>;
+  let oauth: jest.Mocked<Pick<OAuthPort, 'start' | 'exchangeCode'>>;
   let cookies: jest.Mocked<Pick<AuthCookiesService, 'issue' | 'rotateOnRefresh' | 'clear'>>;
 
   beforeEach(() => {
     service = {
-      signIn: jest.fn(),
-      refreshToken: jest.fn(),
-      logout: jest.fn(),
-      listSessions: jest.fn(),
-      revokeSession: jest.fn(),
-      signInWithTotp: jest.fn(),
-      requestPasswordReset: jest.fn(),
-      resetPassword: jest.fn(),
-      requestEmailVerification: jest.fn(),
-      verifyEmail: jest.fn(),
-      verifyEmailOtp: jest.fn(),
-      issueTokensForUser: jest.fn(),
-      resolveUserIdByEmail: jest.fn(),
-      register: jest.fn(),
+      signIn: jest.fn().mockResolvedValue({ totpRequired: false, accessToken: 'at', refreshToken: 'rt' }),
+      refreshToken: jest.fn().mockResolvedValue({ accessToken: 'A1', refreshToken: 'R1' }),
+      logout: jest.fn().mockResolvedValue(undefined),
+      listSessions: jest.fn().mockResolvedValue([]),
+      revokeSession: jest.fn().mockResolvedValue({ success: true }),
+      signInWithTotp: jest.fn().mockResolvedValue({ accessToken: 'AT', refreshToken: 'RT' }),
+      requestPasswordReset: jest.fn().mockResolvedValue(undefined),
+      resetPassword: jest.fn().mockResolvedValue(undefined),
+      requestEmailVerification: jest.fn().mockResolvedValue(undefined),
+      verifyEmail: jest.fn().mockResolvedValue(undefined),
+      verifyEmailOtp: jest.fn().mockResolvedValue(undefined),
+      issueTokensForUser: jest.fn().mockResolvedValue({ accessToken: 'AISS', refreshToken: 'RISS' }),
+      resolveUserIdByEmail: jest.fn().mockResolvedValue('resolved-id'),
+      register: jest.fn().mockResolvedValue(undefined),
+      validateOwnerInvite: jest.fn().mockResolvedValue({ email: 'owner@example.com', salonId: 'salon-1' }),
+      completeOwnerRegistration: jest.fn().mockResolvedValue({ accessToken: 'owner-at', refreshToken: 'owner-rt' }),
+      validateStaffInvite: jest.fn().mockResolvedValue({ email: 'staff@example.com', salonId: 'salon-1', role: 'STAFF' }),
+      completeStaffRegistration: jest.fn().mockResolvedValue({ accessToken: 'staff-at', refreshToken: 'staff-rt' }),
+      changePassword: jest.fn().mockResolvedValue(undefined),
+      requestEmailChange: jest.fn().mockResolvedValue(undefined),
+      confirmEmailChange: jest.fn().mockResolvedValue(undefined),
+      signInWithSocial: jest.fn().mockResolvedValue({ accessToken: 'SOC-AT', refreshToken: 'SOC-RT' }),
+      linkSocialAccount: jest.fn().mockResolvedValue(undefined),
+      unlinkSocialAccount: jest.fn().mockResolvedValue(undefined),
     };
     const startRegistration = jest.fn<Promise<Record<string, unknown>>, [string, string]>(
       (_u, _n) => Promise.resolve({ ok: 1 } as Record<string, unknown>),
@@ -53,9 +66,18 @@ describe('AuthController branches (unit)', () => {
       generate: jest.fn<Promise<string[]>, [string, (number | undefined)]>(() => Promise.resolve(['r1', 'r2'])),
       verifyAndConsume: jest.fn<Promise<boolean>, [string, string]>(() => Promise.resolve(true)),
     };
-    const oauth = { start: jest.fn() };
+    oauth = {
+      start: jest.fn().mockResolvedValue({ redirectUrl: 'https://example.com/oauth' }),
+      exchangeCode: jest.fn().mockResolvedValue({ provider: 'google', providerUserId: 'pid' }),
+    } as unknown as jest.Mocked<Pick<OAuthPort, 'start' | 'exchangeCode'>>;
     cookies = { issue: jest.fn(), rotateOnRefresh: jest.fn(), clear: jest.fn() };
-    controller = new AuthController(service as unknown as AuthService, webAuthn as unknown as WebAuthnPort, recovery as unknown as RecoveryCodesPort, oauth as unknown as OAuthPort, cookies as unknown as AuthCookiesService);
+    controller = new AuthController(
+      service as unknown as AuthService,
+      webAuthn as unknown as WebAuthnPort,
+      recovery as unknown as RecoveryCodesPort,
+      oauth as unknown as OAuthPort,
+      cookies as unknown as AuthCookiesService,
+    );
   });
 
   it('signIn branches: totpRequired false and true', async () => {
@@ -219,6 +241,296 @@ describe('AuthController branches (unit)', () => {
 
   it('customer register calls service', async () => {
     (service.register as unknown as jest.Mock).mockResolvedValue(undefined);
-    await expect(controller.register({ email: 'a@b.com', password: 'Password#1' } as unknown as import('../dto/register.dto').RegisterDto)).resolves.toEqual({ success: true });
+    await expect(
+      controller.register({ email: 'a@b.com', password: 'Password#1' } as unknown as import('../dto/register.dto').RegisterDto),
+    ).resolves.toEqual({ success: true });
+  });
+
+  it('webauthnLoginStart handles undefined body and id-based user token', async () => {
+    const start = await controller.webauthnLoginStart(
+      undefined as unknown as { email?: string; userId?: string },
+      { id: 'id-only-user' } as unknown as AuthenticatedUser,
+    );
+    expect(start).toEqual({ request: true });
+  });
+
+  it('webauthnLoginStart rejects when extractUserId returns invalid value', async () => {
+    await expect(
+      controller.webauthnLoginStart({}, { userId: 123 } as unknown as AuthenticatedUser),
+    ).rejects.toThrow();
+  });
+
+  describe('error propagation', () => {
+    const forced = new Error('forced failure');
+
+    const serviceErrorCases = [
+      {
+        name: 'validateOwnerInvite',
+        stub: () => service.validateOwnerInvite as unknown as jest.Mock,
+        invoke: () => controller.validateOwnerInvite('tok'),
+      },
+      {
+        name: 'completeOwnerRegistration',
+        stub: () => service.completeOwnerRegistration as unknown as jest.Mock,
+        invoke: () =>
+          controller.completeOwnerRegistration({ token: 'tok', password: 'Password#1' } as RegistrationCompleteInput),
+      },
+      {
+        name: 'validateStaffInvite',
+        stub: () => service.validateStaffInvite as unknown as jest.Mock,
+        invoke: () => controller.validateStaffInvite('tok'),
+      },
+      {
+        name: 'completeStaffRegistration',
+        stub: () => service.completeStaffRegistration as unknown as jest.Mock,
+        invoke: () =>
+          controller.completeStaffRegistration({ token: 'tok', password: 'Password#1' } as RegistrationCompleteInput),
+      },
+      {
+        name: 'signIn',
+        stub: () => service.signIn as unknown as jest.Mock,
+        invoke: () => controller.signIn({ email: 'e@example.com', password: 'Password#1' } as LoginDto),
+      },
+      {
+        name: 'refresh',
+        stub: () => service.refreshToken as unknown as jest.Mock,
+        invoke: () => controller.refresh(
+          { refreshToken: 'body' } as RefreshTokenDto,
+          { headers: {} } as unknown as ExpressRequest,
+        ),
+      },
+      {
+        name: 'logout',
+        stub: () => service.logout as unknown as jest.Mock,
+        invoke: () => controller.logout({ user: { sessionId: 'sess-1' } } as { user: { sessionId: string } }),
+      },
+      {
+        name: 'listSessions',
+        stub: () => service.listSessions as unknown as jest.Mock,
+        invoke: () => controller.listSessions({ user: { userId: 'u1' } } as { user: { userId: string } }),
+      },
+      {
+        name: 'listDevicesAlias',
+        stub: () => service.listSessions as unknown as jest.Mock,
+        invoke: () => controller.listDevicesAlias({ user: { userId: 'u1' } } as { user: { userId: string } }),
+      },
+      {
+        name: 'revokeSession',
+        stub: () => service.revokeSession as unknown as jest.Mock,
+        invoke: () => controller.revokeSession({ user: { userId: 'u1' } } as { user: { userId: string } }, 'sess-1'),
+      },
+      {
+        name: 'revokeSessionBody',
+        stub: () => service.revokeSession as unknown as jest.Mock,
+        invoke: () => controller.revokeSessionBody({ user: { userId: 'u1' } } as { user: { userId: string } }, { id: 'sess-1' }),
+      },
+      {
+        name: 'revokeDeviceAlias',
+        stub: () => service.revokeSession as unknown as jest.Mock,
+        invoke: () => controller.revokeDeviceAlias({ user: { userId: 'u1' } } as { user: { userId: string } }, { id: 'sess-1' }),
+      },
+      {
+        name: 'revokeSessionDelete',
+        stub: () => service.revokeSession as unknown as jest.Mock,
+        invoke: () => controller.revokeSessionDelete({ user: { userId: 'u1' } } as { user: { userId: string } }, 'sess-1'),
+      },
+      {
+        name: 'signInWithTotp',
+        stub: () => service.signInWithTotp as unknown as jest.Mock,
+        invoke: () =>
+          controller.signInWithTotp({ tempToken: 'tmp', totpCode: '123456' } as { tempToken: string; totpCode: string }),
+      },
+      {
+        name: 'forgotPassword',
+        stub: () => service.requestPasswordReset as unknown as jest.Mock,
+        invoke: () => controller.forgotPassword({ email: 'e@example.com' }),
+      },
+      {
+        name: 'resetPassword',
+        stub: () => service.resetPassword as unknown as jest.Mock,
+        invoke: () =>
+          controller.resetPassword({ token: 'tok', newPassword: 'Password#2' } as { token: string; newPassword: string }),
+      },
+      {
+        name: 'sendEmailVerification',
+        stub: () => service.requestEmailVerification as unknown as jest.Mock,
+        invoke: () => controller.sendEmailVerification({ email: 'e@example.com' }),
+      },
+      {
+        name: 'verifyEmail',
+        stub: () => service.verifyEmail as unknown as jest.Mock,
+        invoke: () => controller.verifyEmail({ token: 'tok' }),
+      },
+      {
+        name: 'changePassword',
+        stub: () => service.changePassword as unknown as jest.Mock,
+        invoke: () =>
+          controller.changePassword(
+            { currentPassword: 'Old#1', newPassword: 'New#1Pass' } as { currentPassword: string; newPassword: string },
+            { user: { userId: 'u1' } } as { user: { userId: string } },
+          ),
+      },
+      {
+        name: 'requestEmailChange',
+        stub: () => service.requestEmailChange as unknown as jest.Mock,
+        invoke: () =>
+          controller.requestEmailChange(
+            { newEmail: 'new@example.com' } as { newEmail: string },
+            { user: { userId: 'u1' } } as { user: { userId: string } },
+          ),
+      },
+      {
+        name: 'confirmEmailChange',
+        stub: () => service.confirmEmailChange as unknown as jest.Mock,
+        invoke: () => controller.confirmEmailChange({ token: 'tok' } as { token: string }),
+      },
+      {
+        name: 'emailVerifyRequest',
+        stub: () => service.requestEmailVerification as unknown as jest.Mock,
+        invoke: () => controller.emailVerifyRequest({ email: 'e@example.com' }),
+      },
+      {
+        name: 'emailVerifyConfirm token branch',
+        stub: () => service.verifyEmail as unknown as jest.Mock,
+        invoke: () => controller.emailVerifyConfirm({ token: 'tok' }),
+      },
+      {
+        name: 'emailVerifyConfirm otp branch',
+        stub: () => service.verifyEmailOtp as unknown as jest.Mock,
+        invoke: () => controller.emailVerifyConfirm({ email: 'e@example.com', otp: '123456' }),
+      },
+      {
+        name: 'register',
+        stub: () => service.register as unknown as jest.Mock,
+        invoke: () => controller.register({ email: 'e@example.com', password: 'Password#1' } as { email: string; password: string }),
+      },
+      {
+        name: 'oauthUnlink',
+        stub: () => service.unlinkSocialAccount as unknown as jest.Mock,
+        invoke: () => controller.oauthUnlink('google', { user: { userId: 'u1' } }),
+      },
+      {
+        name: 'oauthUnlinkAlias',
+        stub: () => service.unlinkSocialAccount as unknown as jest.Mock,
+        invoke: () => controller.oauthUnlinkAlias('google', { user: { userId: 'u1' } } as { user: { userId: string } }),
+      },
+      {
+        name: 'webauthnLoginStart resolveUserIdByEmail',
+        stub: () => service.resolveUserIdByEmail as unknown as jest.Mock,
+        invoke: () => controller.webauthnLoginStart({ email: 'missing@example.com' }, undefined as unknown as AuthenticatedUser),
+      },
+      {
+        name: 'webauthnLoginFinish issueTokensForUser',
+        stub: () => service.issueTokensForUser as unknown as jest.Mock,
+        invoke: () =>
+          controller.webauthnLoginFinish(
+            { response: {} } as unknown as WebauthnAssertionDto,
+            { userId: 'u1' } as unknown as AuthenticatedUser,
+          ),
+      },
+    ] as const;
+
+    for (const { name, stub, invoke } of serviceErrorCases) {
+      it(`propagates errors from ${name}`, async () => {
+        const mock = stub();
+        mock.mockRejectedValueOnce(forced);
+        await expect(invoke()).rejects.toBe(forced);
+      });
+    }
+
+    const webAuthnCases = [
+      {
+        name: 'webauthnRegisterStart',
+        stub: () => webAuthn.startRegistration as unknown as jest.Mock,
+        invoke: () =>
+          controller.webauthnRegisterStart({ username: 'demo' }, { user: { userId: 'u1' } } as { user: { userId: string } }),
+      },
+      {
+        name: 'webauthnRegisterFinish',
+        stub: () => webAuthn.finishRegistration as unknown as jest.Mock,
+        invoke: () =>
+          controller.webauthnRegisterFinish(
+            { response: {} } as unknown as WebauthnAttestationDto,
+            { user: { userId: 'u1' } } as { user: { userId: string } },
+          ),
+      },
+      {
+        name: 'webauthnLoginFinish finishAuthentication',
+        stub: () => webAuthn.finishAuthentication as unknown as jest.Mock,
+        invoke: () =>
+          controller.webauthnLoginFinish(
+            { response: {} } as unknown as WebauthnAssertionDto,
+            { userId: 'u1' } as unknown as AuthenticatedUser,
+          ),
+      },
+    ] as const;
+
+    for (const { name, stub, invoke } of webAuthnCases) {
+      it(`propagates errors from ${name}`, async () => {
+        const mock = stub();
+        mock.mockRejectedValueOnce(forced);
+        await expect(invoke()).rejects.toBe(forced);
+      });
+    }
+
+    const recoveryCases = [
+      {
+        name: 'generateRecovery',
+        stub: () => recovery.generate as unknown as jest.Mock,
+        invoke: () => controller.generateRecovery({ user: { userId: 'u1' } } as { user: { userId: string } }),
+      },
+      {
+        name: 'issueRecoveryCodesAlias',
+        stub: () => recovery.generate as unknown as jest.Mock,
+        invoke: () => controller.issueRecoveryCodesAlias({ user: { userId: 'u1' } } as { user: { userId: string } }),
+      },
+      {
+        name: 'generateRecoveryCodes',
+        stub: () => recovery.generate as unknown as jest.Mock,
+        invoke: () => controller.generateRecoveryCodes({ user: { userId: 'u1' } } as { user: { userId: string } }),
+      },
+      {
+        name: 'verifyRecovery',
+        stub: () => recovery.verifyAndConsume as unknown as jest.Mock,
+        invoke: () => controller.verifyRecovery({ code: 'C' }, { user: { userId: 'u1' } } as { user: { userId: string } }),
+      },
+      {
+        name: 'verifyRecoveryAlias',
+        stub: () => recovery.verifyAndConsume as unknown as jest.Mock,
+        invoke: () => controller.verifyRecoveryAlias({ code: 'C' }, { user: { userId: 'u1' } } as { user: { userId: string } }),
+      },
+    ] as const;
+
+    for (const { name, stub, invoke } of recoveryCases) {
+      it(`propagates errors from ${name}`, async () => {
+        const mock = stub();
+        mock.mockRejectedValueOnce(forced);
+        await expect(invoke()).rejects.toBe(forced);
+      });
+    }
+
+    it('oauthStart propagates errors', async () => {
+      (oauth.start as unknown as jest.Mock).mockRejectedValueOnce(forced);
+      await expect(controller.oauthStart('google')).rejects.toBe(forced);
+    });
+
+    it('oauthCallback propagates exchange errors', async () => {
+      (oauth.exchangeCode as unknown as jest.Mock).mockRejectedValueOnce(forced);
+      await expect(controller.oauthCallback('google', undefined, 'code', 'state')).rejects.toBe(forced);
+    });
+
+    it('oauthCallback propagates link errors', async () => {
+      (oauth.exchangeCode as unknown as jest.Mock).mockResolvedValueOnce({ provider: 'google', providerUserId: 'pid' });
+      (service.linkSocialAccount as unknown as jest.Mock).mockRejectedValueOnce(forced);
+      await expect(
+        controller.oauthCallback('google', { userId: 'u1' } as unknown as AuthenticatedUser, 'code', 'state'),
+      ).rejects.toBe(forced);
+    });
+
+    it('oauthCallback propagates sign-in errors', async () => {
+      (oauth.exchangeCode as unknown as jest.Mock).mockResolvedValueOnce({ provider: 'google', providerUserId: 'pid' });
+      (service.signInWithSocial as unknown as jest.Mock).mockRejectedValueOnce(forced);
+      await expect(controller.oauthCallback('google', undefined, 'code', 'state')).rejects.toBe(forced);
+    });
   });
 });

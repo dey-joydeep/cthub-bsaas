@@ -4,7 +4,13 @@ import { CookieRegistry } from '@cthub-bsaas/server-core';
 
 @Injectable()
 export class AuthCookiesService {
-  constructor(private readonly registry: CookieRegistry, private readonly config: ConfigService) {}
+  private readonly registry: CookieRegistry;
+  private readonly config: ConfigService;
+
+  constructor(registry: CookieRegistry, config: ConfigService) {
+    this.registry = registry;
+    this.config = config;
+  }
 
   issue(params: { csrf: string; accessToken?: string; refreshToken?: string }): void {
     const domain = this.config.auth.cookieDomain;

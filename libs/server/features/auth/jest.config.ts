@@ -19,7 +19,7 @@ const config: Config = {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../../../coverage/libs/server/features/auth',
-  coveragePathIgnorePatterns: ['[\\/]dto[\\/]'],
+  coveragePathIgnorePatterns: ['[\\/]dto[\\/]', 'coverage-normalizer.ts$'],
   coverageThreshold: {
     global: {
       statements: 100,

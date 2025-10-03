@@ -8,6 +8,8 @@ import { WEB_AUTHN_PORT, RECOVERY_CODES_PORT, OAUTH_PORT } from '@cthub-bsaas/se
 import type { WebAuthnPort, RecoveryCodesPort } from '@cthub-bsaas/server-contracts-auth';
 import { AuthCookiesService } from '../../../src/lib/services/auth-cookies.service';
 import { CookieRegistry, CookiesInterceptor, RetryAfterFilter, ConfigModule } from '@cthub-bsaas/server-core';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from '../../../src/lib/strategies/jwt.strategy';
 
 describe('Rate limiting (edge-case)', () => {
   let app: INestApplication;
@@ -28,6 +30,7 @@ describe('Rate limiting (edge-case)', () => {
       imports: [
         ConfigModule,
         ThrottlerModule.forRoot({ throttlers: [{ ttl: 1, limit: 1 }] }),
+        PassportModule.register({ defaultStrategy: 'jwt' }),
       ],
       controllers: [AuthController],
       providers: [
@@ -40,6 +43,7 @@ describe('Rate limiting (edge-case)', () => {
         CookieRegistry,
         CookiesInterceptor,
         AuthCookiesService,
+        JwtStrategy,
       ],
     }).compile();
     app = modRef.createNestApplication();

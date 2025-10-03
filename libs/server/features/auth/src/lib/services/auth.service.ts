@@ -34,21 +34,49 @@ import { randomUUID } from 'crypto';
 
 @Injectable()
 export class AuthService {
+  private readonly userRepository: IUserRepository;
+  private readonly sessionRepository: ISessionRepository;
+  private readonly refreshTokenRepository: IRefreshTokenRepository;
+  private readonly socialAccountRepository: ISocialAccountRepository;
+  private readonly credentialTotpRepository: ICredentialTotpRepository;
+  private readonly jwtService: JwtService;
+  private readonly configService: ConfigService;
+  private readonly totpService: TotpPort;
+  private readonly emailPort: EmailPort;
+  private readonly emailVerRepo: IEmailVerificationRepository;
+  private readonly pwdResetRepo: IPasswordResetRepository;
+  private readonly audit: AuditService;
+  private readonly invitePort?: InvitePort;
+
   constructor(
-    @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
-    @Inject(SESSION_REPOSITORY) private readonly sessionRepository: ISessionRepository,
-    @Inject(REFRESH_TOKEN_REPOSITORY) private readonly refreshTokenRepository: IRefreshTokenRepository,
-    @Inject(SOCIAL_ACCOUNT_REPOSITORY) private readonly socialAccountRepository: ISocialAccountRepository,
-    @Inject(CREDENTIAL_TOTP_REPOSITORY) private readonly credentialTotpRepository: ICredentialTotpRepository,
-    private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
-    @Inject(TOTP_PORT) private readonly totpService: TotpPort,
-    @Inject(EMAIL_PORT) private readonly emailPort: EmailPort,
-    @Inject(EMAIL_VERIFICATION_REPOSITORY) private readonly emailVerRepo: IEmailVerificationRepository,
-    @Inject(PASSWORD_RESET_REPOSITORY) private readonly pwdResetRepo: IPasswordResetRepository,
-    private readonly audit: AuditService,
-    @Optional() @Inject(INVITE_PORT) private readonly invitePort?: InvitePort,
-  ) {}
+    @Inject(USER_REPOSITORY) userRepository: IUserRepository,
+    @Inject(SESSION_REPOSITORY) sessionRepository: ISessionRepository,
+    @Inject(REFRESH_TOKEN_REPOSITORY) refreshTokenRepository: IRefreshTokenRepository,
+    @Inject(SOCIAL_ACCOUNT_REPOSITORY) socialAccountRepository: ISocialAccountRepository,
+    @Inject(CREDENTIAL_TOTP_REPOSITORY) credentialTotpRepository: ICredentialTotpRepository,
+    jwtService: JwtService,
+    configService: ConfigService,
+    @Inject(TOTP_PORT) totpService: TotpPort,
+    @Inject(EMAIL_PORT) emailPort: EmailPort,
+    @Inject(EMAIL_VERIFICATION_REPOSITORY) emailVerRepo: IEmailVerificationRepository,
+    @Inject(PASSWORD_RESET_REPOSITORY) pwdResetRepo: IPasswordResetRepository,
+    audit: AuditService,
+    @Optional() @Inject(INVITE_PORT) invitePort?: InvitePort,
+  ) {
+    this.userRepository = userRepository;
+    this.sessionRepository = sessionRepository;
+    this.refreshTokenRepository = refreshTokenRepository;
+    this.socialAccountRepository = socialAccountRepository;
+    this.credentialTotpRepository = credentialTotpRepository;
+    this.jwtService = jwtService;
+    this.configService = configService;
+    this.totpService = totpService;
+    this.emailPort = emailPort;
+    this.emailVerRepo = emailVerRepo;
+    this.pwdResetRepo = pwdResetRepo;
+    this.audit = audit;
+    this.invitePort = invitePort;
+  }
 
   public async register(email: string, password: string, name?: string): Promise<void> {
     const existing = await this.userRepository.findByEmail(email);

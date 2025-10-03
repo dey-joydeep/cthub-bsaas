@@ -22,13 +22,15 @@ export interface CreateAuthTestUserOptions {
 }
 
 async function ensureAuthRoles(prisma: PrismaClient, roles: UserRole[] = Object.values(UserRole)): Promise<void> {
-  for (const role of roles) {
-    const name = role.toUpperCase();
-    await prisma.role.upsert({
-      where: { name },
-      update: {},
-      create: { name },
-    });
+  const names = Array.from(new Set(roles.map((role) => role.toUpperCase())));
+  for (const name of names) {
+    try {
+      await prisma.role.create({ data: { name } });
+    } catch (error) {
+      if (!(error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002')) {
+        throw error;
+      }
+    }
   }
 }
 

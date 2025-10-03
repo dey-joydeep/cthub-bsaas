@@ -37,7 +37,7 @@ describe('JwtStrategy', () => {
     const cfg = createConfig();
     const strat = new JwtStrategy(cfg);
     type Req = { cookies?: Record<string, string | undefined>; headers?: { authorization?: string } };
-    const extractor = (strat as unknown as { _jwtFromRequest: (r: Req) => string | undefined })._jwtFromRequest;
+    const extractor = (strat as unknown as { _jwtFromRequest: (r: Req) => string | null | undefined })._jwtFromRequest;
     const req: Req = { cookies: { bsaas_at: 'cookie-token' }, headers: { authorization: 'Bearer header-token' } };
     const tok = extractor(req);
     expect(tok).toBe('cookie-token');
@@ -47,9 +47,18 @@ describe('JwtStrategy', () => {
     const cfg = createConfig();
     const strat = new JwtStrategy(cfg);
     type Req = { cookies?: Record<string, string | undefined>; headers?: { authorization?: string } };
-    const extractor = (strat as unknown as { _jwtFromRequest: (r: Req) => string | undefined })._jwtFromRequest;
+    const extractor = (strat as unknown as { _jwtFromRequest: (r: Req) => string | null | undefined })._jwtFromRequest;
     const req: Req = { cookies: {}, headers: { authorization: 'Bearer header-token' } };
     const tok = extractor(req);
     expect(tok).toBe('header-token');
+  });
+
+  it('returns null when neither cookie nor Authorization header present', () => {
+    const cfg = createConfig();
+    const strat = new JwtStrategy(cfg);
+    type Req = { cookies?: Record<string, string | undefined>; headers?: { authorization?: string } };
+    const extractor = (strat as unknown as { _jwtFromRequest: (r: Req) => string | null | undefined })._jwtFromRequest;
+    const req: Req = { cookies: {}, headers: {} };
+    expect(extractor(req)).toBeNull();
   });
 });
