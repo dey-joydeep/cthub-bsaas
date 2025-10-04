@@ -7,11 +7,16 @@ export default {
     '/node_modules/',
     '<rootDir>/tests/',
     '<rootDir>/src/lib/types/',
+    '<rootDir>/src/lib/social.module.ts',
     '<rootDir>/src/lib/dto/',
   ],
   collectCoverageFrom: [
-    '<rootDir>/src/lib/**/*.ts',
+    '<rootDir>/src/lib/controllers/**/*.ts',
+    '<rootDir>/src/lib/services/**/*.ts',
+    '<rootDir>/src/lib/utils/**/*.ts',
+    '<rootDir>/src/lib/strategies/**/*.ts',
     '!<rootDir>/src/lib/**/*.spec.ts',
     '!<rootDir>/src/lib/**/index.ts',
   ],
+  setupFiles: ['reflect-metadata'],
 };

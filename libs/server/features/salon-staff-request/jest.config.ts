@@ -4,6 +4,8 @@ const config: Config = {
   displayName: 'server-feature-salon-staff-request',
   preset: '../../../../jest.preset.cjs',
   testEnvironment: 'node',
+  // testMatch is intentionally left undefined.
+  // It is defined in jest.unit.config.ts and jest.int.config.ts respectively.
   globalSetup: '<rootDir>/../../server-testing-utils/src/lib/global-setup.ts',
   globalTeardown: '<rootDir>/../../server-testing-utils/src/lib/global-teardown.ts',
   testTimeout: 30000,
