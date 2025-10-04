@@ -5,18 +5,20 @@ type ConfigureFn = typeof import('log4js')['configure'];
 type GetLoggerFn = typeof import('log4js')['getLogger'];
 type MkdirSyncFn = typeof import('node:fs')['mkdirSync'];
 
-const configureMock = jest.fn<ReturnType<ConfigureFn>, Parameters<ConfigureFn>>();
-const getLoggerMock = jest.fn<ReturnType<GetLoggerFn>, Parameters<GetLoggerFn>>();
-const mkdirSyncMock = jest.fn<ReturnType<MkdirSyncFn>, Parameters<MkdirSyncFn>>();
-
 jest.mock('log4js', () => ({
-  configure: configureMock,
-  getLogger: getLoggerMock,
+  configure: jest.fn(),
+  getLogger: jest.fn(),
 }));
 
 jest.mock('node:fs', () => ({
-  mkdirSync: mkdirSyncMock,
+  mkdirSync: jest.fn(),
 }));
+
+const { configure: configureMock, getLogger: getLoggerMock } = jest.requireMock('log4js') as {
+  configure: jest.MockedFunction<ConfigureFn>;
+  getLogger: jest.MockedFunction<GetLoggerFn>;
+};
+const mkdirSyncMock = jest.requireMock('node:fs').mkdirSync as jest.MockedFunction<MkdirSyncFn>;
 
 import { LoggerService } from './logger.service';
 import type { Config } from '../config/configuration';
