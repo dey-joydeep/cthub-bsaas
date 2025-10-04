@@ -23,7 +23,7 @@ import type { Request as ExpressRequest } from 'express';
 import { LoginDto } from '../../src/lib/dto/login.dto';
 import { RefreshTokenDto } from '../../src/lib/dto/refresh-token.dto';
 import { WebauthnAssertionDto } from '../../src/lib/dto/webauthn-assertion.dto';
-import type { SignInHttpResponse } from '../../src/lib/types/auth.types';
+import type { AuthSignInResult, JwtUserContext } from '../../src/lib/types/auth.types';
 import { setupAuthIntegrationHarness, AuthIntegrationHarness, ensureAuthRoles } from './utils/auth-integration.harness';
 
 import 'reflect-metadata';
@@ -839,6 +839,24 @@ describe('AuthController (Integration) - success flows', () => {
       let oauthPort: OAuthPort;
       let controllerContext: ContextId;
 
+      const buildJwtUser = (overrides: Partial<JwtUserContext> = {}): JwtUserContext => ({
+        userId: 'user-1',
+        email: 'user@example.com',
+        roles: [UserRole.CUSTOMER],
+        sessionId: 'session-1',
+        ...overrides,
+      });
+
+      const buildAuthenticatedUser = (
+        overrides: Partial<AuthenticatedUser & { userId: string }> = {},
+      ): AuthenticatedUser & { userId: string } => ({
+        id: 'user-1',
+        userId: 'user-1',
+        email: 'user@example.com',
+        roles: [UserRole.CUSTOMER],
+        ...overrides,
+      });
+
       beforeEach(async () => {
         controllerContext = ContextIdFactory.create();
         harness.app.registerRequestByContextId({}, controllerContext);
@@ -898,17 +916,22 @@ describe('AuthController (Integration) - success flows', () => {
       it('covers recovery verification success and failure branches', async () => {
         const verifySpy = jest.spyOn(recoveryPort, 'verifyAndConsume');
         verifySpy.mockResolvedValueOnce(false);
-        await expect(controller.verifyRecovery({ code: 'bad' }, { user: { userId: 'user-1' } })).rejects.toThrow(BadRequestException);
+        await expect(controller.verifyRecovery({ code: 'bad' }, { user: buildJwtUser() })).rejects.toThrow(
+          BadRequestException,
+        );
 
         verifySpy.mockResolvedValueOnce(true);
-        await expect(controller.verifyRecoveryAlias({ code: 'good' }, { user: { userId: 'user-1' } })).resolves.toEqual({ success: true });
+        await expect(controller.verifyRecoveryAlias({ code: 'good' }, { user: buildJwtUser() })).resolves.toEqual({
+          success: true,
+        });
       });
 
       it('covers sign-in totp and standard branches', async () => {
         const cookieSpy = jest.spyOn(controllerCookies, 'issue').mockImplementation(() => undefined);
         const signInSpy = jest.spyOn(controllerAuthService, 'signIn');
 
-        signInSpy.mockResolvedValueOnce({ totpRequired: true, tempToken: 'temp-token' } as SignInHttpResponse);
+        const totpResult: AuthSignInResult = { totpRequired: true, tempToken: 'temp-token' };
+        signInSpy.mockResolvedValueOnce(totpResult);
         await expect(
           controller.signIn({ email: 'totp@example.com', password: 'Password#1' } as LoginDto),
         ).resolves.toEqual({ totpRequired: true, tempToken: 'temp-token' });
@@ -917,7 +940,12 @@ describe('AuthController (Integration) - success flows', () => {
           expect.objectContaining({ accessToken: undefined, refreshToken: undefined }),
         );
 
-        signInSpy.mockResolvedValueOnce({ totpRequired: false, accessToken: 'access', refreshToken: 'refresh' } as SignInHttpResponse);
+        const tokenResult: AuthSignInResult = {
+          totpRequired: false,
+          accessToken: 'access',
+          refreshToken: 'refresh',
+        };
+        signInSpy.mockResolvedValueOnce(tokenResult);
         await expect(
           controller.signIn({ email: 'regular@example.com', password: 'Password#1' } as LoginDto),
         ).resolves.toEqual({ totpRequired: false });
@@ -942,9 +970,12 @@ describe('AuthController (Integration) - success flows', () => {
         expect(startSpy).toHaveBeenCalledWith('user-by-email');
 
         startSpy.mockResolvedValueOnce({ via: 'user' });
-        await expect(
-          controller.webauthnLoginStart({}, { userId: 'user-123' } as AuthenticatedUser),
-        ).resolves.toEqual({ via: 'user' });
+        const authUser = buildAuthenticatedUser({
+          id: 'user-123',
+          userId: 'user-123',
+          email: 'user-123@example.com',
+        });
+        await expect(controller.webauthnLoginStart({}, authUser)).resolves.toEqual({ via: 'user' });
 
         await expect(controller.webauthnLoginStart({}, undefined)).rejects.toThrow(BadRequestException);
         expect(startSpy).toHaveBeenCalledTimes(2);
@@ -955,7 +986,9 @@ describe('AuthController (Integration) - success flows', () => {
           UnauthorizedException,
         );
 
-        const finishSpy = jest.spyOn(webAuthnPort, 'finishAuthentication').mockResolvedValueOnce(undefined);
+        const finishSpy = jest
+          .spyOn(webAuthnPort, 'finishAuthentication')
+          .mockResolvedValueOnce({ credentialId: 'credential-id', counter: 1 });
         const tokenSpy = jest.spyOn(controllerAuthService, 'issueTokensForUser').mockResolvedValueOnce({
           accessToken: 'web-access',
           refreshToken: 'web-refresh',
@@ -965,7 +998,11 @@ describe('AuthController (Integration) - success flows', () => {
         await expect(
           controller.webauthnLoginFinish(
             { response: {} } as WebauthnAssertionDto,
-            { userId: 'user-123' } as AuthenticatedUser,
+            buildAuthenticatedUser({
+              id: 'user-123',
+              userId: 'user-123',
+              email: 'user-123@example.com',
+            }),
           ),
         ).resolves.toEqual({});
         expect(finishSpy).toHaveBeenCalledWith('user-123', expect.any(Object));
@@ -984,9 +1021,7 @@ describe('AuthController (Integration) - success flows', () => {
         exchangeSpy.mockResolvedValueOnce({ provider: 'google', providerUserId: 'profile-link' });
         const linkSpy = jest.spyOn(controllerAuthService, 'linkSocialAccount').mockResolvedValueOnce(undefined);
 
-        await expect(
-          controller.oauthCallback('google', { userId: 'user-1' } as AuthenticatedUser, 'code', 'state'),
-        ).resolves.toEqual({});
+        await expect(controller.oauthCallback('google', buildAuthenticatedUser(), 'code', 'state')).resolves.toEqual({});
         expect(linkSpy).toHaveBeenCalledWith('user-1', 'google', 'profile-link');
 
         const cookieSpy = jest.spyOn(controllerCookies, 'issue').mockImplementation(() => undefined);

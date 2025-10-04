@@ -57,8 +57,25 @@ describe('Rate limiting (edge-case)', () => {
 
   afterEach(async () => {
     try {
-      const storage = app.get(ThrottlerStorageService);
-      await Promise.resolve(storage.reset());
+      const storage = app.get(ThrottlerStorageService) as unknown;
+      const extended = storage as {
+        reset?: () => void | Promise<void>;
+        storage?: Map<unknown, unknown>;
+        timeoutIds?: Map<string, NodeJS.Timeout[]>;
+      };
+      if (typeof extended.reset === 'function') {
+        await Promise.resolve(extended.reset());
+      } else {
+        if (extended.storage instanceof Map) {
+          extended.storage.clear();
+        }
+        if (extended.timeoutIds instanceof Map) {
+          extended.timeoutIds.forEach((timeouts: NodeJS.Timeout[]) => {
+            timeouts.forEach((timeout) => clearTimeout(timeout));
+          });
+          extended.timeoutIds.clear();
+        }
+      }
     } catch {
       // Guard not registered; ignore.
     }

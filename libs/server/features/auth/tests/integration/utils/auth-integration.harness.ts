@@ -21,7 +21,9 @@ export interface CreateAuthTestUserOptions {
   readonly overrides?: Prisma.UserUpdateInput;
 }
 
-async function ensureAuthRoles(prisma: PrismaClient, roles: UserRole[] = Object.values(UserRole)): Promise<void> {
+type RoleClient = PrismaClient | Prisma.TransactionClient;
+
+async function ensureAuthRoles(prisma: RoleClient, roles: UserRole[] = Object.values(UserRole)): Promise<void> {
   const names = Array.from(new Set(roles.map((role) => role.toUpperCase())));
   for (const name of names) {
     try {
@@ -206,16 +208,19 @@ export async function setupAuthIntegrationHarness(
   // hit counts across cases. Clearing those Maps keeps the real guard active without leaking state.
   const resetThrottle = async (): Promise<void> => {
     try {
-      const throttler = context.app.get(ThrottlerStorageService) as ThrottlerStorageService & {
+      const throttler = context.app.get(ThrottlerStorageService) as unknown;
+      const extended = throttler as {
         storage?: Map<unknown, unknown>;
         timeoutIds?: Map<string, NodeJS.Timeout[]>;
       };
-      if (throttler.storage instanceof Map) {
-        throttler.storage.clear();
+      if (extended.storage instanceof Map) {
+        extended.storage.clear();
       }
-      if (throttler.timeoutIds instanceof Map) {
-        throttler.timeoutIds.forEach((timeouts) => timeouts.forEach(clearTimeout));
-        throttler.timeoutIds.clear();
+      if (extended.timeoutIds instanceof Map) {
+        extended.timeoutIds.forEach((timeouts: NodeJS.Timeout[]) => {
+          timeouts.forEach((timeout) => clearTimeout(timeout));
+        });
+        extended.timeoutIds.clear();
       }
     } catch {
       // Guard not registered for this test context; ignore.

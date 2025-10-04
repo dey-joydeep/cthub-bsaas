@@ -2,7 +2,7 @@ import request from 'supertest';
 import { randomUUID } from 'crypto';
 import { authenticator } from 'otplib';
 import { ConfigService, LoggerService } from '@cthub-bsaas/server-core';
-import { TOTP_PORT, USER_REPOSITORY, type IUserRepository } from '@cthub-bsaas/server-contracts-auth';
+import { TOTP_PORT, USER_REPOSITORY, type InvitePort, type IUserRepository } from '@cthub-bsaas/server-contracts-auth';
 import { AuthService } from '../../src/lib/services/auth.service';
 import { AuditService } from '../../src/lib/services/audit.service';
 import { TotpOtplibAdapter } from '@cthub-bsaas/server-infrastructure';
@@ -67,8 +67,8 @@ describe('AuthController (Integration) - error responses', () => {
 
       it('returns not implemented when owner invite port is unavailable', async () => {
         const authService = harness.app.get(AuthService);
-        const originalPort = (authService as { invitePort?: unknown }).invitePort;
-        (authService as { invitePort?: unknown }).invitePort = undefined;
+        const originalPort = Reflect.get(authService as object, 'invitePort') as InvitePort | undefined;
+        Reflect.set(authService as object, 'invitePort', undefined);
 
         try {
           await request(harness.app.getHttpServer())
@@ -80,7 +80,7 @@ describe('AuthController (Integration) - error responses', () => {
             .send({ token: 'test-token', password: 'Password#1' })
             .expect(400);
         } finally {
-          (authService as { invitePort?: unknown }).invitePort = originalPort;
+          Reflect.set(authService as object, 'invitePort', originalPort);
         }
       });
     });
@@ -94,8 +94,8 @@ describe('AuthController (Integration) - error responses', () => {
 
       it('returns not implemented when staff invite port is unavailable', async () => {
         const authService = harness.app.get(AuthService);
-        const originalPort = (authService as { invitePort?: unknown }).invitePort;
-        (authService as { invitePort?: unknown }).invitePort = undefined;
+        const originalPort = Reflect.get(authService as object, 'invitePort') as InvitePort | undefined;
+        Reflect.set(authService as object, 'invitePort', undefined);
 
         try {
           await request(harness.app.getHttpServer())
@@ -107,7 +107,7 @@ describe('AuthController (Integration) - error responses', () => {
             .send({ token: 'test-token', password: 'Password#1' })
             .expect(400);
         } finally {
-          (authService as { invitePort?: unknown }).invitePort = originalPort;
+          Reflect.set(authService as object, 'invitePort', originalPort);
         }
       });
     });
