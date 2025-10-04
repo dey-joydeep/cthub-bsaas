@@ -616,10 +616,14 @@ describe('AuthService', () => {
 
       await service.confirmEmailChange('test-token');
 
-      expect(userRepository.update).toHaveBeenCalledWith('user-id', {
-        email: 'new@example.com',
-        emailVerifiedAt: expect.any(Date),
-      });
+      expect(userRepository.update).toHaveBeenCalled();
+      const [[callUserId, updatePayload]] = userRepository.update.mock.calls as Array<[
+        string,
+        { email?: string; emailVerifiedAt?: Date },
+      ]>;
+      expect(callUserId).toBe('user-id');
+      expect(updatePayload.email).toBe('new@example.com');
+      expect(updatePayload.emailVerifiedAt).toBeInstanceOf(Date);
     });
 
     it('should throw an error if the token is invalid when confirming an email change', async () => {

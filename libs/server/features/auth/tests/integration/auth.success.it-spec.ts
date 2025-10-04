@@ -7,8 +7,6 @@ import { UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
 import {
   TOTP_PORT,
   WEB_AUTHN_PORT,
-  RECOVERY_CODES_PORT,
-  OAUTH_PORT,
   type RecoveryCodesPort,
   type OAuthPort,
   type WebAuthnPort,
@@ -24,12 +22,9 @@ import { AuthController } from '../../src/lib/controllers/auth.controller';
 import type { Request as ExpressRequest } from 'express';
 import { LoginDto } from '../../src/lib/dto/login.dto';
 import { RefreshTokenDto } from '../../src/lib/dto/refresh-token.dto';
-import { TotpLoginDto } from '../../src/lib/dto/totp-login.dto';
-import { VerifyEmailDto } from '../../src/lib/dto/verify-email.dto';
 import { WebauthnAssertionDto } from '../../src/lib/dto/webauthn-assertion.dto';
 import type { SignInHttpResponse } from '../../src/lib/types/auth.types';
 import { setupAuthIntegrationHarness, AuthIntegrationHarness, ensureAuthRoles } from './utils/auth-integration.harness';
-import { normalizeFeatureAuthCoverage } from './utils/coverage-normalizer';
 
 import 'reflect-metadata';
 
@@ -1105,6 +1100,25 @@ describe('AuthController (Integration) - success flows', () => {
         await ensureAuthRoles(harness.prisma);
       });
 
+      it('registers new accounts and sends verification email', async () => {
+        const email = `service-new-${randomUUID()}@example.com`;
+        harness.resetEmails();
+
+        await authService.register(email, 'Password#1');
+
+        const created = await harness.prisma.user.findUnique({ where: { email } });
+        expect(created).toBeTruthy();
+        if (!created) {
+          throw new Error('Expected new user to be created');
+        }
+        harness.trackUser(created.id);
+        expect(created.name).toBeNull();
+        expect(created.emailVerifiedAt).toBeNull();
+
+        const verificationMail = harness.sentEmails.find((mail) => mail.to === email && mail.subject.includes('Verify your email'));
+        expect(verificationMail).toBeDefined();
+      });
+
       it('uses requestEmailVerification when existing account is unverified', async () => {
         const email = `service-unverified-${randomUUID()}@example.com`;
         await harness.registerUser({ email, emailVerifiedAt: null, isVerified: false });
@@ -1178,5 +1192,3 @@ describe('AuthController (Integration) - success flows', () => {
     });
   });
 });
-
-afterAll(normalizeFeatureAuthCoverage);

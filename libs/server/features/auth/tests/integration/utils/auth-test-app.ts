@@ -1,13 +1,11 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { JwtAuthGuard, JwtOptionalAuthGuard } from '@cthub-bsaas/server-core';
+import { JwtAuthGuard } from '@cthub-bsaas/server-core';
 
 import { Test } from '@nestjs/testing';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { PrismaClient } from '@prisma/client';
 import cookieParser from 'cookie-parser';
-import passport from 'passport';
-import { Strategy as JwtPassportStrategy, ExtractJwt } from 'passport-jwt';
 import {
   USER_REPOSITORY,
   SESSION_REPOSITORY,

@@ -27,6 +27,11 @@ describe('cookie.util', () => {
     expect(parseRefreshCookie(undefined)).toBeUndefined();
   });
 
+  it('returns empty string when refresh token cookie has no value', () => {
+    expect(parseRefreshCookie('refreshToken=')).toBe('');
+    expect(parseRefreshCookie('refreshToken')).toBe('');
+  });
+
   it('supports bsaas_rt cookie names and decodes encoded values', () => {
     const encoded = encodeURIComponent('refresh+value');
     expect(parseRefreshCookie(`bsaas_rt=${encoded}`)).toBe('refresh+value');
