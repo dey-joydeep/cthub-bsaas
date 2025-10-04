@@ -11,16 +11,6 @@ const config: Config = {
   // Keep it simple; the preset handles ts-jest + tsconfig paths
   testMatch: ['**/*.spec.ts', '**/*.test.ts'],
 
-  transform: {
-    '^.+\\.[tj]s$': [
-      'ts-jest',
-      {
-        // Use this project's test tsconfig
-        tsconfig: '<rootDir>/tsconfig.spec.json',
-        // No `isolatedModules` here; it’s not required and is deprecated in ts-jest v30.
-      },
-    ],
-  },
 
   moduleFileExtensions: ['ts', 'js', 'json', 'html'],
 

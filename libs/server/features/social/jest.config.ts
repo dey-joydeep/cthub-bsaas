@@ -7,14 +7,6 @@ const config: Config = {
   globalSetup: '<rootDir>/../../server-testing-utils/src/lib/global-setup.ts',
   globalTeardown: '<rootDir>/../../server-testing-utils/src/lib/global-teardown.ts',
   testTimeout: 30000,
-  transform: {
-    '^.+\\.[tj]s$': [
-      'ts-jest',
-      {
-        tsconfig: '<rootDir>/tsconfig.spec.json',
-      },
-    ],
-  },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../../../coverage/libs/server/features/social',
   coveragePathIgnorePatterns: ['[\\/]dto[\\/]'],
