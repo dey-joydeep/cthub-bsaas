@@ -1,7 +1,6 @@
 {
     "extends": "../../../../tsconfig.base.json",
     "compilerOptions": {
-        "rootDir": "src",
         "composite": true,
         "outDir": "../../../../dist/out-tsc/libs/web/core/testing",
         "declaration": true,

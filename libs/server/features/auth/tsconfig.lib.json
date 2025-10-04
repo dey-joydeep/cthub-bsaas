@@ -1,7 +1,6 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
     "outDir": "../../../../dist/libs/server/features/auth",
     "module": "ESNext",
     "declaration": true,
@@ -34,9 +33,9 @@
     "src/**/*.ts"
   ],
   "references": [
-        {
-            "path": "../../contracts-auth/tsconfig.lib.json"
-        },
+    {
+      "path": "../../contracts-auth/tsconfig.lib.json"
+    },
     { "path": "../../core/tsconfig.lib.json" },
     { "path": "../../data-access/tsconfig.lib.json" },
     { "path": "../../infrastructure/tsconfig.lib.json" }

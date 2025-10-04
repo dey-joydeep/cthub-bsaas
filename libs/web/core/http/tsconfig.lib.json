@@ -1,7 +1,6 @@
 {
     "extends": "../../../../tsconfig.base.json",
     "compilerOptions": {
-        "rootDir": "src",
         "outDir": "../../../../dist/out-tsc/libs/web/core/http",
         "declaration": true,
         "declarationMap": true,

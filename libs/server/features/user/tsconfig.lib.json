@@ -1,7 +1,6 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
     "outDir": "../../../../dist/libs/server/features/user",
     "declaration": true,
     "declarationMap": true,
