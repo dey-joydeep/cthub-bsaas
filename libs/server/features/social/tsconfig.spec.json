@@ -10,5 +10,5 @@
         "isolatedModules": false,
         "useDefineForClassFields": false
     },
-    "include": ["**/*.spec.ts", "**/*.test.ts", "**/*.d.ts", "**/*.fixture.ts"]
+    "include": ["**/*.spec.ts", "**/*.it-spec.ts", "**/*.d.ts"]
 }
