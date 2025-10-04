@@ -11,7 +11,7 @@ const config: Config = {
   testTimeout: 30000,
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../../../coverage/libs/server/features/auth',
-  coveragePathIgnorePatterns: ['[\\/]dto[\\/]', 'coverage-normalizer.ts$'],
+  coveragePathIgnorePatterns: ['[\\/]dto[\\/]'],
   coverageThreshold: {
     global: {
       statements: 100,
