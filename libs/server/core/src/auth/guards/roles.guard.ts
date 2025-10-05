@@ -21,9 +21,10 @@ const ROLE_HIERARCHY: Record<UserRole, UserRole[]> = {
  */
 export function normalizeUserRoles(roles: AuthenticatedUser['roles'] | undefined): UserRole[] {
   if (!roles) return [];
-  return roles
-    .map((r) => (typeof r === 'string' ? r : r?.name))
-    .filter((r): r is UserRole => !!r && (Object.values(UserRole) as string[]).includes(r));
+  const consumers = roles as Array<UserRole | { name?: string }>;
+  return consumers
+    .map((role) => (typeof role === 'string' ? role : role?.name))
+    .filter((value): value is UserRole => !!value && (Object.values(UserRole) as string[]).includes(value));
 }
 
 /**

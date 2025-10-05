@@ -13,7 +13,7 @@ export class PrismaLastAdminAdapter implements ILastAdminValidatorDb {
       select: { role: { select: { name: true } } },
     });
 
-    return roles.map(({ role }) => ({
+    return roles.map(({ role }): { role: { name: UserRole } } => ({
       role: { name: role.name as UserRole },
     }));
   }
