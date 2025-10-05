@@ -1,25 +1,17 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-
-export interface NotificationItem {
-  readonly id: string;
-  readonly title: string;
-  readonly message: string;
-  readonly type: 'info' | 'success' | 'warning' | 'error';
-  readonly createdAt: Date;
-  readonly read: boolean;
-}
+import { Notification } from '../models/notification.model';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
-  private items: NotificationItem[] = [];
-  private readonly items$ = new BehaviorSubject<NotificationItem[]>([]);
+  private items: Notification[] = [];
+  private readonly items$ = new BehaviorSubject<Notification[]>([]);
 
   readonly notifications$ = this.items$.asObservable();
 
-  add(notification: Partial<NotificationItem>): NotificationItem {
-    const item: NotificationItem = {
-      id: Math.random().toString(36).substring(2, 9),
+  add(notification: Partial<Notification>): Notification {
+    const item: Notification = {
+      id: notification.id || Math.random().toString(36).substring(2, 9),
       title: notification.title ?? '',
       message: notification.message ?? '',
       type: notification.type ?? 'info',
