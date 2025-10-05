@@ -7,7 +7,9 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "options": {
         "outputPath": "dist/libs/server/features/auth",
         "tsConfig": "libs/server/features/auth/tsconfig.lib.json",
@@ -28,25 +30,41 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
-        "lintFilePatterns": ["libs/server/features/auth/**/*.ts"]
+        "lintFilePatterns": [
+          "libs/server/features/auth/**/*.ts"
+        ]
       }
     },
     "type-check": {
       "executor": "nx:run-commands",
+      "dependsOn": [
+        "shared:build",
+        "server-contracts-auth:build",
+        "server-core:build",
+        "server-data-access:build",
+        "server-infrastructure:build"
+      ],
       "options": {
-        "command": "tsc -p libs/server/features/auth/tsconfig.lib.json --noEmit && tsc -p libs/server/features/auth/tsconfig.spec.json --noEmit"
+        "command": "tsc -b E:\\workspace\\cthub-bsaas\\libs\\server\\features\\auth/tsconfig.json --pretty false"
       }
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
       "options": {
         "jestConfig": "libs/server/features/auth/jest.config.ts",
         "passWithNoTests": true,
         "codeCoverage": true,
-        "coverageReporters": ["text", "lcov"],
+        "coverageReporters": [
+          "text",
+          "lcov"
+        ],
         "coverageDirectory": "coverage/libs/server/features/auth"
       },
       "configurations": {
@@ -59,6 +77,15 @@
       }
     }
   },
-  "tags": ["type:lib", "platform:server", "scope:server-feature", "scope:server", "type:feature"],
-  "implicitDependencies": ["server-core", "server-data-access"]
+  "tags": [
+    "type:lib",
+    "platform:server",
+    "scope:server-feature",
+    "scope:server",
+    "type:feature"
+  ],
+  "implicitDependencies": [
+    "server-core",
+    "server-data-access"
+  ]
 }
