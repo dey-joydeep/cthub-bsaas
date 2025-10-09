@@ -11,6 +11,7 @@
     "emitDecoratorMetadata": true,
     "useDefineForClassFields": false,
     "composite": true,
+    "rootDir": "./src",
     "tsBuildInfoFile": "../../../dist/.tsbuildinfo/server/contracts-auth.tsbuildinfo"
   },
   "include": ["src/**/*.ts"],
