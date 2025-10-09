@@ -1,9 +1,11 @@
 import type { Logger } from 'log4js';
+import * as log4js from 'log4js';
+import * as fs from 'node:fs';
 import { mock, MockProxy } from 'jest-mock-extended';
 
-type ConfigureFn = typeof import('log4js')['configure'];
-type GetLoggerFn = typeof import('log4js')['getLogger'];
-type MkdirSyncFn = typeof import('node:fs')['mkdirSync'];
+type ConfigureFn = typeof log4js.configure;
+type GetLoggerFn = typeof log4js.getLogger;
+type MkdirSyncFn = typeof fs.mkdirSync;
 
 jest.mock('log4js', () => ({
   configure: jest.fn(),
@@ -14,11 +16,9 @@ jest.mock('node:fs', () => ({
   mkdirSync: jest.fn(),
 }));
 
-const { configure: configureMock, getLogger: getLoggerMock } = jest.requireMock('log4js') as {
-  configure: jest.MockedFunction<ConfigureFn>;
-  getLogger: jest.MockedFunction<GetLoggerFn>;
-};
-const mkdirSyncMock = jest.requireMock('node:fs').mkdirSync as jest.MockedFunction<MkdirSyncFn>;
+const configureMock: jest.MockedFunction<ConfigureFn> = jest.mocked(log4js.configure);
+const getLoggerMock: jest.MockedFunction<GetLoggerFn> = jest.mocked(log4js.getLogger);
+const mkdirSyncMock: jest.MockedFunction<MkdirSyncFn> = jest.mocked(fs.mkdirSync);
 
 import { LoggerService } from './logger.service';
 import type { Config } from '../config/configuration';

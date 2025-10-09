@@ -1,94 +1,138 @@
-import { Test } from '@nestjs/testing';
-import { NodemailerEmailAdapter } from './email.nodemailer.adapter';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
+import type { ConfigService } from '@nestjs/config';
+import {
+  NodemailerEmailAdapter,
+  type NodemailerModule,
+  type NodemailerTransporter,
+  type SendMailOptions,
+} from './email.nodemailer.adapter';
 
-jest.mock('nodemailer', () => ({
-  createTransport: jest.fn().mockReturnValue({
-    sendMail: jest.fn(),
-  }),
+jest.mock('node:module', () => ({
+  createRequire: jest.fn(),
 }));
 
+const { createRequire } = jest.requireMock('node:module') as { createRequire: jest.Mock };
+const createRequireMock = createRequire;
+
+const createConfigService = (overrides: Record<string, string | undefined>): ConfigService => {
+  const defaults: Record<string, string | undefined> = {
+    EMAIL_HOST: 'smtp.gmail.com',
+    EMAIL_PORT: '587',
+    EMAIL_SECURE: 'false',
+    EMAIL_USER: 'noreply@example.com',
+    EMAIL_FROM: 'noreply@example.com',
+    ...overrides,
+  };
+
+  return {
+    get: <T = string>(key: string, defaultValue?: T) => (defaults[key] ?? defaultValue ?? undefined) as T,
+  } as ConfigService;
+};
+
+type CreateTransportMock = jest.Mock<NodemailerTransporter, Parameters<NodemailerModule['createTransport']>>;
+type SendMailMock = jest.Mock<Promise<unknown>, [SendMailOptions]>;
+
 describe('NodemailerEmailAdapter', () => {
-  let adapter: NodemailerEmailAdapter;
-  let transporter: any;
+  const buildAdapter = (configOverrides: Record<string, string | undefined> = {}) => {
+    createRequireMock.mockReset();
+    const configService = createConfigService(configOverrides);
+    const sendMailMock: SendMailMock = jest.fn((options) => Promise.resolve(options));
+    const transporterStub: NodemailerTransporter = {
+      sendMail: sendMailMock,
+    };
+    const createTransportMock: CreateTransportMock = jest.fn((..._args) => transporterStub);
+    const nodemailerStub = {
+      createTransport: createTransportMock,
+      createTestAccount: jest.fn(),
+      getTestMessageUrl: jest.fn(),
+    } as unknown as NodemailerModule;
 
-  describe('with password', () => {
-    beforeEach(async () => {
-      const module = await Test.createTestingModule({
-        imports: [ConfigModule.forRoot()],
-        providers: [NodemailerEmailAdapter],
-      }).compile();
+    class TestAdapter extends NodemailerEmailAdapter {
+      constructor(config: ConfigService, private readonly moduleStub: NodemailerModule) {
+        super(config);
+      }
 
-      adapter = module.get<NodemailerEmailAdapter>(NodemailerEmailAdapter);
-      await adapter.onModuleInit();
-      transporter = (nodemailer.createTransport as jest.Mock).mock.results[0].value;
-    });
+      protected loadNodemailer(): NodemailerModule {
+        return this.moduleStub;
+      }
+    }
 
-    it('should be defined', () => {
-      expect(adapter).toBeDefined();
-    });
+    const adapter = new TestAdapter(configService, nodemailerStub);
+    return { adapter, createTransportMock, sendMailMock };
+  };
 
-    it('should send email with correct arguments', async () => {
-      const to = 'test@example.com';
-      const subject = 'Test Subject';
-      const body = 'Test Body';
+  it('creates password transporter using host defaults', () => {
+    const { adapter, createTransportMock } = buildAdapter({ EMAIL_PASS: 'smtp-pass' });
 
-      await adapter.sendMail(to, subject, body);
+    adapter.onModuleInit();
 
-      expect(transporter.sendMail).toHaveBeenCalledWith({
-        from: expect.any(String),
-        to,
-        subject,
-        text: body,
-        html: undefined,
-      });
+    expect(createTransportMock).toHaveBeenCalledWith({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: { user: 'noreply@example.com', pass: 'smtp-pass' },
     });
   });
 
-  describe('with oauth2', () => {
-    beforeEach(async () => {
-      const module = await Test.createTestingModule({
-        imports: [ConfigModule.forRoot()],
-        providers: [
-          NodemailerEmailAdapter,
-          {
-            provide: ConfigService,
-            useValue: {
-              get: jest.fn((key: string) => {
-                if (key === 'EMAIL_OAUTH_CLIENT_ID') return 'client-id';
-                if (key === 'EMAIL_OAUTH_CLIENT_SECRET') return 'client-secret';
-                if (key === 'EMAIL_OAUTH_REFRESH_TOKEN') return 'refresh-token';
-                return null;
-              }),
-            },
-          },
-        ],
-      }).compile();
-
-      adapter = module.get<NodemailerEmailAdapter>(NodemailerEmailAdapter);
-      await adapter.onModuleInit();
-      transporter = (nodemailer.createTransport as jest.Mock).mock.results[0].value;
+  it('creates oauth transporter when oauth config present', () => {
+    const { adapter, createTransportMock } = buildAdapter({
+      EMAIL_USER: 'oauth@example.com',
+      EMAIL_FROM: 'oauth-from@example.com',
+      EMAIL_OAUTH_CLIENT_ID: 'client-id',
+      EMAIL_OAUTH_CLIENT_SECRET: 'client-secret',
+      EMAIL_OAUTH_REFRESH_TOKEN: 'refresh-token',
+      EMAIL_OAUTH_ACCESS_TOKEN: 'access-token',
     });
 
-    it('should be defined', () => {
-      expect(adapter).toBeDefined();
+    adapter.onModuleInit();
+
+    expect(createTransportMock).toHaveBeenCalledWith({
+      service: 'gmail',
+      auth: {
+        type: 'OAuth2',
+        user: 'oauth@example.com',
+        clientId: 'client-id',
+        clientSecret: 'client-secret',
+        refreshToken: 'refresh-token',
+        accessToken: 'access-token',
+      },
     });
+  });
 
-    it('should send email with correct arguments', async () => {
-      const to = 'test@example.com';
-      const subject = 'Test Subject';
-      const body = 'Test Body';
+  it('sends html and text bodies appropriately', async () => {
+    const { adapter, sendMailMock } = buildAdapter({ EMAIL_FROM: 'custom@example.com' });
+    adapter.onModuleInit();
 
-      await adapter.sendMail(to, subject, body);
+    await adapter.sendMail('dest@example.com', 'Subject', '<p>Hi</p>');
+    await adapter.sendMail('text@example.com', 'Subject', 'Plain body');
 
-      expect(transporter.sendMail).toHaveBeenCalledWith({
-        from: expect.any(String),
-        to,
-        subject,
-        text: body,
-        html: undefined,
-      });
+    expect(sendMailMock).toHaveBeenNthCalledWith(1, {
+      from: 'custom@example.com',
+      to: 'dest@example.com',
+      subject: 'Subject',
+      text: undefined,
+      html: '<p>Hi</p>',
     });
+    expect(sendMailMock).toHaveBeenNthCalledWith(2, {
+      from: 'custom@example.com',
+      to: 'text@example.com',
+      subject: 'Subject',
+      text: 'Plain body',
+      html: undefined,
+    });
+  });
+
+  it('loads nodemailer via createRequire when using default helper', () => {
+    const requireFn = jest.fn(() => ({
+      createTransport: jest.fn(() => ({ sendMail: jest.fn() })),
+      createTestAccount: jest.fn(),
+      getTestMessageUrl: jest.fn(),
+    }));
+    createRequireMock.mockReturnValue(requireFn);
+    const adapter = new NodemailerEmailAdapter(createConfigService({ EMAIL_PASS: 'smtp-pass' }));
+
+    adapter.onModuleInit();
+
+    expect(createRequireMock).toHaveBeenCalledWith(`${process.cwd()}/package.json`);
+    expect(requireFn).toHaveBeenCalledWith('nodemailer');
   });
 });
