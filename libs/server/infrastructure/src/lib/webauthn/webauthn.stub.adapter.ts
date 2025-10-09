@@ -9,22 +9,22 @@ import type { WebAuthnPort, CreationOptionsJSON, RequestOptionsJSON } from '@cth
 @Injectable()
 export class WebAuthnStubAdapter implements WebAuthnPort {
   /** @inheritdoc */
-  async startRegistration(userId: string, username: string): Promise<CreationOptionsJSON> {
-    return { challenge: `reg-${userId}`, user: { name: username, id: userId } };
+  startRegistration(userId: string, username: string): Promise<CreationOptionsJSON> {
+    return Promise.resolve({ challenge: `reg-${userId}`, user: { name: username, id: userId } });
   }
 
   /** @inheritdoc */
-  async finishRegistration(userId: string, _response: Record<string, unknown>): Promise<{ credentialId: string; counter: number }> {
-    return { credentialId: `cred-${userId}`, counter: 0 };
+  finishRegistration(userId: string, _response: Record<string, unknown>): Promise<{ credentialId: string; counter: number }> {
+    return Promise.resolve({ credentialId: `cred-${userId}`, counter: 0 });
   }
 
   /** @inheritdoc */
-  async startAuthentication(userId: string): Promise<RequestOptionsJSON> {
-    return { challenge: `auth-${userId}` };
+  startAuthentication(userId: string): Promise<RequestOptionsJSON> {
+    return Promise.resolve({ challenge: `auth-${userId}` });
   }
 
   /** @inheritdoc */
-  async finishAuthentication(userId: string, _response: Record<string, unknown>): Promise<{ credentialId: string; counter: number }> {
-    return { credentialId: `cred-${userId}`, counter: 1 };
+  finishAuthentication(userId: string, _response: Record<string, unknown>): Promise<{ credentialId: string; counter: number }> {
+    return Promise.resolve({ credentialId: `cred-${userId}`, counter: 1 });
   }
 }
