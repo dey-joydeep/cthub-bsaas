@@ -12,13 +12,13 @@
     "libs/server/data-access",
     "libs/server/contracts-auth",
     "libs/shared",
-    "libs/web/admin/auth",
+
     "libs/web/config",
     "libs/web/core/auth",
     "libs/web/core/http",
     "libs/web/core/testing",
 
-    "libs/web/partner/auth",
+
     "libs/web/ui"
   ],
   "packageManager": "npm@10.8.2",

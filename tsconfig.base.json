@@ -29,8 +29,6 @@
       "@cthub-bsaas/server-infrastructure/*": ["dist/libs/server/infrastructure/*", "libs/server/infrastructure/src/*"],
       "@cthub-bsaas/shared": ["libs/shared/src/index.ts"],
       "@cthub-bsaas/shared/*": ["libs/shared/src/*", "dist/libs/shared/*"],
-      "@cthub-bsaas/web-admin-auth": ["libs/web/admin/auth/src/index.ts"],
-      "@cthub-bsaas/web-admin-auth/*": ["libs/web/admin/auth/src/*", "dist/libs/web/admin/auth/*"],
       "@cthub-bsaas/web-config": ["libs/web/config/src/index.ts"],
       "@cthub-bsaas/web-config/*": ["libs/web/config/src/*"],
       "@cthub-bsaas/web-core-auth": ["libs/web/core/auth/src/index.ts"],
@@ -39,9 +37,6 @@
       "@cthub-bsaas/web-core-http/*": ["libs/web/core/http/src/*"],
       "@cthub-bsaas/web-core-testing": ["libs/web/core/testing/src/index.ts"],
       "@cthub-bsaas/web-core-testing/*": ["libs/web/core/testing/src/*"],
-
-      "@cthub-bsaas/web-partner-auth": ["libs/web/partner/auth/src/index.ts"],
-      "@cthub-bsaas/web-partner-auth/*": ["libs/web/partner/auth/src/*", "dist/libs/web/partner/auth/*"],
       "@cthub-bsaas/web-public": ["libs/web/src/index.ts"],
       "@cthub-bsaas/web-ui": ["libs/web/ui/src/index.ts"],
       "@cthub-bsaas/web-ui/*": ["libs/web/ui/src/*", "dist/libs/web/ui/*"]

@@ -12,24 +12,24 @@
                 "outputPath": {
                     "base": "dist/apps/partner"
                 },
-                "index": "src/index.html",
-                "polyfills": ["src/polyfills.ts"],
-                "tsConfig": "tsconfig.app.json",
+                "index": "apps/web/partner/src/index.html",
+                "polyfills": ["apps/web/partner/src/polyfills.ts"],
+                "tsConfig": "apps/web/partner/tsconfig.app.json",
                 "assets": [
                     {
                         "glob": "**/*",
-                        "input": "src/assets",
+                        "input": "apps/web/partner/src/assets",
                         "output": "/assets/"
                     },
                     {
                         "glob": "favicon.ico",
-                        "input": "src",
+                        "input": "apps/web/partner/src",
                         "output": "/"
                     }
                 ],
                 "styles": ["libs/web/config/src/styles/styles.css", "apps/web/partner/src/styles.scss"],
                 "scripts": [],
-                "browser": "src/main.ts"
+                "browser": "apps/web/partner/src/main.ts"
             },
             "configurations": {
                 "production": {
@@ -37,8 +37,8 @@
                     "extractLicenses": true,
                     "fileReplacements": [
                         {
-                            "replace": "src/environments/environment.ts",
-                            "with": "src/environments/environment.prod.ts"
+                            "replace": "libs/web/config/src/environments/partner/environment.ts",
+                            "with": "libs/web/config/src/environments/partner/environment.prod.ts"
                         }
                     ]
                 },

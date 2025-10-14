@@ -1,5 +1,0 @@
-{
-    "dest": "../../../../dist/libs/web/admin/auth",
-    "$schema": "../../../../node_modules/ng-packagr/ng-package.schema.json",
-    "lib": { "entryFile": "src/index.ts" }
-}
