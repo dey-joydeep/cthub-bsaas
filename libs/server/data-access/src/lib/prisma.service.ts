@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Logger, Optional } from '@nestjs/common';
 import { PrismaClient, Prisma, PrismaPromise } from '@prisma/client';
 import { ConfigService } from '@cthub-bsaas/server-core';
 
@@ -18,7 +18,7 @@ type QueryEvent = {
 export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'query' | 'error'> implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
 
-  constructor(private configService: ConfigService) {
+  constructor(@Optional() private configService?: ConfigService) {
     super({
       log: [
         { level: 'warn', emit: 'event' },
@@ -29,7 +29,7 @@ export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'que
       errorFormat: 'pretty',
     });
 
-    const isDevelopment = this.configService.app.isDevelopment;
+    const isDevelopment = this.configService?.app.isDevelopment ?? false;
 
     // Log query events in development
     if (isDevelopment) {

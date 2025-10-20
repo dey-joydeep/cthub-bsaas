@@ -11,14 +11,12 @@ import { ConfigService } from '../config/config.service';
  * Centralized logger facade that configures log4js once and exposes
  * structured logging helpers for the application and access logs.
  */
-/* istanbul ignore next */
 @Injectable()
 export class LoggerService implements OnModuleInit {
   private accessLogger!: Logger;
   private appLogger!: Logger;
   private readonly configService: ConfigService;
 
-  /* istanbul ignore next */
   constructor(configService: ConfigService) {
     this.configService = configService;
   }

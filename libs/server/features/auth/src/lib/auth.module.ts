@@ -20,6 +20,7 @@ import { AuthService } from './services/auth.service';
 import { AuditService } from './services/audit.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { EmailModule, TotpModule, WebAuthnModule, RecoveryModule, OAuthModule, InviteModule, PrismaLastAdminAdapter } from '@cthub-bsaas/server-infrastructure';
+import { RateLimitModule } from '@cthub-bsaas/server-infrastructure';
 import { LAST_ADMIN_VALIDATOR_PORT } from '@cthub-bsaas/server-contracts-auth';
 import { AuthCookiesService } from './services/auth-cookies.service';
 
@@ -78,6 +79,7 @@ const providers = [
     OAuthModule,
     InviteModule,
     EmailModule,
+    RateLimitModule,
     PassportModule,
     JwtModule.registerAsync({
       useFactory: (config: ConfigService) => ({

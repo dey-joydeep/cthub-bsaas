@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '../../config/config.service';
 import * as crypto from 'crypto';
 
-/* istanbul ignore next */
 @Injectable()
 export class EncryptionService {
   private readonly algorithm = 'aes-256-gcm';
@@ -11,7 +10,6 @@ export class EncryptionService {
   private readonly authTagLength = 16;
   private readonly configService: ConfigService;
 
-  /* istanbul ignore next */
   constructor(configService: ConfigService) {
     this.configService = configService;
     const encryptionKey = this.configService.encryption.key;

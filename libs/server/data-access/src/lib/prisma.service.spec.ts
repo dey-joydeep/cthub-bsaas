@@ -99,6 +99,28 @@ describe('PrismaService', () => {
     expect(handlers.has('error')).toBe(true);
   });
 
+  it('defaults to non-development when no ConfigService is provided', () => {
+    const handlers = new Map<PrismaEventName, (payload: unknown) => void>();
+    jest.spyOn(PrismaClient.prototype, '$on').mockImplementation(function (
+      this: PrismaClient,
+      event: unknown,
+      callback: unknown,
+    ) {
+      if (event === 'query' || event === 'error') {
+        handlers.set(event, callback as (payload: unknown) => void);
+      }
+      return this;
+    });
+    mockLogger();
+
+    // Construct without a ConfigService to exercise the nullish coalesce branch
+    // isDevelopment resolves to false via `?? false`
+    new PrismaService();
+
+    expect(handlers.has('query')).toBe(false);
+    expect(handlers.has('error')).toBe(true);
+  });
+
   it('connects to the database on init and logs the outcome', async () => {
     jest.spyOn(PrismaClient.prototype, '$on').mockImplementation(function (this: PrismaClient) {
       return this;

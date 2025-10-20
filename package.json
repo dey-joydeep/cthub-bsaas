@@ -155,6 +155,9 @@
     "typescript-eslint": "^8.29.0"
   },
   "dependencies": {
+    "@simplewebauthn/server": "^9.0.3",
+    "ioredis": "^5.4.1",
+    "google-auth-library": "^9.14.1",
     "@angular/animations": "20.1.6",
     "@angular/cdk": "20.1.5",
     "@angular/common": "20.1.6",

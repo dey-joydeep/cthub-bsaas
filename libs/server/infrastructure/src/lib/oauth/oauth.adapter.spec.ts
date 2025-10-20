@@ -1,13 +1,13 @@
 import { Test } from '@nestjs/testing';
 import { OAuthAdapter } from './oauth.adapter';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule } from '@cthub-bsaas/server-core';
 
 describe('OAuthAdapter', () => {
   let adapter: OAuthAdapter;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      imports: [ConfigModule.forRoot()],
+      imports: [ConfigModule],
       providers: [OAuthAdapter],
     }).compile();
 

@@ -6,6 +6,7 @@ import {
   Public,
   ResponseEnvelopeInterceptor,
   SkipCsrf,
+  CsrfGuard,
 } from '@cthub-bsaas/server-core';
 import {
   Body,
@@ -52,9 +53,10 @@ import {
   OAuthPort,
 } from '@cthub-bsaas/server-contracts-auth';
 import { RegistrationCompleteInput } from '@cthub-bsaas/server-contracts-auth';
-import { Inject } from '@nestjs/common';
+import { Inject, Optional } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthCookiesService } from '../services/auth-cookies.service';
+import { AuditService } from '../services/audit.service';
 import { parseRefreshCookie } from '../utils/cookie.util';
 // Public decorator is already imported at file top
 
@@ -64,7 +66,7 @@ import { parseRefreshCookie } from '../utils/cookie.util';
  * and account recovery endpoints.
  */
 @Controller('auth')
-@UseGuards(JwtOptionalAuthGuard)
+@UseGuards(CsrfGuard, JwtOptionalAuthGuard)
 @UseInterceptors(CookiesInterceptor, ResponseEnvelopeInterceptor)
 export class AuthController {
   private readonly authService: AuthService;
@@ -72,6 +74,7 @@ export class AuthController {
   private readonly recovery: RecoveryCodesPort;
   private readonly oauth: OAuthPort;
   private readonly authCookies: AuthCookiesService;
+  private readonly audit: AuditService;
 
   constructor(
     authService: AuthService,
@@ -79,12 +82,14 @@ export class AuthController {
     @Inject(RECOVERY_CODES_PORT) recovery: RecoveryCodesPort,
     @Inject(OAUTH_PORT) oauth: OAuthPort,
     authCookies: AuthCookiesService,
+    @Optional() audit?: AuditService,
   ) {
     this.authService = authService;
     this.webAuthn = webAuthn;
     this.recovery = recovery;
     this.oauth = oauth;
     this.authCookies = authCookies;
+    this.audit = audit as AuditService;
   }
 
   // Partner Registration — Owner
@@ -533,7 +538,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 2, ttl: 60000 } })
   generateRecovery(@Request() req: { user: { userId: string } }): Promise<string[]> {
-    return this.recovery.generate(req.user.userId, 10);
+    return this.recovery.generate(req.user.userId, 10).then((codes) => {
+      this.audit?.log('recovery_codes_generated', { userId: req.user.userId, count: codes.length });
+      return codes;
+    });
   }
 
   /**
@@ -572,8 +580,10 @@ export class AuthController {
   verifyRecovery(@Body() body: VerifyRecoveryDto, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
     return this.recovery.verifyAndConsume(req.user.userId, body.code).then((ok) => {
       if (!ok) {
+        this.audit?.log('recovery_code_verify_failure', { userId: req.user.userId });
         throw new BadRequestException(COMMON_ERROR_CODES.VALIDATION);
       }
+      this.audit?.log('recovery_code_verify_success', { userId: req.user.userId });
       return { success: true };
     });
   }

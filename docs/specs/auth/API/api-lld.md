@@ -54,6 +54,12 @@
 2. **complete**: POST complete with profile, password/OTP; on success **200**.
 3. **otp request/confirm**: **202** to send; **200/410/422/429** to confirm.
 
+Partner registration endpoints (implemented)
+- Owner validate: `GET /auth/owner/registration/:token`
+- Owner complete: `POST /auth/owner/registration/complete`
+- Staff validate: `GET /auth/staff/registration/:token`
+- Staff complete: `POST /auth/staff/registration/complete`
+
 ### E. Sessions/Devices
 - **refresh**: require valid RT cookie + XSRF; misuse (e.g., no XSRF) → **403**; on success rotate RT & set AT (**200**).
 - **logout**: clear AT/RT (**200**); **logout‑others** clears other sessions; device revoke returns **200** or **404** if not found.
@@ -65,6 +71,8 @@
 ### G. Recovery Codes
 - **issue**: create & persist hashed codes; return **201** with new set; revoke previous; audit.
 - **verify**: constant‑time compare; successful use marks code as consumed; **200** or **422/429**.
+
+Implementation: Recovery codes are persisted in DB (bcrypt-hashed) in all environments; no in-memory fallback.
 
 ### H. Social OAuth (Customer)
 - **start**: 302 to provider with state/nonce.
@@ -85,7 +93,7 @@ Implementation route aliases (current)
 > Maintain these during transition; add canonical aliases; update OpenAPI thereafter.
 
 ## 4) Schemas / DTOs (from OpenAPI)
-- **LoginDto**: `email` (email, max 254), `password` (min 8), `rememberMe?` (boolean)
+- **LoginDto**: `email` (email, max 254), `password` (min 8)
 - **ForgotDto**: `email`
 - **ResetDto**: `token`, `newPassword` (min 8)
 - **TotpVerifyDto**: `challengeId`, `code` (6 digits)
@@ -97,33 +105,37 @@ Implementation route aliases (current)
 
 > For exact constraints, required flags, and enums — see `components/schemas` in `openapi.yaml`.
 
-## 5) Cookies & Headers Effects
+## 5) Response Envelope
+- Non-redirect responses are wrapped by the ResponseEnvelopeInterceptor as `{ success: true, data: <payload> }`.
+- Redirect responses `{ url, statusCode }` are passed through unchanged.
+
+## 6) Cookies & Headers Effects
 - **Login/MFA success:** set **AT/RT**; issue/rotate `XSRF-TOKEN`
 - **Refresh:** rotate **RT**, set **AT**; rotate `XSRF-TOKEN`
 - **Logout:** clear **AT/RT**
 - **All 429:** include **`Retry-After`** (seconds)
 
-Implementation cookie names (current)
+Implementation cookie names (canonical)
 - Access: `bsaas_at` (HttpOnly, SameSite=Lax, Secure, path=/)
 - Refresh: `bsaas_rt` (HttpOnly, SameSite=Lax, Secure, path=/auth)
 - CSRF: `XSRF-TOKEN` (non‑HttpOnly, SameSite=Lax, Secure, path=/)
 
-> OpenAPI cookieAuth uses `access_token` as name; harmonize during normalization.
+> OpenAPI cookieAuth now uses `bsaas_at` to match implementation.
 
-## 6) Error Handling & Mapping
+## 7) Error Handling & Mapping
 - Map domain exceptions → `ApiError` (`code`, `message`, `correlationId`), never leak account existence.
 - Use: **410** for expired one‑time tokens/challenges; **400** for malformed; **422** for invalid assertion/OTP; **403** for CSRF.
 - i18n keys in FE derive from `error-catalog.md` (one catalog → many screens).
 
-## 7) Rate Limits & Lockouts
+## 8) Rate Limits & Lockouts
 - Per IP+email/user counters on login, OTP, verify, resend.  
 - Cooldown returns **429** with `Retry-After`; FE must lock UI while the timer runs.
 
-## 8) Idempotency & Replay
+## 9) Idempotency & Replay
 - Email verify request, password reset request, OTP request → **idempotent** (generic 202).  
 - Confirm endpoints are **replay‑safe**: subsequent attempts return **410** (expired) or **400** (invalid) with no side effects.
 
-## 9) Testing Strategy
+## 10) Testing Strategy
 - **Unit:** DTO validators, TOTP window, WebAuthn verifiers, rate‑limit gates.
 - **Integration:** cookie set/clear/rotate; XSRF enforcement; registration complete transactionality.
 - **Contract (CI):** controller routes validated against `openapi.yaml`.

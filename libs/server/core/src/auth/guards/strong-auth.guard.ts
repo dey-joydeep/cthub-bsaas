@@ -50,16 +50,14 @@ export function pickUserId(user: unknown): string | null {
   return null;
 }
 
-/* istanbul ignore next */
 @Injectable()
 export class StrongAuthGuard implements CanActivate {
   private readonly totpRepo: ICredentialTotpRepository;
   private readonly passkeyRepo: ICredentialPasskeyRepository;
 
-  /* istanbul ignore next */
   constructor(
-    /* istanbul ignore next */ @Inject(CREDENTIAL_TOTP_REPOSITORY) totpRepo: ICredentialTotpRepository,
-    /* istanbul ignore next */ @Inject(CREDENTIAL_PASSKEY_REPOSITORY) passkeyRepo: ICredentialPasskeyRepository,
+    @Inject(CREDENTIAL_TOTP_REPOSITORY) totpRepo: ICredentialTotpRepository,
+    @Inject(CREDENTIAL_PASSKEY_REPOSITORY) passkeyRepo: ICredentialPasskeyRepository,
   ) {
     this.totpRepo = totpRepo;
     this.passkeyRepo = passkeyRepo;

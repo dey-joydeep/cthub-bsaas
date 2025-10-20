@@ -2,12 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService as NestConfigService } from '@nestjs/config';
 import { Config } from './configuration';
 
-/* istanbul ignore next */
 @Injectable()
 export class ConfigService {
   private readonly configService: NestConfigService;
 
-  /* istanbul ignore next */
   constructor(configService: NestConfigService) {
     this.configService = configService;
   }

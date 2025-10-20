@@ -39,12 +39,10 @@ export function expandUserRolesDownward(userRoles: UserRole[]): UserRole[] {
   return [...out];
 }
 
-/* istanbul ignore next */
 @Injectable()
 export class RolesGuard implements CanActivate {
   private readonly reflector: Reflector;
 
-  /* istanbul ignore next */
   constructor(reflector: Reflector) {
     this.reflector = reflector;
   }

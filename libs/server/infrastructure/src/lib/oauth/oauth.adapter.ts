@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ConfigService } from '@cthub-bsaas/server-core';
 import type { OAuthPort, OAuthStartResult, OAuthProfile } from '@cthub-bsaas/server-contracts-auth';
 import crypto from 'crypto';
 
@@ -13,7 +13,7 @@ export class OAuthAdapter implements OAuthPort {
   constructor(private readonly config: ConfigService) {}
 
   start(provider: string, link?: boolean): Promise<OAuthStartResult> {
-    const base = this.config.get<string>('OAUTH_AUTHORIZE_BASE', 'https://example.com/oauth');
+    const base = this.config.get<string>('OAUTH_AUTHORIZE_BASE') ?? 'https://example.com/oauth';
     const nonce = crypto.randomBytes(8).toString('base64url');
     const payload = { link: !!link, n: nonce, t: Date.now() };
     const state = Buffer.from(JSON.stringify(payload)).toString('base64url');

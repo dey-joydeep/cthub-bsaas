@@ -24,13 +24,11 @@ interface HeaderCapableAdapter {
  * Interceptor that applies queued cookie commands to the underlying response
  * using the current HTTP adapter (Express or Fastify).
  */
-/* istanbul ignore next */
 @Injectable()
 export class CookiesInterceptor implements NestInterceptor {
   private readonly registry: CookieRegistry;
   private readonly httpAdapterHost: HttpAdapterHost;
 
-  /* istanbul ignore next */
   constructor(registry: CookieRegistry, httpAdapterHost: HttpAdapterHost) {
     this.registry = registry;
     this.httpAdapterHost = httpAdapterHost;

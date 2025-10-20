@@ -16,7 +16,6 @@ export class LastAdminValidationError extends Error {
 export class IsNotLastAdminConstraint implements ValidatorConstraintInterface {
   private readonly db: ILastAdminValidatorDb;
 
-  /* istanbul ignore next */
   constructor(@Inject(LAST_ADMIN_VALIDATOR_PORT) db: ILastAdminValidatorDb) {
     this.db = db;
   }

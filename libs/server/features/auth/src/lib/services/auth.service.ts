@@ -27,6 +27,7 @@ import { AuditService } from './audit.service';
 import type { AuthSignInResult, TokenPair } from '../types/auth.types';
 import type { OAuthProfile } from '@cthub-bsaas/server-contracts-auth';
 import { AUTH_ERROR_CODES } from '@cthub-bsaas/shared';
+import { RATE_LIMITER, type RateLimiter } from '@cthub-bsaas/server-infrastructure';
 import { Prisma, User } from '@prisma/client';
 import { RegistrationCompleteInput } from '@cthub-bsaas/server-contracts-auth';
 import * as bcrypt from 'bcryptjs';
@@ -47,6 +48,7 @@ export class AuthService {
   private readonly pwdResetRepo: IPasswordResetRepository;
   private readonly audit: AuditService;
   private readonly invitePort?: InvitePort;
+  private readonly rateLimiter: RateLimiter;
 
   constructor(
     @Inject(USER_REPOSITORY) userRepository: IUserRepository,
@@ -62,6 +64,7 @@ export class AuthService {
     @Inject(PASSWORD_RESET_REPOSITORY) pwdResetRepo: IPasswordResetRepository,
     audit: AuditService,
     @Optional() @Inject(INVITE_PORT) invitePort?: InvitePort,
+    @Optional() @Inject(RATE_LIMITER) rateLimiter?: RateLimiter,
   ) {
     this.userRepository = userRepository;
     this.sessionRepository = sessionRepository;
@@ -76,6 +79,7 @@ export class AuthService {
     this.pwdResetRepo = pwdResetRepo;
     this.audit = audit;
     this.invitePort = invitePort;
+    this.rateLimiter = rateLimiter ?? { checkOrThrow: async () => {} };
   }
 
   public async register(email: string, password: string, name?: string): Promise<void> {
@@ -379,6 +383,9 @@ export class AuthService {
   }
 
   public async requestPasswordReset(email: string): Promise<void> {
+    const limit = parseInt(process.env.RATE_LIMIT_PASSWORD_RESET_LIMIT ?? '5', 10);
+    const windowSec = parseInt(process.env.RATE_LIMIT_PASSWORD_RESET_WINDOW ?? String(15 * 60), 10);
+    await this.rateLimiter.checkOrThrow(`email:password-reset:${email}`, limit, windowSec);
     const user = await this.userRepository.findByEmail(email);
     if (!user) return;
     const id = randomUUID();
@@ -418,6 +425,9 @@ export class AuthService {
   }
 
   public async requestEmailVerification(email: string): Promise<void> {
+    const limit = parseInt(process.env.RATE_LIMIT_EMAIL_VERIFY_LIMIT ?? '5', 10);
+    const windowSec = parseInt(process.env.RATE_LIMIT_EMAIL_VERIFY_WINDOW ?? String(10 * 60), 10);
+    await this.rateLimiter.checkOrThrow(`email:verify:${email}`, limit, windowSec);
     const user = await this.userRepository.findByEmail(email);
     if (!user || user.emailVerifiedAt) return;
     const otp = (Math.floor(100000 + Math.random() * 900000)).toString();
@@ -450,6 +460,9 @@ export class AuthService {
   }
 
   public async verifyEmailOtp(email: string, otp: string): Promise<void> {
+    const limit = parseInt(process.env.RATE_LIMIT_EMAIL_VERIFY_OTP_LIMIT ?? '10', 10);
+    const windowSec = parseInt(process.env.RATE_LIMIT_EMAIL_VERIFY_OTP_WINDOW ?? String(10 * 60), 10);
+    await this.rateLimiter.checkOrThrow(`email:verify-otp:${email}`, limit, windowSec);
     const rec = await this.emailVerRepo.findActiveByEmail(email);
     if (!rec) {
       this.audit.log('email_verify_otp_failure', { result: 'failure', reason: 'otp_expired' });

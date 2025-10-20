@@ -15,7 +15,7 @@ components:
     cookieAuth:
       type: apiKey
       in: cookie
-      name: access_token
+      name: bsaas_at
   schemas:
     ApiError:
       type: object
@@ -44,7 +44,7 @@ components:
     TotpVerifyDto:
       type: object
       properties:
-        code: {"type":"string","pattern":"^[0-9]6$"}
+        code: {"type":"string","pattern":"^[0-9]{6}$"}
       required: [code]
     RegisterStartDto:
       type: object
@@ -77,6 +77,48 @@ components:
         newPassword: {"type":"string","minLength":8}
       required: [currentPassword, newPassword]
 paths:
+
+  /auth/owner/registration/{token}:
+
+      get:
+        summary: Validate owner registration token
+        parameters:
+          - in: path
+            name: token
+            required: true
+            schema: { type: string }
+        responses:
+          200:
+            description: Valid token
+
+  /auth/owner/registration/complete:
+
+      post:
+        summary: Complete owner registration
+        responses:
+          201:
+            description: Registration completed
+
+  /auth/staff/registration/{token}:
+
+      get:
+        summary: Validate staff registration token
+        parameters:
+          - in: path
+            name: token
+            required: true
+            schema: { type: string }
+        responses:
+          200:
+            description: Valid token
+
+  /auth/staff/registration/complete:
+
+      post:
+        summary: Complete staff registration
+        responses:
+          201:
+            description: Registration completed
 
   /appointments:
 

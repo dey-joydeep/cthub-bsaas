@@ -5,7 +5,9 @@
 
 Key decisions:
 - **Cookie-based auth** (AT short-lived, RT rotating in HttpOnly cookies).
+- Cookie names (canonical): Access `bsaas_at`, Refresh `bsaas_rt`, CSRF `XSRF-TOKEN`.
 - **Passkeys (WebAuthn)** + **TOTP** for strong auth; **Email OTP** only as fallback. **No SMS OTP**.
+- WebAuthn challenges use Redis (TTL, atomic consume) via `REDIS_URL` in `.env`.
 - **Social Login (Customer)** via OAuth 2.0/OIDC with Google and Meta; accounts may be auto-created on first login with email verification rules and merge/link flows.
 - **Flexible password reset** with recovery codes.
 - **Access log vs Application log** separated. Audit events structured.
