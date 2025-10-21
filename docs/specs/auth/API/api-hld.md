@@ -12,6 +12,8 @@ This HLD defines the **Auth API** surface for CTHub covering:
 - Social OAuth (Google required; Facebook/Apple optional; link/unlink)
 - **Registration**: Customer (self‑serve) & Partner (Owner/Staff invited)
 
+See also (Frontend Integration): `docs/specs/auth/WEB/frontend-auth-integration.md`.
+
 ## 2) Response Envelopes (Canonical)
 - **Success**
 ```json

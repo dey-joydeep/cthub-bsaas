@@ -3,12 +3,13 @@
 Status: Tracking items for frontend implementation alignment with HLD/LLD.
 
 ## API Alignment (Config)
-- [ ] Centralize URLs in `AuthHttpService` (finalized endpoints):
+- [ ] Centralize URLs in `AuthHttpService` (canonical endpoints):
   - [ ] Login: `/auth/login`
   - [ ] Login TOTP: `/auth/login/totp`
-  - [ ] Sessions revoke: `/auth/sessions/revoke` (body `{ id }`)
+  - [ ] Sessions list: `GET /auth/sessions`
+  - [ ] Session revoke (canonical): `DELETE /auth/sessions/{id}`
   - [ ] TOTP enroll: `/auth/totp/enroll/{start,finish}`
-  - [ ] Recovery codes: `/auth/recovery/{codes,verify}`
+  - [ ] Recovery codes: `POST /auth/recovery-codes/issue` (201), `POST /auth/recovery-codes/verify`
 - [ ] Ensure Angular HttpClient XSRF config: cookie `XSRF-TOKEN`, header `X-XSRF-TOKEN`.
 
 ## Cookie & CSRF Model
@@ -43,7 +44,7 @@ Status: Tracking items for frontend implementation alignment with HLD/LLD.
 ## Forms & Validation
 - [ ] Implement form models and validators per LLD (login, TOTP, register placeholder, verify, forgot/reset, enroll TOTP, recovery).
 - [ ] Add strength meter (optional) and confirm-password matching.
-- [ ] Remember Me (client-only): set `remember_me=1` cookie with Max-Age=180d when checked; clear when unchecked; read on bootstrap for silent restore UX.
+- [ ] Stay Signed In: show UX hint only; do not create client cookies. Backend sets persistent RT cookie by policy.
 
 ## Error Handling & UX
 - [ ] Centralize HTTP error → i18n mapping.
@@ -53,3 +54,6 @@ Status: Tracking items for frontend implementation alignment with HLD/LLD.
 ## Testing
 - [ ] Unit tests for services, guards, and forms validation.
 - [ ] Integration tests for key flows with HTTP mocks.
+
+## References
+- See: `docs/specs/auth/WEB/frontend-auth-integration.md` for complete FE ↔ API guidance.
