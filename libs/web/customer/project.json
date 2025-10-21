@@ -1,0 +1,41 @@
+{
+  "name": "web-customer",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/web/customer/src",
+  "prefix": "lib",
+  "tags": ["scope:web", "type:lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:package",
+      "outputs": ["{workspaceRoot}/dist/libs/web/customer"],
+      "options": {
+        "project": "libs/web/customer/ng-package.json",
+        "tsConfig": "libs/web/customer/tsconfig.lib.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "libs/web/customer/tsconfig.lib.prod.json"
+        },
+        "development": {}
+      },
+      "defaultConfiguration": "production"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/libs/web/customer"],
+      "options": {
+        "jestConfig": "libs/web/customer/jest.config.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/web/customer/src/**/*.ts",
+          "libs/web/customer/src/**/*.html"
+        ]
+      }
+    }
+  }
+}

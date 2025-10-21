@@ -1,21 +1,14 @@
 {
   "name": "web-public",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
   "sourceRoot": "libs/web/public/src",
   "prefix": "lib",
-  "projectType": "library",
-  "release": {
-    "version": {
-      "manifestRootsToUpdate": ["dist/{projectRoot}"],
-      "currentVersionResolver": "git-tag",
-      "fallbackCurrentVersionResolver": "disk"
-    }
-  },
-  "tags": [],
+  "tags": ["scope:web", "type:lib"],
   "targets": {
     "build": {
       "executor": "@nx/angular:package",
-      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
+      "outputs": ["{workspaceRoot}/dist/libs/web/public"],
       "options": {
         "project": "libs/web/public/ng-package.json",
         "tsConfig": "libs/web/public/tsconfig.lib.json"
@@ -28,20 +21,21 @@
       },
       "defaultConfiguration": "production"
     },
-    "nx-release-publish": {
-      "options": {
-        "packageRoot": "dist/{projectRoot}"
-      }
-    },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": ["{workspaceRoot}/coverage/libs/web/public"],
       "options": {
         "jestConfig": "libs/web/public/jest.config.ts"
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint"
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/web/public/src/**/*.ts",
+          "libs/web/public/src/**/*.html"
+        ]
+      }
     }
   }
 }

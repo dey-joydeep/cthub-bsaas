@@ -1,0 +1,41 @@
+{
+  "name": "web-admin",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/web/admin/src",
+  "prefix": "lib",
+  "tags": ["scope:web", "type:lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:package",
+      "outputs": ["{workspaceRoot}/dist/libs/web/admin"],
+      "options": {
+        "project": "libs/web/admin/ng-package.json",
+        "tsConfig": "libs/web/admin/tsconfig.lib.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "libs/web/admin/tsconfig.lib.prod.json"
+        },
+        "development": {}
+      },
+      "defaultConfiguration": "production"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/libs/web/admin"],
+      "options": {
+        "jestConfig": "libs/web/admin/jest.config.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/web/admin/src/**/*.ts",
+          "libs/web/admin/src/**/*.html"
+        ]
+      }
+    }
+  }
+}

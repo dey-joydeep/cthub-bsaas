@@ -1,0 +1,41 @@
+{
+  "name": "web-partner",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/web/partner/src",
+  "prefix": "lib",
+  "tags": ["scope:web", "type:lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:package",
+      "outputs": ["{workspaceRoot}/dist/libs/web/partner"],
+      "options": {
+        "project": "libs/web/partner/ng-package.json",
+        "tsConfig": "libs/web/partner/tsconfig.lib.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "libs/web/partner/tsconfig.lib.prod.json"
+        },
+        "development": {}
+      },
+      "defaultConfiguration": "production"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/libs/web/partner"],
+      "options": {
+        "jestConfig": "libs/web/partner/jest.config.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/web/partner/src/**/*.ts",
+          "libs/web/partner/src/**/*.html"
+        ]
+      }
+    }
+  }
+}
