@@ -65,8 +65,8 @@ Tooling: **Nx 21** monorepo, **Material v3**, **Tailwind v4**, **Jest 29** (unit
 
 ## 8) Sessions & SSO
 
-- **AT TTL:** 10–15 minutes; **RT TTL:** 14–30 days.
-- **Remember me**: extends RT TTL only (no change to AT).
+- **AT TTL:** 10–15 minutes; **RT TTL:** policy-driven (e.g., 30–180 days), rotation enabled.
+- **Stay signed in:** UX-only hint; backend applies persistent RT policy; no `rememberMe` flag in API.
 - **Idle timeout:** configurable by app (shorter for Admin).
 - **Active devices**: list with device/UA/IP/lastSeen; **remote logout** and **logout‑others**.
 - **Absolute session age**: Admin may require re‑auth after 24h even if active.
@@ -159,7 +159,7 @@ Tooling: **Nx 21** monorepo, **Material v3**, **Tailwind v4**, **Jest 29** (unit
    - **Admin:** 2FA **required**; **AT 10–15m**, **RT 14d**, idle timeout **10–15m**, absolute age **24h**.
    - **Owner:** 2FA **recommended** (toggle to require); **AT 10–15m**, **RT 14–30d**, idle **15–20m**.
    - **Staff:** 2FA **optional** unless policy mandates; same AT/RT as Owner; idle **20–30m**.
-   - **Customer:** 2FA optional; **AT 15m**, **RT 30d** with “remember me” extending RT TTL.
+  - **Customer:** 2FA optional; **AT 15m**, **RT 30–180d** per policy; no per-login flag.
 
 3. **Subdomain mapping vs single-domain with prefixes**
    - **Decision:** Prefer **subdomains** — `admin.cthub.in`, `partner.cthub.in`, `app.cthub.in`.
