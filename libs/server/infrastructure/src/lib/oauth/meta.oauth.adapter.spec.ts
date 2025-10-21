@@ -49,6 +49,30 @@ describe('MetaOAuthAdapter', () => {
     await expect(adapter.exchangeCode('meta', 'code', 'state')).rejects.toThrow('oauth.invalid_state');
   });
 
+  it('throws unsupported provider on exchange', async () => {
+    const adapter = new MetaOAuthAdapter(cfg, stateStore);
+    await expect(adapter.exchangeCode('google' as unknown as 'meta', 'code', 'state')).rejects.toThrow(
+      'oauth.unsupported_provider',
+    );
+  });
+
+  it('throws misconfigured during exchange (missing clientSecret)', async () => {
+    const badCfg = { get: (_: string) => (undefined) } as unknown as ConfigService;
+    const adapter = new MetaOAuthAdapter(badCfg, stateStore);
+    await expect(adapter.exchangeCode('meta', 'code', 'state')).rejects.toThrow('oauth.meta.misconfigured');
+  });
+
+  it('handles missing access_token in token response', async () => {
+    const adapter = new MetaOAuthAdapter(cfg, stateStore);
+    const orig = globalThis.fetch;
+    globalThis.fetch = jest
+      .fn()
+      // token OK but missing access_token
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) }) as unknown as typeof globalThis.fetch;
+    await expect(adapter.exchangeCode('meta', 'code', 'state')).rejects.toThrow('oauth.meta.access_token_missing');
+    globalThis.fetch = orig;
+  });
+
   it('exchanges code and returns profile', async () => {
     const adapter = new MetaOAuthAdapter(cfg, stateStore);
     const fetchMock = jest.fn()

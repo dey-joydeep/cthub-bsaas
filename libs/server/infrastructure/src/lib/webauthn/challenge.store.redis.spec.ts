@@ -55,6 +55,53 @@ describe('RedisChallengeStore', () => {
     expect(logger.warn).toHaveBeenCalled();
   });
 
+  it('logs a warning on ping timeout (Promise.race path)', async () => {
+    jest.useFakeTimers();
+    (Redis as unknown as jest.Mock).mockImplementationOnce(() => ({
+      connect: jest.fn().mockResolvedValue(undefined),
+      ping: jest.fn().mockReturnValue(new Promise<string>(() => {})),
+      status: 'ready',
+      set: jest.fn(),
+      eval: jest.fn(),
+      quit: jest.fn().mockResolvedValue('OK'),
+    }));
+    const store = new RedisChallengeStore(cfg, logger);
+    const p = store.onModuleInit();
+    await jest.advanceTimersByTimeAsync(1100);
+    await p;
+    expect(logger.warn).toHaveBeenCalled();
+    jest.useRealTimers();
+  });
+
+  it('logs a warning when connect throws non-Error (no message property)', async () => {
+    (Redis as unknown as jest.Mock).mockImplementationOnce(() => ({
+      connect: jest.fn().mockRejectedValue(42),
+      ping: jest.fn(),
+      status: 'ready',
+      set: jest.fn(),
+      eval: jest.fn(),
+      quit: jest.fn().mockResolvedValue('OK'),
+    }));
+    const store = new RedisChallengeStore(cfg, logger);
+    await store.onModuleInit();
+    expect(logger.warn).toHaveBeenCalled();
+  });
+
+  it('onModuleDestroy skips quit when status is end', async () => {
+    const quit = jest.fn().mockResolvedValue('OK');
+    (Redis as unknown as jest.Mock).mockImplementationOnce(() => ({
+      connect: jest.fn().mockResolvedValue(undefined),
+      ping: jest.fn().mockResolvedValue('PONG'),
+      status: 'end',
+      set: jest.fn(),
+      eval: jest.fn(),
+      quit,
+    }));
+    const store = new RedisChallengeStore(cfg, logger);
+    await store.onModuleDestroy();
+    expect(quit).not.toHaveBeenCalled();
+  });
+
   it('returns null for unknown eval result types', async () => {
     (Redis as unknown as jest.Mock).mockImplementationOnce(() => ({
       connect: jest.fn().mockResolvedValue(undefined),

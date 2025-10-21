@@ -57,4 +57,38 @@ describe('GoogleOAuthAdapter', () => {
     (stateStore.consume as jest.Mock).mockResolvedValueOnce(false);
     await expect(adapter.exchangeCode('google', 'code123', 'state')).rejects.toThrow('oauth.invalid_state');
   });
+
+  it('throws when id_token is missing from token response', async () => {
+    const adapter = new GoogleOAuthAdapter(cfg, stateStore);
+    (stateStore.consume as jest.Mock).mockResolvedValueOnce(true);
+    const client = (adapter as unknown as {
+      client: { getToken: jest.Mock; verifyIdToken: jest.Mock };
+    }).client;
+    client.getToken.mockResolvedValue({ tokens: {} });
+    await expect(adapter.exchangeCode('google', 'code123', 'state')).rejects.toThrow('oauth.google.id_token_missing');
+  });
+
+  it('throws when ID token payload has no sub', async () => {
+    const adapter = new GoogleOAuthAdapter(cfg, stateStore);
+    (stateStore.consume as jest.Mock).mockResolvedValueOnce(true);
+    const client = (adapter as unknown as {
+      client: { getToken: jest.Mock; verifyIdToken: jest.Mock };
+    }).client;
+    client.getToken.mockResolvedValue({ tokens: { id_token: 'header.payload.sig' } });
+    client.verifyIdToken.mockResolvedValue({ getPayload: () => ({}) });
+    await expect(adapter.exchangeCode('google', 'code123', 'state')).rejects.toThrow('oauth.google.invalid_id_token');
+  });
+
+  it('throws unsupported provider on exchange', async () => {
+    const adapter = new GoogleOAuthAdapter(cfg, stateStore);
+    await expect(adapter.exchangeCode('meta' as unknown as 'google', 'code', 'state')).rejects.toThrow(
+      'oauth.unsupported_provider',
+    );
+  });
+
+  it('throws misconfigured during exchange (missing clientSecret)', async () => {
+    const badCfg = { get: (_: string) => (undefined) } as unknown as ConfigService;
+    const adapter = new GoogleOAuthAdapter(badCfg, stateStore);
+    await expect(adapter.exchangeCode('google', 'code', 'state')).rejects.toThrow('oauth.google.misconfigured');
+  });
 });
