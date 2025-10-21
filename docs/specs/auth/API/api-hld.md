@@ -75,8 +75,7 @@ Request
 ```json
 {
   "email": "user@example.com",
-  "password": "S3curePass!",
-  "rememberMe": true
+  "password": "S3curePass!"
 }
 ```
 
@@ -157,8 +156,9 @@ result — 200
 **POST** `/auth/refresh` → 200, 401, 403, 429, 500  
 **POST** `/auth/logout` → 200, 401, 500  
 **POST** `/auth/logout-others` → 200, 401, 500  
-**GET** `/auth/devices` → 200, 401, 500  
-**POST** `/auth/devices/revoke` → 200, 401, 404, 500
+**GET** `/auth/sessions` → 200, 401, 500  
+**DELETE** `/auth/sessions/{id}` → 200, 401, 404, 500  
+Aliases (deprecated): `GET /auth/devices`, `POST /auth/devices/revoke`
 
 ### Password Reset
 **POST** `/auth/password/reset/request` → 202, 429, 500
