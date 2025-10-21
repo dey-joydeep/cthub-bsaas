@@ -324,7 +324,6 @@ export class AuthController {
   @Post('password/reset')
   @SkipCsrf()
   @Throttle({ default: { limit: 3, ttl: 60 } })
-  @HttpCode(HttpStatus.OK)
   resetPassword(@Body() body: ResetPasswordDto): Promise<SimpleOk> {
     return this.authService.resetPassword(body.token, body.newPassword).then(() => ({ success: true }));
   }
@@ -356,7 +355,6 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('email/verify')
   @SkipCsrf()
-  @HttpCode(HttpStatus.OK)
   verifyEmail(@Body() body: VerifyEmailDto): Promise<SimpleOk> {
     return this.authService.verifyEmail(body.token).then(() => ({ success: true }));
   }
