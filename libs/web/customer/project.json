@@ -1,5 +1,5 @@
 {
-  "name": "web-customer",
+  "name": "web-lib-customer",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "libs/web/customer/src",

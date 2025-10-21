@@ -28,6 +28,6 @@
       }
     }
   },
-  "implicitDependencies": ["web-admin"],
+  "implicitDependencies": ["web-app-admin"],
   "tags": ["type:e2e", "platform:web"]
 }
