@@ -92,6 +92,14 @@ Implementation route aliases (current)
 
 > Maintain these during transition; add canonical aliases; update OpenAPI thereafter.
 
+## 3.1) Adapters & Environment
+- WebAuthn configuration via env:
+  - `WEB_AUTHN_CHALLENGE_STORE`: `redis` (default) | `memory` (local/dev)
+  - `WEB_AUTHN_CHALLENGE_TTL`: seconds (default 300)
+  - Note: Tests use a stub via TestingModule provider override; production module always binds the `@simplewebauthn` adapter.
+- OAuth adapter selection via env:
+  - `OAUTH_ADAPTER`: `dev` (default), `google`, `meta`
+
 ## 4) Schemas / DTOs (from OpenAPI)
 - **LoginDto**: `email` (email, max 254), `password` (min 8)
 - **ForgotDto**: `email`

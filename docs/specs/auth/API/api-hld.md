@@ -41,6 +41,9 @@ This HLD defines the **Auth API** surface for CTHub covering:
 - **Rate limiting:** Sensitive endpoints (login, OTP/TOTP issue/verify, email verify request). Return **429** with **`Retry-After`**.
 - **Enumeration resistance:** Generic 202/200 responses for “email sent/ok” cases; uniform error copy & timing.
 - **Audit/Telemetry:** login/logout/refresh, MFA enroll/verify, passkey attestation/assertion, recovery issue/verify, reset, email verify/change, OAuth link/unlink, registration milestones. Emit `correlationId` on all events.
+- **Adapters (Env‑switchable):**
+  - WebAuthn: challenge store via `WEB_AUTHN_CHALLENGE_STORE` = `redis` (default) or `memory`; TTL via `WEB_AUTHN_CHALLENGE_TTL`. Tests provide a stub via TestingModule overrides (no prod stub binding).
+  - OAuth: `OAUTH_ADAPTER` = `dev` (default), `google`, or `meta`.
 
 ## 4) HTTP Status Legend (Authoritative)
 - **200**: OK / next step provided
