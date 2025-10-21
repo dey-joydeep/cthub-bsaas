@@ -95,6 +95,12 @@ paths:
 
       post:
         summary: Complete owner registration
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerRegistrationCompleteDto'
         responses:
           201:
             description: Registration completed
@@ -116,6 +122,12 @@ paths:
 
       post:
         summary: Complete staff registration
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerRegistrationCompleteDto'
         responses:
           201:
             description: Registration completed
@@ -1218,6 +1230,7 @@ content:
 
       get:
         summary: GET /auth/devices (alias of /auth/sessions)
+        deprecated: true
         responses:
         200:
           description: OK
@@ -1228,6 +1241,7 @@ content:
 
       post:
         summary: POST /auth/devices/revoke (alias of /auth/sessions/revoke)
+        deprecated: true
         responses:
         200:
           description: OK
@@ -1300,6 +1314,22 @@ content:
             required: true
             schema:
               type: string
+        responses:
+        200:
+          description: OK
+
+  /auth/sessions:
+
+      get:
+        summary: GET /auth/sessions (canonical)
+        responses:
+        200:
+          description: OK
+
+  /auth/refresh:
+
+      post:
+        summary: POST /auth/refresh — rotates RT, sets AT; requires valid RT cookie
         responses:
         200:
           description: OK

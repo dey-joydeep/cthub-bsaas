@@ -90,7 +90,18 @@ Implementation route aliases (current)
   - `POST /auth/webauthn/register/start`, `POST /auth/webauthn/register/finish`
   - `POST /auth/webauthn/login/start`, `POST /auth/webauthn/login/finish`
 
-> Maintain these during transition; add canonical aliases; update OpenAPI thereafter.
+> Maintain these during transition; add canonical endpoints; mark aliases as deprecated in OpenAPI; remove once FE migrates.
+
+### Canonical vs Aliases (Deprecations)
+- Sessions
+  - Canonical: `GET /auth/sessions`, `DELETE /auth/sessions/{id}`
+  - Alias (deprecated): `GET /auth/devices`, `POST /auth/devices/revoke`
+- OAuth unlink
+  - Canonical: `DELETE /auth/oauth/{provider}`
+  - Alias (deprecated): `POST /auth/oauth/{provider}/unlink`
+- Recovery Codes
+  - Canonical: `POST /auth/recovery-codes/issue`, `POST /auth/recovery-codes/verify`
+  - Legacy aliases may exist in code temporarily; prefer canonical routes.
 
 ## 3.1) Adapters & Environment
 - WebAuthn configuration via env:
