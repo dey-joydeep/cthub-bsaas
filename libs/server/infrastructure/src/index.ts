@@ -10,6 +10,5 @@ export * from './lib/oauth/oauth.module';
 export * from './lib/invite/invite.module';
 export * from './lib/invite/invite.adapter';
 export * from './lib/validation/prisma-last-admin.adapter';
-export * from './lib/webauthn/webauthn.stub.adapter';
 export * from './lib/recovery/recovery.memory.adapter';
 export * from './lib/totp/totp.otplib.adapter';

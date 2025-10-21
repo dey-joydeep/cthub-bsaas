@@ -12,7 +12,7 @@ import {
   type WebAuthnPort,
   type RegistrationCompleteInput,
 } from '@cthub-bsaas/server-contracts-auth';
-import { TotpOtplibAdapter, WebAuthnStubAdapter } from '@cthub-bsaas/server-infrastructure';
+import { TotpOtplibAdapter } from '@cthub-bsaas/server-infrastructure';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { AuthCookiesService } from '../../src/lib/services/auth-cookies.service';
 import { AuthService } from '../../src/lib/services/auth.service';
@@ -1186,6 +1186,10 @@ describe('AuthController (Integration) - success flows', () => {
         .send({ username: 'Test Device' })
         .expect(200);
       expect(registerStartRes.body.success).toBe(true);
+      // Assert deterministic stub challenge in envelope data
+      const regData = registerStartRes.body.data as { challenge?: string };
+      expect(typeof regData?.challenge).toBe('string');
+      expect(regData!.challenge!).toMatch(/^reg-/);
 
       await harness
         .withAuth(request(harness.app.getHttpServer()).post('/auth/webauthn/register/finish'), cookies)
@@ -1197,6 +1201,9 @@ describe('AuthController (Integration) - success flows', () => {
         .send({ email: user.email })
         .expect(200);
       expect(loginStartRes.body.success).toBe(true);
+      const authData = loginStartRes.body.data as { challenge?: string };
+      expect(typeof authData?.challenge).toBe('string');
+      expect(authData!.challenge!).toMatch(/^auth-/);
 
       const originalFinishFlag = getRoutePublicFlag('webauthnLoginFinish');
       try {
@@ -1210,7 +1217,7 @@ describe('AuthController (Integration) - success flows', () => {
         setRoutePublicFlag('webauthnLoginFinish', originalFinishFlag);
       }
 
-      const webAuthnAdapter = harness.app.get<WebAuthnStubAdapter>(WEB_AUTHN_PORT);
+      const webAuthnAdapter = harness.app.get<WebAuthnPort>(WEB_AUTHN_PORT);
       expect(webAuthnAdapter).toBeDefined();
     });
 

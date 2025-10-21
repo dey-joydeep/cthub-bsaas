@@ -31,13 +31,22 @@ import {
   PasswordResetRepository,
   PrismaService,
 } from '@cthub-bsaas/server-data-access';
-import {
-  WebAuthnStubAdapter,
-  RecoveryCodesMemoryAdapter,
-  OAuthAdapter,
-  TotpOtplibAdapter,
-  InvitePrismaAdapter,
-} from '@cthub-bsaas/server-infrastructure';
+import { RecoveryCodesMemoryAdapter, OAuthAdapter, TotpOtplibAdapter, InvitePrismaAdapter } from '@cthub-bsaas/server-infrastructure';
+
+class LocalWebAuthnStubAdapter {
+  startRegistration(userId: string, username: string) {
+    return Promise.resolve({ challenge: `reg-${userId}`, user: { name: username, id: userId } });
+  }
+  finishRegistration(_userId: string, _response: unknown) {
+    return Promise.resolve({ credentialId: 'cred', counter: 0 });
+  }
+  startAuthentication(userId: string) {
+    return Promise.resolve({ challenge: `auth-${userId}` });
+  }
+  finishAuthentication(_userId: string, _response: unknown) {
+    return Promise.resolve({ credentialId: 'cred', counter: 1 });
+  }
+}
 import { AuthController } from '../../../src/lib/controllers/auth.controller';
 import { TotpController } from '../../../src/lib/controllers/totp.controller';
 import { AuthService } from '../../../src/lib/services/auth.service';
@@ -109,7 +118,7 @@ export async function createAuthTestContext(options: AuthTestOptions = {}): Prom
       },
       { provide: EMAIL_PORT, useValue: emailPort },
       { provide: INVITE_PORT, useClass: InvitePrismaAdapter },
-      { provide: WEB_AUTHN_PORT, useClass: WebAuthnStubAdapter },
+      { provide: WEB_AUTHN_PORT, useClass: LocalWebAuthnStubAdapter },
       { provide: RECOVERY_CODES_PORT, useClass: RecoveryCodesMemoryAdapter },
       { provide: OAUTH_PORT, useClass: OAuthAdapter },
       { provide: LoggerService, useValue: { access: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() } },
