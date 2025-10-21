@@ -9,12 +9,13 @@ import { CurrentUserService } from '@cthub-bsaas/web-core/auth';
 
 // Models
 import { Appointment, SalonServiceItem, Salon, Staff, Review } from './model/tenant.model';
+import { AppointmentStatus } from '@cthub-bsaas/shared';
 
 // Pipes
 import { SafeUrlPipe } from '@cthub-bsaas/web-ui';
 
 // Services
-import { SalonService } from '../services/salon.service';
+import { TenantService } from './tenant.service';
 
 @Component({
   selector: 'app-tenant',
@@ -42,7 +43,7 @@ export class TenantComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private salonService: SalonService,
+    private tenantService: TenantService,
     @Inject(CurrentUserService) public currentUserService: CurrentUserService,
   ) {
     // Get the current user ID
@@ -50,10 +51,9 @@ export class TenantComponent implements OnInit {
     this.userId = user ? user.id : null;
   }
 
-  public ngOnInit(): void {
-    const salonId = this.route.snapshot.paramMap.get('id');
+    const salonId = this.route.snapshot.paramMap.get('tenantSlug');
     if (salonId) {
-      this.salonService.getSalon(salonId).subscribe({
+      this.tenantService.getSalon(salonId).subscribe({
         next: (salon) => {
           this.salon = salon;
           this.staffList = salon.staff || [];
@@ -66,7 +66,7 @@ export class TenantComponent implements OnInit {
         },
       });
       if (this.userId) {
-        this.salonService.isEligibleForReview(this.userId, salonId).subscribe({
+        this.tenantService.isEligibleForReview(this.userId, salonId).subscribe({
           next: (res) => (this.eligibleToReview = res.eligible),
           error: (err) => {
             this.eligibleToReview = null;
@@ -78,7 +78,7 @@ export class TenantComponent implements OnInit {
   }
 
   fetchReviews(salonId: string) {
-    this.salonService.getSalonReviews(salonId).subscribe({
+    this.tenantService.getSalonReviews(salonId).subscribe({
       next: (reviews) => {
         this.reviews = reviews;
         this.loading = false;
@@ -103,7 +103,7 @@ export class TenantComponent implements OnInit {
     this.submitting = true;
     this.reviewError = null;
 
-    this.salonService.submitReview(this.salon.id, { rating: parseInt(rating, 10), comment, userId: this.userId }).subscribe({
+    this.tenantService.submitReview(this.salon.id, { rating: parseInt(rating, 10), comment, userId: this.userId }).subscribe({
       next: (review) => {
         this.reviews = [review, ...this.reviews];
         this.eligibleToReview = false;
@@ -117,7 +117,7 @@ export class TenantComponent implements OnInit {
   }
 
   submitAppointment() {
-    const salonId = this.route.snapshot.paramMap.get('id');
+    const salonId = this.route.snapshot.paramMap.get('tenantSlug');
     if (!salonId || !this.userId || !this.appointment.serviceId || !this.selectedDate || !this.selectedTime) {
       alert('Please fill in all appointment details.');
       return;
@@ -138,7 +138,7 @@ export class TenantComponent implements OnInit {
       status: AppointmentStatus.PENDING,
       notes: this.appointment.notes || '',
     };
-    this.salonService.submitAppointment(appointmentData).subscribe({
+    this.tenantService.submitAppointment(appointmentData).subscribe({
       next: () => {
         alert('Appointment scheduled successfully!');
       },

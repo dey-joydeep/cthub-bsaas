@@ -159,7 +159,7 @@ export class HomeComponent implements OnInit {
    * Gets the primary CTA route based on authentication status
    */
   getPrimaryCtaRoute(): string {
-    return this.isAuthenticated ? '/appointments' : '/salons';
+      return this.isAuthenticated ? ['/appointments'] : ['/us/salons'];
   }
 
   /**
@@ -182,7 +182,7 @@ export class HomeComponent implements OnInit {
   // Star rating functionality is handled by getRatingStars method
 
   navigateToSalon(salonSlug: string): void {
-    this.router.navigate(['/salon', salonSlug]);
+    this.router.navigate(['/us', salonSlug]);
   }
 
   navigateToService(serviceSlug: string): void {
