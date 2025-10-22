@@ -1,0 +1,16 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "sourceMap": true,
+    "isolatedModules": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "useDefineForClassFields": false,
+    "composite": false
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["**/*.test.ts", "**/*.spec.ts"]
+}
