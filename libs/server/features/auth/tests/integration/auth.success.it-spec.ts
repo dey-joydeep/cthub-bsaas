@@ -276,7 +276,7 @@ describe('AuthController (Integration) - success flows', () => {
       const secret = await decryptTotpSecret(admin.id);
       const setupCode = authenticator.generate(secret);
       await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/totp/verify'), firstCookies)
+        .withAuth(request(harness.app.getHttpServer()).post('/auth/totp/enroll/finish'), firstCookies)
         .send({ token: setupCode })
         .expect(200);
 
@@ -391,8 +391,7 @@ describe('AuthController (Integration) - success flows', () => {
       const sessionId: string = sessionsRes.body.data[0].id;
 
       await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/sessions/revoke'), loginCookies)
-        .send({ id: sessionId })
+        .withAuth(request(harness.app.getHttpServer()).post(`/auth/sessions/revoke/${sessionId}`), loginCookies)
         .expect(200);
 
       // Clearing throttle counters models elapsed time between customer login attempts while keeping the real guard active.
@@ -416,14 +415,10 @@ describe('AuthController (Integration) - success flows', () => {
       const sessionsResThree = await harness
         .withAuth(request(harness.app.getHttpServer()).get('/auth/sessions'), cookiesThree)
         .expect(200);
-      await harness
-        .withAuth(request(harness.app.getHttpServer()).get('/auth/devices'), cookiesThree)
-        .expect(200);
-
       const sessionIdThree: string = sessionsResThree.body.data[0].id;
 
       await harness
-        .withAuth(request(harness.app.getHttpServer()).delete(`/auth/sessions/${sessionIdThree}`), cookiesThree)
+        .withAuth(request(harness.app.getHttpServer()).post(`/auth/sessions/revoke/${sessionIdThree}`), cookiesThree)
         .expect(200);
 
       const loginResFour = await loginRequest(user.email, 'password').expect(200);
@@ -434,8 +429,7 @@ describe('AuthController (Integration) - success flows', () => {
       const sessionIdFour: string = sessionsResFour.body.data[0].id;
 
       await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/devices/revoke'), cookiesFour)
-        .send({ id: sessionIdFour })
+        .withAuth(request(harness.app.getHttpServer()).post(`/auth/sessions/revoke/${sessionIdFour}`), cookiesFour)
         .expect(200);
 
       await harness
@@ -516,7 +510,7 @@ describe('AuthController (Integration) - success flows', () => {
 
       const verificationCode = authenticator.generate(secret);
       await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/totp/verify'), initialCookies)
+        .withAuth(request(harness.app.getHttpServer()).post('/auth/totp/enroll/finish'), initialCookies)
         .send({ token: verificationCode })
         .expect(200);
 
@@ -545,14 +539,14 @@ describe('AuthController (Integration) - success flows', () => {
       const cookies = harness.expectCookies(harness.toCookiesArray(loginRes.headers['set-cookie']), { requireAuth: true });
 
       const setupRes = await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/totp/setup'), cookies)
+        .withAuth(request(harness.app.getHttpServer()).post('/auth/totp/enroll/start'), cookies)
         .expect(200);
       expect(setupRes.body.qrCodeDataUrl).toBeDefined();
       const setupSecret = await decryptTotpSecret(user.id);
 
       const setupToken = authenticator.generate(setupSecret);
       await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/totp/verify'), cookies)
+        .withAuth(request(harness.app.getHttpServer()).post('/auth/totp/enroll/finish'), cookies)
         .send({ token: setupToken })
         .expect(200);
 
@@ -580,17 +574,7 @@ describe('AuthController (Integration) - success flows', () => {
       expect(Array.isArray(generateRes.body.data)).toBe(true);
       expect(generateRes.body.data).toHaveLength(10);
 
-      const generateAliasRes = await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/recovery/codes'), cookies)
-        .expect(200);
-      expect(Array.isArray(generateAliasRes.body.data)).toBe(true);
-      expect(generateAliasRes.body.data).toHaveLength(10);
-
-      const recoveryRes = await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/recovery-codes/issue'), cookies)
-        .expect(201);
-
-      const codes: string[] = recoveryRes.body.data;
+      const codes: string[] = generateRes.body.data;
       expect(Array.isArray(codes)).toBe(true);
 
       await harness
@@ -598,10 +582,6 @@ describe('AuthController (Integration) - success flows', () => {
         .send({ code: codes[0] })
         .expect(200);
 
-      await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/recovery-codes/verify'), cookies)
-        .send({ code: codes[1] })
-        .expect(200);
     });
 
     it('handles password reset and change lifecycle', async () => {
@@ -669,7 +649,7 @@ describe('AuthController (Integration) - success flows', () => {
       const user = await harness.registerUser({ email: `verify-${randomUUID()}@example.com`, emailVerifiedAt: null, isVerified: false });
 
       await request(harness.app.getHttpServer())
-        .post('/auth/email/send-verification')
+        .post('/auth/email/verify/request')
         .send({ email: user.email })
         .expect(202);
 
@@ -694,15 +674,7 @@ describe('AuthController (Integration) - success flows', () => {
         .expect(200);
       expect(aliasConfirmRes.body.data).toEqual({ success: true });
 
-      const directToken = await harness.jwtService.signAsync(
-        { sub: user.id, aud: 'verify' },
-        { secret: configService.auth.jwtVerifyEmailSecret },
-      );
 
-      await request(harness.app.getHttpServer())
-        .post('/auth/email/verify')
-        .send({ token: directToken })
-        .expect(200);
     });
 
     it('starts OAuth login by redirecting to provider', async () => {
@@ -752,9 +724,7 @@ describe('AuthController (Integration) - success flows', () => {
           data: { userId: user.id, provider: 'google', providerUserId: computeProviderUserId('unlink-delete') },
         });
 
-        await harness
-          .withAuth(request(harness.app.getHttpServer()).delete('/auth/oauth/google'), cookies)
-          .expect(200);
+        
       } finally {
         setRoutePublicFlag('oauthCallback', originalFlag);
       }
@@ -921,7 +891,7 @@ describe('AuthController (Integration) - success flows', () => {
         );
 
         verifySpy.mockResolvedValueOnce(true);
-        await expect(controller.verifyRecoveryAlias({ code: 'good' }, { user: buildJwtUser() })).resolves.toEqual({
+        await expect(controller.verifyRecovery({ code: 'good' }, { user: buildJwtUser() })).resolves.toEqual({
           success: true,
         });
       });

@@ -8,7 +8,7 @@ import { LoginDto } from '../dto/login.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { PasswordChangeDto } from '../dto/password-change.dto';
-import { VerifyRecoveryDto } from '../dto/verify-recovery.dto';
+
 import { validate } from 'class-validator';
 import type { Request as ExpressRequest } from 'express';
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
@@ -33,7 +33,6 @@ describe('AuthController', () => {
   const createPasswordChangeDto = (overrides: Partial<PasswordChangeDto> = {}): PasswordChangeDto =>
     Object.assign(new PasswordChangeDto(), { currentPassword: 'Old#1Password', newPassword: 'New#1Password', ...overrides });
 
-  const createRecoveryDto = (code: string): VerifyRecoveryDto => Object.assign(new VerifyRecoveryDto(), { code });
 
   const createRequestWithCookie = (cookieHeader?: string): ExpressRequest =>
     ({ headers: cookieHeader ? { cookie: cookieHeader } : {} } as unknown as ExpressRequest);
@@ -181,11 +180,6 @@ describe('AuthController', () => {
     expect(result).toEqual({ success: true });
   });
 
-  it('revokeSessionBody proxies to service', async () => {
-    service.revokeSession.mockResolvedValue({ success: true });
-    const ok = await controller.revokeSessionBody({ user: { userId: 'u1' } }, { id: 's1' });
-    expect(ok).toEqual({ success: true });
-  });
 
   it('changePassword proxies to service', async () => {
     service.changePassword.mockResolvedValue(undefined);
@@ -195,35 +189,10 @@ describe('AuthController', () => {
     expect(ok).toEqual({ success: true });
   });
 
-  it('devices alias proxies to listSessions', async () => {
-    service.listSessions.mockResolvedValue([{ id: 's1' }]);
-    const result = await controller.listDevicesAlias({ user: { userId: 'u1' } });
-    expect(result).toEqual([{ id: 's1' }]);
-  });
 
-  it('recovery-codes issue alias proxies to recovery.generate', async () => {
-    recovery.generate.mockResolvedValue(['c1', 'c2']);
-    const res = await controller.issueRecoveryCodesAlias({ user: { userId: 'u1' } });
-    expect(res).toEqual(['c1', 'c2']);
-  });
 
-  it('recovery-codes verify alias returns success', async () => {
-    recovery.verifyAndConsume.mockResolvedValue(true);
-    const ok = await controller.verifyRecoveryAlias(createRecoveryDto('ok'), { user: { userId: 'u1' } });
-    expect(ok).toEqual({ success: true });
-  });
 
-  it('revokeSessionDelete proxies to service', async () => {
-    service.revokeSession.mockResolvedValue({ success: true });
-    const ok = await controller.revokeSessionDelete({ user: { userId: 'u1' } }, 's1');
-    expect(ok).toEqual({ success: true });
-  });
 
-  it('devices revoke alias proxies to service', async () => {
-    service.revokeSession.mockResolvedValue({ success: true });
-    const ok = await controller.revokeDeviceAlias({ user: { userId: 'u1' } }, { id: 's1' });
-    expect(ok).toEqual({ success: true });
-  });
 
   it('customer register calls service and returns success', async () => {
     service.register.mockResolvedValue(undefined);
@@ -232,7 +201,7 @@ describe('AuthController', () => {
     expect(service.register).toHaveBeenCalled();
   });
 
-  it('forgot/reset/email verify flows call service and return success', async () => {
+  it('forgot/reset flows call service and return success', async () => {
     service.requestPasswordReset.mockResolvedValue(undefined);
     const forgot = await controller.forgotPassword({ email: 'e' });
     expect(forgot).toEqual({ success: true });
@@ -240,14 +209,6 @@ describe('AuthController', () => {
     service.resetPassword.mockResolvedValue(undefined);
     const reset = await controller.resetPassword({ token: 't', newPassword: 'p' });
     expect(reset).toEqual({ success: true });
-
-    service.requestEmailVerification.mockResolvedValue(undefined);
-    const send = await controller.sendEmailVerification({ email: 'e' });
-    expect(send).toEqual({ success: true });
-
-    service.verifyEmail.mockResolvedValue(undefined);
-    const verify = await controller.verifyEmail({ token: 't' });
-    expect(verify).toEqual({ success: true });
   });
 
   it('emailVerifyRequest calls service and returns success', async () => {

@@ -163,9 +163,7 @@ describe('AuthController branches (unit)', () => {
     const ok = await controller.revokeSession({ user: { userId: 'u1' } } as { user: { userId: string } }, 's1');
     expect(ok).toEqual({ success: true });
 
-    service.revokeSession.mockResolvedValueOnce({ success: true });
-    const ok2 = await controller.revokeSessionBody({ user: { userId: 'u1' } } as { user: { userId: string } }, { id: 's1' });
-    expect(ok2).toEqual({ success: true });
+
   });
 
   it('TOTP login completes and sets cookies', async () => {
@@ -182,11 +180,7 @@ describe('AuthController branches (unit)', () => {
     service.resetPassword.mockResolvedValueOnce(undefined);
     expect(await controller.resetPassword({ token: 't', newPassword: 'p' })).toEqual({ success: true });
 
-    service.requestEmailVerification.mockResolvedValueOnce(undefined);
-    expect(await controller.sendEmailVerification({ email: 'e' })).toEqual({ success: true });
 
-    service.verifyEmail.mockResolvedValueOnce(undefined);
-    expect(await controller.verifyEmail({ token: 't' })).toEqual({ success: true });
 
     service.requestEmailVerification.mockResolvedValueOnce(undefined);
     expect(await controller.emailVerifyRequest({ email: 'e' })).toEqual({ success: true });
@@ -230,8 +224,7 @@ describe('AuthController branches (unit)', () => {
   it('recovery generate/verify branches', async () => {
     const codes = await controller.generateRecovery({ user: { userId: 'u1' } } as { user: { userId: string } });
     expect(codes).toEqual(['r1', 'r2']);
-    const codesAlias = await controller.generateRecoveryCodes({ user: { userId: 'u1' } } as { user: { userId: string } });
-    expect(codesAlias).toEqual(['r1', 'r2']);
+
     // success branch
     recovery.verifyAndConsume.mockResolvedValueOnce(true);
     await expect(controller.verifyRecovery({ code: 'ok' }, { user: { userId: 'u1' } } as { user: { userId: string } })).resolves.toEqual({ success: true });
@@ -309,31 +302,13 @@ describe('AuthController branches (unit)', () => {
         stub: () => service.listSessions as unknown as jest.Mock,
         invoke: () => controller.listSessions({ user: { userId: 'u1' } } as { user: { userId: string } }),
       },
-      {
-        name: 'listDevicesAlias',
-        stub: () => service.listSessions as unknown as jest.Mock,
-        invoke: () => controller.listDevicesAlias({ user: { userId: 'u1' } } as { user: { userId: string } }),
-      },
+
       {
         name: 'revokeSession',
         stub: () => service.revokeSession as unknown as jest.Mock,
         invoke: () => controller.revokeSession({ user: { userId: 'u1' } } as { user: { userId: string } }, 'sess-1'),
       },
-      {
-        name: 'revokeSessionBody',
-        stub: () => service.revokeSession as unknown as jest.Mock,
-        invoke: () => controller.revokeSessionBody({ user: { userId: 'u1' } } as { user: { userId: string } }, { id: 'sess-1' }),
-      },
-      {
-        name: 'revokeDeviceAlias',
-        stub: () => service.revokeSession as unknown as jest.Mock,
-        invoke: () => controller.revokeDeviceAlias({ user: { userId: 'u1' } } as { user: { userId: string } }, { id: 'sess-1' }),
-      },
-      {
-        name: 'revokeSessionDelete',
-        stub: () => service.revokeSession as unknown as jest.Mock,
-        invoke: () => controller.revokeSessionDelete({ user: { userId: 'u1' } } as { user: { userId: string } }, 'sess-1'),
-      },
+
       {
         name: 'signInWithTotp',
         stub: () => service.signInWithTotp as unknown as jest.Mock,
@@ -351,16 +326,7 @@ describe('AuthController branches (unit)', () => {
         invoke: () =>
           controller.resetPassword({ token: 'tok', newPassword: 'Password#2' } as { token: string; newPassword: string }),
       },
-      {
-        name: 'sendEmailVerification',
-        stub: () => service.requestEmailVerification as unknown as jest.Mock,
-        invoke: () => controller.sendEmailVerification({ email: 'e@example.com' }),
-      },
-      {
-        name: 'verifyEmail',
-        stub: () => service.verifyEmail as unknown as jest.Mock,
-        invoke: () => controller.verifyEmail({ token: 'tok' }),
-      },
+
       {
         name: 'changePassword',
         stub: () => service.changePassword as unknown as jest.Mock,
@@ -409,11 +375,7 @@ describe('AuthController branches (unit)', () => {
         stub: () => service.unlinkSocialAccount as unknown as jest.Mock,
         invoke: () => controller.oauthUnlink('google', { user: { userId: 'u1' } }),
       },
-      {
-        name: 'oauthUnlinkAlias',
-        stub: () => service.unlinkSocialAccount as unknown as jest.Mock,
-        invoke: () => controller.oauthUnlinkAlias('google', { user: { userId: 'u1' } } as { user: { userId: string } }),
-      },
+
       {
         name: 'webauthnLoginStart resolveUserIdByEmail',
         stub: () => service.resolveUserIdByEmail as unknown as jest.Mock,
@@ -479,26 +441,13 @@ describe('AuthController branches (unit)', () => {
         stub: () => recovery.generate as unknown as jest.Mock,
         invoke: () => controller.generateRecovery({ user: { userId: 'u1' } } as { user: { userId: string } }),
       },
-      {
-        name: 'issueRecoveryCodesAlias',
-        stub: () => recovery.generate as unknown as jest.Mock,
-        invoke: () => controller.issueRecoveryCodesAlias({ user: { userId: 'u1' } } as { user: { userId: string } }),
-      },
-      {
-        name: 'generateRecoveryCodes',
-        stub: () => recovery.generate as unknown as jest.Mock,
-        invoke: () => controller.generateRecoveryCodes({ user: { userId: 'u1' } } as { user: { userId: string } }),
-      },
+
       {
         name: 'verifyRecovery',
         stub: () => recovery.verifyAndConsume as unknown as jest.Mock,
         invoke: () => controller.verifyRecovery({ code: 'C' }, { user: { userId: 'u1' } } as { user: { userId: string } }),
       },
-      {
-        name: 'verifyRecoveryAlias',
-        stub: () => recovery.verifyAndConsume as unknown as jest.Mock,
-        invoke: () => controller.verifyRecoveryAlias({ code: 'C' }, { user: { userId: 'u1' } } as { user: { userId: string } }),
-      },
+
     ] as const;
 
     for (const { name, stub, invoke } of recoveryCases) {

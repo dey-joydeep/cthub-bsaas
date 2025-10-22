@@ -1,62 +1,60 @@
 import {
+  OAUTH_PORT,
+  OAuthPort,
+  RECOVERY_CODES_PORT,
+  RecoveryCodesPort,
+  RegistrationCompleteInput,
+  WEB_AUTHN_PORT,
+  WebAuthnPort,
+} from '@cthub-bsaas/server-contracts-auth';
+import {
   CookiesInterceptor,
+  CsrfGuard,
   JwtAuthGuard,
   JwtOptionalAuthGuard,
   OptionalUser,
   Public,
   ResponseEnvelopeInterceptor,
   SkipCsrf,
-  CsrfGuard,
 } from '@cthub-bsaas/server-core';
+import { COMMON_ERROR_CODES, type AuthenticatedUser } from '@cthub-bsaas/shared';
 import {
+  BadRequestException,
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
-  Post,
-  UseGuards,
-  Request,
-  Get,
+  Inject,
+  Optional,
   Param,
-  BadRequestException,
-  UseInterceptors,
-  Redirect,
+  Post,
   Query,
-  Delete,
+  Redirect,
+  Request,
   UnauthorizedException,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { COMMON_ERROR_CODES, type AuthenticatedUser } from '@cthub-bsaas/shared';
-import { AuthService } from '../services/auth.service';
-import { LoginDto } from '../dto/login.dto';
-import { RegisterDto } from '../dto/register.dto';
-import { RefreshTokenDto } from '../dto/refresh-token.dto';
-import { ForgotPasswordDto } from '../dto/forgot-password.dto';
-import { ResetPasswordDto } from '../dto/reset-password.dto';
-import { SendVerificationDto } from '../dto/send-verification.dto';
-import { VerifyEmailDto } from '../dto/verify-email.dto';
-import { VerifyRecoveryDto } from '../dto/verify-recovery.dto';
-import { WebauthnRegisterStartDto } from '../dto/webauthn-register-start.dto';
-import { WebauthnAttestationDto } from '../dto/webauthn-attestation.dto';
-import { WebauthnAssertionDto } from '../dto/webauthn-assertion.dto';
-import { TotpLoginDto } from '../dto/totp-login.dto';
-import { PasswordChangeDto } from '../dto/password-change.dto';
-import { EmailChangeRequestDto } from '../dto/email-change-request.dto';
-import { EmailChangeConfirmDto } from '../dto/email-change-confirm.dto';
-import type { Request as ExpressRequest } from 'express';
-import type { SignInHttpResponse, SimpleOk } from '../types/auth.types';
-import {
-  WEB_AUTHN_PORT,
-  RECOVERY_CODES_PORT,
-  WebAuthnPort,
-  RecoveryCodesPort,
-  OAUTH_PORT,
-  OAuthPort,
-} from '@cthub-bsaas/server-contracts-auth';
-import { RegistrationCompleteInput } from '@cthub-bsaas/server-contracts-auth';
-import { Inject, Optional } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { AuthCookiesService } from '../services/auth-cookies.service';
+import type { Request as ExpressRequest } from 'express';
+import { EmailChangeConfirmDto } from '../dto/email-change-confirm.dto';
+import { EmailChangeRequestDto } from '../dto/email-change-request.dto';
+import { ForgotPasswordDto } from '../dto/forgot-password.dto';
+import { LoginDto } from '../dto/login.dto';
+import { PasswordChangeDto } from '../dto/password-change.dto';
+import { RefreshTokenDto } from '../dto/refresh-token.dto';
+import { RegisterDto } from '../dto/register.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
+import { TotpLoginDto } from '../dto/totp-login.dto';
+import { VerifyRecoveryDto } from '../dto/verify-recovery.dto';
+import { WebauthnAssertionDto } from '../dto/webauthn-assertion.dto';
+import { WebauthnAttestationDto } from '../dto/webauthn-attestation.dto';
+import { WebauthnRegisterStartDto } from '../dto/webauthn-register-start.dto';
 import { AuditService } from '../services/audit.service';
+import { AuthCookiesService } from '../services/auth-cookies.service';
+import { AuthService } from '../services/auth.service';
+import type { SignInHttpResponse, SimpleOk } from '../types/auth.types';
 import { parseRefreshCookie } from '../utils/cookie.util';
 // Public decorator is already imported at file top
 
@@ -95,13 +93,15 @@ export class AuthController {
   // Partner Registration — Owner
   @Public()
   @Get('owner/registration/:token')
-  
   validateOwnerInvite(@Param('token') token: string): Promise<{ valid: true; email: string; salonId: string }> {
-    return this.authService.validateOwnerInvite(token).then((res) => ({
-      valid: true,
-      email: res.email,
-      salonId: res.salonId,
-    } as const));
+    return this.authService.validateOwnerInvite(token).then(
+      (res) =>
+        ({
+          valid: true,
+          email: res.email,
+          salonId: res.salonId,
+        }) as const,
+    );
   }
 
   @Public()
@@ -109,7 +109,6 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.CREATED)
   @Post('owner/registration/complete')
-  
   completeOwnerRegistration(@Body() body: RegistrationCompleteInput): Promise<Record<string, never> | { next: 'mfa' }> {
     return this.authService.completeOwnerRegistration(body).then((result) => {
       if ('next' in result) {
@@ -128,13 +127,15 @@ export class AuthController {
   // Partner Registration — Staff
   @Public()
   @Get('staff/registration/:token')
-  
   validateStaffInvite(@Param('token') token: string): Promise<{ valid: true; email: string; salonId: string }> {
-    return this.authService.validateStaffInvite(token).then((res) => ({
-      valid: true,
-      email: res.email,
-      salonId: res.salonId,
-    } as const));
+    return this.authService.validateStaffInvite(token).then(
+      (res) =>
+        ({
+          valid: true,
+          email: res.email,
+          salonId: res.salonId,
+        }) as const,
+    );
   }
 
   @Public()
@@ -142,7 +143,6 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.CREATED)
   @Post('staff/registration/complete')
-  
   completeStaffRegistration(@Body() body: RegistrationCompleteInput): Promise<Record<string, never> | { next: 'mfa' }> {
     return this.authService.completeStaffRegistration(body).then((result) => {
       if ('next' in result) {
@@ -247,15 +247,6 @@ export class AuthController {
   }
 
   /**
-   * Alias: Devices list (canonical name in specs).
-   */
-  @UseGuards(JwtAuthGuard)
-  @Get('devices')
-  listDevicesAlias(@Request() req: { user: { userId: string } }): Promise<unknown> {
-    return this.authService.listSessions(req.user.userId);
-  }
-
-  /**
    * Revoke a specific session owned by the authenticated user.
    *
    * @public
@@ -283,16 +274,14 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('login/totp')
   signInWithTotp(@Body() signInWithTotpDto: TotpLoginDto): Promise<Record<string, never>> {
-    return this.authService
-      .signInWithTotp(signInWithTotpDto.tempToken, signInWithTotpDto.totpCode)
-      .then((tokens) => {
-        this.authCookies.issue({
-          csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
-          accessToken: tokens.accessToken,
-          refreshToken: tokens.refreshToken,
-        });
-        return {} as const;
+    return this.authService.signInWithTotp(signInWithTotpDto.tempToken, signInWithTotpDto.totpCode).then((tokens) => {
+      this.authCookies.issue({
+        csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
       });
+      return {} as const;
+    });
   }
 
   // Account recovery endpoints
@@ -329,37 +318,6 @@ export class AuthController {
   }
 
   /**
-   * Send an email verification token to a user.
-   *
-   * @public
-   * @param {{ email: string }} body - Target email address.
-   * @returns {Promise<{ success: true }>} Accepted response.
-   */
-  @Public()
-  @HttpCode(HttpStatus.ACCEPTED)
-  @Post('email/send-verification')
-  @SkipCsrf()
-  @Throttle({ default: { limit: 3, ttl: 60 } })
-  sendEmailVerification(@Body() body: SendVerificationDto): Promise<SimpleOk> {
-    return this.authService.requestEmailVerification(body.email).then(() => ({ success: true }));
-  }
-
-  /**
-   * Verify an email address using a token.
-   *
-   * @public
-   * @param {{ token: string }} body - Verification token.
-   * @returns {Promise<{ success: true }>} OK response after verification.
-   */
-  @Public()
-  @HttpCode(HttpStatus.OK)
-  @Post('email/verify')
-  @SkipCsrf()
-  verifyEmail(@Body() body: VerifyEmailDto): Promise<SimpleOk> {
-    return this.authService.verifyEmail(body.token).then(() => ({ success: true }));
-  }
-
-  /**
    * Change password for the authenticated user.
    *
    * @public
@@ -370,9 +328,7 @@ export class AuthController {
   @Post('password/change')
   @Throttle({ default: { limit: 3, ttl: 60000 } })
   changePassword(@Body() body: PasswordChangeDto, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
-    return this.authService
-      .changePassword(req.user.userId, body.currentPassword, body.newPassword)
-      .then(() => ({ success: true }));
+    return this.authService.changePassword(req.user.userId, body.currentPassword, body.newPassword).then(() => ({ success: true }));
   }
 
   /**
@@ -485,9 +441,7 @@ export class AuthController {
       return this.webAuthn.startAuthentication(providedUserId);
     }
     if (payload.email) {
-      return this.authService
-        .resolveUserIdByEmail(payload.email)
-        .then((userId) => this.webAuthn.startAuthentication(userId));
+      return this.authService.resolveUserIdByEmail(payload.email).then((userId) => this.webAuthn.startAuthentication(userId));
     }
     return Promise.reject(new BadRequestException('error.validation'));
   }
@@ -505,10 +459,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @SkipCsrf()
   @Throttle({ default: { limit: 10, ttl: 60000 } })
-  webauthnLoginFinish(
-    @Body() response: WebauthnAssertionDto,
-    @OptionalUser() user?: AuthenticatedUser,
-  ): Promise<Record<string, never>> {
+  webauthnLoginFinish(@Body() response: WebauthnAssertionDto, @OptionalUser() user?: AuthenticatedUser): Promise<Record<string, never>> {
     const userId = this.extractUserId(user);
     if (!userId) {
       return Promise.reject(new UnauthorizedException());
@@ -543,29 +494,6 @@ export class AuthController {
   }
 
   /**
-   * Alias: Recovery codes issue (canonical path).
-   */
-  @UseGuards(JwtAuthGuard)
-  @Post('recovery-codes/issue')
-  @HttpCode(HttpStatus.CREATED)
-  issueRecoveryCodesAlias(@Request() req: { user: { userId: string } }): Promise<string[]> {
-    return this.recovery.generate(req.user.userId, 10);
-  }
-
-  /**
-   * Alias for recovery codes generation per spec: POST /auth/recovery/codes
-   * @public
-   * @returns {Promise<string[]>} Plain-text recovery codes.
-   */
-  @UseGuards(JwtAuthGuard)
-  @Post('recovery/codes')
-  @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 2, ttl: 60000 } })
-  generateRecoveryCodes(@Request() req: { user: { userId: string } }): Promise<string[]> {
-    return this.recovery.generate(req.user.userId, 10);
-  }
-
-  /**
    * Verify and consume a recovery code for the current user.
    * @public
    * @param {{ code: string }} body - Recovery code.
@@ -584,44 +512,6 @@ export class AuthController {
       this.audit?.log('recovery_code_verify_success', { userId: req.user.userId });
       return { success: true };
     });
-  }
-
-  /**
-   * Alias: Recovery codes verify (canonical path).
-   */
-  @UseGuards(JwtAuthGuard)
-  @Post('recovery-codes/verify')
-  @HttpCode(HttpStatus.OK)
-  verifyRecoveryAlias(@Body() body: VerifyRecoveryDto, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
-    return this.verifyRecovery(body, req);
-  }
-
-  // Body-based session revoke endpoint (alias without path param)
-  @UseGuards(JwtAuthGuard)
-  @Post('sessions/revoke')
-  @HttpCode(HttpStatus.OK)
-  revokeSessionBody(@Request() req: { user: { userId: string } }, @Body() body: { id: string }): Promise<SimpleOk> {
-    return this.authService.revokeSession(req.user.userId, body.id);
-  }
-
-  /**
-   * Alias: Devices revoke (canonical name in specs).
-   */
-  @UseGuards(JwtAuthGuard)
-  @Post('devices/revoke')
-  @HttpCode(HttpStatus.OK)
-  revokeDeviceAlias(@Request() req: { user: { userId: string } }, @Body() body: { id: string }): Promise<SimpleOk> {
-    return this.authService.revokeSession(req.user.userId, body.id);
-  }
-
-  /**
-   * Alias: Idempotent session revoke via DELETE /auth/sessions/:id
-   */
-  @UseGuards(JwtAuthGuard)
-  @Delete('sessions/:id')
-  @HttpCode(HttpStatus.OK)
-  revokeSessionDelete(@Request() req: { user: { userId: string } }, @Param('id') id: string): Promise<SimpleOk> {
-    return this.authService.revokeSession(req.user.userId, id);
   }
 
   /**
@@ -672,9 +562,7 @@ export class AuthController {
     return this.oauth.exchangeCode(provider, code, state).then((profile) => {
       const linkedUserId = this.extractUserId(user);
       if (linkedUserId) {
-        return this.authService
-          .linkSocialAccount(linkedUserId, profile.provider, profile.providerUserId)
-          .then(() => ({} as const));
+        return this.authService.linkSocialAccount(linkedUserId, profile.provider, profile.providerUserId).then(() => ({}) as const);
       }
       return this.authService.signInWithSocial(profile).then((tokens) => {
         this.authCookies.issue({
@@ -691,16 +579,6 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('oauth/:provider/unlink')
   oauthUnlink(@Param('provider') provider: string, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
-    return this.authService.unlinkSocialAccount(req.user.userId, provider).then(() => ({ success: true }));
-  }
-
-  /**
-   * Alias: OAuth unlink (canonical DELETE method).
-   */
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  @Delete('oauth/:provider')
-  oauthUnlinkAlias(@Param('provider') provider: string, @Request() req: { user: { userId: string } }): Promise<SimpleOk> {
     return this.authService.unlinkSocialAccount(req.user.userId, provider).then(() => ({ success: true }));
   }
 
