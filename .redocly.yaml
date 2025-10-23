@@ -1,0 +1,9 @@
+rules:
+  # Project-specific: we control servers via env; ignore example/localhost url warnings
+  no-server-example.com: off
+  # License metadata tracked elsewhere; not required in internal specs
+  info-license: off
+  # Operation IDs are not required for our tooling
+  operation-operationId: off
+  # 4XX responses are documented in LLD and error catalog; not required per-op
+  operation-4xx-response: off

@@ -68,9 +68,11 @@
     "nx:affected:libs": "nx affected:libs",
     "nx:affected:build": "nx affected:build",
     "nx:affected:test": "nx affected:test",
-    "nx:affected:lint": "nx affected:lint"
+    "nx:affected:lint": "nx affected:lint",
+    "openapi:lint:auth": "redocly lint docs/specs/auth/API/openapi.yaml --config .redocly.yaml --max-problems=0"
   },
   "devDependencies": {
+    "@redocly/cli": "2.7.0",
     "@angular-devkit/core": "20.1.5",
     "@angular-devkit/schematics": "^20.2.0",
     "@angular/build": "^20.2.0",

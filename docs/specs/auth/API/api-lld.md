@@ -88,6 +88,8 @@ Canonical routes (implemented)
 - WebAuthn register/login:
   - `POST /auth/webauthn/register/start`, `POST /auth/webauthn/register/finish`
   - `POST /auth/webauthn/login/start`, `POST /auth/webauthn/login/finish`
+ - TOTP enrollment: `POST /auth/totp/enroll/start`, `POST /auth/totp/enroll/finish`
+ - Customer registration: `POST /auth/register`
 
 ## 3.1) Adapters & Environment
 - WebAuthn configuration via env:
