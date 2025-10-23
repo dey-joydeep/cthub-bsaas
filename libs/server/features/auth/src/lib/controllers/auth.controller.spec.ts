@@ -143,12 +143,10 @@ describe('AuthController', () => {
     await expect(controller.refresh(createRefreshDto(), req7)).rejects.toThrow();
   });
 
-  it('refresh prefers cookie refreshToken over body when present', async () => {
-    service.refreshToken.mockResolvedValue({ accessToken: 'newA', refreshToken: 'newR' });
-    const req8 = createRequestWithCookie('refreshToken=a%2Fb');
-    const result = await controller.refresh(createRefreshDto({ refreshToken: 'BODY-IGNORED' }), req8);
-    expect(result).toEqual({});
-    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'newA', refreshToken: 'newR' }));
+  it('refresh rejects when both cookie and body tokens are provided', async () => {
+    const req = createRequestWithCookie('bsaas_rt=cookie');
+    await expect(controller.refresh(createRefreshDto({ refreshToken: 'from-body' }), req)).rejects.toThrow();
+    expect(cookies.rotateOnRefresh).not.toHaveBeenCalled();
   });
 
   it('webauthnLoginStart throws without identity', async () => {

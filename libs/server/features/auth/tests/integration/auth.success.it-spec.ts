@@ -382,7 +382,7 @@ describe('AuthController (Integration) - success flows', () => {
 
       await harness
         .withAuth(request(harness.app.getHttpServer()).post('/auth/refresh'), loginCookies)
-        .send({ refreshToken: loginRefreshToken })
+        .send({})
         .expect(200);
 
       const sessionsRes = await harness

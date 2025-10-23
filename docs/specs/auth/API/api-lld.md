@@ -60,10 +60,9 @@ Partner registration endpoints (implemented)
 - Staff validate: `GET /auth/staff/registration/:token`
 - Staff complete: `POST /auth/staff/registration/complete`
 
-### E. Sessions/Devices
-- **refresh**: require valid RT cookie + XSRF; misuse (e.g., no XSRF) → **403**; on success rotate RT & set AT (**200**).
-- **logout**: clear AT/RT (**200**); **logout‑others** clears other sessions; device revoke returns **200** or **404** if not found.
-
+### E. Sessions
+- **refresh**: requires RT cookie (`bsaas_rt`) + XSRF; if both cookie and body refresh tokens are provided → **400** (validation). If no cookie present and body contains a token, body is accepted for compatibility. On success rotate RT & set AT (**200**).
+- **logout**: clear AT/RT (**200**).
 ### F. Email Change
 - **request**: `{ newEmail }` → **202**; idempotent; throttle with `Retry-After`.
 - **confirm**: `{ otp }` → **200/400/410/422/401/429**; on success update email & re‑verify; rotate sessions if policy requires.
@@ -81,27 +80,14 @@ Implementation: Recovery codes are persisted in DB (bcrypt-hashed) in all enviro
 ## 3) Service Contracts (API)
 Authoritative routes/methods → see `openapi.yaml`. LLD mirrors the same paths and methods for each domain.
 
-Implementation route aliases (current)
+Canonical routes (implemented)
 - Recovery codes: `POST /auth/recovery/generate`, `POST /auth/recovery/verify`
-- Sessions/devices: `GET /auth/sessions`, `POST /auth/sessions/revoke`, `POST /auth/sessions/revoke/:id`
+- Sessions: `GET /auth/sessions`, `POST /auth/sessions/revoke/:id`
 - OAuth unlink: `POST /auth/oauth/:provider/unlink`
 - TOTP verify after password: `POST /auth/login/totp`
 - WebAuthn register/login:
   - `POST /auth/webauthn/register/start`, `POST /auth/webauthn/register/finish`
   - `POST /auth/webauthn/login/start`, `POST /auth/webauthn/login/finish`
-
-> Maintain these during transition; add canonical endpoints; mark aliases as deprecated in OpenAPI; remove once FE migrates.
-
-### Canonical vs Aliases (Deprecations)
-- Sessions
-  - Canonical: `GET /auth/sessions`, `DELETE /auth/sessions/{id}`
-  - Alias (deprecated): `GET /auth/devices`, `POST /auth/devices/revoke`
-- OAuth unlink
-  - Canonical: `DELETE /auth/oauth/{provider}`
-  - Alias (deprecated): `POST /auth/oauth/{provider}/unlink`
-- Recovery Codes
-  - Canonical: `POST /auth/recovery-codes/issue`, `POST /auth/recovery-codes/verify`
-  - Legacy aliases may exist in code temporarily; prefer canonical routes.
 
 ## 3.1) Adapters & Environment
 - WebAuthn configuration via env:
@@ -136,7 +122,7 @@ Implementation route aliases (current)
 
 Implementation cookie names (canonical)
 - Access: `bsaas_at` (HttpOnly, SameSite=Lax, Secure, path=/)
-- Refresh: `bsaas_rt` (HttpOnly, SameSite=Lax, Secure, path=/auth)
+- Refresh: `bsaas_rt` (HttpOnly, SameSite=Lax, Secure, path=/auth). The refresh token is consumed from this cookie; body token is only read when the cookie is absent. If both are present, the request is rejected with **400**.
 - CSRF: `XSRF-TOKEN` (non‑HttpOnly, SameSite=Lax, Secure, path=/)
 
 > OpenAPI cookieAuth now uses `bsaas_at` to match implementation.

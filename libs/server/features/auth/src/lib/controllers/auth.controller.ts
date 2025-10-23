@@ -200,6 +200,12 @@ export class AuthController {
   refresh(@Body() refreshTokenDto: RefreshTokenDto, @Request() req: ExpressRequest): Promise<Record<string, never>> {
     const tokenFromCookie = parseRefreshCookie(req.headers['cookie']);
     const bodyToken = refreshTokenDto.refreshToken?.trim();
+
+    if (tokenFromCookie && bodyToken) {
+      this.audit?.log?.('refresh_both_tokens_provided', { hasCookie: true, hasBody: true });
+      return Promise.reject(new BadRequestException(COMMON_ERROR_CODES.VALIDATION));
+    }
+
     const token = tokenFromCookie ?? (bodyToken ? bodyToken : undefined);
     if (!token) {
       return Promise.reject(new BadRequestException('error.auth.missing_refresh_token'));

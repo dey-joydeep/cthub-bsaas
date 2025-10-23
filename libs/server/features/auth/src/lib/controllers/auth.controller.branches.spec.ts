@@ -133,11 +133,11 @@ describe('AuthController branches (unit)', () => {
     const req6b = { headers: { cookie: 'refreshToken' } } as unknown as ExpressRequest;
     await expect(controller.refresh({} as RefreshTokenDto, req6b)).rejects.toThrow();
 
-    // cookie present path using 'refreshToken' key and URL-encoded value
-    service.refreshToken.mockResolvedValueOnce({ accessToken: 'A4', refreshToken: 'R4' });
+    // both cookie and body provided -> reject
     const req7 = { headers: { cookie: 'refreshToken=a%2Fb' } } as unknown as ExpressRequest;
-    await controller.refresh({ refreshToken: 'ignored' } as RefreshTokenDto, req7);
-    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'A4', refreshToken: 'R4' }));
+    const before = (cookies.rotateOnRefresh as unknown as jest.Mock).mock.calls.length;
+    await expect(controller.refresh({ refreshToken: 'ignored' } as RefreshTokenDto, req7)).rejects.toThrow();
+    expect((cookies.rotateOnRefresh as unknown as jest.Mock).mock.calls.length).toBe(before);
   });
 
   it('webauthnLoginStart uses default params and errors when none provided', async () => {
