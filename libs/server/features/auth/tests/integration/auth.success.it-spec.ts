@@ -474,11 +474,13 @@ describe('AuthController (Integration) - success flows', () => {
         await trx.userRole.deleteMany();
         await trx.role.deleteMany();
         // Manually invoke the shared seeder to mimic the bootstrap path without racing other workers.
-        await ensureAuthRoles(trx, [UserRole.CUSTOMER]);
+        await ensureAuthRoles(trx);
       });
 
       const roles = await harness.prisma.role.findMany({ orderBy: { name: 'asc' } });
-      expect(roles.map((role) => role.name)).toEqual(['CUSTOMER']);
+      const names = roles.map((role) => role.name);
+      const expected = Object.values(UserRole).map((r) => r.toUpperCase()).slice().sort();
+      expect(names).toEqual(expected);
     });
 
     it('throttles repeated login attempts', async () => {
@@ -1201,6 +1203,29 @@ describe('AuthController (Integration) - success flows', () => {
 
       const otpEmail = harness.sentEmails.find((mail) => mail.subject.includes('Verify your email'));
       expect(otpEmail).toBeDefined();
+    });
+
+    it('starts OAuth flow and returns provider redirect', async () => {
+      const res = await request(harness.app.getHttpServer()).get('/auth/oauth/google/start').expect(302);
+      const location = res.headers['location'];
+      expect(typeof location).toBe('string');
+      expect(location.length).toBeGreaterThan(0);
+    });
+
+    it('confirms email verification with a valid token', async () => {
+      const user = await harness.registerUser({ email: `verify-success-${randomUUID()}@example.com`, emailVerifiedAt: null, isVerified: false });
+      const token = await harness.jwtService.signAsync(
+        { sub: user.id, aud: 'verify' },
+        { secret: configService.auth.jwtVerifyEmailSecret },
+      );
+
+      await request(harness.app.getHttpServer())
+        .post('/auth/email/verify/confirm')
+        .send({ token })
+        .expect(200);
+
+      const updated = await harness.prisma.user.findUnique({ where: { id: user.id } });
+      expect(updated?.emailVerifiedAt).toBeTruthy();
     });
   });
 });

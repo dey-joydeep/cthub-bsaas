@@ -44,7 +44,7 @@ describe('AuthController (Integration) - validation failures', () => {
       const verificationCode = authenticator.generate(totpSecret);
 
       await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/totp/verify'), initialCookies)
+        .withAuth(request(harness.app.getHttpServer()).post('/auth/totp/enroll/finish'), initialCookies)
         .send({ token: verificationCode })
         .expect(200);
 

@@ -51,8 +51,7 @@ describe('AuthController (Integration) - error responses', () => {
       const adminCookies = harness.expectCookies(harness.toCookiesArray(adminLogin.headers['set-cookie']), { requireAuth: true });
 
       await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/sessions/revoke'), adminCookies)
-        .send({ id: staffSession.id })
+        .withAuth(request(harness.app.getHttpServer()).post(`/auth/sessions/revoke/${staffSession.id}`), adminCookies)
         .expect(401);
     });
   });
@@ -134,11 +133,32 @@ describe('AuthController (Integration) - error responses', () => {
       const sessionId: string = sessionsRes.body.data[0].id;
 
       await request(harness.app.getHttpServer())
-        .post('/auth/sessions/revoke')
+        .post(`/auth/sessions/revoke/${sessionId}`)
         .set('Cookie', formatCookieHeader(cookies))
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ id: sessionId })
         .expect(403);
+    });
+
+    it('rejects refresh when both cookie and body tokens are provided', async () => {
+      const user = await harness.registerUser();
+      const loginRes = await request(harness.app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: user.email, password: 'password' })
+        .expect(200);
+
+      const cookies = harness.expectCookies(harness.toCookiesArray(loginRes.headers['set-cookie']), { requireAuth: true });
+      const xsrf = harness.extractCookieValue(cookies, 'XSRF-TOKEN');
+      const refreshToken = harness.extractCookieValue(cookies, 'bsaas_rt');
+      if (!refreshToken || !xsrf) {
+        throw new Error('Expected refresh and XSRF cookies to be present');
+      }
+
+      await request(harness.app.getHttpServer())
+        .post('/auth/refresh')
+        .set('Cookie', formatCookieHeader(cookies))
+        .set('X-XSRF-TOKEN', xsrf)
+        .send({ refreshToken })
+        .expect(400);
     });
 
     it('rejects refresh when CSRF header is missing', async () => {
@@ -210,7 +230,7 @@ describe('AuthController (Integration) - error responses', () => {
 
       const validCode = authenticator.generate(secret);
       await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/totp/verify'), initialCookies)
+        .withAuth(request(harness.app.getHttpServer()).post('/auth/totp/enroll/finish'), initialCookies)
         .send({ token: validCode })
         .expect(200);
 
@@ -298,7 +318,7 @@ describe('AuthController (Integration) - error responses', () => {
       const cookies = harness.expectCookies(harness.toCookiesArray(loginRes.headers['set-cookie']), { requireAuth: true });
 
       await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/totp/verify'), cookies)
+        .withAuth(request(harness.app.getHttpServer()).post('/auth/totp/enroll/finish'), cookies)
         .send({ token: '000000' })
         .expect(401);
     });
@@ -318,7 +338,7 @@ describe('AuthController (Integration) - error responses', () => {
 
       const verificationCode = authenticator.generate(secret);
       await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/totp/verify'), initialCookies)
+        .withAuth(request(harness.app.getHttpServer()).post('/auth/totp/enroll/finish'), initialCookies)
         .send({ token: verificationCode })
         .expect(200);
 
@@ -416,7 +436,7 @@ describe('AuthController (Integration) - error responses', () => {
       );
 
       await request(harness.app.getHttpServer())
-        .post('/auth/email/verify')
+        .post('/auth/email/verify/confirm')
         .send({ token })
         .expect(401);
     });

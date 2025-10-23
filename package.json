@@ -69,7 +69,8 @@
     "nx:affected:build": "nx affected:build",
     "nx:affected:test": "nx affected:test",
     "nx:affected:lint": "nx affected:lint",
-    "openapi:lint:auth": "redocly lint docs/specs/auth/API/openapi.yaml --config .redocly.yaml --max-problems=0"
+    "openapi:lint:auth": "redocly lint docs/specs/auth/API/openapi.yaml --config .redocly.yaml --max-problems=0",
+    "openapi:check:auth": "tsx scripts/openapi-auth-check.ts"
   },
   "devDependencies": {
     "@redocly/cli": "2.7.0",
