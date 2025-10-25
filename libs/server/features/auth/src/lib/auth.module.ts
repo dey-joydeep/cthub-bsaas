@@ -4,6 +4,13 @@ import { ConfigService, CookieRegistry, CookiesInterceptor, EncryptionModule, Lo
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './controllers/auth.controller';
+import { SessionsController } from './controllers/sessions.controller';
+import { PasswordController } from './controllers/password.controller';
+import { EmailController } from './controllers/email.controller';
+import { RecoveryController } from './controllers/recovery.controller';
+import { WebauthnController } from './controllers/webauthn.controller';
+import { OauthController } from './controllers/oauth.controller';
+import { RegistrationController } from './controllers/registration.controller';
 import { TotpController } from './controllers/totp.controller';
 import {
   CREDENTIAL_TOTP_REPOSITORY,
@@ -91,9 +98,18 @@ const providers = [
       inject: [ConfigService],
     }),
   ],
-  controllers: [AuthController, TotpController],
+  controllers: [
+    AuthController,
+    TotpController,
+    SessionsController,
+    PasswordController,
+    EmailController,
+    RecoveryController,
+    WebauthnController,
+    OauthController,
+    RegistrationController,
+  ],
   providers: [AuthService, JwtStrategy, AuditService, AuthCookiesService, CookieRegistry, CookiesInterceptor, ...providers],
   exports: [AuthService, AuditService, AuthCookiesService, CookieRegistry, CookiesInterceptor, ...providers],
 })
 export class AuthModule {}
-

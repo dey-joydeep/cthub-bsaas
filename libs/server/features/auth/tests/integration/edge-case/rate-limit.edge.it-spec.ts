@@ -4,12 +4,14 @@ import { Test } from '@nestjs/testing';
 import { ThrottlerGuard, ThrottlerModule, ThrottlerStorageService } from '@nestjs/throttler';
 import { AuthController } from '../../../src/lib/controllers/auth.controller';
 import { AuthService } from '../../../src/lib/services/auth.service';
+import { WebauthnController } from '../../../src/lib/controllers/webauthn.controller';
 import { WEB_AUTHN_PORT, RECOVERY_CODES_PORT, OAUTH_PORT } from '@cthub-bsaas/server-contracts-auth';
 import type { WebAuthnPort, RecoveryCodesPort } from '@cthub-bsaas/server-contracts-auth';
 import { AuthCookiesService } from '../../../src/lib/services/auth-cookies.service';
 import { CookieRegistry, CookiesInterceptor, RetryAfterFilter, ConfigModule } from '@cthub-bsaas/server-core';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from '../../../src/lib/strategies/jwt.strategy';
+import { AuditService } from '../../../src/lib/services/audit.service';
 
 describe('Rate limiting (edge-case)', () => {
   let app: INestApplication;
@@ -32,7 +34,7 @@ describe('Rate limiting (edge-case)', () => {
         ThrottlerModule.forRoot({ throttlers: [{ ttl: 1, limit: 1 }] }),
         PassportModule.register({ defaultStrategy: 'jwt' }),
       ],
-      controllers: [AuthController],
+      controllers: [AuthController, WebauthnController],
       providers: [
         { provide: AuthService, useValue: authSvc },
         { provide: WEB_AUTHN_PORT, useValue: webAuthn },
@@ -44,6 +46,7 @@ describe('Rate limiting (edge-case)', () => {
         CookiesInterceptor,
         AuthCookiesService,
         JwtStrategy,
+        { provide: AuditService, useValue: { log: jest.fn() } },
       ],
     }).compile();
     app = modRef.createNestApplication();

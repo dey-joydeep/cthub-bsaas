@@ -49,6 +49,13 @@ class LocalWebAuthnStubAdapter {
 }
 import { AuthController } from '../../../src/lib/controllers/auth.controller';
 import { TotpController } from '../../../src/lib/controllers/totp.controller';
+import { SessionsController } from '../../../src/lib/controllers/sessions.controller';
+import { PasswordController } from '../../../src/lib/controllers/password.controller';
+import { EmailController } from '../../../src/lib/controllers/email.controller';
+import { RecoveryController } from '../../../src/lib/controllers/recovery.controller';
+import { WebauthnController } from '../../../src/lib/controllers/webauthn.controller';
+import { OauthController } from '../../../src/lib/controllers/oauth.controller';
+import { RegistrationController } from '../../../src/lib/controllers/registration.controller';
 import { AuthService } from '../../../src/lib/services/auth.service';
 import { AuthCookiesService } from '../../../src/lib/services/auth-cookies.service';
 import { AuditService } from '../../../src/lib/services/audit.service';
@@ -100,7 +107,17 @@ export async function createAuthTestContext(options: AuthTestOptions = {}): Prom
         signOptions: { expiresIn: '60s' },
       }),
     ],
-    controllers: [AuthController, TotpController],
+    controllers: [
+      AuthController,
+      TotpController,
+      SessionsController,
+      PasswordController,
+      EmailController,
+      RecoveryController,
+      WebauthnController,
+      OauthController,
+      RegistrationController,
+    ],
     providers: [
       AuthService,
       JwtStrategy,
