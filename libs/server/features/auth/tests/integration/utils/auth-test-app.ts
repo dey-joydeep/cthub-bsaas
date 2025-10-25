@@ -20,6 +20,7 @@ import {
   TOTP_PORT,
   EMAIL_PORT,
   INVITE_PORT,
+  CREDENTIAL_PASSKEY_REPOSITORY,
 } from '@cthub-bsaas/server-contracts-auth';
 import {
   UserRepository,
@@ -30,6 +31,7 @@ import {
   EmailVerificationRepository,
   PasswordResetRepository,
   PrismaService,
+  CredentialPasskeyRepository,
 } from '@cthub-bsaas/server-data-access';
 import { RecoveryCodesMemoryAdapter, OAuthAdapter, TotpOtplibAdapter, InvitePrismaAdapter } from '@cthub-bsaas/server-infrastructure';
 
@@ -56,10 +58,12 @@ import { RecoveryController } from '../../../src/lib/controllers/recovery.contro
 import { WebauthnController } from '../../../src/lib/controllers/webauthn.controller';
 import { OauthController } from '../../../src/lib/controllers/oauth.controller';
 import { RegistrationController } from '../../../src/lib/controllers/registration.controller';
+import { PasskeysController } from '../../../src/lib/controllers/passkeys.controller';
 import { AuthService } from '../../../src/lib/services/auth.service';
 import { AuthCookiesService } from '../../../src/lib/services/auth-cookies.service';
 import { AuditService } from '../../../src/lib/services/audit.service';
 import { JwtStrategy } from '../../../src/lib/strategies/jwt.strategy';
+import { PasskeysService } from '../../../src/lib/services/passkeys.service';
 import { ConfigModule, CookieRegistry, CookiesInterceptor, EncryptionService, ResponseEnvelopeInterceptor, CsrfGuard, LoggerService } from '@cthub-bsaas/server-core';
 import { APP_GUARD, HttpAdapterHost } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -117,6 +121,7 @@ export async function createAuthTestContext(options: AuthTestOptions = {}): Prom
       WebauthnController,
       OauthController,
       RegistrationController,
+      PasskeysController,
     ],
     providers: [
       AuthService,
@@ -133,6 +138,7 @@ export async function createAuthTestContext(options: AuthTestOptions = {}): Prom
         provide: TOTP_PORT,
         useClass: TotpOtplibAdapter,
       },
+      { provide: CREDENTIAL_PASSKEY_REPOSITORY, useClass: CredentialPasskeyRepository },
       { provide: EMAIL_PORT, useValue: emailPort },
       { provide: INVITE_PORT, useClass: InvitePrismaAdapter },
       { provide: WEB_AUTHN_PORT, useClass: LocalWebAuthnStubAdapter },
@@ -141,6 +147,7 @@ export async function createAuthTestContext(options: AuthTestOptions = {}): Prom
       { provide: LoggerService, useValue: { access: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() } },
       AuditService,
       AuthCookiesService,
+      PasskeysService,
       CookieRegistry,
       ResponseEnvelopeInterceptor,
       CookiesInterceptor,

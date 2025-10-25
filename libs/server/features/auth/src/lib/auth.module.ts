@@ -12,6 +12,8 @@ import { WebauthnController } from './controllers/webauthn.controller';
 import { OauthController } from './controllers/oauth.controller';
 import { RegistrationController } from './controllers/registration.controller';
 import { TotpController } from './controllers/totp.controller';
+import { PasskeysController } from './controllers/passkeys.controller';
+import { PasskeysService } from './services/passkeys.service';
 import {
   CREDENTIAL_TOTP_REPOSITORY,
   CREDENTIAL_PASSKEY_REPOSITORY,
@@ -108,8 +110,9 @@ const providers = [
     WebauthnController,
     OauthController,
     RegistrationController,
+    PasskeysController,
   ],
-  providers: [AuthService, JwtStrategy, AuditService, AuthCookiesService, CookieRegistry, CookiesInterceptor, ...providers],
-  exports: [AuthService, AuditService, AuthCookiesService, CookieRegistry, CookiesInterceptor, ...providers],
+  providers: [AuthService, PasskeysService, JwtStrategy, AuditService, AuthCookiesService, CookieRegistry, CookiesInterceptor, ...providers],
+  exports: [AuthService, PasskeysService, AuditService, AuthCookiesService, CookieRegistry, CookiesInterceptor, ...providers],
 })
 export class AuthModule {}
