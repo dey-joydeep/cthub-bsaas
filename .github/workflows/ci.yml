@@ -54,6 +54,9 @@ jobs:
         run: |
           npx nx run-many -t lint -p server-core,server-data-access,server-feature-auth --parallel=3
           npx nx run-many -t test -p server-core,server-data-access,server-feature-auth --code-coverage --parallel=1
+
+      - name: API e2e smoke (correlation-id, Retry-After)
+        run: npx nx run api-e2e:e2e
       
       - name: Guard hygiene (no Guards in feature libs)
         run: |

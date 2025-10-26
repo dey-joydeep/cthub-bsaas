@@ -1,12 +1,12 @@
 import { Module, ValidationPipe } from '@nestjs/common';
-import { ConfigModule } from '@cthub-bsaas/server-core';
+import { ConfigModule, ConfigService } from '@cthub-bsaas/server-core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CoreModule, JwtAuthGuard, RolesGuard, CsrfGuard } from '@cthub-bsaas/server-core';
-import { AuthModule } from '@cthub-bsaas/server-features-auth';
+import { AuthModule } from '@cthub-bsaas/server-feature-auth';
 import { TotpModule } from '@cthub-bsaas/server-infrastructure';
 import appConfig from './config/app.config';
 import throttleConfig from './config/throttle.config';
