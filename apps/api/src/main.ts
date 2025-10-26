@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { JwtAuthGuard, RolesGuard } from '@cthub-bsaas/server-core/auth';
-import { ConfigService } from '@cthub-bsaas/server-core';
+import { ConfigService, CorrelationIdMiddleware, RetryAfterFilter } from '@cthub-bsaas/server-core';
 import { ClassSerializerInterceptor, Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -78,6 +78,10 @@ async function bootstrap() {
   // Cookie parser
   app.use(cookieParser());
 
+  // Correlation ID middleware (adds/propagates x-correlation-id)
+  const cidMw = new CorrelationIdMiddleware();
+  app.use(cidMw.use.bind(cidMw));
+
   // Body parser
   const bodyLimitJson = configService.app.bodyLimitJson || '10mb';
   const bodyLimitUrlEncoded = configService.app.bodyLimitUrlEncoded || '10mb';
@@ -98,6 +102,9 @@ async function bootstrap() {
 
   // Global interceptors
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+
+  // Global filters: ensure 429 has Retry-After header
+  app.useGlobalFilters(new RetryAfterFilter());
 
   // Global guards
   const reflector = app.get(Reflector);
