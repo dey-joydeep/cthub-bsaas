@@ -8,8 +8,8 @@ import { AppService } from './app.service';
 import { CoreModule, JwtAuthGuard, RolesGuard, CsrfGuard } from '@cthub-bsaas/server-core';
 import { AuthModule } from '@cthub-bsaas/server-feature-auth';
 import { TotpModule } from '@cthub-bsaas/server-infrastructure';
-import appConfig from './config/app.config';
-import throttleConfig from './config/throttle.config';
+
+
 import { ThrottlerRetryAfterFilter } from './http/filters/throttler-retry-after.filter';
 import { ThrottlerRetryAfterGuard } from './http/guards/throttler-retry-after.guard';
 

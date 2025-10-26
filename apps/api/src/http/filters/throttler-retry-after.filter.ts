@@ -12,7 +12,7 @@ import { ConfigService } from '@nestjs/config';
 export class ThrottlerRetryAfterFilter implements ExceptionFilter<ThrottlerException> {
   constructor(private readonly config: ConfigService) {}
 
-  catch(_exception: ThrottlerException, host: ArgumentsHost) {
+  catch(_exception: ThrottlerException, host: ArgumentsHost): void {
     const res = host.switchToHttp().getResponse<Response>();
     const ttl = this.config.get<number>('throttle.ttl', 60);
     res.setHeader('Retry-After', String(ttl));

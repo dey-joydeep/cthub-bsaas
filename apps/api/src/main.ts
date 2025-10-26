@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { JwtAuthGuard, RolesGuard } from '@cthub-bsaas/server-core/auth';
+import { JwtAuthGuard, RolesGuard } from '@cthub-bsaas/server-core';
 import { ConfigService, CorrelationIdMiddleware, RetryAfterFilter } from '@cthub-bsaas/server-core';
 import { ClassSerializerInterceptor, Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
@@ -12,7 +12,7 @@ import morgan from 'morgan';
 import { AppModule } from './app.module';
 import { ConfigModule } from '@cthub-bsaas/server-core';
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
   const logger = new Logger('Bootstrap');
 
   // Create the application with logging
@@ -23,7 +23,7 @@ async function bootstrap() {
 
   // Get config service
   const configService = app.select(ConfigModule).get(ConfigService);
-  const { port, nodeEnv, isProduction } = configService.app;
+  const { port, nodeEnv } = configService.app;
   const { origins, methods, allowedHeaders, exposedHeaders, credentials, maxAge } =
     configService.cors;
 
@@ -40,7 +40,7 @@ async function bootstrap() {
         if (origins.includes('*') || origins.includes(origin)) {
           return callback(null, true);
         }
-      } catch (e) {
+      } catch {
         // If URL parsing fails, deny the request
         return callback(new Error('Invalid origin'));
       }
