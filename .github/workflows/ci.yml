@@ -42,6 +42,22 @@ jobs:
       - name: Run tests
         run: npx nx affected --target=test --parallel=3 --configuration=ci
       
+      - name: OpenAPI parity (auth)
+        run: npm run openapi:check:auth
+      
+      - name: Server libs lint + coverage
+        run: |
+          npx nx run-many -t lint -p server-core,server-data-access,server-feature-auth --parallel=3
+          npx nx run-many -t test -p server-core,server-data-access,server-feature-auth --code-coverage --parallel=1
+      
+      - name: Guard hygiene (no Guards in feature libs)
+        run: |
+          if grep -Rn "class .*Guard" libs/server/features; then
+            echo "Guard classes detected under feature libs" && exit 1;
+          else
+            echo "No Guard classes under feature libs";
+          fi
+      
       - name: Run build
         run: npx nx affected --target=build --parallel=3 --configuration=production
       
