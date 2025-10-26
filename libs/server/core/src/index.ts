@@ -52,3 +52,4 @@ export * from './validators/theme.validator';
 export * from './http/cookies/cookie-commands';
 export * from './http/cookies/cookies.interceptor';
 export * from './http/response-envelope.interceptor';
+export * from './http/correlation-id.middleware';

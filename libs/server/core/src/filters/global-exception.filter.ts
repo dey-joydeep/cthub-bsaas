@@ -2,6 +2,7 @@ import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 import { ErrorService, NormalizedError } from '../errors/error.service';
+import { CorrelationId } from '../http/correlation-id.middleware';
 
 /**
  * @public
@@ -17,6 +18,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
     const isProduction = process.env['NODE_ENV'] === 'production';
 
+    const correlationId = CorrelationId.get();
     const normalized = this.errorService.handle(exception, {
       context: 'GlobalExceptionFilter',
       requestUrl: request.url,
@@ -24,7 +26,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     });
 
     const timestamp = new Date().toISOString();
-    const body = this.buildResponseBody(normalized, request.url, timestamp, isProduction);
+    const body = this.buildResponseBody(normalized, request.url, timestamp, isProduction, correlationId);
 
     response.status(normalized.status).json(body);
   }
@@ -34,6 +36,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     path: string,
     timestamp: string,
     isProduction: boolean,
+    correlationId?: string,
   ): Record<string, unknown> {
     const shouldMaskDetails = normalized.shouldMaskResponse;
     const body: Record<string, unknown> = {
@@ -46,6 +49,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       timestamp,
       path,
     };
+
+    if (correlationId) {
+      body.correlationId = correlationId;
+    }
 
     if (!shouldMaskDetails && normalized.details) {
       body.details = normalized.details;

@@ -64,7 +64,7 @@ import { AuthCookiesService } from '../../../src/lib/services/auth-cookies.servi
 import { AuditService } from '../../../src/lib/services/audit.service';
 import { JwtStrategy } from '../../../src/lib/strategies/jwt.strategy';
 import { PasskeysService } from '../../../src/lib/services/passkeys.service';
-import { ConfigModule, CookieRegistry, CookiesInterceptor, EncryptionService, ResponseEnvelopeInterceptor, CsrfGuard, LoggerService } from '@cthub-bsaas/server-core';
+import { ConfigModule, CookieRegistry, CookiesInterceptor, EncryptionService, ResponseEnvelopeInterceptor, CsrfGuard, LoggerService, CorrelationIdMiddleware } from '@cthub-bsaas/server-core';
 import { APP_GUARD, HttpAdapterHost } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import type { EmailPort } from '@cthub-bsaas/server-contracts-auth';
@@ -169,6 +169,8 @@ export async function createAuthTestContext(options: AuthTestOptions = {}): Prom
 
   const app = testingModule.createNestApplication();
   app.use(cookieParser());
+  // Attach correlation-id middleware so audit/error logs include correlationId in IT
+  app.use(new CorrelationIdMiddleware().use.bind(new CorrelationIdMiddleware()));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   await app.init();
 

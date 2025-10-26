@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { LoggerService } from '@cthub-bsaas/server-core';
+import { CorrelationId } from '@cthub-bsaas/server-core';
 
 /**
  * @public
@@ -22,7 +23,9 @@ export class AuditService {
    * @returns {void}
    */
   public log(event: string, details: Record<string, unknown>): void {
-    const payload = `${event} ${JSON.stringify(details)}`;
+    const cid = CorrelationId.get?.();
+    const full = cid ? { ...details, correlationId: cid } : details;
+    const payload = `${event} ${JSON.stringify(full)}`;
     this.logger.access(payload, AuditService.CONTEXT);
   }
 }

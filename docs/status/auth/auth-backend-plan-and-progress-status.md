@@ -8,21 +8,21 @@ Scope
 
 ## Non‑Registration Gaps (from Specs vs Implementation + Internal Plans)
 
-1. [ ] Success/Error envelope normalization (API HLD §2)
+1. [x] Success/Error envelope normalization (API HLD §2)
    - Current controllers return raw payloads (e.g., `{}`) without the canonical `{ success, data }` wrapper.
    - Action: Add a response‑normalizing interceptor (likely in `server-core`) and apply in Auth module; keep controller returns minimal `data` only.
 
-2. [ ] CSRF enforcement on Refresh (LLD §2.E)
+2. [x] CSRF enforcement on Refresh (LLD §2.E)
    - Spec: Refresh requires valid RT cookie + double‑submit XSRF header.
    - Current: `POST /auth/refresh` is marked `@SkipCsrf()` and does not require the header.
    - Action: Remove `@SkipCsrf()` from refresh; ensure CsrfGuard enforces header when `XSRF-TOKEN` cookie is set; update IT accordingly.
 
-3. [ ] Retry‑After header on 429 (HLD §7; LLD §2)
+3. [~] Retry‑After header on 429 (HLD §7; LLD §2)
    - Spec: All rate‑limited responses must include `Retry-After`.
    - Current: We use `@Throttle`, but do not assert/guarantee the header.
    - Action: Verify Nest Throttler integration and ensure `Retry-After` is set; if not, add a filter/interceptor to inject it. Add IT that asserts the header.
 
-4. [ ] Route alias alignment with spec (HLD/LLD)
+4. [x] Route aliases — removed (canonical only)
    1. Recovery Codes
       - Spec: `POST /auth/recovery-codes/issue` (201), `POST /auth/recovery-codes/verify`.
       - Current: `POST /auth/recovery/generate`, `POST /auth/recovery/verify` (200).
@@ -36,12 +36,12 @@ Scope
       - Current: `POST /auth/oauth/:provider/unlink`.
       - Action: Add `DELETE` alias and keep existing `POST`.
 
-5. [ ] Email Change feature (LLD §2.F)
+5. [x] Email Change feature (LLD §2.F)
    - Spec: `POST /auth/email/change/request` (202), `POST /auth/email/change/confirm`.
    - Current: Not implemented.
    - Action: Add DTOs, controller actions, and service methods (server‑side validation + throttling). No DB migration work here; wire via ports where necessary.
 
-6. [ ] Password Change feature (LLD §2)
+6. [x] Password Change feature (LLD §2)
    - Spec: `POST /auth/password/change` with `{ currentPassword, newPassword }`.
    - Current: Not implemented.
    - Action: Add DTO, controller action, service method; verify current password; rotate sessions if policy requires; rate‑limit attempts.
@@ -66,7 +66,7 @@ Scope
    - [ ] Consider `204 No Content` for actions returning no body (logout, verify endpoints); else keep `200` with minimal body
    - [ ] Ensure all non-resource-creating POSTs have explicit `@HttpCode(200)` (TOTP/WebAuthn/Recovery)
 
-11. [ ] OpenAPI alignment work
+11. [~] OpenAPI alignment work
    - [ ] Update `openapi.yaml` to include canonical + alias paths during migration and reflect cookie names
    - [ ] Add CI contract validation step
 
@@ -172,7 +172,8 @@ Notes
    2. [x] Implement validate/complete controller + service flows (no DB changes)
    3. [x] Add UT/IT; ensure cookies + CSRF policy and rate limits
 
-## Current Status Snapshot
+## Current Status Snapshot (legacy)
+
 
 1. UT: 100% coverage ✔
 2. IT: 100% coverage ✔
@@ -191,6 +192,22 @@ Notes
 15. Partner Registration (Owner/Staff): pending ❗
 
 > Items marked ❗ are recommended for near‑term implementation.
+
+## Current Status Snapshot (updated)
+
+1. UT: 100% coverage
+2. IT: 100% coverage
+3. Cookies/XSRF: Implemented; refresh CSRF policy aligned
+4. OAuth: start/callback/link/unlink present; canonical POST unlink
+5. Recovery Codes: generate/verify present (canonical)
+6. Sessions/Devices: list/revoke present (canonical)
+7. Passkeys device management: list/delete implemented (server); docs/spec synced
+8. Envelope normalization: implemented
+9. Retry‑After: core filter exists; app-level global wiring to confirm
+10. CorrelationId: not propagated yet (planned)
+11. CI coverage & lint hardening: pending
+12. OpenAPI parity script: available; CI gating pending
+13. Partner Registration (Owner/Staff): implemented
 
 ## Context for Next Session Continuation
 

@@ -7,7 +7,7 @@
 This HLD defines the **Auth API** surface for CTHub covering:
 - Sign‑in (email+password) and MFA (TOTP/WebAuthn/passkeys, recovery codes)
 - Password reset & password change
-- Sessions/devices management (refresh, logout, logout-others, list, revoke)
+- Sessions/devices management (refresh, logout, logout-others, list, revoke); passkeys device management (list/delete)
 - Email change (request/confirm)
 - Social OAuth (Google required; Facebook/Apple optional; link/unlink)
 - **Registration**: Customer (self‑serve) & Partner (Owner/Staff invited)
@@ -40,9 +40,9 @@ See also (Frontend Integration): `docs/specs/auth/WEB/frontend-auth-integration.
   Flags → `HttpOnly` (AT/RT), `Secure`, `SameSite=Lax`, `Path=/`, `Domain=.cthub.in` (via `AUTH_COOKIE_DOMAIN`).  
   TTLs → Access: **10–15m**; Refresh: **14–30d**, **rotation** enabled (deny‑list old `jti`).
 - **CSRF/XSRF:** Double‑submit; FE sends `X-XSRF-TOKEN` header on state‑changing requests.
-- **Rate limiting:** Sensitive endpoints (login, OTP/TOTP issue/verify, email verify request). Return **429** with **`Retry-After`**.
+- **Rate limiting:** Sensitive endpoints (login, OTP/TOTP issue/verify, email verify request, passkeys management). Return **429** with **`Retry-After`**. A Retry‑After filter exists in core; app-level global wiring governs production behavior.
 - **Enumeration resistance:** Generic 202/200 responses for “email sent/ok” cases; uniform error copy & timing.
-- **Audit/Telemetry:** login/logout/refresh, MFA enroll/verify, passkey attestation/assertion, recovery issue/verify, reset, email verify/change, OAuth link/unlink, registration milestones. Emit `correlationId` on all events.
+- **Audit/Telemetry:** login/logout/refresh, MFA enroll/verify, passkey attestation/assertion, passkeys list/delete, recovery issue/verify, reset, email verify/change, OAuth link/unlink, registration milestones. Note: correlationId emission is planned; current implementation logs without correlationId.
 - **Adapters (Env‑switchable):**
   - WebAuthn: challenge store via `WEB_AUTHN_CHALLENGE_STORE` = `redis` (default) or `memory`; TTL via `WEB_AUTHN_CHALLENGE_TTL`. Tests provide a stub via TestingModule overrides (no prod stub binding).
   - OAuth: `OAUTH_ADAPTER` = `dev` (default), `google`, or `meta`.
@@ -144,23 +144,25 @@ result — 200
 ```
 
 ### Recovery Codes
-**POST** `/auth/recovery-codes/issue` → 201, 401, 429, 500
-```json
-{ "success": true, "data": { "codes": ["abcd-efgh-ijkl","mnop-qrst-uvwx","yz12-3456-7890"] } }
-```
+Canonical endpoints (aliases removed):
+- `POST /auth/recovery/generate` → 200, 401, 403
+- `POST /auth/recovery/verify` → 200, 400, 401, 403, 422
 
-**POST** `/auth/recovery-codes/verify` → 200, 401, 422, 429, 500
+Example response
 ```json
-{ "success": true, "data": { "verified": true } }
+{ "success": true, "data": {} }
 ```
 
 ### Sessions / Devices
-**POST** `/auth/refresh` → 200, 401, 403, 429, 500  
-**POST** `/auth/logout` → 200, 401, 500  
-**POST** `/auth/logout-others` → 200, 401, 500  
-**GET** `/auth/sessions` → 200, 401, 500  
-**DELETE** `/auth/sessions/{id}` → 200, 401, 404, 500  
-Aliases (deprecated): `GET /auth/devices`, `POST /auth/devices/revoke`
+**POST** `/auth/refresh` → 200, 400, 401  
+**POST** `/auth/logout` → 200, 401  
+**GET** `/auth/sessions` → 200, 401  
+**POST** `/auth/sessions/revoke/{id}` → 200, 401  
+
+### Passkeys (Device Management)
+**GET** `/auth/webauthn/devices` → 200, 401, 403  
+**DELETE** `/auth/webauthn/devices/{id}` → 200, 400, 401, 403  
+Notes: deleting a non-existent/unauthorized credential returns 401 in current implementation.
 
 ### Password Reset
 **POST** `/auth/password/reset/request` → 202, 429, 500
@@ -186,7 +188,7 @@ Aliases (deprecated): `GET /auth/devices`, `POST /auth/devices/revoke`
 ### Social (Customer)
 **GET** `/auth/oauth/{{provider}}/start` → 302 to provider  
 **GET** `/auth/oauth/{{provider}}/callback` → 302 to app on success or 200 (link)  
-**DELETE** `/auth/oauth/{{provider}}` → 200, 401, 409, 422, 500
+**POST** `/auth/oauth/{{provider}}/unlink` → 200, 401, 403
 
 ### Registration (Customer)
 **POST** `/auth/register` → 202

@@ -3,6 +3,7 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 
 import { AppError } from './app.error';
 import { LoggerService } from '../logger/logger.service';
+import { CorrelationId } from '../http/correlation-id.middleware';
 
 /**
  * @public
@@ -175,6 +176,11 @@ export class ErrorService {
 
     if (normalized.details) {
       payload.details = normalized.details;
+    }
+
+    const cid = CorrelationId.get();
+    if (cid) {
+      payload.correlationId = cid;
     }
 
     return JSON.stringify(payload);

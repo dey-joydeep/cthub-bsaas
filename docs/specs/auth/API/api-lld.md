@@ -2,9 +2,9 @@
 **Updated:** 2025-09-11
 
 ## 1) Module Structure
-- **Controllers** per subdomain: login, mfa, password, registration, sessions, recovery, email‑change, passkeys, social
+- **Controllers** per subdomain: login, mfa, password, registration, sessions, recovery, email‑change, passkeys (list/delete), social
 - **Services**: credential verify, WebAuthn verify/attest, OTP dispatch/verify, invite validation, session mgmt
-- **Interceptors/Filters**: error normalization → `ApiError`; `Retry-After` on 429; `Cache-Control: no-store`; `correlationId` injection
+- **Interceptors/Filters**: error normalization → `ApiError`; `Retry-After` on 429 (core filter exists; app-global wiring governs runtime); `Cache-Control: no-store`; `correlationId` (planned)
 
 ## 2) Business Flows / Algorithms
 
@@ -83,13 +83,14 @@ Authoritative routes/methods → see `openapi.yaml`. LLD mirrors the same paths 
 Canonical routes (implemented)
 - Recovery codes: `POST /auth/recovery/generate`, `POST /auth/recovery/verify`
 - Sessions: `GET /auth/sessions`, `POST /auth/sessions/revoke/:id`
+- Passkeys device management: `GET /auth/webauthn/devices`, `DELETE /auth/webauthn/devices/:id`
 - OAuth unlink: `POST /auth/oauth/:provider/unlink`
 - TOTP verify after password: `POST /auth/login/totp`
 - WebAuthn register/login:
   - `POST /auth/webauthn/register/start`, `POST /auth/webauthn/register/finish`
   - `POST /auth/webauthn/login/start`, `POST /auth/webauthn/login/finish`
- - TOTP enrollment: `POST /auth/totp/enroll/start`, `POST /auth/totp/enroll/finish`
- - Customer registration: `POST /auth/register`
+- TOTP enrollment: `POST /auth/totp/enroll/start`, `POST /auth/totp/enroll/finish`
+- Customer registration: `POST /auth/register`
 
 ## 3.1) Adapters & Environment
 - WebAuthn configuration via env:
@@ -115,6 +116,7 @@ Canonical routes (implemented)
 ## 5) Response Envelope
 - Non-redirect responses are wrapped by the ResponseEnvelopeInterceptor as `{ success: true, data: <payload> }`.
 - Redirect responses `{ url, statusCode }` are passed through unchanged.
+- Error handling returns a stable envelope via filters/guards; correlationId inclusion is planned (not yet emitted).
 
 ## 6) Cookies & Headers Effects
 - **Login/MFA success:** set **AT/RT**; issue/rotate `XSRF-TOKEN`
