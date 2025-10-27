@@ -34,7 +34,5 @@ export const AUTH_MESSAGE_KEYS = {
   },
 } as const;
 
-export type AuthInfoMessageKey = (typeof AUTH_MESSAGE_KEYS)['INFO'][keyof (typeof AUTH_MESSAGE_KEYS)['INFO']];
-export type AuthWarnMessageKey = (typeof AUTH_MESSAGE_KEYS)['WARN'][keyof (typeof AUTH_MESSAGE_KEYS)['WARN']];
 export type AuthErrorMessageKey = (typeof AUTH_MESSAGE_KEYS)['ERROR'][keyof (typeof AUTH_MESSAGE_KEYS)['ERROR']];
-export type AuthMessageKey = AuthInfoMessageKey | AuthWarnMessageKey | AuthErrorMessageKey;
+export type AuthMessageKey = AuthErrorMessageKey;

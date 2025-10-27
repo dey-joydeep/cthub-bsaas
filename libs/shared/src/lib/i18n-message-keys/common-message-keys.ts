@@ -13,7 +13,5 @@ export const COMMON_MESSAGE_KEYS = {
   },
 } as const;
 
-export type CommonInfoMessageKey = (typeof COMMON_MESSAGE_KEYS)['INFO'][keyof (typeof COMMON_MESSAGE_KEYS)['INFO']];
-export type CommonWarnMessageKey = (typeof COMMON_MESSAGE_KEYS)['WARN'][keyof (typeof COMMON_MESSAGE_KEYS)['WARN']];
 export type CommonErrorMessageKey = (typeof COMMON_MESSAGE_KEYS)['ERROR'][keyof (typeof COMMON_MESSAGE_KEYS)['ERROR']];
-export type CommonMessageKey = CommonInfoMessageKey | CommonWarnMessageKey | CommonErrorMessageKey;
+export type CommonMessageKey = CommonErrorMessageKey;
