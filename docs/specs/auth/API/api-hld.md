@@ -37,8 +37,8 @@ See also (Frontend Integration): `docs/specs/auth/WEB/frontend-auth-integration.
 
 ## 3) Cross‑Cutting
 - **Cookies:** HttpOnly Access/Refresh cookies (`bsaas_at`, `bsaas_rt`) + non‑HttpOnly `XSRF-TOKEN`  
-  Flags → `HttpOnly` (AT/RT), `Secure`, `SameSite=Lax`, `Path=/`, `Domain=.cthub.in` (via `AUTH_COOKIE_DOMAIN`).  
-  TTLs → Access: **10–15m**; Refresh: **14–30d**, **rotation** enabled (deny‑list old `jti`).
+  Flags → `HttpOnly` (AT/RT), `Secure` (prod only), `SameSite=Lax`, `Domain=AUTH_COOKIE_DOMAIN`. Paths: AT `/`, RT `/auth`.  
+  TTLs → Access: **10–15m**; Refresh: **180d** (Customer), rotation enabled (deny‑list old `jti`).
 - **CSRF/XSRF:** Double‑submit; FE sends `X-XSRF-TOKEN` header on state‑changing requests.
 - **Rate limiting:** Sensitive endpoints (login, OTP/TOTP issue/verify, email verify request, passkeys management). Return **429** with **`Retry-After`**. A Retry‑After filter exists in core; app-level global wiring governs production behavior.
 - **Enumeration resistance:** Generic 202/200 responses for “email sent/ok” cases; uniform error copy & timing.

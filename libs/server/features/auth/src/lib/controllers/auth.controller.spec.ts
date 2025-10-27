@@ -12,6 +12,7 @@ describe('AuthController (core endpoints)', () => {
     'signIn' | 'signInWithTotp' | 'refreshToken' | 'logout'
   >>;
   let cookies: jest.Mocked<Pick<AuthCookiesService, 'issue' | 'rotateOnRefresh' | 'clear'>>;
+  let jwt: { decode: jest.Mock };
 
   const createLoginDto = (overrides: Partial<LoginDto> = {}): LoginDto =>
     Object.assign(new LoginDto(), { email: 'e@example.com', password: 'Password#1', ...overrides });
@@ -30,11 +31,13 @@ describe('AuthController (core endpoints)', () => {
       logout: jest.fn().mockResolvedValue(undefined),
     } as unknown as typeof service;
     cookies = { issue: jest.fn(), rotateOnRefresh: jest.fn(), clear: jest.fn() } as unknown as typeof cookies;
+    jwt = { decode: jest.fn(() => ({ roles: ['CUSTOMER'] })) };
     // AuditService is not used by tests; pass a minimal stub
     controller = new AuthController(
       service as unknown as AuthService,
       cookies as unknown as AuthCookiesService,
       { log: jest.fn() } as unknown as import('../services/audit.service').AuditService,
+      jwt as unknown as any,
     );
   });
 
@@ -42,7 +45,10 @@ describe('AuthController (core endpoints)', () => {
     service.signIn.mockResolvedValue({ totpRequired: false, accessToken: 'at', refreshToken: 'rt' });
     const result = await controller.signIn(createLoginDto());
     expect(result).toEqual({ totpRequired: false });
-    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'at', refreshToken: 'rt' }));
+    expect(cookies.issue).toHaveBeenCalledWith(
+      expect.objectContaining({ accessToken: 'at', refreshToken: 'rt' }),
+      expect.any(Object),
+    );
   });
 
   it('signIn returns temp token when TOTP required', async () => {
@@ -54,21 +60,44 @@ describe('AuthController (core endpoints)', () => {
   it('login/totp issues cookies', async () => {
     const out = await controller.signInWithTotp({ tempToken: 't', totpCode: '123456' });
     expect(out).toEqual({});
-    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'AT2', refreshToken: 'RT2' }));
+    expect(cookies.issue).toHaveBeenCalledWith(
+      expect.objectContaining({ accessToken: 'AT2', refreshToken: 'RT2' }),
+      expect.any(Object),
+    );
+  });
+
+  it('login/totp uses default TTL path when roles are not CUSTOMER', async () => {
+    (jwt.decode as jest.Mock).mockReturnValueOnce({ roles: [] });
+    const out = await controller.signInWithTotp({ tempToken: 't', totpCode: '123456' });
+    expect(out).toEqual({});
+    expect(cookies.issue).toHaveBeenCalled();
+  });
+
+  it('login/totp handles decode null safely', async () => {
+    (jwt.decode as jest.Mock).mockReturnValueOnce(null as any);
+    const out = await controller.signInWithTotp({ tempToken: 't', totpCode: '123456' });
+    expect(out).toEqual({});
+    expect(cookies.issue).toHaveBeenCalled();
   });
 
   it('refresh uses cookie token and rotates cookies', async () => {
     service.refreshToken.mockResolvedValue({ accessToken: 'new-at', refreshToken: 'new-rt' });
     const res = await controller.refresh(createRefreshDto(), reqWithCookie('bsaas_rt=old'));
     expect(res).toEqual({});
-    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'new-at', refreshToken: 'new-rt' }));
+    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(
+      expect.objectContaining({ accessToken: 'new-at', refreshToken: 'new-rt' }),
+      expect.any(Object),
+    );
   });
 
   it('refresh falls back to body token when no cookie', async () => {
     service.refreshToken.mockResolvedValue({ accessToken: 'at2', refreshToken: 'rt2' });
     const res = await controller.refresh(createRefreshDto({ refreshToken: 'from-body' }), reqWithCookie());
     expect(res).toEqual({});
-    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'at2', refreshToken: 'rt2' }));
+    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(
+      expect.objectContaining({ accessToken: 'at2', refreshToken: 'rt2' }),
+      expect.any(Object),
+    );
   });
 
   it('refresh rejects when both cookie and body tokens are provided', async () => {
@@ -86,6 +115,10 @@ describe('AuthController (core endpoints)', () => {
     await controller.logout({ user: { sessionId: 's1' } });
     expect(service.logout).toHaveBeenCalledWith('s1');
     expect(cookies.clear).toHaveBeenCalled();
+  });
+
+  it('isCustomerFromAccess returns false on missing token (early return)', () => {
+    expect((controller as unknown as { isCustomerFromAccess: (t?: string) => boolean }).isCustomerFromAccess(undefined)).toBe(false);
   });
 });
 

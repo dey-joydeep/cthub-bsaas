@@ -9,16 +9,26 @@ const BASE_AUTH_CONFIG: AuthConfig = {
   jwtEmailChangeSecret: 'email-change-secret',
   jwtVerifyEmailSecret: 'verify-secret',
   jwtExpiresIn: '1h',
-  refreshTokenExpiresIn: '7d',
+  refreshTokenExpiresInDefault: '7d',
+  refreshTokenExpiresInCustomer: '180d',
   cookieDomain: 'example.com',
 };
 
-const createConfig = (overrides: Partial<AuthConfig> = {}): ConfigService => ({
+const createConfig = (overrides: Partial<AuthConfig> = {}, app: { isProduction?: boolean } = {}): ConfigService => ({
   auth: {
     ...BASE_AUTH_CONFIG,
     ...overrides,
   },
-}) as unknown as ConfigService;
+  app: {
+    port: 3000,
+    nodeEnv: app.isProduction ? 'production' : 'development',
+    isProduction: app.isProduction ?? true,
+    isDevelopment: !(app.isProduction ?? true),
+    isTest: false,
+    bodyLimitJson: '10mb',
+    bodyLimitUrlEncoded: '10mb',
+  },
+} as unknown as ConfigService);
 
 describe('AuthCookiesService', () => {
   let service: AuthCookiesService;
@@ -29,6 +39,17 @@ describe('AuthCookiesService', () => {
     registry = { set: jest.fn(), clear: jest.fn() } as unknown as CookieRegistryMock;
     config = createConfig();
     service = new AuthCookiesService(registry as unknown as CookieRegistry, config);
+  });
+
+  it('parseDurationToSeconds covers all units and invalid cases (direct)', () => {
+    const direct = service as unknown as { parseDurationToSeconds: (s: any) => number | undefined };
+    expect(direct.parseDurationToSeconds(undefined as any)).toBeUndefined();
+    expect(direct.parseDurationToSeconds('15s')).toBe(15);
+    expect(direct.parseDurationToSeconds('2m')).toBe(120);
+    expect(direct.parseDurationToSeconds('1h')).toBe(3600);
+    expect(direct.parseDurationToSeconds('1d')).toBe(86400);
+    expect(direct.parseDurationToSeconds('oops')).toBeUndefined();
+    expect(direct.parseDurationToSeconds('5x')).toBeUndefined();
   });
 
   const getSetCall = (name: string): [string, string, CookieOptions] => {
@@ -72,6 +93,24 @@ describe('AuthCookiesService', () => {
     );
   });
 
+  it('rotateOnRefresh respects customer TTL when isCustomer is true', () => {
+    registry.set.mockClear();
+    config = createConfig({ refreshTokenExpiresInDefault: '7d', refreshTokenExpiresInCustomer: '180d' });
+    service = new AuthCookiesService(registry as unknown as CookieRegistry, config);
+    service.rotateOnRefresh({ csrf: 'c', accessToken: 'A', refreshToken: 'R' }, { isCustomer: true });
+    const call = getSetCall('bsaas_rt');
+    expect(call[2]).toEqual(expect.objectContaining({ maxAge: 180 * 24 * 60 * 60 }));
+  });
+
+  it('rotateOnRefresh uses default TTL when isCustomer is false', () => {
+    registry.set.mockClear();
+    config = createConfig({ refreshTokenExpiresInDefault: '2d', refreshTokenExpiresInCustomer: '180d' });
+    service = new AuthCookiesService(registry as unknown as CookieRegistry, config);
+    service.rotateOnRefresh({ csrf: 'c', accessToken: 'A', refreshToken: 'R' }, { isCustomer: false });
+    const call = getSetCall('bsaas_rt');
+    expect(call[2]).toEqual(expect.objectContaining({ maxAge: 2 * 24 * 60 * 60 }));
+  });
+
   it('issues when only accessToken provided', () => {
     registry.set.mockClear();
     service.issue({ csrf: 'c3', accessToken: 'A3' });
@@ -95,7 +134,7 @@ describe('AuthCookiesService', () => {
   });
 
   it('sets RT Max-Age using seconds when no suffix', () => {
-    config = createConfig({ refreshTokenExpiresIn: '90' });
+    config = createConfig({ refreshTokenExpiresInDefault: '90' });
     service = new AuthCookiesService(registry as unknown as CookieRegistry, config);
     service.issue({ csrf: 'c', refreshToken: 'R' });
     const call = getSetCall('bsaas_rt');
@@ -108,10 +147,12 @@ describe('AuthCookiesService', () => {
       ['2m', 120],
       ['3h', 10800],
       ['4d', 345600],
+      ['5H', 5 * 60 * 60],
+      [' 12 d ', 12 * 24 * 60 * 60],
     ];
     for (const [val, expected] of cases) {
       (registry.set as unknown as jest.Mock).mockClear();
-      config = createConfig({ refreshTokenExpiresIn: val });
+      config = createConfig({ refreshTokenExpiresInDefault: val });
       service = new AuthCookiesService(registry as unknown as CookieRegistry, config);
       service.issue({ csrf: 'c', refreshToken: 'R' });
       const call = getSetCall('bsaas_rt');
@@ -121,7 +162,7 @@ describe('AuthCookiesService', () => {
 
   it('omits Max-Age when duration is invalid', () => {
     (registry.set as unknown as jest.Mock).mockClear();
-    config = createConfig({ refreshTokenExpiresIn: 'abc' as unknown as string });
+    config = createConfig({ refreshTokenExpiresInDefault: 'abc' as unknown as string });
     service = new AuthCookiesService(registry as unknown as CookieRegistry, config);
     service.issue({ csrf: 'c', refreshToken: 'R' });
     const call = getSetCall('bsaas_rt');
@@ -130,7 +171,7 @@ describe('AuthCookiesService', () => {
 
   it('omits Max-Age when unit is unknown', () => {
     (registry.set as unknown as jest.Mock).mockClear();
-    config = createConfig({ refreshTokenExpiresIn: '10x' as unknown as string });
+    config = createConfig({ refreshTokenExpiresInDefault: '10x' as unknown as string });
     service = new AuthCookiesService(registry as unknown as CookieRegistry, config);
     service.issue({ csrf: 'c', refreshToken: 'R' });
     const call = getSetCall('bsaas_rt');
@@ -140,10 +181,55 @@ describe('AuthCookiesService', () => {
   it('omits Max-Age when refresh TTL is missing', () => {
     (registry.set as unknown as jest.Mock).mockClear();
     // Force missing value
-    config = createConfig({ refreshTokenExpiresIn: undefined as unknown as string });
+    config = createConfig({ refreshTokenExpiresInDefault: undefined as unknown as string });
     service = new AuthCookiesService(registry as unknown as CookieRegistry, config);
     service.issue({ csrf: 'c', refreshToken: 'R' });
     const call = getSetCall('bsaas_rt');
     expect(call[2].maxAge).toBeUndefined();
+  });
+
+  it('uses customer TTL when actor.isCustomer is true', () => {
+    (registry.set as unknown as jest.Mock).mockClear();
+    config = createConfig({ refreshTokenExpiresInDefault: '7d', refreshTokenExpiresInCustomer: '180d' });
+    service = new AuthCookiesService(registry as unknown as CookieRegistry, config);
+    service.issue({ csrf: 'x', refreshToken: 'R', accessToken: 'A' }, { isCustomer: true });
+    const call = getSetCall('bsaas_rt');
+    expect(call[2]).toEqual(expect.objectContaining({ maxAge: 180 * 24 * 60 * 60 }));
+  });
+
+  it('falls back to default TTL when customer TTL is missing but isCustomer=true', () => {
+    (registry.set as unknown as jest.Mock).mockClear();
+    config = createConfig({ refreshTokenExpiresInDefault: '3d', refreshTokenExpiresInCustomer: undefined as any });
+    service = new AuthCookiesService(registry as unknown as CookieRegistry, config);
+    service.issue({ csrf: 'x', refreshToken: 'R' }, { isCustomer: true });
+    const call = getSetCall('bsaas_rt');
+    expect(call[2]).toEqual(expect.objectContaining({ maxAge: 3 * 24 * 60 * 60 }));
+  });
+
+  it('uses default TTL when actor.isCustomer is false', () => {
+    (registry.set as unknown as jest.Mock).mockClear();
+    config = createConfig({ refreshTokenExpiresInDefault: '7d', refreshTokenExpiresInCustomer: '180d' });
+    service = new AuthCookiesService(registry as unknown as CookieRegistry, config);
+    service.issue({ csrf: 'x', refreshToken: 'R', accessToken: 'A' }, { isCustomer: false });
+    const call = getSetCall('bsaas_rt');
+    expect(call[2]).toEqual(expect.objectContaining({ maxAge: 7 * 24 * 60 * 60 }));
+  });
+
+  // Legacy fallback removed: no tests for refreshTokenExpiresIn
+
+  it('sets Secure only in production', () => {
+    const regDev = { set: jest.fn(), clear: jest.fn() } as unknown as CookieRegistry;
+    const cfgDev = createConfig({}, { isProduction: false });
+    const svcDev = new AuthCookiesService(regDev as unknown as CookieRegistry, cfgDev);
+    svcDev.issue({ csrf: 'x', refreshToken: 'R', accessToken: 'A' });
+    const devCalls = (regDev.set as unknown as jest.Mock).mock.calls as [string, string, CookieOptions][];
+    devCalls.forEach(([, , opts]) => expect(opts.secure).toBe(false));
+
+    const regProd = { set: jest.fn(), clear: jest.fn() } as unknown as CookieRegistry;
+    const cfgProd = createConfig({}, { isProduction: true });
+    const svcProd = new AuthCookiesService(regProd as unknown as CookieRegistry, cfgProd);
+    svcProd.issue({ csrf: 'x', refreshToken: 'R', accessToken: 'A' });
+    const prodCalls = (regProd.set as unknown as jest.Mock).mock.calls as [string, string, CookieOptions][];
+    prodCalls.forEach(([, , opts]) => expect(opts.secure).toBe(true));
   });
 });

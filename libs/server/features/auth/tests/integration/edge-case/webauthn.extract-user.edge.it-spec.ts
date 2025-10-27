@@ -4,6 +4,7 @@ import { WEB_AUTHN_PORT } from '@cthub-bsaas/server-contracts-auth';
 import type { WebAuthnPort } from '@cthub-bsaas/server-contracts-auth';
 import { AuthService } from '../../../src/lib/services/auth.service';
 import { AuthCookiesService } from '../../../src/lib/services/auth-cookies.service';
+import { JwtService } from '@nestjs/jwt';
 
 /**
  * Edge-case coverage: exercise extractUserId() branches where OptionalUser provides only `id`
@@ -19,6 +20,7 @@ describe('WebAuthn extractUserId edge cases (integration harness)', () => {
         { provide: WEB_AUTHN_PORT, useValue: {} as unknown as WebAuthnPort },
         { provide: AuthService, useValue: {} },
         { provide: AuthCookiesService, useValue: { issue: jest.fn() } },
+        { provide: JwtService, useValue: { decode: jest.fn(() => ({ roles: [] })) } },
       ],
     }).compile();
 

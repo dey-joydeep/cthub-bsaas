@@ -7,7 +7,6 @@ const BASE_AUTH_CONFIG: AuthConfig = {
   jwtEmailChangeSecret: 'email-change-secret',
   jwtVerifyEmailSecret: 'verify-secret',
   jwtExpiresIn: '1h',
-  refreshTokenExpiresIn: '7d',
   cookieDomain: 'example.com',
 };
 

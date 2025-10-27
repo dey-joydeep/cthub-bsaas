@@ -8,6 +8,7 @@ import type { WebauthnRegisterStartDto } from '../dto/webauthn-register-start.dt
 import type { WebauthnAttestationDto } from '../dto/webauthn-attestation.dto';
 import type { WebauthnAssertionDto } from '../dto/webauthn-assertion.dto';
 
+
 const makeWebAuthn = () => ({
   startRegistration: jest.fn((_userId: string, _username: string) => Promise.resolve({ challenge: 'reg' })),
   finishRegistration: jest.fn((_userId: string, _resp: unknown) => Promise.resolve(undefined)),
@@ -21,18 +22,26 @@ const makeAuthService = () => ({
 });
 
 const makeCookies = () => ({ issue: jest.fn() });
+const makeJwt = () => ({ decode: jest.fn(() => ({ roles: ['CUSTOMER'] })) });
 
 describe('WebauthnController (unit)', () => {
   let controller: WebauthnController;
   let webAuthn: ReturnType<typeof makeWebAuthn>;
   let authService: ReturnType<typeof makeAuthService>;
   let cookies: ReturnType<typeof makeCookies>;
+  let jwt: ReturnType<typeof makeJwt>;
 
   beforeEach(() => {
     webAuthn = makeWebAuthn();
     authService = makeAuthService();
     cookies = makeCookies();
-    controller = new WebauthnController(webAuthn as unknown as WebAuthnPort, authService as unknown as AuthService, cookies as unknown as AuthCookiesService);
+    jwt = makeJwt();
+    controller = new WebauthnController(
+      webAuthn as unknown as WebAuthnPort,
+      authService as unknown as AuthService,
+      cookies as unknown as AuthCookiesService,
+      jwt as unknown as any,
+    );
   });
 
   it('register start delegates to adapter', async () => {
@@ -98,7 +107,34 @@ describe('WebauthnController (unit)', () => {
     const out = await controller.webauthnLoginFinish({ response: {} } as WebauthnAssertionDto, user);
     expect(webAuthn.finishAuthentication).toHaveBeenCalled();
     expect(authService.issueTokensForUser).toHaveBeenCalledWith('u1');
-    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'AT', refreshToken: 'RT' }));
+    expect(cookies.issue).toHaveBeenCalledWith(
+      expect.objectContaining({ accessToken: 'AT', refreshToken: 'RT' }),
+      expect.any(Object),
+    );
     expect(out).toEqual({});
+  });
+
+  it('login finish uses default TTL branch when roles not customer', async () => {
+    (jwt.decode as jest.Mock).mockReturnValueOnce({ roles: [] });
+    const user = { id: 'u1' } as unknown as AuthenticatedUser;
+    const out = await controller.webauthnLoginFinish({ response: {} } as WebauthnAssertionDto, user);
+    expect(out).toEqual({});
+    expect(cookies.issue).toHaveBeenCalled();
+  });
+
+  it('login finish handles non-array roles', async () => {
+    (jwt.decode as jest.Mock).mockReturnValueOnce({ roles: 'x' as unknown as string[] });
+    const user = { id: 'u1' } as unknown as AuthenticatedUser;
+    const out = await controller.webauthnLoginFinish({ response: {} } as WebauthnAssertionDto, user);
+    expect(out).toEqual({});
+    expect(cookies.issue).toHaveBeenCalled();
+  });
+
+  it('login finish handles decode null safely', async () => {
+    (jwt.decode as jest.Mock).mockReturnValueOnce(null as any);
+    const user = { id: 'u1' } as unknown as AuthenticatedUser;
+    const out = await controller.webauthnLoginFinish({ response: {} } as WebauthnAssertionDto, user);
+    expect(out).toEqual({});
+    expect(cookies.issue).toHaveBeenCalled();
   });
 });

@@ -520,6 +520,64 @@ describe('AuthService', () => {
       await expect(service.logout('missing')).resolves.toBeUndefined();
       expect(sessionRepository.delete).not.toHaveBeenCalled();
     });
+
+    it('uses customer RT TTL when role includes CUSTOMER', async () => {
+      // Arrange config TTLs
+      (configService as unknown as { auth: any }).auth = {
+        jwtAccessSecret: 'acc',
+        jwtRefreshSecret: 'ref',
+        jwtEmailChangeSecret: 'emc',
+        jwtVerifyEmailSecret: 'ver',
+        jwtExpiresIn: '15m',
+        refreshTokenExpiresInDefault: '7d',
+        refreshTokenExpiresInCustomer: '180d',
+      };
+      const withCustomer: User & { roles: { role: { name: string } }[] } = {
+        ...mockUser,
+        roles: [{ role: { name: 'CUSTOMER' } }],
+      } as any;
+      userRepository.findById.mockResolvedValue(withCustomer);
+      sessionRepository.create.mockResolvedValue({ id: 'sess', userId: withCustomer.id, deviceOS: null, deviceUA: null, ipHash: null, lastSeenAt: new Date(), createdAt: new Date() } as Session);
+      jwtService.signAsync
+        .mockResolvedValueOnce('access-token')
+        .mockResolvedValueOnce('refresh-token');
+      refreshTokenRepository.create.mockResolvedValue({ jti: 'j3', userId: withCustomer.id, sessionId: 'sess', issuedAt: new Date(), revokedAt: null, rotatedFrom: null } as RefreshToken);
+
+      // Act
+      const result = await service.issueTokensForUser(withCustomer.id);
+
+      // Assert
+      expect(result).toEqual({ accessToken: 'access-token', refreshToken: 'refresh-token' });
+      const [, refreshArgs] = (jwtService.signAsync as jest.Mock).mock.calls[1] as [any, { expiresIn: string }];
+      expect(refreshArgs.expiresIn).toBe('180d');
+    });
+
+    it('uses default RT TTL when role excludes CUSTOMER', async () => {
+      (configService as unknown as { auth: any }).auth = {
+        jwtAccessSecret: 'acc',
+        jwtRefreshSecret: 'ref',
+        jwtEmailChangeSecret: 'emc',
+        jwtVerifyEmailSecret: 'ver',
+        jwtExpiresIn: '15m',
+        refreshTokenExpiresInDefault: '5d',
+        refreshTokenExpiresInCustomer: '180d',
+      };
+      const withStaff: User & { roles: { role: { name: string } }[] } = {
+        ...mockUser,
+        roles: [{ role: { name: 'STAFF' } }],
+      } as any;
+      userRepository.findById.mockResolvedValue(withStaff);
+      sessionRepository.create.mockResolvedValue({ id: 'sess2', userId: withStaff.id, deviceOS: null, deviceUA: null, ipHash: null, lastSeenAt: new Date(), createdAt: new Date() } as Session);
+      jwtService.signAsync
+        .mockResolvedValueOnce('access-token')
+        .mockResolvedValueOnce('refresh-token');
+      refreshTokenRepository.create.mockResolvedValue({ jti: 'j4', userId: withStaff.id, sessionId: 'sess2', issuedAt: new Date(), revokedAt: null, rotatedFrom: null } as RefreshToken);
+
+      const result = await service.issueTokensForUser(withStaff.id);
+      expect(result).toEqual({ accessToken: 'access-token', refreshToken: 'refresh-token' });
+      const [, refreshArgs] = (jwtService.signAsync as jest.Mock).mock.calls[1] as [any, { expiresIn: string }];
+      expect(refreshArgs.expiresIn).toBe('5d');
+    });
   });
 
   describe('email & verification branches', () => {

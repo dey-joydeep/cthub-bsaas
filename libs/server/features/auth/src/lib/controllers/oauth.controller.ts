@@ -1,20 +1,22 @@
 import { BadRequestException, Controller, Get, HttpCode, HttpStatus, Param, Post, Query, Redirect, Request, UseGuards, UseInterceptors } from '@nestjs/common';
-import { CsrfGuard, JwtAuthGuard, JwtOptionalAuthGuard, OptionalUser, Public, ResponseEnvelopeInterceptor, SkipCsrf } from '@cthub-bsaas/server-core';
+import { CsrfGuard, JwtAuthGuard, JwtOptionalAuthGuard, OptionalUser, Public, ResponseEnvelopeInterceptor, SkipCsrf, CookiesInterceptor } from '@cthub-bsaas/server-core';
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 import { OAUTH_PORT, OAuthPort } from '@cthub-bsaas/server-contracts-auth';
 import { Inject } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import { AuthCookiesService } from '../services/auth-cookies.service';
 import { COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('auth')
 @UseGuards(CsrfGuard, JwtOptionalAuthGuard)
-@UseInterceptors(ResponseEnvelopeInterceptor)
+@UseInterceptors(CookiesInterceptor, ResponseEnvelopeInterceptor)
 export class OauthController {
   constructor(
     @Inject(OAUTH_PORT) private readonly oauth: OAuthPort,
     private readonly authService: AuthService,
     private readonly authCookies: AuthCookiesService,
+    private readonly jwtService: JwtService,
   ) {}
 
   @Public()
@@ -44,11 +46,17 @@ export class OauthController {
         return this.authService.linkSocialAccount(linkedUserId, profile.provider, profile.providerUserId).then(() => ({}) as const);
       }
       return this.authService.signInWithSocial(profile).then((tokens) => {
-        this.authCookies.issue({
-          csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
-          accessToken: tokens.accessToken,
-          refreshToken: tokens.refreshToken,
-        });
+        const decoded = this.jwtService.decode(tokens.accessToken) as { roles?: string[] } | null;
+        const roles = decoded?.roles ?? [];
+        const isCustomer = Array.isArray(roles) && roles.includes('CUSTOMER');
+        this.authCookies.issue(
+          {
+            csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+          },
+          { isCustomer },
+        );
         return {} as const;
       });
     });
@@ -68,4 +76,3 @@ export class OauthController {
     return typeof candidate === 'string' && candidate.length > 0 ? candidate : undefined;
   }
 }
-

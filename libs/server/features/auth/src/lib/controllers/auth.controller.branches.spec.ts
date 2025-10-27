@@ -12,6 +12,7 @@ describe('AuthController branches (core)', () => {
     'signIn' | 'signInWithTotp' | 'refreshToken' | 'logout'
   >>;
   let cookies: jest.Mocked<Pick<AuthCookiesService, 'issue' | 'rotateOnRefresh' | 'clear'>>;
+  let jwt: { decode: jest.Mock };
 
   beforeEach(() => {
     service = {
@@ -21,10 +22,12 @@ describe('AuthController branches (core)', () => {
       logout: jest.fn().mockResolvedValue(undefined),
     } as unknown as typeof service;
     cookies = { issue: jest.fn(), rotateOnRefresh: jest.fn(), clear: jest.fn() } as unknown as typeof cookies;
+    jwt = { decode: jest.fn(() => ({ roles: ['CUSTOMER'] })) };
     controller = new AuthController(
       service as unknown as AuthService,
       cookies as unknown as AuthCookiesService,
       { log: jest.fn() } as unknown as import('../services/audit.service').AuditService,
+      jwt as unknown as any,
     );
   });
 
@@ -32,7 +35,10 @@ describe('AuthController branches (core)', () => {
     service.signIn.mockResolvedValueOnce({ totpRequired: false, accessToken: 'at', refreshToken: 'rt' });
     const out1 = await controller.signIn({ email: 'e', password: 'p' } as unknown as LoginDto);
     expect(out1).toEqual({ totpRequired: false });
-    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'at', refreshToken: 'rt' }));
+    expect(cookies.issue).toHaveBeenCalledWith(
+      expect.objectContaining({ accessToken: 'at', refreshToken: 'rt' }),
+      expect.any(Object),
+    );
 
     service.signIn.mockResolvedValueOnce({ totpRequired: true, tempToken: 'tmp' });
     const out2 = await controller.signIn({ email: 'e', password: 'p' } as unknown as LoginDto);
@@ -43,19 +49,28 @@ describe('AuthController branches (core)', () => {
     // cookie present path
     const req1 = { headers: { cookie: 'bsaas_rt=x' } } as unknown as ExpressRequest;
     await controller.refresh({} as RefreshTokenDto, req1);
-    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'A1', refreshToken: 'R1' }));
+    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(
+      expect.objectContaining({ accessToken: 'A1', refreshToken: 'R1' }),
+      expect.any(Object),
+    );
 
     // body token path
     service.refreshToken.mockResolvedValueOnce({ accessToken: 'A2', refreshToken: 'R2' });
     const req2 = { headers: {} } as unknown as ExpressRequest;
     await controller.refresh({ refreshToken: 'from-body' } as RefreshTokenDto, req2);
-    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'A2', refreshToken: 'R2' }));
+    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(
+      expect.objectContaining({ accessToken: 'A2', refreshToken: 'R2' }),
+      expect.any(Object),
+    );
 
     // unrelated cookie header, use body
     service.refreshToken.mockResolvedValueOnce({ accessToken: 'A3', refreshToken: 'R3' });
     const req3 = { headers: { cookie: 'foo=bar; XSRF-TOKEN=abc' } } as unknown as ExpressRequest;
     await controller.refresh({ refreshToken: 'from-body-2' } as RefreshTokenDto, req3);
-    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'A3', refreshToken: 'R3' }));
+    expect(cookies.rotateOnRefresh).toHaveBeenCalledWith(
+      expect.objectContaining({ accessToken: 'A3', refreshToken: 'R3' }),
+      expect.any(Object),
+    );
 
     // service returns undefined -> throw
     service.refreshToken.mockResolvedValueOnce(undefined as unknown as Awaited<ReturnType<AuthService['refreshToken']>>);
@@ -89,7 +104,10 @@ describe('AuthController branches (core)', () => {
   it('TOTP login completes and sets cookies', async () => {
     const out = await controller.signInWithTotp({ tempToken: 't', totpCode: '123456' });
     expect(out).toEqual({});
-    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'AT', refreshToken: 'RT' }));
+    expect(cookies.issue).toHaveBeenCalledWith(
+      expect.objectContaining({ accessToken: 'AT', refreshToken: 'RT' }),
+      expect.any(Object),
+    );
   });
 
   it('logout clears cookies', async () => {

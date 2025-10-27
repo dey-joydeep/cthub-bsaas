@@ -4,12 +4,14 @@ import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 import { AuthService } from '../services/auth.service';
 import { AuthCookiesService } from '../services/auth-cookies.service';
 
+
 describe('OauthController (unit)', () => {
   let controller: OauthController;
   let authSvc: jest.Mocked<Pick<AuthService, 'linkSocialAccount' | 'unlinkSocialAccount' | 'signInWithSocial' | 'logout' | 'revokeSession' | 'listSessions'>>;
   let oauth: jest.Mocked<Pick<OAuthPort, 'start' | 'exchangeCode'>>;
 
   let cookies: jest.Mocked<Pick<AuthCookiesService, 'issue' | 'rotateOnRefresh' | 'clear'>>;
+  let jwt: { decode: jest.Mock };
 
   beforeEach(() => {
     authSvc = {
@@ -25,7 +27,13 @@ describe('OauthController (unit)', () => {
       exchangeCode: jest.fn(() => Promise.resolve({ provider: 'google', providerUserId: 'pid' })),
     } as unknown as typeof oauth;
     cookies = { issue: jest.fn(), rotateOnRefresh: jest.fn(), clear: jest.fn() } as unknown as jest.Mocked<Pick<AuthCookiesService, 'issue' | 'rotateOnRefresh' | 'clear'>>;
-    controller = new OauthController(oauth as unknown as OAuthPort, authSvc as unknown as AuthService, cookies as unknown as AuthCookiesService);
+    jwt = { decode: jest.fn(() => ({ roles: ['CUSTOMER'] })) };
+    controller = new OauthController(
+      oauth as unknown as OAuthPort,
+      authSvc as unknown as AuthService,
+      cookies as unknown as AuthCookiesService,
+      jwt as unknown as any,
+    );
   });
 
   it('oauthStart returns redirect instruction with 302', async () => {
@@ -50,7 +58,31 @@ describe('OauthController (unit)', () => {
     const out = await controller.oauthCallback('google', undefined, 'code123', 'state');
     expect(out).toEqual({});
     expect(authSvc.signInWithSocial).toHaveBeenCalled();
-    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'AT', refreshToken: 'RT' }));
+    expect(cookies.issue).toHaveBeenCalledWith(
+      expect.objectContaining({ accessToken: 'AT', refreshToken: 'RT' }),
+      expect.any(Object),
+    );
+  });
+
+  it('oauthCallback uses default TTL when roles are absent', async () => {
+    jwt.decode.mockReturnValueOnce({ roles: [] });
+    const out = await controller.oauthCallback('google', undefined, 'code123', 'state');
+    expect(out).toEqual({});
+    expect(cookies.issue).toHaveBeenCalled();
+  });
+
+  it('oauthCallback treats non-array roles as non-customer', async () => {
+    jwt.decode.mockReturnValueOnce({ roles: 'x' as unknown as string[] });
+    const out = await controller.oauthCallback('google', undefined, 'code123', 'state');
+    expect(out).toEqual({});
+    expect(cookies.issue).toHaveBeenCalled();
+  });
+
+  it('oauthCallback handles decode null safely', async () => {
+    jwt.decode.mockReturnValueOnce(null as any);
+    const out = await controller.oauthCallback('google', undefined, 'code123', 'state');
+    expect(out).toEqual({});
+    expect(cookies.issue).toHaveBeenCalled();
   });
 
   it('oauthCallback treats invalid typed user id as unauthenticated (branch)', async () => {

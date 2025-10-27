@@ -33,11 +33,12 @@ export class AuthCookiesService {
     }
   }
 
-  issue(params: { csrf: string; accessToken?: string; refreshToken?: string }): void {
+  issue(params: { csrf: string; accessToken?: string; refreshToken?: string }, opts?: { isCustomer?: boolean }): void {
     const domain = this.config.auth.cookieDomain;
+    const secure = this.config.app.isProduction;
     this.registry.set('XSRF-TOKEN', params.csrf, {
       httpOnly: false,
-      secure: true,
+      secure,
       sameSite: 'lax',
       path: '/',
       domain,
@@ -46,27 +47,30 @@ export class AuthCookiesService {
     if (params.accessToken) {
       this.registry.set('bsaas_at', params.accessToken, {
         httpOnly: true,
-        secure: true,
+        secure,
         sameSite: 'lax',
         path: '/',
         domain,
       });
     }
     if (params.refreshToken) {
-      const rtMaxAge = this.parseDurationToSeconds(this.config.auth.refreshTokenExpiresIn);
+      const ttlStr = opts?.isCustomer
+        ? this.config.auth.refreshTokenExpiresInCustomer ?? this.config.auth.refreshTokenExpiresInDefault
+        : this.config.auth.refreshTokenExpiresInDefault;
+      const rtMaxAge = this.parseDurationToSeconds(ttlStr);
       this.registry.set('bsaas_rt', params.refreshToken, {
         httpOnly: true,
-        secure: true,
+        secure,
         sameSite: 'lax',
         path: '/auth',
         domain,
-        ...(typeof rtMaxAge === 'number' ? { maxAge: rtMaxAge } : {}),
+        maxAge: rtMaxAge,
       });
     }
   }
 
-  rotateOnRefresh(params: { csrf: string; accessToken: string; refreshToken: string }): void {
-    this.issue(params);
+  rotateOnRefresh(params: { csrf: string; accessToken: string; refreshToken: string }, opts?: { isCustomer?: boolean }): void {
+    this.issue(params, opts);
   }
 
   clear(): void {

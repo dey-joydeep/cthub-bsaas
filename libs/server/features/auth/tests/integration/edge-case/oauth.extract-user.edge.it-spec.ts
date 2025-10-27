@@ -4,6 +4,7 @@ import type { OAuthPort } from '@cthub-bsaas/server-contracts-auth';
 import { OAUTH_PORT } from '@cthub-bsaas/server-contracts-auth';
 import { AuthService } from '../../../src/lib/services/auth.service';
 import { AuthCookiesService } from '../../../src/lib/services/auth-cookies.service';
+import { JwtService } from '@nestjs/jwt';
 
 /**
  * Edge-case coverage: exercise OauthController.extractUserId() branches
@@ -19,6 +20,7 @@ describe('OAuth extractUserId edge cases (integration harness)', () => {
         { provide: AuthService, useValue: {} },
         { provide: AuthCookiesService, useValue: { issue: jest.fn(), rotateOnRefresh: jest.fn(), clear: jest.fn() } },
         { provide: OAUTH_PORT, useValue: {} as unknown as OAuthPort },
+        { provide: JwtService, useValue: { decode: jest.fn(() => ({ roles: [] })) } },
       ],
     }).compile();
 

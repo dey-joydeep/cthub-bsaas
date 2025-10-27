@@ -12,6 +12,7 @@ import { CookieRegistry, CookiesInterceptor, RetryAfterFilter, ConfigModule } fr
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from '../../../src/lib/strategies/jwt.strategy';
 import { AuditService } from '../../../src/lib/services/audit.service';
+import { JwtService } from '@nestjs/jwt';
 
 describe('Rate limiting (edge-case)', () => {
   let app: INestApplication;
@@ -40,6 +41,7 @@ describe('Rate limiting (edge-case)', () => {
         { provide: WEB_AUTHN_PORT, useValue: webAuthn },
         { provide: RECOVERY_CODES_PORT, useValue: { generate: jest.fn(async () => ['r1']), verifyAndConsume: jest.fn(async () => true) } as RecoveryCodesPort },
         { provide: OAUTH_PORT, useValue: { start: async () => ({ redirectUrl: 'x' }) } },
+        { provide: JwtService, useValue: { decode: jest.fn(() => ({ roles: [] })) } },
         { provide: APP_GUARD, useClass: ThrottlerGuard },
         { provide: APP_FILTER, useClass: RetryAfterFilter },
         CookieRegistry,

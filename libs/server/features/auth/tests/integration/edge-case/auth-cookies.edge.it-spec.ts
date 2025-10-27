@@ -2,15 +2,25 @@ import { CookieRegistry, buildSetCookie } from '@cthub-bsaas/server-core';
 import type { ConfigService } from '@cthub-bsaas/server-core';
 import { AuthCookiesService } from '../../../src/lib/services/auth-cookies.service';
 
-const makeConfig = (opts: { domain?: string; ttl?: string }) => ({
+const makeConfig = (opts: { domain?: string; ttl?: string; isProd?: boolean }) => ({
   auth: {
     jwtAccessSecret: 'a',
     jwtRefreshSecret: 'b',
     jwtEmailChangeSecret: 'c',
     jwtVerifyEmailSecret: 'd',
     jwtExpiresIn: '1h',
-    refreshTokenExpiresIn: opts.ttl ?? '7d',
+    refreshTokenExpiresInDefault: opts.ttl ?? '7d',
+    refreshTokenExpiresInCustomer: '180d',
     cookieDomain: opts.domain ?? 'example.com',
+  },
+  app: {
+    port: 3000,
+    nodeEnv: opts.isProd ? 'production' : 'development',
+    isProduction: opts.isProd ?? true,
+    isDevelopment: !(opts.isProd ?? true),
+    isTest: false,
+    bodyLimitJson: '10mb',
+    bodyLimitUrlEncoded: '10mb',
   },
 });
 
@@ -54,7 +64,7 @@ describe('AuthCookiesService integration edge cases', () => {
     const registry2 = new CookieRegistry();
     const cfg2 = makeConfig({ ttl: '7d' });
     // Simulate missing TTL by deleting the field
-    (cfg2 as { auth: { refreshTokenExpiresIn?: string } }).auth.refreshTokenExpiresIn = undefined;
+    (cfg2 as { auth: { refreshTokenExpiresInDefault?: string } }).auth.refreshTokenExpiresInDefault = undefined as any;
     const service2 = new AuthCookiesService(registry2, cfg2 as unknown as ConfigService);
     service2.issue({ csrf: 'x', refreshToken: 'R' });
     const rt2 = registry2.drain().filter((c) => c.action === 'set' && c.name === 'bsaas_rt')[0];

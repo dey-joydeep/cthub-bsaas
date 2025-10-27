@@ -9,6 +9,7 @@ import { AuditService } from '../services/audit.service';
 import { AuthCookiesService } from '../services/auth-cookies.service';
 import { AuthService } from '../services/auth.service';
 import type { SignInHttpResponse, SimpleOk } from '../types/auth.types';
+import { JwtService } from '@nestjs/jwt';
 import { parseRefreshCookie } from '../utils/cookie.util';
 import { SignInTotpDto } from '../dto/signin-totp.dto';
 
@@ -20,6 +21,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly authCookies: AuthCookiesService,
     private readonly audit: AuditService,
+    private readonly jwtService: JwtService,
   ) {}
 
   @SkipCsrf()
@@ -29,11 +31,15 @@ export class AuthController {
   signIn(@Body() signInDto: LoginDto): Promise<SignInHttpResponse> {
     return this.authService.signIn(signInDto.email, signInDto.password).then((result) => {
       const csrf = (Math.random().toString(36) + Math.random().toString(36)).slice(2);
-      this.authCookies.issue({
-        csrf,
-        accessToken: result.totpRequired ? undefined : result.accessToken,
-        refreshToken: result.totpRequired ? undefined : result.refreshToken,
-      });
+      const isCustomer = !result.totpRequired && !!result.accessToken && this.isCustomerFromAccess(result.accessToken);
+      this.authCookies.issue(
+        {
+          csrf,
+          accessToken: result.totpRequired ? undefined : result.accessToken,
+          refreshToken: result.totpRequired ? undefined : result.refreshToken,
+        },
+        { isCustomer },
+      );
       return result.totpRequired ? { totpRequired: true, tempToken: result.tempToken } : { totpRequired: false };
     });
   }
@@ -45,13 +51,24 @@ export class AuthController {
   @Post('login/totp')
   signInWithTotp(@Body() signInWithTotpDto: SignInTotpDto): Promise<Record<string, never>> {
     return this.authService.signInWithTotp(signInWithTotpDto.tempToken, signInWithTotpDto.totpCode).then((tokens) => {
-      this.authCookies.issue({
-        csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-      });
+      const isCustomer = this.isCustomerFromAccess(tokens.accessToken);
+      this.authCookies.issue(
+        {
+          csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+        },
+        { isCustomer },
+      );
       return {} as const;
     });
+  }
+
+  private isCustomerFromAccess(accessToken?: string): boolean {
+    if (!accessToken) return false;
+    const decoded = this.jwtService.decode(accessToken) as { roles?: string[] } | null;
+    const roles = decoded?.roles ?? [];
+    return Array.isArray(roles) && roles.includes('CUSTOMER');
   }
 
   /** Rotate refresh token and issue a new access token */
@@ -72,11 +89,15 @@ export class AuthController {
       return Promise.reject(new BadRequestException(AUTH_MESSAGE_KEYS.ERROR.MISSING_REFRESH_TOKEN));
     }
     return this.authService.refreshToken(token).then((result) => {
-      this.authCookies.rotateOnRefresh({
-        csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
-        accessToken: result!.accessToken,
-        refreshToken: result!.refreshToken,
-      });
+      const isCustomer = this.isCustomerFromAccess(result!.accessToken);
+      this.authCookies.rotateOnRefresh(
+        {
+          csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
+          accessToken: result!.accessToken,
+          refreshToken: result!.refreshToken,
+        },
+        { isCustomer },
+      );
       return {} as const;
     });
   }

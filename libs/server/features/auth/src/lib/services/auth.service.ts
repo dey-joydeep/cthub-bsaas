@@ -285,9 +285,14 @@ export class AuthService {
     sessionId: string,
   ): Promise<TokenPair> {
     const jti = randomUUID();
+    const roles = user.roles.map((r) => r.role.name);
+    const isCustomer = roles.includes('CUSTOMER');
+    const rtTtl = isCustomer
+      ? this.configService.auth.refreshTokenExpiresInCustomer ?? this.configService.auth.refreshTokenExpiresInDefault
+      : this.configService.auth.refreshTokenExpiresInDefault;
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
-        { sub: user.id, email: user.email, sessionId, roles: user.roles.map((userRole) => userRole.role.name) },
+        { sub: user.id, email: user.email, sessionId, roles },
         {
           secret: this.configService.auth.jwtAccessSecret,
           expiresIn: this.configService.auth.jwtExpiresIn,
@@ -297,7 +302,7 @@ export class AuthService {
         { sub: user.id, jti },
         {
           secret: this.configService.auth.jwtRefreshSecret,
-          expiresIn: this.configService.auth.refreshTokenExpiresIn,
+          expiresIn: rtTtl,
         },
       ),
     ]);

@@ -125,9 +125,9 @@ Canonical routes (implemented)
 - **All 429:** include **`Retry-After`** (seconds)
 
 Implementation cookie names (canonical)
-- Access: `bsaas_at` (HttpOnly, SameSite=Lax, Secure, path=/)
-- Refresh: `bsaas_rt` (HttpOnly, SameSite=Lax, Secure, path=/auth). The refresh token is consumed from this cookie; body token is only read when the cookie is absent. If both are present, the request is rejected with **400**.
-- CSRF: `XSRF-TOKEN` (non‑HttpOnly, SameSite=Lax, Secure, path=/)
+- Access: `bsaas_at` (HttpOnly, SameSite=Lax, Secure: prod only, path=/)
+- Refresh: `bsaas_rt` (HttpOnly, SameSite=Lax, Secure: prod only, path=/auth; Max‑Age aligns with `REFRESH_TOKEN_EXPIRES_IN_DEFAULT` or `REFRESH_TOKEN_EXPIRES_IN_CUSTOMER` based on role; default Customer: 180d). The refresh token is consumed from this cookie; body token is only read when the cookie is absent. If both are present, the request is rejected with **400**.
+- CSRF: `XSRF-TOKEN` (non‑HttpOnly, SameSite=Lax, Secure: prod only, path=/)
 
 > OpenAPI cookieAuth now uses `bsaas_at` to match implementation.
 

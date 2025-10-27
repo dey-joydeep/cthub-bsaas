@@ -39,6 +39,26 @@ describe('AuthController (Integration) - success flows', () => {
   let configService: ConfigService;
   const cleanupTasks: Array<() => Promise<void>> = [];
 
+  const parseDurationToSeconds = (input?: string): number | undefined => {
+    if (!input) return undefined;
+    const m = String(input).trim().match(/^(\d+)\s*([a-zA-Z])?$/);
+    if (!m) return undefined;
+    const value = parseInt(m[1], 10);
+    const unit = (m[2] || 's').toLowerCase();
+    switch (unit) {
+      case 's':
+        return value;
+      case 'm':
+        return value * 60;
+      case 'h':
+        return value * 60 * 60;
+      case 'd':
+        return value * 60 * 60 * 24;
+      default:
+        return undefined;
+    }
+  };
+
   const decryptTotpSecret = async (userId: string): Promise<string> => {
     const record = await harness.prisma.credentialTOTP.findUnique({ where: { userId } });
     expect(record).toBeTruthy();
@@ -103,6 +123,60 @@ describe('AuthController (Integration) - success flows', () => {
     request(harness.app.getHttpServer())
       .post('/auth/login')
       .send({ email, password });
+
+  it('issues RT cookie with Max-Age per config for Customer login', async () => {
+    const customer = await harness.registerUser({ roles: [UserRole.CUSTOMER] });
+    const res = await loginRequest(customer.email, 'password');
+    expect(res.status).toBe(200);
+    const cookies = harness.toCookiesArray(res.headers['set-cookie']);
+    const arr = harness.expectCookies(cookies, { requireAuth: true });
+    const expectedSec = parseDurationToSeconds(
+      configService.auth.refreshTokenExpiresInCustomer ?? configService.auth.refreshTokenExpiresInDefault,
+    ) ?? 15552000;
+    expect(arr.some((c) => c.startsWith('bsaas_rt=') && c.includes(`Max-Age=${expectedSec}`))).toBe(true);
+  });
+
+  it('issues RT cookie with Max-Age per config for non-customer (STAFF) login', async () => {
+    const staff = await harness.registerUser({ roles: [UserRole.STAFF] });
+    const res = await loginRequest(staff.email, 'password');
+    expect(res.status).toBe(200);
+    const cookies = harness.toCookiesArray(res.headers['set-cookie']);
+    const arr = harness.expectCookies(cookies, { requireAuth: true });
+    const expectedSec = parseDurationToSeconds(configService.auth.refreshTokenExpiresInDefault) ?? 7 * 24 * 60 * 60;
+    expect(arr.some((c) => c.startsWith('bsaas_rt=') && c.includes(`Max-Age=${expectedSec}`))).toBe(true);
+  });
+
+  it('rotates RT with Max-Age ≈ 180d for Customer refresh', async () => {
+    const customer = await harness.registerUser({ roles: [UserRole.CUSTOMER] });
+    const login = await loginRequest(customer.email, 'password');
+    expect(login.status).toBe(200);
+    const cookieHeader = harness.toCookiesArray(login.headers['set-cookie']);
+    const refresh = await harness
+      .withAuth(request(harness.app.getHttpServer()).post('/auth/refresh'), cookieHeader)
+      .send({});
+    expect(refresh.status).toBe(200);
+    const cookies = harness.toCookiesArray(refresh.headers['set-cookie']);
+    const arr = harness.expectCookies(cookies, { requireAuth: true });
+    const expectedSec = parseDurationToSeconds(
+      configService.auth.refreshTokenExpiresInCustomer ?? configService.auth.refreshTokenExpiresInDefault,
+    ) ?? 15552000;
+    expect(arr.some((c) => c.startsWith('bsaas_rt=') && c.includes(`Max-Age=${expectedSec}`))).toBe(true);
+  });
+
+  it('rotates RT with Max-Age ≈ 7d for STAFF refresh', async () => {
+    const staff = await harness.registerUser({ roles: [UserRole.STAFF] });
+    const login = await loginRequest(staff.email, 'password');
+    expect(login.status).toBe(200);
+    const cookieHeader = harness.toCookiesArray(login.headers['set-cookie']);
+    const refresh = await harness
+      .withAuth(request(harness.app.getHttpServer()).post('/auth/refresh'), cookieHeader)
+      .send({});
+    expect(refresh.status).toBe(200);
+    const cookies = harness.toCookiesArray(refresh.headers['set-cookie']);
+    const arr = harness.expectCookies(cookies, { requireAuth: true });
+    const expectedSec = parseDurationToSeconds(configService.auth.refreshTokenExpiresInDefault) ?? 7 * 24 * 60 * 60;
+    expect(arr.some((c) => c.startsWith('bsaas_rt=') && c.includes(`Max-Age=${expectedSec}`))).toBe(true);
+  });
 
   const computeProviderUserId = (code: string) => `dev_${createHash('sha256').update(code).digest('hex').slice(0, 12)}`;
   const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
@@ -694,6 +768,29 @@ describe('AuthController (Integration) - success flows', () => {
       expect(startRes.headers.location).toBeDefined();
     });
 
+    it('OAuth sign-in issues RT cookie Max-Age per role (Customer)', async () => {
+      const user = await harness.registerUser({ roles: [UserRole.CUSTOMER] });
+      const originalFlag = getRoutePublicFlag(OauthController, 'oauthCallback');
+      try {
+        setRoutePublicFlag(OauthController, 'oauthCallback', true);
+        const code = 'oauth-customer-code';
+        await harness.prisma.socialAccount.create({
+          data: { userId: user.id, provider: 'google', providerUserId: computeProviderUserId(code) },
+        });
+        const res = await request(harness.app.getHttpServer())
+          .get(`/auth/oauth/google/callback?code=${code}`)
+          .expect(200);
+        const cookies = harness.toCookiesArray(res.headers['set-cookie']);
+        const arr = harness.expectCookies(cookies, { requireAuth: true });
+        const expectedSec = parseDurationToSeconds(
+          configService.auth.refreshTokenExpiresInCustomer ?? configService.auth.refreshTokenExpiresInDefault,
+        ) ?? 15552000;
+        expect(arr.some((c) => c.startsWith('bsaas_rt=') && c.includes(`Max-Age=${expectedSec}`))).toBe(true);
+      } finally {
+        setRoutePublicFlag(OauthController, 'oauthCallback', originalFlag);
+      }
+    });
+
     it('completes OAuth sign-in, link, and unlink flows', async () => {
       const user = await harness.registerUser();
       const originalFlag = getRoutePublicFlag(OauthController, 'oauthCallback');
@@ -882,8 +979,14 @@ describe('AuthController (Integration) - success flows', () => {
           .spyOn(controllerAuthService, 'refreshToken')
           .mockResolvedValue({ accessToken: 'a', refreshToken: 'r' });
 
-        await controller.refresh({} as RefreshTokenDto, { headers: { cookie: 'bsaas_rt=cookie-token' } } as unknown as ExpressRequest);
-        expect(rotateSpy).toHaveBeenCalledWith(expect.objectContaining({ refreshToken: 'r' }));
+        await controller.refresh(
+          {} as RefreshTokenDto,
+          { headers: { cookie: 'bsaas_rt=cookie-token' } } as unknown as ExpressRequest,
+        );
+        expect(rotateSpy).toHaveBeenCalledWith(
+          expect.objectContaining({ refreshToken: 'r' }),
+          expect.any(Object),
+        );
 
         await controller.refresh({ refreshToken: 'body-token' } as RefreshTokenDto, { headers: {} } as unknown as ExpressRequest);
         expect(rotateSpy).toHaveBeenCalledTimes(2);
@@ -922,6 +1025,7 @@ describe('AuthController (Integration) - success flows', () => {
         expect(cookieSpy).toHaveBeenNthCalledWith(
           1,
           expect.objectContaining({ accessToken: undefined, refreshToken: undefined }),
+          expect.any(Object),
         );
 
         const tokenResult: AuthSignInResult = {
@@ -936,6 +1040,7 @@ describe('AuthController (Integration) - success flows', () => {
         expect(cookieSpy).toHaveBeenNthCalledWith(
           2,
           expect.objectContaining({ accessToken: 'access', refreshToken: 'refresh' }),
+          expect.any(Object),
         );
       });
 
@@ -1014,7 +1119,7 @@ describe('AuthController (Integration) - success flows', () => {
             action: 'set',
             name: 'XSRF-TOKEN',
             value: 'csrf-only',
-            options: expect.objectContaining({ httpOnly: false, secure: true, sameSite: 'lax', path: '/' }),
+            options: expect.objectContaining({ httpOnly: false, sameSite: 'lax', path: '/' }),
           }),
         ]);
       });
@@ -1034,7 +1139,7 @@ describe('AuthController (Integration) - success flows', () => {
               action: 'set',
               name: 'bsaas_at',
               value: 'access-token',
-              options: expect.objectContaining({ domain: 'example.com', httpOnly: true, secure: true, sameSite: 'lax', path: '/' }),
+              options: expect.objectContaining({ domain: 'example.com', httpOnly: true, sameSite: 'lax', path: '/' }),
             }),
           );
           const refresh = commands.find((cmd) => cmd.name === 'bsaas_rt');
@@ -1043,7 +1148,7 @@ describe('AuthController (Integration) - success flows', () => {
               action: 'set',
               name: 'bsaas_rt',
               value: 'refresh-token',
-              options: expect.objectContaining({ domain: 'example.com', httpOnly: true, secure: true, sameSite: 'lax', path: '/auth' }),
+              options: expect.objectContaining({ domain: 'example.com', httpOnly: true, sameSite: 'lax', path: '/auth' }),
             }),
           );
         } finally {
@@ -1147,12 +1252,48 @@ describe('AuthController (Integration) - success flows', () => {
           .send({ response: {} })
           .expect(200);
         expect(loginFinishRes.body.data).toEqual({});
+        const finCookies = harness.toCookiesArray(loginFinishRes.headers['set-cookie']);
+        const arr = harness.expectCookies(finCookies, { requireAuth: true });
+        const expectedSec = parseDurationToSeconds(
+          configService.auth.refreshTokenExpiresInCustomer ?? configService.auth.refreshTokenExpiresInDefault,
+        ) ?? 15552000;
+        expect(arr.some((c) => c.startsWith('bsaas_rt=') && c.includes(`Max-Age=${expectedSec}`))).toBe(true);
       } finally {
         setRoutePublicFlag(WebauthnController, 'webauthnLoginFinish', originalFinishFlag);
       }
 
       const webAuthnAdapter = harness.app.get<WebAuthnPort>(WEB_AUTHN_PORT);
       expect(webAuthnAdapter).toBeDefined();
+    });
+
+    it('WebAuthn login finish sets RT Max-Age per non-customer role (STAFF)', async () => {
+      const staff = await harness.registerUser({ roles: [UserRole.STAFF] });
+      const loginRes = await loginRequest(staff.email, 'password').expect(200);
+      const cookies = harness.expectCookies(harness.toCookiesArray(loginRes.headers['set-cookie']), { requireAuth: true });
+
+      await harness
+        .withAuth(request(harness.app.getHttpServer()).post('/auth/webauthn/register/start'), cookies)
+        .send({ username: 'Staff Device' })
+        .expect(200);
+      await harness
+        .withAuth(request(harness.app.getHttpServer()).post('/auth/webauthn/register/finish'), cookies)
+        .send({ response: {} })
+        .expect(200);
+
+      const originalFinishFlag = getRoutePublicFlag(WebauthnController, 'webauthnLoginFinish');
+      try {
+        setRoutePublicFlag(WebauthnController, 'webauthnLoginFinish', false);
+        const finish = await harness
+          .withAuth(request(harness.app.getHttpServer()).post('/auth/webauthn/login/finish'), cookies)
+          .send({ response: {} })
+          .expect(200);
+        const finCookies = harness.toCookiesArray(finish.headers['set-cookie']);
+        const arr = harness.expectCookies(finCookies, { requireAuth: true });
+        const expectedSec = parseDurationToSeconds(configService.auth.refreshTokenExpiresInDefault) ?? 7 * 24 * 60 * 60;
+        expect(arr.some((c) => c.startsWith('bsaas_rt=') && c.includes(`Max-Age=${expectedSec}`))).toBe(true);
+      } finally {
+        setRoutePublicFlag(WebauthnController, 'webauthnLoginFinish', originalFinishFlag);
+      }
     });
 
     it('requests email verification via alias endpoint', async () => {

@@ -10,7 +10,8 @@ export interface AuthConfig {
   jwtEmailChangeSecret: string;
   jwtVerifyEmailSecret: string;
   jwtExpiresIn: string;
-  refreshTokenExpiresIn: string;
+  refreshTokenExpiresInDefault?: string;
+  refreshTokenExpiresInCustomer?: string;
   cookieDomain?: string;
 }
 
@@ -111,7 +112,9 @@ export const configuration = registerAs('config', () => ({
     jwtVerifyEmailSecret:
       process.env.JWT_VERIFY_EMAIL_SECRET || process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET || 'test-verify-email-secret',
     jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1h',
-    refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '7d',
+    // Separate TTLs for refresh token cookie/JWT
+    refreshTokenExpiresInDefault: process.env.REFRESH_TOKEN_EXPIRES_IN_DEFAULT || '7d',
+    refreshTokenExpiresInCustomer: process.env.REFRESH_TOKEN_EXPIRES_IN_CUSTOMER || '180d',
     cookieDomain: process.env.AUTH_COOKIE_DOMAIN,
   },
   cors: {

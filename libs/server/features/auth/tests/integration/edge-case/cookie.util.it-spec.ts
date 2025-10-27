@@ -10,7 +10,6 @@ const buildConfig = (overrides: Partial<AuthConfig>): ConfigService =>
       jwtEmailChangeSecret: 'email-change-test',
       jwtVerifyEmailSecret: 'verify-test',
       jwtExpiresIn: '15m',
-      refreshTokenExpiresIn: '7d',
       cookieDomain: undefined,
       ...overrides,
     },
