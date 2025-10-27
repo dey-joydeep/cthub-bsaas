@@ -470,6 +470,33 @@ describe('AuthService', () => {
       expect(result).toEqual({ accessToken: 'new-at', refreshToken: 'new-rt' });
     });
 
+    it('uses default RT TTL when customer TTL is undefined (fallback branch)', async () => {
+      (configService as unknown as { auth: any }).auth = {
+        jwtAccessSecret: 'acc',
+        jwtRefreshSecret: 'ref',
+        jwtEmailChangeSecret: 'emc',
+        jwtVerifyEmailSecret: 'ver',
+        jwtExpiresIn: '15m',
+        refreshTokenExpiresInDefault: '10d',
+        // intentionally omit refreshTokenExpiresInCustomer to hit ?? fallback
+      };
+      const withCustomer: User & { roles: { role: { name: string } }[] } = {
+        ...mockUser,
+        roles: [{ role: { name: 'CUSTOMER' } }],
+      } as any;
+      userRepository.findById.mockResolvedValue(withCustomer);
+      sessionRepository.create.mockResolvedValue({ id: 'sess-fb', userId: withCustomer.id, deviceOS: null, deviceUA: null, ipHash: null, lastSeenAt: new Date(), createdAt: new Date() } as Session);
+      jwtService.signAsync
+        .mockResolvedValueOnce('access-token')
+        .mockResolvedValueOnce('refresh-token');
+      refreshTokenRepository.create.mockResolvedValue({ jti: 'j-fb', userId: withCustomer.id, sessionId: 'sess-fb', issuedAt: new Date(), revokedAt: null, rotatedFrom: null } as RefreshToken);
+
+      const result = await service.issueTokensForUser(withCustomer.id);
+      expect(result).toEqual({ accessToken: 'access-token', refreshToken: 'refresh-token' });
+      const [, refreshArgs] = (jwtService.signAsync as jest.Mock).mock.calls[1] as [any, { expiresIn: string }];
+      expect(refreshArgs.expiresIn).toBe('10d');
+    });
+
     it('logout revokes existing session when found', async () => {
       sessionRepository.findById.mockResolvedValue({ id: 's1', userId: mockUserWithRoles.id, deviceOS: null, deviceUA: null, ipHash: null, lastSeenAt: new Date(), createdAt: new Date() } as Session);
       await expect(service.logout('s1')).resolves.toBeUndefined();
