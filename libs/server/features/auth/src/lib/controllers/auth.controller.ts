@@ -1,5 +1,5 @@
 import { CookiesInterceptor, CsrfGuard, JwtAuthGuard, JwtOptionalAuthGuard, ResponseEnvelopeInterceptor, SkipCsrf } from '@cthub-bsaas/server-core';
-import { COMMON_ERROR_CODES } from '@cthub-bsaas/shared';
+import { COMMON_MESSAGE_KEYS, AUTH_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 import { BadRequestException, Body, Controller, HttpCode, HttpStatus, Post, Request, UseGuards, UseInterceptors } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { Request as ExpressRequest } from 'express';
@@ -64,12 +64,12 @@ export class AuthController {
 
     if (tokenFromCookie && bodyToken) {
       this.audit?.log?.('refresh_both_tokens_provided', { hasCookie: true, hasBody: true });
-      return Promise.reject(new BadRequestException(COMMON_ERROR_CODES.VALIDATION));
+      return Promise.reject(new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION));
     }
 
     const token = tokenFromCookie ?? (bodyToken ? bodyToken : undefined);
     if (!token) {
-      return Promise.reject(new BadRequestException('error.auth.missing_refresh_token'));
+      return Promise.reject(new BadRequestException(AUTH_MESSAGE_KEYS.ERROR.MISSING_REFRESH_TOKEN));
     }
     return this.authService.refreshToken(token).then((result) => {
       this.authCookies.rotateOnRefresh({

@@ -9,7 +9,7 @@ import {
   IUserRepository,
 } from '@cthub-bsaas/server-contracts-auth';
 import { AuditService } from './audit.service';
-import { COMMON_ERROR_CODES } from '@cthub-bsaas/shared';
+import { COMMON_MESSAGE_KEYS, AUTH_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 
 @Injectable()
 export class PasskeysService {
@@ -28,7 +28,7 @@ export class PasskeysService {
 
   async delete(userId: string, credentialId: string): Promise<{ success: true }> {
     if (!credentialId || credentialId.length === 0) {
-      throw new BadRequestException(COMMON_ERROR_CODES.VALIDATION);
+      throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION);
     }
     const [count, user, social] = await Promise.all([
       this.passkeys.countByUser(userId),
@@ -39,12 +39,12 @@ export class PasskeysService {
     // block deleting the last method (no password, no socials, and only one passkey)
     if (count <= 1 && !hasPassword && social.length === 0) {
       this.audit?.log('webauthn_passkey_delete_blocked_last_method', { userId, credentialId });
-      throw new UnauthorizedException('error.auth.cannot_delete_last_method');
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.CANNOT_UNLINK_LAST_METHOD);
     }
     const ok = await this.passkeys.deleteForUser(userId, credentialId);
     if (!ok) {
       this.audit?.log('webauthn_passkey_delete_not_found', { userId, credentialId });
-      throw new UnauthorizedException('error.auth.not_found');
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.PASSKEY_NOT_FOUND);
     }
     this.audit?.log('webauthn_passkey_delete', { userId, credentialId });
     return { success: true } as const;

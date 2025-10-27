@@ -3,6 +3,7 @@ import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@
 import { Reflector } from '@nestjs/core';
 import { AuthenticatedUser, UserRole } from '@cthub-bsaas/shared';
 import { ROLES_KEY } from '../../decorators/roles.decorator';
+import { AUTH_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 
 /**
  * Role hierarchy: expanding a user's roles "downward" (ADMIN ⇒ OWNER ⇒ STAFF ⇒ CUSTOMER ⇒ GUEST).
@@ -60,19 +61,19 @@ export class RolesGuard implements CanActivate {
     const req = ctx.switchToHttp().getRequest<{ user?: AuthenticatedUser }>();
     const user = req.user;
     if (!user) {
-      throw new ForbiddenException('User not authenticated');
+      throw new ForbiddenException(AUTH_MESSAGE_KEYS.ERROR.UNAUTHENTICATED);
     }
 
     // Expand the user's roles DOWNWARD according to hierarchy
     const expanded = expandUserRolesDownward(normalizeUserRoles(user.roles));
     if (expanded.length === 0) {
-      throw new ForbiddenException('User has no roles');
+      throw new ForbiddenException(AUTH_MESSAGE_KEYS.ERROR.NO_ROLES);
     }
 
     // Check if any required role is included in the user's expanded set
     const ok = required.some((r) => expanded.includes(r));
     if (!ok) {
-      throw new ForbiddenException(`Insufficient permissions. Required roles: ${required.join(', ')}`);
+      throw new ForbiddenException(AUTH_MESSAGE_KEYS.ERROR.INSUFFICIENT_PERMISSIONS);
     }
     return true;
   }

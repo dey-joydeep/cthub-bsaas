@@ -3,6 +3,7 @@ import { JwtAuthGuard } from '@cthub-bsaas/server-core';
 import { TOTP_PORT, TotpPort } from '@cthub-bsaas/server-contracts-auth';
 import { VerifyTotpDto } from '../dto/verify-totp.dto';
 import { Throttle } from '@nestjs/throttler';
+import { AUTH_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 
 /**
  * @public
@@ -28,7 +29,7 @@ export class TotpController {
   public async enrollFinish(@Request() req: { user: { userId: string } }, @Body() verifyTotpDto: VerifyTotpDto): Promise<{ success: true }> {
     const isVerified = await this.totpService.verifyToken(req.user.userId, verifyTotpDto.token);
     if (!isVerified) {
-      throw new UnauthorizedException('Invalid TOTP token');
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_TOTP_TOKEN);
     }
     return { success: true };
   }

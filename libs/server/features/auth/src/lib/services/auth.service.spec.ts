@@ -8,6 +8,7 @@ import * as bcrypt from 'bcryptjs';
 import { ICredentialTotpRepository, IRefreshTokenRepository, ISessionRepository, IUserRepository, TotpPort, EMAIL_PORT, EmailPort, USER_REPOSITORY, SESSION_REPOSITORY, REFRESH_TOKEN_REPOSITORY, CREDENTIAL_TOTP_REPOSITORY, TOTP_PORT, EMAIL_VERIFICATION_REPOSITORY, IEmailVerificationRepository, EmailVerificationRecord, PASSWORD_RESET_REPOSITORY, IPasswordResetRepository, PasswordResetRecord, SOCIAL_ACCOUNT_REPOSITORY, OAuthProfile, INVITE_PORT, InvitePort } from '@cthub-bsaas/server-contracts-auth';
 import { AuditService } from '../services/audit.service';
 import { AuthService } from './auth.service';
+import { AUTH_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 
 jest.mock('bcryptjs');
 
@@ -607,7 +608,7 @@ describe('AuthService', () => {
       userRepository.findById.mockResolvedValue(mockUserWithRoles);
       userRepository.findByEmail.mockResolvedValue(mockUserWithRoles);
 
-      await expect(service.requestEmailChange('user-id', 'new@example.com')).rejects.toThrow('error.auth.email_already_exists');
+      await expect(service.requestEmailChange('user-id', 'new@example.com')).rejects.toThrow(AUTH_MESSAGE_KEYS.ERROR.EMAIL_ALREADY_EXISTS);
     });
 
     it('should confirm an email change with a valid token', async () => {

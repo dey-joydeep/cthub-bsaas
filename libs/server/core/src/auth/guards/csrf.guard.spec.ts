@@ -1,6 +1,7 @@
 import { ForbiddenException, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { CsrfGuard, SKIP_CSRF_KEY, SkipCsrf } from './csrf.guard';
+import { COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 import { mock } from 'jest-mock-extended';
 import type { HttpArgumentsHost } from '@nestjs/common/interfaces';
 
@@ -81,7 +82,7 @@ describe('CsrfGuard', () => {
         cookies: { 'XSRF-TOKEN': token },
       });
       expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
-      expect(() => guard.canActivate(context)).toThrow('error.security.csrf_failed');
+      expect(() => guard.canActivate(context)).toThrow(COMMON_MESSAGE_KEYS.ERROR.CSRF_FAILED);
     });
 
     it('should throw ForbiddenException if header is missing but cookie is present', () => {

@@ -26,8 +26,12 @@ components:
       properties:
         code:
           type: string
+          description: Stable error code identifier
+          example: error.auth.invalid_credentials
         message:
           type: string
+          description: i18n message key (client maps to localized string)
+          example: error.auth.invalid_credentials
         correlationId:
           type: string
       required: [code, message]

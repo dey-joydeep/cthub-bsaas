@@ -26,7 +26,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AuditService } from './audit.service';
 import type { AuthSignInResult, TokenPair } from '../types/auth.types';
 import type { OAuthProfile } from '@cthub-bsaas/server-contracts-auth';
-import { AUTH_ERROR_CODES } from '@cthub-bsaas/shared';
+import { AUTH_MESSAGE_KEYS, COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 import { RATE_LIMITER, type RateLimiter } from '@cthub-bsaas/server-infrastructure';
 import { Prisma, User } from '@prisma/client';
 import { RegistrationCompleteInput } from '@cthub-bsaas/server-contracts-auth';
@@ -111,14 +111,14 @@ export class AuthService {
   public async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
     const user = await this.userRepository.findById(userId);
     if (!user || !user.passwordHash) {
-      throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_CREDENTIALS);
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_CREDENTIALS);
     }
     const ok = await bcrypt.compare(currentPassword, user.passwordHash);
     if (!ok) {
-      throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_CREDENTIALS);
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_CREDENTIALS);
     }
     if (currentPassword === newPassword) {
-      throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_CREDENTIALS);
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_CREDENTIALS);
     }
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await this.userRepository.update(user.id, { passwordHash });
@@ -128,11 +128,11 @@ export class AuthService {
   public async requestEmailChange(userId: string, newEmail: string): Promise<void> {
     const user = await this.userRepository.findById(userId);
     if (!user) {
-      throw new UnauthorizedException(AUTH_ERROR_CODES.USER_NOT_FOUND);
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.USER_NOT_FOUND);
     }
     const existingUser = await this.userRepository.findByEmail(newEmail);
     if (existingUser) {
-      throw new BadRequestException(AUTH_ERROR_CODES.EMAIL_ALREADY_EXISTS);
+      throw new BadRequestException(AUTH_MESSAGE_KEYS.ERROR.EMAIL_ALREADY_EXISTS);
     }
     const token = await this.jwtService.signAsync(
       { sub: userId, aud: 'email-change', email: newEmail },
@@ -159,18 +159,18 @@ export class AuthService {
       );
       if (aud !== 'email-change') {
         this.audit.log('email_change_failure', { result: 'failure', reason: 'invalid_audience' });
-        throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_VERIFY_TOKEN);
+        throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_VERIFY_TOKEN);
       }
       const user = await this.userRepository.findById(sub);
       if (!user) {
         this.audit.log('email_change_failure', { result: 'failure', reason: 'user_not_found' });
-        throw new UnauthorizedException(AUTH_ERROR_CODES.USER_NOT_FOUND);
+        throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.USER_NOT_FOUND);
       }
       await this.userRepository.update(user.id, { email, emailVerifiedAt: new Date() } as Partial<User>);
       this.audit.log('email_change_success', { userId: user.id });
     } catch {
       this.audit.log('email_change_failure', { result: 'failure', reason: 'invalid_or_expired_token' });
-      throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_OR_EXPIRED_VERIFY_TOKEN);
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_OR_EXPIRED_VERIFY_TOKEN);
     }
   }
 
@@ -178,12 +178,12 @@ export class AuthService {
     const user = await this.userRepository.findByEmail(email);
     if (!user || !user.passwordHash) {
       this.audit.log('login_password_failure', { result: 'failure', reason: 'invalid_credentials' });
-      throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_CREDENTIALS);
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_CREDENTIALS);
     }
     const isPasswordValid = await bcrypt.compare(pass, user.passwordHash);
     if (!isPasswordValid) {
       this.audit.log('login_password_failure', { result: 'failure', reason: 'invalid_credentials', userId: user.id });
-      throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_CREDENTIALS);
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_CREDENTIALS);
     }
     const totpCredential = await this.credentialTotpRepository.findByUserId(user.id);
     if (totpCredential && totpCredential.verified) {
@@ -210,17 +210,17 @@ export class AuthService {
       });
       if (aud !== 'totp') {
         this.audit.log('login_totp_failure', { result: 'failure', reason: 'invalid_totp_token' });
-        throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_TOTP_TOKEN);
+        throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_TOTP_TOKEN);
       }
       const isTotpValid = await this.totpService.verifyToken(sub, totpCode);
       if (!isTotpValid) {
         this.audit.log('login_totp_failure', { result: 'failure', reason: 'invalid_totp_code', userId: sub });
-        throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_TOTP_CODE);
+        throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_TOTP_CODE);
       }
       const user = await this.userRepository.findById(sub);
       if (!user) {
         this.audit.log('login_totp_failure', { result: 'failure', reason: 'user_not_found', userId: sub });
-        throw new UnauthorizedException(AUTH_ERROR_CODES.USER_NOT_FOUND);
+        throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.USER_NOT_FOUND);
       }
       const session = await this.sessionRepository.create({ userId: user.id });
       const tokens = await this.generateTokens(user, session.id);
@@ -228,7 +228,7 @@ export class AuthService {
       return tokens;
     } catch {
       this.audit.log('login_totp_failure', { result: 'failure', reason: 'invalid_or_expired_totp' });
-      throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_OR_EXPIRED_TOTP);
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_OR_EXPIRED_TOTP);
     }
   }
 
@@ -240,12 +240,12 @@ export class AuthService {
       const storedToken = await this.refreshTokenRepository.findByJti(jti);
       if (!storedToken || storedToken.revokedAt) {
         this.audit.log('refresh_failure', { result: 'failure', reason: 'invalid_refresh_token' });
-        throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_REFRESH_TOKEN);
+        throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_REFRESH_TOKEN);
       }
       const user = await this.userRepository.findById(sub);
       if (!user) {
         this.audit.log('refresh_failure', { result: 'failure', reason: 'user_not_found', sessionId: storedToken.sessionId });
-        throw new UnauthorizedException(AUTH_ERROR_CODES.USER_NOT_FOUND);
+        throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.USER_NOT_FOUND);
       }
       await this.refreshTokenRepository.revoke(jti);
       const tokens = await this.generateTokens(user, storedToken.sessionId);
@@ -253,7 +253,7 @@ export class AuthService {
       return tokens;
     } catch {
       this.audit.log('refresh_failure', { result: 'failure', reason: 'invalid_refresh_token' });
-      throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_REFRESH_TOKEN);
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_REFRESH_TOKEN);
     }
   }
 
@@ -273,7 +273,7 @@ export class AuthService {
     const session = await this.sessionRepository.findById(sessionId);
     if (!session || session.userId !== userId) {
       this.audit.log('session_revoke_failure', { result: 'failure', reason: 'not_owner', userId, sessionId });
-      throw new UnauthorizedException(AUTH_ERROR_CODES.CANNOT_REVOKE_SESSION);
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.CANNOT_REVOKE_SESSION);
     }
     await this.sessionRepository.delete(sessionId);
     this.audit.log('session_revoked', { userId, sessionId });
@@ -307,20 +307,20 @@ export class AuthService {
 
   public async issueTokensForUser(userId: string): Promise<TokenPair> {
     const user = await this.userRepository.findById(userId);
-    if (!user) throw new UnauthorizedException(AUTH_ERROR_CODES.USER_NOT_FOUND);
+    if (!user) throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.USER_NOT_FOUND);
     const session = await this.sessionRepository.create({ userId: user.id });
     return this.generateTokens(user, session.id);
   }
 
   public async validateOwnerInvite(token: string): Promise<{ email: string; salonId: string }> {
-    if (!this.invitePort) throw new BadRequestException('error.not_implemented');
+    if (!this.invitePort) throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.NOT_IMPLEMENTED);
     const res = await this.invitePort.validateOwner(token);
     this.audit.log('owner_invite_validate', { email: res.email });
     return { email: res.email, salonId: res.salonId };
   }
 
   public async completeOwnerRegistration(input: RegistrationCompleteInput): Promise<TokenPair | { next: 'mfa' }> {
-    if (!this.invitePort) throw new BadRequestException('error.not_implemented');
+    if (!this.invitePort) throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.NOT_IMPLEMENTED);
     const res = await this.invitePort.completeOwner(input);
     if (res.requireMfa) {
       this.audit.log('owner_registration_requires_mfa', { userId: res.userId });
@@ -332,14 +332,14 @@ export class AuthService {
   }
 
   public async validateStaffInvite(token: string): Promise<{ email: string; salonId: string; role?: string }> {
-    if (!this.invitePort) throw new BadRequestException('error.not_implemented');
+    if (!this.invitePort) throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.NOT_IMPLEMENTED);
     const res = await this.invitePort.validateStaff(token);
     this.audit.log('staff_invite_validate', { email: res.email });
     return { email: res.email, salonId: res.salonId, role: res.role };
   }
 
   public async completeStaffRegistration(input: RegistrationCompleteInput): Promise<TokenPair | { next: 'mfa' }> {
-    if (!this.invitePort) throw new BadRequestException('error.not_implemented');
+    if (!this.invitePort) throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.NOT_IMPLEMENTED);
     const res = await this.invitePort.completeStaff(input);
     if (res.requireMfa) {
       this.audit.log('staff_registration_requires_mfa', { userId: res.userId });
@@ -352,7 +352,7 @@ export class AuthService {
 
   public async resolveUserIdByEmail(email: string): Promise<string> {
     const user = await this.userRepository.findByEmail(email);
-    if (!user) throw new UnauthorizedException(AUTH_ERROR_CODES.USER_NOT_FOUND);
+    if (!user) throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.USER_NOT_FOUND);
     return user.id;
   }
 
@@ -360,7 +360,7 @@ export class AuthService {
     const existing = await this.socialAccountRepository.findByProviderAccount(profile.provider, profile.providerUserId);
     const userId = existing?.userId;
     if (!userId) {
-      throw new UnauthorizedException(AUTH_ERROR_CODES.OAUTH_LINK_REQUIRED);
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.OAUTH_LINK_REQUIRED);
     }
     return this.issueTokensForUser(userId);
   }
@@ -376,7 +376,7 @@ export class AuthService {
     const hasPassword = !!user?.passwordHash;
     const methods = socials.length + (hasPassword ? 1 : 0);
     if (methods <= 1) {
-      throw new UnauthorizedException(AUTH_ERROR_CODES.CANNOT_UNLINK_LAST_METHOD);
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.CANNOT_UNLINK_LAST_METHOD);
     }
     await this.socialAccountRepository.unlink(userId, provider);
     this.audit.log('oauth_unlink', { userId, provider });
@@ -402,17 +402,17 @@ export class AuthService {
     const [id, providedSecret] = token.split('.', 2);
     if (!id || !providedSecret) {
       this.audit.log('password_reset_failure', { result: 'failure', reason: 'malformed_token' });
-      throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_OR_EXPIRED_RESET_TOKEN);
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_OR_EXPIRED_RESET_TOKEN);
     }
     const rec = await this.pwdResetRepo.findById(id);
     if (!rec || rec.usedAt || rec.expiresAt.getTime() < Date.now()) {
       this.audit.log('password_reset_failure', { result: 'failure', reason: 'expired_or_used' });
-      throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_OR_EXPIRED_RESET_TOKEN);
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_OR_EXPIRED_RESET_TOKEN);
     }
     const ok = await bcrypt.compare(providedSecret, rec.tokenHash);
     if (!ok) {
       this.audit.log('password_reset_failure', { result: 'failure', reason: 'secret_mismatch', userId: rec.userId });
-      throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_OR_EXPIRED_RESET_TOKEN);
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_OR_EXPIRED_RESET_TOKEN);
     }
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await this.userRepository.update(rec.userId, { passwordHash } as Partial<User>);
@@ -449,13 +449,13 @@ export class AuthService {
       });
       if (aud !== 'verify') {
         this.audit.log('email_verify_failure', { result: 'failure', reason: 'invalid_audience', userId: sub });
-        throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_VERIFY_TOKEN);
+        throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_VERIFY_TOKEN);
       }
       await this.userRepository.update(sub, { emailVerifiedAt: new Date() } as Partial<User>);
       this.audit.log('email_verified', { userId: sub });
     } catch {
       this.audit.log('email_verify_failure', { result: 'failure', reason: 'invalid_or_expired_token' });
-      throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_OR_EXPIRED_VERIFY_TOKEN);
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_OR_EXPIRED_VERIFY_TOKEN);
     }
   }
 
@@ -466,19 +466,19 @@ export class AuthService {
     const rec = await this.emailVerRepo.findActiveByEmail(email);
     if (!rec) {
       this.audit.log('email_verify_otp_failure', { result: 'failure', reason: 'otp_expired' });
-      throw new UnauthorizedException(AUTH_ERROR_CODES.OTP_EXPIRED);
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.OTP_EXPIRED);
     }
     await this.emailVerRepo.incrementAttempts(rec.id);
     const ok = await bcrypt.compare(otp, rec.codeHash);
     if (!ok) {
       this.audit.log('email_verify_otp_failure', { result: 'failure', reason: 'invalid_otp' });
-      throw new UnauthorizedException(AUTH_ERROR_CODES.INVALID_OTP);
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_OTP);
     }
     await this.emailVerRepo.markUsed(rec.id);
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
       this.audit.log('email_verify_otp_failure', { result: 'failure', reason: 'user_not_found' });
-      throw new UnauthorizedException(AUTH_ERROR_CODES.USER_NOT_FOUND);
+      throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.USER_NOT_FOUND);
     }
     await this.userRepository.update(user.id, { emailVerifiedAt: new Date() } as Partial<User>);
     this.audit.log('email_verified', { userId: user.id });

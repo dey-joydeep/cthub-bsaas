@@ -9,6 +9,7 @@ import { WebauthnAttestationDto } from '../dto/webauthn-attestation.dto';
 import { WebauthnAssertionDto } from '../dto/webauthn-assertion.dto';
 import { AuthService } from '../services/auth.service';
 import { AuthCookiesService } from '../services/auth-cookies.service';
+import { COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 
 @Controller('auth')
 @UseGuards(CsrfGuard, JwtOptionalAuthGuard)
@@ -56,7 +57,7 @@ export class WebauthnController {
     if (payload.email) {
       return this.authService.resolveUserIdByEmail(payload.email).then((userId) => this.webAuthn.startAuthentication(userId));
     }
-    return Promise.reject(new BadRequestException('error.validation'));
+    return Promise.reject(new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION));
   }
 
   @Public()

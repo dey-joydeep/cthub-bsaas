@@ -20,7 +20,7 @@ describe('CorrelationIdMiddleware', () => {
     if (headerValue) headers['x-correlation-id'] = headerValue;
     const req = {
       headers,
-    } as unknown as Request & { correlationId?: string };
+    } as unknown as Request & { correlationId?: string; headers: Record<string, string> };
     return req;
   };
 
@@ -36,7 +36,7 @@ describe('CorrelationIdMiddleware', () => {
       // Accessible via ALS getter within request context
       expect(CorrelationId.get()).toBe(headerCid);
       // Exposed on req object for convenience
-      expect((req as any).correlationId).toBe(headerCid);
+      expect(req.correlationId).toBe(headerCid);
       done();
     };
 
@@ -53,7 +53,7 @@ describe('CorrelationIdMiddleware', () => {
       const headerCid = res.headers['x-correlation-id'];
       expect(headerCid).toBe(incoming);
       expect(CorrelationId.get()).toBe(incoming);
-      expect((req as any).correlationId).toBe(incoming);
+      expect(req.correlationId).toBe(incoming);
       done();
     };
 

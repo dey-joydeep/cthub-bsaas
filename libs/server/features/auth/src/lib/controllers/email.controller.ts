@@ -3,6 +3,7 @@ import { CsrfGuard, JwtAuthGuard, JwtOptionalAuthGuard, ResponseEnvelopeIntercep
 import { AuthService } from '../services/auth.service';
 import { EmailChangeRequestDto } from '../dto/email-change-request.dto';
 import { EmailChangeConfirmDto } from '../dto/email-change-confirm.dto';
+import { COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 
 @Controller('auth')
 @UseGuards(CsrfGuard, JwtOptionalAuthGuard)
@@ -41,7 +42,7 @@ export class EmailController {
     if (body.email && body.otp) {
       return this.authService.verifyEmailOtp(body.email, body.otp).then(() => ({ success: true as const }));
     }
-    throw new BadRequestException('error.validation');
+    throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION);
   }
 }
 

@@ -343,7 +343,7 @@ This pattern ensures that tests are independent and the database does not accumu
 4. Lint: zero warnings and zero errors; do not use eslint‑disable.
 5. Build: must succeed.
 6. If code changes are required to fix errors/warnings, repeat steps 3–5 until green.
-7. Error/warning code mapping for both server and client is centralized under `libs/shared`, e.g., `libs/shared/src/lib/errors/auth-error-codes.ts` (CAPITAL_SNAKE_CASE keys) and common codes in `libs/shared/src/lib/errors/common-error-codes.ts`.
+7. Error/warning code mapping for both server and client is centralized under `libs/shared`, e.g., `libs/shared/src/lib/i18n-message-keys/auth-message-keys.ts` and `libs/shared/src/lib/i18n-message-keys/common-message-keys.ts` (grouped under INFO/WARN/ERROR).
 
 ## Roles & Workflow
 

@@ -3,7 +3,7 @@ import { CsrfGuard, JwtAuthGuard, JwtOptionalAuthGuard, ResponseEnvelopeIntercep
 import { VerifyRecoveryDto } from '../dto/verify-recovery.dto';
 import { RECOVERY_CODES_PORT, RecoveryCodesPort } from '@cthub-bsaas/server-contracts-auth';
 import { AuditService } from '../services/audit.service';
-import { COMMON_ERROR_CODES } from '@cthub-bsaas/shared';
+import { COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 
 @Controller('auth')
 @UseGuards(CsrfGuard, JwtOptionalAuthGuard)
@@ -31,7 +31,7 @@ export class RecoveryController {
     return this.recovery.verifyAndConsume(req.user.userId, body.code).then((ok) => {
       if (!ok) {
         this.audit?.log('recovery_code_verify_failure', { userId: req.user.userId });
-        throw new BadRequestException(COMMON_ERROR_CODES.VALIDATION);
+        throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION);
       }
       this.audit?.log('recovery_code_verify_success', { userId: req.user.userId });
       return { success: true as const };

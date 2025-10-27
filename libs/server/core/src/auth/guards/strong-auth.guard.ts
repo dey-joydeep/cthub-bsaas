@@ -5,7 +5,7 @@ import {
   CREDENTIAL_PASSKEY_REPOSITORY,
   ICredentialPasskeyRepository,
 } from '@cthub-bsaas/server-contracts-auth';
-import { AUTH_ERROR_CODES } from '@cthub-bsaas/shared';
+import { AUTH_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 import type { AuthenticatedUser, UserRole, UserRoleInfo } from '@cthub-bsaas/shared';
 
 /**
@@ -77,7 +77,7 @@ export class StrongAuthGuard implements CanActivate {
     const userId = pickUserId(user);
     if (!userId) {
       // Admin with no resolvable id cannot satisfy strong auth checks
-      throw new ForbiddenException(AUTH_ERROR_CODES.STRONG_AUTH_REQUIRED);
+      throw new ForbiddenException(AUTH_MESSAGE_KEYS.ERROR.STRONG_AUTH_REQUIRED);
     }
 
     // Allow if TOTP is verified
@@ -90,6 +90,6 @@ export class StrongAuthGuard implements CanActivate {
 
     if (hasVerifiedTotp || hasPasskey) return true;
 
-    throw new ForbiddenException(AUTH_ERROR_CODES.STRONG_AUTH_REQUIRED);
+    throw new ForbiddenException(AUTH_MESSAGE_KEYS.ERROR.STRONG_AUTH_REQUIRED);
   }
 }

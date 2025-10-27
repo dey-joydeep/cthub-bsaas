@@ -5,7 +5,7 @@ import { OAUTH_PORT, OAuthPort } from '@cthub-bsaas/server-contracts-auth';
 import { Inject } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import { AuthCookiesService } from '../services/auth-cookies.service';
-import { COMMON_ERROR_CODES } from '@cthub-bsaas/shared';
+import { COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 
 @Controller('auth')
 @UseGuards(CsrfGuard, JwtOptionalAuthGuard)
@@ -36,7 +36,7 @@ export class OauthController {
     @Query('state') state?: string,
   ) {
     if (!code) {
-      throw new BadRequestException(COMMON_ERROR_CODES.VALIDATION);
+      throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION);
     }
     return this.oauth.exchangeCode(provider, code, state).then((profile) => {
       const linkedUserId = this.extractUserId(user);

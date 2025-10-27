@@ -1,5 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable, SetMetadata, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 
 /**
  * @public
@@ -47,7 +48,7 @@ export class CsrfGuard implements CanActivate {
     // Enforce double-submit only when server has issued a CSRF cookie
     if (cookie) {
       if (!header || header !== cookie) {
-        throw new ForbiddenException('error.security.csrf_failed');
+        throw new ForbiddenException(COMMON_MESSAGE_KEYS.ERROR.CSRF_FAILED);
       }
     }
     return true;
