@@ -64,7 +64,7 @@ describe('AuthCookiesService integration edge cases', () => {
     const registry2 = new CookieRegistry();
     const cfg2 = makeConfig({ ttl: '7d' });
     // Simulate missing TTL by deleting the field
-    (cfg2 as { auth: { refreshTokenExpiresInDefault?: string } }).auth.refreshTokenExpiresInDefault = undefined as any;
+    (cfg2 as { auth: { refreshTokenExpiresInDefault?: string } }).auth.refreshTokenExpiresInDefault = undefined;
     const service2 = new AuthCookiesService(registry2, cfg2 as unknown as ConfigService);
     service2.issue({ csrf: 'x', refreshToken: 'R' });
     const rt2 = registry2.drain().filter((c) => c.action === 'set' && c.name === 'bsaas_rt')[0];
@@ -106,6 +106,16 @@ describe('AuthCookiesService integration edge cases', () => {
     expect(at).toBeTruthy();
     expect(rt).toBeTruthy();
     expect(buildSetCookie(rt!)).toContain('Max-Age=86400');
+  });
+
+  it('omits Secure flag when not in production', () => {
+    const reg = new CookieRegistry();
+    const svc = new AuthCookiesService(reg, makeConfig({ ttl: '7d', isProd: false }) as unknown as ConfigService);
+    svc.issue({ csrf: 'csrf', refreshToken: 'RT' });
+    const cmds = reg.drain();
+    const rt = cmds.find((c) => c.action === 'set' && c.name === 'bsaas_rt');
+    const header = buildSetCookie(rt!);
+    expect(header).not.toContain('Secure');
   });
 
   it('clear enqueues clear commands with Expires in past and Max-Age=0', () => {

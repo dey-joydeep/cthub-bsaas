@@ -5,6 +5,7 @@ import { randomUUID } from 'crypto';
 import { ConfigService } from '@cthub-bsaas/server-core';
 import { AuthService } from '../../../src/lib/services/auth.service';
 import { setupAuthIntegrationHarness, AuthIntegrationHarness } from '../utils/auth-integration.harness';
+import { UserRole } from '@cthub-bsaas/shared';
 
 const NEW_PASSWORD = 'NewPassword#1';
 
@@ -270,5 +271,14 @@ describe('AuthService (integration edge cases)', () => {
       const updatedRecord = await harness.prisma.emailVerification.findUnique({ where: { id: record.id } });
       expect(updatedRecord?.usedAt).toBeInstanceOf(Date);
     });
+  });
+
+  it('uses default RT TTL when customer TTL is undefined (generateTokens fallback path)', async () => {
+    const customer = await harness.registerUser({ roles: [UserRole.CUSTOMER] });
+    const cfg = (config as unknown as { auth: { refreshTokenExpiresInCustomer?: string } }).auth;
+    delete cfg.refreshTokenExpiresInCustomer;
+    const tokens = await service.issueTokensForUser(customer.id);
+    expect(tokens.accessToken).toBeTruthy();
+    expect(tokens.refreshToken).toBeTruthy();
   });
 });

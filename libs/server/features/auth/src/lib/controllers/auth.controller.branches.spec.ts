@@ -4,6 +4,7 @@ import { AuthCookiesService } from '../services/auth-cookies.service';
 import { LoginDto } from '../dto/login.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import type { Request as ExpressRequest } from 'express';
+import type { JwtService } from '@nestjs/jwt';
 
 describe('AuthController branches (core)', () => {
   let controller: AuthController;
@@ -12,7 +13,8 @@ describe('AuthController branches (core)', () => {
     'signIn' | 'signInWithTotp' | 'refreshToken' | 'logout'
   >>;
   let cookies: jest.Mocked<Pick<AuthCookiesService, 'issue' | 'rotateOnRefresh' | 'clear'>>;
-  let jwt: { decode: jest.Mock };
+  let jwt: Pick<JwtService, 'decode'>;
+  let decodeMock: jest.Mock;
 
   beforeEach(() => {
     service = {
@@ -22,12 +24,13 @@ describe('AuthController branches (core)', () => {
       logout: jest.fn().mockResolvedValue(undefined),
     } as unknown as typeof service;
     cookies = { issue: jest.fn(), rotateOnRefresh: jest.fn(), clear: jest.fn() } as unknown as typeof cookies;
-    jwt = { decode: jest.fn(() => ({ roles: ['CUSTOMER'] })) };
+    decodeMock = jest.fn(() => ({ roles: ['CUSTOMER'] }));
+    jwt = { decode: decodeMock as unknown as JwtService['decode'] };
     controller = new AuthController(
       service as unknown as AuthService,
       cookies as unknown as AuthCookiesService,
       { log: jest.fn() } as unknown as import('../services/audit.service').AuditService,
-      jwt as unknown as any,
+      jwt as unknown as JwtService,
     );
   });
 
@@ -115,4 +118,3 @@ describe('AuthController branches (core)', () => {
     expect(cookies.clear).toHaveBeenCalled();
   });
 });
-

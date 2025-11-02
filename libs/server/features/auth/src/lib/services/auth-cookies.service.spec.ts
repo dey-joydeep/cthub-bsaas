@@ -42,8 +42,8 @@ describe('AuthCookiesService', () => {
   });
 
   it('parseDurationToSeconds covers all units and invalid cases (direct)', () => {
-    const direct = service as unknown as { parseDurationToSeconds: (s: any) => number | undefined };
-    expect(direct.parseDurationToSeconds(undefined as any)).toBeUndefined();
+    const direct = service as unknown as { parseDurationToSeconds: (s: unknown) => number | undefined };
+    expect(direct.parseDurationToSeconds(undefined)).toBeUndefined();
     expect(direct.parseDurationToSeconds('15s')).toBe(15);
     expect(direct.parseDurationToSeconds('2m')).toBe(120);
     expect(direct.parseDurationToSeconds('1h')).toBe(3600);
@@ -199,7 +199,7 @@ describe('AuthCookiesService', () => {
 
   it('falls back to default TTL when customer TTL is missing but isCustomer=true', () => {
     (registry.set as unknown as jest.Mock).mockClear();
-    config = createConfig({ refreshTokenExpiresInDefault: '3d', refreshTokenExpiresInCustomer: undefined as any });
+    config = createConfig({ refreshTokenExpiresInDefault: '3d', refreshTokenExpiresInCustomer: undefined });
     service = new AuthCookiesService(registry as unknown as CookieRegistry, config);
     service.issue({ csrf: 'x', refreshToken: 'R' }, { isCustomer: true });
     const call = getSetCall('bsaas_rt');

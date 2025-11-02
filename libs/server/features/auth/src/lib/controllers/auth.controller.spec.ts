@@ -4,6 +4,7 @@ import { AuthCookiesService } from '../services/auth-cookies.service';
 import { LoginDto } from '../dto/login.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import type { Request as ExpressRequest } from 'express';
+import type { JwtService } from '@nestjs/jwt';
 
 describe('AuthController (core endpoints)', () => {
   let controller: AuthController;
@@ -12,7 +13,8 @@ describe('AuthController (core endpoints)', () => {
     'signIn' | 'signInWithTotp' | 'refreshToken' | 'logout'
   >>;
   let cookies: jest.Mocked<Pick<AuthCookiesService, 'issue' | 'rotateOnRefresh' | 'clear'>>;
-  let jwt: { decode: jest.Mock };
+  let jwt: Pick<JwtService, 'decode'>;
+  let decodeMock: jest.Mock;
 
   const createLoginDto = (overrides: Partial<LoginDto> = {}): LoginDto =>
     Object.assign(new LoginDto(), { email: 'e@example.com', password: 'Password#1', ...overrides });
@@ -31,13 +33,14 @@ describe('AuthController (core endpoints)', () => {
       logout: jest.fn().mockResolvedValue(undefined),
     } as unknown as typeof service;
     cookies = { issue: jest.fn(), rotateOnRefresh: jest.fn(), clear: jest.fn() } as unknown as typeof cookies;
-    jwt = { decode: jest.fn(() => ({ roles: ['CUSTOMER'] })) };
+    decodeMock = jest.fn(() => ({ roles: ['CUSTOMER'] }));
+    jwt = { decode: decodeMock as unknown as JwtService['decode'] };
     // AuditService is not used by tests; pass a minimal stub
     controller = new AuthController(
       service as unknown as AuthService,
       cookies as unknown as AuthCookiesService,
       { log: jest.fn() } as unknown as import('../services/audit.service').AuditService,
-      jwt as unknown as any,
+      jwt as unknown as JwtService,
     );
   });
 
@@ -67,14 +70,14 @@ describe('AuthController (core endpoints)', () => {
   });
 
   it('login/totp uses default TTL path when roles are not CUSTOMER', async () => {
-    (jwt.decode as jest.Mock).mockReturnValueOnce({ roles: [] });
+    decodeMock.mockReturnValueOnce({ roles: [] });
     const out = await controller.signInWithTotp({ tempToken: 't', totpCode: '123456' });
     expect(out).toEqual({});
     expect(cookies.issue).toHaveBeenCalled();
   });
 
   it('login/totp handles decode null safely', async () => {
-    (jwt.decode as jest.Mock).mockReturnValueOnce(null as any);
+    decodeMock.mockReturnValueOnce(null);
     const out = await controller.signInWithTotp({ tempToken: 't', totpCode: '123456' });
     expect(out).toEqual({});
     expect(cookies.issue).toHaveBeenCalled();
@@ -121,4 +124,3 @@ describe('AuthController (core endpoints)', () => {
     expect((controller as unknown as { isCustomerFromAccess: (t?: string) => boolean }).isCustomerFromAccess(undefined)).toBe(false);
   });
 });
-

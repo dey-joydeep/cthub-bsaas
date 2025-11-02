@@ -10,6 +10,7 @@ import { AuthCookiesService } from '../services/auth-cookies.service';
 import { AuthService } from '../services/auth.service';
 import type { SignInHttpResponse, SimpleOk } from '../types/auth.types';
 import { JwtService } from '@nestjs/jwt';
+import { isCustomerFromAccessToken } from '../utils/is-customer.util';
 import { parseRefreshCookie } from '../utils/cookie.util';
 import { SignInTotpDto } from '../dto/signin-totp.dto';
 
@@ -65,10 +66,7 @@ export class AuthController {
   }
 
   private isCustomerFromAccess(accessToken?: string): boolean {
-    if (!accessToken) return false;
-    const decoded = this.jwtService.decode(accessToken) as { roles?: string[] } | null;
-    const roles = decoded?.roles ?? [];
-    return Array.isArray(roles) && roles.includes('CUSTOMER');
+    return isCustomerFromAccessToken(this.jwtService, accessToken);
   }
 
   /** Rotate refresh token and issue a new access token */

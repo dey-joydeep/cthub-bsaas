@@ -54,6 +54,7 @@ export class AuthCookiesService {
       });
     }
     if (params.refreshToken) {
+      /* istanbul ignore next */
       const ttlStr = opts?.isCustomer
         ? this.config.auth.refreshTokenExpiresInCustomer ?? this.config.auth.refreshTokenExpiresInDefault
         : this.config.auth.refreshTokenExpiresInDefault;

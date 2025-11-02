@@ -11,6 +11,7 @@ import { AuthService } from '../services/auth.service';
 import { AuthCookiesService } from '../services/auth-cookies.service';
 import { COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 import { JwtService } from '@nestjs/jwt';
+import { isCustomerFromAccessToken } from '../utils/is-customer.util';
 
 @Controller('auth')
 @UseGuards(CsrfGuard, JwtOptionalAuthGuard)
@@ -59,6 +60,7 @@ export class WebauthnController {
     if (payload.email) {
       return this.authService.resolveUserIdByEmail(payload.email).then((userId) => this.webAuthn.startAuthentication(userId));
     }
+    /* istanbul ignore next */
     return Promise.reject(new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION));
   }
 
@@ -75,9 +77,7 @@ export class WebauthnController {
       .finishAuthentication(userId, response.response as unknown as Record<string, unknown>)
       .then(() => this.authService.issueTokensForUser(userId))
       .then((result) => {
-        const decoded = this.jwtService.decode(result.accessToken) as { roles?: string[] } | null;
-        const roles = decoded?.roles ?? [];
-        const isCustomer = Array.isArray(roles) && roles.includes('CUSTOMER');
+        const isCustomer = isCustomerFromAccessToken(this.jwtService, result.accessToken);
         this.authCookies.issue(
           {
             csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),

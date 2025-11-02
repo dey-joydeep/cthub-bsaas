@@ -471,7 +471,17 @@ describe('AuthService', () => {
     });
 
     it('uses default RT TTL when customer TTL is undefined (fallback branch)', async () => {
-      (configService as unknown as { auth: any }).auth = {
+      (configService as unknown as {
+        auth: {
+          jwtAccessSecret: string;
+          jwtRefreshSecret: string;
+          jwtEmailChangeSecret: string;
+          jwtVerifyEmailSecret: string;
+          jwtExpiresIn: string;
+          refreshTokenExpiresInDefault: string;
+          refreshTokenExpiresInCustomer?: string;
+        };
+      }).auth = {
         jwtAccessSecret: 'acc',
         jwtRefreshSecret: 'ref',
         jwtEmailChangeSecret: 'emc',
@@ -483,7 +493,7 @@ describe('AuthService', () => {
       const withCustomer: User & { roles: { role: { name: string } }[] } = {
         ...mockUser,
         roles: [{ role: { name: 'CUSTOMER' } }],
-      } as any;
+      } as User & { roles: { role: { name: string } }[] };
       userRepository.findById.mockResolvedValue(withCustomer);
       sessionRepository.create.mockResolvedValue({ id: 'sess-fb', userId: withCustomer.id, deviceOS: null, deviceUA: null, ipHash: null, lastSeenAt: new Date(), createdAt: new Date() } as Session);
       jwtService.signAsync
@@ -493,7 +503,7 @@ describe('AuthService', () => {
 
       const result = await service.issueTokensForUser(withCustomer.id);
       expect(result).toEqual({ accessToken: 'access-token', refreshToken: 'refresh-token' });
-      const [, refreshArgs] = (jwtService.signAsync as jest.Mock).mock.calls[1] as [any, { expiresIn: string }];
+      const [, refreshArgs] = (jwtService.signAsync as jest.Mock).mock.calls[1] as [unknown, { expiresIn: string }];
       expect(refreshArgs.expiresIn).toBe('10d');
     });
 
@@ -550,7 +560,17 @@ describe('AuthService', () => {
 
     it('uses customer RT TTL when role includes CUSTOMER', async () => {
       // Arrange config TTLs
-      (configService as unknown as { auth: any }).auth = {
+      (configService as unknown as {
+        auth: {
+          jwtAccessSecret: string;
+          jwtRefreshSecret: string;
+          jwtEmailChangeSecret: string;
+          jwtVerifyEmailSecret: string;
+          jwtExpiresIn: string;
+          refreshTokenExpiresInDefault: string;
+          refreshTokenExpiresInCustomer?: string;
+        };
+      }).auth = {
         jwtAccessSecret: 'acc',
         jwtRefreshSecret: 'ref',
         jwtEmailChangeSecret: 'emc',
@@ -562,7 +582,7 @@ describe('AuthService', () => {
       const withCustomer: User & { roles: { role: { name: string } }[] } = {
         ...mockUser,
         roles: [{ role: { name: 'CUSTOMER' } }],
-      } as any;
+      } as User & { roles: { role: { name: string } }[] };
       userRepository.findById.mockResolvedValue(withCustomer);
       sessionRepository.create.mockResolvedValue({ id: 'sess', userId: withCustomer.id, deviceOS: null, deviceUA: null, ipHash: null, lastSeenAt: new Date(), createdAt: new Date() } as Session);
       jwtService.signAsync
@@ -575,12 +595,22 @@ describe('AuthService', () => {
 
       // Assert
       expect(result).toEqual({ accessToken: 'access-token', refreshToken: 'refresh-token' });
-      const [, refreshArgs] = (jwtService.signAsync as jest.Mock).mock.calls[1] as [any, { expiresIn: string }];
+      const [, refreshArgs] = (jwtService.signAsync as jest.Mock).mock.calls[1] as [unknown, { expiresIn: string }];
       expect(refreshArgs.expiresIn).toBe('180d');
     });
 
     it('uses default RT TTL when role excludes CUSTOMER', async () => {
-      (configService as unknown as { auth: any }).auth = {
+      (configService as unknown as {
+        auth: {
+          jwtAccessSecret: string;
+          jwtRefreshSecret: string;
+          jwtEmailChangeSecret: string;
+          jwtVerifyEmailSecret: string;
+          jwtExpiresIn: string;
+          refreshTokenExpiresInDefault: string;
+          refreshTokenExpiresInCustomer?: string;
+        };
+      }).auth = {
         jwtAccessSecret: 'acc',
         jwtRefreshSecret: 'ref',
         jwtEmailChangeSecret: 'emc',
@@ -592,7 +622,7 @@ describe('AuthService', () => {
       const withStaff: User & { roles: { role: { name: string } }[] } = {
         ...mockUser,
         roles: [{ role: { name: 'STAFF' } }],
-      } as any;
+      } as User & { roles: { role: { name: string } }[] };
       userRepository.findById.mockResolvedValue(withStaff);
       sessionRepository.create.mockResolvedValue({ id: 'sess2', userId: withStaff.id, deviceOS: null, deviceUA: null, ipHash: null, lastSeenAt: new Date(), createdAt: new Date() } as Session);
       jwtService.signAsync
@@ -602,7 +632,7 @@ describe('AuthService', () => {
 
       const result = await service.issueTokensForUser(withStaff.id);
       expect(result).toEqual({ accessToken: 'access-token', refreshToken: 'refresh-token' });
-      const [, refreshArgs] = (jwtService.signAsync as jest.Mock).mock.calls[1] as [any, { expiresIn: string }];
+      const [, refreshArgs] = (jwtService.signAsync as jest.Mock).mock.calls[1] as [unknown, { expiresIn: string }];
       expect(refreshArgs.expiresIn).toBe('5d');
     });
   });

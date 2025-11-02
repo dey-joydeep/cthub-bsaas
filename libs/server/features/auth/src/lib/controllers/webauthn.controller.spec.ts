@@ -22,7 +22,8 @@ const makeAuthService = () => ({
 });
 
 const makeCookies = () => ({ issue: jest.fn() });
-const makeJwt = () => ({ decode: jest.fn(() => ({ roles: ['CUSTOMER'] })) });
+import type { JwtService } from '@nestjs/jwt';
+const makeJwt = () => ({ decode: jest.fn(() => ({ roles: ['CUSTOMER'] })) as unknown as JwtService['decode'] });
 
 describe('WebauthnController (unit)', () => {
   let controller: WebauthnController;
@@ -40,7 +41,7 @@ describe('WebauthnController (unit)', () => {
       webAuthn as unknown as WebAuthnPort,
       authService as unknown as AuthService,
       cookies as unknown as AuthCookiesService,
-      jwt as unknown as any,
+      jwt as unknown as JwtService,
     );
   });
 
@@ -115,7 +116,7 @@ describe('WebauthnController (unit)', () => {
   });
 
   it('login finish uses default TTL branch when roles not customer', async () => {
-    (jwt.decode as jest.Mock).mockReturnValueOnce({ roles: [] });
+    (jwt.decode as unknown as jest.Mock).mockReturnValueOnce({ roles: [] });
     const user = { id: 'u1' } as unknown as AuthenticatedUser;
     const out = await controller.webauthnLoginFinish({ response: {} } as WebauthnAssertionDto, user);
     expect(out).toEqual({});
@@ -123,7 +124,7 @@ describe('WebauthnController (unit)', () => {
   });
 
   it('login finish handles non-array roles', async () => {
-    (jwt.decode as jest.Mock).mockReturnValueOnce({ roles: 'x' as unknown as string[] });
+    (jwt.decode as unknown as jest.Mock).mockReturnValueOnce({ roles: 'x' as unknown as string[] });
     const user = { id: 'u1' } as unknown as AuthenticatedUser;
     const out = await controller.webauthnLoginFinish({ response: {} } as WebauthnAssertionDto, user);
     expect(out).toEqual({});
@@ -131,7 +132,7 @@ describe('WebauthnController (unit)', () => {
   });
 
   it('login finish handles decode null safely', async () => {
-    (jwt.decode as jest.Mock).mockReturnValueOnce(null as any);
+    (jwt.decode as unknown as jest.Mock).mockReturnValueOnce(null);
     const user = { id: 'u1' } as unknown as AuthenticatedUser;
     const out = await controller.webauthnLoginFinish({ response: {} } as WebauthnAssertionDto, user);
     expect(out).toEqual({});

@@ -3,6 +3,7 @@ import type { OAuthPort } from '@cthub-bsaas/server-contracts-auth';
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 import { AuthService } from '../services/auth.service';
 import { AuthCookiesService } from '../services/auth-cookies.service';
+import type { JwtService } from '@nestjs/jwt';
 
 
 describe('OauthController (unit)', () => {
@@ -11,7 +12,8 @@ describe('OauthController (unit)', () => {
   let oauth: jest.Mocked<Pick<OAuthPort, 'start' | 'exchangeCode'>>;
 
   let cookies: jest.Mocked<Pick<AuthCookiesService, 'issue' | 'rotateOnRefresh' | 'clear'>>;
-  let jwt: { decode: jest.Mock };
+  let jwt: Pick<JwtService, 'decode'>;
+  let decodeMock: jest.Mock;
 
   beforeEach(() => {
     authSvc = {
@@ -27,12 +29,13 @@ describe('OauthController (unit)', () => {
       exchangeCode: jest.fn(() => Promise.resolve({ provider: 'google', providerUserId: 'pid' })),
     } as unknown as typeof oauth;
     cookies = { issue: jest.fn(), rotateOnRefresh: jest.fn(), clear: jest.fn() } as unknown as jest.Mocked<Pick<AuthCookiesService, 'issue' | 'rotateOnRefresh' | 'clear'>>;
-    jwt = { decode: jest.fn(() => ({ roles: ['CUSTOMER'] })) };
+    decodeMock = jest.fn(() => ({ roles: ['CUSTOMER'] }));
+    jwt = { decode: decodeMock as unknown as JwtService['decode'] };
     controller = new OauthController(
       oauth as unknown as OAuthPort,
       authSvc as unknown as AuthService,
       cookies as unknown as AuthCookiesService,
-      jwt as unknown as any,
+      jwt as unknown as JwtService,
     );
   });
 
@@ -65,21 +68,21 @@ describe('OauthController (unit)', () => {
   });
 
   it('oauthCallback uses default TTL when roles are absent', async () => {
-    jwt.decode.mockReturnValueOnce({ roles: [] });
+    decodeMock.mockReturnValueOnce({ roles: [] });
     const out = await controller.oauthCallback('google', undefined, 'code123', 'state');
     expect(out).toEqual({});
     expect(cookies.issue).toHaveBeenCalled();
   });
 
   it('oauthCallback treats non-array roles as non-customer', async () => {
-    jwt.decode.mockReturnValueOnce({ roles: 'x' as unknown as string[] });
+    decodeMock.mockReturnValueOnce({ roles: 'x' as unknown as string[] });
     const out = await controller.oauthCallback('google', undefined, 'code123', 'state');
     expect(out).toEqual({});
     expect(cookies.issue).toHaveBeenCalled();
   });
 
   it('oauthCallback handles decode null safely', async () => {
-    jwt.decode.mockReturnValueOnce(null as any);
+    decodeMock.mockReturnValueOnce(null);
     const out = await controller.oauthCallback('google', undefined, 'code123', 'state');
     expect(out).toEqual({});
     expect(cookies.issue).toHaveBeenCalled();
