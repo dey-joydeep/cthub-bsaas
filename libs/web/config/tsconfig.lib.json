@@ -1,28 +1,9 @@
 {
-    "extends": "../../../tsconfig.base.json",
-    "compilerOptions": {
-        "rootDir": "src",
-        "outDir": "../../../dist/out-tsc/libs/web/config",
-        "composite": true,
-        "declaration": true,
-        "declarationMap": true,
-        "inlineSources": true,
-        "types": [],
-        "skipLibCheck": true,
-        "paths": {}
-    },
-    "angularCompilerOptions": {
-        "compilationMode": "partial"
-    },
-    "files": [
-        "src/environments/admin/environment.d.ts",
-        "src/environments/admin/environment.debug.ts",
-        "src/environments/admin/environment.prod.ts",
-        "src/environments/admin/environment.ts",
-        "src/index.ts",
-        "src/tokens/app-env.token.ts",
-        "src/types/env.ts",
-        "src/utils/platform-utils.ts",
-        "src/utils/select-env.ts"
-    ]
+  "extends": "../tsconfig.lib.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "../../../dist/out-tsc/libs/web/config"
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts"],
+  "exclude": ["src/test-setup.ts", "**/*.spec.ts", "**/*.test.ts", "jest.config.ts"]
 }

@@ -1,29 +1,34 @@
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { TranslateLoader } from '@ngx-translate/core';
 import { makeStateKey, StateKey, TransferState } from '@angular/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { HttpClient } from '@angular/common/http';
 
 export class TranslateServerLoader implements TranslateLoader {
+  private readonly httpLoader: TranslateHttpLoader;
+  private readonly defaultPrefix = './assets/i18n/';
+  private readonly defaultSuffix = '.json';
+
   constructor(
-    private transferState: TransferState,
-    private http: HttpClient,
-    private prefix: string = './assets/i18n/',
-    private suffix: string = '.json',
-  ) {}
+    private readonly transferState: TransferState,
+    http: HttpClient,
+    prefix: string = './assets/i18n/',
+    suffix: string = '.json',
+  ) {
+    this.httpLoader = new TranslateHttpLoader(http, prefix ?? this.defaultPrefix, suffix ?? this.defaultSuffix);
+  }
 
-  public getTranslation(lang: string): Observable<any> {
-    const key: StateKey<number> = makeStateKey<number>('transfer-translate-' + lang);
-    const data = this.transferState.get(key, null as unknown as any);
+  public getTranslation(lang: string): Observable<Record<string, unknown>> {
+    const key: StateKey<Record<string, unknown> | null> = makeStateKey<Record<string, unknown> | null>(
+      `transfer-translate-${lang}`,
+    );
+    const cached = this.transferState.get(key, null);
 
-    if (data) {
-      return new Observable((observer) => {
-        observer.next(data);
-        observer.complete();
-      });
-    } else {
-      return new TranslateHttpLoader(this.http, this.prefix, this.suffix).getTranslation(lang);
+    if (cached) {
+      return of(cached);
     }
+
+    return this.httpLoader.getTranslation(lang) as Observable<Record<string, unknown>>;
   }
 }
 

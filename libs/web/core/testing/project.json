@@ -14,7 +14,16 @@
             }
         },
         "lint": {
-            "executor": "@nx/eslint:lint"
+            "executor": "@nx/eslint:lint",
+            "options": {
+                "lintFilePatterns": ["libs/web/core/testing/src/**/*.ts"]
+            }
+        },
+        "type-check": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "npx tsc -p libs/web/core/testing/tsconfig.spec.json --noEmit"
+            }
         }
     }
 }

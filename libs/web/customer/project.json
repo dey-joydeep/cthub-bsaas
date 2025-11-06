@@ -33,8 +33,15 @@
       "options": {
         "lintFilePatterns": [
           "libs/web/customer/src/**/*.ts",
-          "libs/web/customer/src/**/*.html"
+          "libs/web/customer/src/**/*.html",
+          "libs/web/customer/src/**/*.scss"
         ]
+      }
+    },
+    "type-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsc -p libs/web/customer/tsconfig.spec.json --noEmit"
       }
     }
   }

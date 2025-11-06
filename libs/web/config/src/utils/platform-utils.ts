@@ -1,5 +1,5 @@
 import { inject, InjectionToken, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser, isPlatformServer } from '@angular/common';
+import { DOCUMENT, isPlatformBrowser, isPlatformServer } from '@angular/common';
 
 export interface PlatformUtils {
   readonly isBrowser: boolean;
@@ -12,21 +12,17 @@ export const PLATFORM_UTILS_TOKEN = new InjectionToken<PlatformUtils>('PLATFORM_
   providedIn: 'root',
   factory: () => {
     const platformId = inject(PLATFORM_ID);
+    const documentRef = inject(DOCUMENT);
     const isBrowser = isPlatformBrowser(platformId);
     const isServer = isPlatformServer(platformId);
 
-    let windowRef: Window | null = null;
-    let documentRef: Document | null = null;
-    if (isBrowser) {
-      windowRef = window;
-      documentRef = window.document;
-    }
+    const windowRef = isBrowser ? (documentRef?.defaultView ?? null) : null;
 
     return {
       isBrowser,
       isServer,
       windowRef,
-      documentRef,
+      documentRef: (documentRef as Document) ?? null,
     } as const;
   },
 });

@@ -14,7 +14,7 @@ export enum ErrorType {
 export interface ErrorState {
   type: ErrorType;
   message: string;
-  details?: any;
+  details?: unknown;
   timestamp: Date;
 }
 
@@ -25,7 +25,7 @@ export class ErrorService {
   private errorSubject = new BehaviorSubject<ErrorState | null>(null);
   error$ = this.errorSubject.asObservable();
 
-  handleError(error: any, context: string = 'App'): void {
+  handleError(error: unknown, context: string = 'App'): void {
     console.error(`[${context}] Error:`, error);
 
     let errorState: ErrorState = {
@@ -53,20 +53,20 @@ export class ErrorService {
    * @param error The error object or string
    * @returns A user-friendly error message
    */
-  getErrorMessage(error: any): string {
+  getErrorMessage(error: unknown): string {
     if (typeof error === 'string') {
       return error;
     }
 
-    if (error?.error?.message) {
+    if (this.hasMessageProperty(error)) {
       return error.error.message;
     }
 
-    if (error?.message) {
+    if (this.isErrorWithMessage(error)) {
       return error.message;
     }
 
-    if (error?.statusText) {
+    if (this.isHttpErrorResponse(error) && typeof error.statusText === 'string') {
       return error.statusText;
     }
 
@@ -97,5 +97,26 @@ export class ErrorService {
     }
 
     return errorState;
+  }
+
+  private hasMessageProperty(
+    error: unknown,
+  ): error is { error: { message: string } } {
+    if (typeof error !== 'object' || error === null) {
+      return false;
+    }
+
+    const root = error as Record<string, unknown>;
+    const nested = root.error;
+
+    return typeof nested === 'object' && nested !== null && typeof (nested as Record<string, unknown>).message === 'string';
+  }
+
+  private isErrorWithMessage(error: unknown): error is { message: string } {
+    return typeof error === 'object' && error !== null && typeof (error as Record<string, unknown>).message === 'string';
+  }
+
+  private isHttpErrorResponse(error: unknown): error is HttpErrorResponse {
+    return error instanceof HttpErrorResponse;
   }
 }

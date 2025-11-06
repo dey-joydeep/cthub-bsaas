@@ -15,7 +15,7 @@ export interface Notification {
   read: boolean;
   createdAt: Date | string;
   metadata?: {
-    [key: string]: any;
+    [key: string]: unknown;
     source?: string;
     priority?: 'low' | 'medium' | 'high';
     relatedEntityType?: string;

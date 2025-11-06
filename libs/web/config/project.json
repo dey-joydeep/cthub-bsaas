@@ -7,7 +7,24 @@
     "tags": ["scope:web", "type:config"],
     "targets": {
         "lint": {
-            "executor": "@nx/eslint:lint"
+            "executor": "@nx/eslint:lint",
+            "options": {
+                "lintFilePatterns": ["libs/web/config/src/**/*.ts"]
+            }
+        },
+        "test": {
+            "executor": "@nx/jest:jest",
+            "outputs": ["{workspaceRoot}/coverage/libs/web/config"],
+            "options": {
+                "jestConfig": "libs/web/config/jest.config.ts",
+                "passWithNoTests": true
+            }
+        },
+        "type-check": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "npx tsc -p libs/web/config/tsconfig.spec.json --noEmit"
+            }
         },
         "build": {
             "executor": "@nx/angular:package",

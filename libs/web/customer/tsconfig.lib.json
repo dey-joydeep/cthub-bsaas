@@ -1,17 +1,14 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../tsconfig.lib.base.json",
   "compilerOptions": {
-    "outDir": "../../../dist/out-tsc",
-    "declaration": true,
-    "declarationMap": true,
-    "inlineSources": true,
-    "types": []
+    "rootDir": "src",
+    "outDir": "../../../dist/out-tsc/libs/web/customer"
   },
+  "include": ["src/**/*.ts", "src/**/*.d.ts"],
   "exclude": [
     "src/test-setup.ts",
     "**/*.spec.ts",
-    "jest.config.ts",
-    "**/*.test.ts"
-  ],
-  "include": ["src/**/*.ts"]
+    "**/*.test.ts",
+    "jest.config.ts"
+  ]
 }

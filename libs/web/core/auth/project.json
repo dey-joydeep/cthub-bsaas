@@ -21,12 +21,15 @@
             }
         },
         "lint": {
-            "executor": "@nx/eslint:lint"
+            "executor": "@nx/eslint:lint",
+            "options": {
+                "lintFilePatterns": ["libs/web/core/auth/src/**/*.ts"]
+            }
         },
         "type-check": {
             "executor": "nx:run-commands",
             "options": {
-                "command": "tsc -p libs/web/core/auth/tsconfig.lib.json --noEmit"
+                "command": "npx tsc -p libs/web/core/auth/tsconfig.spec.json --noEmit"
             }
         },
         "build": {

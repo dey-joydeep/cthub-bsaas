@@ -5,10 +5,12 @@
  * and memory fallback when localStorage is not available.
  */
 import { isPlatformBrowser } from '@angular/common';
-import { Inject, Injectable, Optional, PLATFORM_ID } from '@angular/core';
-import { PLATFORM_UTILS_TOKEN, PlatformUtils } from '@cthub-bsaas/web-config';
+import { Injectable, Optional, PLATFORM_ID, inject } from '@angular/core';
 import { Observable, of } from 'rxjs';
+import { PLATFORM_UTILS_TOKEN, PlatformUtils } from '@cthub-bsaas/web-config';
+
 type StorageType = 'local' | 'session' | 'memory';
+type Serializable = string | number | boolean | Record<string, unknown> | Serializable[] | null;
 
 /**
  * Service for handling storage operations in an SSR-compatible way
@@ -17,16 +19,17 @@ type StorageType = 'local' | 'session' | 'memory';
   providedIn: 'root',
 })
 export class StorageService {
-  private storage: Storage | null = null;
-  private readonly platformUtils: PlatformUtils | null = null;
+ private storage: Storage | null = null;
+  private readonly platformUtils: PlatformUtils | null;
   private readonly isBrowser: boolean;
   private readonly memoryStore = new Map<string, string>();
   private initialized = false;
   private storageType: StorageType = 'memory';
 
-  constructor(@Inject(PLATFORM_ID) platformId: object, @Optional() @Inject(PLATFORM_UTILS_TOKEN) platformUtils: PlatformUtils | null) {
+  constructor() {
+    this.platformUtils = inject(PLATFORM_UTILS_TOKEN, { optional: true });
+    const platformId = inject(PLATFORM_ID);
     this.isBrowser = isPlatformBrowser(platformId);
-    this.platformUtils = platformUtils;
 
     try {
       this.initialize();
@@ -70,33 +73,28 @@ export class StorageService {
    * Create an in-memory storage implementation
    */
   private createMemoryStorage(): Storage {
-    // Create a proxy to handle the Storage interface requirements
-    const self = this;
-    const storage: Storage = {
-      get length() {
-        return self.memoryStore.size;
+    const map = this.memoryStore;
+
+    return {
+      get length(): number {
+        return map.size;
       },
-      clear: (): void => {
-        this.memoryStore.clear();
+      clear(): void {
+        map.clear();
       },
-      getItem: (key: string): string | null => {
-        return this.memoryStore.get(key) || null;
+      getItem(key: string): string | null {
+        return map.get(key) ?? null;
       },
-      key: (index: number): string | null => {
-        return Array.from(this.memoryStore.keys())[index] || null;
+      key(index: number): string | null {
+        return Array.from(map.keys())[index] ?? null;
       },
-      removeItem: (key: string): void => {
-        if (this.memoryStore.has(key)) {
-          this.memoryStore.delete(key);
-        }
+      removeItem(key: string): void {
+        map.delete(key);
       },
-      setItem: (key: string, value: string): void => {
-        this.memoryStore.set(key, value);
+      setItem(key: string, value: string): void {
+        map.set(key, value);
       },
     };
-
-    // Return the storage object with proper type assertion
-    return storage as unknown as Storage;
   }
 
   /**
@@ -104,15 +102,15 @@ export class StorageService {
    * @param key The key to get
    * @param defaultValue The default value if the key doesn't exist
    */
-  getItem<T = any>(key: string, defaultValue: T | null = null): T | null {
+  getItem<T extends Serializable>(key: string, defaultValue: T | null = null): T | null {
     if (!this.initialized) {
       console.warn('StorageService not yet initialized');
       return defaultValue;
     }
 
     try {
-      const item = this.storage?.getItem(key);
-      return item ? JSON.parse(item) : defaultValue;
+      const item = this.storage?.getItem(key) ?? null;
+      return item ? (JSON.parse(item) as T) : defaultValue;
     } catch (error) {
       console.error(`Error getting item ${key}:`, error);
       return defaultValue;
@@ -124,7 +122,7 @@ export class StorageService {
    * @param key The key to get
    * @param defaultValue The default value if the key doesn't exist
    */
-  getItem$<T = any>(key: string, defaultValue: T | null = null): Observable<T | null> {
+  getItem$<T extends Serializable>(key: string, defaultValue: T | null = null): Observable<T | null> {
     return of(this.getItem(key, defaultValue));
   }
 
@@ -133,7 +131,7 @@ export class StorageService {
    * @param key The key to set
    * @param value The value to set
    */
-  setItem<T = any>(key: string, value: T): void {
+  setItem<T extends Serializable>(key: string, value: T): void {
     if (!this.initialized) {
       console.warn('StorageService not yet initialized');
       return;
@@ -152,7 +150,7 @@ export class StorageService {
    * @param key The key to set
    * @param value The value to set
    */
-  setItem$<T = any>(key: string, value: T): Observable<void> {
+  setItem$<T extends Serializable>(key: string, value: T): Observable<void> {
     return new Observable((subscriber) => {
       try {
         this.setItem(key, value);

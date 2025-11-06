@@ -1,18 +1,14 @@
 {
-    "extends": "../../../tsconfig.base.json",
+    "extends": "../tsconfig.lib.base.json",
     "compilerOptions": {
         "rootDir": "src",
-        "outDir": "../../../dist/out-tsc/libs/web/ui",
-        "declaration": true,
-        "declarationMap": true,
-        "inlineSources": true,
-        "types": [],
-        "isolatedModules": true,
-        "useDefineForClassFields": true
+        "outDir": "../../../dist/out-tsc/libs/web/ui"
     },
-    "angularCompilerOptions": {
-        "compilationMode": "partial"
-    },
-    "exclude": ["src/**/*.spec.ts", "src/test-setup.ts", "jest.config.ts", "src/**/*.test.ts"],
-    "include": ["src/**/*.ts"]
+    "include": ["src/**/*.ts", "src/**/*.d.ts"],
+    "exclude": [
+        "src/test-setup.ts",
+        "**/*.spec.ts",
+        "**/*.test.ts",
+        "jest.config.ts"
+    ]
 }

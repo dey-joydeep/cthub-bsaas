@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 
 @Injectable({
@@ -6,7 +6,8 @@ import { Meta, Title } from '@angular/platform-browser';
 })
 export class SeoMetaService {
 
-  constructor(private title: Title, private meta: Meta) { }
+  private readonly title = inject(Title);
+  private readonly meta = inject(Meta);
 
   setTitle(title: string) {
     this.title.setTitle(title);

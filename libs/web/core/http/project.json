@@ -22,12 +22,15 @@
             }
         },
         "lint": {
-            "executor": "@nx/eslint:lint"
+            "executor": "@nx/eslint:lint",
+            "options": {
+                "lintFilePatterns": ["libs/web/core/http/src/**/*.ts"]
+            }
         },
         "type-check": {
             "executor": "nx:run-commands",
             "options": {
-                "command": "tsc -p libs/web/core/http/tsconfig.lib.json --noEmit"
+                "command": "npx tsc -p libs/web/core/http/tsconfig.spec.json --noEmit"
             }
         },
         "build": {
