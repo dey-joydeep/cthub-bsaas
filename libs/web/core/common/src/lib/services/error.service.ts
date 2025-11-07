@@ -90,7 +90,10 @@ export class ErrorService {
       errorState.message = 'Unable to connect to the server. Please check your internet connection.';
     } else if (error.status >= 400 && error.status < 500) {
       errorState.type = ErrorType.VALIDATION;
-      errorState.message = error.error?.message || 'An error occurred with your request';
+      const payload: unknown = error.error;
+      errorState.message = this.isErrorWithMessage(payload)
+        ? payload.message
+        : 'An error occurred with your request';
     } else if (error.status >= 500) {
       errorState.type = ErrorType.SERVER;
       errorState.message = 'A server error occurred. Please try again later.';
@@ -107,13 +110,21 @@ export class ErrorService {
     }
 
     const root = error as Record<string, unknown>;
-    const nested = root.error;
+    const nested = root['error'];
 
-    return typeof nested === 'object' && nested !== null && typeof (nested as Record<string, unknown>).message === 'string';
+    return (
+      typeof nested === 'object' &&
+      nested !== null &&
+      typeof (nested as Record<string, unknown>)['message'] === 'string'
+    );
   }
 
   private isErrorWithMessage(error: unknown): error is { message: string } {
-    return typeof error === 'object' && error !== null && typeof (error as Record<string, unknown>).message === 'string';
+    return (
+      typeof error === 'object' &&
+      error !== null &&
+      typeof (error as Record<string, unknown>)['message'] === 'string'
+    );
   }
 
   private isHttpErrorResponse(error: unknown): error is HttpErrorResponse {

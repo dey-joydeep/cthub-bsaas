@@ -3,7 +3,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, HostListener, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { AbstractBaseComponent, ErrorService } from '@cthub-bsaas/web-core-common';
+import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { TranslateModule } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 
@@ -44,11 +44,10 @@ export class DashboardComponent extends AbstractBaseComponent implements OnInit 
 
   constructor(
     private dashboardService: DashboardService,
-    @Inject(ErrorService) protected override errorService: ErrorService,
     @Inject(PLATFORM_ID) private platformId: object,
     @Inject(PLATFORM_UTILS_TOKEN) private platformUtils: PlatformUtils,
   ) {
-    super(errorService);
+    super();
     this.isBrowser = isPlatformBrowser(this.platformId);
     const initialWidth = this.isBrowser && this.platformUtils.windowRef ? this.platformUtils.windowRef.innerWidth : 0;
     this.setBreakpoint(initialWidth);

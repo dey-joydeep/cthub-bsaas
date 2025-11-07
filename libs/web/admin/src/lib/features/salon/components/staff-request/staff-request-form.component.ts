@@ -1,9 +1,9 @@
-import { Component, EventEmitter, Inject, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { StaffRequestService, CreateLeaveRequestPayload } from '../../services/staff-request.service';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
-import { AbstractBaseComponent, ErrorService } from '@cthub-bsaas/web-core-common';
+import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 
 @Component({
   selector: 'app-staff-request-form',
@@ -21,9 +21,8 @@ export class StaffRequestFormComponent extends AbstractBaseComponent {
   constructor(
     private fb: FormBuilder,
     private staffRequestService: StaffRequestService,
-    @Inject(ErrorService) protected override errorService: ErrorService,
   ) {
-    super(errorService);
+    super();
     this.form = this.fb.group({
       leaveFrom: ['', Validators.required],
       leaveTo: ['', Validators.required],

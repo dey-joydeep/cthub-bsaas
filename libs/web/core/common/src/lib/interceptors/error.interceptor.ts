@@ -18,7 +18,9 @@ export class ErrorInterceptor implements HttpInterceptor {
         } else if (error.status >= 400 && error.status < 500) {
           if (error.status === 401) {
             this.notificationService.showError('Your session has expired. Please log in again.');
-            void this.router.navigate(['/auth/login']);
+            void this.router
+              .navigate(['/auth/login'])
+              .catch(() => undefined);
           } else if (error.status === 403) {
             this.notificationService.showError('You do not have permission to perform this action.');
           } else if (error.status === 404) {
@@ -31,7 +33,7 @@ export class ErrorInterceptor implements HttpInterceptor {
             url: req.url,
             status: error.status,
             message: this.getErrorMessage(error) ?? 'A server error occurred',
-            error: error.error,
+            error: error.error as unknown,
           });
           this.notificationService.showError('We encountered an issue processing your request. Our team has been notified.');
         } else {
@@ -45,10 +47,10 @@ export class ErrorInterceptor implements HttpInterceptor {
   }
 
   private getErrorMessage(error: HttpErrorResponse): string | undefined {
-    const payload = error.error;
+    const payload: unknown = error.error;
 
     if (typeof payload === 'object' && payload !== null) {
-      const maybeMessage = (payload as Record<string, unknown>).message;
+      const maybeMessage = (payload as Record<string, unknown>)['message'];
       if (typeof maybeMessage === 'string') {
         return maybeMessage;
       }

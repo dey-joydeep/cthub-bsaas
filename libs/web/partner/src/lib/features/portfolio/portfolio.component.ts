@@ -1,9 +1,9 @@
-import { Component, Inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PortfolioService } from './portfolio.service';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { AbstractBaseComponent, ErrorService } from '@cthub-bsaas/web-core-common';
+import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { PortfolioItem } from './models/portfolio.model';
 
 @Component({
@@ -24,9 +24,8 @@ export class PortfolioComponent extends AbstractBaseComponent {
   constructor(
     public portfolioService: PortfolioService,
     private fb: FormBuilder,
-    @Inject(ErrorService) protected override errorService: ErrorService,
   ) {
-    super(errorService);
+    super();
     this.addForm = this.fb.group({
       tenantId: ['', Validators.required],
       userId: ['', Validators.required],

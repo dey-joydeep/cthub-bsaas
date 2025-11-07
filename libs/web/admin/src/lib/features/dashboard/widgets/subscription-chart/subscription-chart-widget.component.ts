@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges, ViewChild, inject, Inject } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,7 +8,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
 import { Observable, from, of } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import { AbstractBaseComponent, ErrorService } from '@cthub-bsaas/web-core-common';
+import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { SubscriptionData } from '../../models/dashboard.model';
 import { DashboardService } from '../../dashboard.service';
 import { BaseChartDirective } from 'ng2-charts';
@@ -106,10 +106,6 @@ export class SubscriptionChartWidgetComponent extends AbstractBaseComponent impl
   };
 
   private dashboardService = inject(DashboardService);
-
-  constructor(@Inject(ErrorService) protected override errorService: ErrorService) {
-    super(errorService);
-  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['subscriptionData'] && this.subscriptionData?.length) {

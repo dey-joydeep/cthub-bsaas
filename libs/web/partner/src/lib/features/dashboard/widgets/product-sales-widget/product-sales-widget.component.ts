@@ -20,7 +20,6 @@ import { takeUntil } from 'rxjs';
 
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { DateRange } from '@cthub-bsaas/ui/models/date-range.model';
-import { ErrorService } from '@cthub-bsaas/web-core-common';
 import { ProductSalesWidgetService } from './product-sales-widget.service';
 import { ProductSale } from './models/product-sales-widget.model';
 
@@ -79,9 +78,8 @@ export class ProductSalesWidgetComponent extends AbstractBaseComponent implement
   constructor(
     private productSalesWidgetService: ProductSalesWidgetService,
     @Inject(TranslateService) private translate: TranslateService,
-    @Inject(ErrorService) protected override errorService: ErrorService,
   ) {
-    super(errorService);
+    super();
   }
 
   override ngOnInit(): void {

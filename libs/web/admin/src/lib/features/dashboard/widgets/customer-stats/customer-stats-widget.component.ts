@@ -1,11 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, Inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { AbstractBaseComponent, ErrorService } from '@cthub-bsaas/web-core-common';
+import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { TranslateModule } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { CustomerStatsWidgetService } from './customer-stats-widget.service';
@@ -32,10 +32,9 @@ export class CustomerStatsWidgetComponent extends AbstractBaseComponent {
   private statsSubscription?: Subscription;
 
   constructor(
-    @Inject(ErrorService) protected override errorService: ErrorService,
     private customerStatsWidgetService: CustomerStatsWidgetService,
   ) {
-    super(errorService);
+    super();
   }
 
   public override ngOnInit(): void {

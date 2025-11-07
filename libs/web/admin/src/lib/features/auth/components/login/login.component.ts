@@ -23,7 +23,7 @@ import { takeUntil } from 'rxjs/operators';
 import { TranslateModule } from '@ngx-translate/core';
 
 // Services
-import { AbstractBaseComponent, ErrorService } from '@cthub-bsaas/web-core-common';
+import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { PLATFORM_UTILS_TOKEN, type PlatformUtils, StorageService } from '@cthub-bsaas/web-core-platform';
 import type { AdminAuthUser } from '../../tokens/login.tokens';
 import { LoginService } from './login.service';
@@ -107,13 +107,12 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
     @Inject(FormBuilder) private fb: FormBuilder,
     @Inject(Router) private router: Router,
     @Inject(ActivatedRoute) private route: ActivatedRoute,
-    protected override errorService: ErrorService,
     @Inject(StorageService) private storageService: StorageService,
     @Inject(LoginService) private loginService: LoginService,
     @Inject(PLATFORM_ID) private platformId: object,
     @Optional() @Inject('SSR_DEBUG') private ssrDebug: any,
   ) {
-    super(errorService);
+    super();
     this.isBrowser = isPlatformBrowser(this.platformId);
 
     // Log constructor execution for debugging

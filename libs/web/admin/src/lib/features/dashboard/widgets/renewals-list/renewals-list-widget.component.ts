@@ -1,4 +1,4 @@
-import { Component, Input, Inject } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -7,7 +7,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
-import { AbstractBaseComponent, ErrorService } from '@cthub-bsaas/web-core-common';
+import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { DashboardService } from '../../services/dashboard.service';
 import { Subscription } from 'rxjs';
 
@@ -49,20 +49,13 @@ export class RenewalsListWidgetComponent extends AbstractBaseComponent {
   renewals: Renewal[] = [];
   private subscriptions = new Subscription();
 
-  constructor(
-    @Inject(ErrorService) protected override errorService: ErrorService,
-    @Inject(DashboardService) private dashboardService: DashboardService,
-  ) {
-    super(errorService);
+  constructor(private dashboardService: DashboardService) {
+    super();
   }
 
   override ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
     super.ngOnDestroy();
-  }
-
-  override handleError(error: any): void {
-    super.handleError(error);
   }
 
   private loadRenewals() {

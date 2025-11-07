@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { AbstractBaseComponent, ErrorService } from '@cthub-bsaas/web-core-common';
+import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { TranslateModule } from '@ngx-translate/core';
 import { CurrentUserService } from '@cthub-bsaas/web-core/auth';
 import { UserService, UserStats } from './user.service';
@@ -19,9 +19,8 @@ export class UserComponent extends AbstractBaseComponent implements OnInit {
   constructor(
     private userService: UserService,
     public currentUserService: CurrentUserService,
-    protected override errorService: ErrorService,
   ) {
-    super(errorService);
+    super();
   }
 
   public override ngOnInit(): void {

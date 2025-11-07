@@ -1,4 +1,4 @@
-import { Directive, OnDestroy, OnInit } from '@angular/core';
+import { Directive, OnDestroy, OnInit, inject } from '@angular/core';
 import { Subject } from 'rxjs';
 import { ErrorService } from '../services/error.service';
 
@@ -7,8 +7,7 @@ export abstract class AbstractBaseComponent implements OnInit, OnDestroy {
   protected destroy$ = new Subject<void>();
   private _error: string | null = null;
   private _loading = false;
-
-  constructor(protected errorService: ErrorService) {}
+  protected readonly errorService = inject(ErrorService);
 
   ngOnInit(): void {
     this.setupErrorSubscription();
@@ -33,7 +32,7 @@ export abstract class AbstractBaseComponent implements OnInit, OnDestroy {
   }
 
   // Helper method for error handling
-  protected handleError(error: any): void {
+  protected handleError(error: unknown): void {
     this.error = this.errorService.getErrorMessage(error);
     this.loading = false;
   }
