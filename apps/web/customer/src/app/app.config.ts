@@ -50,15 +50,10 @@ import {
   type ForgotPasswordApiPort,
   type RegisterApiPort,
 } from '@cthub-bsaas/web-customer-auth';
-import {
-  ErrorHandlerService,
-  ERROR_INTERCEPTOR_PROVIDER,
-  loadingInterceptor,
-  ssrInterceptor,
-  ssrTranslateInterceptor,
-} from '@cthub-bsaas/web-core/http';
+import { ErrorHandlerService, ERROR_INTERCEPTOR_PROVIDER, loadingInterceptor } from '@cthub-bsaas/web-core-common';
+import { ssrInterceptor, ssrTranslateInterceptor } from '@cthub-bsaas/web-core-platform';
 import { AUTH_STATE_PORT } from '@cthub-bsaas/web-core/auth';
-import { AuthService } from './core/auth/services/auth.service';
+import { AuthService } from '@cthub-bsaas/web-customer/auth';
 
 // AoT requires an exported function for factories
 export function httpLoaderFactory(http: HttpClient) {

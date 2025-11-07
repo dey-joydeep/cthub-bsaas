@@ -23,13 +23,10 @@ import { takeUntil } from 'rxjs/operators';
 import { TranslateModule } from '@ngx-translate/core';
 
 // Services
-import { ErrorService } from '@cthub-bsaas/web-core-http';
-import { PLATFORM_UTILS_TOKEN, type PlatformUtils } from '@cthub-bsaas/web-config';
-import { StorageService } from '@cthub-bsaas/web-core-http';
+import { AbstractBaseComponent, ErrorService } from '@cthub-bsaas/web-core-common';
+import { PLATFORM_UTILS_TOKEN, type PlatformUtils, StorageService } from '@cthub-bsaas/web-core-platform';
 import type { AdminAuthUser } from '../../tokens/login.tokens';
 import { LoginService } from './login.service';
-
-import { AbstractBaseComponent } from '@cthub-bsaas/web-core-http';
 
 @Component({
   standalone: true,

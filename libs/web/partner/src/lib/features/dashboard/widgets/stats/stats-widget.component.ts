@@ -3,8 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { TranslateModule } from '@ngx-translate/core';
-import { AbstractBaseComponent } from '@cthub-bsaas/web-core/http';
-import { ErrorService } from '@cthub-bsaas/web-core/http';
+import { AbstractBaseComponent, ErrorService } from '@cthub-bsaas/web-core-common';
 import type { DashboardStats } from './models/stats-widget.model';
 
 @Component({

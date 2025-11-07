@@ -18,9 +18,9 @@ import { RouterModule } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { takeUntil } from 'rxjs';
 
-import { AbstractBaseComponent } from '@cthub-bsaas/web-core/http';
+import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { DateRange } from '@cthub-bsaas/ui';
-import { ErrorService } from '@cthub-bsaas/web-core/http';
+import { ErrorService } from '@cthub-bsaas/web-core-common';
 import { ProductSalesWidgetService } from './product-sales-widget.service';
 import { ProductSale } from './models/product-sales-widget.model';
 

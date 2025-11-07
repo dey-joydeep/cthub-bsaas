@@ -2,7 +2,7 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, Inject, OnDestroy, OnInit, Optional, PLATFORM_ID } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule }'@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 // Material
 import { MatButtonModule } from '@angular/material/button';
@@ -23,14 +23,10 @@ import { takeUntil } from 'rxjs/operators';
 import { TranslateModule } from '@ngx-translate/core';
 
 // Services
-import { ErrorService } from '@cthub-bsaas/web-core/http';
-import { PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-config';
-import { StorageService } from '@cthub-bsaas/web-core/http';
-import type { PlatformUtils } from '@cthub-bsaas/web-config';
+import { ErrorService, AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
+import { PLATFORM_UTILS_TOKEN, type PlatformUtils, StorageService } from '@cthub-bsaas/web-core-platform';
 import { LoginService } from './login.service';
 import { PartnerAuthUser } from './models/login.model';
-
-import { AbstractBaseComponent } from '@cthub-bsaas/web-core/http';
 
 @Component({
   standalone: true,

@@ -1,4 +1,4 @@
-import type { PlatformUtils } from '@cthub-bsaas/web-config';
+import type { PlatformUtils } from '@cthub-bsaas/web-core-platform';
 
 /**
  * Creates a mock implementation of PlatformUtils for testing

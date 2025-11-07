@@ -4,7 +4,7 @@ import { SalonService } from '../../services/salon.service';
 import { of, throwError } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { PLATFORM_ID } from '@angular/core';
-import { PLATFORM_UTILS_TOKEN, type PlatformUtils } from '@cthub-bsaas/web-config';
+import { PLATFORM_UTILS_TOKEN, type PlatformUtils } from '@cthub-bsaas/web-core-platform';
 // Import mocks directly from the test-utils directory
 const { createBrowserPlatformUtilsMock, createServerPlatformUtilsMock } = require('../../../../test-utils/mocks/platform-utils.mock');
 

@@ -3,8 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { StaffRequestService, CreateLeaveRequestPayload } from '../../services/staff-request.service';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
-import { AbstractBaseComponent } from '@cthub-bsaas/web-core/http';
-import { ErrorService } from '@cthub-bsaas/web-core/http';
+import { AbstractBaseComponent, ErrorService } from '@cthub-bsaas/web-core-common';
 
 @Component({
   selector: 'app-staff-request-form',

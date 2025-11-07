@@ -1,7 +1,7 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app/app.component';
 import { config as serverConfig } from './app/app.config.server';
-import { MaterialSsrHandler, materialSsrHandlerFactory } from './app/core/ssr';
+import { MaterialSsrHandler, materialSsrHandlerFactory } from '@cthub-bsaas/web-core-platform';
 import { provideServerRendering } from '@angular/platform-server';
 
 const bootstrap = async () => {

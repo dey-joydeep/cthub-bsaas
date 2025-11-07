@@ -41,14 +41,9 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 // App imports
-import { AUTH_STATE_PORT, CURRENT_USER } from '@cthub-bsaas/web-core/auth';
-import {
-  ERROR_INTERCEPTOR_PROVIDER,
-  ErrorHandlerService,
-  loadingInterceptor,
-  ssrInterceptor,
-  ssrTranslateInterceptor,
-} from '@cthub-bsaas/web-core/http';
+import { AUTH_STATE_PORT, CURRENT_USER, CurrentUserService } from '@cthub-bsaas/web-core/auth';
+import { ERROR_INTERCEPTOR_PROVIDER, ErrorHandlerService, loadingInterceptor } from '@cthub-bsaas/web-core-common';
+import { ssrInterceptor, ssrTranslateInterceptor } from '@cthub-bsaas/web-core-platform';
 import { routes } from './app.routes';
 import { LOGIN_API, AUTH_STATE_SETTER } from '@cthub-bsaas/web-partner-auth';
 import { LoginApiService } from '@cthub-bsaas/web-partner-auth';
@@ -58,8 +53,7 @@ import {
   type ForgotPasswordApiPort,
   type RegisterApiPort,
 } from '@cthub-bsaas/web-partner-auth';
-import { AuthService } from './core/auth/services/auth.service';
-import { CurrentUserAdapter } from './core/auth/services/current-user.adapter';
+import { AuthService } from '@cthub-bsaas/web-partner/auth';
 
 // AoT requires an exported function for factories
 export function httpLoaderFactory(http: HttpClient) {
@@ -132,7 +126,7 @@ export const appConfig: ApplicationConfig = {
     { provide: AUTH_STATE_PORT, useExisting: AuthService },
     { provide: LOGIN_API, useClass: LoginApiService },
     { provide: AUTH_STATE_SETTER, useExisting: AuthService },
-    { provide: CURRENT_USER, useExisting: CurrentUserAdapter },
+    { provide: CURRENT_USER, useExisting: CurrentUserService },
     // Token-based auth APIs (temporary placeholder implementations)
     {
       provide: FORGOT_PASSWORD_API,

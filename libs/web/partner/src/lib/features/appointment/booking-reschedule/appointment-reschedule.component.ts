@@ -19,7 +19,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 
 import { Appointment, TimeSlot } from './models/appointment-reschedule.model';
-import { LoadingService } from '@cthub-bsaas/web-core/http';
+import { LoadingService } from '@cthub-bsaas/web-core-common';
 import { AppointmentRescheduleService } from './appointment-reschedule.service';
 import { AppointmentStatus } from '@cthub-bsaas/shared';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';

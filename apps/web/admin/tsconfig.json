@@ -9,13 +9,18 @@
             "@shared/*": ["../../../libs/shared/src/*"],
             "@cthub-bsaas/web-ui": ["../../../libs/web/ui/src/index.ts"],
             "@cthub-bsaas/web-ui/*": ["../../../libs/web/ui/src/*"],
-            "@cthub-bsaas/web-admin/auth": ["../../../libs/web/admin/auth/src/index.ts"],
+            "@cthub-bsaas/web-admin/auth": ["../../../libs/web/admin/src/lib/features/auth/index.ts"],
             "@cthub-bsaas/shared": ["../../../libs/shared/src/index.ts"],
             "@cthub-bsaas/shared/*": ["../../../libs/shared/src/*"],
             "@cthub-bsaas/web-config": ["../../../libs/web/config/src/index.ts"],
             "@cthub-bsaas/web-core/auth": ["../../../libs/web/core/auth/src/index.ts"],
             "@cthub-bsaas/web-core/http": ["../../../libs/web/core/http/src/index.ts"],
-            "@cthub-bsaas/web-core/testing": ["../../../libs/web/core/testing/src/index.ts"]
+            "@cthub-bsaas/web-core/testing": ["../../../libs/web/core/testing/src/index.ts"],
+            "@cthub-bsaas/web-core-common": ["../../../libs/web/core/common/src/index.ts"],
+            "@cthub-bsaas/web-core-platform": ["../../../libs/web/core/platform/src/index.ts"],
+            "@cthub-bsaas/web-admin": ["../../../libs/web/admin/src/index.ts"],
+            "@cthub-bsaas/web-admin/*": ["../../../libs/web/admin/src/*"],
+            "@cthub-bsaas/web-config/environments/*": ["../../../libs/web/config/src/environments/*"]
         },
         "types": ["node"],
         "esModuleInterop": true

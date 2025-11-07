@@ -11,7 +11,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RevenueChartWidgetService } from './revenue-chart-widget.service';
 import { RevenueData } from './models/revenue-chart-widget.model';
-import { ErrorService } from '@cthub-bsaas/web-core/http';
+import { ErrorService } from '@cthub-bsaas/web-core-common';
 
 @Component({
   selector: 'app-revenue-chart-widget',

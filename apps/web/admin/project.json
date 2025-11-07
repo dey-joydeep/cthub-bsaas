@@ -2,7 +2,7 @@
     "name": "web-app-admin",
     "$schema": "../../../node_modules/nx/schemas/project-schema.json",
     "projectType": "application",
-    "sourceRoot": "src",
+    "sourceRoot": "apps/web/admin/src",
     "tags": ["scope:web", "type:app"],
     "targets": {
         "build": {
@@ -12,24 +12,24 @@
                 "outputPath": {
                     "base": "dist/apps/admin"
                 },
-                "index": "src/index.html",
-                "polyfills": ["src/polyfills.ts"],
-                "tsConfig": "tsconfig.app.json",
+                "index": "apps/web/admin/src/index.html",
+                "polyfills": ["apps/web/admin/src/polyfills.ts"],
+                "tsConfig": "apps/web/admin/tsconfig.app.json",
                 "assets": [
                     {
                         "glob": "**/*",
-                        "input": "src/assets",
+                        "input": "apps/web/admin/src/assets",
                         "output": "/assets/"
                     },
                     {
                         "glob": "favicon.ico",
-                        "input": "src",
+                        "input": "apps/web/admin/src",
                         "output": "/"
                     }
                 ],
                 "styles": ["libs/web/config/src/styles/styles.css", "apps/web/admin/src/styles.scss"],
                 "scripts": [],
-                "browser": "src/main.ts"
+                "browser": "apps/web/admin/src/main.ts"
             },
             "configurations": {
                 "production": {
@@ -37,8 +37,8 @@
                     "extractLicenses": true,
                     "fileReplacements": [
                         {
-                            "replace": "src/environments/environment.ts",
-                            "with": "src/environments/environment.prod.ts"
+                            "replace": "apps/web/admin/src/environments/environment.ts",
+                            "with": "apps/web/admin/src/environments/environment.prod.ts"
                         }
                     ]
                 },
@@ -53,16 +53,16 @@
         "serve": {
             "executor": "@nx/angular:dev-server",
             "options": {
-                "buildTarget": "web-admin:build:development",
+                "buildTarget": "web-app-admin:build:development",
                 "port": 4200,
                 "host": "localhost"
             },
             "configurations": {
                 "production": {
-                    "buildTarget": "web-admin:build:production"
+                    "buildTarget": "web-app-admin:build:production"
                 },
                 "development": {
-                    "buildTarget": "web-admin:build:development"
+                    "buildTarget": "web-app-admin:build:development"
                 }
             },
             "defaultConfiguration": "development"

@@ -3,8 +3,7 @@ import { CommonModule } from '@angular/common';
 import { PortfolioService } from './portfolio.service';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { AbstractBaseComponent } from '@cthub-bsaas/web-core/http';
-import { ErrorService } from '@cthub-bsaas/web-core/http';
+import { AbstractBaseComponent, ErrorService } from '@cthub-bsaas/web-core-common';
 import { PortfolioItem } from './models/portfolio.model';
 
 @Component({

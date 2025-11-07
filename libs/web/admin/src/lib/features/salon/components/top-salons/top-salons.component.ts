@@ -1,12 +1,11 @@
-﻿import { PlatformUtils } from '@cthub-bsaas/web-config';
+﻿import { PlatformUtils, PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
 import { Component, Input, OnInit, Inject, PLATFORM_ID, Type } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { SalonService } from '../../services/salon.service';
 import { RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { ISalonDto } from '../../../home/home.models';
-import type { PlatformUtils } from '@cthub-bsaas/web-config';
-import { PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-config';
+import type { PlatformUtils } from '@cthub-bsaas/web-core-platform';
 
 // Extend ISalonDto with any additional properties needed for this component
 export type Salon = ISalonDto & {

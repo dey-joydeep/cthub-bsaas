@@ -7,7 +7,7 @@ import { TranslateModule } from '@ngx-translate/core';
 
 // Core services
 import { CurrentUserService } from '../../../../core/auth/services/current-user.service';
-import { ErrorService } from '@cthub-bsaas/web-core/http';
+import { ErrorService } from '@cthub-bsaas/web-core-common';
 
 // Models from salon module
 import { Appointment } from '../../models/appointment.model';

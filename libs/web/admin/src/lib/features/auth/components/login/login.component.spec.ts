@@ -14,7 +14,7 @@ import { of, throwError } from 'rxjs';
 import { LoginComponent } from './login.component';
 
 // Services
-import { NotificationService } from '@cthub-bsaas/web-core/http';
+import { NotificationService } from '@cthub-bsaas/web-core-common';
 import { AuthService } from '../../services/auth.service';
 
 // Mocks

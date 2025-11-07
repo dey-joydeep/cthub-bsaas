@@ -12,8 +12,8 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { AuthService } from './core/auth/services/auth.service';
-import { CurrentUserService } from './core/auth/services/current-user.service';
+import { AuthService } from '@cthub-bsaas/web-customer/auth';
+import { CurrentUserService } from '@cthub-bsaas/web-core/auth';
 
 // Define a User interface with roles
 export interface User {

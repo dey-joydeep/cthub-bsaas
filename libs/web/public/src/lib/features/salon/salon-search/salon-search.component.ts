@@ -1,4 +1,4 @@
-import { PlatformUtils } from '@cthub-bsaas/web-config';
+import { PlatformUtils, PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
 import { Component, inject, PLATFORM_ID, OnInit } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpParams } from '@angular/common/http';
@@ -7,8 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { Salon, SalonServiceItem } from './model/salon-search.model';
 import { SafeUrlPipe } from '@cthub-bsaas/web-ui';
-import type { PlatformUtils } from '@cthub-bsaas/web-config';
-import { PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-config';
+import type { PlatformUtils } from '@cthub-bsaas/web-core-platform';
 
 @Component({
   selector: 'app-salon-search',

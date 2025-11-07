@@ -5,7 +5,6 @@
     "prefix": "lib",
     "projectType": "library",
     "tags": ["scope:web-core", "type:data"],
-    "implicitDependencies": ["web-config"],
     "targets": {
         "test": {
             "executor": "@nx/jest:jest",

@@ -3,7 +3,7 @@ import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject, Observable, firstValueFrom, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-import { StorageService } from '@cthub-bsaas/web-core/http';
+import { StorageService } from '@cthub-bsaas/web-core-platform';
 import type { AuthStatePort, BaseAuthUser } from '@cthub-bsaas/web-core/auth';
 import type { CustomerAuthUser } from '@cthub-bsaas/web-customer-auth';
 
@@ -34,6 +34,10 @@ export class AuthService implements AuthStatePort {
     if (!this.isBrowser) return false;
     const token = await firstValueFrom(this.getToken());
     return this.isTokenValid(token);
+  }
+
+  async logout(): Promise<void> {
+    this.clearAuthData();
   }
 
   public setLoggedInUser(user: CustomerAuthUser): void {

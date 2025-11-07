@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { AbstractBaseComponent } from '@cthub-bsaas/web-core/http';
-import { ErrorService } from '@cthub-bsaas/web-core/http';
+import { AbstractBaseComponent, ErrorService } from '@cthub-bsaas/web-core-common';
 import { TranslateModule } from '@ngx-translate/core';
 import { CurrentUserService } from '@cthub-bsaas/web-core/auth';
 import { UserService, UserStats } from './user.service';
