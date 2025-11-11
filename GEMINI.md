@@ -31,7 +31,7 @@
 
 - If an MCP tool is available, use it without asking (respect approvals).
 - Ask for approval before running non-trusted shell commands or anything outside the repo root.
-- **Explain File Deletions:** Before deleting any non-temporary file, you *must* provide a brief explanation of the reason for the deletion. This is to ensure that the user understands the impact of the deletion and can make an informed decision.
+- **Explain File Deletions:** Before deleting any non-temporary file, you _must_ provide a brief explanation of the reason for the deletion. This is to ensure that the user understands the impact of the deletion and can make an informed decision.
 
 ### Common Tasks
 
@@ -134,19 +134,19 @@ When writing integration tests for services that interact with a database, it is
 
 The established pattern involves the following hooks and strategies:
 
--   **`beforeAll`:** Used to set up static, non-mutating master data that is required by the entire test suite.
-    -   **Example:** Populating the `Role` table from a shared enum using a `createRoles(prisma)` helper.
+- **`beforeAll`:** Used to set up static, non-mutating master data that is required by the entire test suite.
+  - **Example:** Populating the `Role` table from a shared enum using a `createRoles(prisma)` helper.
 
--   **`beforeEach`:** Used to set up the specific, unique data required for a single test case.
-    -   **Example:** Creating a new `User` with a guaranteed-unique email (`test-${randomUUID()}@example.com`) using a `createTestUser(prisma, uniqueEmail)` helper.
+- **`beforeEach`:** Used to set up the specific, unique data required for a single test case.
+  - **Example:** Creating a new `User` with a guaranteed-unique email (`test-${randomUUID()}@example.com`) using a `createTestUser(prisma, uniqueEmail)` helper.
 
--   **`afterEach`:** Used to clean up the specific data created in the corresponding `beforeEach` hook. This ensures each test within the file is isolated from the others.
-    -   **Example:** Deleting the specific `User` (and their dependent records like `Session`, `UserRole`, etc.) using a `deleteTestUser(prisma, user)` helper.
+- **`afterEach`:** Used to clean up the specific data created in the corresponding `beforeEach` hook. This ensures each test within the file is isolated from the others.
+  - **Example:** Deleting the specific `User` (and their dependent records like `Session`, `UserRole`, etc.) using a `deleteTestUser(prisma, user)` helper.
 
--   **`afterAll`:** Used to clean up the master data that was created in the `beforeAll` hook.
-    -   **Example:** Deleting all `Role` records using a `deleteRoles(prisma)` helper.
+- **`afterAll`:** Used to clean up the master data that was created in the `beforeAll` hook.
+  - **Example:** Deleting all `Role` records using a `deleteRoles(prisma)` helper.
 
--   **Helpers:** Common setup and teardown logic should be extracted into helper functions (e.g., `createRoles`, `createTestUser`, `deleteTestUser`) and placed in the shared `libs/server/core/src/testing/` directory. This promotes code reuse and maintainability.
+- **Helpers:** Common setup and teardown logic should be extracted into helper functions (e.g., `createRoles`, `createTestUser`, `deleteTestUser`) and placed in the shared `libs/server/core/src/testing/` directory. This promotes code reuse and maintainability.
 
 This pattern ensures that tests are independent and the database does not accumulate stale data, while still allowing for parallel execution.
 
@@ -357,3 +357,17 @@ This pattern ensures that tests are independent and the database does not accumu
 - Do not commit secrets; use env files or secret managers.
 - Prefer free‑tier services and OSS tooling when integrating dependencies.
 - Prisma schema/migrations: `libs/server/data-access/src/`; commit meaningful migrations.
+
+<!-- nx configuration start-->
+<!-- Leave the start & end comments to automatically receive updates. -->
+
+# General Guidelines for working with Nx
+
+- When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
+- You have access to the Nx MCP server and its tools, use them to help the user
+- When answering questions about the repository, use the `nx_workspace` tool first to gain an understanding of the workspace architecture where applicable.
+- When working in individual projects, use the `nx_project_details` mcp tool to analyze and understand the specific project structure and dependencies
+- For questions around nx configuration, best practices or if you're unsure, use the `nx_docs` tool to get relevant, up-to-date docs. Always use this instead of assuming things about nx configuration
+- If the user needs help with an Nx configuration or project graph error, use the `nx_workspace` tool to get any errors
+
+<!-- nx configuration end-->
