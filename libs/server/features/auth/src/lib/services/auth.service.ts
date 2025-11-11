@@ -238,8 +238,27 @@ export class AuthService {
         secret: this.configService.auth.jwtRefreshSecret,
       });
       const storedToken = await this.refreshTokenRepository.findByJti(jti);
-      if (!storedToken || storedToken.revokedAt) {
+      if (!storedToken) {
         this.audit.log('refresh_failure', { result: 'failure', reason: 'invalid_refresh_token' });
+        throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_REFRESH_TOKEN);
+      }
+      if (storedToken.revokedAt) {
+        // Reuse detected for a revoked refresh token: revoke the associated session as a precaution.
+        try {
+          await this.sessionRepository.delete(storedToken.sessionId);
+          this.audit.log('refresh_reuse_detected', {
+            result: 'session_revoked',
+            reason: 'revoked_token_reuse',
+            sessionId: storedToken.sessionId,
+          });
+        } catch {
+          // Best-effort: if session delete fails, proceed to deny refresh.
+          this.audit.log('refresh_reuse_detected', {
+            result: 'deny_only',
+            reason: 'revoked_token_reuse',
+            sessionId: storedToken.sessionId,
+          });
+        }
         throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_REFRESH_TOKEN);
       }
       const user = await this.userRepository.findById(sub);
