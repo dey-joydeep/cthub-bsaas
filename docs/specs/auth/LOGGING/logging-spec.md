@@ -17,7 +17,9 @@
 - **Fields:** userId/anon, tenantId, action, result, reason, ip, ua, deviceId, correlationId, ts.
 
 ## 4) Correlation IDs
-- Use a request-scoped interceptor to assign `correlationId` (UUID v4) to all logs; echo in errors and responses.
+- Use a request-scoped interceptor to assign `correlationId` (UUID v4) to all requests.
+- Always set and expose `X-Correlation-Id` response header.
+- Include `meta.correlationId` in error bodies; omit in success bodies (use header/logs).
 
 ## 5) Folder Paths (runtime)
 ```
@@ -29,4 +31,3 @@
 ```
 ## 6) External collectors (optional)
 Use only if you later add budget. For now, keep logs local. If needed, self-host **OpenSearch/ELK** (OSS) and ship logs via `pino-multi-stream`.
-

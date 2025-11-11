@@ -1,0 +1,44 @@
+name: OpenAPI Contract
+
+on:
+  pull_request:
+    paths:
+      - 'docs/specs/auth/API/**'
+      - 'libs/server/features/auth/**'
+      - 'apps/api/**'
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout HEAD
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Lint OpenAPI (Redocly)
+        run: npm run openapi:lint:auth
+
+      - name: Route parity check (controllers vs spec)
+        run: npm run openapi:check:auth
+
+      - name: Diff OpenAPI against base (breaking-change gate)
+        run: |
+          BASE_REF="origin/${{ github.base_ref }}"
+          git fetch origin "${{ github.base_ref }}:${{ github.base_ref }}"
+          mkdir -p /tmp/base
+          git show "${BASE_REF}:docs/specs/auth/API/openapi.yaml" > /tmp/base/openapi.yaml || echo "no base openapi.yaml; skipping diff"
+          if [ -s /tmp/base/openapi.yaml ]; then
+            npx @redocly/cli@2.7.0 diff /tmp/base/openapi.yaml docs/specs/auth/API/openapi.yaml --format=stylish
+          else
+            echo "Base spec missing; skipping diff"
+          fi
+

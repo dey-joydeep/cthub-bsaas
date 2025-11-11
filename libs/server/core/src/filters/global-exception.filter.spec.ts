@@ -9,13 +9,11 @@ import { ErrorService, NormalizedError } from '../errors/error.service';
 
 
 interface ErrorResponseBody {
-  statusCode: number;
+  success: false;
   message: string;
   code: string;
-  timestamp: string;
-  path: string;
   details?: Record<string, unknown>;
-  stack?: string;
+  meta?: { correlationId: string };
 }
 
 const createResponse = (): Response<ErrorResponseBody> => {
@@ -82,7 +80,7 @@ describe('GlobalExceptionFilter', () => {
     jest.clearAllMocks();
   });
 
-  it('should delegate to ErrorService and respond with normalized payload', () => {
+  it('should delegate to ErrorService and respond with canonical envelope', () => {
     const normalized: NormalizedError = {
       status: HttpStatus.BAD_REQUEST,
       code: 'BAD_REQUEST',
@@ -111,17 +109,16 @@ describe('GlobalExceptionFilter', () => {
     expect(statusMock).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
     const [firstPayload] = jsonMock.mock.calls[0] ?? [];
     expect(firstPayload).toBeDefined();
-    const payload = firstPayload!;
+    const payload = firstPayload! as ErrorResponseBody;
     expect(payload).toMatchObject({
-      statusCode: HttpStatus.BAD_REQUEST,
+      success: false,
       message: 'Invalid input',
       code: 'BAD_REQUEST',
-      path: '/test',
     });
-    expect(typeof payload.timestamp).toBe('string');
+    expect(payload.meta).toBeUndefined();
   });
 
-  it('should mask message and omit details/stack in production for server errors', () => {
+  it('should mask message and omit details in production for server errors', () => {
     const normalized: NormalizedError = {
       status: HttpStatus.INTERNAL_SERVER_ERROR,
       code: 'SERVER_ERROR',
@@ -153,19 +150,16 @@ describe('GlobalExceptionFilter', () => {
     expect(statusMock).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
     const [firstPayload] = jsonMock.mock.calls[0] ?? [];
     expect(firstPayload).toBeDefined();
-    const payload = firstPayload!;
+    const payload = firstPayload! as ErrorResponseBody;
     expect(payload).toMatchObject({
-      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      success: false,
       message: 'An internal server error occurred',
       code: 'SERVER_ERROR',
-      path: '/secure',
     });
-    expect(typeof payload.timestamp).toBe('string');
     expect(payload.details).toBeUndefined();
-    expect(payload.stack).toBeUndefined();
   });
 
-  it('should include details and stack when not in production', () => {
+  it('should include details when not in production', () => {
     const normalized: NormalizedError = {
       status: HttpStatus.BAD_REQUEST,
       code: 'VALIDATION_ERROR',
@@ -185,16 +179,13 @@ describe('GlobalExceptionFilter', () => {
 
     const [firstPayload] = jsonMock.mock.calls[0] ?? [];
     expect(firstPayload).toBeDefined();
-    const payload = firstPayload!;
+    const payload = firstPayload! as ErrorResponseBody;
     expect(payload).toMatchObject({
-      statusCode: HttpStatus.BAD_REQUEST,
+      success: false,
       message: 'Validation failed',
       code: 'VALIDATION_ERROR',
-      path: '/test',
       details: { field: 'email' },
-      stack: 'a-stack-trace',
     });
-    expect(typeof payload.timestamp).toBe('string');
   });
 
   it('should not include details if shouldMask is true', () => {
@@ -216,14 +207,12 @@ describe('GlobalExceptionFilter', () => {
 
     const [firstPayload] = jsonMock.mock.calls[0] ?? [];
     expect(firstPayload).toBeDefined();
-    const payload = firstPayload!;
+    const payload = firstPayload! as ErrorResponseBody;
     expect(payload).toMatchObject({
-      statusCode: HttpStatus.BAD_REQUEST,
+      success: false,
       message: 'Validation failed',
       code: 'VALIDATION_ERROR',
-      path: '/test',
     });
-    expect(typeof payload.timestamp).toBe('string');
     expect(payload.details).toBeUndefined();
   });
 });

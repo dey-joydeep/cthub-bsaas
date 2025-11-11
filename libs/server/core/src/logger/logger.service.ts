@@ -5,6 +5,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { configure, getLogger, Logger } from 'log4js';
 
 import { ConfigService } from '../config/config.service';
+import { CorrelationId } from '../http/correlation-id.middleware';
 
 /**
  * @public
@@ -124,6 +125,11 @@ export class LoggerService implements OnModuleInit {
    * @returns {string} A formatted log string that embeds the optional context.
    */
   private formatMessage(message: string, context?: string): string {
-    return context ? `[${context}] ${message}` : message;
+    const cid = CorrelationId.get();
+    const parts: string[] = [];
+    if (cid) parts.push(`[cid=${cid}]`);
+    if (context) parts.push(`[${context}]`);
+    parts.push(message);
+    return parts.join(' ');
   }
 }

@@ -2,6 +2,7 @@ import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus, Injectable } from '@
 import { Response } from 'express';
 import { ThrottlerException } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
+import { CorrelationId } from '@cthub-bsaas/server-core';
 
 /**
  * Adds a Retry-After header and a stable error code for rate-limited responses (429).
@@ -16,6 +17,13 @@ export class ThrottlerRetryAfterFilter implements ExceptionFilter<ThrottlerExcep
     const res = host.switchToHttp().getResponse<Response>();
     const ttl = this.config.get<number>('throttle.ttl', 60);
     res.setHeader('Retry-After', String(ttl));
-    res.status(HttpStatus.TOO_MANY_REQUESTS).json({ code: 'error.rate_limited' });
+    const correlationId = CorrelationId.get?.();
+    const body: Record<string, unknown> = {
+      success: false,
+      code: 'error.rate_limited',
+      message: 'Too many requests',
+    };
+    if (correlationId) body.meta = { correlationId };
+    res.status(HttpStatus.TOO_MANY_REQUESTS).json(body);
   }
 }

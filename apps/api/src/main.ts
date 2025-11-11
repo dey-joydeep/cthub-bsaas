@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { JwtAuthGuard, RolesGuard } from '@cthub-bsaas/server-core';
-import { ConfigService, CorrelationIdMiddleware, RetryAfterFilter } from '@cthub-bsaas/server-core';
+import { ConfigService, CorrelationIdMiddleware } from '@cthub-bsaas/server-core';
 import { ClassSerializerInterceptor, Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -56,8 +56,9 @@ async function bootstrap(): Promise<void> {
       'Accept',
       'X-XSRF-TOKEN',
       'X-Request-Id',
+      'X-Correlation-Id',
     ],
-    exposedHeaders: exposedHeaders || ['X-Request-Id'],
+    exposedHeaders: exposedHeaders || ['X-Request-Id', 'X-Correlation-Id'],
     maxAge: maxAge || 600, // 10 minutes
   });
 
@@ -103,8 +104,7 @@ async function bootstrap(): Promise<void> {
   // Global interceptors
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
-  // Global filters: ensure 429 has Retry-After header
-  app.useGlobalFilters(new RetryAfterFilter());
+  // 429 Retry-After is handled by the APP_FILTER ThrottlerRetryAfterFilter in AppModule
 
   // Global guards
   const reflector = app.get(Reflector);

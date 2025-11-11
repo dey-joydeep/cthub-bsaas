@@ -25,43 +25,49 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       includeStack: !isProduction,
     });
 
-    const timestamp = new Date().toISOString();
-    const body = this.buildResponseBody(normalized, request.url, timestamp, isProduction, correlationId);
-
-    response.status(normalized.status).json(body);
+    const body = this.buildCanonicalEnvelope(normalized, isProduction, correlationId);
+    response.status(normalized.status).json(body as Record<string, unknown>);
   }
 
-  private buildResponseBody(
+  /**
+   * Canonical error envelope as per API HLD:
+   * { success: false, code, message, details?, meta: { correlationId } }
+   */
+  private buildCanonicalEnvelope(
     normalized: NormalizedError,
-    path: string,
-    timestamp: string,
     isProduction: boolean,
     correlationId?: string,
-  ): Record<string, unknown> {
+  ): {
+    success: false;
+    code: string;
+    message: string;
+    details?: unknown;
+    meta?: { correlationId: string };
+  } {
     const shouldMaskDetails = normalized.shouldMaskResponse;
-    const body: Record<string, unknown> = {
-      statusCode: normalized.status,
+    const base: {
+      success: false;
+      code: string;
+      message: string;
+      details?: unknown;
+      meta?: { correlationId: string };
+    } = {
+      success: false as const,
+      code: normalized.code,
       message:
         isProduction && shouldMaskDetails
           ? 'An internal server error occurred'
           : normalized.message,
-      code: normalized.code,
-      timestamp,
-      path,
     };
 
-    if (correlationId) {
-      body.correlationId = correlationId;
-    }
-
     if (!shouldMaskDetails && normalized.details) {
-      body.details = normalized.details;
+      base.details = normalized.details;
     }
 
-    if (!isProduction && normalized.stack) {
-      body.stack = normalized.stack;
+    if (correlationId) {
+      base.meta = { correlationId };
     }
 
-    return body;
+    return base;
   }
 }

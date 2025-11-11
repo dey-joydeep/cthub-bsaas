@@ -4,7 +4,7 @@
 ## 1) Module Structure
 - **Controllers** per subdomain: login, mfa, password, registration, sessions, recovery, email‑change, passkeys (list/delete), social
 - **Services**: credential verify, WebAuthn verify/attest, OTP dispatch/verify, invite validation, session mgmt
-- **Interceptors/Filters**: error normalization → `ApiError`; `Retry-After` on 429 (core filter exists; app-global wiring governs runtime); `Cache-Control: no-store`; `correlationId` (planned)
+- **Interceptors/Filters**: error normalization → canonical error envelope; `Retry-After` on 429 (single global throttler filter); `Cache-Control: no-store`; `correlationId` (implemented: header on all responses; present in error body meta)
 
 ## 2) Business Flows / Algorithms
 
@@ -116,7 +116,7 @@ Canonical routes (implemented)
 ## 5) Response Envelope
 - Non-redirect responses are wrapped by the ResponseEnvelopeInterceptor as `{ success: true, data: <payload> }`.
 - Redirect responses `{ url, statusCode }` are passed through unchanged.
-- Error handling returns a stable envelope via filters/guards; correlationId inclusion is planned (not yet emitted).
+- Error handling returns a stable envelope via filters/guards; correlationId inclusion is implemented (error envelope includes `meta.correlationId`; success responses omit meta and rely on `X-Correlation-Id` header).
 
 ## 6) Cookies & Headers Effects
 - **Login/MFA success:** set **AT/RT**; issue/rotate `XSRF-TOKEN`

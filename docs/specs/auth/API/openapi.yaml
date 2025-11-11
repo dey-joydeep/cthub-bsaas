@@ -7,7 +7,8 @@ info:
     - Cookies (AT/RT) with SameSite=Lax; XSRF double-submit
     - Refresh token is read from cookie `bsaas_rt`; body is accepted only when cookie is absent
     - If both cookie and body refresh tokens are provided, the request is rejected (400)
-    - All non-redirect responses are wrapped by an envelope: `{ success: boolean, data?: any }`.
+    - Success responses are wrapped by `{ success: true, data }`.
+    - Error responses are wrapped by `{ success: false, code, message, details?, meta?: { correlationId } }`.
 servers:
   - url: https://api.example.com
     description: Production
@@ -32,8 +33,14 @@ components:
           type: string
           description: i18n message key (client maps to localized string)
           example: error.auth.invalid_credentials
-        correlationId:
-          type: string
+        details:
+          description: Optional structured error details
+          type: object
+        meta:
+          type: object
+          properties:
+            correlationId:
+              type: string
       required: [code, message]
     LoginDto:
       type: object

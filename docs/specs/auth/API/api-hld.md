@@ -42,7 +42,7 @@ See also (Frontend Integration): `docs/specs/auth/WEB/frontend-auth-integration.
 - **CSRF/XSRF:** Double‑submit; FE sends `X-XSRF-TOKEN` header on state‑changing requests.
 - **Rate limiting:** Sensitive endpoints (login, OTP/TOTP issue/verify, email verify request, passkeys management). Return **429** with **`Retry-After`**. A Retry‑After filter exists in core; app-level global wiring governs production behavior.
 - **Enumeration resistance:** Generic 202/200 responses for “email sent/ok” cases; uniform error copy & timing.
-- **Audit/Telemetry:** login/logout/refresh, MFA enroll/verify, passkey attestation/assertion, passkeys list/delete, recovery issue/verify, reset, email verify/change, OAuth link/unlink, registration milestones. Note: correlationId emission is planned; current implementation logs without correlationId.
+- **Audit/Telemetry:** login/logout/refresh, MFA enroll/verify, passkey attestation/assertion, passkeys list/delete, recovery issue/verify, reset, email verify/change, OAuth link/unlink, registration milestones. CorrelationId is emitted via response header and included in error envelopes and audit logs.
 - **Adapters (Env‑switchable):**
   - WebAuthn: challenge store via `WEB_AUTHN_CHALLENGE_STORE` = `redis` (default) or `memory`; TTL via `WEB_AUTHN_CHALLENGE_TTL`. Tests provide a stub via TestingModule overrides (no prod stub binding).
   - OAuth: `OAUTH_ADAPTER` = `dev` (default), `google`, or `meta`.
