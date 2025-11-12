@@ -470,6 +470,25 @@ describe('AuthService', () => {
       expect(result).toEqual({ accessToken: 'new-at', refreshToken: 'new-rt' });
     });
 
+    it('denies refresh and revokes session when revoked refresh token is reused', async () => {
+      const jti = 'jti-r1';
+      const sessionId = 'sess-r1';
+      jwtService.verifyAsync.mockResolvedValue({ sub: mockUserWithRoles.id, jti });
+      const reused: RefreshToken = {
+        jti,
+        userId: mockUserWithRoles.id,
+        sessionId,
+        issuedAt: new Date(Date.now() - 60_000),
+        revokedAt: new Date(),
+        rotatedFrom: 'prev-jti',
+      };
+      refreshTokenRepository.findByJti.mockResolvedValue(reused);
+
+      await expect(service.refreshToken('rt-reused')).rejects.toThrow(UnauthorizedException);
+      expect(sessionRepository.delete).toHaveBeenCalledWith(sessionId);
+      expect(refreshTokenRepository.revoke).not.toHaveBeenCalled();
+    });
+
     it('uses default RT TTL when customer TTL is undefined (fallback branch)', async () => {
       (configService as unknown as {
         auth: {
