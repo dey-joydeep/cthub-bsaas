@@ -489,6 +489,16 @@ describe('AuthService', () => {
       expect(refreshTokenRepository.revoke).not.toHaveBeenCalled();
     });
 
+    it('denies refresh when token record is missing', async () => {
+      const jti = 'jti-miss';
+      jwtService.verifyAsync.mockResolvedValue({ sub: mockUserWithRoles.id, jti });
+      refreshTokenRepository.findByJti.mockResolvedValue(null);
+
+      await expect(service.refreshToken('rt-missing')).rejects.toThrow(UnauthorizedException);
+      expect(refreshTokenRepository.revoke).not.toHaveBeenCalled();
+      expect(sessionRepository.delete).not.toHaveBeenCalled();
+    });
+
     it('uses default RT TTL when customer TTL is undefined (fallback branch)', async () => {
       (configService as unknown as {
         auth: {
