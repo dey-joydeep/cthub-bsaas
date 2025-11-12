@@ -489,6 +489,26 @@ describe('AuthService', () => {
       expect(refreshTokenRepository.revoke).not.toHaveBeenCalled();
     });
 
+    it('denies refresh and logs deny_only when session delete fails on revoked token reuse', async () => {
+      const jti = 'jti-r2';
+      const sessionId = 'sess-r2';
+      jwtService.verifyAsync.mockResolvedValue({ sub: mockUserWithRoles.id, jti });
+      const reused: RefreshToken = {
+        jti,
+        userId: mockUserWithRoles.id,
+        sessionId,
+        issuedAt: new Date(Date.now() - 60_000),
+        revokedAt: new Date(),
+        rotatedFrom: 'prev-jti',
+      };
+      refreshTokenRepository.findByJti.mockResolvedValue(reused);
+      sessionRepository.delete.mockRejectedValueOnce(new Error('db error'));
+
+      await expect(service.refreshToken('rt-reused-fail')).rejects.toThrow(UnauthorizedException);
+      expect(sessionRepository.delete).toHaveBeenCalledWith(sessionId);
+      expect(refreshTokenRepository.revoke).not.toHaveBeenCalled();
+    });
+
     it('denies refresh when token record is missing', async () => {
       const jti = 'jti-miss';
       jwtService.verifyAsync.mockResolvedValue({ sub: mockUserWithRoles.id, jti });
