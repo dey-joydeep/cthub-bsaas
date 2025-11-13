@@ -122,9 +122,12 @@ describe('AuthService (integration edge cases)', () => {
       });
       await expect(service.refreshToken(revokedToken)).rejects.toThrow(UnauthorizedException);
 
+      // Our implementation revokes the session on revoked RT reuse. Create a fresh session for subsequent checks.
+      const newSession = await harness.prisma.session.create({ data: { userId: user.id } });
+
       const activeJti = randomUUID();
       await harness.prisma.refreshToken.create({
-        data: { jti: activeJti, userId: user.id, sessionId: session.id },
+        data: { jti: activeJti, userId: user.id, sessionId: newSession.id },
       });
       const missingUserId = randomUUID();
       const mismatchedToken = await jwt.signAsync({ sub: missingUserId, jti: activeJti }, {
