@@ -1,0 +1,281 @@
+# Migration Execution Plan
+
+This plan is intentionally staged. Each phase should be merged only after build, lint, test, type-check, and relevant contract checks are green.
+
+## Phase 0 - Freeze And Baseline
+
+Goal: establish a reliable current baseline before changing versions.
+
+Required checks:
+
+1. Confirm clean working tree.
+2. Capture `node --version`, `npm --version`, and `node node_modules/nx/bin/nx.js --version`.
+3. Run `nx reset`.
+4. Run `NX_DAEMON=false nx show projects --json`.
+5. Run `NX_DAEMON=false nx graph --print`.
+6. Run current critical targets:
+   - `nx run-many -t lint --all`
+   - `nx run-many -t build --all`
+   - `nx run-many -t type-check --all`
+   - `nx test server-feature-auth --configuration=ut`
+   - `nx test server-feature-auth --configuration=it`
+   - `npm run openapi:lint:auth`
+   - `npm run openapi:check:auth`
+
+Current known risk: Nx graph/plugin worker currently fails in this tool environment. Fixing that is a Phase 0 requirement.
+
+## Phase 1 - Runtime And Package Manager Baseline
+
+Goal: align local, CI, and package metadata around a supported LTS runtime.
+
+Changes to plan:
+
+1. Update `.nvmrc`.
+2. Update `package.json` engines.
+3. Update GitHub Actions Node versions.
+4. Update any docs/scripts that assume Node 18 or 20.
+5. Confirm `scripts/check-versions/node-version.js` still enforces the intended policy.
+
+Preferred final baseline:
+
+```json
+{
+  "node": ">=24 <25",
+  "npm": ">=10"
+}
+```
+
+Deadline fallback:
+
+```json
+{
+  "node": ">=22 <25",
+  "npm": ">=10"
+}
+```
+
+Validation:
+
+- `npm ci`
+- `node scripts/check-versions/node-version.js`
+- baseline Nx graph commands
+
+## Phase 2 - Nx 22 Migration
+
+Goal: move all Nx packages together and let official migrations update workspace config.
+
+Execution route:
+
+1. Run official migration command:
+   - `nx migrate latest`
+2. Inspect generated `migrations.json`.
+3. Ensure all `@nx/*` packages resolve to one version line.
+4. Run migrations:
+   - `nx migrate --run-migrations`
+5. Run `npm install`.
+6. Review changes to:
+   - `nx.json`
+   - `package.json`
+   - `package-lock.json`
+   - `tsconfig*.json`
+   - project configurations
+   - `.gitignore`
+
+Specific decisions:
+
+- Add `@nx/vitest`.
+- Keep `@nx/jest` for backend/API/e2e.
+- Keep `@nx/eslint`.
+- Prefer official Nx migration output over manual package edits.
+- Do not enable inferred tasks globally until explicit config parity is confirmed.
+
+Post-migration validation:
+
+- `NX_DAEMON=false nx show projects --json`
+- `NX_DAEMON=false nx graph --print`
+- `nx run-many -t lint --all`
+- `nx run-many -t build --all`
+
+## Phase 3 - Angular 21 Migration
+
+Goal: upgrade web apps/libs to Angular 21.2 with matching Angular build, SSR, Material/CDK, and ng-packagr.
+
+Expected target packages:
+
+- `@angular/* ~21.2.0`
+- `@angular/build ~21.2.0`
+- `@angular/ssr ~21.2.0`
+- `@angular/material ~21.2.0`
+- `@angular/cdk ~21.2.0`
+- `ng-packagr ~21.2.0`
+- `zone.js ~0.16.0`
+- TypeScript `~5.9.2`
+
+Required config review:
+
+- `apps/web/*/project.json`
+- `apps/web/*/tsconfig.app.json`
+- `apps/web/*/tsconfig.server.json`
+- `apps/web/*/tsconfig.spec.json`
+- `apps/web/*/angular.json`
+- `libs/web/*/tsconfig.lib.json`
+- `libs/web/*/ng-package.json`
+
+Standardization items:
+
+- Align app `sourceRoot` to workspace-root paths such as `apps/web/admin/src`.
+- Align output paths to `dist/apps/web/<app>`.
+- Keep SSR-safe app code rules and do not introduce browser globals in server paths.
+
+Validation:
+
+- `nx build web-admin`
+- `nx build web-customer`
+- `nx build web-partner`
+- `nx run-many -t build -p web-config,web-core-http,web-core-auth,web-core-testing,web-admin-auth,web-customer-auth,web-partner-auth,web-ui`
+
+## Phase 4 - Angular ESLint Tightening
+
+Goal: make Angular linting explicit, consistent, and strict.
+
+Current state: `angular-eslint` is already present and `eslint.base.web.js` already includes Angular flat configs.
+
+Actions:
+
+1. Upgrade `angular-eslint` to Angular 21-compatible version.
+2. Ensure `@angular-eslint/*` packages are present if required by the resolved `angular-eslint` package.
+3. Consolidate selector rules across all web apps/libs.
+4. Ensure `*.html` templates are linted everywhere.
+5. Remove project-level warning relaxations that conflict with strict mode unless they are explicitly justified.
+6. Remove `.eslintrc.json` after confirming flat config is complete.
+
+Validation:
+
+- `nx run-many -t lint -p web-admin,web-customer,web-partner`
+- `nx run-many -t lint -p web-config,web-core-http,web-core-auth,web-core-testing,web-admin-auth,web-customer-auth,web-partner-auth,web-ui`
+
+## Phase 5 - Frontend Vitest Migration
+
+Goal: move frontend tests from Jest to Vitest while preserving backend Jest.
+
+Scope for first iteration:
+
+- `apps/web/admin`
+- `apps/web/customer`
+- `apps/web/partner`
+- `libs/web/**`
+
+Candidate second step:
+
+- `libs/shared`, only if pure TypeScript tests do not depend on Jest-specific APIs.
+
+Out of first-iteration scope:
+
+- `apps/api`
+- `apps/e2e/api`
+- `libs/server/**`
+
+Actions:
+
+1. Add `@nx/vitest`.
+2. Add Vitest config for web apps/libs.
+3. Replace `@nx/jest:jest` with `@nx/vitest:test` for web projects only.
+4. Replace Jest setup files:
+   - `setup-jest.ts` -> `setup-vitest.ts` or equivalent.
+5. Update web `tsconfig.spec.json`:
+   - remove `jest` types
+   - add `vitest/globals` only if using globals
+   - keep `jsdom` typing if needed
+6. Replace Jest-specific APIs:
+   - `jest.fn` -> `vi.fn`
+   - `jest.spyOn` -> `vi.spyOn`
+   - `jest.mock` -> `vi.mock`
+7. Configure coverage:
+   - Prefer V8 coverage for speed.
+   - Keep reports under `coverage/{projectRoot}` or `{projectRoot}/coverage` according to Nx 22.6+ `reportsDirectory` behavior.
+
+Validation:
+
+- `nx test web-admin`
+- `nx test web-customer`
+- `nx test web-partner`
+- `nx run-many -t test -p web-config,web-core-http,web-core-auth,web-core-testing,web-admin-auth,web-customer-auth,web-partner-auth,web-ui`
+
+## Phase 6 - Workspace Structure Alignment
+
+Goal: make package/workspace/project metadata consistent.
+
+Actions:
+
+1. Add missing package directories to root workspaces or remove unnecessary package manifests:
+   - `libs/server/features/auth`
+   - `libs/server/infrastructure`
+2. Review root `dependencies` that point to `file:dist/libs/web/*`.
+3. Prefer standard Nx buildable-lib relationships over root dependencies on built `dist` packages unless publication/runtime packaging requires them.
+4. Normalize app/lib output paths:
+   - apps -> `dist/apps/...`
+   - libs -> `dist/libs/...`
+5. Normalize project tags.
+6. Decide whether `libs/server` aggregate project remains valid. If it remains, add tags/lint/type-check or mark it intentionally internal.
+
+Validation:
+
+- `npm install`
+- `npm ls --workspaces --depth=0`
+- `nx show projects --json`
+- `nx graph --print`
+
+## Phase 7 - Backend Dependency Modernization
+
+Goal: upgrade backend runtime/security dependencies without destabilizing Auth.
+
+Order:
+
+1. Same-major NestJS updates.
+2. Same-major Redis/JWT/bcrypt/security patch updates.
+3. Helmet major update.
+4. Prisma same-major update to latest 6.x if deadline constrained.
+5. Prisma 7 migration as separate DB lane if time allows.
+6. WebAuthn major upgrade as a dedicated auth lane.
+7. Express 5 compatibility spike only after Nest/platform validation.
+
+Required Auth validation after backend dependency updates:
+
+- `nx test server-feature-auth --configuration=ut`
+- `nx test server-feature-auth --configuration=it`
+- `nx build server-feature-auth`
+- `nx lint server-feature-auth`
+- `npm run openapi:lint:auth`
+- `npm run openapi:check:auth`
+
+## Phase 8 - Security And Contract Gates
+
+Goal: make security checks repeatable.
+
+Actions:
+
+1. Upgrade `@redocly/cli`.
+2. Update OpenAPI GitHub Action to Node 24 or chosen runtime baseline.
+3. Add dependency audit gate policy:
+   - `npm audit --audit-level=high` for CI gate.
+   - Manual triage for moderate vulnerabilities.
+4. Confirm security headers after Helmet upgrade.
+5. Confirm CORS headers after dependency updates.
+6. Confirm auth error envelopes, rate-limit envelopes, and correlation ID behavior after Nest/platform updates.
+
+## Phase 9 - Final Acceptance
+
+Required final gates:
+
+- `npm ci`
+- `nx show projects --json`
+- `nx graph --print`
+- `nx run-many -t lint --all`
+- `nx run-many -t type-check --all`
+- `nx run-many -t build --all`
+- `nx run-many -t test --all`
+- `nx run-many -t e2e --all` if in scope for the release
+- `npm run openapi:lint:auth`
+- `npm run openapi:check:auth`
+- `npm audit --audit-level=high`
+

@@ -1,0 +1,47 @@
+# Infrastructure Upgrade Plan - 2026-05-01
+
+## Purpose
+
+This directory is the planning anchor for modernizing the CTHub BSaaS workspace infrastructure. It is intentionally documentation-only. No implementation is included here.
+
+## Objectives
+
+1. Modernize the infrastructure to current stable releases.
+2. Keep architectural boundaries and linting strict.
+3. Prioritize TypeScript plus ESM-friendly testing.
+4. Tighten security-related runtime and dependency posture.
+5. Align the repository with standard Nx monorepo structure where it has drifted.
+
+## Target Baseline
+
+Nx does not publish a separate "LTS" channel comparable to Node.js. For this plan, "Nx latest LTS or equivalent" means:
+
+- Use the latest stable Nx release available at execution time.
+- For the 2026-05-01 planning snapshot, that is Nx `22.7.1`.
+- If Nx `23` or a later major is current when the work starts, run the official migration generator first and re-evaluate Angular, TypeScript, and Vitest compatibility before accepting the newer major.
+
+## Documents
+
+- [Current State And Gaps](./current-state-and-gaps.md)
+- [Target Version Matrix](./target-version-matrix.md)
+- [Migration Execution Plan](./migration-execution-plan.md)
+- [Configuration And Boundary Checklist](./configuration-and-boundary-checklist.md)
+- [Deadline Fallback Strategy](./deadline-fallback-strategy.md)
+
+## Non-Goals For First Iteration
+
+- Rewrite the backend from NestJS/Node.js to Java/Spring.
+- Convert backend Jest tests to Vitest in the first pass.
+- Replace Prisma or the database architecture.
+- Rework domain modules beyond what is necessary for Nx, lint, test, build, and security alignment.
+
+## Source References
+
+- Angular version compatibility: https://angular.dev/reference/versions
+- Angular testing overview: https://angular.dev/guide/testing
+- Nx inferred tasks: https://nx.dev/docs/concepts/inferred-tasks
+- Nx module boundaries: https://nx.dev/technologies/eslint/eslint-plugin/recipes/enforce-module-boundaries
+- Nx Vitest plugin: https://nx.dev/docs/technologies/test-tools/vitest/introduction
+- Nx Vitest migrations: https://nx.dev/docs/technologies/test-tools/vitest/migrations
+- Node.js releases: https://nodejs.org/en/about/previous-releases
+
