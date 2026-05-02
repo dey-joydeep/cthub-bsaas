@@ -1,36 +1,43 @@
-# Server Endpoint Alignment (Best‑Effort Scan)
-**Updated:** 2025-09-11
+# Server Endpoint Alignment
+**Updated:** 2026-05-02
 
-Status: ok
+Status: aligned by contract check.
 
-**Guarding Note:** Public endpoints are decorated with `@Public()` and resolved via the new `JwtOptionalAuthGuard`, allowing anonymous access while still hydrating `@OptionalUser()` when a JWT cookie/header is present. Strict routes retain `@UseGuards(JwtAuthGuard)`.
+The backend Auth route surface is validated by `scripts/openapi-auth-check.ts`, which compares controller routes under `libs/server/features/auth/src/lib/controllers` with `/auth/*` paths in `docs/specs/auth/API/openapi.yaml`.
 
-Discovered endpoints (subset):
-- GET /auth/oauth/:provider/callback
-- GET /auth/oauth/:provider/start
-- GET /auth/sessions
-- POST /auth/email/send-verification
-- POST /auth/email/verify
-- POST /auth/email/verify/confirm
-- POST /auth/email/verify/request
-- POST /auth/login
-- POST /auth/login/totp
-- POST /auth/logout
-- POST /auth/oauth/:provider/unlink
-- POST /auth/password/forgot
-- POST /auth/password/reset
-- POST /auth/recovery/codes
-- POST /auth/recovery/generate
-- POST /auth/recovery/verify
-- POST /auth/refresh
-- POST /auth/register
-- POST /auth/sessions/revoke
-- POST /auth/sessions/revoke/:id
-- POST /auth/totp/enroll/finish
-- POST /auth/totp/enroll/start
-- POST /auth/totp/setup
-- POST /auth/totp/verify
-- POST /auth/webauthn/login/finish
-- POST /auth/webauthn/login/start
-- POST /auth/webauthn/register/finish
-- POST /auth/webauthn/register/start
+Current OpenAPI/controller route set:
+
+- `POST /auth/login`
+- `POST /auth/refresh`
+- `POST /auth/logout`
+- `GET /auth/sessions`
+- `POST /auth/sessions/revoke/{id}`
+- `POST /auth/password/forgot`
+- `POST /auth/password/reset`
+- `POST /auth/password/change`
+- `POST /auth/email/change/request`
+- `POST /auth/email/change/confirm`
+- `POST /auth/email/verify/request`
+- `POST /auth/email/verify/confirm`
+- `POST /auth/login/totp`
+- `POST /auth/recovery/generate`
+- `POST /auth/recovery/verify`
+- `POST /auth/webauthn/register/start`
+- `POST /auth/webauthn/register/finish`
+- `POST /auth/webauthn/login/start`
+- `POST /auth/webauthn/login/finish`
+- `GET /auth/oauth/{provider}/start`
+- `GET /auth/oauth/{provider}/callback`
+- `POST /auth/oauth/{provider}/unlink`
+- `GET /auth/webauthn/devices`
+- `DELETE /auth/webauthn/devices/{id}`
+- `GET /auth/owner/registration/{token}`
+- `POST /auth/owner/registration/complete`
+- `POST /auth/register`
+- `POST /auth/totp/enroll/start`
+- `POST /auth/totp/enroll/finish`
+- `GET /auth/staff/registration/{token}`
+- `POST /auth/staff/registration/complete`
+
+Routes not listed above are not part of the current Auth contract.
+

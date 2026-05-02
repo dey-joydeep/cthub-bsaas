@@ -3,13 +3,13 @@
 Status: Tracking items for frontend implementation alignment with HLD/LLD.
 
 ## API Alignment (Config)
-- [ ] Centralize URLs in `AuthHttpService` (canonical endpoints):
+- [ ] Centralize URLs in `AuthHttpService` (OpenAPI-defined endpoints):
   - [ ] Login: `/auth/login`
   - [ ] Login TOTP: `/auth/login/totp`
   - [ ] Sessions list: `GET /auth/sessions`
-  - [ ] Session revoke (canonical): `DELETE /auth/sessions/{id}`
+  - [ ] Session revoke: `POST /auth/sessions/revoke/{id}`
   - [ ] TOTP enroll: `/auth/totp/enroll/{start,finish}`
-  - [ ] Recovery codes: `POST /auth/recovery-codes/issue` (201), `POST /auth/recovery-codes/verify`
+  - [ ] Recovery codes: `POST /auth/recovery/generate`, `POST /auth/recovery/verify`
 - [ ] Ensure Angular HttpClient XSRF config: cookie `XSRF-TOKEN`, header `X-XSRF-TOKEN`.
 
 ## Cookie & CSRF Model

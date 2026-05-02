@@ -21,8 +21,9 @@ export interface TotpVerifyDto { code: string; }
 
 
 ## Service Contracts (API)
-- **POST** `/auth/mfa/totp/verify`  _[TBD]_
-- **POST** `/auth/webauthn/assertion/verify`  _[TBD]_
+- **POST** `/auth/login/totp`
+- **POST** `/auth/webauthn/login/start`
+- **POST** `/auth/webauthn/login/finish`
 
 ## Workflows
 - Success path(s)

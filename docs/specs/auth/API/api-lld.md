@@ -1,151 +1,148 @@
-# Auth API — Low‑Level Design (LLD)
-**Updated:** 2025-09-11
+# Auth API - Low-Level Design (LLD)
+**Updated:** 2026-05-02
 
 ## 1) Module Structure
-- **Controllers** per subdomain: login, mfa, password, registration, sessions, recovery, email‑change, passkeys (list/delete), social
-- **Services**: credential verify, WebAuthn verify/attest, OTP dispatch/verify, invite validation, session mgmt
-- **Interceptors/Filters**: error normalization → canonical error envelope; `Retry-After` on 429 (single global throttler filter); `Cache-Control: no-store`; `correlationId` (implemented: header on all responses; present in error body meta)
+- **Controllers:** login/session, password, registration, email, recovery, TOTP, WebAuthn/passkeys, OAuth.
+- **Services:** credential verification, token/session rotation, recovery code management, WebAuthn challenge/verification, TOTP enrollment/login, registration completion, email flows, OAuth.
+- **Filters/interceptors:** success envelope, canonical error envelope, 429 `Retry-After`, `Cache-Control: no-store`, correlation ID header and error metadata.
 
-## 2) Business Flows / Algorithms
+Exact paths and schemas are defined in `openapi.yaml`.
 
-### A. Sign‑in with optional MFA
-**Goal:** authenticate with password; branch to MFA if required.
+## 2) Authentication Flow
 
-**Algorithm (pseudo)**
-1. Validate payload (email, password). If invalid → **422**.
-2. Find user by email; generic failure if not found → **401**.
-3. Verify password (constant‑time). If wrong → **401** and increment attempt counter.
-4. Check account state: locked? → **423** (generic). disabled? → **403**.
-5. If user has MFA:
-   - Create `challengeId`, populate allowed methods (`totp`, `webauthn`, `recovery`), TTL (e.g., 5m).
-   - Return **200** with `next="mfa"` and challenge.
-6. Else:
-   - Issue AT/RT cookies; rotate XSRF; return **200** with `next="signedIn"`.
+### Password Login
+1. Validate `LoginDto` with `email` and `password`.
+2. Verify account and password using uniform error behavior for credential failure.
+3. If no MFA challenge is required, issue cookies and return `200`.
+4. If TOTP is required, return a temporary token and require `POST /auth/login/totp`.
 
-**MFA TOTP verify**
-1. Validate `{ challengeId, code }`. If invalid → **422**.
-2. Locate challenge; if expired → **410**; if not for user → **401**.
-3. Verify TOTP (RFC 6238); allow ±1 time‑step.
-4. On success: clear challenge; issue AT/RT; **200**. On too many attempts: **429** with `Retry-After`.
+### TOTP Login Challenge
+Endpoint: `POST /auth/login/totp`
 
-**MFA WebAuthn assertion**
-1. **options**: generate challenge with allowCredentials; return **200** with `publicKey`.
-2. **result**: verify clientDataJSON, authenticatorData, signature against stored credential; on success → AT/RT; **200**; on invalid → **422**; on expired → **410**.
+Request schema: `TotpLoginDto`
 
-### B. Password Reset
-**request**
-1. Accept `{ email }`; always return **202** (anti‑enumeration).
-2. Enforce cooldown (per email/IP); on throttle → **429** with `Retry-After`.
-3. Generate reset token (TTL e.g., 15m); enqueue email.
+- `tempToken`: temporary challenge token.
+- `totpCode`: 6-digit TOTP code.
 
-**confirm**
-1. Validate `{ token, newPassword }`. If malformed → **400**; if expired → **410**.
-2. Enforce password policy on server; if weak → **400** (`WEAK_PASSWORD`).
-3. In tx: set new password, rotate credentials/sessions; set cookies if auto‑login; **200**.
+Outcomes:
 
-### C. Registration (Customer)
-1. **start** `{ email }` → **202** (idempotent); ensure one active reg session per email; store `registration_sessions` with TTL.
-2. **email verify request** `{ email }` → **202** (idempotent); cooldown + daily cap.
-3. **email verify confirm** `{ sessionId, email, code }` → **200** or **410/400/422**.
-4. **complete** `{ sessionId, fullName, password }` → **200** (tx: create user, profile, initial settings); rotate session.
+- `200`: challenge accepted, cookies issued.
+- `410`: challenge expired.
+- `422`: invalid TOTP.
+- `429`: too many attempts, with `Retry-After`.
 
-### D. Registration (Partner: Owner/Staff)
-1. **validate invite**: `GET /auth/(owner|staff)/registration/{token}` → **200** or **410/400/409** (expired/invalid/consumed).
-2. **complete**: POST complete with profile, password/OTP; on success **200**.
-3. **otp request/confirm**: **202** to send; **200/410/422/429** to confirm.
+## 3) Session Flow
 
-Partner registration endpoints (implemented)
-- Owner validate: `GET /auth/owner/registration/:token`
-- Owner complete: `POST /auth/owner/registration/complete`
-- Staff validate: `GET /auth/staff/registration/:token`
-- Staff complete: `POST /auth/staff/registration/complete`
+### Refresh
+Endpoint: `POST /auth/refresh`
 
-### E. Sessions
-- **refresh**: requires RT cookie (`bsaas_rt`) + XSRF; if both cookie and body refresh tokens are provided → **400** (validation). If no cookie present and body contains a token, body is accepted for compatibility. On success rotate RT & set AT (**200**).
-- **logout**: clear AT/RT (**200**).
-### F. Email Change
-- **request**: `{ newEmail }` → **202**; idempotent; throttle with `Retry-After`.
-- **confirm**: `{ otp }` → **200/400/410/422/401/429**; on success update email & re‑verify; rotate sessions if policy requires.
+- Primary token source is the HttpOnly `bsaas_rt` cookie.
+- Body `refreshToken` is accepted only when the cookie is absent.
+- Supplying both cookie and body refresh tokens is a `400`.
+- On success, refresh token is rotated, access token is renewed, and `XSRF-TOKEN` is rotated.
+- Reuse of a revoked refresh token is denied and attempts session revocation/audit handling.
 
-### G. Recovery Codes
-- **issue**: create & persist hashed codes; return **201** with new set; revoke previous; audit.
-- **verify**: constant‑time compare; successful use marks code as consumed; **200** or **422/429**.
+### Logout And Revoke
+- `POST /auth/logout`: clears access/refresh cookies.
+- `GET /auth/sessions`: lists active sessions.
+- `POST /auth/sessions/revoke/{id}`: revokes a specific session.
 
-Implementation: Recovery codes are persisted in DB (bcrypt-hashed) in all environments; no in-memory fallback.
+## 4) Password And Email Flows
 
-### H. Social OAuth (Customer)
-- **start**: 302 to provider with state/nonce.
-- **callback**: verify state/nonce; if provider email is verified → pre‑verified; else require email verification; on link/unlink manage associations and conflicts (**409**).
+### Password Reset
+- `POST /auth/password/forgot`: accepts `{ email }`, returns `202` using anti-enumeration behavior.
+- `POST /auth/password/reset`: accepts `{ token, newPassword }`.
 
-## 3) Service Contracts (API)
-Authoritative routes/methods → see `openapi.yaml`. LLD mirrors the same paths and methods for each domain.
+### Password Change
+- `POST /auth/password/change`: authenticated password change with CSRF protection.
 
-Canonical routes (implemented)
-- Recovery codes: `POST /auth/recovery/generate`, `POST /auth/recovery/verify`
-- Sessions: `GET /auth/sessions`, `POST /auth/sessions/revoke/:id`
-- Passkeys device management: `GET /auth/webauthn/devices`, `DELETE /auth/webauthn/devices/:id`
-- OAuth unlink: `POST /auth/oauth/:provider/unlink`
-- TOTP verify after password: `POST /auth/login/totp`
-- WebAuthn register/login:
-  - `POST /auth/webauthn/register/start`, `POST /auth/webauthn/register/finish`
-  - `POST /auth/webauthn/login/start`, `POST /auth/webauthn/login/finish`
-- TOTP enrollment: `POST /auth/totp/enroll/start`, `POST /auth/totp/enroll/finish`
-- Customer registration: `POST /auth/register`
+### Email Change
+- `POST /auth/email/change/request`: accepts `{ newEmail }`, returns `202`.
+- `POST /auth/email/change/confirm`: accepts `{ token }`.
 
-## 3.1) Adapters & Environment
-- WebAuthn configuration via env:
-  - `WEB_AUTHN_CHALLENGE_STORE`: `redis` (default) | `memory` (local/dev)
-  - `WEB_AUTHN_CHALLENGE_TTL`: seconds (default 300)
-  - Note: Tests use a stub via TestingModule provider override; production module always binds the `@simplewebauthn` adapter.
-- OAuth adapter selection via env:
-  - `OAUTH_ADAPTER`: `dev` (default), `google`, `meta`
+### Email Verification
+- `POST /auth/email/verify/request`: accepts `{ email }`, returns `202`.
+- `POST /auth/email/verify/confirm`: accepts either `{ token }` or `{ email, otp }`.
 
-## 4) Schemas / DTOs (from OpenAPI)
-- **LoginDto**: `email` (email, max 254), `password` (min 8)
-- **ForgotDto**: `email`
-- **ResetDto**: `token`, `newPassword` (min 8)
-- **TotpVerifyDto**: `challengeId`, `code` (6 digits)
-- **RegisterStartDto**: `email`
-- **EmailVerifyRequestDto**: `email`
-- **EmailVerifyConfirmDto**: `sessionId`, `email`, `code`
-- **RegisterCompleteDto**: `sessionId`, `fullName`, `password`
-- **PasswordChangeDto**: `currentPassword`, `newPassword`
+## 5) Registration Flows
 
-> For exact constraints, required flags, and enums — see `components/schemas` in `openapi.yaml`.
+### Customer
+Endpoint: `POST /auth/register`
 
-## 5) Response Envelope
-- Non-redirect responses are wrapped by the ResponseEnvelopeInterceptor as `{ success: true, data: <payload> }`.
-- Redirect responses `{ url, statusCode }` are passed through unchanged.
-- Error handling returns a stable envelope via filters/guards; correlationId inclusion is implemented (error envelope includes `meta.correlationId`; success responses omit meta and rely on `X-Correlation-Id` header).
+Request:
 
-## 6) Cookies & Headers Effects
-- **Login/MFA success:** set **AT/RT**; issue/rotate `XSRF-TOKEN`
-- **Refresh:** rotate **RT**, set **AT**; rotate `XSRF-TOKEN`
-- **Logout:** clear **AT/RT**
-- **All 429:** include **`Retry-After`** (seconds)
+- `email`
+- `password`
+- `name`
 
-Implementation cookie names (canonical)
-- Access: `bsaas_at` (HttpOnly, SameSite=Lax, Secure: prod only, path=/)
-- Refresh: `bsaas_rt` (HttpOnly, SameSite=Lax, Secure: prod only, path=/auth; Max‑Age aligns with `REFRESH_TOKEN_EXPIRES_IN_DEFAULT` or `REFRESH_TOKEN_EXPIRES_IN_CUSTOMER` based on role; default Customer: 180d). The refresh token is consumed from this cookie; body token is only read when the cookie is absent. If both are present, the request is rejected with **400**.
-- CSRF: `XSRF-TOKEN` (non‑HttpOnly, SameSite=Lax, Secure: prod only, path=/)
+Successful registration returns `201` and issues cookies/XSRF.
 
-> OpenAPI cookieAuth now uses `bsaas_at` to match implementation.
+### Partner Owner/Staff
+- `GET /auth/owner/registration/{token}`
+- `POST /auth/owner/registration/complete`
+- `GET /auth/staff/registration/{token}`
+- `POST /auth/staff/registration/complete`
 
-## 7) Error Handling & Mapping
-- Map domain exceptions → `ApiError` (`code`, `message`, `correlationId`), never leak account existence.
-- Use: **410** for expired one‑time tokens/challenges; **400** for malformed; **422** for invalid assertion/OTP; **403** for CSRF.
-- i18n keys in FE derive from `error-catalog.md` (one catalog → many screens).
+Successful completion returns `201`.
 
-## 8) Rate Limits & Lockouts
-- Per IP+email/user counters on login, OTP, verify, resend.  
-- Cooldown returns **429** with `Retry-After`; FE must lock UI while the timer runs.
+## 6) Recovery, TOTP Enrollment, WebAuthn
 
-## 9) Idempotency & Replay
-- Email verify request, password reset request, OTP request → **idempotent** (generic 202).  
-- Confirm endpoints are **replay‑safe**: subsequent attempts return **410** (expired) or **400** (invalid) with no side effects.
+### Recovery Codes
+- `POST /auth/recovery/generate`: generates recovery codes; current contract returns `200`.
+- `POST /auth/recovery/verify`: verifies and consumes a recovery code.
+
+Recovery codes are persisted hashed in the database.
+
+### TOTP Enrollment
+- `POST /auth/totp/enroll/start`
+- `POST /auth/totp/enroll/finish`
+
+### WebAuthn And Passkeys
+- `POST /auth/webauthn/register/start`
+- `POST /auth/webauthn/register/finish`
+- `POST /auth/webauthn/login/start`
+- `POST /auth/webauthn/login/finish`
+- `GET /auth/webauthn/devices`
+- `DELETE /auth/webauthn/devices/{id}`
+
+## 7) OAuth
+- `GET /auth/oauth/{provider}/start`: begins provider login/link flow.
+- `GET /auth/oauth/{provider}/callback`: callback returns `200` in the current contract.
+- `POST /auth/oauth/{provider}/unlink`: unlinks provider for authenticated user.
+
+## 8) DTO Summary
+- `LoginDto`: `email`, `password`.
+- `RefreshDto`: optional `refreshToken`, only used when `bsaas_rt` cookie is absent.
+- `ForgotDto`: `email`.
+- `ResetDto`: `token`, `newPassword`.
+- `PasswordChangeDto`: `currentPassword`, `newPassword`.
+- `EmailChangeRequestDto`: `newEmail`.
+- `EmailChangeConfirmDto`: `token`.
+- `EmailVerifyRequestDto`: `email`.
+- `EmailVerifyConfirmDto`: `token` OR `email` + `otp`.
+- `TotpLoginDto`: `tempToken`, `totpCode`.
+- `PartnerRegistrationCompleteDto`: `token`, `password`.
+- `WebauthnRegisterStartDto`: `username`.
+- `WebauthnAttestationDto`: `response`.
+- `WebauthnAssertionDto`: `response`.
+
+## 9) Response Envelope And Errors
+- Non-redirect success responses are wrapped as `{ success: true, data }`.
+- Errors are wrapped as `{ success: false, code, message, details?, meta?: { correlationId } }`.
+- `X-Correlation-Id` is emitted for all responses.
+- Error envelopes include `meta.correlationId`.
+
+Current status semantics:
+
+- `400`: malformed/conflicting request.
+- `401`: invalid credentials/session/ownership.
+- `403`: forbidden or CSRF failure.
+- `410`: expired one-time token/challenge.
+- `422`: validation or invalid OTP/assertion.
+- `429`: throttled, with `Retry-After`.
 
 ## 10) Testing Strategy
-- **Unit:** DTO validators, TOTP window, WebAuthn verifiers, rate‑limit gates.
-- **Integration:** cookie set/clear/rotate; XSRF enforcement; registration complete transactionality.
-- **Contract (CI):** controller routes validated against `openapi.yaml`.
-- **E2E:** login branches (no MFA/MFA), expired tokens/challenges, rate‑limited flows, invite invalid/expired/consumed, social cancel/error.
+- **Unit:** controller/service branches, DTO behavior, token/session edge cases, cookie behavior.
+- **Integration:** cookie rotation, refresh reuse detection, CSRF behavior, recovery/passkey/TOTP/OAuth edge cases.
+- **Contract:** `scripts/openapi-auth-check.ts` validates controller route parity against `openapi.yaml`.
+- **OpenAPI lint:** Redocly validates `openapi.yaml`.

@@ -1,79 +1,117 @@
-# Auth API — High‑Level Design (HLD)
-**Status:** Authoritative (integrated with Registration)  
-**Updated:** 2025-09-11  
+# Auth API - High-Level Design (HLD)
+**Status:** Authoritative overview; `openapi.yaml` is the route/source contract  
+**Updated:** 2026-05-02  
 **Locales:** en/bn/hi
 
 ## 1) Purpose & Scope
-This HLD defines the **Auth API** surface for CTHub covering:
-- Sign‑in (email+password) and MFA (TOTP/WebAuthn/passkeys, recovery codes)
-- Password reset & password change
-- Sessions/devices management (refresh, logout, logout-others, list, revoke); passkeys device management (list/delete)
-- Email change (request/confirm)
-- Social OAuth (Google required; Facebook/Apple optional; link/unlink)
-- **Registration**: Customer (self‑serve) & Partner (Owner/Staff invited)
+This HLD defines the Auth API capabilities for CTHub:
 
-See also (Frontend Integration): `docs/specs/auth/WEB/frontend-auth-integration.md`.
+- Sign-in with email/password and optional MFA challenge.
+- TOTP and WebAuthn/passkey authentication.
+- Password reset and password change.
+- Refresh, logout, session list, and session revoke.
+- Recovery code generation and verification.
+- Email verification and email change.
+- OAuth start/callback/unlink.
+- Customer self-registration.
+- Partner owner/staff invite validation and completion.
 
-## 2) Response Envelopes (Canonical)
-- **Success**
+For exact paths, methods, request bodies, response schemas, and status codes, use `docs/specs/auth/API/openapi.yaml`.
+
+## 2) Source Of Truth
+The current API contract is:
+
+- `openapi.yaml`: external HTTP contract.
+- Controllers under `libs/server/features/auth/src/lib/controllers`: implementation.
+- `scripts/openapi-auth-check.ts`: route parity check between controllers and OpenAPI.
+
+Do not add routes that are absent from OpenAPI unless a new API migration plan is approved and implemented with tests.
+
+## 3) Response Envelopes
+Success responses are normalized as:
+
 ```json
 {
   "success": true,
   "data": {}
 }
 ```
-- **Error**
+
+Error responses are normalized as:
+
 ```json
 {
   "success": false,
-  "code": "auth.error.generic",
-  "message": "Human readable message (localized on FE)",
-  "details": [
-    { "field": "email", "reason": "invalidFormat" }
-  ],
-  "meta": { "correlationId": "c-01HZZ..." }
+  "code": "error.auth.invalid_credentials",
+  "message": "error.auth.invalid_credentials",
+  "details": {},
+  "meta": {
+    "correlationId": "c-01HZZ..."
+  }
 }
 ```
 
-## 3) Cross‑Cutting
-- **Cookies:** HttpOnly Access/Refresh cookies (`bsaas_at`, `bsaas_rt`) + non‑HttpOnly `XSRF-TOKEN`  
-  Flags → `HttpOnly` (AT/RT), `Secure` (prod only), `SameSite=Lax`, `Domain=AUTH_COOKIE_DOMAIN`. Paths: AT `/`, RT `/auth`.  
-  TTLs → Access: **10–15m**; Refresh: **180d** (Customer), rotation enabled (deny‑list old `jti`).
-- **CSRF/XSRF:** Double‑submit; FE sends `X-XSRF-TOKEN` header on state‑changing requests.
-- **Rate limiting:** Sensitive endpoints (login, OTP/TOTP issue/verify, email verify request, passkeys management). Return **429** with **`Retry-After`**. A Retry‑After filter exists in core; app-level global wiring governs production behavior.
-- **Enumeration resistance:** Generic 202/200 responses for “email sent/ok” cases; uniform error copy & timing.
-- **Audit/Telemetry:** login/logout/refresh, MFA enroll/verify, passkey attestation/assertion, passkeys list/delete, recovery issue/verify, reset, email verify/change, OAuth link/unlink, registration milestones. CorrelationId is emitted via response header and included in error envelopes and audit logs.
-- **Adapters (Env‑switchable):**
-  - WebAuthn: challenge store via `WEB_AUTHN_CHALLENGE_STORE` = `redis` (default) or `memory`; TTL via `WEB_AUTHN_CHALLENGE_TTL`. Tests provide a stub via TestingModule overrides (no prod stub binding).
-  - OAuth: `OAUTH_ADAPTER` = `dev` (default), `google`, or `meta`.
+Success responses rely on the `X-Correlation-Id` response header. Error responses include `meta.correlationId`.
 
-## 4) HTTP Status Legend (Authoritative)
-- **200**: OK / next step provided
-- **201**: resource created (e.g., recovery codes)
-- **202**: accepted (email dispatched / idempotent “sent”)
-- **400**: malformed / missing fields
-- **401**: auth failure / wrong user or session
-- **403**: forbidden / CSRF violation (e.g., refresh misuse)
-- **404**: not found (device/session/record)
-- **410**: expired link/challenge/token (one‑time)
-- **422**: validation error / invalid OTP/assertion
-- **429**: rate limited / attempts exhausted / cooldown (**include `Retry-After`**)
-- **500**: unexpected (log `correlationId`)
+## 4) Cross-Cutting Rules
+- **Cookies:** HttpOnly access/refresh cookies: `bsaas_at`, `bsaas_rt`; non-HttpOnly CSRF cookie: `XSRF-TOKEN`.
+- **Cookie flags:** `HttpOnly` for access/refresh; `Secure` in production; `SameSite=Lax`; configurable domain via `AUTH_COOKIE_DOMAIN`. Access path is `/`; refresh path is `/auth`.
+- **Refresh token source:** refresh reads `bsaas_rt`; a body token is accepted only when the cookie is absent. Supplying both cookie and body token is a `400`.
+- **CSRF/XSRF:** double-submit token; frontend sends `X-XSRF-TOKEN` for protected state-changing requests.
+- **Rate limiting:** sensitive endpoints return `429` with `Retry-After`.
+- **Enumeration resistance:** email/password/reset/verification flows use generic responses where needed.
+- **Correlation ID:** emitted as `X-Correlation-Id`, included in error envelopes, and used in logs/audit context.
 
-## 5) Capability Surface (by domain)
-- **Authentication:** `POST /auth/login`, `POST /auth/mfa/totp/verify`, WebAuthn assertion (options/result)
-- **Credential Recovery:** `POST /auth/password/reset/request`, `POST /auth/password/reset/confirm`
-- **Account Security:** Recovery codes (issue/list/verify), sessions (refresh/logout/logout‑others/list/revoke), email change (request/confirm), passkeys (attestation/assertion; manage), password change
-- **Registration (Customer):** start, email verify request/confirm, complete
-- **Registration (Partner):** Owner/Staff invite validate & complete; OTP request/confirm
-- **Social OAuth (Customer):** start/callback, link/unlink
+## 5) Current Route Surface
 
-## 6) Representative Contracts (JSON Samples)
+### Authentication And Sessions
+- `POST /auth/login`
+- `POST /auth/login/totp`
+- `POST /auth/refresh`
+- `POST /auth/logout`
+- `GET /auth/sessions`
+- `POST /auth/sessions/revoke/{id}`
 
-### Sign‑in (Email + Password)
-**POST** `/auth/login` → 200, 401, 422, 429, 500
+### Passwords And Email
+- `POST /auth/password/forgot`
+- `POST /auth/password/reset`
+- `POST /auth/password/change`
+- `POST /auth/email/change/request`
+- `POST /auth/email/change/confirm`
+- `POST /auth/email/verify/request`
+- `POST /auth/email/verify/confirm`
 
-Request
+### Recovery, TOTP, WebAuthn, Passkeys
+- `POST /auth/recovery/generate`
+- `POST /auth/recovery/verify`
+- `POST /auth/totp/enroll/start`
+- `POST /auth/totp/enroll/finish`
+- `POST /auth/webauthn/register/start`
+- `POST /auth/webauthn/register/finish`
+- `POST /auth/webauthn/login/start`
+- `POST /auth/webauthn/login/finish`
+- `GET /auth/webauthn/devices`
+- `DELETE /auth/webauthn/devices/{id}`
+
+### OAuth
+- `GET /auth/oauth/{provider}/start`
+- `GET /auth/oauth/{provider}/callback`
+- `POST /auth/oauth/{provider}/unlink`
+
+### Registration
+- `POST /auth/register`
+- `GET /auth/owner/registration/{token}`
+- `POST /auth/owner/registration/complete`
+- `GET /auth/staff/registration/{token}`
+- `POST /auth/staff/registration/complete`
+
+## 6) Representative Contracts
+
+### Login
+`POST /auth/login`
+
+Request:
+
 ```json
 {
   "email": "user@example.com",
@@ -81,190 +119,70 @@ Request
 }
 ```
 
-Response — 200 (no MFA)
+Typical success response:
+
 ```json
 {
   "success": true,
   "data": {
-    "next": "signedIn",
-    "user": { "id": "u_123", "email": "user@example.com", "fullName": "A B" }
+    "next": "signedIn"
   }
 }
 ```
 
-Response — 200 (MFA required)
+If TOTP is required, the login response returns a temporary challenge token used with `POST /auth/login/totp`.
+
+### TOTP Login Challenge
+`POST /auth/login/totp`
+
+Request:
+
 ```json
 {
-  "success": true,
-  "data": {
-    "next": "mfa",
-    "methods": ["webauthn", "totp", "recovery"],
-    "mfa": { "challengeId": "ch_abc", "allowed": "totp|webauthn|recovery" }
-  }
+  "tempToken": "tmp_abc",
+  "totpCode": "123456"
 }
 ```
 
-### MFA — TOTP Verify
-**POST** `/auth/mfa/totp/verify` → 200, 400, 401, 410, 422, 429, 500
+### Refresh
+`POST /auth/refresh`
 
-Request
-```json
-{ "challengeId": "ch_abc", "code": "123456" }
-```
+The refresh token is read from cookie `bsaas_rt`. A body refresh token is accepted only when the cookie is absent. Providing both is rejected with `400`.
 
-Response — 200
-```json
-{ "success": true, "data": { "next": "signedIn" } }
-```
+### Customer Registration
+`POST /auth/register`
 
-### MFA — Passkey (WebAuthn) Assertion
-**POST** `/auth/mfa/webauthn/assertion/options` → 200, 401, 429, 500  
-**POST** `/auth/mfa/webauthn/assertion/result`  → 200, 400, 401, 410, 422, 429, 500
+Request:
 
-options — 200
 ```json
 {
-  "success": true,
-  "data": {
-    "publicKey": {
-      "challenge": "base64url-challenge",
-      "rpId": "cthub.in",
-      "allowCredentials": [{ "type": "public-key", "id": "base64url-cred-id" }],
-      "timeout": 60000,
-      "userVerification": "preferred"
-    },
-    "challengeId": "ch_abc"
-  }
+  "email": "user@example.com",
+  "password": "S3curePass!",
+  "name": "A B"
 }
 ```
 
-result — 200
-```json
-{ "success": true, "data": { "next": "signedIn" } }
-```
+Successful customer registration returns `201` and issues auth cookies.
 
-### Recovery Codes
-Canonical endpoints (aliases removed):
-- `POST /auth/recovery/generate` → 200, 401, 403
-- `POST /auth/recovery/verify` → 200, 400, 401, 403, 422
+### Partner Registration Completion
+`POST /auth/owner/registration/complete` and `POST /auth/staff/registration/complete`
 
-Example response
-```json
-{ "success": true, "data": {} }
-```
+Successful completion returns `201`.
 
-### Sessions / Devices
-**POST** `/auth/refresh` → 200, 400, 401  
-**POST** `/auth/logout` → 200, 401  
-**GET** `/auth/sessions` → 200, 401  
-**POST** `/auth/sessions/revoke/{id}` → 200, 401  
+## 7) Status Code Policy
+- `200`: OK.
+- `201`: created, including customer/partner registration completion.
+- `202`: accepted/idempotent email-dispatch flows.
+- `400`: malformed or conflicting request.
+- `401`: unauthenticated or invalid credential/session ownership.
+- `403`: forbidden or CSRF failure.
+- `410`: expired one-time token/challenge.
+- `422`: validation, invalid OTP/assertion, or semantic failure.
+- `429`: rate limited; include `Retry-After`.
+- `500`: unexpected server failure; log correlation ID.
 
-### Passkeys (Device Management)
-**GET** `/auth/webauthn/devices` → 200, 401, 403  
-**DELETE** `/auth/webauthn/devices/{id}` → 200, 400, 401, 403  
-Notes: deleting a non-existent/unauthorized credential returns 401 in current implementation.
-
-### Password Reset
-**POST** `/auth/password/reset/request` → 202, 429, 500
-```json
-{ "email": "user@example.com" }
-```
-
-**POST** `/auth/password/reset/confirm` → 200, 400, 410, 422, 429, 500
-```json
-{ "token": "reset_abc", "newPassword": "N3wS3curePass!" }
-```
-
-### Email Change
-**POST** `/auth/email/change/request` → 202, 401, 429, 500
-```json
-{ "newEmail": "new@example.com" }
-```
-**POST** `/auth/email/change/confirm` → 200, 400, 410, 422, 401, 429, 500
-```json
-{ "otp": "654321" }
-```
-
-### Social (Customer)
-**GET** `/auth/oauth/{{provider}}/start` → 302 to provider  
-**GET** `/auth/oauth/{{provider}}/callback` → 302 to app on success or 200 (link)  
-**POST** `/auth/oauth/{{provider}}/unlink` → 200, 401, 403
-
-### Registration (Customer)
-**POST** `/auth/register` → 202
-```json
-{ "email": "user@example.com" }
-```
-**POST** `/auth/email/verify/request` → 202
-```json
-{ "email": "user@example.com" }
-```
-**POST** `/auth/email/verify/confirm` → 200, 400, 410, 422
-```json
-{ "sessionId": "rs_123", "email": "user@example.com", "code": "432198" }
-```
-**POST** `/auth/register/complete` → 200, 400
-```json
-{ "sessionId": "rs_123", "fullName": "A B", "password": "N3wS3curePass!" }
-```
-
-### Registration (Partner)
-**GET** `/auth/owner/registration/{{token}}` → 200, 400, 410, 409  
-**POST** `/auth/owner/registration/complete` → 200, 400, 410  
-**GET** `/auth/staff/registration/{{token}}` → 200, 400, 410, 409  
-**POST** `/auth/staff/registration/complete` → 200, 400, 410  
-**POST** `/auth/otp/request` → 202, 429  
-**POST** `/auth/otp/confirm` → 200, 400, 410, 422, 429
-
-## 7) Cookies & Headers Effects
-- **Login/MFA success:** set AT/RT; issue or rotate `XSRF-TOKEN`
-- **Refresh:** rotate RT; set AT; rotate `XSRF-TOKEN`
-- **Logout:** clear AT/RT
-- **All 429:** include `Retry-After` (seconds)
-
-## 8) i18n Codes
-Map `error.code` to keys like:  
-`auth.login.invalid`, `auth.mfa.required`, `auth.mfa.totp.invalid`, `auth.passwordReset.sent`, `auth.emailChange.sent`, `auth.error.rateLimited`, `auth.error.generic`
-
-## 9) Versioning & Compatibility
-If current controllers expose slightly different paths, add **aliases** or progressive migration.  
-A response‑normalizing interceptor can enforce the success/error envelope consistently.
-
-## 10) Traceability
-- **Source of truth:** `openapi.yaml` (OpenAPI 3.1)  
-- **Error catalog:** `error-catalog.md` (code → HTTP → i18n → UX)  
-- **FE summary:** `fe-service-contracts.md`
-
-## 11) Implementation Notes (Aliases/Parity with Code)
-These reflect current backend routes/behaviors that differ from the canonical paths above. They MUST be supported (aliases) or normalized during migration.
-
-- Recovery Codes
-  - Implemented: `POST /auth/recovery/generate` (issue), `POST /auth/recovery/verify`
-  - Canonical: `POST /auth/recovery-codes/issue` (201), `POST /auth/recovery-codes/verify`
-
-- Sessions / Devices
-  - Implemented: `GET /auth/sessions`, `POST /auth/sessions/revoke`, `POST /auth/sessions/revoke/:id`
-  - Canonical: `GET /auth/devices`, `POST /auth/devices/revoke`
-
-- OAuth Unlink
-  - Implemented: `POST /auth/oauth/:provider/unlink`
-  - Canonical: `DELETE /auth/oauth/{provider}`
-
-- MFA: TOTP & WebAuthn endpoints (AuthN/AuthZ)
-  - Implemented:
-    - `POST /auth/login/totp` (TOTP verify after password)
-    - WebAuthn register: `POST /auth/webauthn/register/start`, `POST /auth/webauthn/register/finish`
-    - WebAuthn login: `POST /auth/webauthn/login/start`, `POST /auth/webauthn/login/finish`
-  - Canonical (LLD):
-    - TOTP: `POST /auth/mfa/totp/verify`
-    - WebAuthn assertion: `POST /auth/mfa/webauthn/assertion/options`, `POST /auth/mfa/webauthn/assertion/result`
-
-- Cookies (names)
-  - Implemented: `bsaas_at` (access), `bsaas_rt` (refresh), `XSRF-TOKEN` (non‑HttpOnly)
-  - Canonical/OpenAPI cookieAuth currently refers to `access_token`; align during normalization.
-
-- OAuth Callback
-  - Implemented: returns 200 with cookies for login; 200 for link; guard allows both modes
-  - Canonical: 302 redirect to app on success (login); 200 for link
-
-> Migration plan: expose canonical paths as aliases, keep current paths during transition; update OpenAPI accordingly.
+## 8) Traceability
+- API contract: `docs/specs/auth/API/openapi.yaml`
+- Error catalog: `docs/specs/auth/API/error-catalog.md`
+- Frontend service summary: `docs/specs/auth/API/fe-service-contracts.md`
+- Contract parity script: `scripts/openapi-auth-check.ts`

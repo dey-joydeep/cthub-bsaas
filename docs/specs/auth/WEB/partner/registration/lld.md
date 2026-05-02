@@ -27,8 +27,6 @@ export interface TotpVerify { code: string; }
 - **POST** `/auth/owner/registration/complete`
 - **GET** `/auth/staff/registration/:token`
 - **POST** `/auth/staff/registration/complete`
-- **POST** `/auth/otp/request`
-- **POST** `/auth/otp/confirm`
 
 ## Workflows
 - Success path(s)
@@ -85,5 +83,5 @@ export interface TotpVerify { code: string; }
 - Route guard pre-validates token with a neutral skeleton/loading state.
 - Map 400/410/409 to non-revealing UI states; never disclose presence of specific accounts.
 
-### OTP Attempts & Lockout
-- Count attempts locally; if server returns 423 (locked), show cooldown guidance without thresholds.
+### Retry And Cooldown
+- If server returns 429, honor `Retry-After` and show cooldown guidance without exposing thresholds.

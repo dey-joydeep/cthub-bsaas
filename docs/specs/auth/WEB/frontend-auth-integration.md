@@ -1,83 +1,82 @@
 # Frontend Auth Integration (Angular + SSR)
 
-Status: Authoritative for FE ↔ API integration; complements API HLD/LLD.
+Status: aligned to `docs/specs/auth/API/openapi.yaml`.
 
 ## Goals
-- Use secure, cookie-based auth (AT short-lived, RT persistent by policy) with Angular 20 and SSR.
+- Use secure cookie-based auth with Angular SSR.
 - Avoid client-side token storage; rely on HttpOnly cookies and CSRF protection.
-- Keep FE aligned with canonical routes; avoid deprecated aliases.
+- Keep frontend service calls aligned with OpenAPI. Do not call routes that are absent from the contract.
 
-## Cookies & “Stay Signed In”
-- Backend issues cookies:
-  - `bsaas_at` (Access Token): HttpOnly, Secure, SameSite=Lax, Path `/`.
-  - `bsaas_rt` (Refresh Token): HttpOnly, Secure, SameSite=Lax, Path `/auth`, persistent Max-Age (policy-driven, e.g., 180d).
-  - `XSRF-TOKEN` (CSRF): non-HttpOnly, Secure, SameSite=Lax, Path `/`.
-- “Stay signed in” is a backend policy (persistent RT). Do not send a `rememberMe` flag; checkbox is UX-only.
+## Cookies And Stay Signed In
+Backend issues:
 
-## CSRF (XSRF) Integration
-- Angular HttpClient defaults:
-  - Cookie: `XSRF-TOKEN`
-  - Header: `X-XSRF-TOKEN`
-- Ensure HttpClient XSRF is enabled and `withCredentials: true` on API requests.
-- Server enforces double-submit on state-changing requests when it has issued `XSRF-TOKEN`.
-- Safe methods (GET/HEAD/OPTIONS) and explicitly annotated endpoints may skip CSRF.
+- `bsaas_at`: access token, HttpOnly, `Secure` in production, `SameSite=Lax`, path `/`.
+- `bsaas_rt`: refresh token, HttpOnly, `Secure` in production, `SameSite=Lax`, path `/auth`, persistent Max-Age by backend policy.
+- `XSRF-TOKEN`: CSRF token, non-HttpOnly, `Secure` in production, `SameSite=Lax`, path `/`.
 
-## withCredentials & SSO
-- Always set `withCredentials: true` on API calls so cookies flow.
-- Prefer relative API URLs; SSR server (Node) can proxy origin.
-- Cookies use a shared parent domain (e.g., `.cthub.in`) for SSO across `admin.`, `partner.`, `app.`.
+"Stay signed in" is backend policy expressed through refresh-token lifetime. Do not send a frontend-only `rememberMe` flag unless OpenAPI later defines one.
 
-## Canonical Endpoints (Use These)
-- Auth
-  - `POST /auth/login` — password login (may return MFA challenge)
-  - `POST /auth/login/totp` — complete TOTP challenge
-  - `POST /auth/refresh` — rotate RT; set AT
-  - `POST /auth/logout`, `POST /auth/logout-others`
-  - `GET /auth/sessions` — list sessions (canonical)
-  - `DELETE /auth/sessions/{id}` — revoke device/session (canonical)
-- Recovery Codes
-  - `POST /auth/recovery-codes/issue` (201)
-  - `POST /auth/recovery-codes/verify`
-- Email
-  - `POST /auth/email/send-verification`
-  - `POST /auth/email/verify` | `POST /auth/email/verify/{request,confirm}`
-- OAuth
-  - `GET /auth/oauth/{provider}/start`
-  - `GET /auth/oauth/{provider}/callback`
-  - `DELETE /auth/oauth/{provider}` (unlink)
+## CSRF/XSRF
+- Angular sends `X-XSRF-TOKEN` from the `XSRF-TOKEN` cookie.
+- Auth requests must use credentials so cookies flow.
+- Server enforces double-submit on protected state-changing requests when it has issued an XSRF cookie.
 
-Deprecated aliases (avoid):
-- `GET /auth/devices`, `POST /auth/devices/revoke`
+## Current Endpoints
+
+### Auth And Sessions
+- `POST /auth/login`
+- `POST /auth/login/totp`
+- `POST /auth/refresh`
+- `POST /auth/logout`
+- `GET /auth/sessions`
+- `POST /auth/sessions/revoke/{id}`
+
+### Password, Email, Recovery
+- `POST /auth/password/forgot`
+- `POST /auth/password/reset`
+- `POST /auth/password/change`
+- `POST /auth/email/change/request`
+- `POST /auth/email/change/confirm`
+- `POST /auth/email/verify/request`
+- `POST /auth/email/verify/confirm`
+- `POST /auth/recovery/generate`
+- `POST /auth/recovery/verify`
+
+### TOTP, WebAuthn, Passkeys
+- `POST /auth/totp/enroll/start`
+- `POST /auth/totp/enroll/finish`
+- `POST /auth/webauthn/register/start`
+- `POST /auth/webauthn/register/finish`
+- `POST /auth/webauthn/login/start`
+- `POST /auth/webauthn/login/finish`
+- `GET /auth/webauthn/devices`
+- `DELETE /auth/webauthn/devices/{id}`
+
+### OAuth And Registration
+- `GET /auth/oauth/{provider}/start`
+- `GET /auth/oauth/{provider}/callback`
 - `POST /auth/oauth/{provider}/unlink`
+- `POST /auth/register`
+- `GET /auth/owner/registration/{token}`
+- `POST /auth/owner/registration/complete`
+- `GET /auth/staff/registration/{token}`
+- `POST /auth/staff/registration/complete`
 
-## Error Envelope & Status Handling
-- Success: `{ success: true, data: … }` (ResponseEnvelope)
-- Error mapping:
-  - 401: unauthenticated → redirect to login
-  - 403: CSRF violation → refresh page/flow; reissue XSRF
-  - 410: expired token/link → show expired UI, offer resend/refresh
-  - 422: validation/assertion failed → show field or general errors
-  - 429: rate limited → respect `Retry-After` and disable UI timers
-
-## OAuth UX (Google/Meta)
-- Start flow with allowlisted redirects; persist return URL via state if needed.
-- On callback:
-  - Login: cookies set; redirect to intended route.
-  - Link (authenticated): update profile; handle conflict gracefully.
-- Error query params should show actionable messages and a retry/back option.
+## Error Handling
+- Success: `{ success: true, data }`.
+- Error: `{ success: false, code, message, details?, meta?: { correlationId } }`.
+- `401`: unauthenticated or invalid session.
+- `403`: forbidden or CSRF violation.
+- `410`: expired token/challenge.
+- `422`: validation/assertion failure.
+- `429`: rate limited; use `Retry-After` for countdown.
 
 ## SSR Safety
-- Guard browser-only APIs (`window`, `document`, `localStorage`, `navigator.credentials`) with `isPlatformBrowser` checks.
-- Use `TransferState` to avoid duplicate fetches for initial auth/session checks.
-- Never store tokens client-side; rely on cookies.
+- Guard browser APIs such as `window`, `document`, `localStorage`, and `navigator.credentials`.
+- Prefer relative API URLs or an SSR proxy.
+- Never store tokens in browser storage.
 
 ## Testing Guidance
-- Unit: services/interceptors/guards; simulate HTTP with Angular testing utilities.
-- Integration (web): HTTP mock tests for auth flows; ensure `withCredentials` and XSRF header are set.
-- E2E: happy-path login, MFA, refresh, logout, revoke; OAuth callback success/error; cooldowns.
-
-## References
-- API HLD: `docs/specs/auth/API/api-hld.md`
-- API LLD: `docs/specs/auth/API/api-lld.md`
-- Frontend SSR: `docs/us/frontend/ssr-setup.md`
-
+- Unit-test services/interceptors/guards with mocked HTTP.
+- Verify credentials and XSRF behavior in web integration tests.
+- Keep API route names sourced from OpenAPI or `fe-service-contracts.md`.
