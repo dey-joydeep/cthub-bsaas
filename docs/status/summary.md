@@ -1,127 +1,51 @@
 # Project Status Summary
 
-## Overall Health
+**Updated:** 2026-05-04
 
-| Metric        | Status             | Trend |
-| ------------- | ------------------ | ----- |
-| Development   | 🟢 On Track        | →     |
-| Testing       | 🟡 Needs Attention | ↓     |
-| Deployment    | 🟢 Stable          | →     |
-| Documentation | 🟡 In Progress     | ↑     |
-| Team Velocity | 🟢 Good            | →     |
+This status folder is currently used for local planning and branch handoff notes. It is not a release-management dashboard.
 
-## Module Status
+## Active Branch Focus
 
-### Auth Module
+Current branch:
 
-- **Progress**: 85%
-- **Blockers**: None
-- **Next Steps**: Implement 2FA
-- **Owner**: @alice
+```text
+feat/auth-backend-foundation
+```
 
-### Dashboard Module
+Primary branch status document:
 
-- **Progress**: 70%
-- **Blockers**: API performance
-- **Next Steps**: Optimize queries
-- **Owner**: @bob
+- `docs/status/auth/auth-backend-plan-and-progress-status.md`
 
-### Appointment Module
+## Auth Backend Summary
 
-- **Progress**: 90%
-- **Blockers**: Timezone issues
-- **Next Steps**: Final testing
-- **Owner**: @charlie
+The Auth backend foundation is largely implemented against the current OpenAPI route contract.
 
-### Profile Module
+Current source of truth:
 
-- **Progress**: 60%
-- **Blockers**: Design review
-- **Next Steps**: Implement settings
-- **Owner**: @dave
+- `docs/specs/auth/API/openapi.yaml`
+- `docs/specs/auth/API/api-hld.md`
+- `docs/specs/auth/API/api-lld.md`
+- `docs/specs/auth/WEB/docs/auth/server-alignment.md`
+- `scripts/openapi-auth-check.ts`
 
-## Key Metrics
+Current branch rules:
 
-### Code Quality
+- Do not add legacy route aliases.
+- Keep controller routes and OpenAPI in parity.
+- Keep Auth UT and IT coverage at 100%.
+- Keep lint/build green.
+- Keep docs aligned with implementation whenever Auth behavior changes.
 
-- **Test Coverage**: 78% (+5% from last sprint)
-- **Bugs**: 12 open, 5 in progress
-- **Tech Debt**: 15 items
+## Known Remaining Backend Auth Work
 
-### Performance
+1. Wire OpenAPI route parity into CI.
+2. Add or confirm CI coverage enforcement for backend feature libraries.
+3. Decide whether additional server import-boundary hardening belongs in this branch or the infra-upgrade workstream.
 
-- **API Response Time**: 120ms (p95)
-- **Page Load**: 1.8s (avg)
-- **Uptime**: 99.95% (30d)
+## Related Planning
 
-### Team
+Infrastructure modernization planning lives under:
 
-- **Velocity**: 28 points/sprint
-- **Sprint Completion**: 92%
-- **PR Cycle Time**: 1.2 days (avg)
+- `docs/infra-upgrade/20260501/`
 
-## Risks & Issues
-
-### High Priority
-
-1. **API Rate Limiting**
-   - Impact: High
-   - Mitigation: Implement caching
-   - Owner: @alice
-
-2. **Mobile Performance**
-   - Impact: Medium
-   - Mitigation: Optimize assets
-   - Owner: @bob
-
-### Medium Priority
-
-1. **Test Coverage**
-   - Impact: Medium
-   - Target: 85%
-   - Owner: QA Team
-
-2. **Documentation**
-   - Impact: Low
-   - Target: 100% coverage
-   - Owner: Tech Writers
-
-## Recent Achievements
-
-- Successfully deployed v1.2.0 to production
-- Reduced API response time by 35%
-- Achieved 99.95% test coverage in core modules
-- Onboarded 2 new team members
-
-## Upcoming Milestones
-
-### Next 2 Weeks
-
-- [ ] Release v1.3.0 (2025-07-30)
-- [ ] Complete performance audit
-- [ ] Update API documentation
-
-### Next Month
-
-- [ ] Implement 2FA
-- [ ] Launch mobile app beta
-- [ ] Conduct security audit
-
-## Dependencies
-
-- Backend API v1.2.0+
-- Frontend SDK v2.1.0+
-- Database migration v3.0.0
-
-## Team Updates
-
-- @alice: On vacation until 2025-07-20
-- @bob: Leading the performance optimization task force
-- @charlie: Mentoring new team members
-- @dave: Focused on documentation
-
-## Notes
-
-- Next all-hands meeting: 2025-07-18
-- Retrospective scheduled for 2025-07-21
-- Company holiday: 2025-08-15
+That workstream is separate from this Auth backend branch.
