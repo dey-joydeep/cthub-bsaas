@@ -2,10 +2,17 @@ import { UnauthorizedException } from '@nestjs/common';
 import type { JwtService } from '@nestjs/jwt';
 import type { ConfigService } from '@cthub-bsaas/server-core';
 import type {
+  EmailPort,
+  ICredentialTotpRepository,
+  IEmailVerificationRepository,
+  IPasswordResetRepository,
   IRefreshTokenRepository,
   ISessionRepository,
+  ISocialAccountRepository,
+  TotpPort,
   IUserRepository,
 } from '@cthub-bsaas/server-contracts-auth';
+import type { RateLimiter } from '@cthub-bsaas/server-infrastructure';
 import type { RefreshToken } from '@prisma/client';
 import { AuthService } from '../../../src/lib/services/auth.service';
 import { AuditService } from '../../../src/lib/services/audit.service';
@@ -18,7 +25,7 @@ import { AuditService } from '../../../src/lib/services/audit.service';
 describe('AuthService edge-case: revoked RT reuse deny_only path (IT harness)', () => {
   it('denies refresh and logs deny_only when session delete fails', async () => {
     const jwt: Partial<JwtService> = { verifyAsync: jest.fn().mockResolvedValue({ sub: 'u1', jti: 'j1' }) };
-    const config: Partial<ConfigService> = { auth: { jwtRefreshSecret: 'ref' } as any };
+    const config = { auth: { jwtRefreshSecret: 'ref' } } as ConfigService;
 
     const refreshRepo: jest.Mocked<IRefreshTokenRepository> = {
       create: jest.fn(),
@@ -54,22 +61,25 @@ describe('AuthService edge-case: revoked RT reuse deny_only path (IT harness)', 
     const audit = { log: jest.fn() } as unknown as AuditService;
 
     // Instantiate AuthService directly with stubs for unused deps
-    const noop: any = {};
+    const unused = <T>(): T => ({} as T);
+    const rateLimiter: RateLimiter = {
+      checkOrThrow: async (): Promise<void> => undefined,
+    };
     const service = new AuthService(
-      userRepo as any,
-      sessionRepo as any,
-      refreshRepo as any,
-      noop, // socialAccountRepository
-      noop, // credentialTotpRepository
+      userRepo,
+      sessionRepo,
+      refreshRepo,
+      unused<ISocialAccountRepository>(),
+      unused<ICredentialTotpRepository>(),
       jwt as JwtService,
-      config as ConfigService,
-      noop, // totp
-      noop, // email
-      noop, // emailVerRepo
-      noop, // pwdResetRepo
+      config,
+      unused<TotpPort>(),
+      unused<EmailPort>(),
+      unused<IEmailVerificationRepository>(),
+      unused<IPasswordResetRepository>(),
       audit,
       undefined, // invitePort
-      { checkOrThrow: async () => {} } as any,
+      rateLimiter,
     );
 
     await expect(service.refreshToken('rt-reused')).rejects.toThrow(UnauthorizedException);

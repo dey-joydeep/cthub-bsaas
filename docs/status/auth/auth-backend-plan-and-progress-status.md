@@ -100,8 +100,10 @@ Examples of routes that are intentionally not part of the contract:
 | Retry-After | Implemented | API throttler guard/filter wiring sets `Retry-After` for throttled responses. |
 | Cookie handling | Implemented | Auth cookies are centralized through Auth cookie services/interceptors. |
 | Controller route parity | Implemented | `scripts/openapi-auth-check.ts` compares controller routes to OpenAPI. |
-| CI contract gate | Pending | The parity script exists; a CI job still needs to enforce it. |
-| Server-wide coverage gate | Pending | Auth has project thresholds; broader server-feature CI enforcement remains future hardening. |
+| CI contract gate | Implemented | `.github/workflows/ci.yml` and `.github/workflows/openapi-contract.yml` run Auth OpenAPI lint/parity checks. |
+| Auth coverage gate | Implemented | `server-feature-auth` has project coverage thresholds and CI runs server lint/test coverage for Auth. |
+| Server-wide coverage gate | Deferred | Broader `server-feature-*` coverage gates belong to the upcoming workflow after those features are developed. |
+| Import-boundary hardening | Deferred | Additional no-restricted-import hardening is tracked under infra-upgrade/boundary work, not this Auth backend branch. |
 
 ## Validation Commands
 
@@ -123,12 +125,24 @@ Expected Auth requirements:
 - Lint: zero warnings and zero errors.
 - OpenAPI route parity: no missing routes in implementation or spec.
 
-## Remaining Work For This Branch
+## Branch Completion Status
 
-1. Wire `scripts/openapi-auth-check.ts` into CI.
-2. Add/confirm CI jobs that enforce backend feature coverage thresholds.
-3. Decide whether no-restricted-import hardening for server-core deep imports should be implemented now or tracked under infra hardening.
-4. Keep this document current whenever Auth route scope, validation commands, or completion status changes.
+Auth backend implementation tasks are complete for this branch scope.
+
+Latest local validation on 2026-05-04:
+
+- `npx nx test server-feature-auth --configuration=ut`: passed, 100% statements/branches/functions/lines.
+- `npx nx test server-feature-auth --configuration=it`: passed, 100% statements/branches/functions/lines.
+- `npx nx lint server-feature-auth`: passed, zero warnings/errors.
+- `npx nx build server-feature-auth`: passed.
+- `node_modules/.bin/redocly.cmd lint docs/specs/auth/API/openapi.yaml --config .redocly.yaml --max-problems=0`: passed.
+- `node_modules/.bin/tsx.cmd scripts/openapi-auth-check.ts`: passed, 31 implemented routes and 31 spec routes.
+
+Future work that is intentionally outside this branch:
+
+1. Broader `server-feature-*` coverage gates for undeveloped/upcoming server features.
+2. Additional import-boundary hardening under the infrastructure upgrade workstream.
+3. Keeping this document current whenever Auth route scope, validation commands, or completion status changes.
 
 ## Out Of Scope
 

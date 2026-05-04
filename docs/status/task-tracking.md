@@ -41,9 +41,11 @@ Out of scope:
 | Auth UT coverage | Done | Must remain 100%. |
 | Auth IT coverage | Done | Must remain 100%. |
 | OpenAPI route parity script | Done | Script exists at `scripts/openapi-auth-check.ts`. |
-| CI gate for OpenAPI route parity | Pending | Add to CI before final merge. |
-| CI gate for backend feature coverage | Pending | Broader server hardening task. |
-| Additional server import-boundary hardening | Pending | Decide whether this belongs here or infra-upgrade. |
+| CI gate for OpenAPI route parity | Done | `.github/workflows/ci.yml` and `.github/workflows/openapi-contract.yml` run Auth OpenAPI checks. |
+| CI gate for Auth backend coverage | Done | CI runs server lint/test coverage for `server-feature-auth`. |
+| CI gate for all server features | Deferred | Future workflow item; other server feature work is not developed in this branch. |
+| Additional server import-boundary hardening | Deferred | Tracked under infra-upgrade boundary hardening, not this Auth backend branch. |
+| Final local branch validation | Done | UT, IT, lint, build, OpenAPI lint, and OpenAPI route parity passed on 2026-05-04. |
 
 ## Validation Checklist
 

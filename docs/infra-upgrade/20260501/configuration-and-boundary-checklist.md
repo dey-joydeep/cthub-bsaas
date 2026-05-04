@@ -137,6 +137,7 @@ Required ESLint checks:
 - Ban web imports from `@cthub-bsaas/server-*`.
 - Ban server imports from `libs/web/**`.
 - Ban deep imports across package boundaries.
+- Evaluate targeted `no-restricted-imports` rules for server-core deep imports after package-root exports are confirmed.
 - Consider `banTransitiveDependencies: true` after package/workspace metadata is cleaned.
 
 ## Angular ESLint

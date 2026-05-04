@@ -18,7 +18,7 @@ Primary branch status document:
 
 ## Auth Backend Summary
 
-The Auth backend foundation is largely implemented against the current OpenAPI route contract.
+The Auth backend foundation is implemented and locally validated against the current OpenAPI route contract.
 
 Current source of truth:
 
@@ -38,9 +38,12 @@ Current branch rules:
 
 ## Known Remaining Backend Auth Work
 
-1. Wire OpenAPI route parity into CI.
-2. Add or confirm CI coverage enforcement for backend feature libraries.
-3. Decide whether additional server import-boundary hardening belongs in this branch or the infra-upgrade workstream.
+No Auth backend implementation tasks remain in the current branch scope.
+
+Future work outside this branch:
+
+1. Broader `server-feature-*` coverage gates after additional server features are developed.
+2. Additional server import-boundary hardening under `docs/infra-upgrade/20260501/`.
 
 ## Related Planning
 
