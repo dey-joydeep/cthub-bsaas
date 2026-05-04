@@ -43,6 +43,8 @@ export interface AdminAuthUser extends BaseAuthUser {
     readonly accessToken?: string;
     readonly refreshToken?: string;
     readonly expiresIn?: number;
+
+    readonly [key: string]: unknown;
 }
 
 export interface SocialLoginResponse {

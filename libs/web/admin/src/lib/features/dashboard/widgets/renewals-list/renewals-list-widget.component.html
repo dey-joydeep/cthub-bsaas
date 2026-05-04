@@ -39,7 +39,7 @@
               </div>
               <div class="renewal-status">
                 <mat-icon>{{ getStatusIcon(renewal.status) }}</mat-icon>
-                <span [style.color]="getStatusColor(renewal.status)">
+                <span [style.color]="getStatusColor(renewal.status || 'pending')">
                   {{ formatRenewalStatus(renewal.status) | translate }}
                 </span>
               </div>

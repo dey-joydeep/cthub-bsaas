@@ -1,15 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
-import { DashboardComponent } from './dashboard.component';
+import { environment } from '@cthub-bsaas/web-config/environments/admin/environment';
 import { AppointmentTrend, DashboardStats, ProductSales, Renewal, RevenueData, SubscriptionData } from './models/dashboard.model';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
   private apiUrl = environment.apiUrl;
-  private tenantId = DashboardComponent.tenantId;
+  private tenantId = 'demo-tenant';
 
   constructor(private http: HttpClient) {}
 
@@ -96,5 +95,15 @@ export class DashboardService {
     return this.http
       .get<{ data: { month: string; retentionRate: number }[] }>(`${this.apiUrl}/customers/retention`)
       .pipe(map((response) => response.data));
+  }
+
+  getTenantId(): Observable<string> {
+    return of(this.tenantId);
+  }
+
+  setTenantId(value: string | null | undefined): void {
+    if (typeof value === 'string' && value.trim().length > 0) {
+      this.tenantId = value;
+    }
   }
 }

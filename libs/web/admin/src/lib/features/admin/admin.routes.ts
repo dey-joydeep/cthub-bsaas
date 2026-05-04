@@ -1,8 +1,5 @@
 import { Routes } from '@angular/router';
-import { roleGuard } from '@cthub-bsaas/web-core/auth';
-
-// Guards
-import { authGuard } from '../../core/auth/guards/auth.guard';
+import { authGuard, roleGuard } from '@cthub-bsaas/web-core/auth';
 
 export const ADMIN_ROUTES: Routes = [
   {

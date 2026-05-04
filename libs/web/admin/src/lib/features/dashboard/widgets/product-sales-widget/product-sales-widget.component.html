@@ -43,7 +43,7 @@
 
   <mat-card-content>
     <!-- Loading State -->
-    <div *ngIf="isLoading && (!dataSource || dataSource.length === 0)" class="loading-container">
+    <div *ngIf="loading && (!dataSource || dataSource.length === 0)" class="loading-container">
       <mat-spinner diameter="40"></mat-spinner>
       <p>{{ 'COMMON.LOADING' | translate }}</p>
     </div>
@@ -198,7 +198,7 @@
     </div>
 
     <!-- Empty State -->
-    <div *ngIf="!isLoading && (!dataSource || dataSource.length === 0)" class="empty-state">
+    <div *ngIf="!loading && (!dataSource || dataSource.length === 0)" class="empty-state">
       <mat-icon>inbox</mat-icon>
       <h3>{{ 'DASHBOARD.PRODUCT_SALES.NO_DATA_TITLE' | translate }}</h3>
       <p>{{ 'DASHBOARD.PRODUCT_SALES.NO_DATA_DESCRIPTION' | translate }}</p>

@@ -7,6 +7,7 @@ export interface CustomerAuthUser extends BaseAuthUser {
     readonly accessToken?: string;
     readonly refreshToken?: string;
     readonly expiresIn?: number;
+    readonly [key: string]: unknown;
 }
 
 export interface AuthResponse extends Omit<CustomerAuthUser, 'accessToken' | 'refreshToken' | 'expiresIn'> {

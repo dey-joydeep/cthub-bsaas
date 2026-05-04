@@ -1,12 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
 import { DashboardStats } from './models/customer-stats-widget.model';
 
 @Injectable({ providedIn: 'root' })
 export class CustomerStatsWidgetService {
-  constructor(private http: HttpClient) {}
-
   getStats(): Promise<DashboardStats> {
     // Simulate API call
     return Promise.resolve({

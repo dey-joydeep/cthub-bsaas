@@ -3,8 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { environment } from '@env/environment';
-import { DashboardStats, ProductSale, ProductSalesFilter, ProductSalesResponse, ProductSalesSummary } from '../models/dashboard.model';
+import { environment } from '@cthub-bsaas/web-config/environments/admin/environment';
+import { DashboardStats, ProductSalesFilter, ProductSalesResponse, ProductSalesSummary } from '../models/dashboard.model';
 import { AppointmentsFilter, AppointmentsOverview, AppointmentsPageableResponse, Appointment } from '../models/appointment.model';
 import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.enum';
 

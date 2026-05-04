@@ -155,7 +155,7 @@ export class RenewalsListWidgetComponent extends AbstractBaseComponent {
     return statusMap[status];
   }
 
-  getStatusColor(status: 'pending' | 'completed' | 'overdue'): string {
+  getStatusColor(status: RenewalStatus): string {
     const colorMap = {
       pending: 'var(--mat-warning)',
       completed: 'var(--mat-success)',

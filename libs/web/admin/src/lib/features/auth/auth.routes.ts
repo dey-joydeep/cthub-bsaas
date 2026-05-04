@@ -1,4 +1,4 @@
-import { authGuard } from '@cthub-bsaas/web-core-auth';
+import { authGuard } from '@cthub-bsaas/web-core/auth';
 import { Routes } from '@angular/router';
 // Components
 import { LoginComponent } from './components/login/login.component';

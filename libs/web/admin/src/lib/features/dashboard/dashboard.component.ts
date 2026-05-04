@@ -1,4 +1,5 @@
-import { PlatformUtils, PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
+import { PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
+import type { PlatformUtils } from '@cthub-bsaas/web-core-platform';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, HostListener, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
@@ -70,6 +71,7 @@ export class DashboardComponent extends AbstractBaseComponent implements OnInit 
         const savedTenantId = await firstValueFrom(this.dashboardService.getTenantId());
         if (savedTenantId) {
           this.tenantId = savedTenantId;
+          this.dashboardService.setTenantId(savedTenantId);
         }
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';

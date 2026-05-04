@@ -29,6 +29,8 @@ const _setImmediate = (callback: () => void): any => {
   return setTimeout(callback, 0);
 };
 
+const noop = (): void => {};
+
 export class MaterialSsrHandler {
   private static initialized = false;
 

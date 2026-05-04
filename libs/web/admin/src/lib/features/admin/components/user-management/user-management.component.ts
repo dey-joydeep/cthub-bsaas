@@ -6,8 +6,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatSortModule, Sort } from '@angular/material/sort';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSortModule } from '@angular/material/sort';
 
 interface User {
   id: string;

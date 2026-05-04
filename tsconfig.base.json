@@ -43,6 +43,8 @@
       "@cthub-bsaas/web-config/environments/*": ["libs/web/config/src/environments/*"],
       "@cthub-bsaas/web-core-auth": ["libs/web/core/auth/src/index.ts"],
       "@cthub-bsaas/web-core-auth/*": ["libs/web/core/auth/src/*", "dist/libs/web/core/auth/*"],
+      "@cthub-bsaas/web-core/auth": ["libs/web/core/auth/src/index.ts"],
+      "@cthub-bsaas/web-core/auth/*": ["libs/web/core/auth/src/*", "dist/libs/web/core/auth/*"],
       "@cthub-bsaas/web-core-http": ["libs/web/core/http/src/index.ts"],
       "@cthub-bsaas/web-core-http/*": ["libs/web/core/http/src/*"],
       "@cthub-bsaas/web-core-testing": ["libs/web/core/testing/src/index.ts"],

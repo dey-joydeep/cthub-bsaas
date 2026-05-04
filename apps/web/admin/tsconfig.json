@@ -14,6 +14,7 @@
             "@cthub-bsaas/shared/*": ["../../../libs/shared/src/*"],
             "@cthub-bsaas/web-config": ["../../../libs/web/config/src/index.ts"],
             "@cthub-bsaas/web-core/auth": ["../../../libs/web/core/auth/src/index.ts"],
+            "@cthub-bsaas/web-core-auth": ["../../../libs/web/core/auth/src/index.ts"],
             "@cthub-bsaas/web-core/http": ["../../../libs/web/core/http/src/index.ts"],
             "@cthub-bsaas/web-core/testing": ["../../../libs/web/core/testing/src/index.ts"],
             "@cthub-bsaas/web-core-common": ["../../../libs/web/core/common/src/index.ts"],

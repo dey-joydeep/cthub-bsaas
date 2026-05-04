@@ -19,7 +19,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { takeUntil } from 'rxjs';
 
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
-import { DateRange } from '@cthub-bsaas/ui';
 import { ProductSalesWidgetService } from './product-sales-widget.service';
 import { ProductSale } from './models/product-sales-widget.model';
 
@@ -186,7 +185,7 @@ export class ProductSalesWidgetComponent extends AbstractBaseComponent implement
     }
   }
 
-  onDateRangeSelected(range: DateRange): void {
+  onDateRangeSelected(range: { start: Date | null; end: Date | null }): void {
     if (range) {
       this.dateRange.patchValue({
         start: range.start,

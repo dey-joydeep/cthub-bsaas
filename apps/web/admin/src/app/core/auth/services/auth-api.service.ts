@@ -10,7 +10,7 @@ import {
   type LoginCredentials,
   type VerifyOtpParams,
 } from '@cthub-bsaas/web-admin/auth';
-import { environment } from '../../../../environments/environment';
+import { environment } from '@cthub-bsaas/web-config/environments/admin/environment';
 
 /**
  * Thin HTTP adapter that satisfies the `LOGIN_API` and password reset ports.
