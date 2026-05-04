@@ -151,6 +151,33 @@ Required checks:
 - Directive selectors use camelCase attributes.
 - Project-specific `quality.config.js` files are either wired into lint or removed if stale.
 
+## Angular Official Update Guide Checkpoint
+
+Phase 3 must include the official Angular Update Guide as a checklist, not only Nx migrations.
+
+Use:
+
+```text
+https://angular.dev/update-guide?v=20.0-21.0&l=3
+```
+
+Required selections:
+
+- Angular 20.0 to Angular 21.0.
+- Advanced complexity.
+- Angular Material.
+- Windows.
+
+Required review items:
+
+- Angular/Node/TypeScript/Zone.js compatibility.
+- Angular Material and CDK migration notes.
+- SSR and hydration behavior.
+- Windows-specific command/path caveats.
+- Any warnings emitted by Angular migrations.
+
+Do not treat optional Angular modernization as part of the upgrade unless separately scoped. Zoneless adoption, broad Signals refactors, and large UI rewrites should remain follow-up work.
+
 ## Testing Config Split
 
 Target split:
@@ -206,4 +233,3 @@ Required CI target state:
 - Nx cache works locally and in CI.
 - OpenAPI contract check runs on Node 24 or chosen baseline.
 - Vitest web tests and Jest backend tests both run through Nx.
-

@@ -20,6 +20,8 @@ Nx does not publish a separate "LTS" channel comparable to Node.js. For this pla
 - For the 2026-05-01 planning snapshot, that is Nx `22.7.1`.
 - If Nx `23` or a later major is current when the work starts, run the official migration generator first and re-evaluate Angular, TypeScript, and Vitest compatibility before accepting the newer major.
 
+Angular migration remains governed by the official Angular Update Guide even though this workspace should execute the package/project migration through Nx. For the Angular 20 to 21 step, record the Angular guide output for advanced complexity with Angular Material and Windows selected before accepting the migration.
+
 ## Documents
 
 - [Current State And Gaps](./current-state-and-gaps.md)
@@ -38,10 +40,10 @@ Nx does not publish a separate "LTS" channel comparable to Node.js. For this pla
 ## Source References
 
 - Angular version compatibility: https://angular.dev/reference/versions
+- Angular 20 to 21 update guide: https://angular.dev/update-guide?v=20.0-21.0&l=3
 - Angular testing overview: https://angular.dev/guide/testing
 - Nx inferred tasks: https://nx.dev/docs/concepts/inferred-tasks
 - Nx module boundaries: https://nx.dev/technologies/eslint/eslint-plugin/recipes/enforce-module-boundaries
 - Nx Vitest plugin: https://nx.dev/docs/technologies/test-tools/vitest/introduction
 - Nx Vitest migrations: https://nx.dev/docs/technologies/test-tools/vitest/migrations
 - Node.js releases: https://nodejs.org/en/about/previous-releases
-

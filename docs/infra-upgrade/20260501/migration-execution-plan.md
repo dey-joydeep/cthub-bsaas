@@ -100,6 +100,21 @@ Post-migration validation:
 
 Goal: upgrade web apps/libs to Angular 21.2 with matching Angular build, SSR, Material/CDK, and ng-packagr.
 
+Nx remains the execution path for this monorepo, but the official Angular Update Guide is a required checklist for Angular-specific risk. Before accepting Phase 3, open:
+
+```text
+https://angular.dev/update-guide?v=20.0-21.0&l=3
+```
+
+Use these selections:
+
+- From Angular 20.0 to Angular 21.0.
+- Advanced complexity.
+- Angular Material enabled.
+- Windows enabled.
+
+Record the guide output/checklist in the upgrade PR or implementation notes. If Angular's guide conflicts with generated Nx migration output, pause and resolve the conflict explicitly instead of assuming Nx is sufficient.
+
 Expected target packages:
 
 - `@angular/* ~21.2.0`
@@ -126,6 +141,13 @@ Standardization items:
 - Align app `sourceRoot` to workspace-root paths such as `apps/web/admin/src`.
 - Align output paths to `dist/apps/web/<app>`.
 - Keep SSR-safe app code rules and do not introduce browser globals in server paths.
+- Review Angular Material/CDK migration notes before changing UI code.
+- Review SSR/hydration behavior after the upgrade.
+- Keep optional modernization out of this phase unless separately approved:
+  - zoneless adoption
+  - broad Signals refactors
+  - large UI rewrites
+  - frontend test runner migration beyond the planned Vitest phase
 
 Validation:
 
@@ -133,6 +155,7 @@ Validation:
 - `nx build web-customer`
 - `nx build web-partner`
 - `nx run-many -t build -p web-config,web-core-http,web-core-auth,web-core-testing,web-admin-auth,web-customer-auth,web-partner-auth,web-ui`
+- Run or document Angular guide checklist completion for Material, Windows, SSR, TypeScript, Node, and Zone.js compatibility.
 
 ## Phase 4 - Angular ESLint Tightening
 
@@ -278,4 +301,3 @@ Required final gates:
 - `npm run openapi:lint:auth`
 - `npm run openapi:check:auth`
 - `npm audit --audit-level=high`
-
