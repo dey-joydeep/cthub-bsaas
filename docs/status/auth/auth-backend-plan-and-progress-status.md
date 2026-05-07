@@ -202,7 +202,7 @@ Notes
      - test(server-feature-auth): reach 100% UT/IT and fix lint — 991f9345e
 
 2. Primary working doc
-   - Plan/status: `./tmp/auth-backend-plan-and-progress-status.md` (this file)
+   - Plan/status: `docs/status/auth/auth-backend-plan-and-progress-status.md` (this file)
    - Updated specs for parity:
      - HLD: `docs/specs/auth/API/api-hld.md` (section 11)
      - LLD: `docs/specs/auth/API/api-lld.md` (route aliases + cookie names)

@@ -17,6 +17,7 @@ logs
 
 # Temporary files
 tmp/
+work/
 
 # IDE and editor files
 .cursor/
