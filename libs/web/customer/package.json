@@ -2,8 +2,8 @@
   "name": "@cthub-bsaas/web-customer",
   "version": "0.0.1",
   "peerDependencies": {
-    "@angular/common": "^17.3.0",
-    "@angular/core": "^17.3.0"
+    "@angular/common": "^20.0.0",
+    "@angular/core": "^20.0.0"
   },
   "sideEffects": false
 }

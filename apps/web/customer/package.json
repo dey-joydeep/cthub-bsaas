@@ -1,5 +1,5 @@
 {
-  "name": "@cthub-bsaas/web-customer",
+  "name": "@cthub-bsaas/web-app-customer",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -8,7 +8,7 @@
     "build": "ng build",
     "test": "nx jest:test --config=jest.config.ts --passWithNoTests",
     "lint": "nx eslint:lint",
-    "build:ssr": "ng build && ng run web-customer:server",
+    "build:ssr": "ng build && ng run web-app-customer:server",
     "serve:ssr": "node dist/apps/web/customer/server/server.mjs"
   }
 }

@@ -4,7 +4,11 @@
     "rootDir": "src",
     "outDir": "../../../dist/out-tsc/libs/web/customer"
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts"],
+  "include": [
+    "src/index.ts",
+    "src/lib/features/auth/**/*.ts",
+    "src/**/*.d.ts"
+  ],
   "exclude": [
     "src/test-setup.ts",
     "**/*.spec.ts",

@@ -2,7 +2,7 @@
     "name": "web-app-customer",
     "$schema": "../../../node_modules/nx/schemas/project-schema.json",
     "projectType": "application",
-    "sourceRoot": "src",
+    "sourceRoot": "apps/web/customer/src",
     "tags": ["scope:web", "type:app"],
     "targets": {
         "build": {
@@ -53,16 +53,16 @@
         "serve": {
             "executor": "@nx/angular:dev-server",
             "options": {
-                "buildTarget": "web-customer:build:development",
+                "buildTarget": "web-app-customer:build:development",
                 "port": 4200,
                 "host": "localhost"
             },
             "configurations": {
                 "production": {
-                    "buildTarget": "web-customer:build:production"
+                    "buildTarget": "web-app-customer:build:production"
                 },
                 "development": {
-                    "buildTarget": "web-customer:build:development"
+                    "buildTarget": "web-app-customer:build:development"
                 }
             },
             "defaultConfiguration": "development"
