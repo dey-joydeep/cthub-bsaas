@@ -51,6 +51,7 @@ export class TenantComponent implements OnInit {
     this.userId = user ? user.id : null;
   }
 
+  ngOnInit(): void {
     const salonId = this.route.snapshot.paramMap.get('tenantSlug');
     if (salonId) {
       this.tenantService.getSalon(salonId).subscribe({

@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateFn, CanMatchFn, Router } from '@angular/router';
 import { map, take } from 'rxjs/operators';
 import { CURRENT_USER, CurrentUserPort } from '../interfaces/current-user.port';
 
@@ -24,5 +24,15 @@ export const authenticatedGuard: CanActivateFn = (_route, state) => {
       // Navigate to the login page
       return router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: state.url } });
     }),
+  );
+};
+
+export const authCanMatch: CanMatchFn = () => {
+  const currentUserService = inject(CURRENT_USER) as CurrentUserPort;
+  const router = inject(Router);
+
+  return currentUserService.isAuthenticated$.pipe(
+    take(1),
+    map((isAuthenticated) => (isAuthenticated ? true : router.createUrlTree(['/auth/login']))),
   );
 };

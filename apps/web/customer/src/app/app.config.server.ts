@@ -24,7 +24,7 @@ import { ErrorService, loadingInterceptor } from '@cthub-bsaas/web-core-common';
 import { TranslateServerLoader, ssrInterceptor, ssrTranslateInterceptor } from '@cthub-bsaas/web-core-platform';
 import { TranslateLoader, TranslateStore } from '@ngx-translate/core';
 import { appConfig } from './app.config';
-import { LOGIN_API, AUTH_STATE_SETTER, LoginApiService } from '@cthub-bsaas/web-customer-auth';
+import { LOGIN_API, AUTH_STATE_SETTER, LoginApiService } from '@cthub-bsaas/web-customer/auth';
 import { AuthService } from '@cthub-bsaas/web-customer/auth';
 
 // Server-side interceptors

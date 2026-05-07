@@ -1,6 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, OnDestroy, PLATFORM_ID } from '@angular/core';
-import { StorageService } from '@cthub-bsaas/web-core-http';
+import { StorageService } from '@cthub-bsaas/web-core-platform';
 import { BehaviorSubject, Subject, timer } from 'rxjs';
 import { distinctUntilChanged, filter, map, shareReplay, takeUntil } from 'rxjs/operators';
 import { AUTH_STATE_PORT, type AuthStatePort, type BaseAuthUser } from '../ports/auth-state.port';
@@ -68,7 +68,7 @@ export class CurrentUserService implements OnDestroy {
                 });
               }
             },
-            error: (error: any) => console.error('Error in currentUser$ stream:', error),
+            error: (error: unknown) => console.error('Error in currentUser$ stream:', error),
           });
       } else {
         // Fallback: if authenticated and getCurrentUser available, hydrate once
@@ -169,7 +169,7 @@ export class CurrentUserService implements OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => this.checkAuthState(),
-        error: (error: any) => {
+        error: (error: unknown) => {
           console.error('Error in auth state polling:', error);
           this.clearUser();
         },
@@ -220,7 +220,7 @@ export class CurrentUserService implements OnDestroy {
             this.currentUserSubject.next(user);
           }
         },
-        error: (error: any) => {
+        error: (error: unknown) => {
           console.error('Failed to load user from storage:', error);
           this.clearUser();
         },

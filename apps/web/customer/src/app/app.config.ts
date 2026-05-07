@@ -42,17 +42,17 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 // App imports
 import { routes } from './app.routes';
-import { LOGIN_API, AUTH_STATE_SETTER } from '@cthub-bsaas/web-customer-auth';
-import { LoginApiService } from '@cthub-bsaas/web-customer-auth';
+import { LOGIN_API, AUTH_STATE_SETTER } from '@cthub-bsaas/web-customer/auth';
+import { LoginApiService } from '@cthub-bsaas/web-customer/auth';
 import {
   FORGOT_PASSWORD_API,
   REGISTER_API,
   type ForgotPasswordApiPort,
   type RegisterApiPort,
-} from '@cthub-bsaas/web-customer-auth';
+} from '@cthub-bsaas/web-customer/auth';
 import { ErrorHandlerService, ERROR_INTERCEPTOR_PROVIDER, loadingInterceptor } from '@cthub-bsaas/web-core-common';
 import { ssrInterceptor, ssrTranslateInterceptor } from '@cthub-bsaas/web-core-platform';
-import { AUTH_STATE_PORT } from '@cthub-bsaas/web-core/auth';
+import { AUTH_STATE_PORT } from '@cthub-bsaas/web-core-auth';
 import { AuthService } from '@cthub-bsaas/web-customer/auth';
 
 // AoT requires an exported function for factories
@@ -127,7 +127,7 @@ export const appConfig: ApplicationConfig = {
     // Token-based auth APIs (temporary placeholder implementations)
     {
       provide: FORGOT_PASSWORD_API,
-      useFactory: (http: HttpClient): ForgotPasswordApiPort => {
+      useFactory: (): ForgotPasswordApiPort => {
         // TODO: Replace with real API integration using a dedicated AuthApiService
         return {
           requestPasswordReset: () => {

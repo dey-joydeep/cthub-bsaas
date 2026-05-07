@@ -1,14 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { RegisterPayload } from './models/register.model';
 
 @Injectable({ providedIn: 'root' })
 export class RegisterService {
-  constructor(private http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
 
   register(payload: RegisterPayload): Promise<void> {
-    // Simulate API call
-    return Promise.resolve();
+    return firstValueFrom(this.http.post<void>('/api/auth/register', payload));
   }
 }

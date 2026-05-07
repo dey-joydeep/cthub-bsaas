@@ -20,8 +20,8 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 // Translation
 import { TranslateModule } from '@ngx-translate/core';
 
-// Services
-import { ForgotPasswordService } from './forgot-password.service';
+// Tokens
+import { FORGOT_PASSWORD_API, type ForgotPasswordApiPort } from '../../tokens/password.tokens';
 
 // Interfaces
 interface ForgotPasswordForm {
@@ -57,7 +57,7 @@ export class ForgotPasswordComponent {
 
   constructor(
     private fb: FormBuilder,
-    private forgotPasswordService: ForgotPasswordService,
+    @Optional() @Inject(FORGOT_PASSWORD_API) private forgotApi: ForgotPasswordApiPort | null,
   ) {
     // Initialize Forgot Password Form
     this.forgotForm = this.fb.group<ForgotPasswordForm>({
@@ -100,7 +100,13 @@ export class ForgotPasswordComponent {
       return;
     }
 
-    this.forgotPasswordService.requestPasswordReset(email).subscribe({
+    if (!this.forgotApi) {
+      this.loading = false;
+      this.error = 'Password reset service not configured.';
+      return;
+    }
+
+    this.forgotApi.requestPasswordReset(email).subscribe({
       next: (success: boolean) => {
         this.loading = false;
         if (success) {
@@ -131,7 +137,13 @@ export class ForgotPasswordComponent {
       return;
     }
 
-    this.forgotPasswordService.resetPassword(otp, newPassword).subscribe({
+    if (!this.forgotApi) {
+      this.loading = false;
+      this.error = 'Password reset service not configured.';
+      return;
+    }
+
+    this.forgotApi.resetPassword(otp, newPassword).subscribe({
       next: (success: boolean) => {
         this.loading = false;
         if (success) {

@@ -40,7 +40,7 @@ export class LoginService {
     }
 
     private handleAuth(res: ApiResponse<AuthResponse>): CustomerAuthUser {
-        const user: CustomerAuthUser = { ...res.data };
+        const user: CustomerAuthUser = res.data;
         this.authState.setLoggedInUser(user);
         return user;
     }

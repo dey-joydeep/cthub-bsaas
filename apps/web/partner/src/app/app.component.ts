@@ -13,16 +13,16 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '@cthub-bsaas/web-partner/auth';
-import { CurrentUserService } from '@cthub-bsaas/web-core/auth';
+import { CurrentUserService, type BaseAuthUser } from '@cthub-bsaas/web-core/auth';
 
 // Define a User interface with roles
 export interface User {
   id: string;
-  email: string;
+  email?: string;
   firstName?: string;
   lastName?: string;
   roles?: string[];
-  [key: string]: any; // Allow for additional properties
+  [key: string]: unknown;
 }
 
 @Component({
@@ -77,8 +77,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private initializeAuthSubscription(): void {
     this.authSubscription = this.currentUserService.currentUser$.subscribe({
-      next: (user: User | null) => {
-        this.currentUser = user;
+      next: (user: BaseAuthUser | null) => {
+        this.currentUser = user as User | null;
         this.isLoggedIn = !!user;
 
         if (this.isAdmin) {

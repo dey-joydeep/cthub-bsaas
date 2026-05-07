@@ -3,6 +3,7 @@ import type { Observable } from 'rxjs';
 
 // Minimal user shape required by core auth. Apps can extend this in their own layer.
 export type BaseAuthUser = {
+  readonly [key: string]: unknown;
   readonly id: string;
 };
 

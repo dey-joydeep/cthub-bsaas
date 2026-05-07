@@ -29,6 +29,8 @@ export interface IServiceDto {
 
 import { ISalonDto } from '@cthub-bsaas/shared/models/salon.dto';
 
+export type { ISalonDto } from '@cthub-bsaas/shared/models/salon.dto';
+
 export interface ITestimonialDto {
   id: string;
   content: string;

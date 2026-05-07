@@ -5,7 +5,7 @@ import { catchError } from 'rxjs/operators';
 
 import { StorageService } from '@cthub-bsaas/web-core-platform';
 import type { AuthStatePort, BaseAuthUser } from '@cthub-bsaas/web-core/auth';
-import type { CustomerAuthUser } from '@cthub-bsaas/web-customer-auth';
+import type { CustomerAuthUser } from '../models/auth.models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService implements AuthStatePort {

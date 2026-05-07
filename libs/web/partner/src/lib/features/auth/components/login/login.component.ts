@@ -26,7 +26,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { PLATFORM_UTILS_TOKEN, type PlatformUtils, StorageService } from '@cthub-bsaas/web-core-platform';
 import { LoginService } from './login.service';
-import { PartnerAuthUser } from './models/login.model';
+import type { InitLoginResponse, PartnerAuthUser } from '../../models/auth.models';
 
 @Component({
   standalone: true,
@@ -210,7 +210,7 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
       .initLogin(this.loginForm.value)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (res: PartnerAuthUser) => {
+        next: (res: InitLoginResponse) => {
           this.userType = res.userType;
 
           if (res.userType === 'owner' || res.userType === 'staff') {
@@ -281,7 +281,7 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
    */
   private startResendCountdown(seconds: number): void {
     this.resendDisabled = true;
-    this.countdown = 30;
+    this.countdown = seconds;
 
     const timer = setInterval(() => {
       this.countdown--;

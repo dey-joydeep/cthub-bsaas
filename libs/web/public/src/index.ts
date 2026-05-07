@@ -1,1 +1,1 @@
-export * from './lib/web-public.component';
+export * from './lib/public.routes';
