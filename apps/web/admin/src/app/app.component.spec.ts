@@ -44,7 +44,7 @@ describe('AppComponent', () => {
 
   it('should switch languages', () => {
     const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
+    fixture.detectChanges();
     // app.switchLang('bn');
     // expect(app.currentLang).toBe('bn');
     // app.switchLang('en');
@@ -53,7 +53,7 @@ describe('AppComponent', () => {
 
   it('should show/hide links based on login', () => {
     const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
+    fixture.detectChanges();
     const getItemSpy = spyOn(localStorage, 'getItem');
     getItemSpy.and.returnValue('token');
     // expect(app.isLoggedIn).toBeTrue();

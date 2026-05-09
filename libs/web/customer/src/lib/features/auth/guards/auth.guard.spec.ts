@@ -15,7 +15,6 @@ class MockRouter {
 
 describe('AuthGuard', () => {
   let currentUserService: CurrentUserService;
-  let router: MockRouter;
   const mockRoute = {} as ActivatedRouteSnapshot;
   const mockState = { url: '/test' } as RouterStateSnapshot;
 
@@ -25,7 +24,6 @@ describe('AuthGuard', () => {
     });
 
     currentUserService = TestBed.inject(CurrentUserService);
-    router = TestBed.inject(Router) as any;
   });
 
   it('should allow activation if user is authenticated', (done) => {

@@ -4,7 +4,7 @@ import { RouterModule, RouterOutlet } from '@angular/router';
 import { HeaderComponent } from '../header/header.component';
 
 @Component({
-  selector: 'app-layout',
+  selector: 'lib-layout',
   standalone: true,
   imports: [CommonModule, RouterModule, RouterOutlet, HeaderComponent],
   templateUrl: './layout.component.html',

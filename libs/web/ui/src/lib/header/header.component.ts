@@ -52,7 +52,7 @@ interface Notification {
     label?: string;
     url?: string;
     method?: string;
-    payload?: any;
+    payload?: unknown;
     handler?: () => void;
   };
 }
@@ -79,7 +79,8 @@ class NotificationService {
     return of(0);
   }
 
-  markAsRead(_notificationId: string) {
+  markAsRead(notificationId: string) {
+    void notificationId;
     return of({ success: true });
   }
 
@@ -88,10 +89,10 @@ class NotificationService {
   }
 
   // Process notification to ensure it has required properties
-  static processNotification(notification: any): Notification {
+  static processNotification(notification: Notification): Notification {
     return {
       ...notification,
-      action: notification.action || {},
+      action: notification.action ?? {},
     };
   }
 }
@@ -103,7 +104,7 @@ class AuthService {
 }
 
 @Component({
-  selector: 'app-header',
+  selector: 'lib-header',
   standalone: true,
   imports: [
     CommonModule,
@@ -193,24 +194,26 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   // Private properties
   private subscriptions = new Subscription();
+  private readonly scrollListener = (): void => this.handleScroll();
+  private readonly resizeListener = (): void => this.onResize();
 
   // Handle window resize
   @HostListener('window:resize')
-  onResize() {
+  onResize(): void {
     this.checkIfMobile();
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     // Initialize browser-specific code
     if (this.isBrowser) {
       // Check if mobile on init
       this.checkIfMobile();
 
       // Subscribe to scroll events
-      this.platformUtils.windowRef?.addEventListener('scroll', this.handleScroll.bind(this));
+      this.platformUtils.windowRef?.addEventListener('scroll', this.scrollListener);
 
       // Subscribe to window resize events
-      this.platformUtils.windowRef?.addEventListener('resize', this.onResize);
+      this.platformUtils.windowRef?.addEventListener('resize', this.resizeListener);
 
       // Load initial scroll position
       this.handleScroll();
@@ -226,11 +229,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.setupNotificationPolling();
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     // Clean up event listeners
     if (this.isBrowser) {
-      this.platformUtils.windowRef?.removeEventListener('scroll', this.handleScroll);
-      this.platformUtils.windowRef?.removeEventListener('resize', this.onResize);
+      this.platformUtils.windowRef?.removeEventListener('scroll', this.scrollListener);
+      this.platformUtils.windowRef?.removeEventListener('resize', this.resizeListener);
     }
 
     // Unsubscribe from all subscriptions
@@ -241,7 +244,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   // Handle scroll events for header visibility
   @HostListener('window:scroll')
-  handleScroll() {
+  handleScroll(): void {
     if (!this.isBrowser) return;
 
     const currentScrollPosition =
@@ -278,10 +281,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.storageService.getItem$<string>('userLanguage').subscribe({
         next: (savedLanguage: string | null) => {
           if (savedLanguage) {
-            this.onLanguageChange(savedLanguage);
+            this.onLanguageChange(savedLanguage).catch((error: unknown) =>
+              console.warn('Failed to apply saved language preference:', error),
+            );
           }
         },
-        error: (error: any) => console.warn('Failed to load language preference:', error),
+        error: (error: unknown) => console.warn('Failed to load language preference:', error),
       });
 
       this.storageService.getItem$<string>('userCity').subscribe({
@@ -291,12 +296,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
             this.cdr.markForCheck();
           }
         },
-        error: (error: any) => console.warn('Failed to load city preference:', error),
+        error: (error: unknown) => console.warn('Failed to load city preference:', error),
       });
     }
   }
 
-  private checkIfMobile() {
+  private checkIfMobile(): void {
     this.isMobile = this.isBrowser ? (this.platformUtils.windowRef?.innerWidth || 0) < 768 : false;
   }
 
@@ -338,8 +343,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
             // Show a subtle notification that new notifications are available
             this.snackBar
               .open(
-                this.translate.instant('NOTIFICATIONS.NEW_NOTIFICATIONS', { count: count - this.unreadCount }),
-                this.translate.instant('COMMON.VIEW'),
+                this.translateText('NOTIFICATIONS.NEW_NOTIFICATIONS', { count: count - this.unreadCount }),
+                this.translateText('COMMON.VIEW'),
                 { duration: 5000 },
               )
               .onAction()
@@ -372,7 +377,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   // Handle language change
   async onLanguageChange(languageCode: string, showSnackbar = true): Promise<void> {
     this.selectedLanguage = languageCode;
-    this.translate.use(languageCode);
+    this.translate.use(languageCode).subscribe({
+      error: (error: unknown) => console.warn('Failed to change language:', error),
+    });
 
     // Save preference using storage service
     if (this.isBrowser) {
@@ -392,7 +399,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
     // Show snackbar if requested
     if (showSnackbar) {
-      this.snackBar.open(this.translate.instant('LANGUAGE_CHANGED'), this.translate.instant('CLOSE'), { duration: 3000 });
+      this.snackBar.open(this.translateText('LANGUAGE_CHANGED'), this.translateText('CLOSE'), { duration: 3000 });
     }
 
     // Emit event for other components
@@ -419,7 +426,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     // Show snackbar
     const selectedCity = this.cities.find((city) => city.id === cityId);
     if (selectedCity) {
-      this.snackBar.open(this.translate.instant('CITY_CHANGED', { city: selectedCity.name }), this.translate.instant('CLOSE'), {
+      this.snackBar.open(this.translateText('CITY_CHANGED', { city: selectedCity.name }), this.translateText('CLOSE'), {
         duration: 3000,
       });
     }
@@ -451,14 +458,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   // Alias for template compatibility
-  get logout() {
+  get logout(): () => void {
     return this.onLogout.bind(this);
   }
 
   onSearch(query?: string): void {
     const searchQuery = query || this.searchQuery;
     if (searchQuery && searchQuery.trim()) {
-      this.router.navigate(['/search'], { queryParams: { q: searchQuery.trim() } });
+      this.navigate(this.router.navigate(['/search'], { queryParams: { q: searchQuery.trim() } }));
       this.searchQuery = '';
       this.isMobileSearchVisible = false;
     }
@@ -474,7 +481,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
         next: () => {
           // Notification marked as read, the service will update the count
           if (notification.action?.url) {
-            this.router.navigateByUrl(notification.action.url);
+            this.navigate(this.router.navigateByUrl(notification.action.url));
           } else if (notification.action?.handler) {
             notification.action.handler();
           }
@@ -485,7 +492,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
         },
       });
     } else if (notification.action?.url) {
-      this.router.navigateByUrl(notification.action.url);
+      this.navigate(this.router.navigateByUrl(notification.action.url));
       this.showNotifications = false;
     } else if (notification.action?.handler) {
       notification.action.handler();
@@ -499,13 +506,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.notificationService.markAllAsRead().subscribe({
       next: () => {
         // The service will update the notifications and count
-        this.snackBar.open(this.translate.instant('NOTIFICATIONS.MARKED_ALL_READ'), this.translate.instant('COMMON.OK'), {
+        this.snackBar.open(this.translateText('NOTIFICATIONS.MARKED_ALL_READ'), this.translateText('COMMON.OK'), {
           duration: 3000,
         });
       },
       error: (error) => {
         console.error('Failed to mark all notifications as read', error);
-        this.snackBar.open(this.translate.instant('NOTIFICATIONS.MARK_READ_ERROR'), this.translate.instant('COMMON.CLOSE'), {
+        this.snackBar.open(this.translateText('NOTIFICATIONS.MARK_READ_ERROR'), this.translateText('COMMON.CLOSE'), {
           duration: 5000,
           panelClass: ['error-snackbar'],
         });
@@ -518,13 +525,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.authService.logout().subscribe({
       next: () => {
-        this.router.navigate(['/login']);
+        this.navigate(this.router.navigate(['/login']));
         this.isLoading = false;
       },
       error: (error) => {
         console.error('Logout error:', error);
         this.isLoading = false;
-        this.snackBar.open(this.translate.instant('AUTH.LOGOUT_ERROR'), this.translate.instant('COMMON.CLOSE'), {
+        this.snackBar.open(this.translateText('AUTH.LOGOUT_ERROR'), this.translateText('COMMON.CLOSE'), {
           duration: 5000,
           panelClass: ['error-snackbar'],
         });
@@ -534,14 +541,22 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   onProfileClick(): void {
     if (this.user) {
-      this.router.navigate(['/profile']);
+      this.navigate(this.router.navigate(['/profile']));
       this.showUserMenu = false;
     }
   }
 
   onSettingsClick(): void {
-    this.router.navigate(['/settings']);
+    this.navigate(this.router.navigate(['/settings']));
     this.showUserMenu = false;
   }
-}
 
+  private translateText(key: string, params?: Record<string, unknown>): string {
+    const translated: unknown = this.translate.instant(key, params);
+    return typeof translated === 'string' ? translated : key;
+  }
+
+  private navigate(navigation: Promise<boolean>): void {
+    navigation.catch((error: unknown) => console.error('Navigation failed:', error));
+  }
+}

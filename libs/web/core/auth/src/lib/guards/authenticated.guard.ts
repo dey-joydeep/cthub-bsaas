@@ -1,14 +1,14 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, CanMatchFn, Router } from '@angular/router';
 import { map, take } from 'rxjs/operators';
-import { CURRENT_USER, CurrentUserPort } from '../interfaces/current-user.port';
+import { CURRENT_USER } from '../interfaces/current-user.port';
 
 /**
  * Authenticated guard: allows only authenticated users.
  * Stores attempted URL and redirects unauthenticated users to login.
  */
 export const authenticatedGuard: CanActivateFn = (_route, state) => {
-  const currentUserService = inject(CURRENT_USER) as CurrentUserPort;
+  const currentUserService = inject(CURRENT_USER);
   const router = inject(Router);
 
   return currentUserService.isAuthenticated$.pipe(
@@ -28,7 +28,7 @@ export const authenticatedGuard: CanActivateFn = (_route, state) => {
 };
 
 export const authCanMatch: CanMatchFn = () => {
-  const currentUserService = inject(CURRENT_USER) as CurrentUserPort;
+  const currentUserService = inject(CURRENT_USER);
   const router = inject(Router);
 
   return currentUserService.isAuthenticated$.pipe(

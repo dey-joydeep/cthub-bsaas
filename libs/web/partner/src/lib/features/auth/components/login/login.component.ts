@@ -87,8 +87,8 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
   }
 
   // Social login handler (stub). Replace with real token retrieval and API call when available.
-  loginWithSocial(_provider: 'google' | 'facebook'): void {
-    this.error = 'Social login is not implemented yet.';
+  loginWithSocial(provider: 'google' | 'facebook'): void {
+    this.error = `${provider} social login is not implemented yet.`;
   }
 
   // Removed unused logError() to satisfy noUnusedLocals
