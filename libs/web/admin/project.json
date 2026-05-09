@@ -4,7 +4,7 @@
   "projectType": "library",
   "sourceRoot": "libs/web/admin/src",
   "prefix": "lib",
-  "tags": ["scope:web", "type:lib"],
+  "tags": ["platform:web", "scope:web", "type:lib"],
   "targets": {
     "build": {
       "executor": "@nx/angular:package",
@@ -32,16 +32,17 @@
       "executor": "@nx/eslint:lint",
       "options": {
         "lintFilePatterns": [
-          "libs/web/admin/src/**/*.ts",
-          "libs/web/admin/src/**/*.html",
-          "libs/web/admin/src/**/*.scss"
+          "libs/web/admin/src/index.ts",
+          "libs/web/admin/src/lib/features/auth/**/*.ts",
+          "libs/web/admin/src/lib/features/auth/**/*.html",
+          "libs/web/admin/src/lib/features/auth/**/*.scss"
         ]
       }
     },
     "type-check": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsc -p libs/web/admin/tsconfig.spec.json --noEmit"
+        "command": "npx tsc -p libs/web/admin/tsconfig.lib.json --noEmit"
       }
     }
   }

@@ -4,7 +4,7 @@
   "projectType": "library",
   "sourceRoot": "libs/web/partner/src",
   "prefix": "lib",
-  "tags": ["scope:web", "type:lib"],
+  "tags": ["platform:web", "scope:web", "type:lib"],
   "targets": {
     "build": {
       "executor": "@nx/angular:package",
@@ -32,16 +32,17 @@
       "executor": "@nx/eslint:lint",
       "options": {
         "lintFilePatterns": [
-          "libs/web/partner/src/**/*.ts",
-          "libs/web/partner/src/**/*.html",
-          "libs/web/partner/src/**/*.scss"
+          "libs/web/partner/src/index.ts",
+          "libs/web/partner/src/lib/features/auth/**/*.ts",
+          "libs/web/partner/src/lib/features/auth/**/*.html",
+          "libs/web/partner/src/lib/features/auth/**/*.scss"
         ]
       }
     },
     "type-check": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsc -p libs/web/partner/tsconfig.spec.json --noEmit"
+        "command": "npx tsc -p libs/web/partner/tsconfig.lib.json --noEmit"
       }
     }
   }

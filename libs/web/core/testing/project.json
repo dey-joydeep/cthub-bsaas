@@ -1,29 +1,29 @@
 {
-    "name": "web-core-testing",
-    "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "libs/web/core/testing/src",
-    "prefix": "lib",
-    "projectType": "library",
-    "tags": ["type:lib", "platform:web", "scope:web-core"],
-    "targets": {
-        "test": {
-            "executor": "@nx/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-            "options": {
-                "jestConfig": "libs/web/core/testing/jest.config.ts"
-            }
-        },
-        "lint": {
-            "executor": "@nx/eslint:lint",
-            "options": {
-                "lintFilePatterns": ["libs/web/core/testing/src/**/*.ts"]
-            }
-        },
-        "type-check": {
-            "executor": "nx:run-commands",
-            "options": {
-                "command": "npx tsc -p libs/web/core/testing/tsconfig.spec.json --noEmit"
-            }
-        }
+  "name": "web-core-testing",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/web/core/testing/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["platform:web", "scope:web-core", "type:lib"],
+  "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/web/core/testing/jest.config.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["libs/web/core/testing/src/**/*.ts"]
+      }
+    },
+    "type-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsc -p libs/web/core/testing/tsconfig.spec.json --noEmit"
+      }
     }
+  }
 }

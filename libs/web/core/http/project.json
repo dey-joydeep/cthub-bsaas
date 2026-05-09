@@ -1,45 +1,45 @@
 {
-    "name": "web-core-http",
-    "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "libs/web/core/http/src",
-    "prefix": "lib",
-    "projectType": "library",
-    "tags": ["scope:web-core", "type:data"],
-    "targets": {
-        "test": {
-            "executor": "@nx/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-            "options": {
-                "jestConfig": "libs/web/core/http/jest.config.ts",
-                "passWithNoTests": true
-            },
-            "configurations": {
-                "ci": {
-                    "ci": true,
-                    "codeCoverage": true
-                }
-            }
-        },
-        "lint": {
-            "executor": "@nx/eslint:lint",
-            "options": {
-                "lintFilePatterns": ["libs/web/core/http/src/**/*.ts"]
-            }
-        },
-        "type-check": {
-            "executor": "nx:run-commands",
-            "options": {
-                "command": "npx tsc -p libs/web/core/http/tsconfig.spec.json --noEmit"
-            }
-        },
-        "build": {
-            "executor": "@nx/angular:package",
-            "outputs": ["{workspaceRoot}/dist/libs/web/core/http"],
-            "options": {
-                "tsConfig": "libs/web/core/http/tsconfig.lib.json",
-                "project": "libs/web/core/http/ng-package.json"
-            },
-            "dependsOn": ["^build"]
+  "name": "web-core-http",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/web/core/http/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["platform:web", "scope:web-core", "type:data", "type:lib"],
+  "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/web/core/http/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
         }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["libs/web/core/http/src/**/*.ts"]
+      }
+    },
+    "type-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsc -p libs/web/core/http/tsconfig.spec.json --noEmit"
+      }
+    },
+    "build": {
+      "executor": "@nx/angular:package",
+      "outputs": ["{workspaceRoot}/dist/libs/web/core/http"],
+      "options": {
+        "tsConfig": "libs/web/core/http/tsconfig.lib.json",
+        "project": "libs/web/core/http/ng-package.json"
+      },
+      "dependsOn": ["^build"]
     }
+  }
 }

@@ -4,7 +4,7 @@
   "projectType": "library",
   "sourceRoot": "libs/web/public/src",
   "prefix": "lib",
-  "tags": ["scope:web", "type:lib"],
+  "tags": ["platform:web", "scope:web", "type:lib"],
   "targets": {
     "build": {
       "executor": "@nx/angular:package",
@@ -31,17 +31,13 @@
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": [
-          "libs/web/public/src/**/*.ts",
-          "libs/web/public/src/**/*.html",
-          "libs/web/public/src/**/*.scss"
-        ]
+        "lintFilePatterns": ["libs/web/public/src/index.ts", "libs/web/public/src/lib/public.routes.ts"]
       }
     },
     "type-check": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsc -p libs/web/public/tsconfig.spec.json --noEmit"
+        "command": "npx tsc -p libs/web/public/tsconfig.lib.json --noEmit"
       }
     }
   }

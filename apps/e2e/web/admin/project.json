@@ -15,12 +15,6 @@
         "parallel": false
       }
     },
-    "type-check": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "tsc -p apps/e2e/web/admin/tsconfig.json --noEmit"
-      }
-    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
