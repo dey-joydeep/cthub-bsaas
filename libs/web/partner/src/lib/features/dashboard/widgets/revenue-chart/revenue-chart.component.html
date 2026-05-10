@@ -1,0 +1,14 @@
+<mat-card class="revenue-chart">
+  <mat-card-header>
+    <mat-card-title>{{ 'DASHBOARD.REVENUE.TITLE' | translate }}</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    <div class="chart-container">
+      <!-- Chart will be rendered here -->
+      <div class="no-data" *ngIf="!revenueData || revenueData.length === 0">
+        {{ 'DASHBOARD.REVENUE.NO_DATA' | translate }}
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

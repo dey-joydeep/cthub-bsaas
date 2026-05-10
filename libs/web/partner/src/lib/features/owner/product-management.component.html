@@ -1,0 +1,165 @@
+<div class="product-management-container">
+  <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="product-form">
+    <h1>{{ 'PRODUCT_MANAGEMENT.TITLE' | translate }}</h1>
+
+    <mat-tab-group [(selectedIndex)]="selectedTabIndex" class="product-tabs">
+      <!-- Basic Information Tab -->
+      <mat-tab [label]="'PRODUCT_MANAGEMENT.TABS.BASIC' | translate">
+        <div class="tab-content">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.NAME' | translate }}</mat-label>
+            <input matInput formControlName="name" required />
+            <mat-error *ngIf="productForm.get('name')?.hasError('required')">
+              {{ 'VALIDATION.REQUIRED' | translate }}
+            </mat-error>
+            <mat-error *ngIf="productForm.get('name')?.hasError('maxlength')">
+              {{ 'VALIDATION.MAX_LENGTH' | translate: { max: 100 } }}
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.DESCRIPTION' | translate }}</mat-label>
+            <textarea matInput formControlName="description" rows="3"></textarea>
+            <mat-hint *ngIf="!productForm.get('description')?.value">
+              {{ 'PRODUCT_MANAGEMENT.FIELDS.DESCRIPTION_HINT' | translate }}
+            </mat-hint>
+          </mat-form-field>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="half-width">
+              <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.SKU' | translate }}</mat-label>
+              <input matInput formControlName="sku" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="half-width">
+              <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.BARCODE' | translate }}</mat-label>
+              <input matInput formControlName="barcode" />
+            </mat-form-field>
+          </div>
+
+          <mat-checkbox formControlName="isActive">
+            {{ 'PRODUCT_MANAGEMENT.FIELDS.IS_ACTIVE' | translate }}
+          </mat-checkbox>
+
+          <mat-checkbox formControlName="isFeatured">
+            {{ 'PRODUCT_MANAGEMENT.FIELDS.IS_FEATURED' | translate }}
+          </mat-checkbox>
+        </div>
+      </mat-tab>
+
+      <!-- Pricing Tab -->
+      <mat-tab [label]="'PRODUCT_MANAGEMENT.TABS.PRICING' | translate">
+        <div class="tab-content">
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.PRICE' | translate }} *</mat-label>
+            <input matInput type="number" formControlName="price" step="0.01" min="0" required />
+            <span matPrefix>$&nbsp;</span>
+            <mat-error *ngIf="productForm.get('price')?.hasError('required')">
+              {{ 'VALIDATION.REQUIRED' | translate }}
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.COMPARE_AT_PRICE' | translate }}</mat-label>
+            <input matInput type="number" formControlName="compareAtPrice" step="0.01" min="0" />
+            <span matPrefix>$&nbsp;</span>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.COST_PER_ITEM' | translate }}</mat-label>
+            <input matInput type="number" formControlName="costPerItem" step="0.01" min="0" />
+            <span matPrefix>$&nbsp;</span>
+          </mat-form-field>
+
+          <mat-checkbox formControlName="trackQuantity">
+            {{ 'PRODUCT_MANAGEMENT.FIELDS.TRACK_QUANTITY' | translate }}
+          </mat-checkbox>
+
+          <mat-form-field appearance="outline" class="half-width" *ngIf="productForm.get('trackQuantity')?.value">
+            <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.QUANTITY' | translate }} *</mat-label>
+            <input matInput type="number" formControlName="quantity" min="0" required />
+          </mat-form-field>
+
+          <mat-checkbox formControlName="continueSellingWhenOutOfStock">
+            {{ 'PRODUCT_MANAGEMENT.FIELDS.CONTINUE_SELLING' | translate }}
+          </mat-checkbox>
+        </div>
+      </mat-tab>
+
+      <!-- Organization Tab -->
+      <mat-tab [label]="'PRODUCT_MANAGEMENT.TABS.ORGANIZATION' | translate">
+        <div class="tab-content">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.CATEGORIES' | translate }}</mat-label>
+            <mat-select formControlName="categories" multiple>
+              <mat-option *ngFor="let category of categories" [value]="category.id">
+                {{ category.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.TAGS' | translate }}</mat-label>
+            <input matInput formControlName="tags" />
+            <mat-hint>{{ 'PRODUCT_MANAGEMENT.FIELDS.TAGS_HINT' | translate }}</mat-hint>
+          </mat-form-field>
+        </div>
+      </mat-tab>
+
+      <!-- Images Tab -->
+      <mat-tab [label]="'PRODUCT_MANAGEMENT.TABS.IMAGES' | translate">
+        <div class="tab-content">
+          <div formArrayName="images" *ngFor="let image of images.controls; let i = index">
+            <div [formGroupName]="i" class="image-upload-row">
+              <mat-form-field appearance="outline" class="image-url">
+                <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.IMAGE_URL' | translate }}</mat-label>
+                <input matInput formControlName="url" placeholder="https://example.com/image.jpg" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="image-alt">
+                <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.ALT_TEXT' | translate }}</mat-label>
+                <input matInput formControlName="altText" />
+              </mat-form-field>
+
+              <mat-checkbox formControlName="isDefault" class="default-checkbox">
+                {{ 'PRODUCT_MANAGEMENT.FIELDS.DEFAULT_IMAGE' | translate }}
+              </mat-checkbox>
+
+              <button type="button" mat-icon-button color="warn" (click)="removeImage(i)" matTooltip="Remove image">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <button type="button" mat-button color="primary" (click)="addNewImage()" class="add-image-btn">
+            <mat-icon>add</mat-icon>
+            {{ 'PRODUCT_MANAGEMENT.ACTIONS.ADD_IMAGE' | translate }}
+          </button>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+
+    <div class="form-actions">
+      <button mat-button type="button" (click)="productForm.reset()" [disabled]="loading">
+        {{ 'COMMON.RESET' | translate }}
+      </button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="loading || productForm.invalid">
+        {{ (productForm.get('id')?.value ? 'COMMON.UPDATE' : 'COMMON.SAVE') | translate }}
+      </button>
+    </div>
+
+    <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+
+    <div class="form-messages">
+      <mat-error *ngIf="error" class="error-message">
+        <mat-icon>error_outline</mat-icon>
+        {{ error }}
+      </mat-error>
+
+      <div *ngIf="success" class="success-message">
+        <mat-icon>check_circle</mat-icon>
+        {{ success }}
+      </div>
+    </div>
+  </form>
+</div>

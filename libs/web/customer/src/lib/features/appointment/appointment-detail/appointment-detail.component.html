@@ -1,0 +1,93 @@
+<div class="appointment-detail-container">
+  <div class="back-button">
+    <button mat-button routerLink="/appointments">
+      <mat-icon>arrow_back</mat-icon>
+      {{ 'COMMON.BACK_TO_APPOINTMENTS' | translate }}
+    </button>
+  </div>
+
+  <div class="loading-shade" *ngIf="isLoading">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <div class="appointment-content" *ngIf="!isLoading && appointment">
+    <mat-card>
+      <mat-card-header>
+        <div mat-card-avatar class="appointment-avatar">
+          <mat-icon>event</mat-icon>
+        </div>
+        <mat-card-title>{{ 'APPOINTMENT.APPOINTMENT_DETAILS' | translate }} #{{ appointment.id }}</mat-card-title>
+        <mat-card-subtitle>
+          <span [ngClass]="getStatusClass(appointment.status)">
+            {{ getStatusText(appointment.status) }}
+          </span>
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-divider></mat-divider>
+
+      <mat-card-content>
+        <div class="appointment-section">
+          <h3>{{ 'APPOINTMENT.SERVICE_DETAILS' | translate }}</h3>
+          <div class="detail-row">
+            <div class="detail-label">{{ 'APPOINTMENT.SERVICE' | translate }}:</div>
+            <div class="detail-value">{{ getServiceName(appointment.serviceId) }}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">{{ 'APPOINTMENT.SALON' | translate }}:</div>
+            <div class="detail-value">{{ getSalonName(appointment.salonId) }}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">{{ 'APPOINTMENT.STAFF' | translate }}:</div>
+            <div class="detail-value">{{ getStaffName(appointment.staffId || '') }}</div>
+          </div>
+        </div>
+
+        <div class="appointment-section">
+          <h3>{{ 'APPOINTMENT.DETAILS' | translate }}</h3>
+          <div class="detail-row">
+            <div class="detail-label">{{ 'APPOINTMENT.DATE' | translate }}:</div>
+            <div class="detail-value">
+              {{ formatAppointmentDate(appointment.appointmentDate) }}
+            </div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">{{ 'APPOINTMENT.TIME' | translate }}:</div>
+            <div class="detail-value">{{ formatAppointmentTime(appointment.startTime, appointment.endTime) }}</div>
+          </div>
+        </div>
+
+        <div class="appointment-section" *ngIf="appointment.notes">
+          <h3>{{ 'APPOINTMENT.NOTES' | translate }}</h3>
+          <p class="appointment-notes">{{ appointment.notes }}</p>
+        </div>
+      </mat-card-content>
+
+      <mat-divider></mat-divider>
+
+      <mat-card-actions *ngIf="appointment.status === AppointmentStatus.BOOKED">
+        <button mat-raised-button color="primary" (click)="onReschedule()" [disabled]="isUpdating">
+          {{ 'APPOINTMENT.RESCHEDULE' | translate }}
+        </button>
+        <button mat-button color="warn" (click)="onCancelAppointment()" [disabled]="isUpdating">
+          {{ 'APPOINTMENT.CANCEL' | translate }}
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <div class="not-found" *ngIf="!isLoading && !appointment">
+    <mat-card>
+      <mat-card-content>
+        <div class="not-found-content">
+          <mat-icon>event_busy</mat-icon>
+          <h3>{{ 'APPOINTMENT.NOT_FOUND_TITLE' | translate }}</h3>
+          <p>{{ 'APPOINTMENT.NOT_FOUND_MESSAGE' | translate }}</p>
+          <button mat-raised-button color="primary" routerLink="/appointments">
+            {{ 'APPOINTMENT.VIEW_ALL_APPOINTMENTS' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

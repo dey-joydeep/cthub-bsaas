@@ -1,0 +1,161 @@
+<div class="auth-container">
+  <mat-card class="auth-card">
+    <!-- Logo Section -->
+    <div class="logo-container">
+      <img src="assets/images/logo.svg" alt="Beauty SaaS" class="logo" />
+      <h1 class="app-name">Beauty SaaS</h1>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="error" class="error-message">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error }}</span>
+    </div>
+
+    <!-- Loading Indicator -->
+    <mat-progress-bar *ngIf="loading" mode="indeterminate" color="primary"></mat-progress-bar>
+
+    <!-- Credentials Form -->
+    <form *ngIf="step === 'credentials'" [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+      <h2 class="form-title">Welcome Back</h2>
+      <p class="form-subtitle">Sign in to your account to continue</p>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <input
+          matInput
+          formControlName="email"
+          type="email"
+          placeholder="Enter your email"
+          required
+          autocomplete="username"
+          [readonly]="loading"
+          [disabled]="loading"
+        />
+        <mat-icon matSuffix>email</mat-icon>
+        <mat-error *ngIf="loginForm.get('email')?.hasError('required')"> Email is required </mat-error>
+        <mat-error *ngIf="loginForm.get('email')?.hasError('email')"> Please enter a valid email </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Password</mat-label>
+        <input
+          matInput
+          formControlName="password"
+          [type]="hidePassword ? 'password' : 'text'"
+          placeholder="Enter your password"
+          required
+          autocomplete="current-password"
+          [readonly]="loading"
+          [disabled]="loading"
+        />
+        <button type="button" mat-icon-button matSuffix (click)="hidePassword = !hidePassword" [disabled]="loading">
+          <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        <mat-error *ngIf="loginForm.get('password')?.hasError('required')"> Password is required </mat-error>
+      </mat-form-field>
+
+      <div class="form-options">
+        <mat-checkbox formControlName="rememberMe" color="primary" [disabled]="loading"> Remember me </mat-checkbox>
+        <a routerLink="/auth/forgot-password" class="forgot-password" [class.disabled]="loading"> Forgot password? </a>
+      </div>
+
+      <button
+        mat-raised-button
+        color="primary"
+        class="auth-button"
+        type="submit"
+        [disabled]="loginForm.invalid || loading"
+        [class.mat-elevation-z0]="loading"
+      >
+        <span *ngIf="!loading">SIGN IN</span>
+        <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+      </button>
+
+      <div class="divider">
+        <span>OR CONTINUE WITH</span>
+      </div>
+
+      <div class="social-login">
+        <button mat-stroked-button type="button" class="social-button" (click)="loginWithSocial('google')" [disabled]="loading">
+          <img src="assets/images/google.svg" alt="Google" class="social-icon" />
+          <span>Google</span>
+        </button>
+        <button mat-stroked-button type="button" class="social-button" (click)="loginWithSocial('facebook')" [disabled]="loading">
+          <img src="assets/images/facebook.svg" alt="Facebook" class="social-icon" />
+          <span>Facebook</span>
+        </button>
+      </div>
+
+      <p class="signup-link">
+        Don't have an account?
+        <a routerLink="/auth/register" [class.disabled]="loading">Sign up</a>
+      </p>
+    </form>
+
+    <!-- OTP Verification Form -->
+    <form *ngIf="step === 'otp'" [formGroup]="otpForm" (ngSubmit)="onOtpSubmit()" class="auth-form">
+      <h2 class="form-title">Verify Your Identity</h2>
+      <p class="form-subtitle">We've sent a verification code to {{ email }}</p>
+
+      <div class="otp-container">
+        <mat-form-field appearance="outline" class="otp-input">
+          <mat-label>Enter 6-digit code</mat-label>
+          <input
+            matInput
+            formControlName="otp"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="6"
+            placeholder="000000"
+            required
+            autocomplete="one-time-code"
+            [readonly]="loading"
+            [disabled]="loading"
+            (keyup.enter)="onOtpSubmit()"
+          />
+          <mat-error *ngIf="otpForm.get('otp')?.hasError('required')"> Verification code is required </mat-error>
+          <mat-error *ngIf="otpForm.get('otp')?.hasError('minlength') || otpForm.get('otp')?.hasError('maxlength')">
+            Please enter a 6-digit code
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <button
+        mat-raised-button
+        color="primary"
+        class="auth-button"
+        type="submit"
+        [disabled]="otpForm.invalid || loading"
+        [class.mat-elevation-z0]="loading"
+      >
+        <span *ngIf="!loading">VERIFY</span>
+        <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+      </button>
+
+      <div class="resend-code">
+        <span>Didn't receive a code? </span>
+        <a
+          href="#"
+          (click)="$event.preventDefault(); resendOtp()"
+          [class.disabled]="resendDisabled || loading"
+          [class.resend-countdown]="resendCountdown > 0"
+        >
+          {{ resendCountdown > 0 ? 'Resend in ' + resendCountdown + 's' : 'Resend Code' }}
+        </a>
+      </div>
+
+      <button mat-button type="button" class="back-button" (click)="step = 'credentials'" [disabled]="loading">
+        <mat-icon>arrow_back</mat-icon>
+        Back to login
+      </button>
+    </form>
+
+    <!-- Error Message -->
+    <div *ngIf="error" class="error-message">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error }}</span>
+    </div>
+  </mat-card>
+</div>

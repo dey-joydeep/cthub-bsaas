@@ -1,0 +1,207 @@
+<mat-card class="dashboard-widget">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon class="widget-icon">shopping_cart</mat-icon>
+      {{ 'DASHBOARD.PRODUCT_SALES.TITLE' | translate }}
+    </mat-card-title>
+    <span class="spacer"></span>
+
+    <!-- Date Range Picker -->
+    <div class="date-range-picker">
+      <mat-form-field class="date-field">
+        <mat-label>{{ 'COMMON.START_DATE' | translate }}</mat-label>
+        <input matInput [matDatepicker]="startPicker" [formControl]="dateRange.controls.start" />
+        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker></mat-datepicker>
+      </mat-form-field>
+
+      <span class="date-separator">-</span>
+
+      <mat-form-field class="date-field">
+        <mat-label>{{ 'COMMON.END_DATE' | translate }}</mat-label>
+        <input matInput [matDatepicker]="endPicker" [formControl]="dateRange.controls.end" [min]="dateRange.value.start" />
+        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+        <mat-datepicker #endPicker></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+    <!-- Actions -->
+    <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="{{ 'COMMON.ACTIONS' | translate }}">
+      <mat-icon>more_vert</mat-icon>
+    </button>
+    <mat-menu #menu="matMenu">
+      <button mat-menu-item (click)="refresh()">
+        <mat-icon>refresh</mat-icon>
+        <span>{{ 'COMMON.REFRESH' | translate }}</span>
+      </button>
+      <button mat-menu-item (click)="exportToCSV()" [disabled]="dataSource.length === 0">
+        <mat-icon>file_download</mat-icon>
+        <span>{{ 'COMMON.EXPORT_CSV' | translate }}</span>
+      </button>
+    </mat-menu>
+  </mat-card-header>
+
+  <mat-card-content>
+    <!-- Loading State -->
+    <div *ngIf="isLoading && (!dataSource || dataSource.length === 0)" class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>{{ 'COMMON.LOADING' | translate }}</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error" class="error-container">
+      <mat-icon color="warn">error_outline</mat-icon>
+      <p>{{ error }}</p>
+      <button mat-button color="primary" (click)="loadData()">
+        {{ 'COMMON.RETRY' | translate }}
+      </button>
+    </div>
+
+    <!-- Summary Cards -->
+    <div *ngIf="summary" class="summary-cards">
+      <mat-card class="summary-card">
+        <mat-card-header>
+          <mat-card-title>{{ 'DASHBOARD.PRODUCT_SALES.TOTAL_SALES' | translate }}</mat-card-title>
+          <mat-icon mat-card-avatar>receipt</mat-icon>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="summary-value">{{ summary.totalSales | number }}</div>
+          <div class="summary-label">{{ 'DASHBOARD.PRODUCT_SALES.TRANSACTIONS' | translate }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="summary-card">
+        <mat-card-header>
+          <mat-card-title>{{ 'DASHBOARD.PRODUCT_SALES.TOTAL_REVENUE' | translate }}</mat-card-title>
+          <mat-icon mat-card-avatar>attach_money</mat-icon>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="summary-value">{{ summary.totalRevenue | currency: 'USD' : 'symbol' : '1.2-2' }}</div>
+          <div class="summary-label">{{ 'DASHBOARD.PRODUCT_SALES.REVENUE' | translate }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="summary-card">
+        <mat-card-header>
+          <mat-card-title>{{ 'DASHBOARD.PRODUCT_SALES.AVERAGE_SALE' | translate }}</mat-card-title>
+          <mat-icon mat-card-avatar>trending_up</mat-icon>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="summary-value">{{ summary.averageSale | currency: 'USD' : 'symbol' : '1.2-2' }}</div>
+          <div class="summary-label">{{ 'DASHBOARD.PRODUCT_SALES.PER_ORDER' | translate }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="summary-card">
+        <mat-card-header>
+          <mat-card-title>{{ 'DASHBOARD.PRODUCT_SALES.ITEMS_SOLD' | translate }}</mat-card-title>
+          <mat-icon mat-card-avatar>inventory_2</mat-icon>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="summary-value">{{ summary.totalItems | number }}</div>
+          <div class="summary-label">{{ 'DASHBOARD.PRODUCT_SALES.TOTAL_ITEMS' | translate }}</div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Top Selling Products -->
+    <mat-card *ngIf="summary && summary.topSellingProducts && summary.topSellingProducts.length > 0" class="top-products">
+      <mat-card-header>
+        <mat-card-title>{{ 'DASHBOARD.PRODUCT_SALES.TOP_PRODUCTS' | translate }}</mat-card-title>
+        <mat-icon mat-card-avatar>star</mat-icon>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="product-list">
+          <div *ngFor="let product of summary.topSellingProducts" class="product-item">
+            <span class="product-name">{{ product?.name || 'N/A' }}</span>
+            <span class="product-quantity">{{ product?.quantity || 0 }} {{ 'DASHBOARD.PRODUCT_SALES.SOLD' | translate }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Data Table -->
+    <div *ngIf="dataSource && dataSource.length > 0" class="table-container">
+      <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onSortChange($event)" class="full-width">
+        <!-- Product Name Column -->
+        <ng-container matColumnDef="productName">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>
+            {{ 'DASHBOARD.PRODUCT_SALES.PRODUCT' | translate }}
+          </th>
+          <td mat-cell *matCellDef="let element">{{ element.productName }}</td>
+        </ng-container>
+
+        <!-- Quantity Column -->
+        <ng-container matColumnDef="quantity">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>
+            {{ 'DASHBOARD.PRODUCT_SALES.QUANTITY' | translate }}
+          </th>
+          <td mat-cell *matCellDef="let element">{{ element.quantity }}</td>
+        </ng-container>
+
+        <!-- Unit Price Column -->
+        <ng-container matColumnDef="unitPrice">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>
+            {{ 'DASHBOARD.PRODUCT_SALES.UNIT_PRICE' | translate }}
+          </th>
+          <td mat-cell *matCellDef="let element">{{ element.unitPrice | currency: 'USD' : 'symbol' : '1.2-2' }}</td>
+        </ng-container>
+
+        <!-- Total Amount Column -->
+        <ng-container matColumnDef="totalAmount">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>
+            {{ 'DASHBOARD.PRODUCT_SALES.TOTAL' | translate }}
+          </th>
+          <td mat-cell *matCellDef="let element">
+            <strong>{{ element.totalAmount | currency: 'USD' : 'symbol' : '1.2-2' }}</strong>
+          </td>
+        </ng-container>
+
+        <!-- Sale Date Column -->
+        <ng-container matColumnDef="saleDate">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>
+            {{ 'DASHBOARD.PRODUCT_SALES.DATE' | translate }}
+          </th>
+          <td mat-cell *matCellDef="let element">
+            {{ element.saleDate | date: 'mediumDate' }}
+          </td>
+        </ng-container>
+
+        <!-- Sold By Column -->
+        <ng-container matColumnDef="soldBy">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>
+            {{ 'DASHBOARD.PRODUCT_SALES.SOLD_BY' | translate }}
+          </th>
+          <td mat-cell *matCellDef="let element">
+            <div class="user-info">
+              <mat-icon class="user-icon">person</mat-icon>
+              <span>{{ element.soldByName }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" class="clickable-row" [routerLink]="['/sales', row?.id || '']"></tr>
+      </table>
+
+      <!-- Paginator -->
+      <mat-paginator
+        [length]="totalItems"
+        [pageSize]="pageSize"
+        [pageIndex]="pageIndex"
+        [pageSizeOptions]="[5, 10, 25, 100]"
+        (page)="onPageChange($event)"
+        aria-label="Select page"
+        class="paginator"
+      >
+      </mat-paginator>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && (!dataSource || dataSource.length === 0)" class="empty-state">
+      <mat-icon>inbox</mat-icon>
+      <h3>{{ 'DASHBOARD.PRODUCT_SALES.NO_DATA_TITLE' | translate }}</h3>
+      <p>{{ 'DASHBOARD.PRODUCT_SALES.NO_DATA_DESCRIPTION' | translate }}</p>
+    </div>
+  </mat-card-content>
+</mat-card>

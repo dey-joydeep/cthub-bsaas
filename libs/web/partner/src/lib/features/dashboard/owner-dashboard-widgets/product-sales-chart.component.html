@@ -1,0 +1,8 @@
+<div class="chart-widget">
+  <h3>Product Sales</h3>
+  <ng-container *ngIf="!loading() && !error()">
+    <canvas baseChart [data]="data()" [options]="options" chartType="bar"> </canvas>
+  </ng-container>
+  <mat-progress-bar *ngIf="loading()" mode="indeterminate"></mat-progress-bar>
+  <mat-error *ngIf="error()">{{ error() }}</mat-error>
+</div>

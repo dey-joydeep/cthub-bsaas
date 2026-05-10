@@ -49,4 +49,4 @@ As a **Salon Owner/Staff**, I need secure but convenient login and visibility ov
 ## 6) Tests
 - Unit: invite lifecycle, policy enforcement, device revoke.  
 - E2E: Owner 2FA prompt, Staff invite acceptance, cross‑app preview.  
-- Perf: p95 login < 900ms.
+- Perf: p95 sign-in < 900ms.

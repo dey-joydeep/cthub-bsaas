@@ -1,7 +1,7 @@
 {
     "name": "server-core",
     "sourceRoot": "libs/server/core/src",
-    "tags": ["type:lib", "platform:server", "scope:server-core"],
+    "tags": ["type:lib", "platform:server", "scope:server-core", "scope:server", "type:core"],
     "targets": {
         "lint": {
             "outputs": ["{options.outputFile}"],
@@ -11,50 +11,16 @@
             }
         },
         "build": {
-            "executor": "@nx/rollup:rollup",
+            "executor": "@nx/js:tsc",
             "outputs": ["{options.outputPath}"],
             "options": {
                 "outputPath": "dist/libs/server/core",
+                "main": "libs/server/core/src/index.ts",
                 "tsConfig": "libs/server/core/tsconfig.lib.json",
-                "project": "libs/server/core/package.json",
-                "entryFile": "libs/server/core/src/index.ts",
-                "external": [
-                    "@nestjs/common",
-                    "@nestjs/config",
-                    "@nestjs/core",
-                    "@nestjs/jwt",
-                    "@nestjs/passport",
-                    "@nestjs/platform-express",
-                    "@nestjs/schedule",
-                    "@nestjs/swagger",
-                    "@nestjs/terminus",
-                    "@nestjs/testing",
-                    "@nestjs/throttler",
-                    "class-transformer",
-                    "class-validator",
-                    "cookie-parser",
-                    "cors",
-                    "express",
-                    "helmet",
-                    "joi",
-                    "jsonwebtoken",
-                    "log4js",
-                    "morgan",
-                    "passport",
-                    "passport-jwt",
-                    "reflect-metadata",
-                    "rxjs",
-                    "swagger-ui-express"
+                "assets": [
+                    "libs/server/core/*.md"
                 ],
-                "rollupConfig": "libs/server/core/rollup.config.js",
-                "format": ["esm"],
-                "useLegacyTypescriptPlugin": false,
-                "assets": []
-            },
-            "configurations": {
-                "production": {
-                    "minify": true
-                }
+                "rootDir": "libs/server/core/src"
             }
         },
         "type-check": {

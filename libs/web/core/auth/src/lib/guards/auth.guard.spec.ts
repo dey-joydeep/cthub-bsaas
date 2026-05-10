@@ -1,95 +1,66 @@
-import { TestBed } from '@angular/core/testing';
-import { Router, RouterStateSnapshot, ActivatedRouteSnapshot, UrlTree } from '@angular/router';
-import { Observable, of } from 'rxjs';
+import { Injector, runInInjectionContext } from '@angular/core';
+import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree, type GuardResult, type MaybeAsync } from '@angular/router';
+import { Observable, firstValueFrom, of } from 'rxjs';
+import { CURRENT_USER, type CurrentUserMin, type CurrentUserPort } from '../interfaces/current-user.port';
 import { authGuard } from './auth.guard';
-import { CurrentUserService } from '../services/current-user.service';
+
+type MutableCurrentUserPort = {
+  currentUser$: Observable<CurrentUserMin | null>;
+  isAuthenticated$: Observable<boolean>;
+  redirectUrl: string | null;
+};
 
 class MockRouter {
-  navigate = jasmine.createSpy('navigate');
-  createUrlTree = (commands: any[]) =>
-    ({
+  createUrlTree(commands: readonly string[]): UrlTree {
+    return {
       toString: () => commands.join('/'),
-    }) as UrlTree;
-  parseUrl = (url: string) => url;
+    } as UrlTree;
+  }
 }
 
 describe('AuthGuard', () => {
-  let currentUserService: CurrentUserService;
-  let router: MockRouter;
+  let currentUserPort: MutableCurrentUserPort;
   const mockRoute = {} as ActivatedRouteSnapshot;
   const mockState = { url: '/test' } as RouterStateSnapshot;
 
+  let injector: Injector;
+
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      providers: [CurrentUserService, { provide: Router, useClass: MockRouter }],
+    currentUserPort = {
+      currentUser$: of(null),
+      isAuthenticated$: of(false),
+      redirectUrl: null,
+    };
+
+    injector = Injector.create({
+      providers: [
+        { provide: CURRENT_USER, useValue: currentUserPort satisfies CurrentUserPort },
+        { provide: Router, useClass: MockRouter },
+      ],
     });
-
-    currentUserService = TestBed.inject(CurrentUserService);
-    router = TestBed.inject(Router) as any;
   });
 
-  it('should allow activation if user is authenticated', (done) => {
-    // Mock the currentUser$ observable to emit a user
-    spyOn(currentUserService, 'currentUser$').and.returnValue(of({ id: '1', email: 'test@example.com' } as any));
+  it('should allow activation if user is authenticated', async () => {
+    currentUserPort.currentUser$ = of({ id: '1', role: 'customer' });
 
-    const result = authGuard(mockRoute, mockState);
+    const result = await resolveGuardResult(runInInjectionContext(injector, () => authGuard(mockRoute, mockState)));
 
-    if (result === true) {
-      expect(result).toBeTrue();
-      done();
-    } else if (result instanceof Promise) {
-      result.then((res) => {
-        expect(res).toBeTrue();
-        done();
-      });
-    } else if (result instanceof Observable) {
-      (result as Observable<boolean | UrlTree>).subscribe((res) => {
-        if (typeof res === 'boolean') {
-          expect(res).toBeTrue();
-        } else {
-          fail('Expected boolean true but got UrlTree');
-        }
-        done();
-      });
-    } else {
-      fail('Unexpected return type from authGuard');
-      done();
-    }
+    expect(result).toBe(true);
   });
 
-  it('should redirect to /auth/login if user is not authenticated', (done) => {
-    // Mock the currentUser$ observable to emit null (not authenticated)
-    spyOn(currentUserService, 'currentUser$').and.returnValue(of(null));
+  it('should redirect to /auth/login if user is not authenticated', async () => {
+    currentUserPort.currentUser$ = of(null);
 
-    const result = authGuard(mockRoute, mockState);
+    const result = await resolveGuardResult(runInInjectionContext(injector, () => authGuard(mockRoute, mockState)));
 
-    if (result === false) {
-      fail('Expected UrlTree but got boolean false');
-      done();
-    } else if (result instanceof Promise) {
-      result.then((res) => {
-        if (typeof res === 'boolean') {
-          fail('Expected UrlTree but got boolean');
-        } else {
-          expect(res.toString()).toContain('auth/login');
-        }
-        done();
-      });
-    } else if (result instanceof Observable) {
-      (result as Observable<boolean | UrlTree>).subscribe((res) => {
-        if (typeof res === 'boolean') {
-          fail('Expected UrlTree but got boolean');
-        } else {
-          expect(res.toString()).toContain('auth/login');
-        }
-        done();
-      });
-    } else if (result instanceof UrlTree) {
-      expect(result.toString()).toContain('auth/login');
-      done();
-    } else {
-      fail('Unexpected return type from authGuard');
-      done();
-    }
+    expect(result.toString()).toContain('auth/login');
   });
 });
+
+function resolveGuardResult(result: MaybeAsync<GuardResult>): Promise<GuardResult> {
+  if (result instanceof Observable) {
+    return firstValueFrom(result);
+  }
+
+  return Promise.resolve(result);
+}

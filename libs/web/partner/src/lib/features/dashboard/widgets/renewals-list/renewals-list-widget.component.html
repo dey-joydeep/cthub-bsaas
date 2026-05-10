@@ -1,0 +1,80 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>{{ title | translate }}</mat-card-title>
+    <mat-card-subtitle>{{ subtitle | translate }}</mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    <div *ngIf="loading" class="loading-container">
+      <mat-spinner></mat-spinner>
+      <p>{{ 'DASHBOARD.LOADING' | translate }}</p>
+    </div>
+
+    <div *ngIf="error" class="error-container">
+      <mat-icon>error_outline</mat-icon>
+      <p>{{ error }}</p>
+    </div>
+
+    <div *ngIf="!loading && !error" class="renewals-container">
+      <div class="renewals-list">
+        <mat-list>
+          <mat-list-item *ngFor="let renewal of renewals">
+            <div class="renewal-item">
+              <div class="renewal-date">
+                <mat-icon>calendar_today</mat-icon>
+                {{ formatRenewalDate(renewal.renewalDate) }}
+                <span class="days-until"
+                  >({{ getDaysUntilRenewal(renewal.renewalDate) }} {{ 'DASHBOARD.RENEWALS.DAYS_UNTIL' | translate }})</span
+                >
+              </div>
+              <div class="renewal-details">
+                <div class="customer-name">
+                  <mat-icon>person</mat-icon>
+                  {{ renewal.customerName }}
+                </div>
+                <div class="service-name">
+                  <mat-icon>event</mat-icon>
+                  {{ renewal.serviceName }}
+                </div>
+              </div>
+              <div class="renewal-status">
+                <mat-icon>{{ getStatusIcon(renewal.status) }}</mat-icon>
+                <span [style.color]="getStatusColor(renewal.status)">
+                  {{ formatRenewalStatus(renewal.status) | translate }}
+                </span>
+              </div>
+            </div>
+          </mat-list-item>
+        </mat-list>
+      </div>
+
+      <div class="stats-info">
+        <div class="stat-item">
+          <mat-icon>pending</mat-icon>
+          <div class="stat-value">{{ getRenewalCountByStatus('pending') }}</div>
+          <div class="stat-label">{{ 'DASHBOARD.RENEWALS.PENDING' | translate }}</div>
+        </div>
+        <div class="stat-item">
+          <mat-icon>check_circle</mat-icon>
+          <div class="stat-value">{{ getRenewalCountByStatus('completed') }}</div>
+          <div class="stat-label">{{ 'DASHBOARD.RENEWALS.COMPLETED' | translate }}</div>
+        </div>
+        <div class="stat-item">
+          <mat-icon>error</mat-icon>
+          <div class="stat-value">{{ getRenewalCountByStatus('overdue') }}</div>
+          <div class="stat-label">{{ 'DASHBOARD.RENEWALS.OVERDUE' | translate }}</div>
+        </div>
+      </div>
+    </div>
+  </mat-card-content>
+
+  <mat-card-footer>
+    <div class="stats-info">
+      <div class="stat-item">
+        <mat-icon>event</mat-icon>
+        <div class="stat-value">{{ renewals.length }}</div>
+        <div class="stat-label">{{ 'DASHBOARD.RENEWALS.TOTAL_RENEWALS' | translate }}</div>
+      </div>
+    </div>
+  </mat-card-footer>
+</mat-card>

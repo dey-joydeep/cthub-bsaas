@@ -1,5 +1,21 @@
 {
-    "extends": "../../../tsconfig.base.json",
-    "files": [],
-    "references": [{ "path": "./tsconfig.lib.json" }, { "path": "../../shared/tsconfig.lib.json" }]
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "emitDecoratorMetadata": true,
+    "paths": {
+      "@cthub-bsaas/server-contracts-auth": ["../../../libs/server/contracts-auth/src/index.ts"],
+      "@cthub-bsaas/server-contracts-auth/*": ["../../../libs/server/contracts-auth/src/*"]
+    }
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
 }

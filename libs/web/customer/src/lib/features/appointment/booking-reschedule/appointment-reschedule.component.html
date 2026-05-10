@@ -1,0 +1,184 @@
+<div class="appointment-reschedule-container">
+  <div class="back-button">
+    <button mat-button [routerLink]="['/appointments', appointment?.id]" [disabled]="!appointment || isSubmitting">
+      <mat-icon>arrow_back</mat-icon>
+      {{ 'COMMON.BACK' | translate }}
+    </button>
+  </div>
+
+  <div class="loading-shade" *ngIf="isLoading">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <div class="appointment-content" *ngIf="!isLoading && appointment">
+    <mat-card>
+      <mat-card-header>
+        <div mat-card-avatar class="reschedule-avatar">
+          <mat-icon>event_available</mat-icon>
+        </div>
+        <mat-card-title>{{ 'APPOINTMENT.RESCHEDULE_APPOINTMENT' | translate }}</mat-card-title>
+        <mat-card-subtitle>{{ 'APPOINTMENT.SELECT_NEW_TIME' | translate }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-divider></mat-divider>
+
+      <mat-card-content>
+        <mat-stepper [linear]="isLinear" #stepper>
+          <!-- Step 1: Select New Date & Time -->
+          <mat-step [stepControl]="dateTimeFormGroup" [editable]="!isSubmitting">
+            <form [formGroup]="dateTimeFormGroup">
+              <ng-template matStepLabel>{{ 'APPOINTMENT.SELECT_DATETIME' | translate }}</ng-template>
+
+              <div class="step-content">
+                <h3>{{ 'APPOINTMENT.CURRENT_APPOINTMENT' | translate }}</h3>
+                <div class="current-appointment">
+                  <div class="appointment-detail">
+                    <mat-icon>event</mat-icon>
+                    <div>
+                      <div class="detail-label">{{ 'APPOINTMENT.DATE' | translate }}:</div>
+                      <div class="detail-value">{{ appointment.startTime | date: 'mediumDate' }}</div>
+                    </div>
+                  </div>
+                  <div class="appointment-detail">
+                    <mat-icon>spa</mat-icon>
+                    <div>
+                      <div class="detail-label">{{ 'APPOINTMENT.SERVICE' | translate }}</div>
+                      <div class="detail-value">{{ getServiceName(appointment.serviceId) }}</div>
+                    </div>
+                  </div>
+                  <div class="appointment-detail">
+                    <mat-icon>person</mat-icon>
+                    <div>
+                      <div class="detail-label">{{ 'APPOINTMENT.STAFF' | translate }}</div>
+                      <div class="detail-value">{{ getStaffName(appointment.staffId) }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <h3 class="new-time-header">{{ 'APPOINTMENT.SELECT_NEW_TIME' | translate }}</h3>
+
+                <div class="datetime-selection">
+                  <div class="date-picker">
+                    <mat-form-field appearance="outline" class="w-full">
+                      <mat-label>{{ 'COMMON.DATE' | translate }}</mat-label>
+                      <input matInput [matDatepicker]="picker" [min]="minDateString" [formControl]="dateControl" />
+                      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                      <mat-datepicker #picker></mat-datepicker>
+                      <mat-error *ngIf="dateTimeFormGroup.get('date')?.hasError('required')">
+                        {{ 'VALIDATION.DATE_REQUIRED' | translate }}
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="time-slots" *ngIf="availableTimeSlots.length > 0">
+                    <h4>{{ 'APPOINTMENT.AVAILABLE_TIMESLOTS' | translate }}</h4>
+                    <div class="time-grid">
+                      <button
+                        *ngFor="let time of availableTimeSlots"
+                        mat-stroked-button
+                        type="button"
+                        [class.selected]="dateTimeFormGroup.get('time')?.value === time"
+                        (click)="dateTimeFormGroup.get('time')?.setValue(time)"
+                      >
+                        {{ time }}
+                      </button>
+                    </div>
+                    <mat-error *ngIf="dateTimeFormGroup.get('time')?.hasError('required') && dateTimeFormGroup.get('time')?.touched">
+                      {{ 'VALIDATION.TIME_REQUIRED' | translate }}
+                    </mat-error>
+                  </div>
+                </div>
+              </div>
+
+              <div class="step-actions">
+                <button mat-button type="button" [routerLink]="['/appointments', appointment.id]" [disabled]="isSubmitting">
+                  {{ 'COMMON.CANCEL' | translate }}
+                </button>
+                <button mat-button color="primary" matStepperNext [disabled]="dateTimeFormGroup.invalid || isSubmitting">
+                  {{ 'COMMON.NEXT' | translate }}
+                </button>
+              </div>
+            </form>
+          </mat-step>
+
+          <!-- Step 2: Review Changes -->
+          <mat-step [stepControl]="reviewFormGroup">
+            <form [formGroup]="reviewFormGroup">
+              <ng-template matStepLabel>{{ 'APPOINTMENT.REVIEW_CHANGES' | translate }}</ng-template>
+
+              <div class="step-content">
+                <h3>{{ 'APPOINTMENT.REVIEW_CHANGES' | translate }}</h3>
+                <p class="step-description">{{ 'APPOINTMENT.CONFIRM_RESCHEDULE' | translate }}</p>
+
+                <div class="changes-summary">
+                  <div class="change-item">
+                    <div class="change-label">{{ 'APPOINTMENT.CURRENT' | translate }}:</div>
+                    <div class="change-detail">
+                      <div class="date-time">
+                        <mat-icon>event</mat-icon>
+                        <span>{{ formatDate(appointment.startTime) }} at {{ formatTime(appointment.startTime) }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="change-arrow">
+                    <mat-icon>arrow_forward</mat-icon>
+                  </div>
+
+                  <div class="change-item">
+                    <div class="change-label">{{ 'APPOINTMENT.NEW' | translate }}:</div>
+                    <div class="change-detail">
+                      <div class="date-time" *ngIf="dateTimeFormGroup.get('date')?.value">
+                        <mat-icon>event_available</mat-icon>
+                        <span>
+                          {{ formatDate(dateTimeFormGroup.get('date')?.value) }}
+                          at {{ dateTimeFormGroup.get('time')?.value || '--:--' }}
+                        </span>
+                      </div>
+                      <div class="no-selection" *ngIf="!dateTimeFormGroup.get('date')?.value">
+                        {{ 'APPOINTMENT.NO_DATE_SELECTED' | translate }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>{{ 'APPOINTMENT.ADDITIONAL_NOTES' | translate }} ({{ 'COMMON.OPTIONAL' | translate }})</mat-label>
+                  <textarea
+                    matInput
+                    formControlName="notes"
+                    rows="3"
+                    [placeholder]="'APPOINTMENT.RESCHEDULE_NOTES_PLACEHOLDER' | translate"
+                  ></textarea>
+                </mat-form-field>
+
+                <mat-checkbox formControlName="confirm" class="confirmation-checkbox">
+                  {{ 'APPOINTMENT.CONFIRM_RESCHEDULE_CHECKBOX' | translate }}
+                </mat-checkbox>
+                <mat-error *ngIf="reviewFormGroup.get('confirm')?.hasError('required') && reviewFormGroup.get('confirm')?.touched">
+                  {{ 'VALIDATION.CONFIRMATION_REQUIRED' | translate }}
+                </mat-error>
+              </div>
+
+              <div class="step-actions">
+                <button mat-button matStepperPrevious [disabled]="isSubmitting">
+                  {{ 'COMMON.BACK' | translate }}
+                </button>
+                <button
+                  mat-raised-button
+                  color="primary"
+                  type="button"
+                  (click)="onSubmit()"
+                  [disabled]="reviewFormGroup.invalid || isSubmitting"
+                >
+                  <span *ngIf="!isSubmitting">{{ 'APPOINTMENT.CONFIRM_RESCHEDULE' | translate }}</span>
+                  <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
+                </button>
+              </div>
+            </form>
+          </mat-step>
+        </mat-stepper>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

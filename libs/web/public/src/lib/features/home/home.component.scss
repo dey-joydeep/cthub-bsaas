@@ -1,0 +1,139 @@
+// Home Component Styles
+// =====================
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--text-primary);
+  padding-top: 4rem;
+
+  .home-container {
+    max-width: 90rem;
+    margin: 0 auto;
+    padding: 0 1.5rem 2rem;
+
+    @media (max-width: 37.5rem) {
+      padding: 0 1rem 1.5rem;
+    }
+  }
+
+  // Hero Section (unique to home page)
+  .hero {
+    text-align: center;
+    padding: 2rem 1rem;
+    background: linear-gradient(135deg, var(--primary-50) 0%, var(--primary-100) 100%);
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+    position: relative;
+    overflow: hidden;
+
+    &-content {
+      position: relative;
+      z-index: 1;
+      max-width: 48rem;
+      margin: 0 auto 1rem;
+    }
+
+    &-logo {
+      max-width: 8rem;
+      height: auto;
+      margin: 0 auto 1rem;
+    }
+
+    &-title {
+      font: 700 2rem/1.2 var(--font-family);
+      margin: 0 0 0.75rem;
+      color: var(--text-primary);
+
+      @media (max-width: 37.5rem) {
+        font-size: 1.5rem;
+      }
+    }
+
+    &-subtitle {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      max-width: 36rem;
+      margin: 0 auto 1.5rem;
+      line-height: 1.5;
+
+      @media (max-width: 37.5rem) {
+        font-size: 0.9375rem;
+      }
+    }
+
+    &-cta {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+
+      @media (max-width: 37.5rem) {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+    }
+
+    @media (max-width: 37.5rem) {
+      padding: 1.5rem 1rem;
+      margin: 0.5rem 0;
+
+      &-logo {
+        max-width: 6rem;
+        margin-bottom: 0.75rem;
+      }
+    }
+  }
+
+  // Search Component (unique to home page)
+  .search {
+    max-width: 40rem;
+    margin: 0 auto 1.5rem;
+    position: relative;
+
+    &-input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 1.25rem;
+      font-size: 0.9375rem;
+      border: 1px solid var(--border-color);
+      border-radius: 2rem;
+      outline: 0;
+      transition: border-color 0.2s;
+      background: var(--surface);
+      color: var(--text-primary);
+
+      &::placeholder {
+        color: var(--text-secondary);
+        opacity: 0.8;
+      }
+
+      &:focus {
+        border-color: var(--primary);
+      }
+    }
+
+    &-button {
+      position: absolute;
+      right: 0.25rem;
+      top: 0.25rem;
+      bottom: 0.25rem;
+      background: var(--primary);
+      color: #fff;
+      border: 0;
+      border-radius: 50%;
+      width: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s;
+
+      &:hover {
+        background: var(--primary-600);
+      }
+    }
+  }
+
+  // Home page specific grid overrides can go here if needed
+} // Close :host

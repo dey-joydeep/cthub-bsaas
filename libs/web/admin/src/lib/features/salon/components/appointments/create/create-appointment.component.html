@@ -1,0 +1,117 @@
+<div class="appointment-create-form">
+  <h2>Schedule a Salon Service</h2>
+  <form [formGroup]="appointmentForm" (ngSubmit)="submit()">
+    <!-- Salon Selection -->
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Salon</mat-label>
+      <mat-select id="salon" formControlName="salonId" (selectionChange)="onSalonChange()" required>
+        <mat-option *ngFor="let salon of salons" [value]="salon.id">{{ salon.name }}</mat-option>
+      </mat-select>
+      <mat-error *ngIf="appointmentForm.get('salonId')?.hasError('required')">Please select a salon</mat-error>
+    </mat-form-field>
+
+    <!-- Services Selection -->
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Services</mat-label>
+      <mat-select id="services" formControlName="services" multiple (selectionChange)="onServiceChange()" required>
+        <mat-option *ngFor="let s of services" [value]="s.id">{{ s.name }}</mat-option>
+      </mat-select>
+      <mat-error *ngIf="appointmentForm.get('services')?.hasError('required')">Please select at least one service</mat-error>
+    </mat-form-field>
+
+    <!-- Staff Selection -->
+    <mat-form-field appearance="outline" class="form-field" *ngIf="staffs.length > 0">
+      <mat-label>Staff (optional)</mat-label>
+      <mat-select id="staff" formControlName="staffId">
+        <mat-option [value]="">Any</mat-option>
+        <mat-option *ngFor="let staff of staffs" [value]="staff.id">{{ staff.name }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Date/Time Selection -->
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Date/Time</mat-label>
+      <mat-select id="date" formControlName="date" required>
+        <mat-option *ngFor="let t of availableTimes" [value]="t">{{ t | date: 'medium' }}</mat-option>
+      </mat-select>
+      <mat-error *ngIf="appointmentForm.get('date')?.hasError('required')">Please select a time</mat-error>
+    </mat-form-field>
+
+    <!-- Additional Notes -->
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Additional Notes</mat-label>
+      <textarea matInput id="note" formControlName="note" rows="2" placeholder="Notes for your appointment (optional)"></textarea>
+    </mat-form-field>
+
+    <!-- Submit Button -->
+    <div class="form-actions">
+      <button mat-raised-button color="primary" type="submit" [disabled]="loading">
+        <span *ngIf="!loading">Schedule Appointment</span>
+        <mat-spinner *ngIf="loading" diameter="24"></mat-spinner>
+      </button>
+    </div>
+
+    <!-- Status Messages -->
+    <div *ngIf="error" class="error-message">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error }}</span>
+    </div>
+    <div *ngIf="success" class="success-message">
+      <mat-icon>check_circle_outline</mat-icon>
+      <span>{{ success }}</span>
+    </div>
+  </form>
+</div>
+
+<style>
+  .appointment-create-form {
+    max-width: 400px;
+    margin: 24px auto;
+    padding: 24px;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  }
+  .appointment-create-form h2 {
+    margin-bottom: 18px;
+  }
+  .form-group {
+    margin-bottom: 14px;
+  }
+  label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  select,
+  textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 15px;
+  }
+  button {
+    width: 100%;
+    padding: 10px;
+    background: #6a4cff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  button:disabled {
+    background: #bcbcbc;
+  }
+  .error-message {
+    color: #d32f2f;
+    margin-top: 10px;
+  }
+  .success-message {
+    color: #388e3c;
+    margin-top: 10px;
+  }
+</style>

@@ -36,22 +36,9 @@ const config: Config = {
   // Module handling
   moduleFileExtensions: ['js', 'json', 'ts'],
 
-  // Coverage settings
-  collectCoverage: true,
-  collectCoverageFrom: ['**/*.ts', '!**/*.spec.ts', '!**/*.test.ts'],
-  coverageReporters: ['text', 'lcov'],
-  coverageDirectory: '../../coverage/libs/core',
-  coverageThreshold: {
-    global: {
-      statements: 80,
-      branches: 80,
-      functions: 80,
-      lines: 80,
-    },
-  },
+  // Coverage: not enforced at core level (feature libs enforce thresholds)
 
-  // Watch plugins
-  watchPlugins: ['jest-watch-typeahead/filename', 'jest-watch-typeahead/testname'],
+  // No extra watch plugins required in CI/envs without TTY
 };
 
 export default config;

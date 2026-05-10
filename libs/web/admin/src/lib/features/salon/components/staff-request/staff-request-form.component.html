@@ -1,0 +1,16 @@
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <div>
+    <label>Leave From:</label>
+    <input type="date" formControlName="leaveFrom" required />
+  </div>
+  <div>
+    <label>Leave To:</label>
+    <input type="date" formControlName="leaveTo" required />
+  </div>
+  <div>
+    <label>Reason:</label>
+    <input type="text" formControlName="reason" />
+  </div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+  <button type="submit" [disabled]="submitting || form.invalid">Submit Leave Request</button>
+</form>

@@ -14,9 +14,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
-import { Roles } from '../../../core/auth/decorators/roles.decorator';
-import { JwtAuthGuard } from '../../../core/auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../../../core/auth/guards/roles.guard';
+import { Roles, JwtAuthGuard, RolesGuard } from '@cthub-bsaas/server-core';
 import { AppUserRole } from '@shared/types/user.types';
 import { SalonStaffRequestStatus } from '@prisma/client';
 import { CreateSalonStaffRequestDto } from '../dto/create-salon-staff-request.dto';

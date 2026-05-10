@@ -10,16 +10,17 @@
         "composite": true,
         "declaration": true,
         "declarationMap": true,
-        "outDir": "../../../dist/libs/server/core"
+        "outDir": "../../../dist/libs/server/core",
+        "tsBuildInfoFile": "../../../dist/.tsbuildinfo/server/core.tsbuildinfo"
     },
     "include": ["src/**/*.ts"],
-    "exclude": ["**/*.test.ts", "**/*.spec.ts"],
+    "exclude": ["**/*.test.ts", "**/*.spec.ts", "src/testing/**"],
     "references": [
         {
             "path": "../../shared/tsconfig.lib.json"
         },
         {
-            "path": "../data-access/tsconfig.lib.json"
+            "path": "../contracts-auth/tsconfig.lib.json"
         }
     ]
 }

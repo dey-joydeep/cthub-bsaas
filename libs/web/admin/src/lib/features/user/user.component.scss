@@ -1,0 +1,35 @@
+.user-stats-container {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  padding: 2rem 2.5rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.stat-label {
+  font-weight: 600;
+  color: #555;
+}
+
+.stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--bright-blue, #3f51b5);
+}
+
+.error-message {
+  color: #d32f2f;
+  margin-top: 1rem;
+}
+
+.loading {
+  color: #888;
+  font-style: italic;
+}

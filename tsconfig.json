@@ -23,7 +23,16 @@
             "path": "libs/server/core/tsconfig.lib.json"
         },
         {
+            "path": "libs/server/contracts-auth/tsconfig.lib.json"
+        },
+        {
             "path": "libs/server/data-access/tsconfig.lib.json"
+        },
+        {
+            "path": "libs/server/infrastructure/tsconfig.lib.json"
+        },
+        {
+            "path": "libs/server/features/auth/tsconfig.lib.json"
         },
         {
             "path": "libs/shared/tsconfig.lib.json"

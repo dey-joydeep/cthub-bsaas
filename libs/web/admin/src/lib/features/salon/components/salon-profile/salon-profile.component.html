@@ -1,0 +1,121 @@
+<div class="salon-profile-container">
+  <!-- Salon Info -->
+  <section class="salon-info">
+    <h2>{{ salon?.name || 'Salon Name' }}</h2>
+    <p>{{ salon?.description || 'Salon description goes here.' }}</p>
+    <div class="contact-details">
+      <span>{{ salon?.address || 'Address not available' }}</span> |
+      <span>{{ salon?.phone || 'Phone not available' }}</span>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section class="salon-gallery">
+    <h3>Gallery</h3>
+    <div class="gallery-images">
+      <img *ngFor="let img of salon?.images" [src]="img" alt="Salon image" />
+    </div>
+  </section>
+
+  <!-- Staff List -->
+  <section class="salon-staff">
+    <h3>Our Team</h3>
+    <ul>
+      <li *ngFor="let staff of salon?.staff">
+        <span>{{ staff.name }}</span> - <span>{{ staff.role }}</span>
+        <a *ngIf="staff.portfolioUrl" [href]="staff.portfolioUrl" target="_blank">Portfolio</a>
+      </li>
+    </ul>
+  </section>
+
+  <!-- Services Offered -->
+  <section class="salon-services">
+    <h3>Services</h3>
+    <table>
+      <tr>
+        <th>Service</th>
+        <th>Duration</th>
+        <th>Price</th>
+      </tr>
+      <tr *ngFor="let service of salon?.services">
+        <td>{{ service.name }}</td>
+        <td>{{ service.duration }}</td>
+        <td>{{ service.price | currency }}</td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- Map Embed for Customer Help -->
+  <section class="salon-map">
+    <h3>Find Us</h3>
+    <div class="map-embed">
+      <iframe
+        width="100%"
+        height="250"
+        [src]="'https://maps.google.com/maps?q=' + (salon?.latitude || 0) + ',' + (salon?.longitude || 0) + '&z=15&output=embed' | safeUrl"
+        allowfullscreen
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        title="Google Map of {{ salon?.name }}"
+        style="border: 0; border-radius: 8px; margin-bottom: 12px"
+      ></iframe>
+    </div>
+    <button (click)="openMap()">Open in Google Maps</button>
+  </section>
+
+  <!-- Appointment Widget -->
+  <section class="salon-appointment">
+    <h3>Schedule an Appointment</h3>
+    <form (ngSubmit)="submitAppointment()">
+      <label for="service">Service:</label>
+      <select id="service" [(ngModel)]="appointment.serviceId" name="serviceId" required>
+        <option *ngFor="let service of serviceList" [value]="service.id">{{ service.name }}</option>
+      </select>
+      <label for="staff">Staff (optional):</label>
+      <select id="staff" [(ngModel)]="appointment.staffId" name="staffId">
+        <option value="">Any</option>
+        <option *ngFor="let staff of staffList" [value]="staff.id">{{ staff.name }}</option>
+      </select>
+      <label for="date">Date:</label>
+      <input id="date" type="date" [(ngModel)]="selectedDate" name="date" required />
+      <label for="time">Time:</label>
+      <input id="time" type="time" [(ngModel)]="selectedTime" name="time" required />
+      <label for="notes">Notes:</label>
+      <input id="notes" type="text" [(ngModel)]="appointment.notes" name="notes" />
+      <button type="submit">Schedule Appointment</button>
+    </form>
+  </section>
+
+  <!-- Reviews & Ratings -->
+  <section class="salon-reviews">
+    <h3>Reviews</h3>
+    <div *ngIf="reviews?.length; else noReviews">
+      <div *ngFor="let review of reviews" class="review">
+        <div class="review-header">
+          <span class="reviewer">{{ review.reviewer || review.userId }}</span>
+          <span class="rating">{{ review.rating }}/5</span>
+        </div>
+        <p>{{ review.comment }}</p>
+        <div class="review-meta">{{ review.createdAt | date }}</div>
+      </div>
+    </div>
+    <ng-template #noReviews>
+      <p>No reviews yet.</p>
+    </ng-template>
+    <form *ngIf="eligibleToReview" (ngSubmit)="submitReview(rating.value, reviewText.value)" class="review-form">
+      <label for="rating">Your Rating</label>
+      <select #rating id="rating" required>
+        <option [value]="5">5</option>
+        <option [value]="4">4</option>
+        <option [value]="3">3</option>
+        <option [value]="2">2</option>
+        <option [value]="1">1</option>
+      </select>
+      <label for="reviewText">Your Review</label>
+      <textarea #reviewText id="reviewText" rows="3" required></textarea>
+      <button type="submit" [disabled]="submitting">{{ submitting ? 'Submitting...' : 'Submit Review' }}</button>
+      <div *ngIf="reviewError" class="error-message">{{ reviewError }}</div>
+    </form>
+    <div *ngIf="eligibleToReview === false && !submitting" class="not-eligible-msg">You are not eligible to review this salon.</div>
+  </section>
+</div>

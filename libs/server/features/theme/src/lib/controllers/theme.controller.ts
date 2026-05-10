@@ -18,9 +18,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { ApiPaginatedResponse } from '../../../common/decorators/api-paginated-response.decorator';
 import { PaginatedResponseDto } from '../../../common/dto/paginated-response.dto';
 import { Role } from '../../../common/enums/role.enum';
-import { Roles } from '../../../core/auth/decorators/roles.decorator';
-import { JwtAuthGuard } from '../../../core/auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../../../core/auth/guards/roles.guard';
+import { Roles, JwtAuthGuard, RolesGuard } from '@cthub-bsaas/server-core';
 import { CreateThemeDto } from '../dto/create-theme.dto';
 import { ThemeQueryDto } from '../dto/theme-query.dto';
 import { ThemeResponseDto } from '../dto/theme-response.dto';

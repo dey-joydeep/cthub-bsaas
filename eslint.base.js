@@ -40,59 +40,37 @@ export default [
       '@nx/enforce-module-boundaries': [
         'error',
         {
-          // Stricter boundary rules per workspace proposal
-          enforceBuildableLibDependency: false,
+          enforceBuildableLibDependency: true,
+          checkDynamicDependenciesExceptions: [
+            '@cthub-bsaas/web-admin',
+            '@cthub-bsaas/web-admin/*',
+            '@cthub-bsaas/web-customer',
+            '@cthub-bsaas/web-customer/*',
+            '@cthub-bsaas/web-partner',
+            '@cthub-bsaas/web-partner/*',
+          ],
           allow: [],
           depConstraints: [
             // Apps may only depend on libs
             { sourceTag: 'type:app', onlyDependOnLibsWithTags: ['type:lib'] },
 
-            // Web code must not depend on server code
-            {
-              sourceTag: 'platform:web',
-              onlyDependOnLibsWithTags: ['platform:web', 'scope:ui', 'scope:shared', 'scope:web-config'],
-            },
+            // Web cannot depend on server
+            { sourceTag: 'platform:web', onlyDependOnLibsWithTags: ['platform:web', 'scope:ui', 'scope:shared', 'scope:web-config'] },
 
-            // Server code must not depend on web code
-            {
-              sourceTag: 'platform:server',
-              onlyDependOnLibsWithTags: [
-                'platform:server',
-                'scope:shared',
-                'scope:server-core',
-                'scope:server-data',
-                'scope:server-feature',
-              ],
-            },
-
-            // UI should stay presentational / neutral
-            { sourceTag: 'scope:ui', onlyDependOnLibsWithTags: ['scope:shared'] },
-
-            // Web core & feature libs may use other web core, UI, shared, and web-config
-            {
-              sourceTag: 'scope:web-core',
-              onlyDependOnLibsWithTags: ['scope:web-core', 'scope:ui', 'scope:shared', 'scope:web-config'],
-            },
-            {
-              sourceTag: 'scope:web-feature-auth',
-              onlyDependOnLibsWithTags: ['scope:web-core', 'scope:ui', 'scope:shared', 'scope:web-config'],
-            },
-
-            // Shared should only depend on itself (keeps it framework-agnostic)
+            // Shared only depends on shared
             { sourceTag: 'scope:shared', onlyDependOnLibsWithTags: ['scope:shared'] },
 
-            // Server layering constraints
+            // Backend layering (contracts -> core -> data -> infra -> features)
+            { sourceTag: 'layer:contracts', onlyDependOnLibsWithTags: ['layer:contracts', 'scope:shared'] },
+            { sourceTag: 'type:core', onlyDependOnLibsWithTags: ['type:core', 'layer:contracts', 'scope:shared'] },
+            { sourceTag: 'type:data', onlyDependOnLibsWithTags: ['type:data', 'type:core', 'layer:contracts', 'scope:shared'] },
             {
-              sourceTag: 'scope:server-feature',
-              onlyDependOnLibsWithTags: ['scope:server-core', 'scope:server-data', 'scope:shared'],
+              sourceTag: 'type:infra',
+              onlyDependOnLibsWithTags: ['type:infra', 'type:data', 'type:core', 'layer:contracts', 'scope:shared'],
             },
             {
-              sourceTag: 'scope:server-core',
-              onlyDependOnLibsWithTags: ['scope:server-data', 'scope:shared'],
-            },
-            {
-              sourceTag: 'scope:server-data',
-              onlyDependOnLibsWithTags: ['scope:shared'],
+              sourceTag: 'type:feature',
+              onlyDependOnLibsWithTags: ['type:feature', 'type:infra', 'type:data', 'type:core', 'layer:contracts', 'scope:shared'],
             },
           ],
         },
@@ -119,17 +97,37 @@ export default [
   ...compat.extends('prettier'),
   // Type-aware rules only for source files; auto-discover tsconfig via project service
   ...typeCheckedScoped,
-  // Non-source TS (tests, scripts) use non-type-aware parsing to avoid tsconfig requirement
+  // Strengthen async safety in source files
   {
-    files: [
-      '**/*.{spec,test}.ts',
-      '**/jest*.ts',
-      '**/*.scripts.ts',
-      '**/*.e2e-spec.ts',
-      '**/*.migration.ts',
-      '**/tools/**/*.ts',
-      '**/scripts/**/*.ts',
-    ],
+    files: ['**/src/**/*.{ts,tsx}'],
+    ignores: ['**/src/**/*.{spec,test}.ts', '**/src/**/*.e2e-spec.ts'],
+    rules: {
+      '@typescript-eslint/require-await': 'error',
+      '@typescript-eslint/no-floating-promises': ['error', { ignoreVoid: false, ignoreIIFE: false }],
+      '@typescript-eslint/no-misused-promises': ['error', { checksVoidReturn: { attributes: false }, checksConditionals: true }],
+    },
+  },
+  // Type-aware tests under src (leverage project service)
+  {
+    files: ['**/src/**/*.{spec,test}.ts'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: { projectService: true },
+    },
+    rules: {
+      '@typescript-eslint/require-await': 'warn',
+      '@typescript-eslint/no-floating-promises': 'warn',
+      '@typescript-eslint/no-misused-promises': 'warn',
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unsafe-assignment': 'warn',
+      '@typescript-eslint/no-unsafe-member-access': 'warn',
+      '@typescript-eslint/no-unsafe-argument': 'warn',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    },
+  },
+  // Non-source TS (other tests, scripts) use non-type-aware parsing
+  {
+    files: ['**/*.{spec,test}.ts', '**/*.scripts.ts', '**/*.e2e-spec.ts', '**/*.migration.ts', '**/tools/**/*.ts', '**/scripts/**/*.ts'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -148,5 +146,59 @@ export default [
       },
     },
     rules: {},
+  },
+  // Jest config TS files: keep parsing simple, no typed rules
+  {
+    files: ['**/jest*.ts'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: { project: false },
+    },
+    rules: {},
+  },
+  // Prevent deep relative imports to core from feature libs; enforce package-root imports
+  {
+    files: ['libs/server/features/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '../../core/**',
+                '../../../core/**',
+                '../../../../core/**',
+                '../../lib/server/core/**',
+                '../../../lib/server/core/**',
+                '**/core/src/**',
+              ],
+              message: 'Import from @cthub-bsaas/server-core (package root), not deep relative paths into core.',
+            },
+            {
+              group: ['@cthub-bsaas/server-core/*'],
+              message: 'Import from @cthub-bsaas/server-core package root; deep subpath imports are not allowed.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Prevent web -> server imports; web must only import web/* and shared/*
+  {
+    files: ['libs/web/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['../../server/**', '../../../server/**', '../../../../server/**', '@cthub-bsaas/server-*'],
+              message: 'Web libraries must not import server libraries. Use @cthub-bsaas/shared or other web libs instead.',
+            },
+          ],
+        },
+      ],
+    },
   },
 ];

@@ -1,0 +1,34 @@
+<div class="dashboard-container">
+  <h1>{{ 'DASHBOARD.TITLE' | translate }}</h1>
+  <div class="dashboard-grid">
+    <!-- Stats Widget -->
+    <div class="widget-container">
+      <app-stats-widget></app-stats-widget>
+    </div>
+
+    <!-- Revenue Chart Widget -->
+    <div class="widget-container">
+      <app-revenue-chart></app-revenue-chart>
+    </div>
+
+    <!-- Customer Stats Widget -->
+    <div class="widget-container">
+      <app-customer-stats-widget></app-customer-stats-widget>
+    </div>
+
+    <!-- Product Sales Widget -->
+    <div class="widget-container">
+      <app-product-sales-widget></app-product-sales-widget>
+    </div>
+
+    <!-- Subscription Chart Widget -->
+    <div class="widget-container">
+      <app-subscription-chart-widget></app-subscription-chart-widget>
+    </div>
+
+    <!-- Renewals List Widget -->
+    <div class="widget-container">
+      <app-renewals-list-widget [tenantId]="tenantId"></app-renewals-list-widget>
+    </div>
+  </div>
+</div>

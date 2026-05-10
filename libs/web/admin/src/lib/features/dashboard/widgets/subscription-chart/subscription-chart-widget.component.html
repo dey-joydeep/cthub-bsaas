@@ -1,0 +1,44 @@
+<div class="chart-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>{{ 'DASHBOARD.SUBSCRIPTIONS.TITLE' | translate }}</mat-card-title>
+
+      <div class="chart-actions" mat-card-actions>
+        <button mat-icon-button (click)="refreshChart()" matTooltip="{{ 'COMMON.REFRESH' | translate }}">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </div>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Loading state -->
+      <div *ngIf="loading" class="loading-state">
+        <mat-spinner diameter="40"></mat-spinner>
+        <span>{{ 'DASHBOARD.LOADING' | translate }}</span>
+      </div>
+
+      <!-- Error state -->
+      <div *ngIf="error && !loading" class="error-state">
+        <mat-icon color="warn">error_outline</mat-icon>
+        <span>{{ error }}</span>
+        <button mat-button color="primary" (click)="refreshChart()" class="retry-button">
+          <mat-icon>refresh</mat-icon>
+          {{ 'COMMON.RETRY' | translate }}
+        </button>
+      </div>
+
+      <!-- Chart container -->
+      <div class="chart-wrapper" *ngIf="!loading && !error">
+        <div class="chart-canvas-container">
+          <canvas baseChart [type]="lineChartType" [data]="lineChartData" [options]="lineChartOptions"> </canvas>
+        </div>
+
+        <!-- No data message -->
+        <div *ngIf="!subscriptionData?.length" class="no-data">
+          <mat-icon>info</mat-icon>
+          <span>{{ 'DASHBOARD.SUBSCRIPTIONS.NO_DATA' | translate }}</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

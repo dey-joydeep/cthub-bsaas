@@ -1,0 +1,58 @@
+{
+  "name": "server-feature-auth",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/server/features/auth/src",
+  "prefix": "app",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/server/features/auth",
+        "tsConfig": "libs/server/features/auth/tsconfig.lib.json",
+        "packageJson": "libs/server/features/auth/package.json",
+        "main": "libs/server/features/auth/src/index.ts",
+        "assets": [],
+        "buildableProjectDepsInPackageJsonType": "dependencies"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "libs/server/features/auth/tsconfig.lib.prod.json"
+        },
+        "development": {
+          "tsConfig": "libs/server/features/auth/tsconfig.lib.json"
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/server/features/auth/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/server/features/auth/jest.config.ts",
+        "passWithNoTests": true,
+        "codeCoverage": true,
+        "coverageReporters": ["text", "lcov"],
+        "coverageDirectory": "coverage/libs/server/features/auth"
+      },
+      "configurations": {
+        "ut": {
+          "jestConfig": "libs/server/features/auth/jest.unit.config.ts"
+        },
+        "it": {
+          "jestConfig": "libs/server/features/auth/jest.int.config.ts"
+        }
+      }
+    }
+  },
+  "tags": ["type:lib", "platform:server", "scope:server-feature", "scope:server", "type:feature"],
+  "implicitDependencies": ["server-core", "server-data-access"]
+}

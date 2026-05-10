@@ -1,5 +1,5 @@
 {
-  "name": "@cthub-bsaas/web-partner",
+  "name": "@cthub-bsaas/web-app-partner",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -8,7 +8,7 @@
     "build": "ng build",
     "test": "nx jest:test --config=jest.config.ts --passWithNoTests",
     "lint": "nx eslint:lint",
-    "build:ssr": "ng build && ng run web-partner:server",
+    "build:ssr": "ng build && ng run web-app-partner:server",
     "serve:ssr": "node dist/apps/web/partner/server/server.mjs"
   }
 }

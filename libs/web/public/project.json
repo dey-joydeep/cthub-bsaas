@@ -1,0 +1,44 @@
+{
+  "name": "web-lib-public",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/web/public/src",
+  "prefix": "lib",
+  "tags": ["platform:web", "scope:web", "type:lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:package",
+      "outputs": ["{workspaceRoot}/dist/libs/web/public"],
+      "options": {
+        "project": "libs/web/public/ng-package.json",
+        "tsConfig": "libs/web/public/tsconfig.lib.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "libs/web/public/tsconfig.lib.prod.json"
+        },
+        "development": {}
+      },
+      "defaultConfiguration": "production"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/libs/web/public"],
+      "options": {
+        "jestConfig": "libs/web/public/jest.config.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["libs/web/public/src/index.ts", "libs/web/public/src/lib/public.routes.ts"]
+      }
+    },
+    "type-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsc -p libs/web/public/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

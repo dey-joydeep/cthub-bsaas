@@ -1,0 +1,67 @@
+<div class="profile-container">
+  <mat-card class="profile-card">
+    <mat-card-header>
+      <mat-card-title>{{ 'PROFILE.TITLE' | translate }}</mat-card-title>
+      <mat-card-subtitle>{{ 'PROFILE.SUBTITLE' | translate }}</mat-card-subtitle>
+
+      <div class="spacer"></div>
+
+      <button *ngIf="!isEditing" mat-raised-button color="primary" (click)="onEdit()">
+        <mat-icon>edit</mat-icon>
+        {{ 'COMMON.EDIT' | translate }}
+      </button>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>{{ 'PROFILE.FIRST_NAME' | translate }}</mat-label>
+            <input matInput formControlName="firstName" required />
+            <mat-icon matSuffix>person</mat-icon>
+            <mat-error *ngIf="firstName?.hasError('required')">
+              {{ 'VALIDATION.REQUIRED' | translate }}
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>{{ 'PROFILE.LAST_NAME' | translate }}</mat-label>
+            <input matInput formControlName="lastName" required />
+            <mat-icon matSuffix>person_outline</mat-icon>
+            <mat-error *ngIf="lastName?.hasError('required')">
+              {{ 'VALIDATION.REQUIRED' | translate }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>{{ 'PROFILE.EMAIL' | translate }}</mat-label>
+          <input matInput formControlName="email" type="email" required />
+          <mat-icon matSuffix>email</mat-icon>
+          <mat-error *ngIf="email?.hasError('required')">
+            {{ 'VALIDATION.REQUIRED' | translate }}
+          </mat-error>
+          <mat-error *ngIf="email?.hasError('email')">
+            {{ 'VALIDATION.INVALID_EMAIL' | translate }}
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>{{ 'PROFILE.PHONE' | translate }}</mat-label>
+          <input matInput formControlName="phone" type="tel" />
+          <mat-icon matSuffix>phone</mat-icon>
+        </mat-form-field>
+
+        <div class="form-actions" *ngIf="isEditing">
+          <button mat-button type="button" (click)="onCancel()" class="cancel-button">
+            {{ 'COMMON.CANCEL' | translate }}
+          </button>
+          <button mat-raised-button color="primary" type="submit" [disabled]="profileForm.invalid || isLoading" class="save-button">
+            <span *ngIf="!isLoading">{{ 'COMMON.SAVE' | translate }}</span>
+            <mat-spinner *ngIf="isLoading" diameter="24"></mat-spinner>
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

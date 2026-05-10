@@ -1,0 +1,28 @@
+<div class="service-management-container">
+  <form [formGroup]="serviceForm" (ngSubmit)="onSubmit()">
+    <h1>Service Management</h1>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Name</mat-label>
+      <input matInput formControlName="name" required />
+      <mat-error *ngIf="serviceForm.get('name')?.invalid">Name required</mat-error>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Description</mat-label>
+      <input matInput formControlName="description" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Duration (minutes)</mat-label>
+      <input matInput formControlName="duration" type="number" required />
+      <mat-error *ngIf="serviceForm.get('duration')?.invalid">Duration required</mat-error>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Price</mat-label>
+      <input matInput formControlName="price" type="number" required />
+      <mat-error *ngIf="serviceForm.get('price')?.invalid">Price required</mat-error>
+    </mat-form-field>
+    <button mat-raised-button color="primary" class="full-width" [disabled]="loading">Save Service</button>
+    <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+    <mat-error *ngIf="error">{{ error }}</mat-error>
+    <p class="success" *ngIf="success">{{ success }}</p>
+  </form>
+</div>

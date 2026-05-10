@@ -1,0 +1,43 @@
+{
+    "name": "server-infrastructure",
+    "sourceRoot": "libs/server/infrastructure/src",
+    "tags": ["scope:server", "type:infra"],
+    "targets": {
+        "lint": {
+            "outputs": ["{options.outputFile}"],
+            "executor": "@nx/eslint:lint",
+            "options": {
+                "lintFilePatterns": ["libs/server/infrastructure/**/*.ts"]
+            }
+        },
+        "build": {
+            "executor": "@nx/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/libs/server/infrastructure",
+                "main": "libs/server/infrastructure/src/index.ts",
+                "tsConfig": "libs/server/infrastructure/tsconfig.lib.json",
+                "assets": [],
+                "rootDir": "libs/server/infrastructure/src"
+            }
+        },
+        "type-check": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "tsc -p libs/server/infrastructure/tsconfig.lib.json --noEmit"
+            }
+        },
+        "test": {
+            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "executor": "@nx/jest:jest",
+            "options": {
+                "passWithNoTests": true,
+                "jestConfig": "libs/server/infrastructure/jest.config.ts",
+                "codeCoverage": true,
+                "coverageReporters": ["text", "lcov"]
+            }
+        }
+    },
+    "projectType": "library",
+    "prefix": "cthub-bsaas"
+}

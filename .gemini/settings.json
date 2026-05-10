@@ -1,0 +1,34 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "E:\\workspace\\cthub-bsaas\\node_modules\\.bin\\mcp-server-filesystem.cmd",
+      "args": ["E:\\workspace\\cthub-bsaas"]
+    },
+    "git": {
+      "command": "E:\\workspace\\cthub-bsaas\\node_modules\\.bin\\git-mcp-server.cmd",
+      "args": ["--repository", "E:\\workspace\\cthub-bsaas"]
+    },
+    "eslint": {
+      "command": "E:\\workspace\\cthub-bsaas\\node_modules\\.bin\\mcp.cmd",
+      "args": []
+    },
+    "postgres": {
+      "command": "E:\\workspace\\cthub-bsaas\\node_modules\\.bin\\mcp-server-postgres.cmd",
+      "args": ["postgresql://postgres:root@localhost:5432/bsaas"]
+    },
+    "github": {
+      "command": "E:\\workspace\\cthub-bsaas\\node_modules\\.bin\\mcp-server-github.cmd",
+      "args": []
+    },
+    "prisma": {
+      "command": "E:\\workspace\\cthub-bsaas\\node_modules\\.bin\\prisma.cmd",
+      "args": ["mcp", "--schema", "E:\\workspace\\cthub-bsaas\\libs\\server\\data-access\\prisma\\schema.prisma", "--early-access"],
+      "env": {
+        "PRISMA_HIDE_UPDATE_MESSAGE": "1",
+        "NO_COLOR": "1",
+        "CI": "1",
+        "DATABASE_URL": "postgresql://postgres:root@localhost:5432/bsaas"
+      }
+    }
+  }
+}

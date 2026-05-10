@@ -1,0 +1,27 @@
+{
+  "name": "web-partner-e2e",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/e2e/web/partner/src",
+  "targets": {
+    "e2e": {
+      "executor": "@nx/run-commands:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "echo Web Partner E2E: scaffolding in place; tests TBD"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["apps/e2e/web/partner/**/*.ts"]
+      }
+    }
+  },
+  "implicitDependencies": ["web-app-partner"],
+  "tags": ["type:e2e", "platform:web"]
+}

@@ -1,0 +1,59 @@
+<h2 mat-dialog-title>
+  <mat-icon color="warn" class="dialog-icon">warning</mat-icon>
+  {{ 'APPOINTMENT.CONFIRM_CANCELLATION' | translate }}
+</h2>
+
+<mat-dialog-content>
+  <p>{{ 'APPOINTMENT.CANCELLATION_WARNING' | translate }}</p>
+
+  <form [formGroup]="cancelForm" (ngSubmit)="onSubmit()">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ 'APPOINTMENT.CANCELLATION_REASON' | translate }}</mat-label>
+      <textarea
+        matInput
+        formControlName="reason"
+        rows="4"
+        [placeholder]="'APPOINTMENT.REASON_PLACEHOLDER' | translate"
+        cdkTextareaAutosize
+        cdkAutosizeMinRows="3"
+        cdkAutosizeMaxRows="6"
+      ></textarea>
+      <mat-error *ngIf="reason?.hasError('required')">
+        {{ 'VALIDATION.REASON_REQUIRED' | translate }}
+      </mat-error>
+      <mat-error *ngIf="reason?.hasError('minlength')">
+        {{ 'VALIDATION.REASON_MIN_LENGTH' | translate }}
+      </mat-error>
+      <mat-hint>{{ 'APPOINTMENT.REASON_HELP' | translate }}</mat-hint>
+    </mat-form-field>
+  </form>
+
+  <div class="appointment-details">
+    <div class="detail-item">
+      <span class="detail-label">{{ 'APPOINTMENT.SERVICE' | translate }}:</span>
+      <span class="detail-value">{{ data.appointment.serviceId | titlecase }}</span>
+    </div>
+    <div class="detail-item">
+      <span class="detail-label">{{ 'APPOINTMENT.DATE' | translate }}:</span>
+      <span class="detail-value">{{ appointmentDate }}</span>
+    </div>
+    <div class="detail-item">
+      <span class="detail-label">{{ 'APPOINTMENT.TIME' | translate }}:</span>
+      <span class="detail-value">{{ appointmentTime }}</span>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button color="warn" [disabled]="isSubmitting">
+    <span *ngIf="!isSubmitting">{{ 'APPOINTMENT.CANCEL_APPOINTMENT' | translate }}</span>
+    <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
+  </button>
+  <button mat-button (click)="onNoClick()" [disabled]="isSubmitting">
+    {{ 'COMMON.CANCEL' | translate }}
+  </button>
+  <button mat-raised-button color="warn" [disabled]="cancelForm.invalid || isSubmitting" (click)="onSubmit()">
+    <span *ngIf="!isSubmitting">{{ 'APPOINTMENT.CONFIRM_CANCEL' | translate }}</span>
+    <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
+  </button>
+</mat-dialog-actions>

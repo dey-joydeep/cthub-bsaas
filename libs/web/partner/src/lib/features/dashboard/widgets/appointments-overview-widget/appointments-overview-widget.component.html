@@ -1,0 +1,371 @@
+<div class="appointments-widget">
+  <!-- Header with title and actions -->
+  <div class="widget-header">
+    <div class="header-content">
+      <h2 class="widget-title">
+        <mat-icon>event</mat-icon>
+        {{ 'DASHBOARD.APPOINTMENTS.TITLE' | translate }}
+      </h2>
+      <div class="header-actions">
+        <!-- Date range picker -->
+        <mat-form-field appearance="outline" class="date-range-picker">
+          <mat-label>Date Range</mat-label>
+          <mat-date-range-input [formGroup]="dateRange" [rangePicker]="picker">
+            <input matStartDate formControlName="start" placeholder="Start date" />
+            <input matEndDate formControlName="end" placeholder="End date" />
+          </mat-date-range-input>
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-date-range-picker #picker></mat-date-range-picker>
+
+          <button
+            *ngIf="dateRange.value.start || dateRange.value.end"
+            mat-icon-button
+            matSuffix
+            (click)="dateRange.reset(); loadData()"
+            [matTooltip]="'COMMON.CLEAR' | translate"
+            class="clear-date"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-form-field>
+
+        <!-- Status filter -->
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>{{ 'COMMON.STATUS' | translate }}</mat-label>
+          <mat-select [formControl]="statusFilter" (selectionChange)="loadData()">
+            <mat-option *ngFor="let status of statusOptions" [value]="status.value">
+              {{ status.label | translate }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Refresh button -->
+        <button mat-icon-button [matTooltip]="'COMMON.REFRESH' | translate" (click)="refresh()" [disabled]="isLoading">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div *ngIf="isLoading && !overview" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>{{ 'COMMON.LOADING' | translate }}...</p>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error && !isLoading" class="error-container">
+    <mat-icon color="warn">error_outline</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-button color="primary" (click)="loadData()">
+      <mat-icon>refresh</mat-icon>
+      {{ 'COMMON.RETRY' | translate }}
+    </button>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="overview && !isLoading" class="widget-content">
+    <!-- Summary cards -->
+    <div class="summary-cards">
+      <!-- Total Appointments -->
+      <mat-card class="summary-card">
+        <mat-card-header>
+          <mat-card-title>{{ 'DASHBOARD.APPOINTMENTS.TOTAL' | translate }}</mat-card-title>
+          <mat-card-subtitle>{{ 'DASHBOARD.APPOINTMENTS.ALL_APPOINTMENTS' | translate }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="summary-value">{{ overview.totalAppointments }}</div>
+          <div class="summary-trend">
+            <mat-icon [class.positive]="overview.completedAppointments > 0" [class.negative]="overview.cancelledAppointments > 0">
+              {{ overview.completedAppointments > overview.cancelledAppointments ? 'trending_up' : 'trending_down' }}
+            </mat-icon>
+            <span>{{ overview.completedAppointments }} {{ 'DASHBOARD.APPOINTMENTS.COMPLETED' | translate }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Confirmed Appointments -->
+      <mat-card class="summary-card">
+        <mat-card-header>
+          <mat-card-title>{{ 'DASHBOARD.APPOINTMENTS.CONFIRMED' | translate }}</mat-card-title>
+          <mat-card-subtitle>{{ 'DASHBOARD.APPOINTMENTS.UPCOMING' | translate }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="summary-value">{{ overview.confirmedAppointments }}</div>
+          <div class="summary-trend">
+            <mat-icon [class.positive]="overview.confirmedAppointments > 0">event_available</mat-icon>
+            <span>{{ overview.upcomingAppointments.length || 0 }} {{ 'DASHBOARD.APPOINTMENTS.UPCOMING' | translate | lowercase }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Revenue -->
+      <mat-card class="summary-card">
+        <mat-card-header>
+          <mat-card-title>{{ 'DASHBOARD.APPOINTMENTS.REVENUE' | translate }}</mat-card-title>
+          <mat-card-subtitle>{{ 'DASHBOARD.APPOINTMENTS.TOTAL_EARNINGS' | translate }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="summary-value">{{ overview.totalRevenue | currency }}</div>
+          <div class="summary-trend">
+            <mat-icon [class.positive]="overview.totalRevenue > 0">attach_money</mat-icon>
+            <span>{{ overview.completedAppointments }} {{ 'DASHBOARD.APPOINTMENTS.COMPLETED_APPOINTMENTS' | translate }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Average Duration -->
+      <mat-card class="summary-card">
+        <mat-card-header>
+          <mat-card-title>{{ 'DASHBOARD.APPOINTMENTS.AVG_DURATION' | translate }}</mat-card-title>
+          <mat-card-subtitle>{{ 'DASHBOARD.APPOINTMENTS.PER_APPOINTMENT' | translate }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="summary-value">{{ formatDuration(overview.averageDuration) }}</div>
+          <div class="summary-trend">
+            <mat-icon>schedule</mat-icon>
+            <span>{{ overview.completedAppointments }} {{ 'DASHBOARD.APPOINTMENTS.COMPLETED' | translate | lowercase }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Tabs for different views -->
+    <mat-tab-group [(selectedIndex)]="selectedTabIndex" class="appointments-tabs">
+      <!-- Upcoming Appointments Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">upcoming</mat-icon>
+          {{ 'DASHBOARD.APPOINTMENTS.UPCOMING' | translate }}
+          <span class="tab-badge" *ngIf="overview && overview.upcomingAppointments && overview.upcomingAppointments.length > 0">
+            {{ overview.upcomingAppointments.length }}
+          </span>
+        </ng-template>
+
+        <div class="tab-content">
+          <div *ngIf="overview && overview.upcomingAppointments && overview.upcomingAppointments.length === 0" class="no-data">
+            <mat-icon>event_busy</mat-icon>
+            <p>{{ 'DASHBOARD.APPOINTMENTS.NO_UPCOMING' | translate }}</p>
+          </div>
+
+          <div *ngIf="overview && overview.upcomingAppointments && overview.upcomingAppointments.length > 0" class="appointments-list">
+            <div *ngFor="let appointment of overview?.upcomingAppointments || []" class="appointment-item">
+              <div class="appointment-time">
+                <div class="time">{{ formatDate(appointment.startTime) | date: 'shortTime' }}</div>
+                <div class="date">{{ formatDate(appointment.startTime) | date: 'MMM d, y' }}</div>
+              </div>
+
+              <div class="appointment-details">
+                <div class="appointment-header">
+                  <h3 class="appointment-title">
+                    <mat-icon [class.today]="isToday(appointment.startTime)" [class.past]="isPast(appointment.startTime)">
+                      {{ getAppointmentIcon(appointment) }}
+                    </mat-icon>
+                    {{ appointment.title || 'Appointment' }}
+                  </h3>
+                  <span class="appointment-status" [ngClass]="'status-' + appointment.status.toLowerCase()">
+                    {{ getStatusBadge(appointment.status).text }}
+                  </span>
+                </div>
+
+                <div class="appointment-meta">
+                  <div class="meta-item">
+                    <mat-icon>person</mat-icon>
+                    <span>{{ appointment.customerName }}</span>
+                  </div>
+                  <div class="meta-item">
+                    <mat-icon>person_outline</mat-icon>
+                    <span>{{ appointment.staffName }}</span>
+                  </div>
+                  <div class="meta-item">
+                    <mat-icon>category</mat-icon>
+                    <span>{{ appointment.serviceName }}</span>
+                  </div>
+                  <div class="meta-item">
+                    <mat-icon>schedule</mat-icon>
+                    <span>{{ formatDuration(appointment.duration) }}</span>
+                  </div>
+                </div>
+
+                <div class="appointment-actions">
+                  <button
+                    mat-icon-button
+                    [matMenuTriggerFor]="statusMenu"
+                    [matTooltip]="'DASHBOARD.APPOINTMENTS.CHANGE_STATUS' | translate"
+                  >
+                    <mat-icon>swap_vert</mat-icon>
+                  </button>
+
+                  <button
+                    mat-icon-button
+                    [matTooltip]="'DASHBOARD.APPOINTMENTS.VIEW_DETAILS' | translate"
+                    [routerLink]="['/appointments', appointment.id]"
+                  >
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+
+                  <mat-menu #statusMenu="matMenu">
+                    <button
+                      mat-menu-item
+                      *ngFor="let status of statusOptions"
+                      [disabled]="status.value === appointment.status || status.value === 'ALL'"
+                      (click)="onStatusChange(appointment, status.value)"
+                    >
+                      <mat-icon [ngClass]="'status-' + status.value.toLowerCase()">
+                        {{ getStatusIcon(status.value) }}
+                      </mat-icon>
+                      <span>{{ 'DASHBOARD.APPOINTMENTS.SET_AS' | translate: { status: status.label } }}</span>
+                    </button>
+                  </mat-menu>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Recent Appointments Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">history</mat-icon>
+          {{ 'DASHBOARD.APPOINTMENTS.RECENT' | translate }}
+          <span class="tab-badge" *ngIf="overview && overview.recentAppointments && overview.recentAppointments.length > 0">
+            {{ overview.recentAppointments.length }}
+          </span>
+        </ng-template>
+
+        <div class="tab-content">
+          <div *ngIf="overview && overview.recentAppointments && overview.recentAppointments.length === 0" class="no-data">
+            <mat-icon>history</mat-icon>
+            <p>{{ 'DASHBOARD.APPOINTMENTS.NO_RECENT' | translate }}</p>
+          </div>
+
+          <div *ngIf="overview && overview.recentAppointments && overview.recentAppointments.length > 0" class="recent-appointments">
+            <div *ngFor="let appointment of overview.recentAppointments" class="recent-appointment">
+              <div class="recent-appointment-date">
+                {{ formatDate(appointment.endTime) | date: 'MMM d' }}
+                <span class="day">{{ formatDate(appointment.endTime) | date: 'EEE' }}</span>
+              </div>
+
+              <div class="recent-appointment-details">
+                <div class="recent-appointment-header">
+                  <h4>{{ appointment.title || 'Appointment' }}</h4>
+                  <span class="status-badge" [ngClass]="'status-' + appointment.status.toLowerCase()">
+                    {{ getStatusBadge(appointment.status).text }}
+                  </span>
+                </div>
+
+                <div class="recent-appointment-meta">
+                  <span class="time">
+                    <mat-icon>schedule</mat-icon>
+                    {{ formatDate(appointment.startTime) | date: 'shortTime' }} - {{ formatDate(appointment.endTime) | date: 'shortTime' }}
+                  </span>
+                  <span class="divider">•</span>
+                  <span class="customer">
+                    <mat-icon>person</mat-icon>
+                    {{ appointment.customerName }}
+                  </span>
+                  <span class="divider">•</span>
+                  <span class="service">
+                    <mat-icon>category</mat-icon>
+                    {{ appointment.serviceName }}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                mat-icon-button
+                [matTooltip]="'DASHBOARD.APPOINTMENTS.VIEW_DETAILS' | translate"
+                [routerLink]="['/appointments', appointment.id]"
+              >
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Status Distribution Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">pie_chart</mat-icon>
+          {{ 'DASHBOARD.APPOINTMENTS.STATS' | translate }}
+        </ng-template>
+
+        <div class="tab-content">
+          <div class="stats-container">
+            <!-- Status Distribution Chart -->
+            <div class="stats-chart">
+              <h3>{{ 'DASHBOARD.APPOINTMENTS.STATUS_DISTRIBUTION' | translate }}</h3>
+              <div class="chart-legend">
+                <ng-container *ngFor="let status of statusOptions">
+                  <div *ngIf="status.value !== 'ALL' && overview.statusDistribution[status.value]" class="chart-legend-item">
+                    <div class="legend-color" [style.background]="getStatusColor(status.value)"></div>
+                    <span class="legend-label">{{ status.label | translate }}</span>
+                    <span class="legend-value">{{ overview.statusDistribution[status.value] || 0 }}</span>
+                    <span class="legend-percentage">
+                      ({{ ((overview.statusDistribution[status.value] / overview.totalAppointments) * 100).toFixed(1) }}%)
+                    </span>
+                  </div>
+                </ng-container>
+              </div>
+              <div class="chart-container">
+                <div class="chart-bars">
+                  <ng-container *ngFor="let status of statusOptions">
+                    <div
+                      *ngIf="status.value !== 'ALL' && overview.statusDistribution[status.value]"
+                      class="chart-bar"
+                      [style.height.%]="(overview.statusDistribution[status.value] / overview.totalAppointments) * 100"
+                      [style.background]="getStatusColor(status.value)"
+                      [matTooltip]="
+                        status.label +
+                        ': ' +
+                        overview.statusDistribution[status.value] +
+                        ' (' +
+                        ((overview.statusDistribution[status.value] / overview.totalAppointments) * 100).toFixed(1) +
+                        '%)'
+                      "
+                    ></div>
+                  </ng-container>
+                </div>
+                <div class="chart-labels">
+                  <ng-container *ngFor="let status of statusOptions">
+                    <div *ngIf="status.value !== 'ALL' && overview.statusDistribution[status.value]" class="chart-label">
+                      {{ status.label | translate | slice: 0 : 1 }}
+                    </div>
+                  </ng-container>
+                </div>
+              </div>
+            </div>
+
+            <!-- Daily Appointments Chart -->
+            <div class="stats-chart">
+              <h3>{{ 'DASHBOARD.APPOINTMENTS.DAILY_APPOINTMENTS' | translate }}</h3>
+              <div class="daily-chart">
+                <div class="chart-bars">
+                  <ng-container *ngFor="let day of getLast7Days()">
+                    <div
+                      *ngIf="overview.dailyAppointments[day.date.toISOString()] !== undefined"
+                      class="daily-bar"
+                      [style.height.px]="(overview.dailyAppointments[day.date.toISOString()] || 0) * 5"
+                      [matTooltip]="
+                        (day.date | date: 'mediumDate') + ': ' + (overview.dailyAppointments[day.date.toISOString()] || 0) + ' appointments'
+                      "
+                    ></div>
+                  </ng-container>
+                </div>
+                <div class="chart-labels">
+                  <ng-container *ngFor="let day of getLast7Days()">
+                    <div *ngIf="overview.dailyAppointments[day.date.toISOString()] !== undefined" class="chart-label">
+                      {{ day.date | date: 'EEE' }}
+                    </div>
+                  </ng-container>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>

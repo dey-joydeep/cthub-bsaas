@@ -1,0 +1,83 @@
+<div class="portfolio-container">
+  <h2>{{ 'portfolio.title' | translate }}</h2>
+  <p>{{ 'portfolio.description' | translate }}</p>
+
+  <form [formGroup]="addForm" (ngSubmit)="addPortfolioItem()" class="portfolio-form">
+    <label>
+      {{ 'portfolio.tenantId' | translate }}
+      <input formControlName="tenantId" type="text" />
+      <div *ngIf="addForm.get('tenantId')?.invalid && addForm.get('tenantId')?.touched" class="error-message">
+        {{ 'portfolio.error' | translate }}
+      </div>
+    </label>
+    <label>
+      {{ 'portfolio.userId' | translate }}
+      <input formControlName="userId" type="text" />
+      <div *ngIf="addForm.get('userId')?.invalid && addForm.get('userId')?.touched" class="error-message">
+        {{ 'portfolio.error' | translate }}
+      </div>
+    </label>
+    <label>
+      {{ 'portfolio.image' | translate }}
+      <input type="file" (change)="onImageChange($event)" accept="image/*" />
+      <div *ngIf="!selectedImage && addForm.touched" class="error-message">
+        {{ 'portfolio.image_required' | translate }}
+      </div>
+    </label>
+    <label>
+      {{ 'portfolio.imagePath' | translate }}
+      <input formControlName="imagePath" type="text" />
+      <div *ngIf="addForm.get('imagePath')?.invalid && addForm.get('imagePath')?.touched" class="error-message">
+        {{ 'portfolio.error' | translate }}
+      </div>
+    </label>
+    <label>
+      {{ 'portfolio.description' | translate }}
+      <input formControlName="description" type="text" />
+      <div *ngIf="addForm.get('description')?.invalid && addForm.get('description')?.touched" class="error-message">
+        {{ 'portfolio.error' | translate }}
+      </div>
+    </label>
+    <button type="submit" [disabled]="addForm.invalid">{{ 'portfolio.add' | translate }}</button>
+  </form>
+
+  <div *ngIf="loading" class="loading">{{ 'portfolio.loading' | translate }}</div>
+  <div *ngIf="error" class="error-message">{{ 'portfolio.error' | translate }}</div>
+
+  <div *ngIf="portfolioItems.length > 0" class="portfolio-list">
+    <div *ngFor="let item of portfolioItems; let i = index" class="portfolio-item">
+      <img *ngIf="item.id" [src]="getPortfolioImagePath(item)" alt="{{ 'portfolio.imageAlt' | translate }}" width="80" />
+      <div>
+        <div>
+          <b>{{ item.description }}</b>
+        </div>
+        <div>{{ 'portfolio.tenant' | translate }}: {{ item.tenantId }}, {{ 'portfolio.user' | translate }}: {{ item.userId }}</div>
+      </div>
+      <button (click)="startEdit(i)">{{ 'portfolio.edit' | translate }}</button>
+      <button (click)="deletePortfolioItem(i)">{{ 'portfolio.delete' | translate }}</button>
+      <form *ngIf="editIndex === i" [formGroup]="editForm" (ngSubmit)="saveEdit(i)" class="edit-form">
+        <label>
+          {{ 'portfolio.image' | translate }}
+          <input type="file" (change)="onEditImageChange($event)" accept="image/*" />
+        </label>
+        <label>
+          {{ 'portfolio.imagePath' | translate }}
+          <input formControlName="imagePath" type="text" />
+          <div *ngIf="editForm.get('imagePath')?.invalid && editForm.get('imagePath')?.touched" class="error-message">
+            {{ 'portfolio.error' | translate }}
+          </div>
+        </label>
+        <label>
+          {{ 'portfolio.description' | translate }}
+          <input formControlName="description" type="text" />
+          <div *ngIf="editForm.get('description')?.invalid && editForm.get('description')?.touched" class="error-message">
+            {{ 'portfolio.error' | translate }}
+          </div>
+        </label>
+        <button type="submit" [disabled]="editForm.invalid">{{ 'portfolio.save' | translate }}</button>
+        <button type="button" (click)="cancelEdit()">{{ 'portfolio.cancel' | translate }}</button>
+      </form>
+    </div>
+  </div>
+  <div *ngIf="!loading && portfolioItems.length === 0">{{ 'portfolio.no_items' | translate }}</div>
+</div>

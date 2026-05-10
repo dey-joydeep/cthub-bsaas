@@ -13,13 +13,13 @@ As a **Platform Admin**, I need phishing‑resistant sign‑in and strong sessio
 ## 3) Scenarios & Acceptance Criteria (Gherkin)
 ### A‑1 First‑time sign‑in requires 2FA enrollment
 **Given** an admin account without 2FA  
-**When** I sign in with email+password  
+**When** I log in with email+password  
 **Then** I am forced to enroll **Passkey** or **TOTP** before accessing the dashboard  
 **And** I receive **recovery codes** and must acknowledge storage.
 
 ### A‑2 Passkey sign‑in
 **Given** I have a registered passkey  
-**When** I choose “Sign in with passkey”  
+**When** I choose “Login with passkey”  
 **Then** I authenticate without password and receive valid AT/RT cookies  
 **And** an audit log is recorded with action `login_passkey_success`.
 

@@ -1,0 +1,95 @@
+<div class="appointment-list-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>{{ 'APPOINTMENT.MY_APPOINTMENTS' | translate }}</mat-card-title>
+      <mat-card-subtitle>{{ 'APPOINTMENT.VIEW_MANAGE_APPOINTMENTS' | translate }}</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="loading-shade" *ngIf="isLoading">
+        <mat-spinner></mat-spinner>
+      </div>
+
+      <div class="mat-elevation-z8">
+        <table mat-table [dataSource]="dataSource" class="full-width">
+          <!-- Service Column -->
+          <ng-container matColumnDef="service">
+            <th mat-header-cell *matHeaderCellDef>{{ 'APPOINTMENT.SERVICE' | translate }}</th>
+            <td mat-cell *matCellDef="let appointment">
+              <div class="service-cell">
+                <mat-icon class="service-icon">spa</mat-icon>
+                <div class="service-details">
+                  <div class="service-name">{{ appointment.serviceId | titlecase }}</div>
+                  <div class="salon-name" *ngIf="appointment.salonId">
+                    {{ 'APPOINTMENT.AT_SALON' | translate }} {{ appointment.salonId | titlecase }}
+                  </div>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Date Column -->
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef>{{ 'APPOINTMENT.DATE_TIME' | translate }}</th>
+            <td mat-cell *matCellDef="let appointment">
+              <div class="date-cell">
+                <div class="date">{{ appointment.date | date: 'mediumDate' }}</div>
+                <div class="time">{{ appointment.time }}</div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>{{ 'COMMON.STATUS' | translate }}</th>
+            <td mat-cell *matCellDef="let appointment">
+              <mat-chip [ngClass]="getStatusChipClass(appointment.status)">
+                {{ 'APPOINTMENT.STATUS.' + appointment.status.toUpperCase() | translate }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'COMMON.ACTIONS' | translate }}</th>
+            <td mat-cell *matCellDef="let appointment">
+              <button mat-icon-button [matMenuTriggerFor]="menu" [disabled]="appointment.status === 'CANCELLED'">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+
+              <mat-menu #menu="matMenu">
+                <button mat-menu-item (click)="onReschedule(appointment)" [disabled]="appointment.status !== 'BOOKED'">
+                  <mat-icon>event_available</mat-icon>
+                  <span>{{ 'APPOINTMENT.RESCHEDULE' | translate }}</span>
+                </button>
+                <button
+                  mat-menu-item
+                  (click)="onCancelAppointment(appointment)"
+                  [disabled]="appointment.status !== 'BOOKED'"
+                  class="cancel-button"
+                >
+                  <mat-icon>cancel</mat-icon>
+                  <span>{{ 'APPOINTMENT.CANCEL' | translate }}</span>
+                </button>
+              </mat-menu>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns" [class.cancelled]="row.status === 'CANCELLED'"></tr>
+        </table>
+
+        <mat-paginator
+          [length]="totalItems"
+          [pageSize]="pageSize"
+          [pageIndex]="pageIndex"
+          [pageSizeOptions]="[5, 10, 25, 100]"
+          (page)="onPageChange($event)"
+          showFirstLastButtons
+          aria-label="Select page of appointments"
+        >
+        </mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

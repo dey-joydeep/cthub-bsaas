@@ -1,0 +1,21 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "../../../../dist/libs/server/contracts-auth",
+    "declaration": true,
+    "declarationMap": true,
+    "types": ["node"],
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {},
+    "isolatedModules": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "useDefineForClassFields": false,
+    "composite": true,
+    "tsBuildInfoFile": "../../../../dist/.tsbuildinfo/server/contracts-auth.tsbuildinfo"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["**/*.test.ts", "**/*.spec.ts"]
+}

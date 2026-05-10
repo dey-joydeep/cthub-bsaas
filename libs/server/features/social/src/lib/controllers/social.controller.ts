@@ -4,8 +4,7 @@ import { SocialService } from '../services/social.service';
 import { CreateSocialDto } from '../dto/requests/create-social.dto';
 import { UpdateSocialDto } from '../dto/requests/update-social.dto';
 import { SocialResponseDto } from '../dto/responses/social-response.dto';
-import { JwtAuthGuard } from '../../../core/auth/guards/jwt-auth.guard';
-import { RolesGuard, Roles } from '../../../core/auth/guards/roles.guard';
+import { JwtAuthGuard, RolesGuard, Roles } from '@cthub-bsaas/server-core';
 import { AppUserRole } from '@shared/types/user.types';
 
 @ApiTags('social')

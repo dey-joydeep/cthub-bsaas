@@ -1,0 +1,11 @@
+<div *ngIf="loading">Loading requests...</div>
+<div *ngIf="error" class="error">{{ error }}</div>
+<ul *ngIf="!loading && !error">
+  <li *ngFor="let req of requests">
+    <strong>{{ req.requestType }}</strong
+    >: {{ req.leaveFrom | date }} - {{ req.leaveTo | date }}
+    <span *ngIf="req.reason">({{ req.reason }})</span>
+    <span>Status: {{ req.status }}</span>
+    <span *ngIf="req.status === 'REJECTED'">Reason: {{ req.rejectionReason }}</span>
+  </li>
+</ul>

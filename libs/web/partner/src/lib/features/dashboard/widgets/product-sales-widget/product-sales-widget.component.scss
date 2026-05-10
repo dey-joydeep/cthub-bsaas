@@ -1,0 +1,244 @@
+.dashboard-widget {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  mat-card-header {
+    padding: 16px 16px 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+
+    .mat-mdc-card-title {
+      display: flex;
+      align-items: center;
+      margin: 0;
+      font-weight: 500;
+
+      .widget-icon {
+        margin-right: 8px;
+        color: #3f51b5;
+      }
+    }
+
+    .spacer {
+      flex: 1 1 auto;
+    }
+
+    .date-range-picker {
+      display: flex;
+      align-items: center;
+      margin: 0 16px;
+
+      .date-field {
+        width: 150px;
+        margin: 0 8px;
+      }
+
+      .date-separator {
+        margin: 0 4px;
+        color: rgba(0, 0, 0, 0.54);
+      }
+    }
+  }
+
+  mat-card-content {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+
+    .loading-container,
+    .error-container,
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 0;
+      text-align: center;
+
+      mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        margin-bottom: 16px;
+        opacity: 0.7;
+      }
+
+      p {
+        margin: 8px 0 16px;
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+
+    .error-container {
+      mat-icon {
+        color: #f44336;
+      }
+    }
+  }
+
+  /* Summary Cards */
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+
+    .summary-card {
+      height: 100%;
+
+      mat-card-header {
+        padding-bottom: 0;
+        border: none;
+
+        .mat-mdc-card-header-text {
+          margin: 0;
+        }
+
+        mat-icon[mat-card-avatar] {
+          margin-left: auto;
+          background-color: rgba(63, 81, 181, 0.1);
+          color: #3f51b5;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+      }
+
+      mat-card-content {
+        padding: 16px;
+        text-align: center;
+
+        .summary-value {
+          font-size: 24px;
+          font-weight: 500;
+          line-height: 1.2;
+          margin-bottom: 4px;
+        }
+
+        .summary-label {
+          font-size: 14px;
+          color: rgba(0, 0, 0, 0.6);
+        }
+      }
+    }
+  }
+
+  /* Top Products */
+  .top-products {
+    margin-bottom: 24px;
+
+    mat-card-header {
+      padding-bottom: 0;
+      border: none;
+
+      mat-icon[mat-card-avatar] {
+        background-color: #fff8e1;
+        color: #ffc107;
+      }
+    }
+
+    .product-list {
+      .product-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        .product-name {
+          font-weight: 500;
+        }
+
+        .product-quantity {
+          color: rgba(0, 0, 0, 0.6);
+          font-size: 14px;
+        }
+      }
+    }
+  }
+
+  /* Table Styles */
+  .table-container {
+    margin-top: 16px;
+    overflow-x: auto;
+
+    .full-width {
+      width: 100%;
+    }
+
+    .clickable-row {
+      cursor: pointer;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+      }
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+
+      .user-icon {
+        margin-right: 8px;
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        color: rgba(0, 0, 0, 0.54);
+      }
+    }
+
+    .mat-mdc-paginator {
+      border-top: 1px solid rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 959px) {
+    .summary-cards {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    mat-card-header {
+      .date-range-picker {
+        order: 1;
+        width: 100%;
+        margin: 16px 0 0;
+        justify-content: space-between;
+
+        .date-field {
+          width: calc(50% - 20px);
+        }
+      }
+    }
+  }
+
+  @media (max-width: 599px) {
+    .summary-cards {
+      grid-template-columns: 1fr;
+    }
+
+    mat-card-header {
+      .date-range-picker {
+        flex-direction: column;
+
+        .date-field {
+          width: 100%;
+          margin: 0 0 8px;
+        }
+
+        .date-separator {
+          display: none;
+        }
+      }
+    }
+  }
+}

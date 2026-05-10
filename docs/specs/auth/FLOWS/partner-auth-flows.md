@@ -4,7 +4,7 @@
 - Until Owner enrolls 2FA, show non-dismissable banner.
 
 2) **Staff Invitation**
-- Owner sends invite → single-use link → set password (+ optional 2FA) → sign-in.
+- Owner sends invite → single-use link → set password (+ optional 2FA) → login.
 
 3) **Owner Device Control**
 - Owner can revoke own or staff sessions within tenant (audited).

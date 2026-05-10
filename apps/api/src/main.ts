@@ -79,8 +79,10 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // Body parser
-  app.use(json({ limit: '10mb' }));
-  app.use(urlencoded({ extended: true, limit: '10mb' }));
+  const bodyLimitJson = configService.app.bodyLimitJson || '10mb';
+  const bodyLimitUrlEncoded = configService.app.bodyLimitUrlEncoded || '10mb';
+  app.use(json({ limit: bodyLimitJson }));
+  app.use(urlencoded({ extended: true, limit: bodyLimitUrlEncoded }));
 
   // Global validation pipe
   app.useGlobalPipes(

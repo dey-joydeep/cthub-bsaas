@@ -1,0 +1,9 @@
+<div class="customer-stats-widget">
+  <h3>Customers</h3>
+  <div *ngIf="!loading() && !error()">
+    <div>Active: {{ active() }}</div>
+    <div>Passive: {{ passive() }}</div>
+  </div>
+  <mat-progress-bar *ngIf="loading()" mode="indeterminate"></mat-progress-bar>
+  <mat-error *ngIf="error()">{{ error() }}</mat-error>
+</div>

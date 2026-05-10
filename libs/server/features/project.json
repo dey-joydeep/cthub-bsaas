@@ -40,7 +40,7 @@
             "executor": "@nx/jest:jest",
             "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
             "options": {
-                "jestConfig": "jest.preset.ts",
+                "jestConfig": "libs/server/features/jest.config.ts",
                 "passWithNoTests": true
             }
         }

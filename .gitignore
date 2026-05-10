@@ -17,9 +17,9 @@ logs
 
 # Temporary files
 tmp/
+work/
 
 # IDE and editor files
-.vscode/
 .cursor/
 
 # Angular

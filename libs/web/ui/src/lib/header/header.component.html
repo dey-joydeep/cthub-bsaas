@@ -153,8 +153,16 @@
 </div>
 
 <!-- City Selection Popup -->
-<div class="city-popup-overlay" *ngIf="showCityPopup" (click)="showCityPopup = false">
-  <div class="city-popup" (click)="$event.stopPropagation()">
+<div
+  class="city-popup-overlay"
+  *ngIf="showCityPopup"
+  role="button"
+  tabindex="0"
+  (click)="showCityPopup = false"
+  (keydown.enter)="showCityPopup = false"
+  (keydown.space)="showCityPopup = false"
+>
+  <div class="city-popup" role="dialog" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
     <h2>{{ 'HEADER.SELECT_YOUR_CITY' | translate }}</h2>
     <p>{{ 'HEADER.WE_USE_THIS_TO_SHOW_RELEVANT_CONTENT' | translate }}</p>
 

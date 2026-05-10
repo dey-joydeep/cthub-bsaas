@@ -12,10 +12,10 @@
     "./prisma.service": "./../../dist/libs/server/data-access/prisma.service.js",
     "./prisma.module": "./../../dist/libs/server/data-access/prisma.module.js"
   },
-  "prisma": {
-    "schema": "./prisma/schema.prisma"
-  },
   "dependencies": {
     "@cthub-bsaas/shared": "0.0.1"
+  },
+  "peerDependencies": {
+    "@cthub-bsaas/server-contracts-auth": "0.0.1"
   }
 }

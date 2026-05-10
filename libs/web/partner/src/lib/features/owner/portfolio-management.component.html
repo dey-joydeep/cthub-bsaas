@@ -1,0 +1,24 @@
+<div class="portfolio-management-container">
+  <form [formGroup]="portfolioForm" (ngSubmit)="onSubmit()">
+    <h1>Portfolio Management</h1>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Title</mat-label>
+      <input matInput formControlName="title" required />
+      <mat-error *ngIf="portfolioForm.get('title')?.invalid">Title required</mat-error>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Description</mat-label>
+      <input matInput formControlName="description" required />
+      <mat-error *ngIf="portfolioForm.get('description')?.invalid">Description required</mat-error>
+    </mat-form-field>
+    <div class="portfolio-image-upload">
+      <label>Image:</label>
+      <input type="file" (change)="onImageChange($event)" accept="image/*" required />
+      <img *ngIf="imagePreview" [src]="imagePreview" class="portfolio-image-preview" />
+    </div>
+    <button mat-raised-button color="primary" class="full-width" [disabled]="loading">Save Portfolio Item</button>
+    <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+    <mat-error *ngIf="error">{{ error }}</mat-error>
+    <p class="success" *ngIf="success">{{ success }}</p>
+  </form>
+</div>

@@ -5,10 +5,18 @@
     "rootDir": "../../",
     "typeRoots": ["node_modules/@types", "../../node_modules/@types"],
     "types": ["node", "express"],
+    "emitDecoratorMetadata": true,
     "composite": true,
     "incremental": true,
     "preserveSymlinks": true // Important for monorepo setups
   },
   "include": ["src/**/*.ts"],
+  "references": [
+    { "path": "../../libs/server/core/tsconfig.lib.json" },
+    { "path": "../../libs/server/data-access/tsconfig.lib.json" },
+    { "path": "../../libs/server/features/auth/tsconfig.lib.json" },
+    { "path": "../../libs/server/infrastructure/tsconfig.lib.json" },
+    { "path": "../../libs/server/contracts-auth/tsconfig.lib.json" }
+  ],
   "exclude": ["node_modules", "dist"]
 }

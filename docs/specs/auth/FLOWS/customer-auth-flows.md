@@ -4,7 +4,7 @@
 - Register → email OTP verification (10m TTL) → signed in.
 
 2) **Passkeys (optional)**
-- User may add a passkey and use passwordless sign-in later.
+- User may add a passkey and use passwordless login later.
 
 3) **Booking-first**
 - Start booking without account → verify email → account auto-created → prompt to set password/add passkey.

@@ -17,6 +17,8 @@ export interface AppConfig {
   isProduction: boolean;
   isDevelopment: boolean;
   isTest: boolean;
+  bodyLimitJson: string;
+  bodyLimitUrlEncoded: string;
 }
 
 export interface CorsConfig {
@@ -62,6 +64,8 @@ export const configuration = registerAs('config', () => ({
   app: {
     port: parseInt(process.env.PORT || '3000', 10),
     nodeEnv: process.env.NODE_ENV || 'development',
+    bodyLimitJson: process.env.API_BODY_LIMIT_JSON || '10mb',
+    bodyLimitUrlEncoded: process.env.API_BODY_LIMIT_URLENCODED || '10mb',
     get isProduction() {
       return this.nodeEnv === 'production';
     },
@@ -118,6 +122,8 @@ export const validationSchema = Joi.object<Config>({
   app: Joi.object({
     port: Joi.number().default(3000),
     nodeEnv: Joi.string().valid('development', 'production', 'test').default('development'),
+    bodyLimitJson: Joi.string().default('10mb'),
+    bodyLimitUrlEncoded: Joi.string().default('10mb'),
   }),
   database: Joi.object({
     url: Joi.string().required(),

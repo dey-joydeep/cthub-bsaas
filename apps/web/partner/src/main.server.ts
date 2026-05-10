@@ -1,8 +1,9 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app/app.component';
 import { config as serverConfig } from './app/app.config.server';
-import { MaterialSsrHandler, materialSsrHandlerFactory } from './app/core/ssr';
+import { MaterialSsrHandler, materialSsrHandlerFactory } from '@cthub-bsaas/web-core-platform';
 import { provideServerRendering } from '@angular/platform-server';
+import { PLATFORM_ID } from '@angular/core';
 
 const bootstrap = async () => {
   console.log('🚀 Starting server-side rendering bootstrap...');
@@ -74,10 +75,11 @@ const bootstrap = async () => {
         provideServerRendering(),
         {
           provide: MaterialSsrHandler,
-          useFactory: () => {
+          useFactory: (platformId: object) => {
             console.log('🔧 Creating MaterialSsrHandler...');
-            return materialSsrHandlerFactory('server');
+            return materialSsrHandlerFactory(platformId);
           },
+          deps: [PLATFORM_ID],
         },
         // Add error handler for SSR
         {

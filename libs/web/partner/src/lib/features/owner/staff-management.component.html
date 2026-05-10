@@ -1,0 +1,70 @@
+<div class="staff-management-container">
+  <form [formGroup]="staffForm" (ngSubmit)="onSubmit()">
+    <h1>Staff Management</h1>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Name</mat-label>
+      <input matInput formControlName="name" required />
+      <mat-error *ngIf="staffForm.get('name')?.invalid">Name required</mat-error>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" type="email" required />
+      <mat-error *ngIf="staffForm.get('email')?.invalid">Valid email required</mat-error>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Contact Number</mat-label>
+      <input matInput formControlName="contact" required />
+      <mat-error *ngIf="staffForm.get('contact')?.invalid">Contact number required</mat-error>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nickname</mat-label>
+      <input matInput formControlName="nickname" />
+    </mat-form-field>
+    <div class="profile-picture-upload">
+      <label>Profile Picture:</label>
+      <input type="file" (change)="onImageChange($event)" accept="image/*" />
+    </div>
+    <button mat-raised-button color="primary" class="full-width" [disabled]="loading">Save Staff</button>
+    <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+    <mat-error *ngIf="error">{{ error }}</mat-error>
+    <p class="success" *ngIf="success">{{ success }}</p>
+  </form>
+  <div class="staff-list">
+    <h2>Staff List</h2>
+    <table class="staff-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Contact</th>
+          <th>Nickname</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let staff of staffList">
+          <td>{{ staff.name }}</td>
+          <td>{{ staff.email }}</td>
+          <td>{{ staff.contact }}</td>
+          <td>{{ staff.nickname }}</td>
+          <td>
+            <span *ngIf="staff.isActive; else inactive">Active</span>
+            <ng-template #inactive><span>Inactive</span></ng-template>
+          </td>
+          <td>
+            <button mat-icon-button color="primary" (click)="onActivate(staff)" [disabled]="staff.isActive" title="Activate">
+              <mat-icon>check_circle</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="onDeactivate(staff)" [disabled]="!staff.isActive" title="Deactivate">
+              <mat-icon>block</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="onRemove(staff)" title="Remove">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

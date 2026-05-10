@@ -1,0 +1,182 @@
+<div class="home-container" *ngIf="!loading; else loading">
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <img src="assets/logo.png" alt="Beauty SaaS Logo" class="hero-logo" />
+      <h1 class="hero-title">Welcome to Beauty SaaS</h1>
+      <p class="hero-subtitle">
+        {{
+          isAuthenticated
+            ? 'Manage your beauty experience with our comprehensive platform.'
+            : 'Discover top-rated salons, book appointments, and transform your beauty routine.'
+        }}
+      </p>
+
+      <!-- Search Bar -->
+      <div class="search">
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (keyup.enter)="onSearch()"
+          placeholder="Search for salons, services, or locations..."
+          class="search-input"
+          aria-label="Search for salons, services, or locations"
+        />
+        <button mat-flat-button color="primary" (click)="onSearch()" class="search-button" aria-label="Search">
+          <mat-icon>search</mat-icon> Search
+        </button>
+      </div>
+
+      <!-- Primary CTA -->
+      <div class="hero-cta">
+        <a [routerLink]="primaryCtaRoute" mat-flat-button color="primary" class="primary-cta">
+          {{ primaryCtaText }}
+        </a>
+
+        <a *ngIf="!isAuthenticated" routerLink="/register" mat-stroked-button class="secondary-cta"> Create Account </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Actions (for authenticated users) -->
+  <section *ngIf="isAuthenticated" class="quick-actions">
+    <h2 class="section-title">Quick Actions</h2>
+    <div class="action-grid">
+      <a *ngIf="userRole === 'owner'" routerLink="/owner/appointments" mat-button class="action-card">
+        <mat-icon>calendar_today</mat-icon>
+        <span>Manage Appointments</span>
+      </a>
+      <a *ngIf="userRole === 'owner'" routerLink="/owner/settings" mat-button class="action-card">
+        <mat-icon>settings</mat-icon>
+        <span>Salon Settings</span>
+      </a>
+      <a *ngIf="userRole === 'staff'" routerLink="/staff/schedule" mat-button class="action-card">
+        <mat-icon>schedule</mat-icon>
+        <span>My Schedule</span>
+      </a>
+      <a routerLink="/appointments" mat-button class="action-card">
+        <mat-icon>event_available</mat-icon>
+        <span>My Appointments</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Featured Salons -->
+  <section class="section" *ngIf="featuredSalons.length > 0">
+    <div class="section-header">
+      <h2 class="section-title">Featured Salons</h2>
+      <a routerLink="/salons" class="view-all">View All</a>
+    </div>
+
+    <div class="grid grid-3">
+      <div class="salon-card" *ngFor="let salon of featuredSalons" (click)="navigateToSalon(salon.slug || salon.id)">
+        <div class="card-image" [style.backgroundImage]="'url(' + (salon.imageUrl || 'assets/salon-placeholder.jpg') + ')'">
+          <span class="badge">Featured</span>
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">
+            <a [routerLink]="['/salons', salon.id]">{{ salon.name }}</a>
+          </h3>
+          <div class="salon-rating" *ngIf="salon.averageRating">
+            <span class="rating-stars">
+              <span *ngFor="let star of getRatingStars(salon.averageRating)">
+                <ng-container *ngIf="star === 1">★</ng-container>
+                <ng-container *ngIf="star === 0.5">½</ng-container>
+                <ng-container *ngIf="star === 0">☆</ng-container>
+              </span>
+            </span>
+            <span class="review-count" *ngIf="salon.reviewCount">({{ salon.reviewCount }} reviews)</span>
+          </div>
+          <div class="card-meta">
+            <mat-icon>location_on</mat-icon>
+            <span>{{ salon.city || 'N/A' }}</span>
+          </div>
+          <div class="card-footer">
+            <span class="services">
+              <span class="service-tag" *ngFor="let service of salon.services?.slice(0, 2)">
+                {{ service.name || 'Service' }}
+              </span>
+            </span>
+            <a [routerLink]="['/salons', salon.id]" mat-button color="primary">View</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Special Offers -->
+  <section class="section" *ngIf="specialOffers.length > 0">
+    <div class="section-header">
+      <h2 class="section-title">Special Offers</h2>
+    </div>
+    <div class="grid grid-3">
+      <mat-card *ngFor="let offer of specialOffers" class="card">
+        <mat-card-header>
+          <mat-card-title>{{ offer.title }}</mat-card-title>
+          <mat-card-subtitle>{{ offer.salonName }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p>{{ offer.description }}</p>
+          <div class="discount-badge">{{ offer.discount }}% OFF</div>
+          <div class="valid-until">Valid until {{ offer.validUntil | date: 'mediumDate' }}</div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-button [routerLink]="['/salons', offer.salonId, 'offers', offer.id]">View Details</button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </section>
+
+  <!-- Popular Services -->
+  <section class="services-section" *ngIf="featuredServices.length > 0">
+    <div class="section-header">
+      <h2 class="section-title">Popular Services</h2>
+      <a routerLink="/services" class="view-all">Browse All</a>
+    </div>
+    <div class="services-grid">
+      <div class="service-card" *ngFor="let service of featuredServices" (click)="navigateToService(service.id)">
+        <div class="service-image">
+          <img [src]="service.imageUrl || 'assets/default-service.jpg'" [alt]="service.name" />
+        </div>
+        <div class="service-details">
+          <h3 class="service-name">{{ service.name }}</h3>
+          <p class="service-price">From ${{ service.price }}</p>
+          <p class="service-duration">{{ service.duration }} min</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- New Salons -->
+  <app-top-salons [salons]="newSalons" title="New Salons" [showViewAll]="true"></app-top-salons>
+
+  <!-- Feature Highlights -->
+  <section class="feature-highlights">
+    <h2 class="section-title">Why Choose Us</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <mat-icon>schedule</mat-icon>
+        <h3>Easy Online Appointments</h3>
+        <p>Book appointments 24/7 with our easy-to-use platform.</p>
+      </div>
+      <div class="feature-card">
+        <mat-icon>verified_user</mat-icon>
+        <h3>Verified Professionals</h3>
+        <p>All our beauty experts are thoroughly vetted and certified.</p>
+      </div>
+      <div class="feature-card">
+        <mat-icon>payments</mat-icon>
+        <h3>Secure Payments</h3>
+        <p>Your transactions are always safe and secure.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Loading State -->
+<ng-template #loading>
+  <div class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading your beauty experience...</p>
+  </div>
+</ng-template>

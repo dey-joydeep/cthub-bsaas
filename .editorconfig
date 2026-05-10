@@ -1,0 +1,13 @@
+root = true
+
+[*]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# Optional: keep SQL at 4 spaces for readability in complex queries
+[*.sql]
+indent_size = 4

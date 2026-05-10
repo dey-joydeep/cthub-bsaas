@@ -13,6 +13,8 @@ import { ConfigService } from './config.service';
       validationSchema: Joi.object({
         NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
         PORT: Joi.number().default(3000),
+        API_BODY_LIMIT_JSON: Joi.string().default('10mb'),
+        API_BODY_LIMIT_URLENCODED: Joi.string().default('10mb'),
         DATABASE_URL: Joi.string().required(),
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRES_IN: Joi.string().default('1h'),

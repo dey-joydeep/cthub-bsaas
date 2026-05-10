@@ -1,0 +1,43 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "../../../../dist/libs/server/features/auth",
+    "declaration": true,
+    "declarationMap": true,
+    "skipLibCheck": true,
+    "isolatedModules": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "useDefineForClassFields": false,
+    "composite": true,
+    "plugins": [
+      {
+        "name": "@nestjs/swagger/plugin",
+        "options": {
+          "classValidatorShim": true,
+          "introspectComments": true
+        }
+      }
+    ]
+  },
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.e2e-spec.ts",
+    "**/*.test.ts",
+    "jest.config.ts",
+    "node_modules",
+    "dist"
+  ],
+  "include": [
+    "src/**/*.ts"
+  ],
+  "references": [
+        {
+            "path": "../../contracts-auth/tsconfig.lib.json"
+        },
+    { "path": "../../core/tsconfig.lib.json" },
+    { "path": "../../data-access/tsconfig.lib.json" },
+    { "path": "../../infrastructure/tsconfig.lib.json" }
+  ]
+}

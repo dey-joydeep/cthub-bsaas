@@ -20,13 +20,10 @@ import {
 } from '@angular/core';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { provideServerRendering, ɵSERVER_CONTEXT as SERVER_CONTEXT } from '@angular/platform-server';
-import { ErrorService } from '@cthub-bsaas/web-core/http';
-import { TranslateServerLoader } from '@cthub-bsaas/web-core/http';
+import { ErrorService, loadingInterceptor } from '@cthub-bsaas/web-core-common';
+import { TranslateServerLoader, ssrInterceptor, ssrTranslateInterceptor } from '@cthub-bsaas/web-core-platform';
 import { TranslateLoader, TranslateStore } from '@ngx-translate/core';
 import { appConfig } from './app.config';
-
-// Import interceptors from shared web-core/http
-import { loadingInterceptor, ssrInterceptor, ssrTranslateInterceptor } from '@cthub-bsaas/web-core/http';
 
 // Server-side interceptors
 const serverInterceptors: HttpInterceptorFn[] = [ssrInterceptor, ssrTranslateInterceptor, loadingInterceptor];

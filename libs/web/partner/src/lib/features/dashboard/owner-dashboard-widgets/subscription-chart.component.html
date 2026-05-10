@@ -1,0 +1,46 @@
+<div class="chart-widget">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Subscription Overview</mat-card-title>
+      <mat-card-subtitle>Distribution of subscription plans</mat-card-subtitle>
+
+      <!-- Refresh button -->
+      <button mat-icon-button matTooltip="Refresh data" (click)="loadData()" [disabled]="loading()">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </mat-card-header>
+
+    <mat-card-content>
+      <ng-container *ngIf="!loading() && !error()">
+        <div class="chart-container" style="height: 300px; width: 100%">
+          <canvas baseChart [type]="chartType" [data]="data()" [options]="options"></canvas>
+        </div>
+      </ng-container>
+
+      <!-- Loading indicator -->
+      <div class="loading-container" *ngIf="loading()">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        <p>Loading subscription data...</p>
+      </div>
+
+      <!-- Error message -->
+      <div class="error-container" *ngIf="error() && !loading()">
+        <mat-error>
+          <mat-icon>error_outline</mat-icon>
+          {{ error() }}
+        </mat-error>
+        <button mat-button color="primary" (click)="loadData()">
+          <mat-icon>refresh</mat-icon>
+          Try Again
+        </button>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions *ngIf="!loading() && !error()">
+      <button mat-button color="primary" (click)="exportData()">
+        <mat-icon>download</mat-icon>
+        Export Data
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

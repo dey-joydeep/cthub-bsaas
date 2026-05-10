@@ -1,0 +1,285 @@
+.appointment-create-container {
+  padding: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+mat-card {
+  margin: 16px 0;
+  overflow: hidden;
+
+  mat-card-header {
+    background-color: #f5f5f5;
+    padding: 24px;
+    border-bottom: 1px solid #e0e0e0;
+
+    mat-card-title {
+      font-size: 1.5rem;
+      font-weight: 500;
+      margin: 0;
+    }
+
+    mat-card-subtitle {
+      margin: 4px 0 0;
+      font-size: 1rem;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  mat-card-content {
+    padding: 24px;
+  }
+}
+
+.step-content {
+  padding: 16px 0;
+
+  h3 {
+    margin-top: 0;
+    color: #3f51b5;
+  }
+
+  .step-description {
+    color: rgba(0, 0, 0, 0.6);
+    margin-bottom: 24px;
+  }
+}
+
+.service-grid,
+.staff-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+
+  mat-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 0;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    &.selected {
+      border: 2px solid #3f51b5;
+      background-color: #f5f5f5;
+    }
+
+    mat-card-header {
+      padding: 16px;
+
+      .service-avatar,
+      .staff-avatar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #e3f2fd;
+        color: #1976d2;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+
+        mat-icon {
+          color: inherit;
+        }
+      }
+
+      mat-card-title {
+        font-size: 1rem;
+        margin-bottom: 4px;
+      }
+
+      mat-card-subtitle {
+        font-size: 0.875rem;
+        margin: 0;
+      }
+    }
+  }
+}
+
+.datetime-selection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+
+  .date-picker,
+  .time-slots {
+    flex: 1;
+    min-width: 280px;
+  }
+
+  h4 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: #3f51b5;
+  }
+
+  .mat-form-field {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .time-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+    margin-top: 16px;
+
+    button {
+      min-width: auto;
+
+      &.selected {
+        background-color: #3f51b5;
+        color: white;
+      }
+    }
+  }
+}
+
+.appointment-summary {
+  margin-top: 24px;
+
+  mat-card {
+    margin: 0;
+
+    mat-card-content {
+      padding: 16px;
+    }
+
+    .summary-detail {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+
+      mat-icon {
+        margin-right: 16px;
+        color: #3f51b5;
+      }
+
+      .detail-label {
+        font-size: 0.75rem;
+        color: rgba(0, 0, 0, 0.6);
+      }
+
+      .detail-value {
+        font-weight: 500;
+      }
+    }
+
+    .full-width {
+      width: 100%;
+      margin-top: 16px;
+    }
+
+    mat-card-actions {
+      padding: 16px;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+
+      mat-checkbox {
+        margin: 0;
+      }
+    }
+  }
+}
+
+.step-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+
+  button {
+    min-width: 100px;
+
+    &[matStepperNext],
+    &[color='primary'] {
+      margin-left: auto;
+    }
+
+    &[disabled] {
+      cursor: not-allowed;
+    }
+  }
+}
+
+// Dark theme support
+:host-context(.dark-theme) {
+  mat-card-header {
+    background-color: #424242;
+    border-bottom-color: #616161;
+
+    mat-card-title {
+      color: white;
+    }
+
+    mat-card-subtitle {
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+
+  .step-content {
+    h3 {
+      color: #7986cb;
+    }
+
+    .step-description {
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+
+  .service-grid,
+  .staff-grid {
+    mat-card {
+      background-color: #424242;
+
+      &.selected {
+        border-color: #7986cb;
+        background-color: #303030;
+      }
+
+      .service-avatar,
+      .staff-avatar {
+        background-color: #1c313a;
+        color: #4fc3f7;
+      }
+    }
+  }
+
+  .datetime-selection {
+    h4 {
+      color: #7986cb;
+    }
+
+    .time-grid {
+      button {
+        &.selected {
+          background-color: #7986cb;
+        }
+      }
+    }
+  }
+
+  .appointment-summary {
+    mat-card {
+      background-color: #424242;
+
+      .detail-label {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .detail-value {
+        color: white;
+      }
+    }
+  }
+
+  .step-actions {
+    border-top-color: #616161;
+  }
+}

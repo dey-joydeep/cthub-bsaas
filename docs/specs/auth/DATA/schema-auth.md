@@ -13,3 +13,13 @@
 
 Indexes:
 - unique(email), unique(credentialId), unique(jti). TTL/cleanup jobs for expired rows.
+
+## Social Accounts (Customer)
+
+- **SocialAccount**: id, userId, provider, providerUserId, email, displayName, avatarUrl, createdAt, lastUsedAt.
+  - Optional encrypted fields when storing tokens for refresh: `accessTokenEnc`, `refreshTokenEnc`, `tokenScope`, `expiresAt`.
+  - Indexes: unique(provider, providerUserId), index(userId, provider).
+- Link semantics:
+  - A user can have multiple social accounts; unlink allowed if another login method remains.
+  - On first social login: if email claim is verified and matches a local account, policy may auto-link; else require explicit link.
+  - If provider email is unverified or absent, require email OTP before activating account.

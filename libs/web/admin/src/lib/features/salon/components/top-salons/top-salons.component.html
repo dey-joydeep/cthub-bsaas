@@ -1,0 +1,27 @@
+<div class="top-salons-container">
+  <h2>Top Salons Near You</h2>
+  <div *ngIf="loading">Loading top salons...</div>
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+  <div *ngIf="locationDenied" class="info-message">Location permission denied or unavailable. Showing top salons globally.</div>
+  <div *ngIf="!loading && salons.length === 0 && !error">No salons found.</div>
+  <div class="salon-list" *ngIf="salons.length > 0">
+    <div *ngFor="let salon of salons" class="salon-card">
+      <div class="salon-header">{{ getSalonProperty(salon, 'name') || 'Salon' }}</div>
+      <div class="salon-rating">
+        Rating: {{ getSalonProperty(salon, 'averageRating') !== undefined ? getSalonProperty(salon, 'averageRating') : 'N/A' }} ({{
+          getSalonProperty(salon, 'reviewCount') || 0
+        }}
+        reviews)
+      </div>
+      <div class="salon-address">
+        {{ getSalonProperty(salon, 'address') }}
+        <span *ngIf="getSalonProperty(salon, 'city')">, {{ getSalonProperty(salon, 'city') }}</span>
+      </div>
+      <div *ngIf="getSalonProperty(salon, 'services')?.length">Services: {{ getSalonProperty(salon, 'services').join(', ') }}</div>
+      <div class="salon-actions">
+        <a [routerLink]="['/salon', salon.id]" class="profile-link">View Profile</a>
+        <button type="button" *ngIf="getMapUrl(salon)" (click)="openMap(salon)">Open Map</button>
+      </div>
+    </div>
+  </div>
+</div>

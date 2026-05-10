@@ -1,0 +1,90 @@
+<mat-card class="customer-stats">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon class="header-icon">people_alt</mat-icon>
+      {{ 'DASHBOARD.CUSTOMERS.TITLE' | translate }}
+    </mat-card-title>
+    <button mat-icon-button (click)="refresh()" [disabled]="loading" matTooltip="{{ 'COMMON.REFRESH' | translate }}">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </mat-card-header>
+
+  <mat-card-content>
+    <div class="loading-container" *ngIf="loading">
+      <mat-spinner diameter="36"></mat-spinner>
+      <p>{{ 'DASHBOARD.LOADING' | translate }}</p>
+    </div>
+
+    <div class="error-container" *ngIf="error && !loading">
+      <mat-icon color="warn">error_outline</mat-icon>
+      <p>{{ error }}</p>
+      <button mat-button color="primary" (click)="refresh()">
+        <mat-icon>refresh</mat-icon>
+        {{ 'COMMON.RETRY' | translate }}
+      </button>
+    </div>
+
+    <div class="stats-grid" *ngIf="!loading && !error">
+      <!-- First Row -->
+      <div class="stat-item total-customers">
+        <div class="stat-icon">
+          <mat-icon>people</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.totalCustomers | number }}</div>
+          <div class="stat-label">{{ 'DASHBOARD.CUSTOMERS.TOTAL' | translate }}</div>
+          <div class="stat-trend" *ngIf="stats.newCustomers !== undefined">
+            <mat-icon [class.positive]="stats.newCustomers >= 0" [class.negative]="stats.newCustomers < 0">
+              {{ stats.newCustomers >= 0 ? 'trending_up' : 'trending_down' }}
+            </mat-icon>
+            <span>{{ stats.newCustomers | number }} {{ 'DASHBOARD.CUSTOMERS.NEW_THIS_MONTH' | translate }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-item active-customers">
+        <div class="stat-icon">
+          <mat-icon>groups</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.activeCustomers || 0 | number }}</div>
+          <div class="stat-label">{{ 'DASHBOARD.CUSTOMERS.ACTIVE' | translate }}</div>
+          <div class="stat-subtext">{{ stats.count | number }} {{ 'DASHBOARD.CUSTOMERS.THIS_MONTH' | translate }}</div>
+        </div>
+      </div>
+
+      <!-- Second Row -->
+      <div class="stat-item subscriptions">
+        <div class="stat-icon">
+          <mat-icon>subscriptions</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.activeSubscriptions | number }}</div>
+          <div class="stat-label">{{ 'DASHBOARD.CUSTOMERS.SUBSCRIPTIONS' | translate }}</div>
+          <div class="stat-subtext" *ngIf="stats.returningCustomers !== undefined">
+            {{ stats.returningCustomers | number }} {{ 'DASHBOARD.CUSTOMERS.RETURNING' | translate }}
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-item revenue">
+        <div class="stat-icon">
+          <mat-icon>attach_money</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value" *ngIf="stats.mrr">
+            {{ stats.mrr | currency: 'USD' : 'symbol' : '1.0-0' }}
+            <span class="stat-unit">/mo</span>
+          </div>
+          <div class="stat-value" *ngIf="!stats.mrr">
+            {{ stats.totalRevenue | currency: 'USD' : 'symbol' : '1.0-0' }}
+          </div>
+          <div class="stat-label">{{ 'DASHBOARD.REVENUE' | translate }}</div>
+          <div class="stat-subtext" *ngIf="stats.arr">
+            {{ 'DASHBOARD.ANNUAL' | translate }}: {{ stats.arr | currency: 'USD' : 'symbol' : '1.0-0' }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

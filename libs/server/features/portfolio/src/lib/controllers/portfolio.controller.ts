@@ -17,9 +17,7 @@ import { PortfolioService } from '../services/portfolio.service';
 import { CreatePortfolioDto } from '../dto/requests/create-portfolio.dto';
 import { UpdatePortfolioDto } from '../dto/requests/update-portfolio.dto';
 import { PortfolioResponseDto } from '../dto/responses/portfolio-response.dto';
-import { JwtAuthGuard } from '../../../core/auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../../../core/auth/guards/roles.guard';
-import { Roles } from '../../../core/auth/decorators/roles.decorator';
+import { JwtAuthGuard, RolesGuard, Roles } from '@cthub-bsaas/server-core';
 import { AppUserRole } from '@shared/types/user.types';
 
 @ApiTags('portfolios')

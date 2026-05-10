@@ -28,7 +28,7 @@ app.set('view engine', 'html');
 app.set('views', browserDistFolder);
 
 // Global error handler middleware
-const globalErrorHandler: ErrorRequestHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
+const globalErrorHandler: ErrorRequestHandler = (err: Error, req: Request, res: Response, _next: NextFunction) => {
   console.error('\n🔥 Unhandled error in request:', req.originalUrl);
   console.error('Error:', err);
 
@@ -226,30 +226,6 @@ app.get('*', (req, res, next) => {
     console.log('Request body:', JSON.stringify(req.body, null, 2));
   }
 
-  // Set up SSR providers with request/response objects
-  const providers = [
-    { provide: 'REQUEST', useValue: req },
-    { provide: 'RESPONSE', useValue: res },
-    { provide: 'SSR', useValue: true },
-    { provide: 'BROWSER', useValue: false },
-    { provide: 'PLATFORM_ID', useValue: 'server' },
-    // Add more detailed logging for debugging
-    {
-      provide: 'SSR_DEBUG',
-      useValue: {
-        log: (message: string, data?: any) => {
-          console.log(`[SSR] ${message}`, data || '');
-        },
-        error: (error: Error, context?: string) => {
-          console.error(`[SSR Error] ${context || 'Unhandled error'}:`, error);
-          if (error.stack) {
-            console.error('Stack trace:', error.stack);
-          }
-        },
-      },
-    },
-  ];
-
   const renderOptions = {
     bootstrap,
     documentFilePath: indexHtml,
@@ -288,11 +264,11 @@ app.get('*', (req, res, next) => {
  * Start the server if this module is the main entry point.
  * The server listens on the port defined by the `PORT` environment variable, or defaults to 4000.
  */
-const isMainModule = (module: any) => {
-  return import.meta.url === `file://${process.argv[1]}`;
+const isMainModule = (moduleUrl: string): boolean => {
+  return moduleUrl === `file://${process.argv[1]}`;
 };
 
-if (isMainModule(import.meta)) {
+if (isMainModule(import.meta.url)) {
   const port = process.env['PORT'] || 4000;
   app.listen(port, () => {
     console.log(`Node Express server listening on http://localhost:${port}`);

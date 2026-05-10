@@ -1,0 +1,28 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "rootDir": "src",
+        "types": ["node"],
+        "isolatedModules": false,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "useDefineForClassFields": false,
+        "composite": true,
+        "declaration": true,
+        "declarationMap": true,
+        "outDir": "../../../dist/libs/server/infrastructure"
+    },
+    "include": ["src/**/*.ts"],
+    "exclude": ["**/*.test.ts", "**/*.spec.ts"],
+    "references": [
+        {
+            "path": "../contracts-auth/tsconfig.lib.json"
+        },
+        {
+            "path": "../data-access/tsconfig.lib.json"
+        },
+        {
+            "path": "../core/tsconfig.lib.json"
+        }
+    ]
+}

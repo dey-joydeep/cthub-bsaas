@@ -1,0 +1,27 @@
+{
+  "name": "web-customer-e2e",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/e2e/web/customer/src",
+  "targets": {
+    "e2e": {
+      "executor": "@nx/run-commands:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "echo Web Customer E2E: scaffolding in place; tests TBD"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["apps/e2e/web/customer/**/*.ts"]
+      }
+    }
+  },
+  "implicitDependencies": ["web-app-customer"],
+  "tags": ["type:e2e", "platform:web"]
+}

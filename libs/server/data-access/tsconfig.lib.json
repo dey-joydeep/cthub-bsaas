@@ -11,13 +11,9 @@
         "isolatedModules": false,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "useDefineForClassFields": false
+        "useDefineForClassFields": false,
+        "tsBuildInfoFile": "../../../dist/.tsbuildinfo/server/data-access.tsbuildinfo"
     },
     "include": ["src/**/*.ts"],
-    "exclude": ["**/*.test.ts", "**/*.spec.ts"],
-    "references": [
-        {
-            "path": "../../shared/tsconfig.lib.json"
-        }
-    ]
+    "exclude": ["**/*.test.ts", "**/*.spec.ts"]
 }

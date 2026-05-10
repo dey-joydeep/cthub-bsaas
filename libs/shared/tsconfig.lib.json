@@ -6,7 +6,7 @@
         "declarationMap": true,
         "composite": true,
         "rootDir": "src",
-        "isolatedModules": true,
+        "isolatedModules": false,
         "useDefineForClassFields": true,
         "lib": ["ES2022"],
         "types": ["node"]

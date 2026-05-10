@@ -1,0 +1,134 @@
+<div class="salon-search-container">
+  <form class="search-bar" (ngSubmit)="search(true)" autocomplete="off">
+    <input type="text" [(ngModel)]="query" name="query" placeholder="Search by name, address, service..." (input)="onFilterChange()" />
+    <input type="text" [(ngModel)]="city" name="city" placeholder="City" (input)="onFilterChange()" />
+    <input type="text" [(ngModel)]="zipCode" name="zipCode" placeholder="Zip code" (input)="onFilterChange()" />
+    <!-- Service dropdown filter -->
+    <select [(ngModel)]="service" name="service" (change)="onFilterChange()">
+      <option value="">All Services</option>
+      <option *ngFor="let s of services" [value]="s.name">{{ s.name }}</option>
+    </select>
+    <input
+      type="number"
+      min="0"
+      max="5"
+      step="0.1"
+      [(ngModel)]="minRating"
+      name="minRating"
+      placeholder="Min rating"
+      (input)="onFilterChange()"
+    />
+    <input
+      type="number"
+      min="0"
+      max="5"
+      step="0.1"
+      [(ngModel)]="maxRating"
+      name="maxRating"
+      placeholder="Max rating"
+      (input)="onFilterChange()"
+    />
+    <button type="submit" [disabled]="loading">Search</button>
+  </form>
+  <div class="filters">
+    <label>
+      Results per page:
+      <select [(ngModel)]="pageSize" name="pageSize" (change)="setPageSize(pageSize)">
+        <option *ngFor="let size of pageSizes" [value]="size">{{ size }}</option>
+      </select>
+    </label>
+    <label>
+      Sort by:
+      <select [(ngModel)]="sort" name="sort" (change)="onFilterChange()">
+        <option value="">Sort By</option>
+        <option value="rating">Highest Rating</option>
+        <option value="reviews">Most Reviews</option>
+        <option value="name">Name (A-Z)</option>
+      </select>
+    </label>
+  </div>
+  <div *ngIf="loading" class="loading-spinner">
+    <span>Loading salons...</span>
+  </div>
+  <div class="results-info" *ngIf="!loading">
+    <span *ngIf="!error && salons.length">{{ total }} salons found</span>
+    <span *ngIf="!error && !salons.length">No salons found. Try adjusting your search or filters.</span>
+    <span *ngIf="error" class="error-message">{{ error }}</span>
+  </div>
+  <div class="view-toggle-bar">
+    <button type="button" (click)="showMap = !showMap">
+      {{ showMap ? 'Show List' : 'Show on Map' }}
+    </button>
+  </div>
+  <div *ngIf="showMap && salons.length" class="salon-map-view">
+    <iframe
+      width="100%"
+      height="400"
+      [src]="getMapUrl() | safeUrl"
+      allowfullscreen
+      loading="lazy"
+      referrerpolicy="no-referrer-when-downgrade"
+      style="border: 0; border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); margin-bottom: 18px"
+    ></iframe>
+  </div>
+  <div *ngIf="!showMap">
+    <div class="salon-list">
+      <div *ngFor="let salon of salons" class="salon-card" tabindex="0">
+        <ng-container *ngIf="salon?.imagePath; else noImageBlock">
+          <img
+            [src]="salon?.imagePath || 'assets/default-salon.png'"
+            (error)="onImageError(salon)"
+            alt="Salon image for {{ salon.name }}"
+            class="salon-img"
+            style="max-width: 100px; max-height: 100px; object-fit: cover; margin-bottom: 8px"
+          />
+        </ng-container>
+        <ng-template #noImageBlock>
+          <div
+            style="
+              width: 100px;
+              height: 100px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: #f3f3f3;
+              color: #888;
+              border-radius: 8px;
+              margin-bottom: 8px;
+            "
+          >
+            No image for {{ salon.name }}
+          </div>
+        </ng-template>
+        <div class="salon-header">
+          <span class="salon-name">{{ salon.name }}</span>
+          <span *ngIf="salon.rating && salon.rating >= 4.5 && salon.reviewCount && salon.reviewCount >= 10" class="top-rated-badge"
+            >Top Rated</span
+          >
+          <span class="salon-rating" *ngIf="salon.rating">
+            <span class="star">&#9733;</span> {{ salon.rating }}
+            <span class="review-count">({{ salon?.reviewCount || 0 }} reviews)</span>
+          </span>
+        </div>
+        <div class="salon-address">
+          {{ salon?.address }}<span *ngIf="salon?.city">, {{ salon?.city }}</span
+          ><span *ngIf="salon?.zipCode">, {{ salon?.zipCode }}</span>
+        </div>
+        <div *ngIf="salon.services && salon.services.length" class="salon-services">
+          <strong>Services:</strong> {{ getSalonServices(salon) }}
+        </div>
+        <div class="salon-actions">
+          <a [routerLink]="['/salon', salon.id]" class="profile-link">View Profile</a>
+          <button type="button" (click)="openMap(salon)">Open Map</button>
+        </div>
+      </div>
+    </div>
+    <div class="pagination" *ngIf="total > pageSize">
+      <button (click)="goToPage(page - 1)" [disabled]="page === 1">&lt; Prev</button>
+      <ng-container *ngFor="let p of paginationPages; let i = index">
+        <button (click)="goToPage(i + 1)" [class.active]="page === i + 1">{{ i + 1 }}</button>
+      </ng-container>
+      <button (click)="goToPage(page + 1)" [disabled]="page === paginationPages.length">Next &gt;</button>
+    </div>
+  </div>
+</div>

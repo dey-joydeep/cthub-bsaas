@@ -1,6 +1,0 @@
-{
-  "name": "@cthub-bsaas/web-admin-auth",
-  "version": "0.0.1",
-  "sideEffects": false,
-  "type": "module"
-}

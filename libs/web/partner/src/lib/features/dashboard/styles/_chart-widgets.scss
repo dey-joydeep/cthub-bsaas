@@ -1,0 +1,147 @@
+// Common styles for chart widgets
+.chart-widget {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  &__card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    &-header {
+      position: relative;
+
+      .chart-actions {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        margin: 0;
+        padding: 0;
+      }
+    }
+
+    &-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 300px;
+      position: relative;
+    }
+  }
+
+  &__state {
+    &--loading,
+    &--error,
+    &--no-data {
+      @extend .chart-widget__state-base;
+
+      mat-icon {
+        @extend .chart-widget__state-icon;
+      }
+
+      span {
+        @extend .chart-widget__state-text;
+      }
+
+      .retry-button {
+        margin-top: 8px;
+      }
+    }
+
+    &-base {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      z-index: 1;
+      gap: 8px;
+      color: rgba(0, 0, 0, 0.54);
+    }
+
+    &-icon {
+      width: 48px;
+      height: 48px;
+      font-size: 48px;
+      margin-bottom: 16px;
+      color: rgba(0, 0, 0, 0.54);
+    }
+
+    &-text {
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    &--error {
+      mat-icon {
+        color: #f44336;
+      }
+    }
+  }
+
+  &__wrapper {
+    position: relative;
+    flex: 1;
+    min-height: 300px;
+
+    .chart-canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+
+      canvas {
+        width: 100% !important;
+        height: 100% !important;
+      }
+    }
+  }
+}
+
+// Loading and error containers (if used outside chart widgets)
+.loading-container,
+.error-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+
+  p {
+    margin: 0;
+    font-size: 16px;
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  mat-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 48px;
+  }
+}
+
+.error-container {
+  color: var(--mat-error);
+
+  button {
+    margin-top: 16px;
+  }
+
+  mat-icon {
+    color: var(--mat-warn);
+  }
+}

@@ -1,0 +1,20 @@
+{
+    "name": "server-contracts-auth",
+    "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/server/contracts-auth/src",
+    "projectType": "library",
+    "tags": ["scope:server", "type:core", "layer:contracts"],
+    "targets": {
+        "build": {
+            "executor": "@nx/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/libs/server/contracts-auth",
+                "main": "libs/server/contracts-auth/src/index.ts",
+                "tsConfig": "libs/server/contracts-auth/tsconfig.lib.json",
+                "assets": ["libs/server/contracts-auth/*.md"],
+                "rootDir": "libs/server/contracts-auth/src"
+            }
+        }
+    }
+}

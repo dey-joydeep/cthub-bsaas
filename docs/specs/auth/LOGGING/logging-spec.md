@@ -27,3 +27,6 @@
     app.log
     audit.log   (optional: separate store or stream to DB/SIEM)
 ```
+## 6) External collectors (optional)
+Use only if you later add budget. For now, keep logs local. If needed, self-host **OpenSearch/ELK** (OSS) and ship logs via `pino-multi-stream`.
+

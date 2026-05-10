@@ -60,6 +60,6 @@ ON CONFLICT (key) DO NOTHING;
 - See schema `@@index`/`@@unique`. Purge expired verification/reset rows; prune stale sessions/RTs.
 
 ## Testing
-- Unit: sign-in, refresh, enroll passkey, verify TOTP, reset, recovery, email verify.
+- Unit: login, refresh, enroll passkey, verify TOTP, reset, recovery, email verify.
 - E2E: admin first-login 2FA; step-up; partner invite; customer booking-first; RT replay blocked.
 - Perf: p95 login < 900ms; refresh < 200ms.

@@ -1,0 +1,20 @@
+{
+    "name": "@cthub-bsaas/server-infrastructure",
+    "version": "0.0.1",
+    "type": "module",
+    "main": "./../../dist/libs/server/infrastructure/index.js",
+    "types": "./../../dist/libs/server/infrastructure/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./../../dist/libs/server/infrastructure/index.d.ts",
+            "default": "./../../dist/libs/server/infrastructure/index.js"
+        }
+    },
+    "sideEffects": false,
+  "dependencies": {
+    "@cthub-bsaas/shared": "0.0.1",
+    "@cthub-bsaas/server-core": "0.0.1",
+    "@cthub-bsaas/server-data-access": "0.0.1",
+    "nodemailer": "^6.9.13"
+  }
+}

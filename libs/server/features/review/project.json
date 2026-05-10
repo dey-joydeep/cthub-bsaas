@@ -60,11 +60,5 @@
     }
   },
   "tags": ["type:lib", "platform:server", "scope:server-feature"],
-  "implicitDependencies": ["server-core"],
-  "dependencies": [
-    {
-      "target": "server-data-access",
-      "projects": "server-data-access"
-    }
-  ]
+  "implicitDependencies": ["server-core"]
 }
