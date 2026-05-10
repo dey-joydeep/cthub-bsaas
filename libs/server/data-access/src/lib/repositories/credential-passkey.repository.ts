@@ -11,7 +11,7 @@ export class CredentialPasskeyRepository implements ICredentialPasskeyRepository
     return count > 0;
   }
 
-  async countByUser(userId: string): Promise<number> {
+  countByUser(userId: string): Promise<number> {
     return this.prisma.credentialPasskey.count({ where: { userId } });
   }
 
@@ -34,4 +34,3 @@ export class CredentialPasskeyRepository implements ICredentialPasskeyRepository
     return res.count > 0;
   }
 }
-

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { ICredentialTotpRepository } from '@cthub-bsaas/server-contracts-auth';
-import { CredentialTOTP } from '@prisma/client';
+import type { ICredentialTotpRepository } from '@cthub-bsaas/server-contracts-auth';
+import type { CredentialTOTP } from '@prisma/client';
 
 /**
  * @public
@@ -14,14 +14,14 @@ export class CredentialTotpRepository implements ICredentialTotpRepository {
     /**
      * @inheritdoc
      */
-    async findByUserId(userId: string): Promise<CredentialTOTP | null> {
+    findByUserId(userId: string): Promise<CredentialTOTP | null> {
         return this.prisma.credentialTOTP.findUnique({ where: { userId } });
     }
 
     /**
      * @inheritdoc
      */
-    async create(data: { userId: string; secretEncrypted: Buffer }): Promise<CredentialTOTP> {
+    create(data: { userId: string; secretEncrypted: Buffer }): Promise<CredentialTOTP> {
         return this.prisma.credentialTOTP.create({
             data: {
                 userId: data.userId,
@@ -33,7 +33,7 @@ export class CredentialTotpRepository implements ICredentialTotpRepository {
     /**
      * @inheritdoc
      */
-    async update(userId: string, data: { secretEncrypted?: Buffer; verified?: boolean }): Promise<CredentialTOTP> {
+    update(userId: string, data: { secretEncrypted?: Buffer; verified?: boolean }): Promise<CredentialTOTP> {
         return this.prisma.credentialTOTP.update({ where: { userId }, data });
     }
 }

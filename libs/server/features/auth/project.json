@@ -49,7 +49,7 @@
         "server-infrastructure:build"
       ],
       "options": {
-        "command": "tsc -b E:\\workspace\\cthub-bsaas\\libs\\server\\features\\auth/tsconfig.json --pretty false"
+        "command": "tsc -b libs/server/features/auth/tsconfig.json --pretty false"
       }
     },
     "test": {
