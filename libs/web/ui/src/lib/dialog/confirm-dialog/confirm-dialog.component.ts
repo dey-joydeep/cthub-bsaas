@@ -11,12 +11,17 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 
 @Component({
-  selector: 'app-confirm-dialog',
+  selector: 'lib-confirm-dialog',
   templateUrl: './confirm-dialog.component.html',
   standalone: true,
   imports: [MatDialogModule, MatButtonModule, MatDialogTitle, MatDialogContent, MatDialogActions, MatDialogClose],
 })
 export class ConfirmDialogComponent {
   public readonly dialogRef = inject(MatDialogRef<ConfirmDialogComponent>);
-  public readonly data = inject(MAT_DIALOG_DATA) as { title: string; message: string };
+  public readonly data = inject(MAT_DIALOG_DATA) as ConfirmDialogData;
+}
+
+export interface ConfirmDialogData {
+  readonly title: string;
+  readonly message: string;
 }

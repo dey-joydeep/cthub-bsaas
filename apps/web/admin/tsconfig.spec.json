@@ -7,9 +7,8 @@
     "module": "esnext",
     "moduleResolution": "node",
     "target": "ES2022",
-    "types": ["jest", "node", "@testing-library/jest-dom", "jest-environment-jsdom"],
+    "types": ["jest", "node"],
     "esModuleInterop": true,
-    "emitDecoratorMetadata": true,
     "strictNullChecks": true,
     "noImplicitAny": false,
     "strict": true,
@@ -19,7 +18,6 @@
     "noUnusedParameters": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "typeRoots": ["./node_modules/@types", "./src/types"],
     "lib": ["es2022", "dom"],
     "isolatedModules": true,
     "useDefineForClassFields": true
@@ -27,7 +25,7 @@
   "include": [
     "src/**/*.spec.ts",
     "src/**/*.d.ts",
-    "src/test-setup.ts",
+    "src/setup-jest.ts",
     "jest.config.ts",
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
@@ -36,6 +34,6 @@
     "src/**/__mocks__/*.ts",
     "src/**/__tests__/*.ts"
   ],
-  "files": ["src/test-setup.ts"],
+  "files": ["src/setup-jest.ts"],
   "exclude": ["node_modules/jasmine", "node_modules/jasmine-core", "node_modules/@types/jasmine", "**/*.mjs"]
 }

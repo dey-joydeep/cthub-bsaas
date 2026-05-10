@@ -6,6 +6,7 @@ export interface CurrentUserMin {
   readonly id?: string;
   readonly role: string;
   readonly isVerified?: boolean;
+  readonly is_verified?: boolean;
 }
 
 export interface CurrentUserPort {

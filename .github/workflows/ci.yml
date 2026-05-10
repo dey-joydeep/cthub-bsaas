@@ -10,54 +10,67 @@ on:
 # Environment variables for Nx Cloud
 env:
   NX_CLOUD_DISTRIBUTED_EXECUTION: true
+  NX_CLOUD_AUTH_TOKEN: ${{ secrets.NX_CLOUD_AUTH_TOKEN }}
 
 jobs:
   main:
     name: Main Workflow
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 30
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Required for Nx affected commands
-      
+          fetch-depth: 0 # Required for Nx affected commands
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
+      - name: Set Nx affected refs
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "NX_BASE=origin/${{ github.base_ref }}" >> "$GITHUB_ENV"
+            echo "NX_HEAD=HEAD" >> "$GITHUB_ENV"
+            echo "NX_DAEMON=false" >> "$GITHUB_ENV"
+            echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
+            echo "NX_CLOUD_DISTRIBUTED_EXECUTION=false" >> "$GITHUB_ENV"
+          else
+            echo "NX_BASE=${{ github.event.before }}" >> "$GITHUB_ENV"
+            echo "NX_HEAD=HEAD" >> "$GITHUB_ENV"
+          fi
+
       - name: Enable Nx Cloud read-only mode
         if: github.event_name != 'pull_request'
-        env:
-          NX_CLOUD_AUTH_TOKEN: ${{ secrets.NX_CLOUD_AUTH_TOKEN }}
-          NX_CLOUD_DISTRIBUTED_EXECUTION: true
         run: npx nx-cloud start-ci-run --distribute-on='5 linux-medium-js' --stop-agents-after='build'
-      
+
       - name: Run linting
-        run: npx nx affected --target=lint --parallel=3 --configuration=ci
-      
+        run: npx nx affected --target=lint --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=ci
+
       - name: Run tests
-        run: npx nx affected --target=test --parallel=3 --configuration=ci
-      
+        run: npx nx affected --target=test --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=ci
+
       - name: OpenAPI parity (auth)
         run: npm run openapi:check:auth
 
       - name: OpenAPI lint (auth)
         run: npm run openapi:lint:auth
-      
-      - name: Server libs lint + coverage
+
+      - name: Server auth lint + coverage
         run: |
           npx nx run-many -t lint -p server-core,server-data-access,server-feature-auth --parallel=3
           npx nx run-many -t test -p server-core,server-data-access,server-feature-auth --code-coverage --parallel=1
 
       - name: API e2e smoke (correlation-id, Retry-After)
         run: npx nx run api-e2e:e2e
-      
+
       - name: Guard hygiene (no Guards in feature libs)
         run: |
           if grep -Rn "class .*Guard" libs/server/features; then
@@ -65,19 +78,11 @@ jobs:
           else
             echo "No Guard classes under feature libs";
           fi
-      
-      - name: Run build
-        run: npx nx affected --target=build --parallel=3 --configuration=production
-      
-      - name: Upload test coverage (PR)
-        if: github.event_name == 'pull_request'
-        uses: codecov/codecov-action@v4
-        with:
-          directory: ./coverage
-          fail_ci_if_error: false
 
-      - name: Upload test coverage (push)
-        if: github.event_name != 'pull_request'
+      - name: Run build
+        run: npx nx affected --target=build --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=production
+
+      - name: Upload test coverage
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

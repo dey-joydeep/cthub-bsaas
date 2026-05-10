@@ -5,6 +5,7 @@
     "rootDir": "../../",
     "typeRoots": ["node_modules/@types", "../../node_modules/@types"],
     "types": ["node", "express"],
+    "emitDecoratorMetadata": true,
     "composite": true,
     "incremental": true,
     "preserveSymlinks": true // Important for monorepo setups

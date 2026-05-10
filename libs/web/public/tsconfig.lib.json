@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.lib.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "../../../dist/out-tsc/libs/web/public",
+    "paths": {
+      "@cthub-bsaas/shared": ["dist/libs/shared/index.d.ts"],
+      "@cthub-bsaas/web-config": ["dist/libs/web/config/index.d.ts"],
+      "@cthub-bsaas/web-core-common": ["dist/libs/web/core/common/index.d.ts"],
+      "@cthub-bsaas/web-core-platform": ["dist/libs/web/core/platform/index.d.ts"],
+      "@cthub-bsaas/web-ui": ["dist/libs/web/ui/index.d.ts"]
+    }
+  },
+  "include": ["src/index.ts", "src/lib/public.routes.ts", "src/**/*.d.ts"],
+  "exclude": ["src/test-setup.ts", "**/*.spec.ts", "**/*.test.ts", "jest.config.ts"]
+}

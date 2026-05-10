@@ -1,0 +1,10 @@
+{
+  "name": "@cthub-bsaas/web-partner",
+  "version": "0.0.1",
+  "type": "module",
+  "peerDependencies": {
+    "@angular/common": "^20.0.0",
+    "@angular/core": "^20.0.0"
+  },
+  "sideEffects": false
+}

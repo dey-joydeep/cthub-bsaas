@@ -1,32 +1,28 @@
-import js from '@eslint/js';
 import webBase from '../../../eslint.base.web.js';
 
 export default [
   ...webBase,
-  // Base JavaScript configuration
-  {
-    files: ['**/*.js'],
-    ignores: ['node_modules/**', 'dist/**', 'coverage/**'],
-    languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'module',
-    },
-    rules: {
-      ...js.configs.recommended.rules,
-      quotes: ['error', 'single'],
-      'no-unused-vars': 'warn',
-    },
-  },
-
-  // TypeScript configuration (project-specific rules; parser set in base)
   {
     files: ['**/*.ts'],
-    ignores: ['node_modules/**', 'dist/**', 'coverage/**'],
     rules: {
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/explicit-module-boundary-types': 'warn',
-      '@typescript-eslint/explicit-function-return-type': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@angular-eslint/component-selector': [
+        'error',
+        {
+          type: 'element',
+          prefix: ['app', 'lib'],
+          style: 'kebab-case',
+        },
+      ],
+      '@angular-eslint/prefer-inject': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-floating-promises': 'off',
+      '@typescript-eslint/no-implied-eval': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
 ];

@@ -63,6 +63,11 @@
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
     },
+    "@nx/angular:package": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"]
+    },
     "@nx/js:tsc": {
       "cache": true,
       "dependsOn": ["^build"],
@@ -104,6 +109,16 @@
       }
     }
   },
+  "depConstraints": [
+    {
+      "sourceTag": "scope:web-public",
+      "onlyDependOnLibsWithTags": ["scope:web-ui", "scope:web-core", "scope:web-config", "scope:shared"]
+    },
+    {
+      "sourceTag": "scope:web-customer",
+      "onlyDependOnLibsWithTags": ["scope:web-ui", "scope:web-core", "scope:web-config", "scope:shared"]
+    }
+  ],
   "workspaceLayout": {
     "appsDir": "apps",
     "libsDir": "libs"
@@ -126,5 +141,10 @@
       "style": "scss"
     }
   },
-  "defaultBase": "main"
+  "defaultBase": "main",
+  "release": {
+    "version": {
+      "preVersionCommand": "npx nx run-many -t build"
+    }
+  }
 }

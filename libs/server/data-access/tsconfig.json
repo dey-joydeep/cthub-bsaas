@@ -1,5 +1,13 @@
 {
   "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "emitDecoratorMetadata": true,
+    "paths": {
+      "@cthub-bsaas/server-contracts-auth": ["../../../libs/server/contracts-auth/src/index.ts"],
+      "@cthub-bsaas/server-contracts-auth/*": ["../../../libs/server/contracts-auth/src/*"]
+    }
+  },
   "files": [],
   "include": [],
   "references": [

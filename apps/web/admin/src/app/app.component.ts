@@ -12,10 +12,16 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { AuthService } from './core/auth/services/auth.service';
+import { AuthService } from '@cthub-bsaas/web-admin/auth';
 import { Inject } from '@angular/core';
 import { CURRENT_USER } from '@cthub-bsaas/web-core/auth';
 import type { CurrentUserPort, CurrentUserMin } from '@cthub-bsaas/web-core/auth';
+
+type AdminAppUser = CurrentUserMin & {
+  readonly firstName?: string;
+  readonly lastName?: string;
+  readonly email?: string;
+};
 
 // Using CurrentUserMin from shared auth port
 
@@ -45,7 +51,7 @@ export class AppComponent implements OnInit, OnDestroy {
   title = 'BeautySaaS';
   error: string | null = null;
   // Public properties for template binding
-  currentUser: CurrentUserMin | null = null;
+  currentUser: AdminAppUser | null = null;
   isLoggedIn = false;
   pendingApprovalsCount = 0; // Will be populated from a service
 
@@ -71,7 +77,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private initializeAuthSubscription(): void {
     this.authSubscription = this.currentUserService.currentUser$.subscribe(
-      (user: CurrentUserMin | null) => {
+      (user: AdminAppUser | null) => {
         this.currentUser = user;
         this.isLoggedIn = !!user;
 

@@ -1,41 +1,44 @@
 {
-    "name": "web-ui",
-    "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "libs/web/ui/src",
-    "projectType": "library",
-    "prefix": "lib",
-    "tags": ["scope:web", "type:ui"],
-    "targets": {
-        "test": {
-            "executor": "@nx/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-            "options": {
-                "jestConfig": "libs/web/ui/jest.config.ts",
-                "passWithNoTests": true
-            },
-            "configurations": {
-                "ci": {
-                    "ci": true,
-                    "codeCoverage": true
-                }
-            }
-        },
-        "lint": {
-            "executor": "@nx/eslint:lint"
-        },
-        "type-check": {
-            "executor": "nx:run-commands",
-            "options": {
-                "command": "tsc -p libs/web/ui/tsconfig.lib.json --noEmit"
-            }
-        },
-        "build": {
-            "executor": "@nx/angular:package",
-            "outputs": ["{workspaceRoot}/dist/libs/web/ui"],
-            "options": {
-                "tsConfig": "libs/web/ui/tsconfig.lib.json",
-                "project": "libs/web/ui/ng-package.json"
-            }
+  "name": "web-ui",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/web/ui/src",
+  "projectType": "library",
+  "prefix": "lib",
+  "tags": ["platform:web", "scope:web", "type:lib", "type:ui"],
+  "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/web/ui/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
         }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["libs/web/ui/src/**/*.ts", "libs/web/ui/src/**/*.html", "libs/web/ui/src/**/*.scss"]
+      }
+    },
+    "type-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsc -p libs/web/ui/tsconfig.spec.json --noEmit"
+      }
+    },
+    "build": {
+      "executor": "@nx/angular:package",
+      "outputs": ["{workspaceRoot}/dist/libs/web/ui"],
+      "options": {
+        "tsConfig": "libs/web/ui/tsconfig.lib.json",
+        "project": "libs/web/ui/ng-package.json"
+      }
     }
+  }
 }

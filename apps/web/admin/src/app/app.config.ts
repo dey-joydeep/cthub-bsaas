@@ -42,18 +42,12 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 // App imports
 import { routes } from './app.routes';
-import {
-  ErrorHandlerService,
-  ERROR_INTERCEPTOR_PROVIDER,
-  loadingInterceptor,
-  ssrInterceptor,
-  ssrTranslateInterceptor,
-} from '@cthub-bsaas/web-core/http';
-import { AUTH_STATE_PORT, CURRENT_USER } from '@cthub-bsaas/web-core/auth';
+import { ErrorHandlerService, ERROR_INTERCEPTOR_PROVIDER, loadingInterceptor } from '@cthub-bsaas/web-core-common';
+import { ssrInterceptor, ssrTranslateInterceptor } from '@cthub-bsaas/web-core-platform';
+import { AUTH_STATE_PORT, CURRENT_USER, CurrentUserService } from '@cthub-bsaas/web-core/auth';
 import { LOGIN_API, AUTH_STATE_SETTER, FORGOT_PASSWORD_API, REGISTER_API, type ForgotPasswordApiPort, type RegisterApiPort } from '@cthub-bsaas/web-admin/auth';
-import { AuthService } from './core/auth/services/auth.service';
+import { AuthService } from '@cthub-bsaas/web-admin/auth';
 import { AuthApiService } from './core/auth/services/auth-api.service';
-import { CurrentUserAdapter } from './core/auth/services/current-user.adapter';
 
 // AoT requires an exported function for factories
 export function httpLoaderFactory(http: HttpClient) {
@@ -122,7 +116,7 @@ export const appConfig: ApplicationConfig = {
     { provide: MAT_DATE_LOCALE, useValue: 'en-US' },
     { provide: ErrorHandler, useClass: ErrorHandlerService },
     { provide: AUTH_STATE_PORT, useExisting: AuthService },
-    { provide: CURRENT_USER, useExisting: CurrentUserAdapter },
+    { provide: CURRENT_USER, useExisting: CurrentUserService },
     { provide: LOGIN_API, useExisting: AuthApiService },
     { provide: AUTH_STATE_SETTER, useExisting: AuthService },
     // Bridge library tokens to app services

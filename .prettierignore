@@ -30,3 +30,5 @@ yarn.lock
 **/*.snap
 .eslintcache
 *.tsbuildinfo
+
+.angular

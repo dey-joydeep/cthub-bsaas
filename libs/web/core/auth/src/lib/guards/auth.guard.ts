@@ -1,14 +1,14 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { map, take } from 'rxjs/operators';
-import { CURRENT_USER, CurrentUserPort } from '../interfaces/current-user.port';
+import { CURRENT_USER } from '../interfaces/current-user.port';
 
 /**
  * Auth guard that checks if user is authenticated
  * Redirects to login page if not authenticated
  */
 export const authGuard: CanActivateFn = (route, state) => {
-  const currentUserService = inject(CURRENT_USER) as CurrentUserPort;
+  const currentUserService = inject(CURRENT_USER);
   const router = inject(Router);
 
   const requiredRoles = (route.data?.['roles'] as string[] | undefined) ?? null;
@@ -24,7 +24,7 @@ export const authGuard: CanActivateFn = (route, state) => {
         }
 
         // Verification requirement (optional via route data)
-        const isVerified = (user as any)?.is_verified === true || (user as any)?.isVerified === true;
+        const isVerified = user.is_verified === true || user.isVerified === true;
         if (requiresVerified && !isVerified) {
           return router.createUrlTree(['/auth/verify']);
         }
@@ -45,8 +45,8 @@ export const authGuard: CanActivateFn = (route, state) => {
  * Public guard that checks if user is not authenticated
  * Redirects to home if already authenticated
  */
-export const publicGuard: CanActivateFn = (_route, _state) => {
-  const currentUserService = inject(CURRENT_USER) as CurrentUserPort;
+export const publicGuard: CanActivateFn = () => {
+  const currentUserService = inject(CURRENT_USER);
   const router = inject(Router);
 
   return currentUserService.currentUser$.pipe(
