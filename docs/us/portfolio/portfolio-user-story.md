@@ -1,51 +1,68 @@
-# Portfolio User Story
+# Portfolio And Style Inspiration User Stories
 
-## Date: 2025-07-31
+**Date:** 2026-05-11
+**Status:** Current planning source
 
-### Status: Draft
+## Owner Outcome
 
-#### Acceptance Criteria
+As a salon owner, I want to showcase portfolio work and style inspiration so that customers can trust service quality and book specific looks.
 
-1. **Portfolio Management**
-   - [ ] Image Gallery:
-     - [ ] Upload multiple images
-     - [ ] Organize into albums
-     - [ ] Add captions/descriptions
-   - [ ] Service Showcase:
-     - [ ] Link to specific services
-     - [ ] Before/after comparisons
-     - [ ] Service details
-   - [ ] Staff Portfolios:
-     - [ ] Individual staff showcases
-     - [ ] Specialization tags
-     - [ ] Experience level
+## Actors
 
-2. **Customer Portfolio**
-   - [ ] Before/After Showcase:
-     - [ ] Upload media
-     - [ ] Add service details
-     - [ ] Share on social media
-   - [ ] Style Book:
-     - [ ] Save favorite looks
-     - [ ] Create mood boards
-     - [ ] Share with stylists
+- Salon Owner
+- Service Staff
+- Customer
+- Branch Manager
 
-3. **Portfolio Discovery**
-   - [ ] Browsing:
-     - [ ] Filter by service
-     - [ ] Filter by staff
-     - [ ] Sort by popularity/date
-   - [ ] Search Functionality:
-     - [ ] Keyword search
-     - [ ] Hashtag search
-     - [ ] Color search
+## Primary Screens Or Workflows
 
-4. **Interactive Features**
-   - [ ] Virtual Consultations:
-     - [ ] Schedule from portfolio
-     - [ ] Save favorite looks
-     - [ ] Share with stylist
-   - [ ] Style Inspiration:
-     - [ ] Save for later
-     - [ ] Get similar looks
-     - [ ] Book this style
+- Portfolio gallery
+- Portfolio album editor
+- Staff portfolio
+- Style inspiration browser
+- Book-this-style CTA
+
+## User Stories
+
+### PORT-US-001: Salon portfolio
+
+As a salon owner, I want to upload and organize approved work photos so that public visitors can see service quality.
+
+### PORT-US-002: Staff portfolio
+
+As a service staff member, I want my approved work linked to my profile so that customers can choose me for relevant services.
+
+### PORT-US-003: Style inspiration
+
+As a customer, I want to save style examples and share them during booking so that staff understands my preference.
+
+### PORT-US-004: Book from portfolio
+
+As a customer, I want to book a service from a portfolio item so that I can request a similar look.
+
+## Functional Requirements
+
+- Upload portfolio media with caption, service link, staff link, branch, tags, and approval state.
+- Organize media into albums.
+- Support before/after presentation where consent exists.
+- Allow customer save/share of inspiration.
+- Provide public filtering by service, staff, tag, and branch.
+
+## Business Rules And Edge Cases
+
+- Customer-identifiable media requires consent before public use.
+- Hidden/inactive staff should not be promoted publicly, but historical portfolio ownership remains.
+- Portfolio item must not promise exact outcome; copy should say "inspired by" or "similar style".
+- Removed media must not remain publicly accessible through stale URLs.
+
+## Acceptance Criteria
+
+- Given owner uploads approved media, when public salon profile loads, then the media appears in portfolio.
+- Given media lacks consent, when public profile loads, then the media is not shown publicly.
+- Given a portfolio item links to a service, when customer clicks book, then booking starts with that service preselected.
+
+## Non-Functional Requirements
+
+- Media must be optimized and scanned/validated.
+- Portfolio pages must be mobile-friendly and SEO-safe where public.
+- Access to upload/edit must be role-protected.

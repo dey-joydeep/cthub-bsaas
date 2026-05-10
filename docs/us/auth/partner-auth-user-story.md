@@ -1,52 +1,59 @@
-# Partner Authentication — User Story (Salon Owner & Staff)
-**Date:** 2025-09-01  
-**Status:** Draft v2 (Owner recommended 2FA; Staff optional/policy‑driven)
+# Partner Authentication User Stories
 
-## 1) Story
-As a **Salon Owner/Staff**, I need secure but convenient login and visibility over sessions so operations are safe and uninterrupted.
+**Date:** 2026-05-11
+**Status:** Current supporting source
 
-## 2) Assumptions
-- Partner app hosted at `partner.cthub.in` (configurable).  
-- **Owner**: recommended 2FA (enforced by policy option).  
-- **Staff**: optional 2FA unless tenant policy mandates it.
+## Owner Outcome
 
-## 3) Scenarios & Acceptance Criteria (Gherkin)
-### P‑1 Owner prompted to enable 2FA
-**Given** an Owner without 2FA  
-**When** they sign in  
-**Then** a non‑dismissable banner requests **Passkey/TOTP** enrollment until completed.
+As a salon owner or staff member, I want secure but practical sign-in, MFA, session visibility, and recovery so that daily salon operations continue without exposing business data.
 
-### P‑2 Staff invitation & activation
-**Given** an Owner invites a Staff member  
-**When** the Staff opens the single‑use invitation (short TTL)  
-**Then** they set a password, optionally enroll 2FA, and are signed in  
-**And** invitation cannot be reused.
+## Actors
 
-### P‑3 Device oversight & revocation
-**Given** an Owner views **Active Sessions**  
-**Then** the Owner can revoke **their own** sessions and **any Staff** sessions in their tenant  
-**And** revoked sessions are logged and tokens invalidated.
+- Salon Owner
+- Staff
+- Branch Manager
 
-### P‑4 Limited SSO preview of Customer app (read‑only)
-**Given** Staff with preview permission  
-**When** they open the Customer app via “Preview”  
-**Then** they see read‑only UI with no mutation actions.
+## User Stories
 
-### P‑5 Password reset (flexible)
-**Given** Staff forgot password  
-**When** they use the reset link  
-**And** 2FA is unavailable  
-**Then** they can use **recovery code** to complete reset; otherwise manual verification per tenant policy.
+### PAUTH-US-001: Partner sign-in
 
-## 4) Error Handling
-- Standardized, localized messages; no existence leak for invites/resets.  
-- After password change/reset, **log out other sessions**.
+As a Partner user, I want to sign in with approved credentials so that I can access my assigned salon or branch workspace.
 
-## 5) UX
-- Entry: `/login`; clear prompts for 2FA where applicable.  
-- Post‑login: Owner → `/dashboard`; Staff → `/schedule`.
+### PAUTH-US-002: MFA enrollment and verification
 
-## 6) Tests
-- Unit: invite lifecycle, policy enforcement, device revoke.  
-- E2E: Owner 2FA prompt, Staff invite acceptance, cross‑app preview.  
-- Perf: p95 sign-in < 900ms.
+As a Partner user, I want to enroll and verify passkey or TOTP so that my account satisfies salon security policy.
+
+### PAUTH-US-003: Tenant-scoped sessions
+
+As a salon owner, I want sessions scoped to my salon/branch permissions so that staff cannot cross tenant boundaries.
+
+### PAUTH-US-004: Staff session oversight
+
+As a salon owner or authorized manager, I want to revoke staff sessions so that access can be removed from lost/shared devices.
+
+### PAUTH-US-005: Partner recovery
+
+As a Partner user, I want a safe password reset/recovery path so that I can regain access without weakening security.
+
+## Functional Requirements
+
+- Partner sign-in uses secure cookies and CSRF protection.
+- Required MFA must be satisfied before operational Partner screens are accessible.
+- Session list shows device, user agent, approximate IP/location where available, last seen, and created time.
+- Authorized owner/manager can revoke staff sessions within their salon scope.
+- Password reset follows generic response and session revocation policy.
+
+## Business Rules And Edge Cases
+
+- Partner access is denied while `isMFAEnrollRequired` is true.
+- Staff cannot revoke owner sessions unless explicitly permitted.
+- Revoking a session invalidates its refresh path.
+- Tenant and role authorization are enforced server-side.
+- Recovery code or manual verification policy applies when MFA is unavailable.
+
+## Acceptance Criteria
+
+- Given a Partner user without required MFA, when sign-in succeeds, then they are routed to MFA enrollment and cannot access operations.
+- Given an owner revokes a staff session, when that session refreshes, then refresh fails.
+- Given a staff user belongs to one branch, when accessing another branch, then access is denied.
+- Given password reset succeeds, then other sessions are revoked according to policy.

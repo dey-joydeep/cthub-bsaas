@@ -1,52 +1,57 @@
-# Partner — Auth Registration & Onboarding (US)
+# Partner Owner And Staff Onboarding User Stories
 
-**Date:** 2025-09-06
-**Scope:** Owner onboarding via sessioned registration link (30-day expiry, single-use) and Staff onboarding via invite + temporary password. **Mandatory MFA (Passkey or TOTP)** pre-access.
+**Date:** 2026-05-11
+**Status:** Current supporting source
 
-## US-P1: Owner — Sessioned Link Onboarding
+## Owner Outcome
 
-- Open link → set Password & Verify → mandatory MFA (Passkey preferred or TOTP) → success dialog → redirect Sign-in.
-  **AC:** Link single-use/expiry handling with Request new link CTA; password policy; MFA gating (`mustEnrollMFA=true` until completion); i18n (en/bn/hi); accessibility; audit logs.
+As a salon owner or staff member, I want a secure onboarding flow so that Partner app access is granted only to invited and MFA-ready users.
 
-## US-P2: Staff — Temp Password + MFA
+## Actors
 
-- Open “registration complete” link → enter Current (temp) password + New + Verify → enroll MFA → redirect Sign-in.
-  **AC:** New password ≠ temp; role binding to salon + role; MFA gating same as Owner; lockout/recovery policy for repeated failures, i18n (en/bn/hi); accessibility; audit logs.
+- Salon Owner
+- Staff
+- Platform Admin
+- Branch Manager
 
----
+## User Stories
 
-### Superseded on 2025-09-07 — Reasons
-- Partner onboarding now **requires MFA before access** via `isMFAEnrollRequired=true`.
-- Introduced **2-day reminder scheduler** until MFA enrollment completes.
-- Clarified token expiry/used handling (`404/410`) and error mapping.
+### PREG-US-001: Owner onboarding link
 
----
+As a salon owner, I want to complete onboarding from a secure single-use link so that my salon account can be activated safely.
 
-## Updated Full Spec — 2025-09-07
+### PREG-US-002: Staff invite
 
-# Partner (Owner & Staff) — Registration / Onboarding User Story
-**Date:** 2025-09-07 · **Locales:** en/bn/hi
+As staff, I want to accept an invitation and rotate my temporary password so that I can access only my assigned salon/branch role.
 
-## Owner
-- Entry: **sessioned link** (30-day TTL, single use).  
-- Step: Set password → API returns `{ "isMFAEnrollRequired": true }`.  
-- Must enroll **Passkey or TOTP** before accessing Partner UI.  
-- Email: **Setup next steps** sent upon password completion.
+### PREG-US-003: MFA gate
 
-## Staff
-- Entry: **invite** with **temp password**.  
-- Step: Provide temp `currentPassword`, set new password → `{ "isMFAEnrollRequired": true }`.  
-- Enroll MFA before access. Email: **Setup next steps** sent.
+As a salon business, I want owner and staff access blocked until required MFA enrollment is complete so that operational data is protected.
 
-## Reminders (Scheduler)
-Every **2 days** while `isMFAEnrollRequired=true`.  
-DB fields initialized: `mfaReminderFirstAt=now()`, `mfaReminderLastAt=now()`; scheduler updates `mfaReminderLastAt` after each send.
+### PREG-US-004: MFA reminders
 
-## Errors / Status
-- Token invalid → `404`; expired/used → `410`.  
-- Field validation → `422`; wrong temp password → `401`; rate limit → `429`.
+As a salon owner, I want reminder emails while MFA is incomplete so that onboarding does not stall silently.
 
-## Acceptance
-- Cannot enter Partner UI without MFA enrollment.  
-- Reminder cadence operates until enrollment.  
-- Tokens are single use; audit trail captured.
+## Functional Requirements
+
+- Owner onboarding link is single-use and expires according to policy.
+- Staff invite binds user to salon, branch, and role.
+- Staff temporary password must be rotated before access.
+- API returns `isMFAEnrollRequired` when MFA enrollment must be completed.
+- Partner UI blocks operational access while MFA gate is active.
+- Reminder scheduler sends reminders every two days while MFA is required.
+
+## Business Rules And Edge Cases
+
+- Expired or used links cannot be reused.
+- Wrong temporary password is rate-limited.
+- New password cannot equal temporary password.
+- User signing out before MFA completion must resume at MFA enrollment after next sign-in.
+- Owner/Staff records remain auditable even if onboarding expires.
+
+## Acceptance Criteria
+
+- Given an owner opens a valid onboarding link, when they set password, then MFA enrollment is required before Partner UI access.
+- Given staff enters valid temporary password and new password, when the password is rotated, then MFA enrollment is required before access.
+- Given onboarding link is expired, when user opens it, then the system shows an expired-link outcome.
+- Given MFA remains incomplete for two days, when reminder scheduler runs, then a reminder is sent and timestamp is updated.

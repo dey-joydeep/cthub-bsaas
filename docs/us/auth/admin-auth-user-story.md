@@ -1,58 +1,58 @@
-# Admin Authentication — User Story
-**Date:** 2025-09-01  
-**Status:** Draft v2 (Passkeys/TOTP, Mandatory 2FA)
+# Admin Authentication User Stories
 
-## 1) Story
-As a **Platform Admin**, I need phishing‑resistant sign‑in and strong session controls so the platform remains secure even under targeted attacks.
+**Date:** 2026-05-11
+**Status:** Current supporting source
 
-## 2) Assumptions
-- Admin app hosted at `admin.cthub.in` (configurable).  
-- 2FA is **mandatory**: user must enroll **Passkey (WebAuthn)** or **TOTP** at first sign‑in.  
-- Absolute session age enforced (e.g., 24h).
+## Owner Outcome
 
-## 3) Scenarios & Acceptance Criteria (Gherkin)
-### A‑1 First‑time sign‑in requires 2FA enrollment
-**Given** an admin account without 2FA  
-**When** I log in with email+password  
-**Then** I am forced to enroll **Passkey** or **TOTP** before accessing the dashboard  
-**And** I receive **recovery codes** and must acknowledge storage.
+As a platform admin, I want phishing-resistant authentication, step-up controls, and strict session governance so that high-risk platform operations remain protected.
 
-### A‑2 Passkey sign‑in
-**Given** I have a registered passkey  
-**When** I choose “Login with passkey”  
-**Then** I authenticate without password and receive valid AT/RT cookies  
-**And** an audit log is recorded with action `login_passkey_success`.
+## Actors
 
-### A‑3 Step‑up re‑auth for high‑risk actions
-**Given** I am signed in  
-**When** I attempt tenant deletion, role elevation, or policy changes  
-**Then** I must re‑authenticate (Passkey or TOTP) even if my session is active.
+- Platform Admin
+- Support Admin
 
-### A‑4 Active sessions & remote logout
-**Given** I open “Active Sessions”  
-**Then** I see device/UA/IP/lastSeen and can **log out other sessions**  
-**And** affected sessions’ RTs are invalidated.
+## User Stories
 
-### A‑5 Idle & absolute timeouts
-**Given** I’m idle beyond the admin idle timeout (e.g., 10–15 min)  
-**Then** I am signed out (AT invalid) and prompted to re‑auth  
-**And** after 24h absolute age I must re‑auth even if active.
+### AAUTH-US-001: Mandatory MFA
 
-### A‑6 Rate‑limiting & alerts
-**Given** repeated failed logins for my admin account  
-**Then** attempts are throttled with exponential backoff  
-**And** after a threshold an alert is emitted to the security channel.
+As a platform admin, I want MFA required before dashboard access so that admin compromise risk is reduced.
 
-## 4) Error Handling
-- Generic errors for invalid creds; no account enumeration.  
-- On 2FA failure, show remaining attempts and cooldown; expose `Retry‑After`.  
-- If passkey unavailable, offer TOTP or **recovery code** path.
+### AAUTH-US-002: Passkey sign-in
 
-## 5) UX & Navigation
-- Entry: `/login` with **Passkey** button and email+password form.  
-- Post‑login: `/dashboard`; after step‑up, return to originating action.
+As a platform admin, I want passkey sign-in where supported so that phishing-resistant authentication is available.
 
-## 6) Tests
-- Unit: guards (roles/tenants), services (WebAuthn/TOTP), RT rotation.  
-- E2E: first‑time 2FA, passkey login, step‑up, device revoke.  
-- Perf: p95 login < 800ms (excl. email latency).
+### AAUTH-US-003: Step-up authentication
+
+As a platform admin, I want high-risk actions to require recent re-authentication so that stale sessions cannot perform dangerous operations.
+
+### AAUTH-US-004: Admin session control
+
+As a platform admin, I want active session visibility and remote logout so that lost or shared devices can be handled quickly.
+
+### AAUTH-US-005: Admin abuse controls
+
+As a platform operator, I want rate limiting and security alerts for admin auth failures so that attacks are detected early.
+
+## Functional Requirements
+
+- Admin MFA is mandatory using passkey or TOTP according to policy.
+- Recovery codes are issued and shown once during MFA enrollment.
+- Step-up applies to tenant deletion, role elevation, policy changes, support access, and other high-risk actions.
+- Admin session list shows device, user agent, approximate IP/location where available, last seen, and created time.
+- Auth failures are rate-limited and audited.
+
+## Business Rules And Edge Cases
+
+- Admin cannot access dashboard before MFA enrollment.
+- Step-up has a short validity window.
+- Recovery code use must rotate or invalidate the used code.
+- Admin auth logs must avoid secrets and raw tokens.
+- Support admins may have reduced permissions compared with platform owners.
+
+## Acceptance Criteria
+
+- Given an admin without MFA, when sign-in succeeds, then MFA enrollment is required before dashboard access.
+- Given admin performs a high-risk action, when recent step-up is missing, then re-authentication is required.
+- Given admin revokes another session, when that session refreshes, then refresh fails.
+- Given repeated admin login failures occur, then throttling and audit events are produced.

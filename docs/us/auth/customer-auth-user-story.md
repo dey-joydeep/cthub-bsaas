@@ -1,97 +1,59 @@
-# Customer Authentication — User Story
-**Date:** 2025-09-01  
-**Status:** Draft v2 (Friction‑light, Passkeys optional, Booking‑first)
+# Customer Authentication User Stories
 
-## 1) Story
-As a **Customer**, I want a simple sign‑up/sign‑in and recovery flow so I can book appointments and manage my profile easily.
+**Date:** 2026-05-11
+**Status:** Current supporting source
 
-## 2) Assumptions
-- Customer app hosted at `app.cthub.in` (configurable).  
-- Modal login pattern is supported with two tabs: **Login** and **Register**.  
-- Client & server validation run in tandem.
+## Owner Outcome
 
-## 3) Scenarios & Acceptance Criteria (Gherkin)
-### C‑1 Email sign‑up with verification
-**Given** I enter email + password (or choose passkey)  
-**When** I verify via **email OTP** (TTL 10m) or verification link  
-**Then** my account activates and I’m signed in.
+As a customer, I want low-friction sign-in, recovery, and optional strong authentication so that I can book and manage salon visits securely.
 
-### C‑2 Passwordless / Passkeys (optional)
-**Given** my device supports passkeys  
-**When** I click "Login with passkey"  
-**Then** I authenticate and receive AT/RT cookies; no password needed.
+## Actors
 
-### C‑3 Booking‑first → account auto‑creation
-**Given** I start a booking without an account  
-**When** I complete contact details and verify email/phone via OTP  
-**Then** an account is created, booking is linked, and I’m prompted to set password or add a passkey.
+- Customer
+- Salon business
+- Platform
 
-### C‑4 Password reset (flexible)
-**Given** I forgot my password  
-**When** I open the reset link  
-**Then** if 2FA is enabled and available, complete second factor; if unavailable, use **recovery code**; else manual verification pathway.
+## User Stories
 
-### C‑5 Rate‑limits & copy
-**Given** I exceed OTP or login attempt limits  
-**Then** I see friendly, localized retry guidance and `Retry‑After`; no account existence leak.
+### CAUTH-US-001: Customer sign-in
 
-## 4) UX
-- Entry: `/login` and `/register` (or modal); localized copy about privacy & security.  
-- Stay signed in: Show an informational "Stay signed in" hint; backend applies persistent refresh cookie policy uniformly (no API flag). Avoid on shared devices.
-- Post‑login: redirect to **intended route** (e.g., checkout) or `/home`.
+As a customer, I want to sign in with email/password or a supported linked provider so that I can access bookings and rewards.
 
-## 5) Tests
-- Unit: OTP issuance/verification & edge cases.  
-- E2E: booking‑first → account creation, passkey login, flexible reset.  
-- Perf: p95 login < 1s (excl. email provider latency).
+### CAUTH-US-002: Optional passkey
 
-## Social Login (Google/Meta)
+As a customer, I want to add a passkey where supported so that future sign-in is faster and safer.
 
-### Goals
-- Offer friction-light login/sign-up for Customers using Google or Meta accounts.
-- Keep security strong: PKCE, state/nonce, verified email checks, and explicit linking.
+### CAUTH-US-003: Booking-first account prompt
 
-### Scenarios & Acceptance Criteria (Gherkin)
-#### S-1 Social login (new user, current policy)
-Given I click "Continue with Google/Meta" on the login/register modal  
-When I complete the provider flow  
-Then if an existing link is found, I am signed in  
-And otherwise I see an i18n error `error.auth.oauth_link_required` instructing me to log in first and link in settings.
+As a customer starting a booking, I want account creation or sign-in to appear only when needed so that discovery remains low-friction.
 
-#### S-2 Social login success (existing linked)
-Given my account is already linked to Google/Meta  
-When I complete the provider flow  
-Then I am signed in and receive AT/RT cookies  
-And an audit event `oauth_callback_success` is recorded.
+### CAUTH-US-004: Customer recovery
 
-#### S-3 Email match with local account (not linked)
-Given a local account exists with the same verified email  
-When I complete the provider flow  
-Then the system does not auto-link during unauthenticated callback  
-And I must log in using an existing method, then link the provider in settings (or retry the provider while authenticated).
+As a customer, I want password reset and recovery that does not reveal whether an email exists so that my account privacy is protected.
 
-#### S-4 Linking from profile
-Given I am authenticated  
-When I choose to link Google/Meta  
-Then after provider consent my social account is linked to my profile  
-And I can unlink if another login method remains.
+### CAUTH-US-005: Social account linking
 
-#### S-5 Provider denies email scope or unverified email
-Given the provider does not return a verified email  
-When the callback completes unauthenticated  
-Then I receive `error.auth.oauth_link_required` and must log in and link explicitly  
-And the email verification (OTP) path remains available for traditional sign-up flows.
+As a customer, I want to link or unlink Google/Meta where supported so that sign-in remains convenient without losing account access.
 
-### Security & Constraints
-- Use OAuth 2.0/OIDC with PKCE, `state`, and `nonce`; validate ID token (`iss`,`aud`,`exp`,`nonce`).
-- Only allow redirects to approved domains/paths.
-- Do not rely on provider refresh tokens unless required; store tokens encrypted if stored.
-- Audit: `oauth_start`, `oauth_callback_success|failure`, `oauth_link`, `oauth_unlink`.
+## Functional Requirements
 
-### Provider Details
-- Google: OIDC `openid email profile`, hosted discovery; use "One Tap" later (optional).
-- Meta (Facebook): OAuth 2.0; request `email` scope; verify email status.
+- Customer sign-in issues secure first-party cookies.
+- Social provider callback validates state/nonce and provider identity.
+- Provider linking requires existing account policy and must prevent duplicate identities.
+- Customer can unlink a provider only when another sign-in method remains.
+- Reset and verification flows return generic responses where account existence would otherwise leak.
 
-### Out of Scope (now)
-- Admin/Partner social login (not required).  
-- SMS-based or Apple Login.
+## Business Rules And Edge Cases
+
+- Customer MFA is optional unless future policy changes.
+- Social provider email must be verified or require additional verification.
+- Unauthenticated social callback must not silently take over an existing local account.
+- Booking-first flow must not create incomplete persistent users without verified registration completion.
+- Rate limits apply to login, OTP, reset, and social callback abuse signals.
+
+## Acceptance Criteria
+
+- Given valid customer credentials, when sign-in succeeds, then cookies are issued and intended route is restored.
+- Given provider email is unverified, when social callback completes, then additional verification or safe failure path is used.
+- Given customer tries to unlink their last sign-in method, when they submit, then unlink is blocked.
+- Given reset is requested for any email, then response does not disclose account existence.

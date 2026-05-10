@@ -1,72 +1,65 @@
-# Customer — Auth Registration (US)
+# Customer Registration User Stories
 
-**Date:** 2025-09-06
-**Scope:** Self-registration for customers via email/password + email OTP, and via Social sign-in (Google/Meta) with deduplication and linking. Modal-based **Sign-in/Sign-up** UX in header.
+**Date:** 2026-05-11
+**Status:** Current supporting source
 
-## US-C1: Email/Password + OTP Registration
+## Owner Outcome
 
-1. Header → Sign-in/Sign-up → Sign-up tab; enter Full Name, Email, Password, Verify Password; accept T&C/Policies.
-2. Proceed (disabled until valid). Create unverified user; send 6-digit OTP (TTL 10 min, single-use, 5 attempts, 60s resend cooldown).
-3. Enter OTP → Submit. On success: mark email verified, sign in (issue AT/RT + XSRF), close modal, update app state.
+As a customer, I want quick and safe registration so that I can book services, receive offers, and manage visits without unnecessary friction.
 
-**AC:** Client & server validation; duplicate email error with CTA; OTP UX (masked email, countdown, resend); throttling; i18n (en/bn/hi); accessibility; audit logs.
+## Actors
 
-## US-C2: Social Sign-in (Creates or Links Account)
+- Customer
+- Platform
+- Salon business receiving the booking/customer relationship
 
-- If provider `email_verified=true` → create/find user, mark verified, sign in (no OTP).
-- If missing/unverified email → prompt email → OTP → on confirm, link provider and sign in.
-- Existing account (same email) → link provider on first social sign-in (may require re-auth if risk policy flags).
+## Primary Workflow
 
-**Safety rails:** Cannot unlink last method; link/unlink requires recent re-auth; deduplicate; audit.
-**Business note:** Linking aids conversion/dup-prevention/support; not KYC strength.
+- Start registration with email.
+- Verify email with OTP through an ephemeral registration session.
+- Complete profile/password/consent.
+- Create user only after verification and completion.
 
----
+## User Stories
 
-### Superseded on 2025-09-07 — Reasons
-- Replaced any password-first or early-user-creation flow with **OTP-first RegSession**.
-- Name validation tightened to **letters + single spaces only**; no hyphens/punctuation; double spaces collapsed server-side.
-- Added explicit OTP **resend cooldown & caps** and **status mapping** for `201/202/200/409/422/410/429`.
-- Added **Welcome email** on successful completion.
+### CREG-US-001: OTP-first registration
 
----
+As a customer, I want to verify my email before account creation completes so that abandoned sign-ups do not create unusable accounts.
 
-## Updated Full Spec — 2025-09-07
+### CREG-US-002: Complete registration
 
-# Customer — Registration User Story
-**Date:** 2025-09-07 · **Locales:** en/bn/hi
+As a customer, I want to provide full name, password, and required consent after OTP verification so that my account is created correctly.
 
-## Goal
-Create a customer account quickly and safely for bookings, coupons, and reviews.
+### CREG-US-003: Resend OTP
 
-## Flow (OTP-first; Ephemeral RegSession)
-1) Start: Enter **email** → `POST /auth/register` → RegSession in Redis (TTL), OTP emailed. Response:  
-   {"success": true, "data": {"sessionId":"...", "next":"otp", "otp":{"ttlSec":600,"resendAfterSec":60,"maxAttempts":5}, "maskedEmail":"a***@ex.com"}}
-2) Verify: Enter OTP → `POST /auth/email/verify/confirm` with {"sessionId":"...","email":"user@example.com","code":"123456"} → {"emailVerified": true, "next": "setPassword"}.
-3) Complete: Provide `fullName`, `password`, `consent` → `POST /auth/register/complete` → creates `User`, sets `isVerified=true`, `emailVerifiedAt=now()`, signs in. Welcome email.
+As a customer, I want to resend OTP after cooldown so that I can complete registration if the first email is delayed.
 
-### Resend OTP
-`POST /auth/email/verify/request` → `202 Accepted` with cooldown meta; generates new OTP and resets attempts (daily caps apply).
+### CREG-US-004: Social registration
 
-### Abandon
-Closing modal or navigating away: RegSession TTL expires; no DB `User`; email isn't reserved.
+As a customer, I want to use supported social sign-in where policy allows so that registration is faster.
 
-## Validation Rules
-- **fullName**: 1..80, Unicode **letters + single spaces only** (`^[\p{L}]+(?:\s[\p{L}]+)*$` with `u`).  
-  - Two+ spaces collapsed server-side. Any hyphens/punctuation/digits/emoji → error `auth.registration.fullName.invalidChars`.
-- **email**: RFC5322, ≤254.
-- **password**: 8..128; strength meter; breach check on server.
-- **consent**: boolean true.
+## Functional Requirements
 
-## Error & Status
-- `201` register created, `202` resend, `200` verified/complete, `409` email taken (only after completion step checks), `422` field/OTP invalid, `410` expired, `429` attempts/cooldown, `500` unexpected.  
-- Error shape is global (see aggregate).
+- `POST /auth/register` starts registration and creates an ephemeral registration session.
+- OTP TTL is 10 minutes unless config says otherwise.
+- Resend is cooldown and daily-cap protected.
+- No persistent `User` row is created before registration completion.
+- `POST /auth/email/verify/confirm` proves email for the registration session.
+- `POST /auth/register/complete` creates user, records email verification, consent, and signs in.
+- Welcome notification is sent after completion.
 
-## i18n keys (sample)
-Labels: `auth.registration.title`, `.email.label`, `.otp.label`, `.fullName.label`, `.password.label`, `.confirmPassword.label`, `.consent.label`  
-Errors: `auth.registration.fullName.invalidChars`, `auth.registration.email.invalid`, `auth.otp.invalid`, `auth.otp.expired`, `auth.otp.tooManyAttempts`, `auth.otp.resend.cooldown`  
-Success: `auth.registration.otp.sent`, `auth.otp.resend.sent`, `auth.registration.completed`
+## Business Rules And Edge Cases
 
-## Acceptance
-- OTP resend cooldown enforced; attempts reset on new code.  
-- Abandon → no `User` row.  
-- Name normalization and validation per rules.
+- Expired registration session cannot be completed.
+- OTP attempts are capped.
+- New OTP invalidates or supersedes previous OTP according to implementation policy.
+- `fullName` accepts Unicode letters and single spaces; server normalizes repeated spaces.
+- Duplicate email conflict is checked at completion.
+- Abandoned registration expires without reserving email.
+
+## Acceptance Criteria
+
+- Given I start registration, when OTP is sent, then I receive session ID, masked email, TTL, resend cooldown, and max attempts.
+- Given I abandon registration, when the session expires, then no user exists for that abandoned attempt.
+- Given I enter valid OTP and completion details, when completion succeeds, then my account is created and I am signed in.
+- Given I enter invalid OTP too many times, when attempts are exhausted, then the flow is blocked according to policy.
