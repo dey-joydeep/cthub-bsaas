@@ -1,63 +1,68 @@
-# Theme & Customization User Story
+# Theme, Accessibility, And Personalization User Stories
 
-## Date: 2025-07-31
+**Date:** 2026-05-11
+**Status:** Current future-scope source
 
-### Status: Draft
+## Owner Outcome
 
-#### Acceptance Criteria
+As a salon owner or user, I want appropriate branding, accessibility, and personalization controls so that the application is usable and can reflect salon identity without compromising consistency.
 
-1. **Theme Selection**
-   - [ ] Predefined Themes:
-     - [ ] Light mode
-     - [ ] Dark mode
-     - [ ] High contrast
-   - [ ] Custom Themes:
-     - [ ] Color picker
-     - [ ] Font selection
-     - [ ] Layout options
-   - [ ] Branding:
-     - [ ] Upload logo
-     - [ ] Custom favicon
-     - [ ] Brand colors
+## Actors
 
-2. **UI Customization**
-   - [ ] Layout Options:
-     - [ ] Grid/List view
-     - [ ] Sidebar position
-     - [ ] Card styles
-   - [ ] Navigation:
-     - [ ] Menu structure
-     - [ ] Quick actions
-     - [ ] Breadcrumbs
-   - [ ] Content Display:
-     - [ ] Text size
-     - [ ] Image styles
-     - [ ] Animation preferences
+- Salon Owner
+- Platform Admin
+- Customer
+- Staff
 
-3. **Accessibility**
-   - [ ] Visual Aids:
-     - [ ] Text scaling
-     - [ ] Color contrast
-     - [ ] Readable fonts
-   - [ ] Navigation Aids:
-     - [ ] Keyboard navigation
-     - [ ] Skip links
-     - [ ] Focus indicators
-   - [ ] Content Alternatives:
-     - [ ] Alt text for images
-     - [ ] Captions for media
-     - [ ] Text transcripts
+## Primary Screens Or Workflows
 
-4. **Personalization**
-   - [ ] Dashboard Widgets:
-     - [ ] Add/remove widgets
-     - [ ] Resize widgets
-     - [ ] Reorder layout
-   - [ ] Notification Preferences:
-     - [ ] Email settings
-     - [ ] Push notifications
-     - [ ] Sound alerts
-   - [ ] Saved Views:
-     - [ ] Custom filters
-     - [ ] Column preferences
-     - [ ] Default sort order
+- Brand settings
+- Theme settings
+- Accessibility preferences
+- Dashboard personalization
+- Notification preferences
+
+## User Stories
+
+### THEME-US-001: Brand settings
+
+As a salon owner, I want to configure logo, brand colors, and public display assets so that customer-facing pages match my salon identity.
+
+### THEME-US-002: Accessibility preferences
+
+As a user, I want readable text, contrast, keyboard navigation, and focus indicators so that I can use the product comfortably.
+
+### THEME-US-003: Dashboard personalization
+
+As a salon owner, I want to customize dashboard widgets and saved views so that frequently used information is easy to access.
+
+### THEME-US-004: Platform guardrails
+
+As a platform admin, I want theme limits so that custom branding does not break accessibility, layout, or product consistency.
+
+## Functional Requirements
+
+- Configure salon logo, favicon, public cover image, and brand colors.
+- Validate contrast for customer-facing colors.
+- Support user display preferences such as text size and reduced motion where practical.
+- Support saved filters/views for operational screens.
+- Restrict advanced customization by plan or platform policy.
+
+## Business Rules And Edge Cases
+
+- Branding must not hide required platform/legal/compliance text.
+- Theme settings must not reduce accessibility below accepted thresholds.
+- Public media must be validated before display.
+- Personalization must not change underlying permission boundaries.
+
+## Acceptance Criteria
+
+- Given owner uploads a valid logo, when public salon profile loads, then the logo is displayed.
+- Given selected colors fail contrast requirements, when saving theme, then the system blocks or warns according to policy.
+- Given a user saves a dashboard view, when they return, then the saved filters are restored.
+
+## Non-Functional Requirements
+
+- Theme changes must be safe under SSR.
+- Accessibility settings must be keyboard accessible.
+- Public theme assets should be cacheable and invalidated after update.
