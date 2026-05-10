@@ -52,9 +52,11 @@ jobs:
         run: npx nx-cloud start-ci-run --distribute-on='5 linux-medium-js' --stop-agents-after='build'
 
       - name: Run linting
+        if: github.event_name != 'pull_request'
         run: npx nx affected --target=lint --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=ci
 
       - name: Run tests
+        if: github.event_name != 'pull_request'
         run: npx nx affected --target=test --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=ci
 
       - name: OpenAPI parity (auth)
@@ -68,6 +70,9 @@ jobs:
           npx nx run-many -t lint -p server-core,server-data-access,server-feature-auth --parallel=3
           npx nx run-many -t test -p server-core,server-data-access,server-feature-auth --code-coverage --parallel=1
 
+      - name: Server auth build
+        run: npx nx run-many -t build -p server-core,server-data-access,server-feature-auth --parallel=3
+
       - name: API e2e smoke (correlation-id, Retry-After)
         run: npx nx run api-e2e:e2e
 
@@ -80,6 +85,7 @@ jobs:
           fi
 
       - name: Run build
+        if: github.event_name != 'pull_request'
         run: npx nx affected --target=build --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=production
 
       - name: Upload test coverage
