@@ -13,3 +13,4 @@ export * from './lib/ports/oauth.port';
 export * from './lib/ports/social-account.repository.port';
 export * from './lib/ports/credential-passkey.repository.port';
 export * from './lib/ports/invite.port';
+export * from './lib/ports/last-admin.validator.port';

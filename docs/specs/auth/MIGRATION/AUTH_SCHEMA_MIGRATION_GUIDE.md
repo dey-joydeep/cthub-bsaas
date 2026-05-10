@@ -1,5 +1,5 @@
 # Auth Schema — Implementation & Migration Guide
-**Date:** 2025-09-01 | **DB:** PostgreSQL | **Prisma:** 6.x
+**Date:** 2026-05-02 | **DB:** PostgreSQL | **Prisma:** 6.x
 
 ## Overview
 Implements single **User** with tenant memberships & roles, **cookie AT/RT rotation**, **sessions**, **passkeys/TOTP**, **recovery codes**, **email verification**, **password reset**, **social accounts**, and optional **DB audit events**.
@@ -33,7 +33,7 @@ Implements single **User** with tenant memberships & roles, **cookie AT/RT rotat
 - Implement **flexible reset**: if 2FA unavailable, accept recovery code.
 
 ### Phase 4 — Cleanup
-- Remove legacy OTP usage and deprecated flags.
+- Remove former OTP-only data paths and retired flags.
 - Finalize:
   ```bash
   npx prisma migrate dev --name auth_consolidation_cleanup

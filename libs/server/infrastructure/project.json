@@ -1,7 +1,7 @@
 {
     "name": "server-infrastructure",
     "sourceRoot": "libs/server/infrastructure/src",
-    "tags": ["scope:server", "type:infra"],
+    "tags": ["scope:server", "type:infra", "type:lib"],
     "targets": {
         "lint": {
             "outputs": ["{options.outputFile}"],
@@ -23,8 +23,14 @@
         },
         "type-check": {
             "executor": "nx:run-commands",
+            "dependsOn": [
+                "shared:build",
+                "server-contracts-auth:build",
+                "server-core:build",
+                "server-data-access:build"
+            ],
             "options": {
-                "command": "tsc -p libs/server/infrastructure/tsconfig.lib.json --noEmit"
+                "command": "tsc -b libs/server/infrastructure/tsconfig.json --pretty false"
             }
         },
         "test": {

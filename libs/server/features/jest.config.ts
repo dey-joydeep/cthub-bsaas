@@ -1,10 +1,23 @@
-export default {
+import type { Config } from 'jest';
+
+const config: Config = {
   displayName: 'server-features',
   preset: '../../../jest.preset.cjs',
   testEnvironment: 'node',
-  transform: {
-    '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
-  },
+  globalSetup: '<rootDir>/../server-testing-utils/src/lib/global-setup.ts',
+  globalTeardown: '<rootDir>/../server-testing-utils/src/lib/global-teardown.ts',
+  testTimeout: 30000,
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../../coverage/libs/server/features',
+  coveragePathIgnorePatterns: ['[\\/]dto[\\/]'],
+  coverageThreshold: {
+    global: {
+      statements: 100,
+      branches: 100,
+      functions: 100,
+      lines: 100,
+    },
+  },
 };
+
+export default config;

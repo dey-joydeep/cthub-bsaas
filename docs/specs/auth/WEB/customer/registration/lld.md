@@ -16,9 +16,8 @@ This LLD implements the architecture defined in **/customer/registration/hld.md*
 ## Data Models / DTOs
 
 ```ts
-export interface RegisterStartDto { email: string; }
-export interface EmailVerifyDto { sessionId: string; email: string; code: string; }
-export interface RegisterCompleteDto { sessionId: string; fullName: string; password: string; }
+export interface RegisterDto { email: string; password: string; name: string; }
+export interface EmailVerifyDto { token?: string; email?: string; otp?: string; }
 ```
 
 
@@ -26,7 +25,6 @@ export interface RegisterCompleteDto { sessionId: string; fullName: string; pass
 - **POST** `/auth/register`
 - **POST** `/auth/email/verify/request`
 - **POST** `/auth/email/verify/confirm`
-- **POST** `/auth/register/complete`
 - **GET** `/auth/oauth/:provider/start`
 - **GET** `/auth/oauth/:provider/callback`
 

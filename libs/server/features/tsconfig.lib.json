@@ -1,7 +1,6 @@
 {
     "extends": "../../../tsconfig.base.json",
     "compilerOptions": {
-        "rootDir": "src",
         "composite": true,
         "outDir": "../../../dist/libs/server/features",
         "declaration": true,

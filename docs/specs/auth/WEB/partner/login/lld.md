@@ -1,5 +1,5 @@
 # Partner — Login — LLD
-**Updated:** 2025-09-11
+**Updated:** 2026-05-02
 
 ## Reference
 This LLD implements the architecture defined in **/partner/login/hld.md**. Any design drift found during implementation must be reflected back in the HLD.
@@ -17,15 +17,15 @@ This LLD implements the architecture defined in **/partner/login/hld.md**. Any d
 
 ```ts
 export interface LoginDto { email: string; password: string; }
-export type AssertionOptions = PublicKeyCredentialRequestOptions;
-export interface AssertionVerifyDto { credential: any; }
+export interface WebAuthnLoginStartDto { email?: string; }
+export interface WebAuthnLoginFinishDto { credential: PublicKeyCredential; }
 ```
 
 
 ## Service Contracts (API)
 - **POST** `/auth/login`  _[server]_
-- **GET** `/auth/webauthn/assertion/options`  _[TBD]_
-- **POST** `/auth/webauthn/assertion/verify`  _[TBD]_
+- **POST** `/auth/webauthn/login/start`  _[server]_
+- **POST** `/auth/webauthn/login/finish`  _[server]_
 
 ## Workflows
 - Success path(s)

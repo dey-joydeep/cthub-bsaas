@@ -1,8 +1,8 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
     "outDir": "../../../../dist/libs/server/features/user",
+    "module": "ESNext",
     "declaration": true,
     "declarationMap": true,
     "skipLibCheck": true,
@@ -23,6 +23,7 @@
   },
   "exclude": [
     "**/*.spec.ts",
+    "**/*.e2e-spec.ts",
     "**/*.test.ts",
     "jest.config.ts",
     "node_modules",
@@ -32,7 +33,17 @@
     "src/**/*.ts"
   ],
   "references": [
-    { "path": "../../core/tsconfig.lib.json" },
-    { "path": "../../data-access/tsconfig.lib.json" }
+    {
+      "path": "../../contracts-auth/tsconfig.lib.json"
+    },
+    {
+      "path": "../../core/tsconfig.lib.json"
+    },
+    {
+      "path": "../../data-access/tsconfig.lib.json"
+    },
+    {
+      "path": "../../infrastructure/tsconfig.lib.json"
+    }
   ]
 }

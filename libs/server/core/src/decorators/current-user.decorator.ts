@@ -1,5 +1,6 @@
 import { createParamDecorator, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
+import { AUTH_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 
 /**
  * Custom decorator to get the current authenticated user from the request
@@ -17,7 +18,7 @@ export const CurrentUser = createParamDecorator((_data: unknown, ctx: ExecutionC
   const request = ctx.switchToHttp().getRequest<{ user?: AuthenticatedUser }>();
 
   if (!request.user) {
-    throw new UnauthorizedException('User not authenticated');
+    throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.UNAUTHENTICATED);
   }
 
   return request.user;

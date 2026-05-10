@@ -37,6 +37,7 @@ As a **Customer**, I want a simple sign‑up/sign‑in and recovery flow so I ca
 
 ## 4) UX
 - Entry: `/login` and `/register` (or modal); localized copy about privacy & security.  
+- Stay signed in: Show an informational "Stay signed in" hint; backend applies persistent refresh cookie policy uniformly (no API flag). Avoid on shared devices.
 - Post‑login: redirect to **intended route** (e.g., checkout) or `/home`.
 
 ## 5) Tests

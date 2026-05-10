@@ -3,7 +3,7 @@ import { PrismaService } from '../../../core/database/prisma/prisma.service';
 import { APPOINTMENT_REPOSITORY } from '../repositories/appointment.repository';
 import { AppointmentService } from './appointment.service';
 import { CreateAppointmentDto } from '../dto/requests/create-appointment.dto';
-import { AuthUser } from '../../user/interfaces/auth.interface';
+import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 import { AppointmentStatus } from '@shared/enums/appointment-status.enum';
 
 // Test data
@@ -71,7 +71,7 @@ describe('AppointmentService', () => {
         status: AppointmentStatus.PENDING,
       };
 
-      const mockUser: AuthUser = {
+      const mockUser: AuthenticatedUser = {
         id: TEST_USER_ID,
         email: 'test@example.com',
         firstName: 'Test',
@@ -134,7 +134,7 @@ describe('AppointmentService', () => {
         status: AppointmentStatus.PENDING,
       };
 
-      const mockUser: AuthUser = {
+      const mockUser: AuthenticatedUser = {
         id: TEST_USER_ID,
         email: 'test@example.com',
         firstName: 'Test',

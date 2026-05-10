@@ -5,7 +5,7 @@
         "declaration": true,
         "declarationMap": true,
         "composite": true,
-        "rootDir": "src",
+        "rootDir": "./src",
         "isolatedModules": false,
         "useDefineForClassFields": true,
         "lib": ["ES2022"],

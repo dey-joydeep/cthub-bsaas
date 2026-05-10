@@ -1,65 +1,30 @@
 {
-    "extends": "./tsconfig.base.json",
-    "compilerOptions": {
-        "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
-    },
-    "files": [],
-    "include": [],
-    "exclude": ["node_modules", "dist"],
-    "references": [
-        {
-            "path": "apps/api/tsconfig.app.json"
-        },
-        {
-            "path": "apps/web/admin/tsconfig.app.json"
-        },
-        {
-            "path": "apps/web/customer/tsconfig.app.json"
-        },
-        {
-            "path": "apps/web/partner/tsconfig.app.json"
-        },
-        {
-            "path": "libs/server/core/tsconfig.lib.json"
-        },
-        {
-            "path": "libs/server/contracts-auth/tsconfig.lib.json"
-        },
-        {
-            "path": "libs/server/data-access/tsconfig.lib.json"
-        },
-        {
-            "path": "libs/server/infrastructure/tsconfig.lib.json"
-        },
-        {
-            "path": "libs/server/features/auth/tsconfig.lib.json"
-        },
-        {
-            "path": "libs/shared/tsconfig.lib.json"
-        },
-        {
-            "path": "libs/web/admin/auth/tsconfig.lib.json"
-        },
-        {
-            "path": "libs/web/config/tsconfig.lib.json"
-        },
-        {
-            "path": "libs/web/core/auth/tsconfig.lib.json"
-        },
-        {
-            "path": "libs/web/core/http/tsconfig.lib.json"
-        },
-        {
-            "path": "libs/web/core/testing/tsconfig.lib.json"
-        },
-        {
-            "path": "libs/web/customer/auth/tsconfig.lib.json"
-        },
-        {
-            "path": "libs/web/partner/auth/tsconfig.lib.json"
-        },
-        {
-            "path": "libs/web/ui/tsconfig.lib.json"
-        }
-    ]
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
+  },
+  "files": [],
+  "include": [],
+  "exclude": ["node_modules", "dist"],
+  "references": [
+    { "path": "apps/api/tsconfig.app.json" },
+    { "path": "apps/web/admin/tsconfig.app.json" },
+    { "path": "apps/web/customer/tsconfig.app.json" },
+    { "path": "apps/web/partner/tsconfig.app.json" },
+    { "path": "libs/server/core/tsconfig.lib.json" },
+    { "path": "libs/server/contracts-auth/tsconfig.lib.json" },
+    { "path": "libs/server/data-access/tsconfig.lib.json" },
+    { "path": "libs/server/infrastructure/tsconfig.lib.json" },
+    { "path": "libs/server/features/auth/tsconfig.lib.json" },
+    { "path": "libs/shared/tsconfig.lib.json" },
+    { "path": "libs/web/admin/auth/tsconfig.lib.json" },
+    { "path": "libs/web/config/tsconfig.lib.json" },
+    { "path": "libs/web/core/auth/tsconfig.lib.json" },
+    { "path": "libs/web/core/http/tsconfig.lib.json" },
+    { "path": "libs/web/core/testing/tsconfig.lib.json" },
+    { "path": "libs/web/customer/auth/tsconfig.lib.json" },
+    { "path": "libs/web/partner/auth/tsconfig.lib.json" },
+    { "path": "libs/web/ui/tsconfig.lib.json" }
+  ]
 }
+

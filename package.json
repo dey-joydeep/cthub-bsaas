@@ -92,9 +92,12 @@
     "nx:affected:libs": "nx affected:libs",
     "nx:affected:build": "nx affected:build",
     "nx:affected:test": "nx affected:test",
-    "nx:affected:lint": "nx affected:lint"
+    "nx:affected:lint": "nx affected:lint",
+    "openapi:lint:auth": "redocly lint docs/specs/auth/API/openapi.yaml --config .redocly.yaml --max-problems=0",
+    "openapi:check:auth": "tsx scripts/openapi-auth-check.ts"
   },
   "devDependencies": {
+    "@redocly/cli": "2.7.0",
     "@angular-devkit/core": "20.1.5",
     "@angular-devkit/schematics": "^20.2.0",
     "@angular/build": "^20.2.0",
@@ -104,6 +107,7 @@
     "@eslint/js": "^9.8.0",
     "@eslint/mcp": "^0.1.1",
     "@faker-js/faker": "^9.9.0",
+    "@golevelup/ts-jest": "^0.4.0",
     "@jimp/types": "1.6.0",
     "@microsoft/api-extractor": "^7.52.11",
     "@modelcontextprotocol/server-filesystem": "^2025.8.21",
@@ -137,6 +141,7 @@
     "@types/log4js": "^0.0.33",
     "@types/morgan": "^1.9.10",
     "@types/node": "^20.19.10",
+    "@types/nodemailer": "^7.0.1",
     "@types/passport": "^1.0.17",
     "@types/passport-jwt": "^3.0.13",
     "@types/supertest": "^6.0.3",
@@ -178,6 +183,9 @@
     "verdaccio": "^6.0.5"
   },
   "dependencies": {
+    "@simplewebauthn/server": "^9.0.3",
+    "ioredis": "^5.4.1",
+    "google-auth-library": "^9.14.1",
     "@angular/animations": "20.1.6",
     "@angular/cdk": "20.1.5",
     "@angular/common": "20.1.6",

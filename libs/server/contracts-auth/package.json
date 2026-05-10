@@ -1,13 +1,16 @@
 {
-    "name": "@cthub-bsaas/server-contracts-auth",
-    "version": "0.0.1",
-    "type": "module",
-    "main": "./../../../../dist/libs/server/contracts-auth/index.js",
-    "types": "./../../../../dist/libs/server/contracts-auth/index.d.ts",
-    "exports": {
-        ".": {
-            "types": "./../../../../dist/libs/server/contracts-auth/index.d.ts",
-            "default": "./../../../../dist/libs/server/contracts-auth/index.js"
-        }
+  "name": "@cthub-bsaas/server-contracts-auth",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./../../../../dist/libs/server/contracts-auth/index.js",
+  "types": "./../../../../dist/libs/server/contracts-auth/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./../../../../dist/libs/server/contracts-auth/index.d.ts",
+      "default": "./../../../../dist/libs/server/contracts-auth/index.js"
     }
+  },
+  "dependencies": {
+    "@cthub-bsaas/shared": "0.0.1"
+  }
 }

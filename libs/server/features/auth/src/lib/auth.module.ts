@@ -1,12 +1,19 @@
 import { CredentialTotpRepository, RefreshTokenRepository, SessionRepository, UserRepository, PrismaModule, PasswordResetRepository, SocialAccountRepository, CredentialPasskeyRepository } from '@cthub-bsaas/server-data-access';
-import { EncryptionModule } from '@cthub-bsaas/server-core';
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { resolveAccessSecret } from './utils/jwt-secret.util';
+import { ConfigService, CookieRegistry, CookiesInterceptor, EncryptionModule, LoggerModule } from '@cthub-bsaas/server-core';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './controllers/auth.controller';
+import { SessionsController } from './controllers/sessions.controller';
+import { PasswordController } from './controllers/password.controller';
+import { EmailController } from './controllers/email.controller';
+import { RecoveryController } from './controllers/recovery.controller';
+import { WebauthnController } from './controllers/webauthn.controller';
+import { OauthController } from './controllers/oauth.controller';
+import { RegistrationController } from './controllers/registration.controller';
 import { TotpController } from './controllers/totp.controller';
+import { PasskeysController } from './controllers/passkeys.controller';
+import { PasskeysService } from './services/passkeys.service';
 import {
   CREDENTIAL_TOTP_REPOSITORY,
   CREDENTIAL_PASSKEY_REPOSITORY,
@@ -21,8 +28,9 @@ import { EmailVerificationRepository } from '@cthub-bsaas/server-data-access';
 import { AuthService } from './services/auth.service';
 import { AuditService } from './services/audit.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { EmailModule, TotpModule, WebAuthnModule, RecoveryModule, OAuthModule, InviteModule } from '@cthub-bsaas/server-infrastructure';
-import { CookieRegistry, CookiesInterceptor } from '@cthub-bsaas/server-core';
+import { EmailModule, TotpModule, WebAuthnModule, RecoveryModule, OAuthModule, InviteModule, PrismaLastAdminAdapter } from '@cthub-bsaas/server-infrastructure';
+import { RateLimitModule } from '@cthub-bsaas/server-infrastructure';
+import { LAST_ADMIN_VALIDATOR_PORT } from '@cthub-bsaas/server-contracts-auth';
 import { AuthCookiesService } from './services/auth-cookies.service';
 
 const providers = [
@@ -58,6 +66,10 @@ const providers = [
     provide: CREDENTIAL_PASSKEY_REPOSITORY,
     useClass: CredentialPasskeyRepository,
   },
+  {
+    provide: LAST_ADMIN_VALIDATOR_PORT,
+    useClass: PrismaLastAdminAdapter,
+  },
 ];
 
 /**
@@ -69,27 +81,38 @@ const providers = [
   imports: [
     PrismaModule,
     EncryptionModule,
+    LoggerModule,
     TotpModule,
     WebAuthnModule,
     RecoveryModule,
     OAuthModule,
     InviteModule,
     EmailModule,
+    RateLimitModule,
     PassportModule,
     JwtModule.registerAsync({
-      imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        secret: resolveAccessSecret(config),
+        secret: config.auth.jwtAccessSecret,
         signOptions: {
-          expiresIn: config.get<string>('JWT_ACCESS_EXPIRES_IN', '15m'),
+          expiresIn: config.auth.jwtExpiresIn,
         },
       }),
       inject: [ConfigService],
     }),
   ],
-  controllers: [AuthController, TotpController],
-  providers: [AuthService, JwtStrategy, AuditService, AuthCookiesService, CookieRegistry, CookiesInterceptor, ...providers],
-  exports: [AuthService, AuditService, AuthCookiesService, CookieRegistry, CookiesInterceptor, ...providers],
+  controllers: [
+    AuthController,
+    TotpController,
+    SessionsController,
+    PasswordController,
+    EmailController,
+    RecoveryController,
+    WebauthnController,
+    OauthController,
+    RegistrationController,
+    PasskeysController,
+  ],
+  providers: [AuthService, PasskeysService, JwtStrategy, AuditService, AuthCookiesService, CookieRegistry, CookiesInterceptor, ...providers],
+  exports: [AuthService, PasskeysService, AuditService, AuthCookiesService, CookieRegistry, CookiesInterceptor, ...providers],
 })
 export class AuthModule {}
-

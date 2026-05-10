@@ -41,3 +41,6 @@ work/
 coverage/
 .angular
 .github/instructions/nx.instructions.md
+
+.claude/worktrees
+.claude/settings.local.json

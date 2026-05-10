@@ -2,1262 +2,711 @@ openapi: 3.1.0
 info:
   title: CTHub Auth API
   version: "1.0.0"
-  description: >
-    Consolidated, implementation-aligned spec for Auth. Generated 2025-09-11.
-    Cookies (AT/RT) with SameSite=Lax; XSRF double-submit; uniform anti-enumeration responses.
+  description: |
+    Implementation-aligned Auth API.
+    - Cookies (AT/RT) with SameSite=Lax; XSRF double-submit
+    - Refresh token is read from cookie `bsaas_rt`; body is accepted only when cookie is absent
+    - If both cookie and body refresh tokens are provided, the request is rejected (400)
+    - Success responses are wrapped by `{ success: true, data }`.
+    - Error responses are wrapped by `{ success: false, code, message, details?, meta?: { correlationId } }`.
 servers:
   - url: https://api.example.com
     description: Production
   - url: http://localhost:3000
     description: Local
+security: []
 components:
   securitySchemes:
     cookieAuth:
       type: apiKey
       in: cookie
-      name: access_token
+      name: bsaas_at
   schemas:
     ApiError:
       type: object
       properties:
-        code: {"type":"string"}
-        message: {"type":"string"}
-        correlationId: {"type":"string"}
+        code:
+          type: string
+          description: Stable error code identifier
+          example: error.auth.invalid_credentials
+        message:
+          type: string
+          description: i18n message key (client maps to localized string)
+          example: error.auth.invalid_credentials
+        details:
+          description: Optional structured error details
+          type: object
+        meta:
+          type: object
+          properties:
+            correlationId:
+              type: string
       required: [code, message]
     LoginDto:
       type: object
       properties:
-        email: {"type":"string","format":"email","maxLength":254}
-        password: {"type":"string","minLength":8}
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 8
       required: [email, password]
-    ResetDto:
+    RefreshDto:
       type: object
+      description: Optional body token used only if cookie `bsaas_rt` is absent.
       properties:
-        token: {"type":"string"}
-        newPassword: {"type":"string","minLength":8}
-      required: [token, newPassword]
+        refreshToken:
+          type: string
+      required: []
     ForgotDto:
       type: object
       properties:
-        email: {"type":"string","format":"email","maxLength":254}
+        email:
+          type: string
+          format: email
+          maxLength: 254
       required: [email]
-    TotpVerifyDto:
+    ResetDto:
       type: object
       properties:
-        code: {"type":"string","pattern":"^[0-9]6$"}
-      required: [code]
-    RegisterStartDto:
-      type: object
-      properties:
-        email: {"type":"string","format":"email"}
-      required: [email]
-    EmailVerifyRequestDto:
-      type: object
-      properties:
-        email: {"type":"string"}
-      required: [email]
-    EmailVerifyConfirmDto:
-      type: object
-      properties:
-        sessionId: {"type":"string"}
-        email: {"type":"string"}
-        code: {"type":"string"}
-      required: [sessionId, email, code]
-    RegisterCompleteDto:
-      type: object
-      properties:
-        sessionId: {"type":"string"}
-        fullName: {"type":"string"}
-        password: {"type":"string","minLength":8}
-      required: [sessionId, fullName, password]
+        token:
+          type: string
+        newPassword:
+          type: string
+          minLength: 8
+      required: [token, newPassword]
     PasswordChangeDto:
       type: object
       properties:
-        currentPassword: {"type":"string"}
-        newPassword: {"type":"string","minLength":8}
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+          minLength: 8
       required: [currentPassword, newPassword]
+    EmailChangeRequestDto:
+      type: object
+      properties:
+        newEmail:
+          type: string
+          format: email
+      required: [newEmail]
+    EmailChangeConfirmDto:
+      type: object
+      properties:
+        token:
+          type: string
+      required: [token]
+    EmailVerifyRequestDto:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required: [email]
+    EmailVerifyConfirmDto:
+      type: object
+      oneOf:
+        - required: [token]
+        - required: [email, otp]
+      properties:
+        token:
+          type: string
+        email:
+          type: string
+          format: email
+        otp:
+          type: string
+          pattern: "^[0-9]{6}$"
+    TotpLoginDto:
+      type: object
+      properties:
+        tempToken:
+          type: string
+        totpCode:
+          type: string
+          pattern: "^[0-9]{6}$"
+      required: [tempToken, totpCode]
+    PartnerRegistrationCompleteDto:
+      type: object
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+          minLength: 8
+      required: [token, password]
+    WebauthnRegisterStartDto:
+      type: object
+      properties:
+        username:
+          type: string
+      required: [username]
+    WebauthnAttestationDto:
+      type: object
+      properties:
+        response:
+          type: object
+      required: [response]
+    WebauthnAssertionDto:
+      type: object
+      properties:
+        response:
+          type: object
+      required: [response]
+    PasskeyDto:
+      type: object
+      properties:
+        credentialId:
+          type: string
+          description: WebAuthn credential ID (base64url)
+        createdAt:
+          type: string
+          format: date-time
+        lastUsedAt:
+          type: string
+          format: date-time
+        transports:
+          type: array
+          items:
+            type: string
+      required: [credentialId]
 paths:
-
-  /appointments:
-
-      get:
-        summary: GET /appointments
-        responses:
-        200:
-          description: OK
-
-
-
-      post:
-        summary: POST /appointments
-        responses:
-        200:
-          description: OK
-
-
-
-  /appointments/eligible-to-review/:tenantId:
-
-      get:
-        summary: GET /appointments/eligible-to-review/:tenantId
-        responses:
-        200:
-          description: OK
-
-
-
-  /appointments/overview:
-
-      get:
-        summary: GET /appointments/overview
-        responses:
-        200:
-          description: OK
-
-
-
-  /appointments/tenant/:tenantId:
-
-      get:
-        summary: GET /appointments/tenant/:tenantId
-        responses:
-        200:
-          description: OK
-
-
-
-  /appointments/user:
-
-      get:
-        summary: GET /appointments/user
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/email/send-verification:
-
-      post:
-        summary: POST /auth/email/send-verification
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/email/verify:
-
-      post:
-        summary: POST /auth/email/verify
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/email/verify/confirm:
-
-      post:
-        summary: POST /auth/email/verify/confirm
-        requestBody:
-          {
-                    "required": true,
-                    "content": {
-                              "application/json": {
-                                        "schema": {
-                                                  "$ref": "#/components/schemas/EmailVerifyConfirmDto"
-                                        }
-                              }
-                    }
-          }
-        responses:
-        200:
-          description: Email verified
-
-
-
-  /auth/email/verify/request:
-
-      post:
-        summary: POST /auth/email/verify/request
-        requestBody:
-          {
-                    "required": true,
-                    "content": {
-                              "application/json": {
-                                        "schema": {
-                                                  "$ref": "#/components/schemas/EmailVerifyRequestDto"
-                                        }
-                              }
-                    }
-          }
-        responses:
-        202:
-          description: Verification email sent
-
-
-
   /auth/login:
-
-      post:
-        summary: POST /auth/login
-        requestBody:
-          {
-                    "required": true,
-                    "content": {
-                              "application/json": {
-                                        "schema": {
-                                                  "$ref": "#/components/schemas/LoginDto"
-                                        }
-                              }
-                    }
-          }
-        responses:
-        200:
+    post:
+      summary: Sign in with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginDto'
+      responses:
+        '200':
           description: Authenticated
-        401:
-
-description: Invalid credentials
-headers:
-  Retry-After:
-    description: Cooldown in seconds (for 429) when applicable.
-    schema: { "type": "integer" }
-content:
-  application/json:
-    schema:
-      $ref: '#/components/schemas/ApiError'
-    example:
-      code: INVALID_CREDENTIALS
-      message: "Invalid credentials"        423:
-
-description: Account locked
-headers:
-  Retry-After:
-    description: Cooldown in seconds (for 429) when applicable.
-    schema: { "type": "integer" }
-content:
-  application/json:
-    schema:
-      $ref: '#/components/schemas/ApiError'
-    example:
-      code: ACCOUNT_LOCKED
-      message: "Account locked"        429:
-
-description: Too many requests
-headers:
-  Retry-After:
-    description: Cooldown in seconds (for 429) when applicable.
-    schema: { "type": "integer" }
-content:
-  application/json:
-    schema:
-      $ref: '#/components/schemas/ApiError'
-    example:
-      code: RATE_LIMITED
-      message: "Too many requests"
-
-
-  /auth/login/totp:
-
-      post:
-        summary: POST /auth/login/totp
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/logout:
-
-      post:
-        summary: POST /auth/logout
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/mfa/totp/confirm:
-
-      post:
-        summary: POST /auth/mfa/totp/confirm
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/mfa/totp/enroll:
-
-      post:
-        summary: POST /auth/mfa/totp/enroll
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/mfa/totp/verify:
-
-      post:
-        summary: POST /auth/mfa/totp/verify
-        requestBody:
-          {
-                    "required": true,
-                    "content": {
-                              "application/json": {
-                                        "schema": {
-                                                  "$ref": "#/components/schemas/TotpVerifyDto"
-                                        }
-                              }
-                    }
-          }
-        responses:
-        200:
-          description: MFA verified
-        401:
-
-description: Invalid TOTP
-headers:
-  Retry-After:
-    description: Cooldown in seconds (for 429) when applicable.
-    schema: { "type": "integer" }
-content:
-  application/json:
-    schema:
-      $ref: '#/components/schemas/ApiError'
-    example:
-      code: TOTP_INVALID
-      message: "Invalid TOTP"        423:
-
-description: MFA locked
-headers:
-  Retry-After:
-    description: Cooldown in seconds (for 429) when applicable.
-    schema: { "type": "integer" }
-content:
-  application/json:
-    schema:
-      $ref: '#/components/schemas/ApiError'
-    example:
-      code: MFA_LOCKED
-      message: "MFA locked"
-
-
-  /auth/oauth/:provider/callback:
-
-      get:
-        summary: GET /auth/oauth/:provider/callback
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/oauth/:provider/start:
-
-      get:
-        summary: GET /auth/oauth/:provider/start
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/oauth/:provider/unlink:
-
-      post:
-        summary: POST /auth/oauth/:provider/unlink
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/otp/confirm:
-
-      post:
-        summary: POST /auth/otp/confirm
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/otp/request:
-
-      post:
-        summary: POST /auth/otp/request
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/owner/registration/:token:
-
-      get:
-        summary: GET /auth/owner/registration/:token
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/owner/registration/complete:
-
-      post:
-        summary: POST /auth/owner/registration/complete
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/password/forgot:
-
-      post:
-        summary: POST /auth/password/forgot
-        requestBody:
-          {
-                    "required": true,
-                    "content": {
-                              "application/json": {
-                                        "schema": {
-                                                  "$ref": "#/components/schemas/ForgotDto"
-                                        }
-                              }
-                    }
-          }
-        responses:
-        202:
-          description: Accepted (generic response)
-
-
-
-  /auth/password/reset:
-
-      post:
-        summary: POST /auth/password/reset
-        requestBody:
-          {
-                    "required": true,
-                    "content": {
-                              "application/json": {
-                                        "schema": {
-                                                  "$ref": "#/components/schemas/ResetDto"
-                                        }
-                              }
-                    }
-          }
-        responses:
-        200:
-          description: Password reset OK
-        400:
-
-description: Invalid token
-headers:
-  Retry-After:
-    description: Cooldown in seconds (for 429) when applicable.
-    schema: { "type": "integer" }
-content:
-  application/json:
-    schema:
-      $ref: '#/components/schemas/ApiError'
-    example:
-      code: TOKEN_INVALID
-      message: "Invalid token"        410:
-
-description: Expired token
-headers:
-  Retry-After:
-    description: Cooldown in seconds (for 429) when applicable.
-    schema: { "type": "integer" }
-content:
-  application/json:
-    schema:
-      $ref: '#/components/schemas/ApiError'
-    example:
-      code: TOKEN_EXPIRED
-      message: "Expired token"
-
-
-  /auth/recovery/codes:
-
-      post:
-        summary: POST /auth/recovery/codes
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/recovery/generate:
-
-      post:
-        summary: POST /auth/recovery/generate
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/recovery/verify:
-
-      post:
-        summary: POST /auth/recovery/verify
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/refresh:
-
-      post:
-        summary: POST /auth/refresh
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/register:
-
-      post:
-        summary: POST /auth/register
-        requestBody:
-          {
-                    "required": true,
-                    "content": {
-                              "application/json": {
-                                        "schema": {
-                                                  "$ref": "#/components/schemas/RegisterStartDto"
-                                        }
-                              }
-                    }
-          }
-        responses:
-        202:
-          description: Registration started
-
-
-
-  /auth/register/complete:
-
-      post:
-        summary: POST /auth/register/complete
-        requestBody:
-          {
-                    "required": true,
-                    "content": {
-                              "application/json": {
-                                        "schema": {
-                                                  "$ref": "#/components/schemas/RegisterCompleteDto"
-                                        }
-                              }
-                    }
-          }
-        responses:
-        200:
-          description: Registered
-        400:
-
-description: Password too weak
-headers:
-  Retry-After:
-    description: Cooldown in seconds (for 429) when applicable.
-    schema: { "type": "integer" }
-content:
-  application/json:
-    schema:
-      $ref: '#/components/schemas/ApiError'
-    example:
-      code: WEAK_PASSWORD
-      message: "Password too weak"
-
-
-  /auth/sessions:
-
-      get:
-        summary: GET /auth/sessions
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/sessions/revoke:
-
-      post:
-        summary: POST /auth/sessions/revoke
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/sessions/revoke/:id:
-
-      post:
-        summary: POST /auth/sessions/revoke/:id
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/staff/registration/:token:
-
-      get:
-        summary: GET /auth/staff/registration/:token
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/staff/registration/complete:
-
-      post:
-        summary: POST /auth/staff/registration/complete
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/totp/enroll/finish:
-
-      post:
-        summary: POST /auth/totp/enroll/finish
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/totp/enroll/start:
-
-      post:
-        summary: POST /auth/totp/enroll/start
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/totp/setup:
-
-      post:
-        summary: POST /auth/totp/setup
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/totp/verify:
-
-      post:
-        summary: POST /auth/totp/verify
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/webauthn/login/finish:
-
-      post:
-        summary: POST /auth/webauthn/login/finish
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/webauthn/login/start:
-
-      post:
-        summary: POST /auth/webauthn/login/start
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/webauthn/register/finish:
-
-      post:
-        summary: POST /auth/webauthn/register/finish
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/webauthn/register/start:
-
-      post:
-        summary: POST /auth/webauthn/register/start
-        responses:
-        200:
-          description: OK
-
-
-
-  /dashboard/product-sales:
-
-      get:
-        summary: GET /dashboard/product-sales
-        responses:
-        200:
-          description: OK
-
-
-
-  /dashboard/product-sales-summary:
-
-      get:
-        summary: GET /dashboard/product-sales-summary
-        responses:
-        200:
-          description: OK
-
-
-
-  /dashboard/renewals:
-
-      get:
-        summary: GET /dashboard/renewals
-        responses:
-        200:
-          description: OK
-
-
-
-  /dashboard/revenue:
-
-      get:
-        summary: GET /dashboard/revenue
-        responses:
-        200:
-          description: OK
-
-
-
-  /dashboard/stats:
-
-      get:
-        summary: GET /dashboard/stats
-        responses:
-        200:
-          description: OK
-
-
-
-  /dashboard/subscriptions:
-
-      get:
-        summary: GET /dashboard/subscriptions
-        responses:
-        200:
-          description: OK
-
-
-
-  /dashboard/top-selling-products:
-
-      get:
-        summary: GET /dashboard/top-selling-products
-        responses:
-        200:
-          description: OK
-
-
-
-  /portfolios:
-
-      get:
-        summary: GET /portfolios
-        responses:
-        200:
-          description: OK
-
-
-
-      post:
-        summary: POST /portfolios
-        responses:
-        200:
-          description: OK
-
-
-
-  /portfolios/:id:
-
-      get:
-        summary: GET /portfolios/:id
-        responses:
-        200:
-          description: OK
-
-
-
-      put:
-        summary: PUT /portfolios/:id
-        responses:
-        200:
-          description: OK
-
-
-
-  /reviews:
-
-      get:
-        summary: GET /reviews
-        responses:
-        200:
-          description: OK
-
-
-
-      post:
-        summary: POST /reviews
-        responses:
-        200:
-          description: OK
-
-
-
-  /reviews/:id:
-
-      delete:
-        summary: DELETE /reviews/:id
-        responses:
-        200:
-          description: OK
-
-
-
-      get:
-        summary: GET /reviews/:id
-        responses:
-        200:
-          description: OK
-
-
-
-      put:
-        summary: PUT /reviews/:id
-        responses:
-        200:
-          description: OK
-
-
-
-  /reviews/:id/respond:
-
-      post:
-        summary: POST /reviews/:id/respond
-        responses:
-        200:
-          description: OK
-
-
-
-  /salon-staff-requests:
-
-      get:
-        summary: GET /salon-staff-requests
-        responses:
-        200:
-          description: OK
-
-
-
-      post:
-        summary: POST /salon-staff-requests
-        responses:
-        200:
-          description: OK
-
-
-
-  /salon-staff-requests/:id:
-
-      delete:
-        summary: DELETE /salon-staff-requests/:id
-        responses:
-        200:
-          description: OK
-
-
-
-      get:
-        summary: GET /salon-staff-requests/:id
-        responses:
-        200:
-          description: OK
-
-
-
-      put:
-        summary: PUT /salon-staff-requests/:id
-        responses:
-        200:
-          description: OK
-
-
-
-  /salon-staff-requests/pending:
-
-      get:
-        summary: GET /salon-staff-requests/pending
-        responses:
-        200:
-          description: OK
-
-
-
-  /salons:
-
-      post:
-        summary: POST /salons
-        responses:
-        200:
-          description: OK
-
-
-
-  /salons/:id:
-
-      delete:
-        summary: DELETE /salons/:id
-        responses:
-        200:
-          description: OK
-
-
-
-      get:
-        summary: GET /salons/:id
-        responses:
-        200:
-          description: OK
-
-
-
-      patch:
-        summary: PATCH /salons/:id
-        responses:
-        200:
-          description: OK
-
-
-
-  /salons/search:
-
-      get:
-        summary: GET /salons/search
-        responses:
-        200:
-          description: OK
-
-
-
-  /salons/top:
-
-      get:
-        summary: GET /salons/top
-        responses:
-        200:
-          description: OK
-
-
-
-  /social:
-
-      get:
-        summary: GET /social
-        responses:
-        200:
-          description: OK
-
-
-
-      post:
-        summary: POST /social
-        responses:
-        200:
-          description: OK
-
-
-
-  /social/:id:
-
-      delete:
-        summary: DELETE /social/:id
-        responses:
-        200:
-          description: OK
-
-
-
-      get:
-        summary: GET /social/:id
-        responses:
-        200:
-          description: OK
-
-
-
-      post:
-        summary: POST /social/:id
-        responses:
-        200:
-          description: OK
-
-
-
-  /social/auth/facebook:
-
-      get:
-        summary: GET /social/auth/facebook
-        responses:
-        200:
-          description: OK
-
-
-
-  /social/auth/google:
-
-      get:
-        summary: GET /social/auth/google
-        responses:
-        200:
-          description: OK
-
-
-
-  /themes:
-
-      get:
-        summary: GET /themes
-        responses:
-        200:
-          description: OK
-
-
-
-      post:
-        summary: POST /themes
-        responses:
-        200:
-          description: OK
-
-
-
-  /themes/:id:
-
-      delete:
-        summary: DELETE /themes/:id
-        responses:
-        200:
-          description: OK
-
-
-
-      get:
-        summary: GET /themes/:id
-        responses:
-        200:
-          description: OK
-
-
-
-      patch:
-        summary: PATCH /themes/:id
-        responses:
-        200:
-          description: OK
-
-
-
-  /users:
-
-      get:
-        summary: GET /users
-        responses:
-        200:
-          description: OK
-
-
-
-      post:
-        summary: POST /users
-        responses:
-        200:
-          description: OK
-
-
-
-  /users/:id:
-
-      delete:
-        summary: DELETE /users/:id
-        responses:
-        200:
-          description: OK
-
-
-
-      patch:
-        summary: PATCH /users/:id
-        responses:
-        200:
-          description: OK
-
-
-
-  /users/login:
-
-      post:
-        summary: POST /users/login
-        responses:
-        200:
-          description: OK
-
-
-
-  /users/logout:
-
-      post:
-        summary: POST /users/logout
-        responses:
-        200:
-          description: OK
-
-
-
-  /users/me:
-
-      get:
-        summary: GET /users/me
-        responses:
-        200:
-          description: OK
-
-
-
-  /users/register:
-
-      post:
-        summary: POST /users/register
-        responses:
-        200:
-          description: OK
-
-
-
-  /users/stats:
-
-      get:
-        summary: GET /users/stats
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/devices:
-
-      get:
-        summary: GET /auth/devices (alias of /auth/sessions)
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/devices/revoke:
-
-      post:
-        summary: POST /auth/devices/revoke (alias of /auth/sessions/revoke)
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/recovery-codes/issue:
-
-      post:
-        summary: POST /auth/recovery-codes/issue (201)
-        responses:
-        201:
-          description: Created
-
-
-
-  /auth/recovery-codes/verify:
-
-      post:
-        summary: POST /auth/recovery-codes/verify
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/password/change:
-
-      post:
-        summary: POST /auth/password/change
-        requestBody:
-          required: true
+        '401':
+          description: Invalid credentials
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  currentPassword: { type: string }
-                  newPassword: { type: string, minLength: 8 }
-                required: [currentPassword, newPassword]
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/oauth/{provider}:
-
-      delete:
-        summary: DELETE /auth/oauth/{provider} (unlink)
-        parameters:
-          - in: path
-            name: provider
-            required: true
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: Too many attempts
+          headers:
+            Retry-After:
+              description: Cooldown in seconds
+              schema:
+                type: integer
+  /auth/refresh:
+    post:
+      summary: Rotate refresh token and issue new access token
+      description: |
+        Uses refresh token from cookie `bsaas_rt`. If both cookie and body token are provided, returns 400.
+      requestBody:
+        required: false
+        content:
+          application/json:
             schema:
-              type: string
-        responses:
-        200:
-          description: OK
-
-
-
-  /auth/sessions/{id}:
-
-      delete:
-        summary: DELETE /auth/sessions/{id} (idempotent revoke)
-        parameters:
-          - in: path
-            name: id
-            required: true
+              $ref: '#/components/schemas/RefreshDto'
+      responses:
+        '200':
+          description: Tokens rotated
+        '400':
+          description: Validation error (e.g., both cookie and body present)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /auth/logout:
+    post:
+      summary: Logout current session
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Logged out
+  /auth/sessions:
+    get:
+      summary: List active sessions
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Sessions listed
+  /auth/sessions/revoke/{id}:
+    post:
+      summary: Revoke a specific session
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session revoked
+        '401':
+          description: Unauthorized or not owner
+  /auth/password/forgot:
+    post:
+      summary: Request password reset email
+      requestBody:
+        required: true
+        content:
+          application/json:
             schema:
-              type: string
-        responses:
-        200:
-          description: OK
+              $ref: '#/components/schemas/ForgotDto'
+      responses:
+        '202':
+          description: Accepted
+  /auth/password/reset:
+    post:
+      summary: Reset password using token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetDto'
+      responses:
+        '200':
+          description: Password updated
+  /auth/password/change:
+    post:
+      summary: Change password for authenticated user
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeDto'
+      responses:
+        '200':
+          description: Password changed
+        '401':
+          description: Unauthorized
+        '403':
+          description: CSRF failed
+        '429':
+          description: Too many attempts
+  /auth/email/change/request:
+    post:
+      summary: Request email change
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailChangeRequestDto'
+      responses:
+        '202':
+          description: Email change requested
+        '401':
+          description: Unauthorized
+        '403':
+          description: CSRF failed
+        '429':
+          description: Throttled
+  /auth/email/change/confirm:
+    post:
+      summary: Confirm email change
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailChangeConfirmDto'
+      responses:
+        '200':
+          description: Email changed
+        '400':
+          description: Invalid token
+        '410':
+          description: Token expired
+        '422':
+          description: Validation failed
+        '429':
+          description: Throttled
+  /auth/email/verify/request:
+    post:
+      summary: Request email verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailVerifyRequestDto'
+      responses:
+        '202':
+          description: Verification email sent
+        '429':
+          description: Throttled
+  /auth/email/verify/confirm:
+    post:
+      summary: Confirm email verification (OTP or token)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailVerifyConfirmDto'
+      responses:
+        '200':
+          description: Email verified
+        '400':
+          description: Invalid request
+        '410':
+          description: Token expired
+        '422':
+          description: Invalid OTP/assertion
+        '429':
+          description: Throttled
+  /auth/login/totp:
+    post:
+      summary: Complete TOTP login challenge with temp token and code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TotpLoginDto'
+      responses:
+        '200':
+          description: Tokens issued
+        '410':
+          description: Challenge expired
+        '422':
+          description: Invalid TOTP
+        '429':
+          description: Too many attempts
+  /auth/recovery/generate:
+    post:
+      summary: Generate recovery codes
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Recovery codes generated
+        '401':
+          description: Unauthorized
+        '403':
+          description: CSRF failed
+  /auth/recovery/verify:
+    post:
+      summary: Verify and consume a recovery code
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Recovery code accepted
+        '400':
+          description: Invalid code
+        '401':
+          description: Unauthorized
+        '403':
+          description: CSRF failed
+        '422':
+          description: Validation failed
+  /auth/webauthn/register/start:
+    post:
+      summary: Start WebAuthn registration
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebauthnRegisterStartDto'
+      responses:
+        '200':
+          description: Options returned
+        '401':
+          description: Unauthorized
+        '403':
+          description: CSRF failed
+  /auth/webauthn/register/finish:
+    post:
+      summary: Finish WebAuthn registration
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebauthnAttestationDto'
+      responses:
+        '200':
+          description: Registered
+        '401':
+          description: Unauthorized
+        '403':
+          description: CSRF failed
+        '422':
+          description: Invalid attestation
+        '410':
+          description: Challenge expired
+  /auth/webauthn/login/start:
+    post:
+      summary: Start WebAuthn login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                userId:
+                  type: string
+      responses:
+        '200':
+          description: Options returned
+        '400':
+          description: Invalid request
+        '429':
+          description: Throttled
+  /auth/webauthn/login/finish:
+    post:
+      summary: Finish WebAuthn login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebauthnAssertionDto'
+      responses:
+        '200':
+          description: Tokens issued
+        '401':
+          description: Unauthorized
+        '422':
+          description: Invalid assertion
+        '410':
+          description: Challenge expired
+  /auth/oauth/{provider}/start:
+    get:
+      summary: Begin OAuth login for provider
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to provider
+  /auth/oauth/{provider}/callback:
+    get:
+      summary: OAuth callback
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: code
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: state
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Signed in or linked
+  /auth/oauth/{provider}/unlink:
+    post:
+      summary: Unlink OAuth provider from current user
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Unlinked
+        '401':
+          description: Unauthorized
+        '403':
+          description: CSRF failed
+  /auth/webauthn/devices:
+    get:
+      summary: List registered passkeys for the current user
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: List of passkeys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PasskeyDto'
+        '401':
+          description: Unauthorized
+        '403':
+          description: CSRF failed
+  /auth/webauthn/devices/{id}:
+    delete:
+      summary: Delete a registered passkey
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+        '400':
+          description: Invalid credential id
+        '401':
+          description: Unauthorized or not owned
+        '403':
+          description: CSRF failed
+  /auth/owner/registration/{token}:
+    get:
+      summary: Validate owner registration token
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Valid token
+  /auth/owner/registration/complete:
+    post:
+      summary: Complete owner registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartnerRegistrationCompleteDto'
+      responses:
+        '201':
+          description: Completed
+        '400':
+          description: Invalid request
+        '410':
+          description: Invite expired or consumed
+        '422':
+          description: Validation failed
+  /auth/register:
+    post:
+      summary: Customer self‑registration (Customer only)
+      description: Creates a new Customer account. On success issues cookies and XSRF.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                name:
+                  type: string
+              required: [email, password, name]
+      responses:
+        '201':
+          description: Registered
+        '400':
+          description: Invalid request
+        '422':
+          description: Validation failed
+        '429':
+          description: Throttled
+  /auth/totp/enroll/start:
+    post:
+      summary: Start TOTP enrollment for current user
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: QR code issued
+        '401':
+          description: Unauthorized
+        '403':
+          description: CSRF failed
+  /auth/totp/enroll/finish:
+    post:
+      summary: Finish TOTP enrollment by verifying a token
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+              required: [token]
+      responses:
+        '200':
+          description: TOTP enabled
+        '401':
+          description: Unauthorized
+        '403':
+          description: CSRF failed
+        '422':
+          description: Invalid TOTP
+  /auth/staff/registration/{token}:
+    get:
+      summary: Validate staff registration token
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Valid token
+  /auth/staff/registration/complete:
+    post:
+      summary: Complete staff registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartnerRegistrationCompleteDto'
+      responses:
+        '201':
+          description: Completed

@@ -29,6 +29,11 @@
         "CI": "1",
         "DATABASE_URL": "postgresql://postgres:root@localhost:5432/bsaas"
       }
+    },
+    "nx-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["nx-mcp"]
     }
   }
 }

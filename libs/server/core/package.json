@@ -12,7 +12,6 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@cthub-bsaas/shared": "0.0.1",
-    "@cthub-bsaas/server-data-access": "0.0.1"
+    "@cthub-bsaas/shared": "0.0.1"
   }
 }

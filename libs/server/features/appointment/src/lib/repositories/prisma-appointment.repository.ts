@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@cthub-bsaas/server-data-access';
 import { AppointmentRepository, APPOINTMENT_REPOSITORY } from './appointment.repository';
 import { CreateAppointmentDto } from '../dto/requests/create-appointment.dto';
-import { AuthUser } from '@cthub-bsaas/server-core';
+import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 import { AppointmentWithDetails } from '../models/appointment.model';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
     return null;
   }
 
-  async create(createAppointmentDto: CreateAppointmentDto, authUser: AuthUser): Promise<AppointmentWithDetails> {
+  async create(createAppointmentDto: CreateAppointmentDto, authUser: AuthenticatedUser): Promise<AppointmentWithDetails> {
     // Stub implementation - returns null as Appointment model doesn't exist
     console.warn('Appointment model not found in schema - create not implemented');
     return null;

@@ -31,7 +31,7 @@
 
 - If an MCP tool is available, use it without asking (respect approvals).
 - Ask for approval before running non-trusted shell commands or anything outside the repo root.
-- **Explain File Deletions:** Before deleting any non-temporary file, you *must* provide a brief explanation of the reason for the deletion. This is to ensure that the user understands the impact of the deletion and can make an informed decision.
+- **Explain File Deletions:** Before deleting any non-temporary file, you _must_ provide a brief explanation of the reason for the deletion. This is to ensure that the user understands the impact of the deletion and can make an informed decision.
 
 ### Common Tasks
 
@@ -127,6 +127,28 @@
   - Note: filenames must still end with `.it-spec.ts` to match the repo `testMatch`.
 - Scope: use lightweight Nest TestingModules with mocked ports/services to hit controller/service branches without full e2e setup.
 - Run only edge cases: `npx nx test <project> --configuration=it --testPathPattern edge-case`
+
+#### Integration Test (IT) Pattern for Stateful Services
+
+When writing integration tests for services that interact with a database, it is critical to ensure tests are isolated and can run in parallel without race conditions. The file `libs/server/features/auth/tests/integration/auth.controller.login.spec.ts` should be used as the Single Source of Truth (SSoT) for this pattern.
+
+The established pattern involves the following hooks and strategies:
+
+- **`beforeAll`:** Used to set up static, non-mutating master data that is required by the entire test suite.
+  - **Example:** Populating the `Role` table from a shared enum using a `createRoles(prisma)` helper.
+
+- **`beforeEach`:** Used to set up the specific, unique data required for a single test case.
+  - **Example:** Creating a new `User` with a guaranteed-unique email (`test-${randomUUID()}@example.com`) using a `createTestUser(prisma, uniqueEmail)` helper.
+
+- **`afterEach`:** Used to clean up the specific data created in the corresponding `beforeEach` hook. This ensures each test within the file is isolated from the others.
+  - **Example:** Deleting the specific `User` (and their dependent records like `Session`, `UserRole`, etc.) using a `deleteTestUser(prisma, user)` helper.
+
+- **`afterAll`:** Used to clean up the master data that was created in the `beforeAll` hook.
+  - **Example:** Deleting all `Role` records using a `deleteRoles(prisma)` helper.
+
+- **Helpers:** Common setup and teardown logic should be extracted into helper functions (e.g., `createRoles`, `createTestUser`, `deleteTestUser`) and placed in the shared `libs/server/core/src/testing/` directory. This promotes code reuse and maintainability.
+
+This pattern ensures that tests are independent and the database does not accumulate stale data, while still allowing for parallel execution.
 
 ### Security & Secrets in Tests
 
@@ -247,7 +269,7 @@
 ## Testing Guidelines
 
 - Unit tests: Jest `*.spec.ts` colocated next to source under `src/`.
-- Integration tests: place under each project `tests/integration/**/*.it-spec.ts` (not inside `src/`). Use Nest `TestingModule` with in-memory/test doubles; avoid real external services. Integration tests must run via `nx test <lib>`.
+- Integration tests: place under each project `tests/integration/**/*.it-spec.ts` (not inside `src/`). These are end-to-end tests that use a real database. They should use `beforeAll`/`beforeEach` to seed the database and `afterAll`/`afterEach` to clean up. Integration tests must run via `nx test <lib>`.
 - E2E tests: live under `apps/e2e/**` as dedicated Nx projects.
   - API E2E: Jest specs in `apps/e2e/api/src/*.e2e-spec.ts`; run with `npx nx run api-e2e:e2e`.
   - Web E2E: per app under `apps/e2e/web/<app>`.
@@ -301,6 +323,7 @@
 - Conventional Commits: `feat:`, `fix:`, `chore:`, `refactor:`, `test:`, `docs:`.
 - PRs include description, linked issues, screenshots/logs when relevant, and call out breaking changes.
 - Agent policy: Do not commit any changes unless the user explicitly instructs you to commit. Prefer to stage and show diffs first; commit only on request. Commit authorization is scoped to the immediately preceding task/change only and must not be inferred for subsequent or follow‑up changes; request fresh approval before any new commit.
+- For multi-line commit messages, the full message will be written to `tmp/commit-message.txt`. The new message will completely overwrite any existing content in that file. The commit will then be made using `git commit -F tmp/commit-message.txt`.
 
 ### Branching
 
@@ -323,7 +346,7 @@
 4. Lint: zero warnings and zero errors; do not use eslint‑disable.
 5. Build: must succeed.
 6. If code changes are required to fix errors/warnings, repeat steps 3–5 until green.
-7. Error/warning code mapping for both server and client is centralized under `libs/shared`, e.g., `libs/shared/src/lib/errors/auth-error-codes.ts` (CAPITAL_SNAKE_CASE keys) and common codes in `libs/shared/src/lib/errors/common-error-codes.ts`.
+7. Error/warning code mapping for both server and client is centralized under `libs/shared`, e.g., `libs/shared/src/lib/i18n-message-keys/auth-message-keys.ts` and `libs/shared/src/lib/i18n-message-keys/common-message-keys.ts` (grouped under INFO/WARN/ERROR).
 
 ## Roles & Workflow
 
@@ -334,3 +357,27 @@
 - Do not commit secrets; use env files or secret managers.
 - Prefer free‑tier services and OSS tooling when integrating dependencies.
 - Prisma schema/migrations: `libs/server/data-access/src/`; commit meaningful migrations.
+
+<!-- nx configuration start-->
+<!-- Leave the start & end comments to automatically receive updates. -->
+
+## General Guidelines for working with Nx
+
+- For navigating/exploring the workspace, invoke the `nx-workspace` skill first - it has patterns for querying projects, targets, and dependencies
+- When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
+- Prefix nx commands with the workspace's package manager (e.g., `pnpm nx build`, `npm exec nx test`) - avoids using globally installed CLI
+- You have access to the Nx MCP server and its tools, use them to help the user
+- For Nx plugin best practices, check `node_modules/@nx/<plugin>/PLUGIN.md`. Not all plugins have this file - proceed without it if unavailable.
+- NEVER guess CLI flags - always check nx_docs or `--help` first when unsure
+
+## Scaffolding & Generators
+
+- For scaffolding tasks (creating apps, libs, project structure, setup), ALWAYS invoke the `nx-generate` skill FIRST before exploring or calling MCP tools
+
+## When to use nx_docs
+
+- USE for: advanced config options, unfamiliar flags, migration guides, plugin configuration, edge cases
+- DON'T USE for: basic generator syntax (`nx g @nx/react:app`), standard commands, things you already know
+- The `nx-generate` skill handles generator discovery internally - don't call nx_docs just to look up generator syntax
+
+<!-- nx configuration end-->

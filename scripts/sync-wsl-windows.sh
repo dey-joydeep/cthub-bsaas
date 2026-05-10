@@ -21,6 +21,34 @@ need_cmd() {
   command -v "$1" >/dev/null 2>&1 || die "Required command not found: $1"
 }
 
+# Small spinner wrapper to keep console clean for noisy commands
+spinner() {
+  # usage: spinner "Message" -- cmd args...
+  local msg="$1"; shift
+  local sp='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'; local i=0
+  local tmp; tmp="$(mktemp)"
+  echo -ne "${BLU}${BOLD}${msg}${RST} "
+  ( "$@" >"$tmp" 2>&1 ) &
+  local pid=$!
+  while kill -0 "$pid" 2>/dev/null; do
+    i=$(( (i+1) % 10 ))
+    printf "\r${BLU}${BOLD}%s${RST} %s" "$msg" "${sp:$i:1}"
+    sleep 0.08
+  done
+  wait "$pid"; local rc=$?
+  printf "\r"
+  if [[ $rc -eq 0 ]]; then
+    ok "$msg"
+  else
+    echo -e "${RED}✖ ${msg}${RST}"
+    echo -e "${DIM}--- output ---${RST}"
+    cat "$tmp"
+    echo -e "${DIM}--------------${RST}"
+  fi
+  rm -f "$tmp"
+  return $rc
+}
+
 # Try to offer arrow-key menu via fzf if present, else numbered select
 choose() {
   local prompt="$1"; shift
@@ -147,11 +175,10 @@ main() {
     local choice
     choice="$(choose "Push now?" "Yes, push commits" "Quit")" || exit 1
     if [[ "$choice" == "Quit" ]]; then die "Aborted by user."; fi
-    info "Pushing ${SRC_NAME}..."
-    if ! git -C "$SRC" push; then
+    # QUIET push with spinner (no console dump)
+    if ! spinner "Pushing ${SRC_NAME}" git -C "$SRC" push --quiet; then
       die "Push failed. Resolve and rerun."
     fi
-    ok "Pushed."
   else
     ok "$SRC_NAME has no unpushed commits."
   fi
@@ -186,30 +213,31 @@ main() {
     local choice2
     choice2="$(choose "Push now?" "Yes, push commits" "Quit")" || exit 1
     if [[ "$choice2" == "Quit" ]]; then die "Aborted by user."; fi
-    info "Pushing ${DEST_NAME}..."
-    if ! git -C "$DEST" push; then
+    # QUIET push with spinner (no console dump)
+    if ! spinner "Pushing ${DEST_NAME}" git -C "$DEST" push --quiet; then
       die "Push failed. Resolve and rerun."
     fi
-    ok "Pushed."
   else
     ok "$DEST_NAME has no unpushed commits."
   fi
 
-  # Step 7: pull on destination to ensure sync
-  info "Pulling latest on ${DEST_NAME}..."
+  # Step 7: pull on destination to ensure sync (quiet + spinner)
   # Prefer fast-forward; if it fails, let user resolve then continue.
-  if ! git -C "$DEST" pull --ff-only --recurse-submodules; then
+  if ! spinner "Pulling latest on ${DEST_NAME}" git -C "$DEST" pull --ff-only --recurse-submodules --quiet; then
     warn "Fast-forward pull failed (non-FF or conflicts)."
     echo -e "${DIM}Open a subshell at ${DEST} to resolve (rebase/merge), then exit to continue.${RST}"
     ( cd "$DEST" && ${SHELL:-/bin/bash} -i )
     info "Re-attempting pull..."
-    git -C "$DEST" pull --recurse-submodules || die "Pull still failing. Resolve and rerun."
+    if ! spinner "Pulling latest on ${DEST_NAME}" git -C "$DEST" pull --recurse-submodules --quiet; then
+      die "Pull still failing. Resolve and rerun."
+    fi
   fi
   ok "Destination is up-to-date with remote."
 
   # Step 8: copy files
   info "Copying ${#FILES[@]} file(s) from ${SRC_NAME} → ${DEST_NAME}..."
   local copied=0 skipped=0
+  declare -a MAPPED=()  # collect pretty mappings to show at the end
   for rel in "${FILES[@]}"; do
     # Skip deletions: if file missing in source but tracked removal, don't touch dest.
     if [[ ! -e "$SRC/$rel" ]]; then
@@ -218,15 +246,25 @@ main() {
       continue
     fi
     mkdir -p "$DEST/$(dirname "$rel")"
-    # rsync to preserve times/perms reasonably; avoids issues with spaces.
+    # keep your original rsync flags/behavior
     if rsync -a --no-compress --mkpath "$SRC/$rel" "$DEST/$rel"; then
       ((copied++))
+      MAPPED+=("$SRC/$rel ==> $DEST/$rel")
     else
       warn "Failed to copy: $rel"
       ((skipped++))
     fi
   done
   ok "Copied $copied file(s). Skipped $skipped."
+
+  # Pretty list of copied mappings
+  if [[ $copied -gt 0 ]]; then
+    echo -e "${BOLD}Copied files${RST} (${DIM}${SRC_NAME} → ${DEST_NAME}${RST}):"
+    for line in "${MAPPED[@]}"; do
+      src="${line%%==>*}"; dst="${line#*==> }"
+      printf "  %s%s%s  ${DIM}→${RST}  %s%s%s\n" "${DIM}" "$src" "${RST}" "${DIM}" "$dst" "${RST}"
+    done
+  fi
 
   echo
   ok "Done. Review changes in ${DEST_NAME}:"

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ConfigService } from '@cthub-bsaas/server-core';
 import type { OAuthPort, OAuthStartResult, OAuthProfile } from '@cthub-bsaas/server-contracts-auth';
 import crypto from 'crypto';
 
@@ -12,15 +12,15 @@ import crypto from 'crypto';
 export class OAuthAdapter implements OAuthPort {
   constructor(private readonly config: ConfigService) {}
 
-  async start(provider: string, link?: boolean): Promise<OAuthStartResult> {
-    const base = this.config.get<string>('OAUTH_AUTHORIZE_BASE', 'https://example.com/oauth');
+  start(provider: string, link?: boolean): Promise<OAuthStartResult> {
+    const base = this.config.get<string>('OAUTH_AUTHORIZE_BASE') ?? 'https://example.com/oauth';
     const nonce = crypto.randomBytes(8).toString('base64url');
     const payload = { link: !!link, n: nonce, t: Date.now() };
     const state = Buffer.from(JSON.stringify(payload)).toString('base64url');
-    return { redirectUrl: `${base}/${provider}/authorize?state=${state}`, state };
+    return Promise.resolve({ redirectUrl: `${base}/${provider}/authorize?state=${state}`, state });
   }
 
-  async exchangeCode(provider: string, code: string, state?: string): Promise<OAuthProfile> {
+  exchangeCode(provider: string, code: string, state?: string): Promise<OAuthProfile> {
     // Parse state if present (best-effort; ignore errors for dev adapter)
     if (state) {
       try {
@@ -31,6 +31,6 @@ export class OAuthAdapter implements OAuthPort {
     }
     // Deterministic id from code for testability
     const providerUserId = `dev_${crypto.createHash('sha256').update(code).digest('hex').slice(0, 12)}`;
-    return { provider, providerUserId };
+    return Promise.resolve({ provider, providerUserId });
   }
 }

@@ -1,94 +1,80 @@
-import { ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
+// libs/server/core/src/auth/guards/roles.guard.ts
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { AuthGuard } from '@nestjs/passport';
-import { Observable } from 'rxjs';
-import { UserRole } from '@cthub-bsaas/shared';
-import { AuthenticatedUser, UserRoleInfo } from '@cthub-bsaas/shared';
-
-export const ROLES_KEY = 'roles';
+import { AuthenticatedUser, UserRole } from '@cthub-bsaas/shared';
+import { ROLES_KEY } from '../../decorators/roles.decorator';
+import { AUTH_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 
 /**
- * Role hierarchy definition
- * Each role inherits permissions from roles to its right
+ * Role hierarchy: expanding a user's roles "downward" (ADMIN ⇒ OWNER ⇒ STAFF ⇒ CUSTOMER ⇒ GUEST).
+ * We DO NOT expand the required roles; we expand the user's roles and then check if any requirement is satisfied.
  */
 const ROLE_HIERARCHY: Record<UserRole, UserRole[]> = {
-  [UserRole.ADMIN]: [UserRole.OWNER, UserRole.STAFF, UserRole.CUSTOMER],
-  [UserRole.OWNER]: [UserRole.STAFF, UserRole.CUSTOMER],
-  [UserRole.STAFF]: [UserRole.CUSTOMER],
-  [UserRole.CUSTOMER]: [],
-  [UserRole.GUEST]: [],
+  [UserRole.ADMIN]: [UserRole.ADMIN, UserRole.OWNER, UserRole.STAFF, UserRole.CUSTOMER, UserRole.GUEST],
+  [UserRole.OWNER]: [UserRole.OWNER, UserRole.STAFF, UserRole.CUSTOMER, UserRole.GUEST],
+  [UserRole.STAFF]: [UserRole.STAFF, UserRole.CUSTOMER, UserRole.GUEST],
+  [UserRole.CUSTOMER]: [UserRole.CUSTOMER, UserRole.GUEST],
+  [UserRole.GUEST]: [UserRole.GUEST],
 };
-
-// Using AuthenticatedUser from @cthub-bsaas/shared instead of local UserWithRoles
 
 /**
- * Custom decorator to set required roles for a route handler or controller
- * @param roles Array of UserRole that are allowed to access the route
+ * @internal Normalizes the roles carried on the authenticated user object into canonical UserRole strings.
  */
-export const Roles = (...roles: UserRole[]) => {
-  return (target: object, descriptor?: PropertyDescriptor) => {
-    if (descriptor) {
-      // Method decorator
-      Reflect.defineMetadata(ROLES_KEY, roles, descriptor.value as object);
-      return descriptor;
-    }
-    // Class decorator
-    Reflect.defineMetadata(ROLES_KEY, roles, target as object);
-    return undefined;
-  };
-};
+export function normalizeUserRoles(roles: AuthenticatedUser['roles'] | undefined): UserRole[] {
+  if (!roles) return [];
+  const consumers = roles as Array<UserRole | { name?: string }>;
+  return consumers
+    .map((role) => (typeof role === 'string' ? role : role?.name))
+    .filter((value): value is UserRole => !!value && (Object.values(UserRole) as string[]).includes(value));
+}
+
+/**
+ * @internal Expands a user's roles downward through the defined hierarchy so implied roles are considered.
+ */
+export function expandUserRolesDownward(userRoles: UserRole[]): UserRole[] {
+  const out = new Set<UserRole>();
+  for (const r of userRoles) {
+    const implied = ROLE_HIERARCHY[r] ?? [r];
+    for (const x of implied) out.add(x);
+  }
+  return [...out];
+}
 
 @Injectable()
-export class RolesGuard extends AuthGuard('jwt') {
-  constructor(private reflector: Reflector) {
-    super();
+export class RolesGuard implements CanActivate {
+  private readonly reflector: Reflector;
+
+  constructor(reflector: Reflector) {
+    this.reflector = reflector;
   }
 
-  /**
-   * Checks if a user has at least one of the required roles
-   * @param userRoles - Array of user's roles
-   * @param requiredRoles - Array of required roles
-   */
-  private hasRequiredRole(userRoles: UserRole[], requiredRoles: UserRole[]): boolean {
-    return userRoles.some((userRole) => {
-      // Check direct match
-      if (requiredRoles.includes(userRole)) {
-        return true;
-      }
+  canActivate(ctx: ExecutionContext): boolean {
+    // Read required roles (unexpanded)
+    const required = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [ctx.getHandler(), ctx.getClass()]) ?? [];
 
-      // Check role hierarchy
-      return ROLE_HIERARCHY[userRole]?.some((higherRole) => requiredRoles.includes(higherRole)) || false;
-    });
-  }
-
-  override canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
-    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [context.getHandler(), context.getClass()]);
-
-    // If no roles are required, allow access
-    if (!requiredRoles || requiredRoles.length === 0) {
+    if (required.length === 0) {
+      // No roles required → allow
       return true;
     }
 
-    const { user } = context.switchToHttp().getRequest<{ user: AuthenticatedUser }>();
+    // Narrow the request typing so we never touch `any`
+    const req = ctx.switchToHttp().getRequest<{ user?: AuthenticatedUser }>();
+    const user = req.user;
     if (!user) {
-      throw new ForbiddenException('User not authenticated');
+      throw new ForbiddenException(AUTH_MESSAGE_KEYS.ERROR.UNAUTHENTICATED);
     }
 
-    // Extract role names from user roles, handling both string and object formats
-    const userRoleNames = (user.roles || [])
-      .map((role) => {
-        if (typeof role === 'string') {
-          return role as UserRole;
-        }
-        return (role as UserRoleInfo).name;
-      })
-      .filter((role): role is UserRole => role !== undefined && Object.values<string>(UserRole).includes(role));
-
-    // Check if user has any of the required roles
-    if (userRoleNames.length === 0 || !this.hasRequiredRole(userRoleNames, requiredRoles)) {
-      throw new ForbiddenException(`Insufficient permissions. Required roles: ${requiredRoles.join(', ')}`);
+    // Expand the user's roles DOWNWARD according to hierarchy
+    const expanded = expandUserRolesDownward(normalizeUserRoles(user.roles));
+    if (expanded.length === 0) {
+      throw new ForbiddenException(AUTH_MESSAGE_KEYS.ERROR.NO_ROLES);
     }
 
+    // Check if any required role is included in the user's expanded set
+    const ok = required.some((r) => expanded.includes(r));
+    if (!ok) {
+      throw new ForbiddenException(AUTH_MESSAGE_KEYS.ERROR.INSUFFICIENT_PERMISSIONS);
+    }
     return true;
   }
 }

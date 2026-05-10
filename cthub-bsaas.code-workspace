@@ -1,10 +1,33 @@
 {
   "folders": [
     {
-      "path": ".",
-    },
+      "path": "."
+    }
   ],
   "settings": {
     "nxConsole.generateAiAgentRules": true,
-  },
+    "vsicons.associations.folders": [
+      // Associate NestJS icons with the API folder
+      { "icon": "nest", "extensions": ["apps/api"], "format": "svg" },
+      { "icon": "nest-controller", "extensions": ["api/src/app/controllers"], "format": "svg" },
+      { "icon": "nest-middleware", "extensions": ["api/src/app/middleware"], "format": "svg" },
+      { "icon": "nest-module", "extensions": ["api/src/app/modules"], "format": "svg" },
+      { "icon": "nest-service", "extensions": ["api/src/app/services"], "format": "svg" },
+      { "icon": "nest-decorator", "extensions": ["api/src/app/decorators"], "format": "svg" },
+      { "icon": "nest-pipe", "extensions": ["api/src/app/pipes"], "format": "svg" },
+      { "icon": "nest-filter", "extensions": ["api/src/app/filters"], "format": "svg" },
+      { "icon": "nest-gateway", "extensions": ["api/src/app/gateways"], "format": "svg" },
+      { "icon": "nest-guard", "extensions": ["api/src/app/guards"], "format": "svg" },
+      // Associate Angular icons with web app folders
+      { "icon": "angular", "extensions": ["apps/web"], "format": "svg" },
+      { "icon": "angular-component", "extensions": ["web/admin", "web/customer", "web/partner"], "format": "svg" }
+    ],
+    "vsicons.associations.files": [
+      // Associate specific file icons for Angular
+      { "icon": "angular-routing", "filenames": ["app-routing.module.ts", "app.routes.ts"], "format": "svg" },
+      { "icon": "angular-module", "filenames": ["app.module.ts"], "format": "svg" },
+      { "icon": "angular-component", "filenames": ["app.component.ts"], "format": "svg" },
+      { "icon": "angular-service", "filenames": ["app.service.ts"], "format": "svg" }
+    ]
+  }
 }

@@ -15,6 +15,25 @@
                 "assets": ["libs/server/contracts-auth/*.md"],
                 "rootDir": "libs/server/contracts-auth/src"
             }
+        },
+        "type-check": {
+            "executor": "nx:run-commands",
+            "dependsOn": [
+                "shared:build"
+            ],
+            "options": {
+                "command": "tsc -b libs/server/contracts-auth/tsconfig.json --pretty false"
+            }
+        },
+        "test": {
+            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "executor": "@nx/jest:jest",
+            "options": {
+                "passWithNoTests": true,
+                "jestConfig": "libs/server/contracts-auth/jest.config.ts",
+                "codeCoverage": true,
+                "coverageReporters": ["text", "lcov"]
+            }
         }
     }
 }

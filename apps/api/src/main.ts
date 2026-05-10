@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { JwtAuthGuard, RolesGuard } from '@cthub-bsaas/server-core/auth';
-import { ConfigService } from './config/config.service';
+import { JwtAuthGuard, RolesGuard } from '@cthub-bsaas/server-core';
+import { ConfigService, CorrelationIdMiddleware } from '@cthub-bsaas/server-core';
 import { ClassSerializerInterceptor, Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -10,9 +10,9 @@ import { json, urlencoded } from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { AppModule } from './app.module';
-import { ConfigModule } from './config/config.module';
+import { ConfigModule } from '@cthub-bsaas/server-core';
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
   const logger = new Logger('Bootstrap');
 
   // Create the application with logging
@@ -23,7 +23,7 @@ async function bootstrap() {
 
   // Get config service
   const configService = app.select(ConfigModule).get(ConfigService);
-  const { port, nodeEnv, isProduction } = configService.app;
+  const { port, nodeEnv } = configService.app;
   const { origins, methods, allowedHeaders, exposedHeaders, credentials, maxAge } =
     configService.cors;
 
@@ -40,7 +40,7 @@ async function bootstrap() {
         if (origins.includes('*') || origins.includes(origin)) {
           return callback(null, true);
         }
-      } catch (e) {
+      } catch {
         // If URL parsing fails, deny the request
         return callback(new Error('Invalid origin'));
       }
@@ -56,8 +56,9 @@ async function bootstrap() {
       'Accept',
       'X-XSRF-TOKEN',
       'X-Request-Id',
+      'X-Correlation-Id',
     ],
-    exposedHeaders: exposedHeaders || ['X-Request-Id'],
+    exposedHeaders: exposedHeaders || ['X-Request-Id', 'X-Correlation-Id'],
     maxAge: maxAge || 600, // 10 minutes
   });
 
@@ -77,6 +78,10 @@ async function bootstrap() {
 
   // Cookie parser
   app.use(cookieParser());
+
+  // Correlation ID middleware (adds/propagates x-correlation-id)
+  const cidMw = new CorrelationIdMiddleware();
+  app.use(cidMw.use.bind(cidMw));
 
   // Body parser
   const bodyLimitJson = configService.app.bodyLimitJson || '10mb';
@@ -98,6 +103,8 @@ async function bootstrap() {
 
   // Global interceptors
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+
+  // 429 Retry-After is handled by the APP_FILTER ThrottlerRetryAfterFilter in AppModule
 
   // Global guards
   const reflector = app.get(Reflector);

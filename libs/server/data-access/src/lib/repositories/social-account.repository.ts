@@ -7,15 +7,15 @@ import type { SocialAccount } from '@prisma/client';
 export class SocialAccountRepository implements ISocialAccountRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findByProviderAccount(provider: string, providerUserId: string): Promise<SocialAccount | null> {
+  findByProviderAccount(provider: string, providerUserId: string): Promise<SocialAccount | null> {
     return this.prisma.socialAccount.findUnique({ where: { provider_providerUserId: { provider, providerUserId } } });
   }
 
-  async link(userId: string, provider: string, providerUserId: string): Promise<SocialAccount> {
+  link(userId: string, provider: string, providerUserId: string): Promise<SocialAccount> {
     return this.prisma.socialAccount.create({ data: { userId, provider, providerUserId } });
   }
 
-  async findByUserId(userId: string): Promise<SocialAccount[]> {
+  findByUserId(userId: string): Promise<SocialAccount[]> {
     return this.prisma.socialAccount.findMany({ where: { userId } });
   }
 
@@ -23,4 +23,3 @@ export class SocialAccountRepository implements ISocialAccountRepository {
     await this.prisma.socialAccount.deleteMany({ where: { userId, provider } });
   }
 }
-

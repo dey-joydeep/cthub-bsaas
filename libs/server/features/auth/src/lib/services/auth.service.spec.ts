@@ -3,11 +3,12 @@ import { JwtService } from '@nestjs/jwt';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { User, CredentialTOTP, Session, RefreshToken, RegistrationStatus } from '@prisma/client';
 import { UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ConfigService } from '@cthub-bsaas/server-core';
 import * as bcrypt from 'bcryptjs';
 import { ICredentialTotpRepository, IRefreshTokenRepository, ISessionRepository, IUserRepository, TotpPort, EMAIL_PORT, EmailPort, USER_REPOSITORY, SESSION_REPOSITORY, REFRESH_TOKEN_REPOSITORY, CREDENTIAL_TOTP_REPOSITORY, TOTP_PORT, EMAIL_VERIFICATION_REPOSITORY, IEmailVerificationRepository, EmailVerificationRecord, PASSWORD_RESET_REPOSITORY, IPasswordResetRepository, PasswordResetRecord, SOCIAL_ACCOUNT_REPOSITORY, OAuthProfile, INVITE_PORT, InvitePort } from '@cthub-bsaas/server-contracts-auth';
 import { AuditService } from '../services/audit.service';
 import { AuthService } from './auth.service';
+import { AUTH_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 
 jest.mock('bcryptjs');
 
@@ -469,6 +470,92 @@ describe('AuthService', () => {
       expect(result).toEqual({ accessToken: 'new-at', refreshToken: 'new-rt' });
     });
 
+    it('denies refresh and revokes session when revoked refresh token is reused', async () => {
+      const jti = 'jti-r1';
+      const sessionId = 'sess-r1';
+      jwtService.verifyAsync.mockResolvedValue({ sub: mockUserWithRoles.id, jti });
+      const reused: RefreshToken = {
+        jti,
+        userId: mockUserWithRoles.id,
+        sessionId,
+        issuedAt: new Date(Date.now() - 60_000),
+        revokedAt: new Date(),
+        rotatedFrom: 'prev-jti',
+      };
+      refreshTokenRepository.findByJti.mockResolvedValue(reused);
+
+      await expect(service.refreshToken('rt-reused')).rejects.toThrow(UnauthorizedException);
+      expect(sessionRepository.delete).toHaveBeenCalledWith(sessionId);
+      expect(refreshTokenRepository.revoke).not.toHaveBeenCalled();
+    });
+
+    it('denies refresh and logs deny_only when session delete fails on revoked token reuse', async () => {
+      const jti = 'jti-r2';
+      const sessionId = 'sess-r2';
+      jwtService.verifyAsync.mockResolvedValue({ sub: mockUserWithRoles.id, jti });
+      const reused: RefreshToken = {
+        jti,
+        userId: mockUserWithRoles.id,
+        sessionId,
+        issuedAt: new Date(Date.now() - 60_000),
+        revokedAt: new Date(),
+        rotatedFrom: 'prev-jti',
+      };
+      refreshTokenRepository.findByJti.mockResolvedValue(reused);
+      sessionRepository.delete.mockRejectedValueOnce(new Error('db error'));
+
+      await expect(service.refreshToken('rt-reused-fail')).rejects.toThrow(UnauthorizedException);
+      expect(sessionRepository.delete).toHaveBeenCalledWith(sessionId);
+      expect(refreshTokenRepository.revoke).not.toHaveBeenCalled();
+    });
+
+    it('denies refresh when token record is missing', async () => {
+      const jti = 'jti-miss';
+      jwtService.verifyAsync.mockResolvedValue({ sub: mockUserWithRoles.id, jti });
+      refreshTokenRepository.findByJti.mockResolvedValue(null);
+
+      await expect(service.refreshToken('rt-missing')).rejects.toThrow(UnauthorizedException);
+      expect(refreshTokenRepository.revoke).not.toHaveBeenCalled();
+      expect(sessionRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('uses default RT TTL when customer TTL is undefined (fallback branch)', async () => {
+      (configService as unknown as {
+        auth: {
+          jwtAccessSecret: string;
+          jwtRefreshSecret: string;
+          jwtEmailChangeSecret: string;
+          jwtVerifyEmailSecret: string;
+          jwtExpiresIn: string;
+          refreshTokenExpiresInDefault: string;
+          refreshTokenExpiresInCustomer?: string;
+        };
+      }).auth = {
+        jwtAccessSecret: 'acc',
+        jwtRefreshSecret: 'ref',
+        jwtEmailChangeSecret: 'emc',
+        jwtVerifyEmailSecret: 'ver',
+        jwtExpiresIn: '15m',
+        refreshTokenExpiresInDefault: '10d',
+        // intentionally omit refreshTokenExpiresInCustomer to hit ?? fallback
+      };
+      const withCustomer: User & { roles: { role: { name: string } }[] } = {
+        ...mockUser,
+        roles: [{ role: { name: 'CUSTOMER' } }],
+      } as User & { roles: { role: { name: string } }[] };
+      userRepository.findById.mockResolvedValue(withCustomer);
+      sessionRepository.create.mockResolvedValue({ id: 'sess-fb', userId: withCustomer.id, deviceOS: null, deviceUA: null, ipHash: null, lastSeenAt: new Date(), createdAt: new Date() } as Session);
+      jwtService.signAsync
+        .mockResolvedValueOnce('access-token')
+        .mockResolvedValueOnce('refresh-token');
+      refreshTokenRepository.create.mockResolvedValue({ jti: 'j-fb', userId: withCustomer.id, sessionId: 'sess-fb', issuedAt: new Date(), revokedAt: null, rotatedFrom: null } as RefreshToken);
+
+      const result = await service.issueTokensForUser(withCustomer.id);
+      expect(result).toEqual({ accessToken: 'access-token', refreshToken: 'refresh-token' });
+      const [, refreshArgs] = (jwtService.signAsync as jest.Mock).mock.calls[1] as [unknown, { expiresIn: string }];
+      expect(refreshArgs.expiresIn).toBe('10d');
+    });
+
     it('logout revokes existing session when found', async () => {
       sessionRepository.findById.mockResolvedValue({ id: 's1', userId: mockUserWithRoles.id, deviceOS: null, deviceUA: null, ipHash: null, lastSeenAt: new Date(), createdAt: new Date() } as Session);
       await expect(service.logout('s1')).resolves.toBeUndefined();
@@ -518,6 +605,84 @@ describe('AuthService', () => {
       sessionRepository.findById.mockResolvedValue(null);
       await expect(service.logout('missing')).resolves.toBeUndefined();
       expect(sessionRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('uses customer RT TTL when role includes CUSTOMER', async () => {
+      // Arrange config TTLs
+      (configService as unknown as {
+        auth: {
+          jwtAccessSecret: string;
+          jwtRefreshSecret: string;
+          jwtEmailChangeSecret: string;
+          jwtVerifyEmailSecret: string;
+          jwtExpiresIn: string;
+          refreshTokenExpiresInDefault: string;
+          refreshTokenExpiresInCustomer?: string;
+        };
+      }).auth = {
+        jwtAccessSecret: 'acc',
+        jwtRefreshSecret: 'ref',
+        jwtEmailChangeSecret: 'emc',
+        jwtVerifyEmailSecret: 'ver',
+        jwtExpiresIn: '15m',
+        refreshTokenExpiresInDefault: '7d',
+        refreshTokenExpiresInCustomer: '180d',
+      };
+      const withCustomer: User & { roles: { role: { name: string } }[] } = {
+        ...mockUser,
+        roles: [{ role: { name: 'CUSTOMER' } }],
+      } as User & { roles: { role: { name: string } }[] };
+      userRepository.findById.mockResolvedValue(withCustomer);
+      sessionRepository.create.mockResolvedValue({ id: 'sess', userId: withCustomer.id, deviceOS: null, deviceUA: null, ipHash: null, lastSeenAt: new Date(), createdAt: new Date() } as Session);
+      jwtService.signAsync
+        .mockResolvedValueOnce('access-token')
+        .mockResolvedValueOnce('refresh-token');
+      refreshTokenRepository.create.mockResolvedValue({ jti: 'j3', userId: withCustomer.id, sessionId: 'sess', issuedAt: new Date(), revokedAt: null, rotatedFrom: null } as RefreshToken);
+
+      // Act
+      const result = await service.issueTokensForUser(withCustomer.id);
+
+      // Assert
+      expect(result).toEqual({ accessToken: 'access-token', refreshToken: 'refresh-token' });
+      const [, refreshArgs] = (jwtService.signAsync as jest.Mock).mock.calls[1] as [unknown, { expiresIn: string }];
+      expect(refreshArgs.expiresIn).toBe('180d');
+    });
+
+    it('uses default RT TTL when role excludes CUSTOMER', async () => {
+      (configService as unknown as {
+        auth: {
+          jwtAccessSecret: string;
+          jwtRefreshSecret: string;
+          jwtEmailChangeSecret: string;
+          jwtVerifyEmailSecret: string;
+          jwtExpiresIn: string;
+          refreshTokenExpiresInDefault: string;
+          refreshTokenExpiresInCustomer?: string;
+        };
+      }).auth = {
+        jwtAccessSecret: 'acc',
+        jwtRefreshSecret: 'ref',
+        jwtEmailChangeSecret: 'emc',
+        jwtVerifyEmailSecret: 'ver',
+        jwtExpiresIn: '15m',
+        refreshTokenExpiresInDefault: '5d',
+        refreshTokenExpiresInCustomer: '180d',
+      };
+      const withStaff: User & { roles: { role: { name: string } }[] } = {
+        ...mockUser,
+        roles: [{ role: { name: 'STAFF' } }],
+      } as User & { roles: { role: { name: string } }[] };
+      userRepository.findById.mockResolvedValue(withStaff);
+      sessionRepository.create.mockResolvedValue({ id: 'sess2', userId: withStaff.id, deviceOS: null, deviceUA: null, ipHash: null, lastSeenAt: new Date(), createdAt: new Date() } as Session);
+      jwtService.signAsync
+        .mockResolvedValueOnce('access-token')
+        .mockResolvedValueOnce('refresh-token');
+      refreshTokenRepository.create.mockResolvedValue({ jti: 'j4', userId: withStaff.id, sessionId: 'sess2', issuedAt: new Date(), revokedAt: null, rotatedFrom: null } as RefreshToken);
+
+      const result = await service.issueTokensForUser(withStaff.id);
+      expect(result).toEqual({ accessToken: 'access-token', refreshToken: 'refresh-token' });
+      const [, refreshArgs] = (jwtService.signAsync as jest.Mock).mock.calls[1] as [unknown, { expiresIn: string }];
+      expect(refreshArgs.expiresIn).toBe('5d');
     });
   });
 
@@ -579,6 +744,70 @@ describe('AuthService', () => {
       refreshTokenRepository.create.mockResolvedValue({ jti: 'j2', userId: withRole2.id, sessionId: 'sess', issuedAt: new Date(), revokedAt: null, rotatedFrom: null } as RefreshToken);
       const res = await service.signIn('test@example.com', 'password');
       expect(res).toEqual({ totpRequired: false, accessToken: 'access-token', refreshToken: 'refresh-token' });
+    });
+  });
+
+  describe('Email Change', () => {
+    it('should request an email change and send an email', async () => {
+      userRepository.findById.mockResolvedValue(mockUserWithRoles);
+      userRepository.findByEmail.mockResolvedValue(null);
+      jwtService.signAsync.mockResolvedValue('test-token');
+
+      await service.requestEmailChange('user-id', 'new@example.com');
+
+      expect(emailPort.sendMail).toHaveBeenCalledWith(
+        'new@example.com',
+        'Confirm your new email address',
+        'Use this token to confirm your new email address: test-token',
+      );
+    });
+
+    it('should throw an error if the user is not found when requesting an email change', async () => {
+      userRepository.findById.mockResolvedValue(null);
+
+      await expect(service.requestEmailChange('user-id', 'new@example.com')).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw an error if the new email already exists when requesting an email change', async () => {
+      userRepository.findById.mockResolvedValue(mockUserWithRoles);
+      userRepository.findByEmail.mockResolvedValue(mockUserWithRoles);
+
+      await expect(service.requestEmailChange('user-id', 'new@example.com')).rejects.toThrow(AUTH_MESSAGE_KEYS.ERROR.EMAIL_ALREADY_EXISTS);
+    });
+
+    it('should confirm an email change with a valid token', async () => {
+      jwtService.verifyAsync.mockResolvedValue({ sub: 'user-id', aud: 'email-change', email: 'new@example.com' });
+      userRepository.findById.mockResolvedValue(mockUserWithRoles);
+
+      await service.confirmEmailChange('test-token');
+
+      expect(userRepository.update).toHaveBeenCalled();
+      const [[callUserId, updatePayload]] = userRepository.update.mock.calls as Array<[
+        string,
+        { email?: string; emailVerifiedAt?: Date },
+      ]>;
+      expect(callUserId).toBe('user-id');
+      expect(updatePayload.email).toBe('new@example.com');
+      expect(updatePayload.emailVerifiedAt).toBeInstanceOf(Date);
+    });
+
+    it('should throw an error if the token is invalid when confirming an email change', async () => {
+      jwtService.verifyAsync.mockRejectedValue(new Error());
+
+      await expect(service.confirmEmailChange('invalid-token')).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw an error if the token audience is invalid when confirming an email change', async () => {
+      jwtService.verifyAsync.mockResolvedValue({ sub: 'user-id', aud: 'invalid-audience', email: 'new@example.com' });
+
+      await expect(service.confirmEmailChange('test-token')).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw an error if the user is not found when confirming an email change', async () => {
+      jwtService.verifyAsync.mockResolvedValue({ sub: 'user-id', aud: 'email-change', email: 'new@example.com' });
+      userRepository.findById.mockResolvedValue(null);
+
+      await expect(service.confirmEmailChange('test-token')).rejects.toThrow(UnauthorizedException);
     });
   });
 

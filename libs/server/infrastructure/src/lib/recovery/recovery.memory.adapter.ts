@@ -11,7 +11,7 @@ export class RecoveryCodesMemoryAdapter implements RecoveryCodesPort {
   private store = new Map<string, Set<string>>();
 
   /** @inheritdoc */
-  async generate(userId: string, count = 10): Promise<string[]> {
+  generate(userId: string, count = 10): Promise<string[]> {
     const codes: string[] = [];
     const set = new Set<string>();
     for (let i = 0; i < count; i++) {
@@ -20,16 +20,16 @@ export class RecoveryCodesMemoryAdapter implements RecoveryCodesPort {
       set.add(code);
     }
     this.store.set(userId, set);
-    return codes;
+    return Promise.resolve(codes);
   }
 
   /** @inheritdoc */
-  async verifyAndConsume(userId: string, code: string): Promise<boolean> {
+  verifyAndConsume(userId: string, code: string): Promise<boolean> {
     const set = this.store.get(userId);
-    if (!set) return false;
-    if (!set.has(code)) return false;
+    if (!set) return Promise.resolve(false);
+    if (!set.has(code)) return Promise.resolve(false);
     set.delete(code);
-    return true;
+    return Promise.resolve(true);
   }
 }
 

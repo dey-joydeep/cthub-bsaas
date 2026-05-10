@@ -26,6 +26,8 @@
       "@cthub-bsaas/server-features-auth/*": ["dist/libs/server/features/auth/*", "libs/server/features/auth/src/*"],
       "@cthub-bsaas/server-infrastructure": ["libs/server/infrastructure/src/index.ts"],
       "@cthub-bsaas/server-infrastructure/*": ["dist/libs/server/infrastructure/*", "libs/server/infrastructure/src/*"],
+      "@cthub-bsaas/server-testing-utils": ["libs/server/server-testing-utils/src/index.ts"],
+      "@cthub-bsaas/server-testing-utils/*": ["dist/libs/server/server-testing-utils/*", "libs/server/server-testing-utils/src/*"],
       "@cthub-bsaas/shared": ["libs/shared/src/index.ts"],
       "@cthub-bsaas/shared/models/*": ["libs/shared/src/lib/models/*"],
       "@cthub-bsaas/shared/*": ["dist/libs/shared/*", "libs/shared/src/*"],

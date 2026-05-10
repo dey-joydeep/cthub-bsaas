@@ -1,99 +1,69 @@
 # Task Tracking
 
-## Overview
+**Updated:** 2026-05-04
 
-This document tracks the progress of development tasks across all modules.
+This document tracks active local tasks at a high level. Detailed Auth backend branch status is maintained in:
 
-## Active Sprints
+- `docs/status/auth/auth-backend-plan-and-progress-status.md`
 
-### Current Sprint (Sprint 3 - 2025-07-15 to 2025-07-28)
+## Active Workstream
 
-| Module    | Task                     | Status      | Assignee | Points | Progress |
-| --------- | ------------------------ | ----------- | -------- | ------ | -------- |
-| Auth      | Implement password reset | In Progress | @alice   | 5      | 60%      |
-| Dashboard | Add revenue chart        | In Progress | @bob     | 8      | 30%      |
-| Appointment   | Fix timezone issues      | In Review   | @charlie | 3      | 90%      |
-| Profile   | Update user settings     | To Do       | @dave    | 5      | 0%       |
+### Auth Backend Foundation
 
-### Upcoming Sprints
+Branch:
 
-- **Sprint 4 (2025-07-29 - 2025-08-11)**:
-  - Multi-language support
-  - Advanced search filters
-  - Performance optimizations
+```text
+feat/auth-backend-foundation
+```
 
-## Backlog
+Scope:
 
-### High Priority
+- Backend Auth feature implementation and hardening.
+- Auth OpenAPI/controller parity.
+- Auth UT/IT coverage enforcement.
+- Auth API/server docs alignment.
+- Supporting server-core pieces needed by Auth, such as envelopes, correlation ID, CSRF behavior, Retry-After behavior, and cookie handling.
 
-- [ ] Implement 2FA authentication
-- [ ] Add audit logging
-- [ ] Improve error handling
-- [ ] Add rate limiting
+Out of scope:
 
-### Medium Priority
+- Legacy route aliases.
+- Frontend Auth implementation.
+- Web E2E expansion.
+- Jest-to-Vitest migration.
+- Unrelated backend domains.
 
-- [ ] Update documentation
-- [ ] Add unit tests
-- [ ] Improve accessibility
-- [ ] Optimize database queries
+## Current Task List
 
-### Low Priority
+| Task | Status | Notes |
+| --- | --- | --- |
+| Align Auth docs with current implementation | Done | OpenAPI, API HLD/LLD, and server-alignment docs are the active contract. |
+| Remove stale alias references from docs | Done | Current route set is OpenAPI-defined only. |
+| Auth UT coverage | Done | Must remain 100%. |
+| Auth IT coverage | Done | Must remain 100%. |
+| OpenAPI route parity script | Done | Script exists at `scripts/openapi-auth-check.ts`. |
+| CI gate for OpenAPI route parity | Done | `.github/workflows/ci.yml` and `.github/workflows/openapi-contract.yml` run Auth OpenAPI checks. |
+| CI gate for Auth backend coverage | Done | CI runs server lint/test coverage for `server-feature-auth`. |
+| CI gate for all server features | Deferred | Future workflow item; other server feature work is not developed in this branch. |
+| Additional server import-boundary hardening | Deferred | Tracked under infra-upgrade boundary hardening, not this Auth backend branch. |
+| Final local branch validation | Done | UT, IT, lint, build, OpenAPI lint, and OpenAPI route parity passed on 2026-05-04. |
 
-- [ ] Refactor legacy code
-- [ ] Update dependencies
-- [ ] Add analytics
+## Validation Checklist
 
-## Blocked Items
+Before considering Auth backend branch work complete:
 
-| Issue               | Module    | Blocked By          | Status               |
-| ------------------- | --------- | ------------------- | -------------------- |
-| API rate limiting   | Auth      | Infrastructure team | Waiting for approval |
-| Payment integration | Appointment   | Third-party API     | In progress          |
-| File upload         | Portfolio | Security review     | Pending              |
+```powershell
+npx nx test server-feature-auth --configuration=ut
+npx nx test server-feature-auth --configuration=it
+npx nx lint server-feature-auth
+npx nx build server-feature-auth
+node_modules/.bin/redocly.cmd lint docs/specs/auth/API/openapi.yaml --config .redocly.yaml --max-problems=0
+node_modules/.bin/tsx.cmd scripts/openapi-auth-check.ts
+```
 
-## Completed Tasks
+Expected result:
 
-### Sprint 2 (2025-07-01 - 2025-07-14)
-
-- [x] Implement user authentication
-- [x] Set up CI/CD pipeline
-- [x] Add basic dashboard
-
-### Sprint 1 (2025-06-17 - 2025-06-30)
-
-- [x] Project setup
-- [x] Initial architecture
-- [x] Basic routing
-
-## Metrics
-
-### Velocity
-
-- Sprint 1: 32 points
-- Sprint 2: 28 points
-- Sprint 3 (current): 21 points committed
-
-### Bug Count
-
-- Open: 12
-- In Progress: 5
-- Resolved (this sprint): 8
-
-### Code Quality
-
-- Test Coverage: 78%
-- Code Smells: 15
-- Critical Issues: 2
-
-## Dependencies
-
-- Backend API v1.2.0+
-- Frontend SDK v2.1.0+
-- Database migration v3.0.0
-
-## Notes
-
-- All PRs require at least one review
-- Critical bugs should be fixed immediately
-- Documentation updates should be part of each task
+- Tests pass.
+- Auth UT and IT coverage stay at 100%.
+- Lint has zero warnings and zero errors.
+- Build succeeds.
+- OpenAPI route parity reports no missing routes.

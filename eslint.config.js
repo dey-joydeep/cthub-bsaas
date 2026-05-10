@@ -1,8 +1,18 @@
 import nx from '@nx/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
 
 export default [
+  // Ensure TS files are parsed with @typescript-eslint/parser in VSCode (flat config)
   {
     files: ['**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        // Auto-discover the correct tsconfig per file and respect project references
+        projectService: true,
+        sourceType: 'module',
+      },
+    },
     plugins: { '@nx': nx },
     rules: {},
   },

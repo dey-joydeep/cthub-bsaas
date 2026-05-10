@@ -1,5 +1,5 @@
 # Registration DB Changes
-**Updated:** 2025-09-11
+**Updated:** 2026-05-02
 
 ## New/Updated Tables
 - **users**: add `isVerified` (boolean, default false), `registrationStatus` (enum: pending, verified, completed).
@@ -20,4 +20,4 @@
 - Resend verification idempotent (regenerate or reuse unexpired token).
 
 ## Backfill/Migration Notes
-- If existing data present, initialize `isVerified` based on historical events; default `registrationStatus='completed'` for legacy users.
+- If existing data is present, initialize `isVerified` based on historical events and default `registrationStatus='completed'` for pre-existing users.

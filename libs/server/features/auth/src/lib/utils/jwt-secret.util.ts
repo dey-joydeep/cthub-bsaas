@@ -1,33 +1,61 @@
-import { ConfigService } from '@nestjs/config';
+/**
+ * JWT secret resolution helpers centralising fallbacks used across the auth feature.
+ */
+import { ConfigService } from '@cthub-bsaas/server-core';
+import type { AuthConfig } from '@cthub-bsaas/server-core';
+
+const DEFAULT_ACCESS_SECRET = 'test-access-secret';
+const DEFAULT_REFRESH_SECRET = 'test-refresh-secret';
 
 /**
- * Resolve the access token signing secret from configuration with sensible fallbacks for tests.
- *
- * Order: JWT_ACCESS_SECRET -> JWT_SECRET -> 'test-access-secret'
- *
- * @param {ConfigService} config - Nest config service.
- * @returns {string} Secret to use for access tokens.
+ * Subset of the auth configuration containing the secrets used to sign tokens.
  */
-export function resolveAccessSecret(config: ConfigService): string {
-  const access = config.get<string>('JWT_ACCESS_SECRET');
-  if (access) return access;
-  const fallback = config.get<string>('JWT_SECRET');
-  if (fallback) return fallback;
-  return 'test-access-secret';
+type AuthSecrets = Partial<Pick<AuthConfig, 'jwtAccessSecret' | 'jwtRefreshSecret'>>;
+
+function pickSecret({ jwtAccessSecret, jwtRefreshSecret }: AuthSecrets): {
+  access?: string;
+  refresh?: string;
+} {
+  const access = jwtAccessSecret?.trim();
+  const refresh = jwtRefreshSecret?.trim();
+  return {
+    access: access && access.length > 0 ? access : undefined,
+    refresh: refresh && refresh.length > 0 ? refresh : undefined,
+  };
 }
 
 /**
- * Resolve the refresh token signing secret from configuration with sensible fallbacks for tests.
+ * Resolve the symmetric secret used to sign access tokens.
  *
- * Order: JWT_REFRESH_SECRET -> JWT_SECRET -> 'test-refresh-secret'
- *
- * @param {ConfigService} config - Nest config service.
- * @returns {string} Secret to use for refresh tokens.
+ * @public
+ * @param {ConfigService} configService - Application configuration service exposing auth settings.
+ * @returns {string} The secret to use when signing or verifying access tokens.
  */
-export function resolveRefreshSecret(config: ConfigService): string {
-  const refresh = config.get<string>('JWT_REFRESH_SECRET');
-  if (refresh) return refresh;
-  const fallback = config.get<string>('JWT_SECRET');
-  if (fallback) return fallback;
-  return 'test-refresh-secret';
+export function resolveAccessSecret(configService: ConfigService): string {
+  const secrets = pickSecret(configService.auth);
+  if (secrets.access) {
+    return secrets.access;
+  }
+  if (secrets.refresh) {
+    return secrets.refresh;
+  }
+  return DEFAULT_ACCESS_SECRET;
+}
+
+/**
+ * Resolve the symmetric secret used to sign refresh tokens.
+ *
+ * @public
+ * @param {ConfigService} configService - Application configuration service exposing auth settings.
+ * @returns {string} The secret to use when signing or verifying refresh tokens.
+ */
+export function resolveRefreshSecret(configService: ConfigService): string {
+  const secrets = pickSecret(configService.auth);
+  if (secrets.refresh) {
+    return secrets.refresh;
+  }
+  if (secrets.access) {
+    return secrets.access;
+  }
+  return DEFAULT_REFRESH_SECRET;
 }

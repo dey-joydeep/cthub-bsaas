@@ -1,5 +1,11 @@
 # Flows — Partner (Owner & Staff)
 
+Endpoints (implemented)
+- Owner validate: `GET /auth/owner/registration/:token`
+- Owner complete: `POST /auth/owner/registration/complete`
+- Staff validate: `GET /auth/staff/registration/:token`
+- Staff complete: `POST /auth/staff/registration/complete`
+
 1) **Owner 2FA Prompt**
 - Until Owner enrolls 2FA, show non-dismissable banner.
 

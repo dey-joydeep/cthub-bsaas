@@ -1,4 +1,4 @@
-import { JwtAuthGuard, Roles, User, RolesGuard } from '@cthub-bsaas/server-core';
+import { CurrentUser, JwtAuthGuard, Roles, RolesGuard } from '@cthub-bsaas/server-core';
 import type { PaginatedResponse, PaginationParams } from '@cthub-bsaas/server-core';
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 import { AppUserRole } from '@cthub-bsaas/shared';
@@ -75,7 +75,7 @@ export class UserController {
   @ApiBadRequestResponse({ description: 'Bad Request' })
   @ApiForbiddenResponse({ description: 'Forbidden' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
-  async getUserStats(@Query('tenant_id') tenantId: string, @User() _user: AuthenticatedUser) {
+  async getUserStats(@Query('tenant_id') tenantId: string, @CurrentUser() _user: AuthenticatedUser) {
     try {
       // The JwtAuthGuard and RolesGuard already verify the user's authentication and authorization
       // For now, we'll return a simple object since getUserStats is not implemented
@@ -123,7 +123,7 @@ export class UserController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiForbiddenResponse({ description: 'Forbidden' })
   async getUsers(
-    @User() user: AuthenticatedUser,
+    @CurrentUser() user: AuthenticatedUser,
     @Query()
     query: PaginationParams & {
       search?: string;
@@ -255,7 +255,7 @@ export class UserController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiForbiddenResponse({ description: 'Forbidden' })
   async getUsersAdmin(
-    @User() user: AuthenticatedUser,
+    @CurrentUser() user: AuthenticatedUser,
     @Query()
     query: PaginationParams & {
       search?: string;
@@ -417,7 +417,7 @@ export class UserController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiForbiddenResponse({ description: 'Forbidden' })
   @ApiConflictResponse({ description: 'User already exists' })
-  async create(@Body() createUserDto: CreateUserDto, @User() currentUser: AuthenticatedUser): Promise<UserResponseDto> {
+  async create(@Body() createUserDto: CreateUserDto, @CurrentUser() currentUser: AuthenticatedUser): Promise<UserResponseDto> {
     try {
       // Only allow ADMIN to create users with ADMIN role
       // OWNER can only create CUSTOMER and STAFF users
@@ -478,7 +478,7 @@ export class UserController {
   async updateUser(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
-    @User() _user: AuthenticatedUser,
+    @CurrentUser() _user: AuthenticatedUser,
   ): Promise<UserResponseDto> {
     try {
       const updatedUser = await this.userService.updateUser(id, updateUserDto);
@@ -608,7 +608,7 @@ export class UserController {
   @ApiOkResponse({ type: UserResponseDto })
   @UseInterceptors(ClassSerializerInterceptor)
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  async getCurrentUser(@User() user: AuthenticatedUser): Promise<UserResponseDto> {
+  async getCurrentUser(@CurrentUser() user: AuthenticatedUser): Promise<UserResponseDto> {
     try {
       const currentUser = await this.userService.getUserById(user.id);
       if (!currentUser) {

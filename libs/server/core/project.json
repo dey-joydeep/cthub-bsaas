@@ -25,8 +25,12 @@
         },
         "type-check": {
             "executor": "nx:run-commands",
+            "dependsOn": [
+                "shared:build",
+                "server-contracts-auth:build"
+            ],
             "options": {
-                "command": "tsc -p libs/server/core/tsconfig.lib.json --noEmit"
+                "command": "tsc -b libs/server/core/tsconfig.json --pretty false"
             }
         },
         "test": {

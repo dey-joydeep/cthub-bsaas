@@ -6,4 +6,3 @@ export default {
   globalTeardown: undefined,
   testMatch: ['<rootDir>/src/**/*.spec.ts', '<rootDir>/src/**/*.test.ts'],
 };
-

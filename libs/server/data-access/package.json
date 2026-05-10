@@ -13,6 +13,7 @@
     "./prisma.module": "./../../dist/libs/server/data-access/prisma.module.js"
   },
   "dependencies": {
+    "@cthub-bsaas/server-core": "0.0.1",
     "@cthub-bsaas/shared": "0.0.1"
   },
   "peerDependencies": {

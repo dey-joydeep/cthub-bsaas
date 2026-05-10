@@ -1,4 +1,4 @@
-import { registerDecorator, ValidationOptions, ValidationArguments } from 'class-validator';
+import { registerDecorator, ValidationOptions } from 'class-validator';
 import { AppointmentStatus } from '@cthub-bsaas/shared';
 
 /**
@@ -14,7 +14,7 @@ export function IsValidAppointmentStatus(validationOptions?: ValidationOptions) 
         message: 'Invalid appointment status',
       },
       validator: {
-        validate(value: unknown, _args: ValidationArguments) {
+        validate(value: unknown) {
           return (
             typeof value === 'string' &&
             (Object.values(AppointmentStatus) as string[]).includes(value)
@@ -38,7 +38,7 @@ export function IsValidAppointmentTime(validationOptions?: ValidationOptions) {
         message: 'Appointment time must be in the future',
       },
       validator: {
-        validate(value: unknown, _args: ValidationArguments) {
+        validate(value: unknown) {
           if (typeof value === 'string') {
             const appointmentTime = new Date(value);
             const now = new Date();
