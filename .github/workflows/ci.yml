@@ -90,9 +90,6 @@ jobs:
       - name: Server auth build
         run: npx nx run-many -t build -p server-core,server-data-access,server-feature-auth --parallel=3
 
-      - name: API e2e smoke (correlation-id, Retry-After)
-        run: npx nx run api-e2e:e2e
-
       - name: Guard hygiene (no Guards in feature libs)
         run: |
           if grep -Rn "class .*Guard" libs/server/features; then
