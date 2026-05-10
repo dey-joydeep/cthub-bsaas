@@ -1,8 +1,13 @@
 const nxPreset = require('@nx/jest/preset').default;
 const { join } = require('path');
+const { pathsToModuleNameMapper } = require('ts-jest');
+const { compilerOptions } = require('./tsconfig.base.json');
+
+const workspaceRoot = __dirname.replace(/\\/g, '/');
 
 module.exports = {
   ...nxPreset,
+  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, { prefix: `${workspaceRoot}/` }),
   testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
   transform: {
     '^.+\\.(t|j)sx?$': [
