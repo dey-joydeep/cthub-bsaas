@@ -31,8 +31,8 @@ import { ThrottlerRetryAfterGuard } from './http/guards/throttler-retry-after.gu
       useFactory: (config: ConfigService) => ({
         throttlers: [
           {
-            ttl: config.get<number>('throttle.ttl', 60), // Default 60 seconds
-            limit: config.get<number>('throttle.limit', 100), // Default 100 requests per ttl
+            ttl: config.rateLimit.windowMs,
+            limit: config.rateLimit.max,
           },
         ],
       }),
