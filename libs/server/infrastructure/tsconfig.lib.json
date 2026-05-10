@@ -3,6 +3,7 @@
     "compilerOptions": {
         "types": ["node"],
         "isolatedModules": false,
+        "skipLibCheck": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "useDefineForClassFields": false,
