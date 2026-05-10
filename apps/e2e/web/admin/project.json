@@ -5,7 +5,7 @@
   "sourceRoot": "apps/e2e/web/admin/src",
   "targets": {
     "e2e": {
-      "executor": "@nx/run-commands:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "commands": [
           {

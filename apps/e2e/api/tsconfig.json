@@ -5,5 +5,5 @@
     "types": ["node", "jest"],
     "emitDecoratorMetadata": true
   },
-  "include": ["src/**/*.ts"]
+  "include": ["jest.config.ts", "src/**/*.ts"]
 }
