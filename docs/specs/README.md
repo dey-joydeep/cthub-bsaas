@@ -13,6 +13,8 @@ This folder contains current implementation baselines and older supporting speci
 | [shared](shared/hld-baselines.md) | Current supporting baseline | Shared HLD/LLD patterns may be used when consistent with active feature specs. |
 | [app-shell](app-shell/README.md) | Current planning baseline | Shared shell, navigation, context selector, global feedback, validation, tests, and wireframe notes. |
 | [account-profile](account-profile/README.md) | Current planning baseline | Account/profile, security settings integration, preferences, privacy entry points, validation, tests, and wireframe notes. |
+| [customer-app](customer-app/README.md) | Current planning baseline | Customer dashboard, booking, appointments, rewards, receipts, reviews, validation, tests, and wireframe notes. |
+| [public-discovery](public-discovery/README.md) | Current planning baseline | Public search, salon profile, service browsing, SEO/SSR, validation, tests, and wireframe notes. |
 
 ## Supporting Or Legacy Specs
 
@@ -25,7 +27,8 @@ These folders predate the Salon Owner MVP baseline or cover product areas that a
 | `salon` | Supporting legacy spec | Compare against `salon-owner` business, branch, staff, and service-catalog specs before reuse. |
 | `user` | Supporting legacy spec | Reconcile with `account-profile` and Auth settings specs before implementation. |
 | `settings` | Supporting current/legacy mix | Reconcile with Auth and `account-profile` before implementation. |
-| `home`, `portfolio`, `review`, `social`, `theme` | Future or supporting product specs | Keep as supporting material until their product areas receive production-grade HLD/LLD/API/Web/Test packs. |
+| `home` | Supporting legacy spec | Reconcile with `public-discovery` before implementation. |
+| `portfolio`, `review`, `social`, `theme` | Future or supporting product specs | Keep as supporting material until their product areas receive production-grade HLD/LLD/API/Web/Test packs. |
 | `salon-staff-request` | Supporting legacy spec | Reconcile with Salon Owner staff and branch access rules before implementation. |
 
 ## Cleanup Policy
