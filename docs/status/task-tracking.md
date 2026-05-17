@@ -1,55 +1,32 @@
 # Task Tracking
 
-**Updated:** 2026-05-04
+**Updated:** 2026-05-18
 
-This document tracks active local tasks at a high level. Detailed Auth backend branch status is maintained in:
+This document tracks current repository-level planning status. Feature-specific status documents remain under their own folders.
 
-- `docs/status/auth/auth-backend-plan-and-progress-status.md`
+## Completed Workstreams
 
-## Active Workstream
+| Workstream | Status | Notes |
+| --- | --- | --- |
+| Auth backend foundation | Done | Backend Auth implementation, OpenAPI/controller parity, UT/IT coverage gates, and supporting server-core pieces are complete for the current scope. |
+| Frontend restructuring foundation | Done | Foundation restructuring branch was completed and merged. |
+| Salon Owner user-story baseline | Done | `docs/us/salon-owner/**` and supporting project-level US docs are the current product baseline. |
+| Salon Owner MVP HLD/LLD baseline | Done | `docs/specs/salon-owner/**` is the current implementation-planning baseline. |
+| Documentation standards | Done | Production documentation and visual collaboration guidelines exist under `docs/quality-standards/**`. |
 
-### Auth Backend Foundation
-
-Branch:
-
-```text
-feat/auth-backend-foundation
-```
-
-Scope:
-
-- Backend Auth feature implementation and hardening.
-- Auth OpenAPI/controller parity.
-- Auth UT/IT coverage enforcement.
-- Auth API/server docs alignment.
-- Supporting server-core pieces needed by Auth, such as envelopes, correlation ID, CSRF behavior, Retry-After behavior, and cookie handling.
-
-Out of scope:
-
-- Legacy route aliases.
-- Frontend Auth implementation.
-- Web E2E expansion.
-- Jest-to-Vitest migration.
-- Unrelated backend domains.
-
-## Current Task List
+## Active Planning Backlog
 
 | Task | Status | Notes |
 | --- | --- | --- |
-| Align Auth docs with current implementation | Done | OpenAPI, API HLD/LLD, and server-alignment docs are the active contract. |
-| Remove stale alias references from docs | Done | Current route set is OpenAPI-defined only. |
-| Auth UT coverage | Done | Must remain 100%. |
-| Auth IT coverage | Done | Must remain 100%. |
-| OpenAPI route parity script | Done | Script exists at `scripts/openapi-auth-check.ts`. |
-| CI gate for OpenAPI route parity | Done | `.github/workflows/ci.yml` and `.github/workflows/openapi-contract.yml` run Auth OpenAPI checks. |
-| CI gate for Auth backend coverage | Done | CI runs server lint/test coverage for `server-feature-auth`. |
-| CI gate for all server features | Deferred | Future workflow item; other server feature work is not developed in this branch. |
-| Additional server import-boundary hardening | Deferred | Tracked under infra-upgrade boundary hardening, not this Auth backend branch. |
-| Final local branch validation | Done | UT, IT, lint, build, OpenAPI lint, and OpenAPI route parity passed on 2026-05-04. |
+| Salon Owner implementation slicing | Next | Create a coding-ready slice plan before starting backend/frontend implementation. |
+| Older spec reconciliation | Pending | Classify older `appointment`, `salon`, `dashboard`, `user`, and related specs as reusable, superseded, or future-scope before implementation. |
+| Non-owner product HLD/LLD packs | Pending | Customer app, platform admin, public discovery, reporting, notifications, integrations, reputation, and data privacy need production-grade design packs when they become active. |
+| Server-wide coverage gate | Deferred | Add only after more server feature libraries are developed. |
+| Additional import-boundary hardening | Deferred | Tracked by the infrastructure-upgrade planning workstream. |
 
-## Validation Checklist
+## Validation References
 
-Before considering Auth backend branch work complete:
+For Auth backend changes:
 
 ```powershell
 npx nx test server-feature-auth --configuration=ut
@@ -60,10 +37,10 @@ node_modules/.bin/redocly.cmd lint docs/specs/auth/API/openapi.yaml --config .re
 node_modules/.bin/tsx.cmd scripts/openapi-auth-check.ts
 ```
 
-Expected result:
+For Salon Owner documentation changes:
 
-- Tests pass.
-- Auth UT and IT coverage stay at 100%.
-- Lint has zero warnings and zero errors.
-- Build succeeds.
-- OpenAPI route parity reports no missing routes.
+```powershell
+git diff --check
+```
+
+Also verify local Markdown links for changed docs before committing large documentation updates.

@@ -1,54 +1,38 @@
 # Project Status Summary
 
-**Updated:** 2026-05-04
+**Updated:** 2026-05-18
 
-This status folder is currently used for local planning and branch handoff notes. It is not a release-management dashboard.
+This folder tracks current documentation and implementation-readiness status. It is not a release-management dashboard.
 
-## Active Branch Focus
+## Current Main-Branch Status
 
-Current branch:
+| Workstream | Status | Source |
+| --- | --- | --- |
+| Auth backend foundation | Complete for current backend scope | [Auth backend status](auth/auth-backend-plan-and-progress-status.md) |
+| Frontend restructuring foundation | Complete for current foundation scope | Git history and frontend branch merge notes |
+| Salon Owner user stories | Complete as current product baseline | [Salon Owner US index](../us/salon-owner/README.md) |
+| Salon Owner MVP specs | Complete as implementation baseline | [Salon Owner spec index](../specs/salon-owner/README.md) |
+| Infrastructure upgrade planning | Available for future upgrade work | [Infra upgrade plan](../infra-upgrade/20260501/README.md) |
 
-```text
-feat/auth-backend-foundation
-```
+## Current Source-Of-Truth Map
 
-Primary branch status document:
+| Area | Use first |
+| --- | --- |
+| Auth backend implementation and route contract | `docs/specs/auth/API/openapi.yaml`, Auth API HLD/LLD, and `scripts/openapi-auth-check.ts` |
+| Salon Owner MVP implementation planning | `docs/specs/salon-owner/README.md` |
+| Product-level user stories | `docs/us/README.md` and `docs/us/status-matrix.md` |
+| Documentation quality rules | `docs/quality-standards/production-documentation-standard.md` |
+| Visual and diagram standards | `docs/quality-standards/visual-collaboration-guideline.md` |
 
-- `docs/status/auth/auth-backend-plan-and-progress-status.md`
+## Remaining Documentation Cleanup
 
-## Auth Backend Summary
+The following items remain outside the completed Salon Owner MVP baseline:
 
-The Auth backend foundation is implemented and locally validated against the current OpenAPI route contract.
+1. Classify or reconcile older feature specs under `docs/specs/appointment`, `docs/specs/salon`, `docs/specs/dashboard`, and related folders before using them for new implementation.
+2. Create implementation slicing docs before coding the Salon Owner MVP.
+3. Add production-grade HLD/LLD/API/Web/Test packs for non-owner product areas when those areas become active.
+4. Keep Auth status current when Auth route scope, validation commands, or implementation status changes.
 
-Current source of truth:
+## Current Guidance
 
-- `docs/specs/auth/API/openapi.yaml`
-- `docs/specs/auth/API/api-hld.md`
-- `docs/specs/auth/API/api-lld.md`
-- `docs/specs/auth/WEB/docs/auth/server-alignment.md`
-- `scripts/openapi-auth-check.ts`
-
-Current branch rules:
-
-- Do not add legacy route aliases.
-- Keep controller routes and OpenAPI in parity.
-- Keep Auth UT and IT coverage at 100%.
-- Keep lint/build green.
-- Keep docs aligned with implementation whenever Auth behavior changes.
-
-## Known Remaining Backend Auth Work
-
-No Auth backend implementation tasks remain in the current branch scope.
-
-Future work outside this branch:
-
-1. Broader `server-feature-*` coverage gates after additional server features are developed.
-2. Additional server import-boundary hardening under `docs/infra-upgrade/20260501/`.
-
-## Related Planning
-
-Infrastructure modernization planning lives under:
-
-- `docs/infra-upgrade/20260501/`
-
-That workstream is separate from this Auth backend branch.
+Do not implement Salon Owner MVP features directly from the user stories alone. Start from the Salon Owner FRD/FNRD documents, then use the HLD/LLD/API/Web/Validation/Test documents as the implementation baseline.
