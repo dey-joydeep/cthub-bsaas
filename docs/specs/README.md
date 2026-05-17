@@ -18,6 +18,8 @@ This folder contains current implementation baselines and older supporting speci
 | [platform-admin](platform-admin/README.md) | Current planning baseline | SaaS administration, tenant oversight, support access, feature flags, audit, validation, tests, and wireframe notes. |
 | [notifications](notifications/README.md) | Current planning baseline | Transactional, reminder, marketing, template, delivery-log, consent, validation, test, and wireframe planning. |
 | [integrations](integrations/README.md) | Current planning baseline | Provider ports, credentials, webhooks, retries, provider health, validation, test, and wireframe planning. |
+| [reporting](reporting/README.md) | Current planning baseline | Financial, appointment, staff, customer, inventory, platform, export, validation, test, and wireframe planning. |
+| [reputation](reputation/README.md) | Current planning baseline | Review submission, moderation, owner response, public visibility, insights, validation, test, and wireframe planning. |
 
 ## Supporting Or Legacy Specs
 
@@ -31,7 +33,8 @@ These folders predate the Salon Owner MVP baseline or cover product areas that a
 | `user` | Supporting legacy spec | Reconcile with `account-profile` and Auth settings specs before implementation. |
 | `settings` | Supporting current/legacy mix | Reconcile with Auth and `account-profile` before implementation. |
 | `home` | Supporting legacy spec | Reconcile with `public-discovery` before implementation. |
-| `portfolio`, `review`, `social`, `theme` | Future or supporting product specs | Keep as supporting material until their product areas receive production-grade HLD/LLD/API/Web/Test packs. |
+| `review` | Supporting legacy spec | Reconcile with `reputation` before implementation. |
+| `portfolio`, `social`, `theme` | Future or supporting product specs | Keep as supporting material until their product areas receive production-grade HLD/LLD/API/Web/Test packs. |
 | `salon-staff-request` | Supporting legacy spec | Reconcile with Salon Owner staff and branch access rules before implementation. |
 
 ## Cleanup Policy
