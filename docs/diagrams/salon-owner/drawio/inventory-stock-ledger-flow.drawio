@@ -1,0 +1,64 @@
+<mxfile host="app.diagrams.net" modified="2026-05-17T00:00:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="inventory-stock-ledger-flow" name="Inventory Stock Ledger Flow">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Inventory Stock Ledger Flow" style="text;html=1;strokeColor=none;fillColor=none;fontSize=24;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="500" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="manager" value="Owner / Manager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="120" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="movement" value="Stock Movement Command&lt;br&gt;receive, adjust, transfer, POS consume" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="330" y="105" width="300" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="validate" value="Validate Scope And Quantity&lt;br&gt;business, branch, product, unit, reason, policy" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="720" y="105" width="310" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="negative" value="Would Balance Go Negative?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="790" y="290" width="190" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="reject" value="409 Stock Insufficient&lt;br&gt;or 400 reason missing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="455" width="270" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="ledger" value="Append Stock Ledger&lt;br&gt;immutable debit or credit row" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#16A34A;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="330" y="455" width="300" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="balance" value="Update Branch Balance&lt;br&gt;derived current stock by product and branch" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="330" y="650" width="300" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="alert" value="Low-Stock Evaluation&lt;br&gt;threshold reached event when balance is below threshold" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#F97316;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="730" y="650" width="330" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="audit" value="Audit And Read Models&lt;br&gt;actor, branch, product, movement reason, correlation ID" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="650" width="330" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="manager" target="movement" value="submit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#475569;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="movement" target="validate" value="server validation" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#475569;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="validate" target="negative" value="load current balance" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#475569;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="negative" target="reject" value="yes, not allowed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#DC2626;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="negative" target="ledger" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="ledger" target="balance" value="same transaction" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="balance" target="alert" value="after commit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#475569;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="balance" target="audit" value="read model update" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#475569;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

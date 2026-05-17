@@ -1,0 +1,22 @@
+<mxfile host="app.diagrams.net" modified="2026-05-17T00:00:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="service-catalog-pricing-availability-flow" name="Service Catalog Pricing Availability Flow">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Service Catalog Pricing And Availability" style="text;html=1;strokeColor=none;fillColor=none;fontSize=24;fontStyle=1;align=left;" vertex="1" parent="1"><mxGeometry x="40" y="30" width="580" height="40" as="geometry" /></mxCell>
+        <mxCell id="owner" value="Owner / Manager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;fontSize=14;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="40" y="120" width="200" height="70" as="geometry" /></mxCell>
+        <mxCell id="service" value="Create / Update Service&lt;br&gt;category, name, duration, base price, tax" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;fontSize=14;" vertex="1" parent="1"><mxGeometry x="320" y="105" width="300" height="100" as="geometry" /></mxCell>
+        <mxCell id="validate" value="Validate Ownership And Rule Set&lt;br&gt;category scope, duplicate name, price, duration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;fontSize=14;" vertex="1" parent="1"><mxGeometry x="720" y="105" width="330" height="100" as="geometry" /></mxCell>
+        <mxCell id="branch" value="Branch Availability And Price Overrides&lt;br&gt;branch scope and active availability" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF2FF;strokeColor=#4F46E5;fontSize=14;" vertex="1" parent="1"><mxGeometry x="320" y="330" width="330" height="100" as="geometry" /></mxCell>
+        <mxCell id="staff" value="Staff Eligibility&lt;br&gt;service skill assignment and branch match" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#16A34A;fontSize=14;" vertex="1" parent="1"><mxGeometry x="740" y="330" width="300" height="100" as="geometry" /></mxCell>
+        <mxCell id="snapshot" value="Appointment / POS Snapshot&lt;br&gt;name, duration, price, tax, currency immutable at use time" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=14;" vertex="1" parent="1"><mxGeometry x="520" y="570" width="360" height="110" as="geometry" /></mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="owner" target="service" value="submit" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#475569;fontSize=12;"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="service" target="validate" value="server validation" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#475569;fontSize=12;"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="validate" target="branch" value="commit service and price record" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="branch" target="staff" value="eligible performers" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#475569;fontSize=12;"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="staff" target="snapshot" value="used by booking and checkout" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#475569;fontSize=12;"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

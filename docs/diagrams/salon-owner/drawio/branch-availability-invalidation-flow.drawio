@@ -1,0 +1,22 @@
+<mxfile host="app.diagrams.net" modified="2026-05-17T00:00:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="branch-availability-invalidation-flow" name="Branch Availability Invalidation Flow">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Branch Hours / Holiday Availability Invalidation" style="text;html=1;strokeColor=none;fillColor=none;fontSize=24;fontStyle=1;align=left;" vertex="1" parent="1"><mxGeometry x="40" y="30" width="700" height="40" as="geometry" /></mxCell>
+        <mxCell id="manager" value="Owner / Branch Manager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;fontSize=14;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="60" y="120" width="240" height="80" as="geometry" /></mxCell>
+        <mxCell id="change" value="Branch Schedule Change&lt;br&gt;weekly hours, holiday, policy, status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;fontSize=14;" vertex="1" parent="1"><mxGeometry x="420" y="110" width="320" height="100" as="geometry" /></mxCell>
+        <mxCell id="validate" value="Validate Schedule&lt;br&gt;no overlapping intervals, local date, archive blockers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;fontSize=14;" vertex="1" parent="1"><mxGeometry x="860" y="110" width="330" height="100" as="geometry" /></mxCell>
+        <mxCell id="commit" value="Commit Branch Change&lt;br&gt;profile/schedule/policy + audit" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#16A34A;fontSize=14;" vertex="1" parent="1"><mxGeometry x="420" y="360" width="320" height="100" as="geometry" /></mxCell>
+        <mxCell id="invalidate" value="Invalidate Availability&lt;br&gt;future slot search and appointment warnings" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=14;" vertex="1" parent="1"><mxGeometry x="860" y="360" width="330" height="100" as="geometry" /></mxCell>
+        <mxCell id="appointments" value="Future Appointments Review&lt;br&gt;blocked archive or changed availability windows" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontSize=14;" vertex="1" parent="1"><mxGeometry x="620" y="610" width="360" height="100" as="geometry" /></mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="manager" target="change" value="submit" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#475569;fontSize=12;"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="change" target="validate" value="server validation" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#475569;fontSize=12;"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="validate" target="commit" value="valid" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="commit" target="invalidate" value="after commit" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#475569;fontSize=12;"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="invalidate" target="appointments" value="future impact" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#DC2626;fontSize=12;"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

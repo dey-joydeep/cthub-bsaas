@@ -1,0 +1,85 @@
+<mxfile host="app.diagrams.net" modified="2026-05-16T00:00:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="appointment-lifecycle" name="Appointment Lifecycle">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Appointment Availability And Lifecycle" style="text;html=1;strokeColor=none;fillColor=none;fontSize=24;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="520" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="actor" value="Owner / Manager / Front Desk" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="110" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="calendar" value="Appointment Calendar&lt;br&gt;branch + staff + date filters" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="340" y="110" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="form" value="Create / Edit Appointment&lt;br&gt;customer, services, staff, date, notes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="660" y="110" width="270" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="availability" value="Find Availability&lt;br&gt;branch hours + holidays + service duration + staff skill + roster + existing bookings" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="95" width="330" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="available" value="Slot Available?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="260" width="180" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="save" value="Create / Reschedule Write&lt;br&gt;transactional conflict check" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#16A34A;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="660" y="300" width="270" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="conflict" value="409 Slot Conflict&lt;br&gt;return conflict details + nearest alternatives" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="440" width="330" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="created" value="Appointment Confirmed / Draft&lt;br&gt;status history appended" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="340" y="300" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="status" value="Allowed Status Actions&lt;br&gt;confirm, arrive, start, complete, cancel, no-show" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="340" y="470" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="pos" value="POS Handoff&lt;br&gt;completed appointment becomes billable" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#475569;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="660" y="620" width="270" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="audit" value="Audit + Events&lt;br&gt;actor, business, branch, status, reason, correlation ID" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="620" width="330" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="actor" target="calendar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#475569;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="calendar" target="form" value="new / reschedule" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#475569;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="form" target="availability" value="find slots" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#475569;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="availability" target="available" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#475569;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="available" target="save" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="available" target="conflict" value="no / stale" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#DC2626;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="save" target="created" value="commit success" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="save" target="conflict" value="409 during write" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#DC2626;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="conflict" target="form" value="refresh / choose alternative" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#475569;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="created" target="status" value="status action" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#475569;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="status" target="pos" value="complete" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#475569;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="created" target="audit" value="emit after commit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#475569;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="status" target="audit" value="status history" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#475569;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

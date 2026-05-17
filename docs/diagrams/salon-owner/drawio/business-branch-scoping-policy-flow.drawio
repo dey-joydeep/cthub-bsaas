@@ -1,0 +1,23 @@
+<mxfile host="app.diagrams.net" modified="2026-05-17T00:00:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="business-branch-scoping-policy-flow" name="Business Branch Scoping Policy Flow">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Business / Branch Scope And Policy Inheritance" style="text;html=1;strokeColor=none;fillColor=none;fontSize=24;fontStyle=1;align=left;" vertex="1" parent="1"><mxGeometry x="40" y="30" width="680" height="40" as="geometry" /></mxCell>
+        <mxCell id="tenant" value="Platform Tenant&lt;br&gt;authenticated partner account" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;fontSize=14;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="80" y="120" width="240" height="90" as="geometry" /></mxCell>
+        <mxCell id="business" value="Salon Business&lt;br&gt;legal profile, currency, timezone, tax defaults" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;fontSize=14;" vertex="1" parent="1"><mxGeometry x="440" y="120" width="330" height="100" as="geometry" /></mxCell>
+        <mxCell id="branch" value="Branch&lt;br&gt;address, hours, holidays, branch policy overrides" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#16A34A;fontSize=14;" vertex="1" parent="1"><mxGeometry x="900" y="120" width="330" height="100" as="geometry" /></mxCell>
+        <mxCell id="operation" value="Feature Operation&lt;br&gt;appointment, POS, inventory, staff, customer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=14;" vertex="1" parent="1"><mxGeometry x="440" y="380" width="330" height="100" as="geometry" /></mxCell>
+        <mxCell id="guard" value="Scope Guard&lt;br&gt;derive business/branch from auth context and route" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;fontSize=14;" vertex="1" parent="1"><mxGeometry x="900" y="380" width="330" height="100" as="geometry" /></mxCell>
+        <mxCell id="audit" value="Audit&lt;br&gt;actor, business, branch, changed fields, correlation ID" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF2FF;strokeColor=#4F46E5;fontSize=14;" vertex="1" parent="1"><mxGeometry x="640" y="620" width="360" height="90" as="geometry" /></mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="tenant" target="business" value="owns or administers" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#475569;fontSize=12;"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="business" target="branch" value="contains" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#475569;fontSize=12;"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="business" target="operation" value="default policy" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#475569;fontSize=12;"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="branch" target="operation" value="override policy" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="operation" target="guard" value="validate scope" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#475569;fontSize=12;"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="guard" target="audit" value="write decision" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#475569;fontSize=12;"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
