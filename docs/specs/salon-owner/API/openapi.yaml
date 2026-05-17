@@ -1,0 +1,1987 @@
+openapi: 3.1.0
+info:
+  title: CTHub Salon Owner MVP API
+  version: '1.0.0'
+  description: |
+    Target implementation contract for the Salon Owner MVP operational API.
+    - All endpoints require authenticated partner/owner context unless stated otherwise.
+    - Browser writes use platform CSRF protection.
+    - Success responses use `{ success: true, data, meta }`.
+    - Error responses use `{ success: false, code, message, details?, meta }`.
+    - `meta.correlationId` is returned on success and error responses.
+    - Money and decimal values are serialized as strings.
+    - Timestamps are UTC ISO-8601 strings.
+servers:
+  - url: https://api.example.com
+    description: Production
+  - url: http://localhost:3000
+    description: Local
+tags:
+  - name: Business Settings
+  - name: Staff
+  - name: Service Catalog
+  - name: Customers
+  - name: Appointments
+  - name: POS
+  - name: Inventory
+  - name: Dashboard
+security:
+  - cookieAuth: []
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: bsaas_at
+  parameters:
+    CorrelationIdHeader:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 128
+      description: Optional caller-provided correlation id. Server generates one when absent.
+    IdempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 128
+      description: Required by policy for payment capture, invoice finalization, appointment creation, and stock adjustments.
+    BranchIdQuery:
+      name: branchId
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    BusinessIdQuery:
+      name: businessId
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    PageQuery:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSizeQuery:
+      name: pageSize
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 25
+    SearchQuery:
+      name: q
+      in: query
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 100
+    DateQuery:
+      name: date
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date
+  responses:
+    BadRequest:
+      description: Request is malformed or violates request-level constraints.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorEnvelope'
+    Unauthorized:
+      description: Authentication is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorEnvelope'
+    Forbidden:
+      description: User lacks tenant, salon business, branch, or role permission.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorEnvelope'
+    NotFound:
+      description: Resource is absent or outside caller scope.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorEnvelope'
+    Conflict:
+      description: Domain conflict such as duplicate record or slot overlap.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorEnvelope'
+    ValidationError:
+      description: Payload is syntactically valid but fails validation.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorEnvelope'
+  schemas:
+    Uuid:
+      type: string
+      format: uuid
+    IsoDateTime:
+      type: string
+      format: date-time
+    MoneyAmount:
+      type: string
+      pattern: "^-?\\d+(\\.\\d{1,2})?$"
+      examples: ['499.00']
+    ApiMeta:
+      type: object
+      required: [correlationId]
+      properties:
+        correlationId:
+          type: string
+    PageMeta:
+      type: object
+      required: [correlationId, page, pageSize, total]
+      properties:
+        correlationId:
+          type: string
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+    ApiErrorEnvelope:
+      type: object
+      required: [success, code, message, meta]
+      properties:
+        success:
+          type: boolean
+          const: false
+        code:
+          type: string
+          description: Stable shared message key.
+        message:
+          type: string
+          description: Stable shared message key or localized fallback.
+        details:
+          type: object
+          additionalProperties: true
+        meta:
+          $ref: '#/components/schemas/ApiMeta'
+    SuccessEnvelope:
+      type: object
+      required: [success, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          type: object
+          additionalProperties: true
+        meta:
+          $ref: '#/components/schemas/ApiMeta'
+    PagedEnvelope:
+      type: object
+      required: [success, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+    AddressDto:
+      type: object
+      required: [line1, city, state, postalCode, country]
+      properties:
+        line1:
+          type: string
+          maxLength: 160
+        line2:
+          type: string
+          maxLength: 160
+        city:
+          type: string
+          maxLength: 80
+        state:
+          type: string
+          maxLength: 80
+        postalCode:
+          type: string
+          maxLength: 20
+        country:
+          type: string
+          minLength: 2
+          maxLength: 2
+          examples: ['IN']
+    SalonBusinessInput:
+      type: object
+      required: [displayName, legalName, status]
+      properties:
+        displayName:
+          type: string
+          minLength: 2
+          maxLength: 120
+        legalName:
+          type: string
+          minLength: 2
+          maxLength: 160
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE]
+    SalonBusinessDto:
+      allOf:
+        - $ref: '#/components/schemas/SalonBusinessInput'
+        - type: object
+          required: [id, tenantId, createdAt, updatedAt]
+          properties:
+            id:
+              $ref: '#/components/schemas/Uuid'
+            tenantId:
+              $ref: '#/components/schemas/Uuid'
+            createdAt:
+              $ref: '#/components/schemas/IsoDateTime'
+            updatedAt:
+              $ref: '#/components/schemas/IsoDateTime'
+    BranchProfileInput:
+      type: object
+      required: [businessId, name, timezone, currency, address]
+      properties:
+        businessId:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+        phone:
+          type: string
+          maxLength: 30
+        email:
+          type: string
+          format: email
+        timezone:
+          type: string
+          examples: ['Asia/Kolkata']
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          examples: ['INR']
+        address:
+          $ref: '#/components/schemas/AddressDto'
+    BranchDto:
+      allOf:
+        - $ref: '#/components/schemas/BranchProfileInput'
+        - type: object
+          required: [id, businessId, createdAt, updatedAt]
+          properties:
+            id:
+              $ref: '#/components/schemas/Uuid'
+            businessId:
+              $ref: '#/components/schemas/Uuid'
+            createdAt:
+              $ref: '#/components/schemas/IsoDateTime'
+            updatedAt:
+              $ref: '#/components/schemas/IsoDateTime'
+    WeeklyHoursInput:
+      type: object
+      required: [timezone, days]
+      properties:
+        timezone:
+          type: string
+        days:
+          type: array
+          minItems: 7
+          maxItems: 7
+          items:
+            type: object
+            required: [dayOfWeek, open, intervals]
+            properties:
+              dayOfWeek:
+                type: integer
+                minimum: 0
+                maximum: 6
+              open:
+                type: boolean
+              intervals:
+                type: array
+                items:
+                  type: object
+                  required: [start, end]
+                  properties:
+                    start:
+                      type: string
+                      pattern: "^\\d{2}:\\d{2}$"
+                    end:
+                      type: string
+                      pattern: "^\\d{2}:\\d{2}$"
+    BranchHolidayInput:
+      type: object
+      required: [closed]
+      properties:
+        closed:
+          type: boolean
+        reason:
+          type: string
+          maxLength: 160
+        intervals:
+          type: array
+          items:
+            type: object
+            required: [start, end]
+            properties:
+              start:
+                type: string
+                pattern: "^\\d{2}:\\d{2}$"
+              end:
+                type: string
+                pattern: "^\\d{2}:\\d{2}$"
+    BranchPolicyInput:
+      type: object
+      required: [bookingLeadMinutes, cancellationCutoffMinutes, noShowGraceMinutes]
+      properties:
+        bookingLeadMinutes:
+          type: integer
+          minimum: 0
+        cancellationCutoffMinutes:
+          type: integer
+          minimum: 0
+        noShowGraceMinutes:
+          type: integer
+          minimum: 0
+    StaffStatus:
+      type: string
+      enum: [ACTIVE, INACTIVE]
+    StaffInput:
+      type: object
+      required: [branchIds, displayName, phone, status]
+      properties:
+        branchIds:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/Uuid'
+        displayName:
+          type: string
+          minLength: 2
+          maxLength: 120
+        phone:
+          type: string
+          maxLength: 30
+        email:
+          type: string
+          format: email
+        status:
+          $ref: '#/components/schemas/StaffStatus'
+    StaffDto:
+      allOf:
+        - $ref: '#/components/schemas/StaffInput'
+        - type: object
+          required: [id, createdAt, updatedAt]
+          properties:
+            id:
+              $ref: '#/components/schemas/Uuid'
+            roles:
+              type: array
+              items:
+                type: string
+            skillServiceIds:
+              type: array
+              items:
+                $ref: '#/components/schemas/Uuid'
+            createdAt:
+              $ref: '#/components/schemas/IsoDateTime'
+            updatedAt:
+              $ref: '#/components/schemas/IsoDateTime'
+    StaffRolesInput:
+      type: object
+      required: [roles]
+      properties:
+        roles:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            enum: [OWNER, MANAGER, RECEPTIONIST, STYLIST, CASHIER, INVENTORY_MANAGER]
+    StaffSkillsInput:
+      type: object
+      required: [serviceIds]
+      properties:
+        serviceIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Uuid'
+    StaffShiftInput:
+      type: object
+      required: [branchId, timezone, days]
+      properties:
+        branchId:
+          $ref: '#/components/schemas/Uuid'
+        timezone:
+          type: string
+        days:
+          type: array
+          items:
+            type: object
+            required: [dayOfWeek, intervals]
+            properties:
+              dayOfWeek:
+                type: integer
+                minimum: 0
+                maximum: 6
+              intervals:
+                type: array
+                items:
+                  type: object
+                  required: [start, end]
+                  properties:
+                    start:
+                      type: string
+                      pattern: "^\\d{2}:\\d{2}$"
+                    end:
+                      type: string
+                      pattern: "^\\d{2}:\\d{2}$"
+    StaffLeaveBlockInput:
+      type: object
+      required: [branchId, startsAt, endsAt, reason]
+      properties:
+        branchId:
+          $ref: '#/components/schemas/Uuid'
+        startsAt:
+          $ref: '#/components/schemas/IsoDateTime'
+        endsAt:
+          $ref: '#/components/schemas/IsoDateTime'
+        reason:
+          type: string
+          maxLength: 160
+    ServiceCategoryInput:
+      type: object
+      required: [name, sortOrder]
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+        sortOrder:
+          type: integer
+          minimum: 0
+    ServiceCategoryDto:
+      allOf:
+        - $ref: '#/components/schemas/ServiceCategoryInput'
+        - type: object
+          required: [id]
+          properties:
+            id:
+              $ref: '#/components/schemas/Uuid'
+    ServiceStatus:
+      type: string
+      enum: [ACTIVE, INACTIVE]
+    ServiceInput:
+      type: object
+      required: [categoryId, name, durationMinutes, basePrice, taxRatePercent, status]
+      properties:
+        categoryId:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+        durationMinutes:
+          type: integer
+          minimum: 5
+          maximum: 720
+        bufferMinutes:
+          type: integer
+          minimum: 0
+          default: 0
+        basePrice:
+          $ref: '#/components/schemas/MoneyAmount'
+        taxRatePercent:
+          type: string
+          pattern: "^\\d+(\\.\\d{1,2})?$"
+        status:
+          $ref: '#/components/schemas/ServiceStatus'
+    ServiceDto:
+      allOf:
+        - $ref: '#/components/schemas/ServiceInput'
+        - type: object
+          required: [id]
+          properties:
+            id:
+              $ref: '#/components/schemas/Uuid'
+            eligibleStaffIds:
+              type: array
+              items:
+                $ref: '#/components/schemas/Uuid'
+    ServiceStatusInput:
+      type: object
+      required: [status]
+      properties:
+        status:
+          $ref: '#/components/schemas/ServiceStatus'
+    StaffEligibilityInput:
+      type: object
+      required: [staffIds]
+      properties:
+        staffIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Uuid'
+    CustomerInput:
+      type: object
+      required: [displayName, phone]
+      properties:
+        displayName:
+          type: string
+          minLength: 2
+          maxLength: 120
+        phone:
+          type: string
+          maxLength: 30
+        email:
+          type: string
+          format: email
+        dateOfBirth:
+          type: string
+          format: date
+        consentForMarketing:
+          type: boolean
+          default: false
+    CustomerDto:
+      allOf:
+        - $ref: '#/components/schemas/CustomerInput'
+        - type: object
+          required: [id, createdAt, updatedAt]
+          properties:
+            id:
+              $ref: '#/components/schemas/Uuid'
+            createdAt:
+              $ref: '#/components/schemas/IsoDateTime'
+            updatedAt:
+              $ref: '#/components/schemas/IsoDateTime'
+    CustomerNoteInput:
+      type: object
+      required: [body, visibility]
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        visibility:
+          type: string
+          enum: [INTERNAL, STAFF_VISIBLE]
+    CommunicationPreferencesInput:
+      type: object
+      required: [smsEnabled, emailEnabled, whatsappEnabled]
+      properties:
+        smsEnabled:
+          type: boolean
+        emailEnabled:
+          type: boolean
+        whatsappEnabled:
+          type: boolean
+    AppointmentStatus:
+      type: string
+      enum: [BOOKED, CONFIRMED, ARRIVED, IN_SERVICE, COMPLETED, CANCELLED, NO_SHOW]
+    AppointmentLineInput:
+      type: object
+      required: [serviceId, staffId, startsAt]
+      properties:
+        serviceId:
+          $ref: '#/components/schemas/Uuid'
+        staffId:
+          $ref: '#/components/schemas/Uuid'
+        startsAt:
+          $ref: '#/components/schemas/IsoDateTime'
+    AppointmentInput:
+      type: object
+      required: [branchId, customerId, lines]
+      properties:
+        branchId:
+          $ref: '#/components/schemas/Uuid'
+        customerId:
+          $ref: '#/components/schemas/Uuid'
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/AppointmentLineInput'
+        notes:
+          type: string
+          maxLength: 1000
+    WalkInAppointmentInput:
+      allOf:
+        - $ref: '#/components/schemas/AppointmentInput'
+        - type: object
+          properties:
+            estimatedWaitMinutes:
+              type: integer
+              minimum: 0
+    AppointmentDto:
+      allOf:
+        - $ref: '#/components/schemas/AppointmentInput'
+        - type: object
+          required: [id, status, createdAt, updatedAt]
+          properties:
+            id:
+              $ref: '#/components/schemas/Uuid'
+            status:
+              $ref: '#/components/schemas/AppointmentStatus'
+            createdAt:
+              $ref: '#/components/schemas/IsoDateTime'
+            updatedAt:
+              $ref: '#/components/schemas/IsoDateTime'
+    RescheduleAppointmentInput:
+      type: object
+      required: [lines, reason]
+      properties:
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/AppointmentLineInput'
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 240
+    ReasonInput:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 240
+    AvailableSlotDto:
+      type: object
+      required: [staffId, startsAt, endsAt]
+      properties:
+        staffId:
+          $ref: '#/components/schemas/Uuid'
+        startsAt:
+          $ref: '#/components/schemas/IsoDateTime'
+        endsAt:
+          $ref: '#/components/schemas/IsoDateTime'
+    InvoiceStatus:
+      type: string
+      enum: [DRAFT, FINALIZED, PARTIALLY_PAID, PAID, VOID]
+    InvoiceInput:
+      type: object
+      required: [branchId, customerId, lines]
+      properties:
+        branchId:
+          $ref: '#/components/schemas/Uuid'
+        customerId:
+          $ref: '#/components/schemas/Uuid'
+        appointmentId:
+          $ref: '#/components/schemas/Uuid'
+        lines:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [type, referenceId, description, quantity, unitPrice]
+            properties:
+              type:
+                type: string
+                enum: [SERVICE, PRODUCT, ADJUSTMENT]
+              referenceId:
+                $ref: '#/components/schemas/Uuid'
+              description:
+                type: string
+                maxLength: 160
+              quantity:
+                type: string
+                pattern: "^\\d+(\\.\\d{1,3})?$"
+              unitPrice:
+                $ref: '#/components/schemas/MoneyAmount'
+    InvoiceDto:
+      allOf:
+        - $ref: '#/components/schemas/InvoiceInput'
+        - type: object
+          required: [id, status, subtotal, taxTotal, discountTotal, total, paidAmount, dueAmount]
+          properties:
+            id:
+              $ref: '#/components/schemas/Uuid'
+            status:
+              $ref: '#/components/schemas/InvoiceStatus'
+            subtotal:
+              $ref: '#/components/schemas/MoneyAmount'
+            taxTotal:
+              $ref: '#/components/schemas/MoneyAmount'
+            discountTotal:
+              $ref: '#/components/schemas/MoneyAmount'
+            total:
+              $ref: '#/components/schemas/MoneyAmount'
+            paidAmount:
+              $ref: '#/components/schemas/MoneyAmount'
+            dueAmount:
+              $ref: '#/components/schemas/MoneyAmount'
+    FinalizeInvoiceInput:
+      type: object
+      required: [confirmedTotal]
+      properties:
+        confirmedTotal:
+          $ref: '#/components/schemas/MoneyAmount'
+    PaymentInput:
+      type: object
+      required: [amount, method, receivedAt]
+      properties:
+        amount:
+          $ref: '#/components/schemas/MoneyAmount'
+        method:
+          type: string
+          enum: [CASH, CARD, UPI, WALLET, BANK_TRANSFER]
+        receivedAt:
+          $ref: '#/components/schemas/IsoDateTime'
+        reference:
+          type: string
+          maxLength: 120
+    ProductInput:
+      type: object
+      required: [name, sku, unit, retailPrice, status]
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+        sku:
+          type: string
+          minLength: 2
+          maxLength: 80
+        unit:
+          type: string
+          enum: [PIECE, ML, GRAM, PACK]
+        retailPrice:
+          $ref: '#/components/schemas/MoneyAmount'
+        reorderPoint:
+          type: string
+          pattern: "^\\d+(\\.\\d{1,3})?$"
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE]
+    ProductDto:
+      allOf:
+        - $ref: '#/components/schemas/ProductInput'
+        - type: object
+          required: [id]
+          properties:
+            id:
+              $ref: '#/components/schemas/Uuid'
+    StockMovementInput:
+      type: object
+      required: [branchId, productId, quantity, reason]
+      properties:
+        branchId:
+          $ref: '#/components/schemas/Uuid'
+        productId:
+          $ref: '#/components/schemas/Uuid'
+        quantity:
+          type: string
+          pattern: "^-?\\d+(\\.\\d{1,3})?$"
+        reason:
+          type: string
+          enum: [PURCHASE, SALE, ADJUSTMENT, DAMAGE, RETURN]
+        note:
+          type: string
+          maxLength: 240
+    DashboardDto:
+      type: object
+      required: [businessDate, branchId, appointments, revenue, inventoryAlerts]
+      properties:
+        businessDate:
+          type: string
+          format: date
+        branchId:
+          $ref: '#/components/schemas/Uuid'
+        appointments:
+          type: object
+          additionalProperties:
+            type: integer
+        revenue:
+          type: object
+          required: [gross, paid, due]
+          properties:
+            gross:
+              $ref: '#/components/schemas/MoneyAmount'
+            paid:
+              $ref: '#/components/schemas/MoneyAmount'
+            due:
+              $ref: '#/components/schemas/MoneyAmount'
+        inventoryAlerts:
+          type: integer
+          minimum: 0
+paths:
+  /partner/businesses:
+    get:
+      tags: [Business Settings]
+      operationId: listSalonBusinesses
+      parameters:
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+      responses:
+        '200':
+          description: Salon businesses available to the caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Business Settings]
+      operationId: createSalonBusiness
+      parameters:
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalonBusinessInput'
+      responses:
+        '201':
+          description: Salon business created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /partner/businesses/{businessId}:
+    parameters:
+      - name: businessId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Uuid'
+    get:
+      tags: [Business Settings]
+      operationId: getSalonBusiness
+      responses:
+        '200':
+          description: Salon business detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Business Settings]
+      operationId: updateSalonBusiness
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalonBusinessInput'
+      responses:
+        '200':
+          description: Salon business updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /partner/branches:
+    get:
+      tags: [Business Settings]
+      operationId: listBranches
+      parameters:
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/BusinessIdQuery'
+      responses:
+        '200':
+          description: Branches available to the caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Business Settings]
+      operationId: createBranch
+      parameters:
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BranchProfileInput'
+      responses:
+        '201':
+          description: Branch created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /partner/branches/{branchId}:
+    parameters:
+      - name: branchId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Uuid'
+    get:
+      tags: [Business Settings]
+      operationId: getBranch
+      responses:
+        '200':
+          description: Branch detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Business Settings]
+      operationId: updateBranch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BranchProfileInput'
+      responses:
+        '200':
+          description: Branch updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /partner/branches/{branchId}/hours:
+    put:
+      tags: [Business Settings]
+      operationId: replaceBranchHours
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WeeklyHoursInput'
+      responses:
+        '200':
+          description: Branch hours replaced.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/branches/{branchId}/holidays/{date}:
+    put:
+      tags: [Business Settings]
+      operationId: setBranchHoliday
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BranchHolidayInput'
+      responses:
+        '200':
+          description: Holiday/special day saved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/branches/{branchId}/policy:
+    put:
+      tags: [Business Settings]
+      operationId: updateBranchPolicy
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BranchPolicyInput'
+      responses:
+        '200':
+          description: Booking policy updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/staff:
+    get:
+      tags: [Staff]
+      operationId: listStaff
+      parameters:
+        - $ref: '#/components/parameters/BranchIdQuery'
+        - $ref: '#/components/parameters/SearchQuery'
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/PageSizeQuery'
+      responses:
+        '200':
+          description: Staff search result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedEnvelope'
+    post:
+      tags: [Staff]
+      operationId: createStaff
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffInput'
+      responses:
+        '201':
+          description: Staff profile created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/staff/{staffId}:
+    parameters:
+      - name: staffId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Uuid'
+    get:
+      tags: [Staff]
+      operationId: getStaff
+      responses:
+        '200':
+          description: Staff detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+    patch:
+      tags: [Staff]
+      operationId: updateStaff
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffInput'
+      responses:
+        '200':
+          description: Staff profile updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/staff/{staffId}/roles:
+    put:
+      tags: [Staff]
+      operationId: replaceStaffRoles
+      parameters:
+        - name: staffId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffRolesInput'
+      responses:
+        '200':
+          description: Staff roles replaced.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/staff/{staffId}/skills:
+    put:
+      tags: [Staff]
+      operationId: replaceStaffSkills
+      parameters:
+        - name: staffId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffSkillsInput'
+      responses:
+        '200':
+          description: Staff skills replaced.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/staff/{staffId}/shifts:
+    put:
+      tags: [Staff]
+      operationId: replaceStaffShifts
+      parameters:
+        - name: staffId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffShiftInput'
+      responses:
+        '200':
+          description: Staff shifts replaced.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/staff/{staffId}/leave-blocks:
+    post:
+      tags: [Staff]
+      operationId: createStaffLeaveBlock
+      parameters:
+        - name: staffId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffLeaveBlockInput'
+      responses:
+        '201':
+          description: Staff leave block created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/service-categories:
+    get:
+      tags: [Service Catalog]
+      operationId: listServiceCategories
+      responses:
+        '200':
+          description: Service categories.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedEnvelope'
+    post:
+      tags: [Service Catalog]
+      operationId: createServiceCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceCategoryInput'
+      responses:
+        '201':
+          description: Service category created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/services:
+    get:
+      tags: [Service Catalog]
+      operationId: listServices
+      parameters:
+        - $ref: '#/components/parameters/SearchQuery'
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/PageSizeQuery'
+      responses:
+        '200':
+          description: Services.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedEnvelope'
+    post:
+      tags: [Service Catalog]
+      operationId: createService
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceInput'
+      responses:
+        '201':
+          description: Service created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/services/{serviceId}:
+    parameters:
+      - name: serviceId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Uuid'
+    get:
+      tags: [Service Catalog]
+      operationId: getService
+      responses:
+        '200':
+          description: Service detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+    patch:
+      tags: [Service Catalog]
+      operationId: updateService
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceInput'
+      responses:
+        '200':
+          description: Service updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/services/{serviceId}/status:
+    put:
+      tags: [Service Catalog]
+      operationId: updateServiceStatus
+      parameters:
+        - name: serviceId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceStatusInput'
+      responses:
+        '200':
+          description: Service status updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/services/{serviceId}/staff-eligibility:
+    put:
+      tags: [Service Catalog]
+      operationId: replaceServiceStaffEligibility
+      parameters:
+        - name: serviceId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffEligibilityInput'
+      responses:
+        '200':
+          description: Service staff eligibility updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/customers:
+    get:
+      tags: [Customers]
+      operationId: searchCustomers
+      parameters:
+        - $ref: '#/components/parameters/SearchQuery'
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/PageSizeQuery'
+      responses:
+        '200':
+          description: Customer search result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedEnvelope'
+    post:
+      tags: [Customers]
+      operationId: createCustomer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerInput'
+      responses:
+        '201':
+          description: Customer created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/customers/{customerId}:
+    parameters:
+      - name: customerId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Uuid'
+    get:
+      tags: [Customers]
+      operationId: getCustomer
+      responses:
+        '200':
+          description: Customer detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+    patch:
+      tags: [Customers]
+      operationId: updateCustomer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerInput'
+      responses:
+        '200':
+          description: Customer updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/customers/{customerId}/notes:
+    post:
+      tags: [Customers]
+      operationId: createCustomerNote
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerNoteInput'
+      responses:
+        '201':
+          description: Customer note created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/customers/{customerId}/communication-preferences:
+    put:
+      tags: [Customers]
+      operationId: updateCustomerCommunicationPreferences
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommunicationPreferencesInput'
+      responses:
+        '200':
+          description: Communication preferences updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/customers/{customerId}/visit-history:
+    get:
+      tags: [Customers]
+      operationId: getCustomerVisitHistory
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Customer visits and invoices summary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedEnvelope'
+  /partner/appointments/day-board:
+    get:
+      tags: [Appointments]
+      operationId: getAppointmentDayBoard
+      parameters:
+        - $ref: '#/components/parameters/BranchIdQuery'
+        - $ref: '#/components/parameters/DateQuery'
+      responses:
+        '200':
+          description: Calendar/day-board read model.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/appointments/slots:
+    get:
+      tags: [Appointments]
+      operationId: findAppointmentSlots
+      parameters:
+        - $ref: '#/components/parameters/BranchIdQuery'
+        - name: serviceIds
+          in: query
+          required: true
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/DateQuery'
+      responses:
+        '200':
+          description: Available appointment slots.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedEnvelope'
+  /partner/appointments:
+    post:
+      tags: [Appointments]
+      operationId: createAppointment
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentInput'
+      responses:
+        '201':
+          description: Appointment booked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /partner/appointments/walk-ins:
+    post:
+      tags: [Appointments]
+      operationId: createWalkInAppointment
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WalkInAppointmentInput'
+      responses:
+        '201':
+          description: Walk-in appointment created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/appointments/{appointmentId}:
+    get:
+      tags: [Appointments]
+      operationId: getAppointment
+      parameters:
+        - name: appointmentId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Appointment detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/appointments/{appointmentId}/reschedule:
+    post:
+      tags: [Appointments]
+      operationId: rescheduleAppointment
+      parameters:
+        - name: appointmentId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RescheduleAppointmentInput'
+      responses:
+        '200':
+          description: Appointment rescheduled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /partner/appointments/{appointmentId}/confirm:
+    post:
+      tags: [Appointments]
+      operationId: confirmAppointment
+      parameters:
+        - name: appointmentId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Appointment confirmed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/appointments/{appointmentId}/cancel:
+    post:
+      tags: [Appointments]
+      operationId: cancelAppointment
+      parameters:
+        - name: appointmentId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonInput'
+      responses:
+        '200':
+          description: Appointment cancelled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/appointments/{appointmentId}/no-show:
+    post:
+      tags: [Appointments]
+      operationId: markAppointmentNoShow
+      parameters:
+        - name: appointmentId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Appointment marked no-show.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/appointments/{appointmentId}/arrive:
+    post:
+      tags: [Appointments]
+      operationId: markAppointmentArrived
+      parameters:
+        - name: appointmentId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Appointment marked arrived.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/appointments/{appointmentId}/start:
+    post:
+      tags: [Appointments]
+      operationId: startAppointmentService
+      parameters:
+        - name: appointmentId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Appointment marked in service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/appointments/{appointmentId}/complete:
+    post:
+      tags: [Appointments]
+      operationId: completeAppointment
+      parameters:
+        - name: appointmentId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Appointment completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/pos/checkout-context:
+    get:
+      tags: [POS]
+      operationId: getCheckoutContext
+      parameters:
+        - name: appointmentId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: customerId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Checkout context.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/pos/invoices:
+    post:
+      tags: [POS]
+      operationId: createInvoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceInput'
+      responses:
+        '201':
+          description: Invoice draft created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/pos/invoices/{invoiceId}:
+    get:
+      tags: [POS]
+      operationId: getInvoice
+      parameters:
+        - name: invoiceId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Invoice detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/pos/invoices/{invoiceId}/finalize:
+    post:
+      tags: [POS]
+      operationId: finalizeInvoice
+      parameters:
+        - name: invoiceId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinalizeInvoiceInput'
+      responses:
+        '200':
+          description: Invoice finalized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/pos/invoices/{invoiceId}/payments:
+    post:
+      tags: [POS]
+      operationId: captureInvoicePayment
+      parameters:
+        - name: invoiceId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentInput'
+      responses:
+        '201':
+          description: Payment captured.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/pos/pending-dues:
+    get:
+      tags: [POS]
+      operationId: listPendingDues
+      parameters:
+        - $ref: '#/components/parameters/BranchIdQuery'
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/PageSizeQuery'
+      responses:
+        '200':
+          description: Pending customer dues.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedEnvelope'
+  /partner/inventory/products:
+    get:
+      tags: [Inventory]
+      operationId: listProducts
+      parameters:
+        - $ref: '#/components/parameters/SearchQuery'
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/PageSizeQuery'
+      responses:
+        '200':
+          description: Product search result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedEnvelope'
+    post:
+      tags: [Inventory]
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '201':
+          description: Product created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/inventory/products/{productId}:
+    parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Uuid'
+    get:
+      tags: [Inventory]
+      operationId: getProduct
+      responses:
+        '200':
+          description: Product detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+    patch:
+      tags: [Inventory]
+      operationId: updateProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '200':
+          description: Product updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/inventory/branch-stock:
+    get:
+      tags: [Inventory]
+      operationId: listBranchStock
+      parameters:
+        - $ref: '#/components/parameters/BranchIdQuery'
+        - $ref: '#/components/parameters/SearchQuery'
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/PageSizeQuery'
+      responses:
+        '200':
+          description: Branch stock levels.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedEnvelope'
+  /partner/inventory/stock-movements:
+    post:
+      tags: [Inventory]
+      operationId: createStockMovement
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockMovementInput'
+      responses:
+        '201':
+          description: Stock movement recorded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/inventory/products/{productId}/adjust-stock:
+    post:
+      tags: [Inventory]
+      operationId: adjustProductStock
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockMovementInput'
+      responses:
+        '201':
+          description: Product stock adjusted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/inventory/low-stock-alerts:
+    get:
+      tags: [Inventory]
+      operationId: listLowStockAlerts
+      parameters:
+        - $ref: '#/components/parameters/BranchIdQuery'
+      responses:
+        '200':
+          description: Low-stock alerts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedEnvelope'
+  /partner/dashboard/owner:
+    get:
+      tags: [Dashboard]
+      operationId: getOwnerDashboard
+      parameters:
+        - $ref: '#/components/parameters/BranchIdQuery'
+        - $ref: '#/components/parameters/DateQuery'
+      responses:
+        '200':
+          description: Owner dashboard read model.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/dashboard/alerts:
+    get:
+      tags: [Dashboard]
+      operationId: listDashboardAlerts
+      parameters:
+        - $ref: '#/components/parameters/BranchIdQuery'
+      responses:
+        '200':
+          description: Operational alerts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedEnvelope'
