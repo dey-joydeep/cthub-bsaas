@@ -26,6 +26,8 @@ This folder contains current implementation baselines and older supporting speci
 
 These folders predate the Salon Owner MVP baseline or cover product areas that are not currently the active implementation baseline. Do not delete or implement from them blindly. Reconcile them against the current user stories and active specs first.
 
+Detailed classification is maintained in [Legacy Spec Reconciliation Matrix](legacy-reconciliation.md).
+
 | Area | Status | Cleanup rule |
 | --- | --- | --- |
 | `appointment` | Supporting legacy spec | Compare against `salon-owner` appointment FRD/HLD/LLD before reuse. |
