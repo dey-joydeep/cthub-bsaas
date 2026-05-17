@@ -16,6 +16,8 @@ This folder contains current implementation baselines and older supporting speci
 | [customer-app](customer-app/README.md) | Current planning baseline | Customer dashboard, booking, appointments, rewards, receipts, reviews, validation, tests, and wireframe notes. |
 | [public-discovery](public-discovery/README.md) | Current planning baseline | Public search, salon profile, service browsing, SEO/SSR, validation, tests, and wireframe notes. |
 | [platform-admin](platform-admin/README.md) | Current planning baseline | SaaS administration, tenant oversight, support access, feature flags, audit, validation, tests, and wireframe notes. |
+| [notifications](notifications/README.md) | Current planning baseline | Transactional, reminder, marketing, template, delivery-log, consent, validation, test, and wireframe planning. |
+| [integrations](integrations/README.md) | Current planning baseline | Provider ports, credentials, webhooks, retries, provider health, validation, test, and wireframe planning. |
 
 ## Supporting Or Legacy Specs
 
