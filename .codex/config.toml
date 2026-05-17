@@ -1,0 +1,6 @@
+# Codex project configuration for CTHub Beauty-SaaS.
+# Keep this file conservative and repository-safe.
+# Personal defaults belong in the developer's user-level Codex config, not here.
+
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
