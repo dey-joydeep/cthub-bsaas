@@ -1,0 +1,21 @@
+<mxfile host="app.diagrams.net" modified="2026-05-18T00:00:00.000Z" agent="Codex" version="24.7.17">
+  <diagram id="account-profile-security-flow" name="Account Profile Security Flow">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="screen" value="Account settings screen" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1565c0;" vertex="1" parent="1"><mxGeometry x="80" y="110" width="180" height="60" as="geometry" /></mxCell>
+        <mxCell id="action" value="Security-sensitive action" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#ef6c00;" vertex="1" parent="1"><mxGeometry x="330" y="110" width="190" height="60" as="geometry" /></mxCell>
+        <mxCell id="reauth" value="Recent auth required?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;" vertex="1" parent="1"><mxGeometry x="590" y="95" width="160" height="90" as="geometry" /></mxCell>
+        <mxCell id="prompt" value="Prompt reauthentication" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffebee;strokeColor=#c62828;" vertex="1" parent="1"><mxGeometry x="830" y="85" width="180" height="60" as="geometry" /></mxCell>
+        <mxCell id="auth" value="Delegate to Auth operation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;" vertex="1" parent="1"><mxGeometry x="590" y="270" width="190" height="60" as="geometry" /></mxCell>
+        <mxCell id="audit" value="Write audit record" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#6a1b9a;" vertex="1" parent="1"><mxGeometry x="830" y="270" width="170" height="60" as="geometry" /></mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="screen" target="action"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="action" target="reauth"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3" value="Yes" edge="1" parent="1" source="reauth" target="prompt"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4" value="No or satisfied" edge="1" parent="1" source="reauth" target="auth"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="auth" target="audit"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
