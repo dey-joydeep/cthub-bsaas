@@ -1,0 +1,70 @@
+<mxfile host="app.diagrams.net" modified="2026-05-17T00:00:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="customer-ownership-merge-flow" name="Customer Ownership And Merge Flow">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Customer Ownership And Merge Flow" style="text;html=1;strokeColor=none;fillColor=none;fontSize=24;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="560" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="staff" value="Staff User" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="120" width="190" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="search" value="Search Customer&lt;br&gt;business scoped phone, email, name" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="320" y="110" width="270" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="duplicate" value="Duplicate Candidate?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="100" width="190" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="create" value="Create / Update Profile&lt;br&gt;customer belongs to one salon business" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#16A34A;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="100" width="300" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="mergeReview" value="Merge Review&lt;br&gt;source and target comparison with consent and visit impact" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="320" y="340" width="320" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="eligible" value="Merge Eligible?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="730" y="330" width="180" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="reject" value="409 Merge Invalid&lt;br&gt;cross-business, permission, or unresolved conflict" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="330" width="310" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="merge" value="Merge Transaction&lt;br&gt;move appointments, invoices, notes, tags, visit pointers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="320" y="600" width="330" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="consent" value="Consent And Audit History&lt;br&gt;preserve policy version, channel, actor, timestamp" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="760" y="600" width="330" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="result" value="Target Customer Profile&lt;br&gt;source retained as merged audit reference" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#16A34A;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="600" width="300" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="staff" target="search" value="search or create" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#475569;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="search" target="duplicate" value="normalize phone and email" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#475569;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="duplicate" target="create" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="duplicate" target="mergeReview" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#475569;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="mergeReview" target="eligible" value="submit merge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#475569;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="eligible" target="reject" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#DC2626;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="eligible" target="merge" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="merge" target="consent" value="preserve and audit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#475569;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="consent" target="result" value="commit result" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

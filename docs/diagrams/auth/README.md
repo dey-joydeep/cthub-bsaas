@@ -1,23 +1,19 @@
-# Authentication Module Diagrams
+# Authentication Diagrams
 
-This directory contains PlantUML diagrams for the Authentication module. The diagrams are organized by feature and type.
+This directory contains PlantUML diagrams for the Authentication module.
+
+The current checked-in diagrams are sequence diagrams only. Add other diagram types only when the corresponding source files are created.
 
 ## Directory Structure
 
-```
-diagrams/
-└── auth/
-    ├── sequences/          # Sequence diagrams
-    │   ├── login.puml      # Login flow
-    │   ├── register.puml   # Registration flow
-    │   ├── otp_flow.puml   # OTP verification flow
-    │   └── password_reset.puml  # Password reset flow
-    ├── states/             # State diagrams
-    │   └── session_states.puml
-    ├── components/         # Component diagrams
-    │   └── auth_components.puml
-    └── classes/            # Class diagrams
-        └── auth_classes.puml
+```text
+docs/diagrams/auth/
+  README.md
+  sequences/
+    login.puml
+    otp_flow.puml
+    password_reset.puml
+    register.puml
 ```
 
 ## Generating Diagrams
@@ -52,15 +48,15 @@ diagrams/
 
 ### Generate All Diagrams
 
-```bash
-# From the project root
-find ./bsaas-docs/diagrams -name "*.puml" -exec plantuml -tsvg {} \;
+```powershell
+Get-ChildItem -Path docs/diagrams/auth -Recurse -Filter *.puml |
+  ForEach-Object { plantuml -tsvg $_.FullName }
 ```
 
 ### Generate Single Diagram
 
-```bash
-plantuml -tsvg ./bsaas-docs/diagrams/auth/sequences/login.puml
+```powershell
+plantuml -tsvg docs/diagrams/auth/sequences/login.puml
 ```
 
 ## Viewing Diagrams
@@ -78,26 +74,28 @@ plantuml -tsvg ./bsaas-docs/diagrams/auth/sequences/login.puml
 
 ## Diagram Standards
 
-1. **Naming Conventions**
-   - Use lowercase with underscores for file names
+1. **Naming conventions**
+   - Keep existing PlantUML files as lowercase with underscores for consistency.
+   - Use kebab-case for new draw.io or Penpot support files.
    - Be descriptive but concise
-   - Example: `user_registration_flow.puml`
+   - Example: `password_reset.puml`
 
-2. **Style Guidelines**
+2. **Style guidelines**
    - Use consistent colors and styles
    - Include proper titles and legends
    - Keep diagrams focused on a single flow
 
-3. **Version Control**
-   - Commit both .puml and generated .svg files
-   - Update diagrams when related code changes
+3. **Version control**
+   - Commit source diagrams.
+   - Commit generated exports only when they are useful for review without local tooling.
+   - Update diagrams when the related spec or implementation behavior changes.
 
 ## Adding New Diagrams
 
 1. Create a new .puml file in the appropriate directory
 2. Follow existing patterns
 3. Add a reference in this README
-4. Generate and commit the .svg file
+4. Generate an SVG export when review requires it
 
 ## Example Diagram
 

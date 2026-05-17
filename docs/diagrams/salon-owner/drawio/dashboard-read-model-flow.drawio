@@ -1,0 +1,22 @@
+<mxfile host="app.diagrams.net" modified="2026-05-17T00:00:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="dashboard-read-model-flow" name="Dashboard Read Model Flow">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Dashboard Read Model Flow" style="text;html=1;strokeColor=none;fillColor=none;fontSize=24;fontStyle=1;align=left;" vertex="1" parent="1"><mxGeometry x="40" y="30" width="520" height="40" as="geometry" /></mxCell>
+        <mxCell id="sources" value="Transactional Sources&lt;br&gt;appointments, POS, inventory, customers, staff" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;fontSize=14;" vertex="1" parent="1"><mxGeometry x="80" y="120" width="330" height="100" as="geometry" /></mxCell>
+        <mxCell id="events" value="Domain Events / Query Aggregation&lt;br&gt;near-real-time or on-demand" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;fontSize=14;" vertex="1" parent="1"><mxGeometry x="520" y="120" width="330" height="100" as="geometry" /></mxCell>
+        <mxCell id="readmodel" value="Dashboard Read Model&lt;br&gt;business, branch, staff, period, metric dimensions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#16A34A;fontSize=14;" vertex="1" parent="1"><mxGeometry x="960" y="120" width="330" height="100" as="geometry" /></mxCell>
+        <mxCell id="filters" value="Dashboard Filters&lt;br&gt;business scope, branches, staff, date range, granularity" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=14;" vertex="1" parent="1"><mxGeometry x="300" y="390" width="360" height="100" as="geometry" /></mxCell>
+        <mxCell id="permission" value="Permission Scope&lt;br&gt;owner all branches, manager assigned branches" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF2FF;strokeColor=#4F46E5;fontSize=14;" vertex="1" parent="1"><mxGeometry x="760" y="390" width="360" height="100" as="geometry" /></mxCell>
+        <mxCell id="response" value="Metric Panels&lt;br&gt;independent panel loading, panel-level errors, table fallback for charts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontSize=14;" vertex="1" parent="1"><mxGeometry x="520" y="640" width="430" height="100" as="geometry" /></mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="sources" target="events" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#475569;"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="events" target="readmodel" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#475569;"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="filters" target="permission" value="validate scope" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#475569;fontSize=12;"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="permission" target="readmodel" value="query allowed dimensions" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#475569;fontSize=12;"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="readmodel" target="response" value="panel responses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
