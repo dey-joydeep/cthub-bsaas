@@ -20,6 +20,7 @@ This folder contains current implementation baselines and older supporting speci
 | [integrations](integrations/README.md) | Current planning baseline | Provider ports, credentials, webhooks, retries, provider health, validation, test, and wireframe planning. |
 | [reporting](reporting/README.md) | Current planning baseline | Financial, appointment, staff, customer, inventory, platform, export, validation, test, and wireframe planning. |
 | [reputation](reputation/README.md) | Current planning baseline | Review submission, moderation, owner response, public visibility, insights, validation, test, and wireframe planning. |
+| [data-privacy](data-privacy/README.md) | Current planning baseline | Privacy requests, retention, exports, anonymization, restricted notes, merge governance, validation, and tests. |
 
 ## Supporting Or Legacy Specs
 
