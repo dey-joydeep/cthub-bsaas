@@ -1,15 +1,15 @@
-# Auth Backend Foundation - Branch Scope And Status
+# Auth Backend Foundation - Completion Status
 
-**Branch:** `feat/auth-backend-foundation`
+**Original branch:** `feat/auth-backend-foundation`
 **Updated:** 2026-05-04
 **Primary code area:** `libs/server/features/auth`
 **Supporting code areas:** `libs/server/core`, `libs/server/contracts-auth`, `libs/server/infrastructure`, `apps/api`
 
 ## Purpose
 
-This branch is the backend foundation workstream for the Auth feature. Its goal is to make the Auth backend production-grade against the current OpenAPI contract, server architecture rules, and test/coverage requirements.
+This document records the completed backend foundation workstream for the Auth feature. Its goal was to make the Auth backend production-grade against the current OpenAPI contract, server architecture rules, and test/coverage requirements.
 
-The branch is not a frontend implementation branch and is not an E2E expansion branch. Web and E2E work may be referenced for alignment, but the branch scope remains backend Auth and supporting server infrastructure.
+This is not a frontend implementation status and not an E2E expansion status. Web and E2E work may be referenced for alignment, but this document covers backend Auth and supporting server infrastructure only.
 
 ## Current Source Of Truth
 
@@ -107,7 +107,7 @@ Examples of routes that are intentionally not part of the contract:
 
 ## Validation Commands
 
-Run these for this branch before merging backend Auth changes:
+Run these before merging backend Auth changes:
 
 ```powershell
 npx nx test server-feature-auth --configuration=ut
@@ -127,7 +127,7 @@ Expected Auth requirements:
 
 ## Branch Completion Status
 
-Auth backend implementation tasks are complete for this branch scope.
+Auth backend implementation tasks are complete for the recorded backend scope.
 
 Latest local validation on 2026-05-04:
 
@@ -138,7 +138,7 @@ Latest local validation on 2026-05-04:
 - `node_modules/.bin/redocly.cmd lint docs/specs/auth/API/openapi.yaml --config .redocly.yaml --max-problems=0`: passed.
 - `node_modules/.bin/tsx.cmd scripts/openapi-auth-check.ts`: passed, 31 implemented routes and 31 spec routes.
 
-Future work that is intentionally outside this branch:
+Future work that is intentionally outside this completed scope:
 
 1. Broader `server-feature-*` coverage gates for undeveloped/upcoming server features.
 2. Additional import-boundary hardening under the infrastructure upgrade workstream.
