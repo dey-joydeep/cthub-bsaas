@@ -1,16 +1,16 @@
 # Integrations Wireframes
 
 **Date:** 2026-05-18
-**Status:** Wireframe specification pending live Penpot board
+**Status:** Live Penpot boards created
 
 ## Penpot Status
 
-Live Penpot board creation is pending. Penpot MCP failed three times on 2026-05-18 with transport/deserialization errors.
+Live Penpot boards were created on 2026-05-18 after Penpot MCP token regeneration.
 
-## Required Frames
+## Penpot Boards
 
-| Frame ID | Purpose |
-| --- | --- |
-| `integrations.providers.desktop` | Provider cards with health/config state. |
-| `integrations.provider-detail.desktop` | Configuration, hidden secrets, test action. |
-| `integrations.platform-health.desktop` | Provider health and recent failures. |
+| Frame ID | Penpot board ID | Purpose |
+| --- | --- | --- |
+| `integrations.providers.desktop` | `a7a9ed20-bb04-8098-8008-09c3acd163dc` | Provider cards with health/config state. |
+| `integrations.provider-detail.desktop` | `a7a9ed20-bb04-8098-8008-09c3ae88edbb` | Configuration, hidden secrets, test action. |
+| `integrations.platform-health.desktop` | `a7a9ed20-bb04-8098-8008-09c3b121d398` | Provider health and recent failures. |
