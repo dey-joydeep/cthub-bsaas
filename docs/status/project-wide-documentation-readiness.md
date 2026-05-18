@@ -19,6 +19,7 @@ Record the final readiness state for project-wide documentation before broad imp
 | 6 | [#34](https://github.com/dey-joydeep/cthub-bsaas/pull/34) | `docs/reporting-reputation-specs` | `docs/notifications-integrations-specs` | Reporting and Reputation. |
 | 7 | [#35](https://github.com/dey-joydeep/cthub-bsaas/pull/35) | `docs/data-privacy-governance-specs` | `docs/reporting-reputation-specs` | Data Privacy and Governance. |
 | 8 | [#36](https://github.com/dey-joydeep/cthub-bsaas/pull/36) | `docs/legacy-spec-reconciliation` | `docs/data-privacy-governance-specs` | Legacy spec reconciliation matrix. |
+| 9 | [#37](https://github.com/dey-joydeep/cthub-bsaas/pull/37) | `docs/project-wide-doc-readiness-review` | `docs/legacy-spec-reconciliation` | Project-wide documentation readiness review. |
 
 ## Readiness Matrix
 
@@ -41,7 +42,7 @@ Record the final readiness state for project-wide documentation before broad imp
 
 | Item | Status | Rule |
 | --- | --- | --- |
-| Live Penpot boards | Pending | Markdown wireframe specs exist. Penpot MCP failed three times on 2026-05-18 with transport/deserialization errors, so board creation was stopped per instruction. |
+| Live Penpot boards | Done | Live Penpot boards were created for the project-wide wireframe specs after Penpot MCP token regeneration. Board IDs are recorded in the feature wireframe documents across PRs #30 through #35. |
 | Deleting legacy docs | Not started | No legacy spec folders were deleted. Deletion requires explicit approval after reviewing the reconciliation matrix. |
 | OpenAPI full contracts for new areas | Pending implementation planning | New docs include endpoint maps. Full OpenAPI contracts should be created per implementation slice before coding those APIs. |
 | Main-branch status update | Pending merge | `docs/status/task-tracking.md` is updated in this stacked branch. It becomes authoritative after the PR stack is merged. |

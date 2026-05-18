@@ -31,9 +31,8 @@ This folder tracks current documentation and implementation-readiness status. It
 The following items remain outside the completed Salon Owner MVP baseline on `main` until the project-wide documentation PR stack is merged:
 
 1. Merge the project-wide documentation PR stack in order.
-2. Retry live Penpot board creation when the HTTP MCP is healthy.
-3. Review legacy spec deletion candidates after the reconciliation matrix is merged.
-4. Create implementation slicing docs before coding new product areas.
+2. Review legacy spec deletion candidates after the reconciliation matrix is merged.
+3. Create implementation slicing docs before coding new product areas.
 
 ## Current Guidance
 
