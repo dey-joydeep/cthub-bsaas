@@ -1,17 +1,17 @@
 # Reporting And Analytics Wireframes
 
 **Date:** 2026-05-18
-**Status:** Wireframe specification pending live Penpot board
+**Status:** Live Penpot boards created
 
 ## Penpot Status
 
-Live Penpot board creation is pending. Penpot MCP failed three times on 2026-05-18 with transport/deserialization errors.
+Live Penpot boards were created on 2026-05-18 after Penpot MCP token regeneration.
 
-## Required Frames
+## Penpot Boards
 
-| Frame ID | Purpose |
-| --- | --- |
-| `reports.financial.desktop` | KPI cards, filters, table, export. |
-| `reports.staff.desktop` | Staff performance chart/table. |
-| `reports.customers.desktop` | Retention segments and filters. |
-| `reports.exports.desktop` | Export job list and status. |
+| Frame ID | Penpot board ID | Purpose |
+| --- | --- | --- |
+| `reports.financial.desktop` | `a7a9ed20-bb04-8098-8008-09c3f59c1a29` | KPI cards, filters, table, export. |
+| `reports.staff.desktop` | `a7a9ed20-bb04-8098-8008-09c3f6c4b671` | Staff performance chart/table. |
+| `reports.customers.desktop` | `a7a9ed20-bb04-8098-8008-09c3f79f4394` | Retention segments and filters. |
+| `reports.exports.desktop` | `a7a9ed20-bb04-8098-8008-09c3f8a714d2` | Export job list and status. |
