@@ -1,7 +1,9 @@
 # Data Privacy And Governance API Endpoint Map
 
 **Date:** 2026-05-18
-**Status:** Target planning contract
+**Status:** Traceability index for project-wide OpenAPI
+
+These operations are represented in [Project-Wide Supporting OpenAPI](../../project-wide/API/openapi.yaml). This endpoint map remains the feature traceability index.
 
 | Capability | Method | Path | Operation ID |
 | --- | --- | --- | --- |

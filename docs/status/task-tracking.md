@@ -15,13 +15,14 @@ This document tracks current repository-level planning status. Feature-specific 
 | Project-wide documentation PR stack | Open | PRs #29 through #37 define project-wide specs, live Penpot wireframe board references, reconciliation, and readiness review. Merge in order before treating them as main-branch source. |
 | Documentation standards | Done | Production documentation and visual collaboration guidelines exist under `docs/quality-standards/**`. |
 | Live Penpot boards | Done | Live Penpot boards were created after Penpot MCP token regeneration. Board IDs are recorded in the relevant wireframe specs across the project-wide PR stack. |
+| Project-wide supporting OpenAPI | Done | `docs/specs/project-wide/API/openapi.yaml` defines the supporting target contract, `docs/specs/project-wide/API/schema-catalog.md` defines operation DTO content, and Redocly lint passes. |
+| Project implementation slicing | Done | `docs/specs/project-wide/IMPLEMENTATION/implementation-slicing.md` defines sequencing, branch strategy, project boundaries, and validation gates. |
 
 ## Active Planning Backlog
 
 | Task | Status | Notes |
 | --- | --- | --- |
 | Merge project-wide documentation PR stack | Next | Merge PRs #29 through #37 in order when ready. |
-| Salon Owner and project implementation slicing | Next after docs merge | Create coding-ready backend/frontend slices before implementation. |
 | Legacy spec deletion review | Pending after docs merge | Use `docs/specs/legacy-reconciliation.md`; delete only after explicit approval. |
 | Server-wide coverage gate | Deferred | Add only after more server feature libraries are developed. |
 | Additional import-boundary hardening | Deferred | Tracked by the infrastructure-upgrade planning workstream. |

@@ -1,7 +1,7 @@
 # Account And Profile API Endpoint Map
 
 **Date:** 2026-05-18
-**Status:** Target planning contract
+**Status:** Traceability index for project-wide OpenAPI
 
 | Capability | Method | Path | Operation ID | Notes |
 | --- | --- | --- | --- | --- |
@@ -17,4 +17,4 @@
 
 ## OpenAPI Rule
 
-Final implementation must either add these operations to an account/profile OpenAPI contract or reconcile them into existing Auth/User contracts before coding.
+These operations are represented in [Project-Wide Supporting OpenAPI](../../project-wide/API/openapi.yaml). This endpoint map remains the feature traceability index.

@@ -1,7 +1,7 @@
 # Customer App API Endpoint Map
 
 **Date:** 2026-05-18
-**Status:** Target planning contract
+**Status:** Traceability index for project-wide OpenAPI
 
 | Capability | Method | Path | Operation ID |
 | --- | --- | --- | --- |
@@ -19,4 +19,4 @@
 
 ## OpenAPI Rule
 
-Before implementation, these operations must be represented in a customer app OpenAPI contract or reconciled into owning feature OpenAPI contracts.
+These operations are represented in [Project-Wide Supporting OpenAPI](../../project-wide/API/openapi.yaml). This endpoint map remains the feature traceability index.

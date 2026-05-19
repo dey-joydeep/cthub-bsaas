@@ -25,6 +25,7 @@ This folder tracks current documentation and implementation-readiness status. It
 | Documentation quality rules | `docs/quality-standards/production-documentation-standard.md` |
 | Visual and diagram standards | `docs/quality-standards/visual-collaboration-guideline.md` |
 | Project-wide documentation readiness | `docs/status/project-wide-documentation-readiness.md` |
+| Project-wide supporting OpenAPI and implementation slicing | `docs/specs/project-wide/README.md` |
 
 ## Remaining Documentation Cleanup
 
@@ -32,8 +33,7 @@ The following items remain outside the completed Salon Owner MVP baseline on `ma
 
 1. Merge the project-wide documentation PR stack in order.
 2. Review legacy spec deletion candidates after the reconciliation matrix is merged.
-3. Create implementation slicing docs before coding new product areas.
 
 ## Current Guidance
 
-Do not implement Salon Owner MVP features directly from the user stories alone. Start from the Salon Owner FRD/FNRD documents, then use the HLD/LLD/API/Web/Validation/Test documents as the implementation baseline.
+Do not implement Salon Owner MVP features directly from the user stories alone. Start from the Salon Owner FRD/FNRD documents, then use the HLD/LLD/API/Web/Validation/Test documents and the project-wide implementation slicing plan as the implementation baseline.
