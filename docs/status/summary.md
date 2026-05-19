@@ -12,6 +12,7 @@ This folder tracks current documentation and implementation-readiness status. It
 | Frontend restructuring foundation | Complete for current foundation scope | Git history and frontend branch merge notes |
 | Salon Owner user stories | Complete as current product baseline | [Salon Owner US index](../us/salon-owner/README.md) |
 | Salon Owner MVP specs | Complete as implementation baseline | [Salon Owner spec index](../specs/salon-owner/README.md) |
+| Project-wide documentation baseline | Open PR stack | [Documentation readiness review](project-wide-documentation-readiness.md) |
 | Infrastructure upgrade planning | Available for future upgrade work | [Infra upgrade plan](../infra-upgrade/20260501/README.md) |
 
 ## Current Source-Of-Truth Map
@@ -23,16 +24,16 @@ This folder tracks current documentation and implementation-readiness status. It
 | Product-level user stories | `docs/us/README.md` and `docs/us/status-matrix.md` |
 | Documentation quality rules | `docs/quality-standards/production-documentation-standard.md` |
 | Visual and diagram standards | `docs/quality-standards/visual-collaboration-guideline.md` |
+| Project-wide documentation readiness | `docs/status/project-wide-documentation-readiness.md` |
+| Project-wide supporting OpenAPI and implementation slicing | `docs/specs/project-wide/README.md` |
 
 ## Remaining Documentation Cleanup
 
-The following items remain outside the completed Salon Owner MVP baseline:
+The following items remain outside the completed Salon Owner MVP baseline on `main` until the project-wide documentation PR stack is merged:
 
-1. Classify or reconcile older feature specs under `docs/specs/appointment`, `docs/specs/salon`, `docs/specs/dashboard`, and related folders before using them for new implementation.
-2. Create implementation slicing docs before coding the Salon Owner MVP.
-3. Add production-grade HLD/LLD/API/Web/Test packs for non-owner product areas when those areas become active.
-4. Keep Auth status current when Auth route scope, validation commands, or implementation status changes.
+1. Merge the project-wide documentation PR stack in order.
+2. Review legacy spec deletion candidates after the reconciliation matrix is merged.
 
 ## Current Guidance
 
-Do not implement Salon Owner MVP features directly from the user stories alone. Start from the Salon Owner FRD/FNRD documents, then use the HLD/LLD/API/Web/Validation/Test documents as the implementation baseline.
+Do not implement Salon Owner MVP features directly from the user stories alone. Start from the Salon Owner FRD/FNRD documents, then use the HLD/LLD/API/Web/Validation/Test documents and the project-wide implementation slicing plan as the implementation baseline.

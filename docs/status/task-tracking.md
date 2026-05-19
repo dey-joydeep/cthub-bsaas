@@ -12,15 +12,18 @@ This document tracks current repository-level planning status. Feature-specific 
 | Frontend restructuring foundation | Done | Foundation restructuring branch was completed and merged. |
 | Salon Owner user-story baseline | Done | `docs/us/salon-owner/**` and supporting project-level US docs are the current product baseline. |
 | Salon Owner MVP HLD/LLD baseline | Done | `docs/specs/salon-owner/**` is the current implementation-planning baseline. |
+| Project-wide documentation PR stack | Open | PRs #29 through #37 define project-wide specs, live Penpot wireframe board references, reconciliation, and readiness review. Merge in order before treating them as main-branch source. |
 | Documentation standards | Done | Production documentation and visual collaboration guidelines exist under `docs/quality-standards/**`. |
+| Live Penpot boards | Done | Live Penpot boards were created after Penpot MCP token regeneration. Board IDs are recorded in the relevant wireframe specs across the project-wide PR stack. |
+| Project-wide supporting OpenAPI | Done | `docs/specs/project-wide/API/openapi.yaml` defines the supporting target contract, `docs/specs/project-wide/API/schema-catalog.md` defines operation DTO content, and Redocly lint passes. |
+| Project implementation slicing | Done | `docs/specs/project-wide/IMPLEMENTATION/implementation-slicing.md` defines sequencing, branch strategy, project boundaries, and validation gates. |
 
 ## Active Planning Backlog
 
 | Task | Status | Notes |
 | --- | --- | --- |
-| Salon Owner implementation slicing | Next | Create a coding-ready slice plan before starting backend/frontend implementation. |
-| Older spec reconciliation | Pending | Classify older `appointment`, `salon`, `dashboard`, `user`, and related specs as reusable, superseded, or future-scope before implementation. |
-| Non-owner product HLD/LLD packs | Pending | Customer app, platform admin, public discovery, reporting, notifications, integrations, reputation, and data privacy need production-grade design packs when they become active. |
+| Merge project-wide documentation PR stack | Next | Merge PRs #29 through #37 in order when ready. |
+| Legacy spec deletion review | Pending after docs merge | Use `docs/specs/legacy-reconciliation.md`; delete only after explicit approval. |
 | Server-wide coverage gate | Deferred | Add only after more server feature libraries are developed. |
 | Additional import-boundary hardening | Deferred | Tracked by the infrastructure-upgrade planning workstream. |
 
