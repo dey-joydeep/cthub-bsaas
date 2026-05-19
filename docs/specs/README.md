@@ -1,6 +1,6 @@
 # Technical Specs Index
 
-**Updated:** 2026-05-18
+**Updated:** 2026-05-19
 
 This folder contains current implementation baselines and older supporting specifications. A spec folder must be treated according to its status below before it is used for new implementation.
 
@@ -11,6 +11,7 @@ This folder contains current implementation baselines and older supporting speci
 | [auth](auth/README.md) | Current implementation baseline | Auth backend is implemented against the OpenAPI route contract. Keep OpenAPI, API HLD/LLD, frontend service contracts, and server-alignment docs synchronized. |
 | [salon-owner](salon-owner/README.md) | Current implementation-planning baseline | Use this for Salon Owner MVP implementation planning across FRD, FNRD, HLD, LLD, API, Web, Validation, Test, wireframes, and diagrams. |
 | [shared](shared/hld-baselines.md) | Current supporting baseline | Shared HLD/LLD patterns may be used when consistent with active feature specs. |
+| [project-wide](project-wide/README.md) | Current implementation-planning baseline | Supporting OpenAPI contract and implementation slicing plan for project-wide areas not covered by Auth or Salon Owner MVP OpenAPI. |
 | [app-shell](app-shell/README.md) | Current planning baseline | Shared shell, navigation, context selector, global feedback, validation, tests, and wireframe notes. |
 | [account-profile](account-profile/README.md) | Current planning baseline | Account/profile, security settings integration, preferences, privacy entry points, validation, tests, and wireframe notes. |
 | [customer-app](customer-app/README.md) | Current planning baseline | Customer dashboard, booking, appointments, rewards, receipts, reviews, validation, tests, and wireframe notes. |
@@ -25,6 +26,8 @@ This folder contains current implementation baselines and older supporting speci
 ## Supporting Or Legacy Specs
 
 These folders predate the Salon Owner MVP baseline or cover product areas that are not currently the active implementation baseline. Do not delete or implement from them blindly. Reconcile them against the current user stories and active specs first.
+
+Detailed classification is maintained in [Legacy Spec Reconciliation Matrix](legacy-reconciliation.md).
 
 | Area | Status | Cleanup rule |
 | --- | --- | --- |
