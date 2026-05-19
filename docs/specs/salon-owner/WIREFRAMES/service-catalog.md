@@ -13,7 +13,7 @@ Define the visual baseline for service categories, services, pricing, branch ava
 - [Service Catalog Validation](../VALIDATION/service-catalog-validation.md)
 - [Service Catalog Tests](../TEST/service-catalog.md)
 - [API Endpoint Map](../API/endpoint-map.md#service-catalog)
-- [Service Catalog Draw.io](../../../diagrams/salon-owner/drawio/service-catalog-pricing-availability-flow.drawio)
+- [Service Catalog Draw.io](../DIAGRAMS/drawio/service-catalog-pricing-availability-flow.drawio)
 
 ## Target Penpot Boards
 

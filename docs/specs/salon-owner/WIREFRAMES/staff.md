@@ -13,7 +13,7 @@ Define the visual baseline for staff directory, profile editing, role/branch/ski
 - [Staff Validation](../VALIDATION/staff-validation.md)
 - [Staff Tests](../TEST/staff.md)
 - [API Endpoint Map](../API/endpoint-map.md#staff)
-- [Staff Roster Conflict Draw.io](../../../diagrams/salon-owner/drawio/staff-roster-conflict-flow.drawio)
+- [Staff Roster Conflict Draw.io](../DIAGRAMS/drawio/staff-roster-conflict-flow.drawio)
 
 ## Target Penpot Boards
 

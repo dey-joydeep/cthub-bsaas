@@ -13,7 +13,7 @@ Define the visual baseline for customer search, profile, notes, consent, visit h
 - [Customer CRM Validation](../VALIDATION/customer-crm-validation.md)
 - [Customer CRM Tests](../TEST/customer-crm.md)
 - [API Endpoint Map](../API/endpoint-map.md#customer-crm)
-- [Customer Ownership And Merge Draw.io](../../../diagrams/salon-owner/drawio/customer-ownership-merge-flow.drawio)
+- [Customer Ownership And Merge Draw.io](../DIAGRAMS/drawio/customer-ownership-merge-flow.drawio)
 
 ## Target Penpot Boards
 

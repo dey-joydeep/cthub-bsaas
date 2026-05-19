@@ -4,7 +4,7 @@
 
 Visual flow reference:
 
-- [Staff Roster Conflict Draw.io](../../../diagrams/salon-owner/drawio/staff-roster-conflict-flow.drawio)
+- [Staff Roster Conflict Draw.io](../DIAGRAMS/drawio/staff-roster-conflict-flow.drawio)
 
 - `StaffController`
 - `StaffService`

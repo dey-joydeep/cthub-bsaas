@@ -4,7 +4,7 @@
 
 Visual flow reference:
 
-- [Dashboard Read Model Draw.io](../../../diagrams/salon-owner/drawio/dashboard-read-model-flow.drawio)
+- [Dashboard Read Model Draw.io](../DIAGRAMS/drawio/dashboard-read-model-flow.drawio)
 
 - `DashboardController`
 - `DashboardQueryService`

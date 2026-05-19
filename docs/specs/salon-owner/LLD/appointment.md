@@ -4,7 +4,7 @@
 
 Visual flow reference:
 
-- [Appointment Lifecycle Draw.io](../../../diagrams/salon-owner/drawio/appointment-lifecycle.drawio)
+- [Appointment Lifecycle Draw.io](../DIAGRAMS/drawio/appointment-lifecycle.drawio)
 
 - `AppointmentController`
 - `AppointmentService`

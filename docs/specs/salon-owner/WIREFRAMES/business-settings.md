@@ -13,7 +13,7 @@ Define the visual baseline for business profile, legal registration, tenant defa
 - [Business Settings Validation](../VALIDATION/business-settings-validation.md)
 - [Business Settings Tests](../TEST/business-settings.md)
 - [API Endpoint Map](../API/endpoint-map.md#business-settings)
-- [Business/Branch Scoping Draw.io](../../../diagrams/salon-owner/drawio/business-branch-scoping-policy-flow.drawio)
+- [Business/Branch Scoping Draw.io](../DIAGRAMS/drawio/business-branch-scoping-policy-flow.drawio)
 
 ## Target Penpot Boards
 
