@@ -12,6 +12,7 @@ Define shared REST API conventions for all backend features and frontend clients
 - [Shared HLD Baselines](hld-baselines.md)
 - [Auth OpenAPI](../auth/API/openapi.yaml)
 - [Salon Owner OpenAPI](../salon-owner/API/openapi.yaml)
+- [Project-Wide Supporting OpenAPI](../project-wide/API/openapi.yaml)
 - [Error Message Catalog](error-message-catalog.md)
 
 ## Response Envelope
