@@ -21,6 +21,7 @@ This folder defines project-wide rules that every feature spec and implementatio
 | [Testing Strategy](testing-strategy.md) | Unit, integration, e2e, contract, accessibility, performance, and coverage expectations. |
 | [E2E Foundation](e2e-foundation.md) | Minimal e2e structure and rules before full scenario expansion. |
 | [Migration And Rollout Policy](migration-rollout-policy.md) | Database, API, feature flag, and deployment safety rules. |
+| [Project-Wide Implementation Specs](../project-wide/README.md) | Final supporting OpenAPI contract and implementation slicing plan for non-auth, non-Salon Owner project-wide areas. |
 
 ## Visual Artifacts
 
