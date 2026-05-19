@@ -1,7 +1,7 @@
 # App Shell API Endpoint Map
 
 **Date:** 2026-05-18
-**Status:** Target planning contract
+**Status:** Traceability index for project-wide OpenAPI
 
 ## Purpose
 
@@ -17,4 +17,4 @@ Map shell-level API needs. The app shell should call only thin context endpoints
 
 ## Contract Rule
 
-The final OpenAPI path ownership belongs to the owning feature. The shell endpoint map must be reconciled into those OpenAPI contracts before implementation.
+These operations are represented in [Project-Wide Supporting OpenAPI](../../project-wide/API/openapi.yaml) or the owning feature OpenAPI contract. This endpoint map remains the shell traceability index.
