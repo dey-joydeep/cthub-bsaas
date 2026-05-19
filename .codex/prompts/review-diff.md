@@ -10,14 +10,15 @@ Scope:
 
 Constraints:
 - Follow root AGENTS.md and nested AGENTS.md files.
-- Review correctness, architecture, security, tests, docs, and maintainability.
+- Review correctness, architecture, Nx boundaries, security, tests, docs, OpenAPI, validation, and maintainability.
 - Do not rewrite code unless explicitly asked.
 
 Please produce:
 1. High-risk findings first.
 2. File-path-specific findings.
 3. Missing tests or validation.
-4. Documentation/spec mismatches.
-5. Suggested surgical fixes.
-6. Final merge readiness verdict.
+4. Documentation/spec/OpenAPI mismatches.
+5. Commands checked or not checked.
+6. Suggested surgical fixes.
+7. Final merge readiness verdict.
 ```

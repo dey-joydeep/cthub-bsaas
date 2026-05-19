@@ -9,6 +9,7 @@ Read this file before working under `docs/**`.
 - Auth API contract: `docs/specs/auth/API/openapi.yaml`
 - Status and branch handoff: `docs/status/**`
 - Infrastructure planning: `docs/infra-upgrade/**`
+- Codex/AIDD operating model and prompts: `docs/aidd/README.md`
 
 ## Source Of Truth
 
@@ -42,3 +43,4 @@ Read this file before working under `docs/**`.
 - For OpenAPI changes, run Redocly lint.
 - For Auth route docs, run `scripts/openapi-auth-check.ts`.
 - For large doc reorganizations, run `git diff --check`.
+- For AIDD prompt/process changes, run Prettier on `.codex/prompts/**/*.md` and `docs/aidd/**/*.md`.

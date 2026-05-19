@@ -1,5 +1,7 @@
 # Codex AIDD Operating Model
 
+**Status:** Current operating guide
+
 This document defines how OpenAI Codex is used for AI-driven development in this repository.
 
 ## Scope
@@ -15,14 +17,19 @@ Do not add other assistant-specific instruction files as part of Codex AIDD setu
 
 ## Repository source of truth
 
-The project source of truth remains the repository itself:
+The project source of truth remains the repository itself. Use the most specific current source:
 
 1. Product/user story documents under `docs/us`.
-2. HLD/LLD/specification documents under `docs/specs`.
-3. API contracts and OpenAPI files under `docs/specs`.
-4. Nx project configuration under `nx.json`, `project.json`, and package scripts.
-5. Implementation under `apps` and `libs`.
-6. Tests beside source or under project test directories.
+2. Production documentation standard under `docs/quality-standards/production-documentation-standard.md`.
+3. HLD/LLD/specification documents under `docs/specs`.
+4. API contracts:
+   - `docs/specs/auth/API/openapi.yaml`
+   - `docs/specs/salon-owner/API/openapi.yaml`
+   - `docs/specs/project-wide/API/openapi.yaml`
+5. Project-wide implementation sequencing under `docs/specs/project-wide/IMPLEMENTATION/implementation-slicing.md`.
+6. Nx project configuration under `nx.json`, `project.json`, and package scripts.
+7. Implementation under `apps` and `libs`.
+8. Tests beside source or under project test directories.
 
 Codex should not rely on stale memory when the repository contains the answer.
 
@@ -34,7 +41,7 @@ Use this flow for feature work and meaningful bug fixes:
 Requirement / issue
   -> inspect existing docs and code
   -> identify impacted apps/libs/contracts/schema/tests
-  -> plan the smallest safe change
+  -> plan the smallest safe change using the project-wide implementation slicing plan
   -> update or confirm HLD/LLD/API/test-plan alignment
   -> implement
   -> add or update tests
@@ -44,18 +51,18 @@ Requirement / issue
 
 ## Task classes
 
-| Task class | Codex behavior |
-| --- | --- |
-| Documentation-only | Update docs, keep examples consistent, no code changes unless requested. |
-| Design/spec | Update HLD/LLD/API/test-plan first; avoid implementation changes unless requested. |
-| Small bug fix | Inspect failing behavior, patch minimally, add regression test where practical. |
-| Feature implementation | Work from user story plus HLD/LLD plus API contract; update missing specs before large code changes. |
-| Refactor | Preserve behavior, keep public API stable, run tests around touched projects. |
-| Review | Report correctness, security, architecture, tests, and maintainability risks before proposing changes. |
+| Task class             | Codex behavior                                                                                                 |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Documentation-only     | Update docs, keep examples consistent, no code changes unless requested.                                       |
+| Design/spec            | Update HLD/LLD/API/test-plan first; avoid implementation changes unless requested.                             |
+| Small bug fix          | Inspect failing behavior, patch minimally, add regression test where practical.                                |
+| Feature implementation | Work from user story plus FRD/FNRD/HLD/LLD/API/validation/test docs; update missing specs before code changes. |
+| Refactor               | Preserve behavior, keep public API stable, run tests around touched projects.                                  |
+| Review                 | Report correctness, security, architecture, tests, and maintainability risks before proposing changes.         |
 
 ## Design documentation expectations
 
-HLD documents should explain the system vision, major modules, boundaries, key flows, non-functional requirements, assumptions, risks, and open questions.
+HLD documents should explain the system vision, major modules, boundaries, key flows, non-functional requirements, risks, and explicit decisions. They must not leave implementation-blocking open questions.
 
 LLD documents should explain concrete implementation details: components/classes/services, DTOs, API contracts, schema impact, validation, errors, security handling, sequence/state flows, and test strategy.
 

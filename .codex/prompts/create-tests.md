@@ -13,11 +13,14 @@ Constraints:
 - Reuse existing test utilities and patterns.
 - Prefer deterministic tests.
 - Do not weaken coverage thresholds or skip failing tests.
+- Respect server UT/IT split and web test placement conventions.
+- Do not commit unless explicitly requested.
 
 Please do:
 1. Inspect the source file and nearby tests.
-2. Identify missing happy-path, edge-case, validation, and error-path coverage.
-3. Add the smallest useful test set.
-4. Run targeted test command where possible.
-5. Report changed files, command results, and remaining coverage gaps.
+2. Inspect linked FRD/LLD/API/validation/test docs when the behavior is documented.
+3. Identify missing happy-path, edge-case, permission, validation, conflict, and error-path coverage.
+4. Add the smallest useful test set.
+5. Run targeted test command where possible.
+6. Report changed files, command results, commands not run, and remaining coverage gaps.
 ```

@@ -1,5 +1,7 @@
 # Codex Validation Commands
 
+**Status:** Current operating guide
+
 Use the narrowest command that validates the change.
 
 ## Project discovery
@@ -37,11 +39,36 @@ npm run format:check
 
 ## API contract validation
 
-For auth OpenAPI changes:
+For Auth OpenAPI changes:
 
 ```powershell
 npm run openapi:lint:auth
 npm run openapi:check:auth
+```
+
+For Salon Owner OpenAPI changes:
+
+```powershell
+node_modules/.bin/redocly.cmd lint docs/specs/salon-owner/API/openapi.yaml --config .redocly.yaml --max-problems=0
+```
+
+For project-wide supporting OpenAPI changes:
+
+```powershell
+node_modules/.bin/redocly.cmd lint docs/specs/project-wide/API/openapi.yaml --config .redocly.yaml --max-problems=0
+```
+
+For any future feature OpenAPI contract:
+
+```powershell
+node_modules/.bin/redocly.cmd lint docs/specs/<feature>/API/openapi.yaml --config .redocly.yaml --max-problems=0
+```
+
+For endpoint maps, schema catalogs, and implementation-slicing docs, also run:
+
+```powershell
+git diff --check
+npx prettier --check docs/specs/<feature>/**/*.md
 ```
 
 ## Common app commands

@@ -4,15 +4,16 @@
 
 Codex is normally invoked from the repository root. Before working in a scoped area, read the nearest relevant instruction file manually:
 
-| Work area | Read this first |
-| --- | --- |
-| `libs/server/**` | `libs/server/AGENTS.md` |
+| Work area                      | Read this first                                                     |
+| ------------------------------ | ------------------------------------------------------------------- |
+| `libs/server/**`               | `libs/server/AGENTS.md`                                             |
 | `libs/server/features/auth/**` | `libs/server/AGENTS.md`, then `libs/server/features/auth/AGENTS.md` |
-| `libs/web/**` | `libs/web/AGENTS.md` |
-| `libs/shared/**` | `libs/shared/AGENTS.md` |
-| `apps/api/**` | `libs/server/AGENTS.md`, then `apps/api/AGENTS.md` |
-| `apps/e2e/**` | `apps/e2e/AGENTS.md` |
-| `docs/**` | `docs/AGENTS.md` |
+| `libs/web/**`                  | `libs/web/AGENTS.md`                                                |
+| `libs/shared/**`               | `libs/shared/AGENTS.md`                                             |
+| `apps/api/**`                  | `libs/server/AGENTS.md`, then `apps/api/AGENTS.md`                  |
+| `apps/e2e/**`                  | `apps/e2e/AGENTS.md`                                                |
+| `docs/**`                      | `docs/AGENTS.md`                                                    |
+| AIDD/Codex process work        | `docs/aidd/README.md`                                               |
 
 Root instructions define global safety, workflow, and repository conventions. Scoped `AGENTS.md` files define domain rules and override root rules only for their area.
 
@@ -77,6 +78,7 @@ Use Nx for workspace tasks. If an Nx command fails, inspect project/target confi
 - Specs/design/API contracts: `docs/specs/<feature>`
 - Status and branch tracking: `docs/status/**`
 - Infrastructure planning: `docs/infra-upgrade/**`
+- Codex/AIDD operating guidance: `docs/aidd/README.md`
 
 Keep specs and implementation aligned. Cross-link PRs to relevant user stories and specs when applicable.
 

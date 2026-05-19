@@ -1,5 +1,7 @@
 # Codex Review Checklist
 
+**Status:** Current operating guide
+
 Use this checklist when Codex reviews its own changes, reviews a pull request, or prepares a completion report.
 
 ## Scope and traceability
@@ -8,6 +10,8 @@ Use this checklist when Codex reviews its own changes, reviews a pull request, o
 - [ ] The smallest safe diff was used.
 - [ ] Related HLD, LLD, API contract, test plan, or README files were checked.
 - [ ] Design/spec documents were updated when behavior or contracts changed.
+- [ ] Implementation changes follow `docs/specs/project-wide/IMPLEMENTATION/implementation-slicing.md` when the work belongs to the project-wide roadmap.
+- [ ] API changes align with the owning OpenAPI file and endpoint map.
 - [ ] No unrelated files were reformatted or moved.
 
 ## Architecture
@@ -48,6 +52,7 @@ Use this checklist when Codex reviews its own changes, reviews a pull request, o
 - [ ] Validation commands were run or explicitly reported as not run.
 - [ ] Test coverage thresholds were not weakened.
 - [ ] No tests were skipped just to pass CI.
+- [ ] OpenAPI lint/parity checks were run for touched API contracts.
 
 ## Completion report
 
