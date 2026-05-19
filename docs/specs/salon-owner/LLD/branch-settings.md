@@ -4,8 +4,8 @@
 
 Visual flow references:
 
-- [Business/Branch Scoping And Policy Draw.io](../../../diagrams/salon-owner/drawio/business-branch-scoping-policy-flow.drawio)
-- [Branch Availability Invalidation Draw.io](../../../diagrams/salon-owner/drawio/branch-availability-invalidation-flow.drawio)
+- [Business/Branch Scoping And Policy Draw.io](../DIAGRAMS/drawio/business-branch-scoping-policy-flow.drawio)
+- [Branch Availability Invalidation Draw.io](../DIAGRAMS/drawio/branch-availability-invalidation-flow.drawio)
 
 - `BranchController`
 - `BranchSettingsService`

@@ -53,4 +53,4 @@ The implementation must cover these visual states:
 
 The lifecycle and availability flow is modeled in:
 
-- [Appointment Lifecycle Draw.io](../../../diagrams/salon-owner/drawio/appointment-lifecycle.drawio)
+- [Appointment Lifecycle Draw.io](../DIAGRAMS/drawio/appointment-lifecycle.drawio)

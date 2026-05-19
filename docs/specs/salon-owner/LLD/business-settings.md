@@ -4,7 +4,7 @@
 
 Visual flow reference:
 
-- [Business/Branch Scoping And Policy Draw.io](../../../diagrams/salon-owner/drawio/business-branch-scoping-policy-flow.drawio)
+- [Business/Branch Scoping And Policy Draw.io](../DIAGRAMS/drawio/business-branch-scoping-policy-flow.drawio)
 
 - `BusinessSettingsController`
 - `BusinessSettingsService`

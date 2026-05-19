@@ -13,7 +13,7 @@ Define the visual baseline for sale draft, payment, invoice, refund, and conflic
 - [POS Validation](../VALIDATION/pos-validation.md)
 - [POS Tests](../TEST/pos.md)
 - [API Endpoint Map](../API/endpoint-map.md#pos)
-- [POS Finalization Draw.io](../../../diagrams/salon-owner/drawio/pos-finalization-flow.drawio)
+- [POS Finalization Draw.io](../DIAGRAMS/drawio/pos-finalization-flow.drawio)
 
 ## Target Penpot Boards
 

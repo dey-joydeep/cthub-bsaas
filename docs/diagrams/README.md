@@ -15,11 +15,6 @@ docs/diagrams/
     README.md
     sequences/
       *.puml
-  salon-owner/
-    README.md
-    drawio/
-    exports/
-    mcp-input/
   drawio/
   exports/
   mcp-input/
@@ -27,13 +22,14 @@ docs/diagrams/
 
 ## Folder Responsibilities
 
-| Folder         | Responsibility                                                          |
-| -------------- | ----------------------------------------------------------------------- |
-| `auth/`        | Existing Auth PlantUML diagrams.                                        |
-| `salon-owner/` | Salon Owner diagrams and wireframe support files.                       |
-| `drawio/`      | Legacy/global draw.io staging folder; use feature folders for new work. |
-| `exports/`     | Legacy/global export folder; use feature folders for new work.          |
-| `mcp-input/`   | Legacy/global MCP input folder; use feature folders for new work.       |
+| Folder       | Responsibility                                                          |
+| ------------ | ----------------------------------------------------------------------- |
+| `auth/`      | Existing Auth PlantUML diagrams.                                        |
+| `drawio/`    | Legacy/global draw.io staging folder; use feature folders for new work. |
+| `exports/`   | Legacy/global export folder; use feature folders for new work.          |
+| `mcp-input/` | Legacy/global MCP input folder; use feature folders for new work.       |
+
+Salon Owner diagrams live with the active Salon Owner specification pack under [../specs/salon-owner/DIAGRAMS](../specs/salon-owner/DIAGRAMS/README.md).
 
 ## Tool Usage
 

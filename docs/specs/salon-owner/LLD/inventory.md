@@ -4,7 +4,7 @@
 
 Visual flow reference:
 
-- [Inventory Stock Ledger Draw.io](../../../diagrams/salon-owner/drawio/inventory-stock-ledger-flow.drawio)
+- [Inventory Stock Ledger Draw.io](../DIAGRAMS/drawio/inventory-stock-ledger-flow.drawio)
 
 - `InventoryController`
 - `InventoryService`

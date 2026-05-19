@@ -4,7 +4,7 @@
 
 Visual flow reference:
 
-- [Service Catalog Pricing And Availability Draw.io](../../../diagrams/salon-owner/drawio/service-catalog-pricing-availability-flow.drawio)
+- [Service Catalog Pricing And Availability Draw.io](../DIAGRAMS/drawio/service-catalog-pricing-availability-flow.drawio)
 
 - `ServiceCatalogController`
 - `ServiceCatalogService`

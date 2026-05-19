@@ -13,7 +13,7 @@ Define the visual baseline for product catalog, branch stock, purchase intake, a
 - [Inventory Validation](../VALIDATION/inventory-validation.md)
 - [Inventory Tests](../TEST/inventory.md)
 - [API Endpoint Map](../API/endpoint-map.md#inventory)
-- [Inventory Stock Ledger Draw.io](../../../diagrams/salon-owner/drawio/inventory-stock-ledger-flow.drawio)
+- [Inventory Stock Ledger Draw.io](../DIAGRAMS/drawio/inventory-stock-ledger-flow.drawio)
 
 ## Target Penpot Boards
 

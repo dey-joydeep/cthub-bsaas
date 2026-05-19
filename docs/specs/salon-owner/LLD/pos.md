@@ -4,7 +4,7 @@
 
 Visual flow reference:
 
-- [POS Finalization Draw.io](../../../diagrams/salon-owner/drawio/pos-finalization-flow.drawio)
+- [POS Finalization Draw.io](../DIAGRAMS/drawio/pos-finalization-flow.drawio)
 
 - `PosController`
 - `PosService`

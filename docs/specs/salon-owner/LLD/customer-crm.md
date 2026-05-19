@@ -4,7 +4,7 @@
 
 Visual flow reference:
 
-- [Customer Ownership And Merge Draw.io](../../../diagrams/salon-owner/drawio/customer-ownership-merge-flow.drawio)
+- [Customer Ownership And Merge Draw.io](../DIAGRAMS/drawio/customer-ownership-merge-flow.drawio)
 
 - `CustomerController`
 - `CustomerService`

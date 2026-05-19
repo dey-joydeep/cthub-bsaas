@@ -13,7 +13,7 @@ Define the visual baseline for owner overview, branch manager dashboard, metric 
 - [Dashboard Validation](../VALIDATION/dashboard-validation.md)
 - [Dashboard Tests](../TEST/dashboard.md)
 - [API Endpoint Map](../API/endpoint-map.md#dashboard)
-- [Dashboard Read Model Draw.io](../../../diagrams/salon-owner/drawio/dashboard-read-model-flow.drawio)
+- [Dashboard Read Model Draw.io](../DIAGRAMS/drawio/dashboard-read-model-flow.drawio)
 
 ## Target Penpot Boards
 

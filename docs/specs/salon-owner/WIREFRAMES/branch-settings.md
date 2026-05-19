@@ -13,7 +13,7 @@ Define the visual baseline for branch profile, hours, holidays, branch policy, a
 - [Branch Settings Validation](../VALIDATION/branch-settings-validation.md)
 - [Branch Settings Tests](../TEST/branch-settings.md)
 - [API Endpoint Map](../API/endpoint-map.md#branch-settings)
-- [Branch Availability Invalidation Draw.io](../../../diagrams/salon-owner/drawio/branch-availability-invalidation-flow.drawio)
+- [Branch Availability Invalidation Draw.io](../DIAGRAMS/drawio/branch-availability-invalidation-flow.drawio)
 
 ## Target Penpot Boards
 
