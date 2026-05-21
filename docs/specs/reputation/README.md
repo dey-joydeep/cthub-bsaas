@@ -14,19 +14,19 @@ Define review submission, owner replies, moderation, public visibility, review r
 - [Customer App Specs](../customer-app/README.md)
 - [Notifications Specs](../notifications/README.md)
 
-## Related Existing Specs
+## Legacy Reconciliation
 
-Older `docs/specs/review/**` is a supporting source and must be reconciled into this baseline before implementation.
+Older `docs/specs/review/**` was reconciled into this baseline and removed. Review eligibility, public ordering, aggregate rating/count, moderation, and production-data requirements are now owned here.
 
 ## Documents
 
-| Area | Document |
-| --- | --- |
-| FRD | [Functional Requirements](FRD/reputation.md) |
-| HLD | [Architecture](HLD/reputation.md) |
-| LLD | [Implementation Design](LLD/reputation.md) |
-| API | [Endpoint Map](API/endpoint-map.md) |
-| Web | [Web Specification](WEB/reputation.md) |
+| Area       | Document                                                       |
+| ---------- | -------------------------------------------------------------- |
+| FRD        | [Functional Requirements](FRD/reputation.md)                   |
+| HLD        | [Architecture](HLD/reputation.md)                              |
+| LLD        | [Implementation Design](LLD/reputation.md)                     |
+| API        | [Endpoint Map](API/endpoint-map.md)                            |
+| Web        | [Web Specification](WEB/reputation.md)                         |
 | Validation | [Validation And Controls](VALIDATION/reputation-validation.md) |
-| Test | [Test Specification](TEST/reputation.md) |
-| Wireframes | [Wireframe Notes](WIREFRAMES/reputation.md) |
+| Test       | [Test Specification](TEST/reputation.md)                       |
+| Wireframes | [Wireframe Notes](WIREFRAMES/reputation.md)                    |

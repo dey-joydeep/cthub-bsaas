@@ -16,6 +16,7 @@ Define booking, walk-in, slot search, reschedule, cancel, no-show, and appointme
 | Walk-in                   | Create branch/customer visit without pre-booked slot and manage queue/service assignment.         |
 | Reschedule/cancel/no-show | Change appointment state with reason and audit.                                                   |
 | Status actions            | Track arrived, in service, completed, and related transitions.                                    |
+| Query and filtering       | List appointments by authorized branch, customer, status, staff, and business-date filters.       |
 
 ## Actors
 
@@ -32,6 +33,8 @@ Define booking, walk-in, slot search, reschedule, cancel, no-show, and appointme
 - Booking commit must re-check conflicts in the database transaction.
 - Overlapping staff appointment lines return `409` unless authorized override is recorded.
 - Cancel and no-show require a reason.
+- Every status change, reschedule, cancellation, and no-show action must preserve audit history.
+- Confirmation, reschedule, cancellation, and no-show actions must emit a notification intent; channel delivery policy is owned by the Notifications specs.
 - Completed appointment is eligible for checkout.
 
 ## Implementation References

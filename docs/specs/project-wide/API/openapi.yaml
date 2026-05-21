@@ -290,6 +290,10 @@ paths:
       security: []
       parameters:
         - $ref: '#/components/parameters/SearchQuery'
+        - $ref: '#/components/parameters/CityQuery'
+        - $ref: '#/components/parameters/AreaQuery'
+        - $ref: '#/components/parameters/ServiceIdQuery'
+        - $ref: '#/components/parameters/RatingMinQuery'
         - $ref: '#/components/parameters/CursorQuery'
         - $ref: '#/components/parameters/LimitQuery'
       responses:
@@ -890,6 +894,36 @@ components:
         type: string
         minLength: 2
         maxLength: 120
+    CityQuery:
+      name: city
+      in: query
+      required: false
+      schema:
+        type: string
+        minLength: 2
+        maxLength: 120
+    AreaQuery:
+      name: area
+      in: query
+      required: false
+      schema:
+        type: string
+        minLength: 2
+        maxLength: 120
+    ServiceIdQuery:
+      name: serviceId
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    RatingMinQuery:
+      name: ratingMin
+      in: query
+      required: false
+      schema:
+        type: number
+        minimum: 1
+        maximum: 5
     CursorQuery:
       name: cursor
       in: query
