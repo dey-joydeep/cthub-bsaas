@@ -13,19 +13,19 @@ Define account, profile, security settings, connected accounts, notification pre
 - [Auth Specs](../auth/README.md)
 - [Shared Cross-Cutting Specs](../shared/README.md)
 
-## Related Existing Specs
+## Legacy Reconciliation
 
-The older `docs/specs/user/**` and `docs/specs/settings/**` folders are supporting sources. They must be reconciled into this current baseline before implementation.
+The older `docs/specs/user/**` and `docs/specs/settings/**` folders were reconciled into this baseline and removed. Optional profile fields remain out of MVP unless a role-specific flow documents ownership, validation, consent, and retention rules.
 
 ## Documents
 
-| Area | Document |
-| --- | --- |
-| FRD | [Functional Requirements](FRD/account-profile.md) |
-| HLD | [Architecture](HLD/account-profile.md) |
-| LLD | [Implementation Design](LLD/account-profile.md) |
-| API | [Endpoint Map](API/endpoint-map.md) |
-| Web | [Web Specification](WEB/account-profile.md) |
+| Area       | Document                                                            |
+| ---------- | ------------------------------------------------------------------- |
+| FRD        | [Functional Requirements](FRD/account-profile.md)                   |
+| HLD        | [Architecture](HLD/account-profile.md)                              |
+| LLD        | [Implementation Design](LLD/account-profile.md)                     |
+| API        | [Endpoint Map](API/endpoint-map.md)                                 |
+| Web        | [Web Specification](WEB/account-profile.md)                         |
 | Validation | [Validation And Controls](VALIDATION/account-profile-validation.md) |
-| Test | [Test Specification](TEST/account-profile.md) |
-| Wireframes | [Wireframe Notes](WIREFRAMES/account-profile.md) |
+| Test       | [Test Specification](TEST/account-profile.md)                       |
+| Wireframes | [Wireframe Notes](WIREFRAMES/account-profile.md)                    |

@@ -9,12 +9,13 @@ Define staff profile, role, skill, shift, and leave requirements.
 
 ## Scope
 
-| Capability    | Requirement                                                          |
-| ------------- | -------------------------------------------------------------------- |
-| Staff profile | Manage display name, contact, active status, and branch assignments. |
-| Roles         | Assign operational permissions by business and branch scope.         |
-| Skills        | Link staff to services they can perform.                             |
-| Shifts/leave  | Define availability used by slot search and booking commit.          |
+| Capability     | Requirement                                                          |
+| -------------- | -------------------------------------------------------------------- |
+| Staff profile  | Manage display name, contact, active status, and branch assignments. |
+| Roles          | Assign operational permissions by business and branch scope.         |
+| Skills         | Link staff to services they can perform.                             |
+| Shifts/leave   | Define availability used by slot search and booking commit.          |
+| Leave requests | Staff self-service leave requests are deferred outside MVP.          |
 
 ## Actors
 
@@ -31,6 +32,7 @@ Define staff profile, role, skill, shift, and leave requirements.
 - Deactivated staff cannot authenticate or be assigned to new appointments.
 - Staff role changes must audit old roles and new roles.
 - Staff with insufficient skill must not be assigned to a service unless an authorized override is recorded.
+- MVP leave handling is manager-entered leave or blocked time. Staff self-service leave request/approval workflow is not implementation scope until this FRD, validation, API, and test pack explicitly adds `PENDING`, `APPROVED`, `REJECTED`, and `CANCELLED` approval states.
 
 ## Implementation References
 

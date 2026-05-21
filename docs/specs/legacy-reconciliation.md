@@ -1,72 +1,79 @@
 # Legacy Spec Reconciliation Matrix
 
-**Date:** 2026-05-18
-**Status:** Current reconciliation baseline
+**Date:** 2026-05-20
+**Status:** Reconciled cleanup baseline
 
 ## Purpose
 
-Classify existing `docs/specs/**` folders after the project-wide documentation baseline work. This document prevents accidental implementation from older notes that overlap with newer production-ready specs.
+Classify existing and removed `docs/specs/**` folders after the project-wide documentation baseline work. This document prevents accidental implementation from older notes that overlap with newer production-ready specs.
 
 ## Status Definitions
 
-| Status | Meaning |
-| --- | --- |
-| Current baseline | Use directly for planning or implementation in the documented scope. |
-| Current supporting baseline | Use as shared guidance, but reconcile with feature docs before implementation. |
-| Supporting legacy | May contain reusable details, but must not be the authoritative source. |
-| Future-scope supporting | Keep for later product planning. Do not implement until upgraded to production-ready pack. |
-| Delete candidate | Content appears fully superseded, but deletion still requires explicit user approval. |
+| Status                       | Meaning                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------ |
+| Current baseline             | Use directly for planning or implementation in the documented scope.                             |
+| Current supporting baseline  | Use as shared guidance, but reconcile with feature docs before implementation.                   |
+| Removed after reconciliation | Deleted after reusable rules were moved into current baselines or confirmed already covered.     |
+| Removed as legacy spec       | Deleted because product intent is preserved elsewhere and the old spec was not production-ready. |
 
 ## Current Baselines
 
-| Folder | Status | Use |
-| --- | --- | --- |
-| `auth` | Current baseline | Auth backend/API/security behavior. |
-| `salon-owner` | Current baseline | Salon Owner MVP operational core. |
-| `shared` | Current supporting baseline | Cross-cutting standards, HLD/LLD patterns, API, security, testing, rollout. |
-| `app-shell` | Current baseline | Shared web shell and navigation. |
-| `account-profile` | Current baseline | User account/profile/security preferences and privacy entry points. |
-| `customer-app` | Current baseline | Authenticated customer experience. |
-| `public-discovery` | Current baseline | Public search, salon profile, SEO/SSR discovery. |
-| `platform-admin` | Current baseline | SaaS admin, support, tenant operations. |
-| `notifications` | Current baseline | Notification policy, templates, dispatch, delivery logs. |
-| `integrations` | Current baseline | Provider-port architecture, configuration, webhooks, provider health. |
-| `reporting` | Current baseline | Reports, metrics, exports, read models. |
-| `reputation` | Current baseline | Reviews, moderation, owner replies, public visibility. |
-| `data-privacy` | Current baseline | Privacy requests, retention, exports, anonymization, merge governance. |
+| Folder             | Status                      | Use                                                                         |
+| ------------------ | --------------------------- | --------------------------------------------------------------------------- |
+| `auth`             | Current baseline            | Auth backend/API/security behavior.                                         |
+| `salon-owner`      | Current baseline            | Salon Owner MVP operational core.                                           |
+| `shared`           | Current supporting baseline | Cross-cutting standards, HLD/LLD patterns, API, security, testing, rollout. |
+| `app-shell`        | Current baseline            | Shared web shell and navigation.                                            |
+| `account-profile`  | Current baseline            | User account/profile/security preferences and privacy entry points.         |
+| `customer-app`     | Current baseline            | Authenticated customer experience.                                          |
+| `public-discovery` | Current baseline            | Public search, salon profile, SEO/SSR discovery.                            |
+| `platform-admin`   | Current baseline            | SaaS admin, support, tenant operations.                                     |
+| `notifications`    | Current baseline            | Notification policy, templates, dispatch, delivery logs.                    |
+| `integrations`     | Current baseline            | Provider-port architecture, configuration, webhooks, provider health.       |
+| `reporting`        | Current baseline            | Reports, metrics, exports, read models.                                     |
+| `reputation`       | Current baseline            | Reviews, moderation, owner replies, public visibility.                      |
+| `data-privacy`     | Current baseline            | Privacy requests, retention, exports, anonymization, merge governance.      |
 
 ## Legacy Or Supporting Folders
 
-| Folder | Status | Superseding/current source | Action before implementation |
-| --- | --- | --- | --- |
-| `appointment` | Supporting legacy | `salon-owner` appointment FRD/HLD/LLD/API/Web/Validation/Test | Extract any missing edge case, then treat Salon Owner appointment specs as authoritative. |
-| `dashboard` | Supporting legacy | `salon-owner` dashboard and `reporting` | Reconcile dashboard widgets and report metrics with current reporting rules. |
-| `salon` | Supporting legacy | `salon-owner`, `public-discovery`, `platform-admin` | Split useful details into owner operations, public profile/search, or platform admin as appropriate. |
-| `user` | Supporting legacy | `account-profile`, `data-privacy`, Auth specs | Reconcile profile/history/preferences docs with account-profile baseline. |
-| `settings` | Supporting legacy/current mix | `account-profile`, Auth specs, `app-shell` | Keep as reference for security setting flows; move reusable rules into account-profile or Auth docs before implementation. |
-| `home` | Supporting legacy | `public-discovery`, `app-shell`, `customer-app` | Reconcile public home and role dashboard ideas into current baselines. |
-| `review` | Supporting legacy | `reputation` | Extract review eligibility details, then use Reputation specs as authoritative. |
-| `salon-staff-request` | Supporting legacy | `salon-owner` staff and `platform-admin` provisioning/support | Reconcile staff request flow before implementation. |
-| `portfolio` | Future-scope supporting | `public-discovery`, future portfolio pack | Keep for future portfolio/style inspiration planning. |
-| `social` | Future-scope supporting | Future social/community pack | Keep for later product scope; not MVP. |
-| `theme` | Future-scope supporting | Future theme/customization pack and app-shell | Keep for later personalization/theme work. |
+| Folder                | Status                       | Superseding/current source                                        | Action before implementation                                                                                                   |
+| --------------------- | ---------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `appointment`         | Removed after reconciliation | `salon-owner` appointment FRD/HLD/LLD/API/Web/Validation/Test     | Reusable status/audit/notification/filtering rules were folded into Salon Owner appointment docs.                              |
+| `dashboard`           | Removed after reconciliation | `salon-owner` dashboard and `reporting`                           | Placeholder component-quality notes were discarded; current dashboard/reporting rules remain authoritative.                    |
+| `salon`               | Removed after reconciliation | `salon-owner`, `public-discovery`, `platform-admin`               | Public search/profile and staff/service details were folded into current specs where useful.                                   |
+| `user`                | Removed after reconciliation | `account-profile`, `data-privacy`, Auth specs                     | Optional profile-field scope was folded into Account/Profile; placeholder API/status notes were discarded.                     |
+| `settings`            | Removed after reconciliation | `account-profile`, Auth specs, `app-shell`                        | Security settings remain owned by Auth and Account/Profile; old per-app duplicates were removed.                               |
+| `home`                | Removed after reconciliation | `public-discovery`, `app-shell`, `customer-app`                   | Public home/search and featured-content intent is represented by Public Discovery, Customer App, and App Shell docs.           |
+| `review`              | Removed after reconciliation | `reputation`                                                      | Review eligibility, newest-first listing, aggregate rating/count, and production-data rules were folded into Reputation.       |
+| `salon-staff-request` | Removed after reconciliation | `salon-owner` staff and `platform-admin` provisioning/support     | Staff leave request workflow remains deferred outside MVP; manager-entered leave/block time remains in Salon Owner staff docs. |
+| `portfolio`           | Removed as legacy spec       | `docs/us/portfolio/**`, `public-discovery`, future portfolio pack | Product intent remains in user stories; no production technical spec exists until future-scope portfolio planning is promoted. |
+| `social`              | Removed as legacy spec       | `docs/us/social/**`, future social/community pack                 | Product intent remains in user stories; no production technical spec exists until future social planning is promoted.          |
+| `theme`               | Removed as legacy spec       | `docs/us/theme/**`, `app-shell`, future theme/customization pack  | Product intent remains in user stories; no production technical spec exists until future theme planning is promoted.           |
 
-## Delete-Candidate Policy
+## Cleanup Result
 
-No folder is marked for automatic deletion in this pass. Several folders are likely to become delete candidates after their reusable content is extracted:
+The legacy folders listed above were removed after reconciliation because their reusable content was either already represented in current production-level docs, folded into the current docs in this cleanup, or preserved as future-scope user-story intent.
 
+Removed legacy folders:
+
+- `appointment`
+- `dashboard`
+- `salon`
+- `user`
+- `settings`
+- `home`
 - `review`
-- selected `home` docs
-- selected old `appointment`, `dashboard`, and `salon` progress/status docs
-
-Deletion requires a separate explicit approval because these folders may still contain historical notes or edge cases worth preserving.
+- `salon-staff-request`
+- `portfolio`
+- `social`
+- `theme`
 
 ## Implementation Rule
 
 When starting implementation:
 
 1. Read the current baseline first.
-2. Check this matrix for legacy folders that may contain supporting details.
-3. Extract only useful rules into the current baseline.
-4. Do not implement directly from supporting legacy docs.
-5. Update this matrix when a legacy folder is reconciled or deleted.
+2. Use removed legacy folders only through git history when investigating historical context.
+3. Do not restore removed legacy docs as implementation sources.
+4. If a future-scope area is promoted, create a production-ready spec pack under `docs/specs/<feature>` using the production documentation standard.
+5. Update this matrix when a new legacy folder is reconciled, removed, or promoted.

@@ -35,16 +35,17 @@ Define binding business behavior for the Salon Owner MVP. HLD, LLD, OpenAPI, dat
 
 ## Staff Rules
 
-| Rule ID  | Rule                                                                                                          |
-| -------- | ------------------------------------------------------------------------------------------------------------- |
-| BR-ST-01 | Staff profile must belong to one salon business.                                                              |
-| BR-ST-02 | Staff can be assigned to one or more branches within the same salon business.                                 |
-| BR-ST-03 | Staff must have an active branch assignment to appear in booking slot search for that branch.                 |
-| BR-ST-04 | Deactivated staff must not authenticate or be assigned to new appointments.                                   |
-| BR-ST-05 | Historical appointments and invoices must retain staff display snapshot after staff deactivation or rename.   |
-| BR-ST-06 | Staff leave and blocked time must make the staff unavailable for overlapping appointment lines.               |
-| BR-ST-07 | Staff role changes must be audited with old roles and new roles.                                              |
-| BR-ST-08 | Staff with insufficient skill must not be assigned to a service unless an owner/manager override is recorded. |
+| Rule ID  | Rule                                                                                                                                                      |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| BR-ST-01 | Staff profile must belong to one salon business.                                                                                                          |
+| BR-ST-02 | Staff can be assigned to one or more branches within the same salon business.                                                                             |
+| BR-ST-03 | Staff must have an active branch assignment to appear in booking slot search for that branch.                                                             |
+| BR-ST-04 | Deactivated staff must not authenticate or be assigned to new appointments.                                                                               |
+| BR-ST-05 | Historical appointments and invoices must retain staff display snapshot after staff deactivation or rename.                                               |
+| BR-ST-06 | Staff leave and blocked time must make the staff unavailable for overlapping appointment lines.                                                           |
+| BR-ST-07 | Staff role changes must be audited with old roles and new roles.                                                                                          |
+| BR-ST-08 | Staff with insufficient skill must not be assigned to a service unless an owner/manager override is recorded.                                             |
+| BR-ST-09 | Staff self-service leave requests are outside the MVP unless promoted into the staff FRD with approval states, actor permissions, and notification rules. |
 
 ## Service Catalog Rules
 
@@ -88,6 +89,7 @@ Define binding business behavior for the Salon Owner MVP. HLD, LLD, OpenAPI, dat
 | BR-APPT-10 | Completed appointment must be eligible for checkout.                                                                                                                        |
 | BR-APPT-11 | Cancelled and no-show appointments must not create service revenue unless branch policy creates a penalty invoice.                                                          |
 | BR-APPT-12 | Walk-in must be assigned to branch and customer before service starts.                                                                                                      |
+| BR-APPT-13 | Appointment status changes, reschedules, cancellations, and no-show actions must create audit records and notification intents.                                             |
 
 ## Appointment State Machine
 
