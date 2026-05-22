@@ -25,6 +25,21 @@ Root instructions define global safety, workflow, and repository conventions. Sc
 4. Confirm runtime environment before commands that depend on OS, shell, Node, npm, database, or network state.
 5. Check `git status --short` before editing or committing.
 
+## AIDD Default Policy
+
+AIDD is the default workflow for every new task, including a new error-fix request. A request such as "fix this error" is still a new task unless it is explicitly part of an already-running implementation session.
+
+For every new task, Codex must:
+
+1. Read this root `AGENTS.md` and the nearest scoped `AGENTS.md` for the touched area.
+2. Read `docs/aidd/README.md` and follow the applicable AIDD guide or prompt template.
+3. Inspect relevant docs and code before editing.
+4. Produce a short plan before non-trivial edits.
+5. Keep design/spec/API/validation/test documents aligned when behavior or contracts change.
+6. Run the narrowest meaningful validation command, or report exactly why validation was not run.
+
+A lighter path is allowed only for a continuation fix inside the same active task, for example correcting a lint/test/build error produced by the current change. Even then, Codex must preserve the AIDD trace, avoid broad refactors, and report the validation result.
+
 ## Safe Filesystem Usage
 
 - Stay inside the repository unless explicitly told otherwise.
@@ -144,7 +159,7 @@ Keep specs and implementation aligned. Cross-link PRs to relevant user stories a
 ## General Guidelines for working with Nx
 
 - For navigating/exploring the workspace, invoke the `nx-workspace` skill first - it has patterns for querying projects, targets, and dependencies
-- When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
+- When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e., `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
 - Prefix nx commands with the workspace's package manager (e.g., `pnpm nx build`, `npm exec nx test`) - avoids using globally installed CLI
 - You have access to the Nx MCP server and its tools, use them to help the user
 - For Nx plugin best practices, check `node_modules/@nx/<plugin>/PLUGIN.md`. Not all plugins have this file - proceed without it if unavailable.
