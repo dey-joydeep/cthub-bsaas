@@ -99,7 +99,7 @@ export class ScopeGuard implements CanActivate {
       return true;
     }
 
-    if (scope.tenantId && user.tenantId && scope.tenantId !== user.tenantId) {
+    if (scope.tenantId && user.tenantId !== scope.tenantId) {
       throw new ForbiddenException(COMMON_MESSAGE_KEYS.ERROR.FORBIDDEN_SCOPE);
     }
 

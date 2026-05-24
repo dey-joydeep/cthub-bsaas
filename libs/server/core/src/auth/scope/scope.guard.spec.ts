@@ -83,6 +83,20 @@ describe('ScopeGuard', () => {
     expect(evaluator.canAccessScope).not.toHaveBeenCalled();
   });
 
+  it('rejects tenant-scoped access when the user has no tenant id', async () => {
+    const evaluator: ScopeAccessEvaluator = { canAccessScope: jest.fn(() => true) };
+    const guard = new ScopeGuard(new Reflector(), evaluator);
+    const request: ScopedRequest = {
+      user: { id: 'u1', email: 'u@example.com', roles: [UserRole.OWNER] },
+      params: { tenantId: 'tenant-1' },
+    };
+
+    await expect(guard.canActivate(createContext(request))).rejects.toThrow(
+      new ForbiddenException(COMMON_MESSAGE_KEYS.ERROR.FORBIDDEN_SCOPE),
+    );
+    expect(evaluator.canAccessScope).not.toHaveBeenCalled();
+  });
+
   it('allows platform admin when configured', async () => {
     const handler = () => undefined;
     Reflect.defineMetadata(SCOPE_REQUIREMENT_KEY, { tenant: { field: 'tenantId' }, allowPlatformAdmin: true }, handler);
