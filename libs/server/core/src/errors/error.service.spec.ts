@@ -5,6 +5,7 @@ import { AppError } from './app.error';
 import { LoggerService } from '../logger/logger.service';
 import { ErrorService, NormalizedError } from './error.service';
 import { mock, MockProxy } from 'jest-mock-extended';
+import { COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 
 const createLoggerMock = (): MockProxy<LoggerService> => mock<LoggerService>();
 
@@ -102,7 +103,18 @@ describe('ErrorService', () => {
     const exception = new HttpException('Custom error message', HttpStatus.NOT_FOUND);
     const normalized = service.handle(exception);
     expect(normalized.message).toBe('Custom error message');
-    expect(normalized.code).toBe('HTTP_EXCEPTION');
+    expect(normalized.code).toBe(COMMON_MESSAGE_KEYS.ERROR.NOT_FOUND);
+  });
+
+  it('uses a message key string response as the error code', () => {
+    const exception = new HttpException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION, HttpStatus.BAD_REQUEST);
+    const normalized = service.handle(exception);
+
+    expect(normalized).toMatchObject<Partial<NormalizedError>>({
+      status: HttpStatus.BAD_REQUEST,
+      code: COMMON_MESSAGE_KEYS.ERROR.VALIDATION,
+      message: COMMON_MESSAGE_KEYS.ERROR.VALIDATION,
+    });
   });
 
   it('falls back to exception message when response payload is null', () => {
@@ -144,14 +156,14 @@ describe('ErrorService', () => {
 
     expect(normalized).toMatchObject<Partial<NormalizedError>>({
       status: HttpStatus.INTERNAL_SERVER_ERROR,
-      code: 'UNHANDLED_ERROR',
+      code: COMMON_MESSAGE_KEYS.ERROR.UNHANDLED,
       message: 'Boom',
       shouldMaskResponse: true,
     });
 
     expect(logger.error).toHaveBeenCalledTimes(1);
     const [payload, trace, context] = logger.error.mock.calls[0];
-    expect(payload).toContain('"code":"UNHANDLED_ERROR"');
+    expect(payload).toContain(`"code":"${COMMON_MESSAGE_KEYS.ERROR.UNHANDLED}"`);
     expect(context).toBe('ErrorService');
     expect(typeof trace === 'string' || trace === undefined).toBeTruthy();
   });
@@ -159,9 +171,8 @@ describe('ErrorService', () => {
   it('treats explicit undefined options the same as default', () => {
     const error = new Error('explicit');
     const normalized = service.handle(error, undefined);
-    expect(normalized.code).toBe('UNHANDLED_ERROR');
+    expect(normalized.code).toBe(COMMON_MESSAGE_KEYS.ERROR.UNHANDLED);
   });
-
 
   it('handles generic error with no message', () => {
     const error = new Error();
@@ -174,7 +185,7 @@ describe('ErrorService', () => {
 
     expect(normalized).toEqual<NormalizedError>({
       status: HttpStatus.INTERNAL_SERVER_ERROR,
-      code: 'UNKNOWN_ERROR',
+      code: COMMON_MESSAGE_KEYS.ERROR.UNKNOWN,
       message: 'An unknown error occurred',
       shouldMaskResponse: true,
     });

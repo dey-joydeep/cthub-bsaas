@@ -2,6 +2,8 @@
 
 This package contains helpers used by server tests (unit and integration). It is not shipped in production apps.
 
+Common request helper conventions live under `libs/server/core/src/testing/` so feature tests can share cookie and authorization header handling without depending on Auth-specific harness internals.
+
 ## WebAuthn Stub Adapter (tests only)
 
 `WebAuthnStubAdapter` is a minimal, deterministic implementation of the `WebAuthnPort` intended for tests. It does not perform any cryptographic checks, does not hit Redis, and is not wired in production. Use it to keep tests fast and predictable when you are not validating the SimpleWebAuthn crypto paths.
@@ -43,4 +45,3 @@ describe('Auth flows with stubbed WebAuthn', () => {
 
 - Production wiring (apps and modules). Keep the production adapter (`WebAuthnSimpleAdapter`) bound in modules.
 - End‑to‑end browser/device validation. Prefer a Virtual Authenticator (e.g., Playwright) for happy‑path flows.
-

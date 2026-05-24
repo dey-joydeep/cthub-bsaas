@@ -1,0 +1,16 @@
+{
+  "name": "@cthub-bsaas/server-contracts-platform",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./../../../../dist/libs/server/contracts-platform/index.js",
+  "types": "./../../../../dist/libs/server/contracts-platform/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./../../../../dist/libs/server/contracts-platform/index.d.ts",
+      "default": "./../../../../dist/libs/server/contracts-platform/index.js"
+    }
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  }
+}

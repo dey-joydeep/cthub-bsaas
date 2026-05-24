@@ -3,6 +3,7 @@ import { Response } from 'express';
 import { ThrottlerException } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
 import { CorrelationId } from '@cthub-bsaas/server-core';
+import { COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 
 /**
  * Adds a Retry-After header and a stable error code for rate-limited responses (429).
@@ -20,7 +21,7 @@ export class ThrottlerRetryAfterFilter implements ExceptionFilter<ThrottlerExcep
     const correlationId = CorrelationId.get?.();
     const body: Record<string, unknown> = {
       success: false,
-      code: 'error.rate_limited',
+      code: COMMON_MESSAGE_KEYS.ERROR.RATE_LIMITED,
       message: 'Too many requests',
     };
     if (correlationId) body.meta = { correlationId };

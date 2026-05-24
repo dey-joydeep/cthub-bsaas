@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { ResponseEnvelopeInterceptor } from './response-envelope.interceptor';
 import { of } from 'rxjs';
 import { ExecutionContext } from '@nestjs/common';
+import { CorrelationId } from './correlation-id.middleware';
 
 describe('ResponseEnvelopeInterceptor', () => {
   let interceptor: ResponseEnvelopeInterceptor;
@@ -14,6 +15,10 @@ describe('ResponseEnvelopeInterceptor', () => {
     interceptor = module.get<ResponseEnvelopeInterceptor>(ResponseEnvelopeInterceptor);
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('should be defined', () => {
     expect(interceptor).toBeDefined();
   });
@@ -22,6 +27,20 @@ describe('ResponseEnvelopeInterceptor', () => {
     const handler = { handle: () => of({ test: 'data' }) };
     interceptor.intercept({} as ExecutionContext, handler).subscribe((result) => {
       expect(result).toEqual({ success: true, data: { test: 'data' } });
+      done();
+    });
+  });
+
+  it('should include correlation metadata when available', (done) => {
+    jest.spyOn(CorrelationId, 'get').mockReturnValue('cid-test-123');
+    const handler = { handle: () => of({ test: 'data' }) };
+
+    interceptor.intercept({} as ExecutionContext, handler).subscribe((result) => {
+      expect(result).toEqual({
+        success: true,
+        data: { test: 'data' },
+        meta: { correlationId: 'cid-test-123' },
+      });
       done();
     });
   });

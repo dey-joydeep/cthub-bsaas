@@ -1,6 +1,7 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus } from '@nestjs/common';
 import type { Response } from 'express';
 import { ThrottlerException } from '@nestjs/throttler';
+import { COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 
 /**
  * @public
@@ -13,6 +14,6 @@ export class RetryAfterFilter implements ExceptionFilter<ThrottlerException> {
     const res = host.switchToHttp().getResponse<Response>();
     const retryAfter = '60';
     res.setHeader('Retry-After', retryAfter);
-    res.status(HttpStatus.TOO_MANY_REQUESTS).json({ code: 'error.rate_limited' });
+    res.status(HttpStatus.TOO_MANY_REQUESTS).json({ code: COMMON_MESSAGE_KEYS.ERROR.RATE_LIMITED });
   }
 }

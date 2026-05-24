@@ -2,8 +2,24 @@ import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nes
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
+import { CorrelationId } from './correlation-id.middleware';
+
 function isPlainObject(val: unknown): val is Record<string, unknown> {
   return !!val && typeof val === 'object' && !Array.isArray(val);
+}
+
+function buildSuccessEnvelope<T>(data: T): { success: true; data: T; meta?: { correlationId: string } } {
+  const correlationId = CorrelationId.get();
+  const base: { success: true; data: T; meta?: { correlationId: string } } = {
+    success: true,
+    data,
+  };
+
+  if (correlationId) {
+    base.meta = { correlationId };
+  }
+
+  return base;
 }
 
 @Injectable()
@@ -21,17 +37,17 @@ export class ResponseEnvelopeInterceptor implements NestInterceptor {
           }
         }
         if (value === undefined || value === null) {
-          return { success: true, data: value } as const;
+          return buildSuccessEnvelope(value);
         }
         if (isPlainObject(value)) {
           const keys = Object.keys(value);
 
           // Treat empty object as empty data
           if (keys.length === 0) {
-            return { success: true, data: {} } as const;
+            return buildSuccessEnvelope({});
           }
         }
-        return { success: true, data: value } as const;
+        return buildSuccessEnvelope(value);
       }),
     );
   }

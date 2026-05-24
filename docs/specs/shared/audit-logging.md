@@ -16,33 +16,37 @@ Define which operations require audit records and what each record must contain.
 
 ## Required Audit Fields
 
-| Field | Rule |
-| --- | --- |
-| `id` | Unique audit record ID. |
-| `occurredAt` | UTC timestamp when the audited action occurred. |
-| `actorUserId` | Authenticated user ID when available. |
-| `actorType` | Platform, owner, staff, customer, system, or anonymous. |
-| `tenantId` | Required when action is tenant-scoped. |
-| `businessId` | Required when action is salon-business-scoped. |
-| `branchId` | Required when action is branch-scoped. |
-| `action` | Stable action key such as `appointment.cancelled`. |
-| `targetType` | Resource type. |
-| `targetId` | Resource ID when available. |
-| `correlationId` | Request correlation ID when available. |
-| `before` | Redacted before snapshot for high-risk changes. |
-| `after` | Redacted after snapshot for high-risk changes. |
-| `metadata` | Redacted structured context. |
+| Field           | Rule                                                    |
+| --------------- | ------------------------------------------------------- |
+| `id`            | Unique audit record ID.                                 |
+| `occurredAt`    | UTC timestamp when the audited action occurred.         |
+| `actorUserId`   | Authenticated user ID when available.                   |
+| `actorType`     | Platform, owner, staff, customer, system, or anonymous. |
+| `tenantId`      | Required when action is tenant-scoped.                  |
+| `businessId`    | Required when action is salon-business-scoped.          |
+| `branchId`      | Required when action is branch-scoped.                  |
+| `action`        | Stable action key such as `appointment.cancelled`.      |
+| `targetType`    | Resource type.                                          |
+| `targetId`      | Resource ID when available.                             |
+| `correlationId` | Request correlation ID when available.                  |
+| `before`        | Redacted before snapshot for high-risk changes.         |
+| `after`         | Redacted after snapshot for high-risk changes.          |
+| `metadata`      | Redacted structured context.                            |
+
+## Shared Contract
+
+Server features that need to emit audit records should depend on the `AuditPort` contract from `@cthub-bsaas/server-contracts-platform`. Feature modules own when an audit event is required; the application shell or infrastructure layer owns the concrete persistence adapter.
 
 ## Operations Requiring Audit
 
-| Category | Examples |
-| --- | --- |
-| Authentication security | Login failure lockout, MFA enrollment, passkey change, session revocation. |
-| Permission and role changes | Staff role, branch assignment, platform support action. |
-| Business configuration | Cancellation policy, tax/payment settings, business/branch status. |
-| Operational state changes | Appointment cancel/no-show, invoice finalization, payment capture, refund, stock adjustment. |
-| Customer privacy | Consent change, data export, data deletion/anonymization, restricted note access. |
-| External integrations | Provider connected/disconnected, webhook failure, payment callback mismatch. |
+| Category                    | Examples                                                                                     |
+| --------------------------- | -------------------------------------------------------------------------------------------- |
+| Authentication security     | Login failure lockout, MFA enrollment, passkey change, session revocation.                   |
+| Permission and role changes | Staff role, branch assignment, platform support action.                                      |
+| Business configuration      | Cancellation policy, tax/payment settings, business/branch status.                           |
+| Operational state changes   | Appointment cancel/no-show, invoice finalization, payment capture, refund, stock adjustment. |
+| Customer privacy            | Consent change, data export, data deletion/anonymization, restricted note access.            |
+| External integrations       | Provider connected/disconnected, webhook failure, payment callback mismatch.                 |
 
 ## Redaction Rules
 
