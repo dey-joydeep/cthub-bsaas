@@ -175,6 +175,19 @@ describe('ScopeGuard', () => {
     );
   });
 
+  it('allows structured evaluator allow decisions', async () => {
+    const handler = () => undefined;
+    Reflect.defineMetadata(SCOPE_REQUIREMENT_KEY, { business: { field: 'businessId' } }, handler);
+    const evaluator: ScopeAccessEvaluator = { canAccessScope: jest.fn(() => ({ allowed: true })) };
+    const guard = new ScopeGuard(new Reflector(), evaluator);
+    const request: ScopedRequest = {
+      user: { id: 'u1', email: 'u@example.com', roles: [UserRole.OWNER] },
+      params: { businessId: 'business-1' },
+    };
+
+    await expect(guard.canActivate(createContext(request, handler))).resolves.toBe(true);
+  });
+
   it('maps evaluator not_found denials to not found responses', async () => {
     const handler = () => undefined;
     Reflect.defineMetadata(SCOPE_REQUIREMENT_KEY, { business: { field: 'businessId' } }, handler);

@@ -109,7 +109,7 @@ export class ScopeGuard implements CanActivate {
     }
 
     const decision = await this.evaluator.canAccessScope(user, scope, requirement);
-    if (decision === true) {
+    if (decision === true || (isDecision(decision) && decision.allowed)) {
       return true;
     }
 
