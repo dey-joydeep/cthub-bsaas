@@ -33,7 +33,7 @@ export interface ScopeAccessEvaluator {
     user: AuthenticatedUser,
     scope: RequestScope,
     requirement: ScopeRequirement,
-  ): boolean | Promise<boolean | ScopeAccessDecision>;
+  ): boolean | ScopeAccessDecision | Promise<boolean | ScopeAccessDecision>;
 }
 
 export interface ScopedRequest {
