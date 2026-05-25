@@ -58,6 +58,8 @@ export type SimpleOk = {
  * JWT user context attached to request after successful authentication.
  */
 export type JwtUserContext = {
+  /** Internal user id as expected by shared request-scope guards. */
+  id: string;
   /** Internal user id (subject). */
   userId: string;
   /** User email address. */
@@ -66,4 +68,6 @@ export type JwtUserContext = {
   roles: string[];
   /** Active session id bound to this access token. */
   sessionId: string;
+  /** Tenant id used by shared scope guards for tenant-scoped APIs. */
+  tenantId?: string;
 };

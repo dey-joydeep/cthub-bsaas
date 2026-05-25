@@ -1,5 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Request, UseGuards, UseInterceptors } from '@nestjs/common';
-import { CsrfGuard, JwtAuthGuard, JwtOptionalAuthGuard, ResponseEnvelopeInterceptor, SkipCsrf } from '@cthub-bsaas/server-core';
+import { CsrfGuard, JwtAuthGuard, JwtOptionalAuthGuard, Public, ResponseEnvelopeInterceptor, SkipCsrf } from '@cthub-bsaas/server-core';
 import { AuthService } from '../services/auth.service';
 import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
@@ -14,6 +14,7 @@ export class PasswordController {
   @HttpCode(HttpStatus.ACCEPTED)
   @Post('password/forgot')
   @SkipCsrf()
+  @Public()
   forgotPassword(@Body() body: ForgotPasswordDto) {
     return this.authService.requestPasswordReset(body.email).then(() => ({ success: true as const }));
   }
@@ -21,6 +22,7 @@ export class PasswordController {
   @HttpCode(HttpStatus.OK)
   @Post('password/reset')
   @SkipCsrf()
+  @Public()
   resetPassword(@Body() body: ResetPasswordDto) {
     return this.authService.resetPassword(body.token, body.newPassword).then(() => ({ success: true as const }));
   }
@@ -34,4 +36,3 @@ export class PasswordController {
       .then(() => ({ success: true as const }));
   }
 }
-

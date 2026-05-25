@@ -1,5 +1,5 @@
 import { BadRequestException, Body, Controller, HttpCode, HttpStatus, Post, Request, UseGuards, UseInterceptors } from '@nestjs/common';
-import { CsrfGuard, JwtAuthGuard, JwtOptionalAuthGuard, ResponseEnvelopeInterceptor, SkipCsrf } from '@cthub-bsaas/server-core';
+import { CsrfGuard, JwtAuthGuard, JwtOptionalAuthGuard, Public, ResponseEnvelopeInterceptor, SkipCsrf } from '@cthub-bsaas/server-core';
 import { AuthService } from '../services/auth.service';
 import { EmailChangeRequestDto } from '../dto/email-change-request.dto';
 import { EmailChangeConfirmDto } from '../dto/email-change-confirm.dto';
@@ -21,6 +21,7 @@ export class EmailController {
   @HttpCode(HttpStatus.OK)
   @Post('email/change/confirm')
   @SkipCsrf()
+  @Public()
   confirmEmailChange(@Body() body: EmailChangeConfirmDto) {
     return this.authService.confirmEmailChange(body.token).then(() => ({ success: true as const }));
   }
@@ -28,6 +29,7 @@ export class EmailController {
   @HttpCode(HttpStatus.ACCEPTED)
   @Post('email/verify/request')
   @SkipCsrf()
+  @Public()
   emailVerifyRequest(@Body() body: { email: string }) {
     return this.authService.requestEmailVerification(body.email).then(() => ({ success: true as const }));
   }
@@ -35,6 +37,7 @@ export class EmailController {
   @HttpCode(HttpStatus.OK)
   @Post('email/verify/confirm')
   @SkipCsrf()
+  @Public()
   emailVerifyConfirm(@Body() body: { token?: string; email?: string; otp?: string }) {
     if (body.token) {
       return this.authService.verifyEmail(body.token).then(() => ({ success: true as const }));
@@ -45,4 +48,3 @@ export class EmailController {
     throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION);
   }
 }
-
