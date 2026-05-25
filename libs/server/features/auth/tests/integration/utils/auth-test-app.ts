@@ -1,5 +1,5 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { JwtAuthGuard } from '@cthub-bsaas/server-core';
+import { JwtAuthGuard, RolesGuard } from '@cthub-bsaas/server-core';
 
 import { Test } from '@nestjs/testing';
 import { JwtModule, JwtService } from '@nestjs/jwt';
@@ -64,7 +64,16 @@ import { AuthCookiesService } from '../../../src/lib/services/auth-cookies.servi
 import { AuditService } from '../../../src/lib/services/audit.service';
 import { JwtStrategy } from '../../../src/lib/strategies/jwt.strategy';
 import { PasskeysService } from '../../../src/lib/services/passkeys.service';
-import { ConfigModule, CookieRegistry, CookiesInterceptor, EncryptionService, ResponseEnvelopeInterceptor, CsrfGuard, LoggerService, CorrelationIdMiddleware } from '@cthub-bsaas/server-core';
+import {
+  ConfigModule,
+  CookieRegistry,
+  CookiesInterceptor,
+  EncryptionService,
+  ResponseEnvelopeInterceptor,
+  CsrfGuard,
+  LoggerService,
+  CorrelationIdMiddleware,
+} from '@cthub-bsaas/server-core';
 import { APP_GUARD, HttpAdapterHost } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import type { EmailPort } from '@cthub-bsaas/server-contracts-auth';
@@ -83,11 +92,7 @@ export interface AuthTestContext {
   close(): Promise<void>;
 }
 
-
-
 export async function createAuthTestContext(options: AuthTestOptions = {}): Promise<AuthTestContext> {
-
-
   const emailPort: EmailPort =
     options.emailPort ??
     ({
@@ -106,8 +111,7 @@ export async function createAuthTestContext(options: AuthTestOptions = {}): Prom
       ThrottlerModule.forRoot({ throttlers: [{ ttl: 60, limit: 5 }] }),
       PassportModule.register({ defaultStrategy: 'jwt' }),
       JwtModule.register({
-        secret:
-          options.jwtSecret ?? process.env.JWT_ACCESS_SECRET ?? process.env.JWT_SECRET ?? 'test-access-secret',
+        secret: options.jwtSecret ?? process.env.JWT_ACCESS_SECRET ?? process.env.JWT_SECRET ?? 'test-access-secret',
         signOptions: { expiresIn: '60s' },
       }),
     ],
@@ -164,6 +168,14 @@ export async function createAuthTestContext(options: AuthTestOptions = {}): Prom
         provide: APP_GUARD,
         useClass: ThrottlerGuard,
       },
+      {
+        provide: APP_GUARD,
+        useClass: JwtAuthGuard,
+      },
+      {
+        provide: APP_GUARD,
+        useClass: RolesGuard,
+      },
     ],
   }).compile();
 
@@ -173,7 +185,6 @@ export async function createAuthTestContext(options: AuthTestOptions = {}): Prom
   app.use(new CorrelationIdMiddleware().use.bind(new CorrelationIdMiddleware()));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   await app.init();
-
 
   const prisma = new PrismaClient();
   const jwtService = app.get(JwtService);

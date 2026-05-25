@@ -1,4 +1,12 @@
-import { CookiesInterceptor, CsrfGuard, JwtAuthGuard, JwtOptionalAuthGuard, ResponseEnvelopeInterceptor, SkipCsrf } from '@cthub-bsaas/server-core';
+import {
+  CookiesInterceptor,
+  CsrfGuard,
+  JwtAuthGuard,
+  JwtOptionalAuthGuard,
+  Public,
+  ResponseEnvelopeInterceptor,
+  SkipCsrf,
+} from '@cthub-bsaas/server-core';
 import { COMMON_MESSAGE_KEYS, AUTH_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 import { BadRequestException, Body, Controller, HttpCode, HttpStatus, Post, Request, UseGuards, UseInterceptors } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
@@ -26,6 +34,7 @@ export class AuthController {
   ) {}
 
   @SkipCsrf()
+  @Public()
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @Post('login')
@@ -47,6 +56,7 @@ export class AuthController {
 
   /** Complete TOTP challenge with a temp token and code */
   @SkipCsrf()
+  @Public()
   @Throttle({ default: { limit: 5, ttl: 60 } })
   @HttpCode(HttpStatus.OK)
   @Post('login/totp')
@@ -70,6 +80,7 @@ export class AuthController {
   }
 
   /** Rotate refresh token and issue a new access token */
+  @Public()
   @Throttle({ default: { limit: 20, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @Post('refresh')

@@ -10,12 +10,13 @@ const BASE_AUTH_CONFIG: AuthConfig = {
   cookieDomain: 'example.com',
 };
 
-const createConfig = (overrides: Partial<AuthConfig> = {}): ConfigService => ({
-  auth: {
-    ...BASE_AUTH_CONFIG,
-    ...overrides,
-  },
-}) as unknown as ConfigService;
+const createConfig = (overrides: Partial<AuthConfig> = {}): ConfigService =>
+  ({
+    auth: {
+      ...BASE_AUTH_CONFIG,
+      ...overrides,
+    },
+  }) as unknown as ConfigService;
 
 describe('JwtStrategy', () => {
   it('validate maps payload to user context', () => {
@@ -26,10 +27,18 @@ describe('JwtStrategy', () => {
       email: 'e@example.com',
       roles: ['customer'],
       sessionId: 'sess-1',
+      tenantId: 'tenant-1',
       iat: 1,
       exp: 2,
     });
-    expect(result).toEqual({ userId: 'uid-1', email: 'e@example.com', roles: ['customer'], sessionId: 'sess-1' });
+    expect(result).toEqual({
+      id: 'uid-1',
+      userId: 'uid-1',
+      email: 'e@example.com',
+      roles: ['customer'],
+      sessionId: 'sess-1',
+      tenantId: 'tenant-1',
+    });
   });
 
   it('extracts token from bsaas_at cookie first', () => {

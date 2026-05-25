@@ -5,7 +5,30 @@ import { User, CredentialTOTP, Session, RefreshToken, RegistrationStatus } from 
 import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@cthub-bsaas/server-core';
 import * as bcrypt from 'bcryptjs';
-import { ICredentialTotpRepository, IRefreshTokenRepository, ISessionRepository, IUserRepository, TotpPort, EMAIL_PORT, EmailPort, USER_REPOSITORY, SESSION_REPOSITORY, REFRESH_TOKEN_REPOSITORY, CREDENTIAL_TOTP_REPOSITORY, TOTP_PORT, EMAIL_VERIFICATION_REPOSITORY, IEmailVerificationRepository, EmailVerificationRecord, PASSWORD_RESET_REPOSITORY, IPasswordResetRepository, PasswordResetRecord, SOCIAL_ACCOUNT_REPOSITORY, OAuthProfile, INVITE_PORT, InvitePort } from '@cthub-bsaas/server-contracts-auth';
+import {
+  ICredentialTotpRepository,
+  IRefreshTokenRepository,
+  ISessionRepository,
+  IUserRepository,
+  TotpPort,
+  EMAIL_PORT,
+  EmailPort,
+  USER_REPOSITORY,
+  SESSION_REPOSITORY,
+  REFRESH_TOKEN_REPOSITORY,
+  CREDENTIAL_TOTP_REPOSITORY,
+  TOTP_PORT,
+  EMAIL_VERIFICATION_REPOSITORY,
+  IEmailVerificationRepository,
+  EmailVerificationRecord,
+  PASSWORD_RESET_REPOSITORY,
+  IPasswordResetRepository,
+  PasswordResetRecord,
+  SOCIAL_ACCOUNT_REPOSITORY,
+  OAuthProfile,
+  INVITE_PORT,
+  InvitePort,
+} from '@cthub-bsaas/server-contracts-auth';
 import { AuditService } from '../services/audit.service';
 import { AuthService } from './auth.service';
 import { AUTH_MESSAGE_KEYS } from '@cthub-bsaas/shared';
@@ -68,7 +91,10 @@ describe('AuthService', () => {
         { provide: SESSION_REPOSITORY, useValue: sessionRepository },
         { provide: REFRESH_TOKEN_REPOSITORY, useValue: refreshTokenRepository },
         { provide: CREDENTIAL_TOTP_REPOSITORY, useValue: credentialTotpRepository },
-        { provide: SOCIAL_ACCOUNT_REPOSITORY, useValue: (socialRepo = { findByProviderAccount: jest.fn(), link: jest.fn(), findByUserId: jest.fn(), unlink: jest.fn() }) },
+        {
+          provide: SOCIAL_ACCOUNT_REPOSITORY,
+          useValue: (socialRepo = { findByProviderAccount: jest.fn(), link: jest.fn(), findByUserId: jest.fn(), unlink: jest.fn() }),
+        },
         { provide: JwtService, useValue: jwtService },
         { provide: ConfigService, useValue: configService },
         { provide: TOTP_PORT, useValue: totpService },
@@ -91,13 +117,23 @@ describe('AuthService', () => {
       await expect(service.validateOwnerInvite('t')).rejects.toThrow();
     });
     it('completeOwnerRegistration throws when no port provided', async () => {
-      await expect(service.completeOwnerRegistration({ token: 't', password: 'P#1' } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput)).rejects.toThrow();
+      await expect(
+        service.completeOwnerRegistration({
+          token: 't',
+          password: 'P#1',
+        } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput),
+      ).rejects.toThrow();
     });
     it('validateStaffInvite throws when no port provided', async () => {
       await expect(service.validateStaffInvite('t')).rejects.toThrow();
     });
     it('completeStaffRegistration throws when no port provided', async () => {
-      await expect(service.completeStaffRegistration({ token: 't', password: 'P#1' } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput)).rejects.toThrow();
+      await expect(
+        service.completeStaffRegistration({
+          token: 't',
+          password: 'P#1',
+        } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput),
+      ).rejects.toThrow();
     });
   });
 
@@ -143,7 +179,10 @@ describe('AuthService', () => {
 
     it('completeOwnerRegistration issues tokens and audits when MFA not required', async () => {
       const spy = jest.spyOn(service, 'issueTokensForUser').mockResolvedValue({ accessToken: 'a', refreshToken: 'r' });
-      const res = await service.completeOwnerRegistration({ token: 't', password: 'P#1' } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput);
+      const res = await service.completeOwnerRegistration({
+        token: 't',
+        password: 'P#1',
+      } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput);
       expect(spy).toHaveBeenCalledWith('u1');
       expect(res).toEqual({ accessToken: 'a', refreshToken: 'r' });
       expect(auditService.log).toHaveBeenCalledWith('owner_registration_complete', { userId: 'u1' });
@@ -157,7 +196,10 @@ describe('AuthService', () => {
         validateStaff: jest.fn(),
         completeStaff: jest.fn(),
       } as unknown as InvitePort;
-      const res = await service.completeOwnerRegistration({ token: 't', password: 'P#1' } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput);
+      const res = await service.completeOwnerRegistration({
+        token: 't',
+        password: 'P#1',
+      } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput);
       expect(res).toEqual({ next: 'mfa' });
     });
 
@@ -167,7 +209,10 @@ describe('AuthService', () => {
     });
 
     it('completeStaffRegistration returns next:mfa when required', async () => {
-      const res = await service.completeStaffRegistration({ token: 't', password: 'P#1' } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput);
+      const res = await service.completeStaffRegistration({
+        token: 't',
+        password: 'P#1',
+      } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput);
       expect(res).toEqual({ next: 'mfa' });
     });
 
@@ -180,7 +225,10 @@ describe('AuthService', () => {
         completeStaff: jest.fn(() => Promise.resolve({ userId: 'u3' })),
       } as unknown as InvitePort;
       const spy = jest.spyOn(service, 'issueTokensForUser').mockResolvedValue({ accessToken: 'A', refreshToken: 'R' });
-      const res = await service.completeStaffRegistration({ token: 't', password: 'P#1' } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput);
+      const res = await service.completeStaffRegistration({
+        token: 't',
+        password: 'P#1',
+      } as unknown as import('@cthub-bsaas/server-contracts-auth').RegistrationCompleteInput);
       expect(spy).toHaveBeenCalledWith('u3');
       expect(res).toEqual({ accessToken: 'A', refreshToken: 'R' });
       expect(auditService.log).toHaveBeenCalledWith('staff_registration_complete', { userId: 'u3' });
@@ -322,7 +370,14 @@ describe('AuthService', () => {
   describe('account recovery (DB-backed)', () => {
     it('requests password reset (no disclosure)', async () => {
       userRepository.findByEmail.mockResolvedValue({ ...mockUserWithRoles });
-      pwdResetRepo.create.mockResolvedValue({ id: 'rid', userId: mockUserWithRoles.id, tokenHash: 'h', expiresAt: new Date(Date.now() + 1000), usedAt: null, createdAt: new Date() } as PasswordResetRecord);
+      pwdResetRepo.create.mockResolvedValue({
+        id: 'rid',
+        userId: mockUserWithRoles.id,
+        tokenHash: 'h',
+        expiresAt: new Date(Date.now() + 1000),
+        usedAt: null,
+        createdAt: new Date(),
+      } as PasswordResetRecord);
       await expect(service.requestPasswordReset('test@example.com')).resolves.toBeUndefined();
       expect(emailPort.sendMail).toHaveBeenCalled();
       expect(pwdResetRepo.create).toHaveBeenCalled();
@@ -333,7 +388,14 @@ describe('AuthService', () => {
       const secret = 'sec';
       (bcrypt.hash as jest.Mock).mockResolvedValueOnce('hash');
       (bcrypt.compare as jest.Mock).mockResolvedValueOnce(true);
-      pwdResetRepo.findById.mockResolvedValue({ id, userId: mockUserWithRoles.id, tokenHash: 'hash', expiresAt: new Date(Date.now() + 60000), usedAt: null, createdAt: new Date() } as PasswordResetRecord);
+      pwdResetRepo.findById.mockResolvedValue({
+        id,
+        userId: mockUserWithRoles.id,
+        tokenHash: 'hash',
+        expiresAt: new Date(Date.now() + 60000),
+        usedAt: null,
+        createdAt: new Date(),
+      } as PasswordResetRecord);
       sessionRepository.findByUserId.mockResolvedValue([
         {
           id: 's1',
@@ -384,13 +446,34 @@ describe('AuthService', () => {
     it('resetPassword throws when record expired/used or secret mismatch', async () => {
       const id = 'rid2';
       // expired
-      pwdResetRepo.findById.mockResolvedValue({ id, userId: mockUserWithRoles.id, tokenHash: 'h', expiresAt: new Date(Date.now() - 1000), usedAt: null, createdAt: new Date() } as PasswordResetRecord);
+      pwdResetRepo.findById.mockResolvedValue({
+        id,
+        userId: mockUserWithRoles.id,
+        tokenHash: 'h',
+        expiresAt: new Date(Date.now() - 1000),
+        usedAt: null,
+        createdAt: new Date(),
+      } as PasswordResetRecord);
       await expect(service.resetPassword(`${id}.sec`, 'x')).rejects.toThrow(UnauthorizedException);
       // used
-      pwdResetRepo.findById.mockResolvedValue({ id, userId: mockUserWithRoles.id, tokenHash: 'h', expiresAt: new Date(Date.now() + 10000), usedAt: new Date(), createdAt: new Date() } as PasswordResetRecord);
+      pwdResetRepo.findById.mockResolvedValue({
+        id,
+        userId: mockUserWithRoles.id,
+        tokenHash: 'h',
+        expiresAt: new Date(Date.now() + 10000),
+        usedAt: new Date(),
+        createdAt: new Date(),
+      } as PasswordResetRecord);
       await expect(service.resetPassword(`${id}.sec`, 'x')).rejects.toThrow(UnauthorizedException);
       // mismatch
-      pwdResetRepo.findById.mockResolvedValue({ id, userId: mockUserWithRoles.id, tokenHash: 'h', expiresAt: new Date(Date.now() + 10000), usedAt: null, createdAt: new Date() } as PasswordResetRecord);
+      pwdResetRepo.findById.mockResolvedValue({
+        id,
+        userId: mockUserWithRoles.id,
+        tokenHash: 'h',
+        expiresAt: new Date(Date.now() + 10000),
+        usedAt: null,
+        createdAt: new Date(),
+      } as PasswordResetRecord);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
       await expect(service.resetPassword(`${id}.sec`, 'x')).rejects.toThrow(UnauthorizedException);
     });
@@ -398,7 +481,15 @@ describe('AuthService', () => {
 
   describe('verifyEmailOtp', () => {
     it('verifies email via OTP and marks used', async () => {
-      emailVerRepo.findActiveByEmail.mockResolvedValue({ id: 'rec1', codeHash: 'h', email: mockUser.email, expiresAt: new Date(Date.now() + 60000), attempts: 0, usedAt: null, createdAt: new Date() } as EmailVerificationRecord);
+      emailVerRepo.findActiveByEmail.mockResolvedValue({
+        id: 'rec1',
+        codeHash: 'h',
+        email: mockUser.email,
+        expiresAt: new Date(Date.now() + 60000),
+        attempts: 0,
+        usedAt: null,
+        createdAt: new Date(),
+      } as EmailVerificationRecord);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       userRepository.findByEmail.mockResolvedValue(mockUserWithRoles);
       await expect(service.verifyEmailOtp(mockUser.email, '123456')).resolves.toBeUndefined();
@@ -412,13 +503,29 @@ describe('AuthService', () => {
     });
 
     it('throws when OTP does not match', async () => {
-      emailVerRepo.findActiveByEmail.mockResolvedValue({ id: 'rec2', codeHash: 'h', email: mockUser.email, expiresAt: new Date(Date.now() + 60000), attempts: 0, usedAt: null, createdAt: new Date() } as EmailVerificationRecord);
+      emailVerRepo.findActiveByEmail.mockResolvedValue({
+        id: 'rec2',
+        codeHash: 'h',
+        email: mockUser.email,
+        expiresAt: new Date(Date.now() + 60000),
+        attempts: 0,
+        usedAt: null,
+        createdAt: new Date(),
+      } as EmailVerificationRecord);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
       await expect(service.verifyEmailOtp(mockUser.email, '999999')).rejects.toThrow(UnauthorizedException);
     });
 
     it('throws when user not found during OTP verify', async () => {
-      emailVerRepo.findActiveByEmail.mockResolvedValue({ id: 'rec3', codeHash: 'h', email: 'nouser@example.com', expiresAt: new Date(Date.now() + 60000), attempts: 0, usedAt: null, createdAt: new Date() } as EmailVerificationRecord);
+      emailVerRepo.findActiveByEmail.mockResolvedValue({
+        id: 'rec3',
+        codeHash: 'h',
+        email: 'nouser@example.com',
+        expiresAt: new Date(Date.now() + 60000),
+        attempts: 0,
+        usedAt: null,
+        createdAt: new Date(),
+      } as EmailVerificationRecord);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       userRepository.findByEmail.mockResolvedValue(null);
       await expect(service.verifyEmailOtp('nouser@example.com', '123456')).rejects.toThrow(UnauthorizedException);
@@ -520,17 +627,19 @@ describe('AuthService', () => {
     });
 
     it('uses default RT TTL when customer TTL is undefined (fallback branch)', async () => {
-      (configService as unknown as {
-        auth: {
-          jwtAccessSecret: string;
-          jwtRefreshSecret: string;
-          jwtEmailChangeSecret: string;
-          jwtVerifyEmailSecret: string;
-          jwtExpiresIn: string;
-          refreshTokenExpiresInDefault: string;
-          refreshTokenExpiresInCustomer?: string;
-        };
-      }).auth = {
+      (
+        configService as unknown as {
+          auth: {
+            jwtAccessSecret: string;
+            jwtRefreshSecret: string;
+            jwtEmailChangeSecret: string;
+            jwtVerifyEmailSecret: string;
+            jwtExpiresIn: string;
+            refreshTokenExpiresInDefault: string;
+            refreshTokenExpiresInCustomer?: string;
+          };
+        }
+      ).auth = {
         jwtAccessSecret: 'acc',
         jwtRefreshSecret: 'ref',
         jwtEmailChangeSecret: 'emc',
@@ -544,11 +653,24 @@ describe('AuthService', () => {
         roles: [{ role: { name: 'CUSTOMER' } }],
       } as User & { roles: { role: { name: string } }[] };
       userRepository.findById.mockResolvedValue(withCustomer);
-      sessionRepository.create.mockResolvedValue({ id: 'sess-fb', userId: withCustomer.id, deviceOS: null, deviceUA: null, ipHash: null, lastSeenAt: new Date(), createdAt: new Date() } as Session);
-      jwtService.signAsync
-        .mockResolvedValueOnce('access-token')
-        .mockResolvedValueOnce('refresh-token');
-      refreshTokenRepository.create.mockResolvedValue({ jti: 'j-fb', userId: withCustomer.id, sessionId: 'sess-fb', issuedAt: new Date(), revokedAt: null, rotatedFrom: null } as RefreshToken);
+      sessionRepository.create.mockResolvedValue({
+        id: 'sess-fb',
+        userId: withCustomer.id,
+        deviceOS: null,
+        deviceUA: null,
+        ipHash: null,
+        lastSeenAt: new Date(),
+        createdAt: new Date(),
+      } as Session);
+      jwtService.signAsync.mockResolvedValueOnce('access-token').mockResolvedValueOnce('refresh-token');
+      refreshTokenRepository.create.mockResolvedValue({
+        jti: 'j-fb',
+        userId: withCustomer.id,
+        sessionId: 'sess-fb',
+        issuedAt: new Date(),
+        revokedAt: null,
+        rotatedFrom: null,
+      } as RefreshToken);
 
       const result = await service.issueTokensForUser(withCustomer.id);
       expect(result).toEqual({ accessToken: 'access-token', refreshToken: 'refresh-token' });
@@ -557,7 +679,15 @@ describe('AuthService', () => {
     });
 
     it('logout revokes existing session when found', async () => {
-      sessionRepository.findById.mockResolvedValue({ id: 's1', userId: mockUserWithRoles.id, deviceOS: null, deviceUA: null, ipHash: null, lastSeenAt: new Date(), createdAt: new Date() } as Session);
+      sessionRepository.findById.mockResolvedValue({
+        id: 's1',
+        userId: mockUserWithRoles.id,
+        deviceOS: null,
+        deviceUA: null,
+        ipHash: null,
+        lastSeenAt: new Date(),
+        createdAt: new Date(),
+      } as Session);
       await expect(service.logout('s1')).resolves.toBeUndefined();
       expect(sessionRepository.delete).toHaveBeenCalledWith('s1');
     });
@@ -572,14 +702,30 @@ describe('AuthService', () => {
     });
 
     it('revokeSession validates owner and deletes', async () => {
-      sessionRepository.findById.mockResolvedValue({ id: 's1', userId: 'u1', deviceOS: null, deviceUA: null, ipHash: null, lastSeenAt: new Date(), createdAt: new Date() } as Session);
+      sessionRepository.findById.mockResolvedValue({
+        id: 's1',
+        userId: 'u1',
+        deviceOS: null,
+        deviceUA: null,
+        ipHash: null,
+        lastSeenAt: new Date(),
+        createdAt: new Date(),
+      } as Session);
       const res = await service.revokeSession('u1', 's1');
       expect(sessionRepository.delete).toHaveBeenCalledWith('s1');
       expect(res).toEqual({ success: true });
     });
 
     it('revokeSession throws when owner mismatch or missing', async () => {
-      sessionRepository.findById.mockResolvedValue({ id: 's1', userId: 'other', deviceOS: null, deviceUA: null, ipHash: null, lastSeenAt: new Date(), createdAt: new Date() } as Session);
+      sessionRepository.findById.mockResolvedValue({
+        id: 's1',
+        userId: 'other',
+        deviceOS: null,
+        deviceUA: null,
+        ipHash: null,
+        lastSeenAt: new Date(),
+        createdAt: new Date(),
+      } as Session);
       await expect(service.revokeSession('u1', 's1')).rejects.toThrow(UnauthorizedException);
     });
 
@@ -590,13 +736,27 @@ describe('AuthService', () => {
 
     it('refreshToken throws when stored token missing or revoked', async () => {
       jwtService.verifyAsync.mockResolvedValue({ sub: 'u1', jti: 'x' });
-      refreshTokenRepository.findByJti.mockResolvedValue({ jti: 'x', userId: 'u1', sessionId: 's1', issuedAt: new Date(), revokedAt: new Date(), rotatedFrom: null } as RefreshToken);
+      refreshTokenRepository.findByJti.mockResolvedValue({
+        jti: 'x',
+        userId: 'u1',
+        sessionId: 's1',
+        issuedAt: new Date(),
+        revokedAt: new Date(),
+        rotatedFrom: null,
+      } as RefreshToken);
       await expect(service.refreshToken('rt')).rejects.toThrow(UnauthorizedException);
     });
 
     it('refreshToken throws when user not found', async () => {
       jwtService.verifyAsync.mockResolvedValue({ sub: 'u1', jti: 'x' });
-      refreshTokenRepository.findByJti.mockResolvedValue({ jti: 'x', userId: 'u1', sessionId: 's1', issuedAt: new Date(), revokedAt: null, rotatedFrom: null } as RefreshToken);
+      refreshTokenRepository.findByJti.mockResolvedValue({
+        jti: 'x',
+        userId: 'u1',
+        sessionId: 's1',
+        issuedAt: new Date(),
+        revokedAt: null,
+        rotatedFrom: null,
+      } as RefreshToken);
       userRepository.findById.mockResolvedValue(null);
       await expect(service.refreshToken('rt')).rejects.toThrow(UnauthorizedException);
     });
@@ -609,17 +769,19 @@ describe('AuthService', () => {
 
     it('uses customer RT TTL when role includes CUSTOMER', async () => {
       // Arrange config TTLs
-      (configService as unknown as {
-        auth: {
-          jwtAccessSecret: string;
-          jwtRefreshSecret: string;
-          jwtEmailChangeSecret: string;
-          jwtVerifyEmailSecret: string;
-          jwtExpiresIn: string;
-          refreshTokenExpiresInDefault: string;
-          refreshTokenExpiresInCustomer?: string;
-        };
-      }).auth = {
+      (
+        configService as unknown as {
+          auth: {
+            jwtAccessSecret: string;
+            jwtRefreshSecret: string;
+            jwtEmailChangeSecret: string;
+            jwtVerifyEmailSecret: string;
+            jwtExpiresIn: string;
+            refreshTokenExpiresInDefault: string;
+            refreshTokenExpiresInCustomer?: string;
+          };
+        }
+      ).auth = {
         jwtAccessSecret: 'acc',
         jwtRefreshSecret: 'ref',
         jwtEmailChangeSecret: 'emc',
@@ -633,11 +795,24 @@ describe('AuthService', () => {
         roles: [{ role: { name: 'CUSTOMER' } }],
       } as User & { roles: { role: { name: string } }[] };
       userRepository.findById.mockResolvedValue(withCustomer);
-      sessionRepository.create.mockResolvedValue({ id: 'sess', userId: withCustomer.id, deviceOS: null, deviceUA: null, ipHash: null, lastSeenAt: new Date(), createdAt: new Date() } as Session);
-      jwtService.signAsync
-        .mockResolvedValueOnce('access-token')
-        .mockResolvedValueOnce('refresh-token');
-      refreshTokenRepository.create.mockResolvedValue({ jti: 'j3', userId: withCustomer.id, sessionId: 'sess', issuedAt: new Date(), revokedAt: null, rotatedFrom: null } as RefreshToken);
+      sessionRepository.create.mockResolvedValue({
+        id: 'sess',
+        userId: withCustomer.id,
+        deviceOS: null,
+        deviceUA: null,
+        ipHash: null,
+        lastSeenAt: new Date(),
+        createdAt: new Date(),
+      } as Session);
+      jwtService.signAsync.mockResolvedValueOnce('access-token').mockResolvedValueOnce('refresh-token');
+      refreshTokenRepository.create.mockResolvedValue({
+        jti: 'j3',
+        userId: withCustomer.id,
+        sessionId: 'sess',
+        issuedAt: new Date(),
+        revokedAt: null,
+        rotatedFrom: null,
+      } as RefreshToken);
 
       // Act
       const result = await service.issueTokensForUser(withCustomer.id);
@@ -649,17 +824,19 @@ describe('AuthService', () => {
     });
 
     it('uses default RT TTL when role excludes CUSTOMER', async () => {
-      (configService as unknown as {
-        auth: {
-          jwtAccessSecret: string;
-          jwtRefreshSecret: string;
-          jwtEmailChangeSecret: string;
-          jwtVerifyEmailSecret: string;
-          jwtExpiresIn: string;
-          refreshTokenExpiresInDefault: string;
-          refreshTokenExpiresInCustomer?: string;
-        };
-      }).auth = {
+      (
+        configService as unknown as {
+          auth: {
+            jwtAccessSecret: string;
+            jwtRefreshSecret: string;
+            jwtEmailChangeSecret: string;
+            jwtVerifyEmailSecret: string;
+            jwtExpiresIn: string;
+            refreshTokenExpiresInDefault: string;
+            refreshTokenExpiresInCustomer?: string;
+          };
+        }
+      ).auth = {
         jwtAccessSecret: 'acc',
         jwtRefreshSecret: 'ref',
         jwtEmailChangeSecret: 'emc',
@@ -673,11 +850,24 @@ describe('AuthService', () => {
         roles: [{ role: { name: 'STAFF' } }],
       } as User & { roles: { role: { name: string } }[] };
       userRepository.findById.mockResolvedValue(withStaff);
-      sessionRepository.create.mockResolvedValue({ id: 'sess2', userId: withStaff.id, deviceOS: null, deviceUA: null, ipHash: null, lastSeenAt: new Date(), createdAt: new Date() } as Session);
-      jwtService.signAsync
-        .mockResolvedValueOnce('access-token')
-        .mockResolvedValueOnce('refresh-token');
-      refreshTokenRepository.create.mockResolvedValue({ jti: 'j4', userId: withStaff.id, sessionId: 'sess2', issuedAt: new Date(), revokedAt: null, rotatedFrom: null } as RefreshToken);
+      sessionRepository.create.mockResolvedValue({
+        id: 'sess2',
+        userId: withStaff.id,
+        deviceOS: null,
+        deviceUA: null,
+        ipHash: null,
+        lastSeenAt: new Date(),
+        createdAt: new Date(),
+      } as Session);
+      jwtService.signAsync.mockResolvedValueOnce('access-token').mockResolvedValueOnce('refresh-token');
+      refreshTokenRepository.create.mockResolvedValue({
+        jti: 'j4',
+        userId: withStaff.id,
+        sessionId: 'sess2',
+        issuedAt: new Date(),
+        revokedAt: null,
+        rotatedFrom: null,
+      } as RefreshToken);
 
       const result = await service.issueTokensForUser(withStaff.id);
       expect(result).toEqual({ accessToken: 'access-token', refreshToken: 'refresh-token' });
@@ -721,15 +911,37 @@ describe('AuthService', () => {
     });
 
     it('issueTokensForUser returns tokens for existing user', async () => {
-      const withRole: typeof mockUserWithRoles = { ...mockUserWithRoles, roles: [{ role: { name: 'admin' } }] };
+      const withRole: typeof mockUserWithRoles = {
+        ...mockUserWithRoles,
+        salonTenantId: 'tenant-1',
+        roles: [{ role: { name: 'admin' } }],
+      };
       userRepository.findById.mockResolvedValue(withRole);
-      sessionRepository.create.mockResolvedValue({ id: 'sess', userId: withRole.id, deviceOS: null, deviceUA: null, ipHash: null, lastSeenAt: new Date(), createdAt: new Date() } as Session);
-      jwtService.signAsync
-        .mockResolvedValueOnce('access-token')
-        .mockResolvedValueOnce('refresh-token');
-      refreshTokenRepository.create.mockResolvedValue({ jti: 'j1', userId: withRole.id, sessionId: 'sess', issuedAt: new Date(), revokedAt: null, rotatedFrom: null } as RefreshToken);
+      sessionRepository.create.mockResolvedValue({
+        id: 'sess',
+        userId: withRole.id,
+        deviceOS: null,
+        deviceUA: null,
+        ipHash: null,
+        lastSeenAt: new Date(),
+        createdAt: new Date(),
+      } as Session);
+      jwtService.signAsync.mockResolvedValueOnce('access-token').mockResolvedValueOnce('refresh-token');
+      refreshTokenRepository.create.mockResolvedValue({
+        jti: 'j1',
+        userId: withRole.id,
+        sessionId: 'sess',
+        issuedAt: new Date(),
+        revokedAt: null,
+        rotatedFrom: null,
+      } as RefreshToken);
       const result = await service.issueTokensForUser(withRole.id);
       expect(result).toEqual({ accessToken: 'access-token', refreshToken: 'refresh-token' });
+      expect(jwtService.signAsync).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ sub: withRole.id, sessionId: 'sess', tenantId: 'tenant-1' }),
+        expect.any(Object),
+      );
     });
 
     it('signIn without TOTP generates tokens via generateTokens', async () => {
@@ -737,11 +949,24 @@ describe('AuthService', () => {
       userRepository.findByEmail.mockResolvedValue(withRole2);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       credentialTotpRepository.findByUserId.mockResolvedValue(null);
-      sessionRepository.create.mockResolvedValue({ id: 'sess', userId: withRole2.id, deviceOS: null, deviceUA: null, ipHash: null, lastSeenAt: new Date(), createdAt: new Date() } as Session);
-      jwtService.signAsync
-        .mockResolvedValueOnce('access-token')
-        .mockResolvedValueOnce('refresh-token');
-      refreshTokenRepository.create.mockResolvedValue({ jti: 'j2', userId: withRole2.id, sessionId: 'sess', issuedAt: new Date(), revokedAt: null, rotatedFrom: null } as RefreshToken);
+      sessionRepository.create.mockResolvedValue({
+        id: 'sess',
+        userId: withRole2.id,
+        deviceOS: null,
+        deviceUA: null,
+        ipHash: null,
+        lastSeenAt: new Date(),
+        createdAt: new Date(),
+      } as Session);
+      jwtService.signAsync.mockResolvedValueOnce('access-token').mockResolvedValueOnce('refresh-token');
+      refreshTokenRepository.create.mockResolvedValue({
+        jti: 'j2',
+        userId: withRole2.id,
+        sessionId: 'sess',
+        issuedAt: new Date(),
+        revokedAt: null,
+        rotatedFrom: null,
+      } as RefreshToken);
       const res = await service.signIn('test@example.com', 'password');
       expect(res).toEqual({ totpRequired: false, accessToken: 'access-token', refreshToken: 'refresh-token' });
     });
@@ -782,10 +1007,7 @@ describe('AuthService', () => {
       await service.confirmEmailChange('test-token');
 
       expect(userRepository.update).toHaveBeenCalled();
-      const [[callUserId, updatePayload]] = userRepository.update.mock.calls as Array<[
-        string,
-        { email?: string; emailVerifiedAt?: Date },
-      ]>;
+      const [[callUserId, updatePayload]] = userRepository.update.mock.calls as Array<[string, { email?: string; emailVerifiedAt?: Date }]>;
       expect(callUserId).toBe('user-id');
       expect(updatePayload.email).toBe('new@example.com');
       expect(updatePayload.emailVerifiedAt).toBeInstanceOf(Date);
@@ -841,7 +1063,10 @@ describe('AuthService', () => {
 
     it('unlinkSocialAccount throws when last method', async () => {
       socialRepo.findByUserId.mockResolvedValue([]);
-      userRepository.findById.mockResolvedValue({ ...mockUserWithRoles, passwordHash: undefined } as unknown as import('@prisma/client').User & { roles: { role: { name: string } }[] });
+      userRepository.findById.mockResolvedValue({
+        ...mockUserWithRoles,
+        passwordHash: undefined,
+      } as unknown as import('@prisma/client').User & { roles: { role: { name: string } }[] });
       await expect(service.unlinkSocialAccount('u1', 'google')).rejects.toThrow(UnauthorizedException);
     });
 

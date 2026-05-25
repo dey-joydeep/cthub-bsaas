@@ -1,5 +1,4 @@
 import 'reflect-metadata';
-import { JwtAuthGuard, RolesGuard } from '@cthub-bsaas/server-core';
 import { ConfigService, CorrelationIdMiddleware } from '@cthub-bsaas/server-core';
 import { ClassSerializerInterceptor, Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
@@ -105,10 +104,6 @@ async function bootstrap(): Promise<void> {
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   // 429 Retry-After is handled by the APP_FILTER ThrottlerRetryAfterFilter in AppModule
-
-  // Global guards
-  const reflector = app.get(Reflector);
-  app.useGlobalGuards(new JwtAuthGuard(reflector), new RolesGuard(reflector));
 
   // API versioning
   app.enableVersioning({

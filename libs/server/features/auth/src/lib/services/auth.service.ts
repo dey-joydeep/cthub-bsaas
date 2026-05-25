@@ -101,9 +101,7 @@ export class AuthService {
         create: [{ role: { connect: { name: 'CUSTOMER' } } }],
       },
     };
-    const user = await this.userRepository.create(
-      data as unknown as Omit<User, 'id' | 'createdAt' | 'updatedAt'>,
-    );
+    const user = await this.userRepository.create(data as unknown as Omit<User, 'id' | 'createdAt' | 'updatedAt'>);
     await this.requestEmailVerification(user.email);
     this.audit.log('register_success', { userId: user.id });
   }
@@ -141,22 +139,15 @@ export class AuthService {
         expiresIn: '10m',
       },
     );
-    await this.emailPort.sendMail(
-      newEmail,
-      'Confirm your new email address',
-      `Use this token to confirm your new email address: ${token}`,
-    );
+    await this.emailPort.sendMail(newEmail, 'Confirm your new email address', `Use this token to confirm your new email address: ${token}`);
     this.audit.log('email_change_requested', { userId });
   }
 
   public async confirmEmailChange(token: string): Promise<void> {
     try {
-      const { sub, aud, email } = await this.jwtService.verifyAsync<{ sub: string; aud: string; email: string }>(
-        token,
-        {
-          secret: this.configService.auth.jwtEmailChangeSecret,
-        },
-      );
+      const { sub, aud, email } = await this.jwtService.verifyAsync<{ sub: string; aud: string; email: string }>(token, {
+        secret: this.configService.auth.jwtEmailChangeSecret,
+      });
       if (aud !== 'email-change') {
         this.audit.log('email_change_failure', { result: 'failure', reason: 'invalid_audience' });
         throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_VERIFY_TOKEN);
@@ -299,19 +290,17 @@ export class AuthService {
     return { success: true };
   }
 
-  private async generateTokens(
-    user: User & { roles: { role: { name: string } }[] },
-    sessionId: string,
-  ): Promise<TokenPair> {
+  private async generateTokens(user: User & { roles: { role: { name: string } }[] }, sessionId: string): Promise<TokenPair> {
     const jti = randomUUID();
     const roles = user.roles.map((r) => r.role.name);
     const isCustomer = roles.includes('CUSTOMER');
     const rtTtl = isCustomer
-      ? this.configService.auth.refreshTokenExpiresInCustomer ?? this.configService.auth.refreshTokenExpiresInDefault
+      ? (this.configService.auth.refreshTokenExpiresInCustomer ?? this.configService.auth.refreshTokenExpiresInDefault)
       : this.configService.auth.refreshTokenExpiresInDefault;
+    const tenantId = user.salonTenantId ?? undefined;
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
-        { sub: user.id, email: user.email, sessionId, roles },
+        { sub: user.id, email: user.email, sessionId, roles, tenantId },
         {
           secret: this.configService.auth.jwtAccessSecret,
           expiresIn: this.configService.auth.jwtExpiresIn,
@@ -454,15 +443,11 @@ export class AuthService {
     await this.rateLimiter.checkOrThrow(`email:verify:${email}`, limit, windowSec);
     const user = await this.userRepository.findByEmail(email);
     if (!user || user.emailVerifiedAt) return;
-    const otp = (Math.floor(100000 + Math.random() * 900000)).toString();
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const codeHash = await bcrypt.hash(otp, 10);
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
     await this.emailVerRepo.upsertForEmail(user.email, codeHash, expiresAt);
-    await this.emailPort.sendMail(
-      user.email,
-      'Verify your email',
-      `Your verification code is: ${otp}. It expires in 10 minutes.`,
-    );
+    await this.emailPort.sendMail(user.email, 'Verify your email', `Your verification code is: ${otp}. It expires in 10 minutes.`);
     this.audit.log('email_verification_requested', { userId: user.id });
   }
 

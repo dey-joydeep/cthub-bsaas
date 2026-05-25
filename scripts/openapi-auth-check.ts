@@ -25,12 +25,47 @@ function extractBase(controllerSource: string): string | undefined {
   return sm ? sm[1] : undefined;
 }
 
-function extractRoutes(controllerSource: string): string[] {
-  const routes: string[] = [];
+interface ControllerRoute {
+  method: string;
+  path: string;
+  isPublic: boolean;
+}
+
+interface SpecRoute {
+  method: string;
+  path: string;
+  requiresAuth: boolean;
+}
+
+function routeKey(route: Pick<ControllerRoute | SpecRoute, 'method' | 'path'>): string {
+  return `${route.method.toUpperCase()} ${route.path}`;
+}
+
+function extractRoutes(controllerSource: string): ControllerRoute[] {
+  const routes: ControllerRoute[] = [];
   const base = extractBase(controllerSource) ?? '';
-  const methodRegex = /@(Get|Post|Put|Patch|Delete)\(([^)]*)\)/g;
-  let m: RegExpExecArray | null;
-  while ((m = methodRegex.exec(controllerSource))) {
+  const lines = controllerSource.split(/\r?\n/);
+  let decorators: string[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('@')) {
+      decorators.push(trimmed);
+      continue;
+    }
+
+    const routeDecorator = decorators.find((decorator) => /^@(Get|Post|Put|Patch|Delete)\(/.test(decorator));
+    if (!routeDecorator) {
+      if (trimmed.length > 0 && !trimmed.startsWith('//')) decorators = [];
+      continue;
+    }
+
+    const m = routeDecorator.match(/^@(Get|Post|Put|Patch|Delete)\(([^)]*)\)/);
+    if (!m) {
+      decorators = [];
+      continue;
+    }
+
     const rawArg = m[2] ?? '';
     const sm = rawArg.match(/['"]([^'"]*)['"]/);
     const sub = sm ? sm[1] : '';
@@ -39,49 +74,96 @@ function extractRoutes(controllerSource: string): string[] {
     let norm = '/' + full.replace(/(^\/|\/+$)/g, '').replace(/\/+/, '/');
     // normalize path params: :id -> {id}
     norm = norm.replace(/:(\w+)/g, '{$1}');
-    routes.push(norm);
+    routes.push({
+      method: m[1].toUpperCase(),
+      path: norm,
+      isPublic: decorators.some((decorator) => decorator.startsWith('@Public(') || decorator === '@Public()'),
+    });
+    decorators = [];
   }
-  return Array.from(new Set(routes));
+
+  return Array.from(new Map(routes.map((route) => [routeKey(route), route])).values());
 }
 
-function extractOpenapiPaths(yaml: string): string[] {
+function extractOpenapiRoutes(yaml: string): SpecRoute[] {
   const lines = yaml.split(/\r?\n/);
-  const paths: string[] = [];
+  const routes: SpecRoute[] = [];
   let inPaths = false;
+  let currentPath: string | undefined;
+  let currentMethod: string | undefined;
+  let currentRequiresAuth = false;
+
+  const flush = () => {
+    if (currentPath && currentMethod) {
+      routes.push({ method: currentMethod.toUpperCase(), path: currentPath, requiresAuth: currentRequiresAuth });
+    }
+  };
+
   for (const line of lines) {
     if (!inPaths) {
       if (/^\s*paths:\s*$/.test(line)) inPaths = true;
       continue;
     }
-    const pathMatch = line.match(/^\s{2}\/[^:]+:/);
+    const pathMatch = line.match(/^\s{2}(\/[^:]+):/);
     if (pathMatch) {
-      const p = pathMatch[0].trim().slice(0, -1); // remove trailing :
-      paths.push(p);
+      flush();
+      currentPath = pathMatch[1];
+      currentMethod = undefined;
+      currentRequiresAuth = false;
+      continue;
     }
+
+    const methodMatch = line.match(/^\s{4}(get|post|put|patch|delete):\s*$/);
+    if (methodMatch) {
+      flush();
+      currentMethod = methodMatch[1].toUpperCase();
+      currentRequiresAuth = false;
+      continue;
+    }
+
+    if (currentMethod && /^\s{6}security:\s*$/.test(line)) {
+      currentRequiresAuth = true;
+    }
+
     // stop if next top-level section
     if (/^\w/.test(line)) break;
   }
-  return paths;
+  flush();
+  return routes;
 }
 
 function main() {
   const controllerFiles = listControllerFiles(controllersDir);
-  const implRoutes = new Set<string>();
+  const implRoutes = new Map<string, ControllerRoute>();
   for (const file of controllerFiles) {
     const src = read(file);
-    for (const r of extractRoutes(src)) implRoutes.add(r);
+    for (const r of extractRoutes(src)) implRoutes.set(routeKey(r), r);
   }
   const specYaml = read(openapiPath);
-  const specRoutes = new Set(extractOpenapiPaths(specYaml));
+  const specRoutes = new Map(extractOpenapiRoutes(specYaml).map((route) => [routeKey(route), route]));
 
   // Filter to /auth namespace only
-  const implAuth = Array.from(implRoutes).filter((r) => r.startsWith('/auth'));
-  const specAuth = Array.from(specRoutes).filter((r) => r.startsWith('/auth'));
+  const implAuth = Array.from(implRoutes.values()).filter((r) => r.path.startsWith('/auth'));
+  const specAuth = Array.from(specRoutes.values()).filter((r) => r.path.startsWith('/auth'));
+  const implAuthKeys = implAuth.map(routeKey);
+  const specAuthKeys = specAuth.map(routeKey);
 
-  const missingInSpec = implAuth.filter((r) => !specAuth.includes(r));
-  const missingInImpl = specAuth.filter((r) => !implAuth.includes(r));
+  const missingInSpec = implAuthKeys.filter((r) => !specAuthKeys.includes(r));
+  const missingInImpl = specAuthKeys.filter((r) => !implAuthKeys.includes(r));
+  const publicMetadataMismatches = specAuth
+    .filter((specRoute) => !specRoute.requiresAuth)
+    .filter((specRoute) => !implRoutes.get(routeKey(specRoute))?.isPublic)
+    .map(routeKey);
+  const protectedMetadataMismatches = specAuth
+    .filter((specRoute) => specRoute.requiresAuth)
+    .filter((specRoute) => implRoutes.get(routeKey(specRoute))?.isPublic)
+    .map(routeKey);
 
-  const ok = missingInSpec.length === 0 && missingInImpl.length === 0;
+  const ok =
+    missingInSpec.length === 0 &&
+    missingInImpl.length === 0 &&
+    publicMetadataMismatches.length === 0 &&
+    protectedMetadataMismatches.length === 0;
 
   const report = {
     ok,
@@ -89,6 +171,8 @@ function main() {
     specCount: specAuth.length,
     missingInSpec,
     missingInImpl,
+    publicMetadataMismatches,
+    protectedMetadataMismatches,
   };
   const out = JSON.stringify(report, null, 2);
   console.log(out);

@@ -1,7 +1,7 @@
 # Auth Backend Foundation - Completion Status
 
 **Original branch:** `feat/auth-backend-foundation`
-**Updated:** 2026-05-04
+**Updated:** 2026-05-25
 **Primary code area:** `libs/server/features/auth`
 **Supporting code areas:** `libs/server/core`, `libs/server/contracts-auth`, `libs/server/infrastructure`, `apps/api`
 
@@ -90,20 +90,22 @@ Examples of routes that are intentionally not part of the contract:
 
 ## Cross-Cutting Status
 
-| Area | Status | Notes |
-| --- | --- | --- |
-| Success envelope | Implemented | Auth controllers use response envelope handling for non-redirect success responses. |
-| Error envelope | Implemented | `GlobalExceptionFilter` returns `{ success: false, code, message, details?, meta?: { correlationId } }`. |
-| Correlation ID | Implemented | `CorrelationIdMiddleware` is registered in `apps/api/src/main.ts`; CORS allows and exposes `X-Correlation-Id`. |
-| Audit correlation | Implemented | Auth audit service uses the correlation context where available. |
-| CSRF refresh policy | Implemented | Refresh uses the CSRF policy when the server has issued an XSRF cookie. |
-| Retry-After | Implemented | API throttler guard/filter wiring sets `Retry-After` for throttled responses. |
-| Cookie handling | Implemented | Auth cookies are centralized through Auth cookie services/interceptors. |
-| Controller route parity | Implemented | `scripts/openapi-auth-check.ts` compares controller routes to OpenAPI. |
-| CI contract gate | Implemented | `.github/workflows/ci.yml` and `.github/workflows/openapi-contract.yml` run Auth OpenAPI lint/parity checks. |
-| Auth coverage gate | Implemented | `server-feature-auth` has project coverage thresholds and CI runs server lint/test coverage for Auth. |
-| Server-wide coverage gate | Deferred | Broader `server-feature-*` coverage gates belong to the upcoming workflow after those features are developed. |
-| Import-boundary hardening | Deferred | Additional no-restricted-import hardening is tracked under infra-upgrade/boundary work, not this Auth backend branch. |
+| Area                      | Status      | Notes                                                                                                                                                         |
+| ------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Success envelope          | Implemented | Auth controllers use response envelope handling for non-redirect success responses.                                                                           |
+| Error envelope            | Implemented | `GlobalExceptionFilter` returns `{ success: false, code, message, details?, meta?: { correlationId } }`.                                                      |
+| Correlation ID            | Implemented | `CorrelationIdMiddleware` is registered in `apps/api/src/main.ts`; CORS allows and exposes `X-Correlation-Id`.                                                |
+| Audit correlation         | Implemented | Auth audit service uses the correlation context where available.                                                                                              |
+| CSRF refresh policy       | Implemented | Refresh uses the CSRF policy when the server has issued an XSRF cookie.                                                                                       |
+| Retry-After               | Implemented | API throttler guard/filter wiring sets `Retry-After` for throttled responses.                                                                                 |
+| Cookie handling           | Implemented | Auth cookies are centralized through Auth cookie services/interceptors.                                                                                       |
+| Controller route parity   | Implemented | `scripts/openapi-auth-check.ts` compares controller routes to OpenAPI.                                                                                        |
+| Auth guard reuse          | Implemented | Auth public/protected route metadata is checked against OpenAPI security expectations, and integration tests use the production global JWT/roles guard stack. |
+| Scope profile handoff     | Implemented | Access-token request context includes `tenantId` from the user's salon tenant when available so tenant-scoped APIs can use shared scope guards.               |
+| CI contract gate          | Implemented | `.github/workflows/ci.yml` and `.github/workflows/openapi-contract.yml` run Auth OpenAPI lint/parity checks.                                                  |
+| Auth coverage gate        | Implemented | `server-feature-auth` has project coverage thresholds and CI runs server lint/test coverage for Auth.                                                         |
+| Server-wide coverage gate | Deferred    | Broader `server-feature-*` coverage gates belong to the upcoming workflow after those features are developed.                                                 |
+| Import-boundary hardening | Deferred    | Additional no-restricted-import hardening is tracked under infra-upgrade/boundary work, not this Auth backend branch.                                         |
 
 ## Validation Commands
 
@@ -136,7 +138,7 @@ Latest local validation on 2026-05-04:
 - `npx nx lint server-feature-auth`: passed, zero warnings/errors.
 - `npx nx build server-feature-auth`: passed.
 - `node_modules/.bin/redocly.cmd lint docs/specs/auth/API/openapi.yaml --config .redocly.yaml --max-problems=0`: passed.
-- `node_modules/.bin/tsx.cmd scripts/openapi-auth-check.ts`: passed, 31 implemented routes and 31 spec routes.
+- `node_modules/.bin/tsx.cmd scripts/openapi-auth-check.ts`: passed, 31 implemented route-method pairs, 31 spec route-method pairs, and no public/protected metadata mismatches.
 
 Future work that is intentionally outside this completed scope:
 

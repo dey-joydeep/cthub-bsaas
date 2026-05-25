@@ -19,7 +19,22 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  public validate(payload: { sub: string; email: string; roles: string[]; sessionId: string; iat: number; exp: number }): JwtUserContext {
-    return { userId: payload.sub, email: payload.email, roles: payload.roles, sessionId: payload.sessionId };
+  public validate(payload: {
+    sub: string;
+    email: string;
+    roles: string[];
+    sessionId: string;
+    tenantId?: string;
+    iat: number;
+    exp: number;
+  }): JwtUserContext {
+    return {
+      id: payload.sub,
+      userId: payload.sub,
+      email: payload.email,
+      roles: payload.roles,
+      sessionId: payload.sessionId,
+      tenantId: payload.tenantId,
+    };
   }
 }

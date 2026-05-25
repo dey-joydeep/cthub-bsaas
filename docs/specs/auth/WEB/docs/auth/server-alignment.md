@@ -1,9 +1,10 @@
 # Server Endpoint Alignment
+
 **Updated:** 2026-05-02
 
 Status: aligned by contract check.
 
-The backend Auth route surface is validated by `scripts/openapi-auth-check.ts`, which compares controller routes under `libs/server/features/auth/src/lib/controllers` with `/auth/*` paths in `docs/specs/auth/API/openapi.yaml`.
+The backend Auth route surface is validated by `scripts/openapi-auth-check.ts`, which compares controller route-method pairs under `libs/server/features/auth/src/lib/controllers` with `/auth/*` operations in `docs/specs/auth/API/openapi.yaml`. The check also verifies that OpenAPI public/protected security expectations match controller `@Public()` metadata used by the global JWT guard.
 
 Current OpenAPI/controller route set:
 
@@ -40,4 +41,3 @@ Current OpenAPI/controller route set:
 - `POST /auth/staff/registration/complete`
 
 Routes not listed above are not part of the current Auth contract.
-
