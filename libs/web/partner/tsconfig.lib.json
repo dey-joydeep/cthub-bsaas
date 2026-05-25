@@ -13,6 +13,6 @@
       "@cthub-bsaas/web-ui": ["dist/libs/web/ui/index.d.ts"]
     }
   },
-  "include": ["src/index.ts", "src/lib/features/auth/**/*.ts", "src/**/*.d.ts"],
+  "include": ["src/index.ts", "src/lib/features/auth/**/*.ts", "src/lib/features/salon-owner-settings/**/*.ts", "src/**/*.d.ts"],
   "exclude": ["src/test-setup.ts", "**/*.spec.ts", "**/*.test.ts", "jest.config.ts"]
 }
