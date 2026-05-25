@@ -33,6 +33,7 @@ describe('CorrelationIdMiddleware', () => {
       const headerCid = res.headers['x-correlation-id'];
       expect(headerCid).toBeDefined();
       expect(typeof headerCid).toBe('string');
+      expect(headerCid).toMatch(/^c-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
       // Accessible via ALS getter within request context
       expect(CorrelationId.get()).toBe(headerCid);
       // Exposed on req object for convenience

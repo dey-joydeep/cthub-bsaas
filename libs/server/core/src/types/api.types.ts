@@ -1,18 +1,43 @@
 /**
- * Standard API response format
+ * Standard API response metadata.
+ */
+export interface ApiResponseMeta {
+  correlationId?: string;
+}
+
+/**
+ * Cursor pagination metadata for list endpoints.
+ */
+export interface CursorPaginationMeta {
+  page: {
+    limit: number;
+    nextCursor: string | null;
+    hasMore: boolean;
+  };
+}
+
+/**
+ * Legacy offset pagination metadata used by existing endpoints.
+ */
+export interface OffsetPaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export type PaginationMeta = CursorPaginationMeta | OffsetPaginationMeta;
+
+/**
+ * Standard API response format.
  */
 export interface ApiResponse<T = unknown> {
   success: boolean;
-  code: string;
-  message: string;
   data?: T;
+  code?: string;
+  message?: string;
   status?: number;
-  meta?: {
-    page?: number;
-    limit?: number;
-    total?: number;
-    totalPages?: number;
-  };
+  meta?: ApiResponseMeta;
 }
 
 /**
@@ -39,10 +64,5 @@ export interface PaginationParams {
  * Standard pagination response
  */
 export interface PaginatedResponse<T> extends ApiResponse<T[]> {
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+  meta: ApiResponseMeta & PaginationMeta;
 }

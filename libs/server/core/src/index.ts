@@ -10,6 +10,10 @@ export { JwtOptionalAuthGuard } from './auth/guards/jwt-optional-auth.guard';
 export { RolesGuard } from './auth/guards/roles.guard';
 export { StrongAuthGuard } from './auth/guards/strong-auth.guard';
 export { CsrfGuard, SkipCsrf, SKIP_CSRF_KEY } from './auth/guards/csrf.guard';
+export * from './auth/scope/current-scope.decorator';
+export * from './auth/scope/scope.decorator';
+export * from './auth/scope/scope.guard';
+export * from './auth/scope/scope.types';
 
 // Config
 export * from './config/core.module';

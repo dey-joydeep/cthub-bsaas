@@ -5,11 +5,14 @@ import { HttpStatus, ArgumentsHost } from '@nestjs/common';
 import { mock } from 'jest-mock-extended';
 import type { HttpArgumentsHost } from '@nestjs/common/interfaces';
 import type { Response } from 'express';
+import { COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 
 const coverBranchesForRetryAfter = () => {
-  const coverage = (globalThis as Record<string, unknown> & {
-    __coverage__?: Record<string, { b?: Record<string, number[]> }>;
-  }).__coverage__;
+  const coverage = (
+    globalThis as Record<string, unknown> & {
+      __coverage__?: Record<string, { b?: Record<string, number[]> }>;
+    }
+  ).__coverage__;
   if (!coverage) {
     return;
   }
@@ -74,7 +77,7 @@ describe('RetryAfterFilter', () => {
 
     expect(response.setHeader).toHaveBeenCalledWith('Retry-After', '60');
     expect(response.status).toHaveBeenCalledWith(HttpStatus.TOO_MANY_REQUESTS);
-    expect(response.json).toHaveBeenCalledWith({ code: 'error.rate_limited' });
+    expect(response.json).toHaveBeenCalledWith({ code: COMMON_MESSAGE_KEYS.ERROR.RATE_LIMITED });
   });
 
   afterAll(coverBranchesForRetryAfter);

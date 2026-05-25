@@ -9,15 +9,15 @@ Define test levels, coverage expectations, and verification rules for backend, f
 
 ## Test Levels
 
-| Level | Purpose | Typical location |
-| --- | --- | --- |
-| Backend unit | Verify service, controller, guard, mapper, and policy behavior in isolation. | `libs/server/**/src/**/*.spec.ts` |
+| Level               | Purpose                                                                      | Typical location                                   |
+| ------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------- |
+| Backend unit        | Verify service, controller, guard, mapper, and policy behavior in isolation. | `libs/server/**/src/**/*.spec.ts`                  |
 | Backend integration | Verify feature behavior with real database and Nest wiring where meaningful. | `libs/server/**/tests/integration/**/*.it-spec.ts` |
-| Web unit/component | Verify Angular components, services, stores, validators, and guards. | `libs/web/**/src/**/*.spec.ts` |
-| Contract | Verify OpenAPI and implementation route parity. | Scripts or project-specific contract tests. |
-| E2E smoke | Verify thin full-stack journeys and deployment wiring. | `apps/e2e/**` |
-| Accessibility | Verify keyboard, focus, semantic roles, and announcements. | Web tests and e2e. |
-| Performance/NFR | Verify latency, load, rendering, and provider failure assumptions. | Feature-specific tooling. |
+| Web unit/component  | Verify Angular components, services, stores, validators, and guards.         | `libs/web/**/src/**/*.spec.ts`                     |
+| Contract            | Verify OpenAPI and implementation route parity.                              | Scripts or project-specific contract tests.        |
+| E2E smoke           | Verify thin full-stack journeys and deployment wiring.                       | `apps/e2e/**`                                      |
+| Accessibility       | Verify keyboard, focus, semantic roles, and announcements.                   | Web tests and e2e.                                 |
+| Performance/NFR     | Verify latency, load, rendering, and provider failure assumptions.           | Feature-specific tooling.                          |
 
 ## Coverage Expectations
 
@@ -45,6 +45,7 @@ Each feature test spec must map tests to:
 - Clean up test data in `afterEach` or `afterAll` according to fixture type.
 - Do not rely on execution order.
 - Avoid real external providers; use adapters/mocks unless an e2e environment is explicitly configured.
+- Use shared request helpers from `libs/server/core/src/testing` for common cookie and bearer-auth request setup.
 
 ## Web Test Rules
 

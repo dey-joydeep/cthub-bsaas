@@ -1,6 +1,7 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import type { Request, Response, NextFunction } from 'express';
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { randomUUID } from 'node:crypto';
 
 // AsyncLocalStorage to carry correlationId through the request lifecycle
 const correlationStore = new AsyncLocalStorage<string>();
@@ -10,8 +11,7 @@ export function getCorrelationId(): string | undefined {
 }
 
 function generateCorrelationId(): string {
-  // Simple, stable prefix with random suffix
-  return 'c-' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  return `c-${randomUUID()}`;
 }
 
 @Injectable()
@@ -33,4 +33,3 @@ export class CorrelationIdMiddleware implements NestMiddleware {
 export const CorrelationId = {
   get: getCorrelationId,
 };
-

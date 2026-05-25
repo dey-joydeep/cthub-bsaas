@@ -1,13 +1,13 @@
 openapi: 3.1.0
 info:
   title: CTHub Auth API
-  version: "1.0.0"
+  version: '1.0.0'
   description: |
     Implementation-aligned Auth API.
     - Cookies (AT/RT) with SameSite=Lax; XSRF double-submit
     - Refresh token is read from cookie `bsaas_rt`; body is accepted only when cookie is absent
     - If both cookie and body refresh tokens are provided, the request is rejected (400)
-    - Success responses are wrapped by `{ success: true, data }`.
+    - Success responses are wrapped by `{ success: true, data, meta?: { correlationId } }`.
     - Error responses are wrapped by `{ success: false, code, message, details?, meta?: { correlationId } }`.
 servers:
   - url: https://api.example.com
@@ -25,6 +25,9 @@ components:
     ApiError:
       type: object
       properties:
+        success:
+          type: boolean
+          const: false
         code:
           type: string
           description: Stable error code identifier
@@ -41,7 +44,7 @@ components:
           properties:
             correlationId:
               type: string
-      required: [code, message]
+      required: [success, code, message]
     LoginDto:
       type: object
       properties:
@@ -119,7 +122,7 @@ components:
           format: email
         otp:
           type: string
-          pattern: "^[0-9]{6}$"
+          pattern: '^[0-9]{6}$'
     TotpLoginDto:
       type: object
       properties:
@@ -127,7 +130,7 @@ components:
           type: string
         totpCode:
           type: string
-          pattern: "^[0-9]{6}$"
+          pattern: '^[0-9]{6}$'
       required: [tempToken, totpCode]
     PartnerRegistrationCompleteDto:
       type: object

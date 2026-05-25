@@ -8,7 +8,6 @@ import {
   TOTP_PORT,
   WEB_AUTHN_PORT,
   RECOVERY_CODES_PORT,
-
   type RecoveryCodesPort,
   type WebAuthnPort,
   type RegistrationCompleteInput,
@@ -41,7 +40,9 @@ describe('AuthController (Integration) - success flows', () => {
 
   const parseDurationToSeconds = (input?: string): number | undefined => {
     if (!input) return undefined;
-    const m = String(input).trim().match(/^(\d+)\s*([a-zA-Z])?$/);
+    const m = String(input)
+      .trim()
+      .match(/^(\d+)\s*([a-zA-Z])?$/);
     if (!m) return undefined;
     const value = parseInt(m[1], 10);
     const unit = (m[2] || 's').toLowerCase();
@@ -120,9 +121,7 @@ describe('AuthController (Integration) - success flows', () => {
   });
 
   const loginRequest = (email: string, password: string) =>
-    request(harness.app.getHttpServer())
-      .post('/auth/login')
-      .send({ email, password });
+    request(harness.app.getHttpServer()).post('/auth/login').send({ email, password });
 
   it('issues RT cookie with Max-Age per config for Customer login', async () => {
     const customer = await harness.registerUser({ roles: [UserRole.CUSTOMER] });
@@ -130,9 +129,9 @@ describe('AuthController (Integration) - success flows', () => {
     expect(res.status).toBe(200);
     const cookies = harness.toCookiesArray(res.headers['set-cookie']);
     const arr = harness.expectCookies(cookies, { requireAuth: true });
-    const expectedSec = parseDurationToSeconds(
-      configService.auth.refreshTokenExpiresInCustomer ?? configService.auth.refreshTokenExpiresInDefault,
-    ) ?? 15552000;
+    const expectedSec =
+      parseDurationToSeconds(configService.auth.refreshTokenExpiresInCustomer ?? configService.auth.refreshTokenExpiresInDefault) ??
+      15552000;
     expect(arr.some((c) => c.startsWith('bsaas_rt=') && c.includes(`Max-Age=${expectedSec}`))).toBe(true);
   });
 
@@ -151,15 +150,13 @@ describe('AuthController (Integration) - success flows', () => {
     const login = await loginRequest(customer.email, 'password');
     expect(login.status).toBe(200);
     const cookieHeader = harness.toCookiesArray(login.headers['set-cookie']);
-    const refresh = await harness
-      .withAuth(request(harness.app.getHttpServer()).post('/auth/refresh'), cookieHeader)
-      .send({});
+    const refresh = await harness.withAuth(request(harness.app.getHttpServer()).post('/auth/refresh'), cookieHeader).send({});
     expect(refresh.status).toBe(200);
     const cookies = harness.toCookiesArray(refresh.headers['set-cookie']);
     const arr = harness.expectCookies(cookies, { requireAuth: true });
-    const expectedSec = parseDurationToSeconds(
-      configService.auth.refreshTokenExpiresInCustomer ?? configService.auth.refreshTokenExpiresInDefault,
-    ) ?? 15552000;
+    const expectedSec =
+      parseDurationToSeconds(configService.auth.refreshTokenExpiresInCustomer ?? configService.auth.refreshTokenExpiresInDefault) ??
+      15552000;
     expect(arr.some((c) => c.startsWith('bsaas_rt=') && c.includes(`Max-Age=${expectedSec}`))).toBe(true);
   });
 
@@ -168,9 +165,7 @@ describe('AuthController (Integration) - success flows', () => {
     const login = await loginRequest(staff.email, 'password');
     expect(login.status).toBe(200);
     const cookieHeader = harness.toCookiesArray(login.headers['set-cookie']);
-    const refresh = await harness
-      .withAuth(request(harness.app.getHttpServer()).post('/auth/refresh'), cookieHeader)
-      .send({});
+    const refresh = await harness.withAuth(request(harness.app.getHttpServer()).post('/auth/refresh'), cookieHeader).send({});
     expect(refresh.status).toBe(200);
     const cookies = harness.toCookiesArray(refresh.headers['set-cookie']);
     const arr = harness.expectCookies(cookies, { requireAuth: true });
@@ -371,7 +366,7 @@ describe('AuthController (Integration) - success flows', () => {
         .withAuth(request(harness.app.getHttpServer()).post('/auth/login/totp'), challengeCookies)
         .send({ tempToken, totpCode: challengeCode })
         .expect(200);
-      expect(totpRes.body).toEqual({ success: true, data: {} });
+      expect(totpRes.body).toMatchObject({ success: true, data: {} });
 
       const finalCookies = harness.expectCookies(harness.toCookiesArray(totpRes.headers['set-cookie']), { requireAuth: true });
       const adminAccessToken = harness.extractCookieValue(finalCookies, 'bsaas_at');
@@ -388,19 +383,14 @@ describe('AuthController (Integration) - success flows', () => {
       it('validates owner invite and completes registration with active session', async () => {
         const { token, email, salonId } = await createOwnerInvite();
 
-        const validateRes = await request(harness.app.getHttpServer())
-          .get(`/auth/owner/registration/${token}`)
-          .expect(200);
+        const validateRes = await request(harness.app.getHttpServer()).get(`/auth/owner/registration/${token}`).expect(200);
         expect(validateRes.body.data).toEqual({ valid: true, email, salonId });
 
         const completeRes = await request(harness.app.getHttpServer())
           .post('/auth/owner/registration/complete')
           .send({ token, password: 'Password#1' })
           .expect(201);
-        const ownerCookies = harness.expectCookies(
-          harness.toCookiesArray(completeRes.headers['set-cookie']),
-          { requireAuth: true },
-        );
+        const ownerCookies = harness.expectCookies(harness.toCookiesArray(completeRes.headers['set-cookie']), { requireAuth: true });
         expect(ownerCookies.length).toBeGreaterThan(0);
         expect(completeRes.body.data).toEqual({});
       });
@@ -421,19 +411,14 @@ describe('AuthController (Integration) - success flows', () => {
       it('validates staff invite and completes registration with issued session', async () => {
         const { token, email, salonId } = await createStaffInvite();
 
-        const validateRes = await request(harness.app.getHttpServer())
-          .get(`/auth/staff/registration/${token}`)
-          .expect(200);
+        const validateRes = await request(harness.app.getHttpServer()).get(`/auth/staff/registration/${token}`).expect(200);
         expect(validateRes.body.data).toEqual({ valid: true, email, salonId });
 
         const completeRes = await request(harness.app.getHttpServer())
           .post('/auth/staff/registration/complete')
           .send({ token, password: 'Password#1' })
           .expect(201);
-        const staffCookies = harness.expectCookies(
-          harness.toCookiesArray(completeRes.headers['set-cookie']),
-          { requireAuth: true },
-        );
+        const staffCookies = harness.expectCookies(harness.toCookiesArray(completeRes.headers['set-cookie']), { requireAuth: true });
         expect(staffCookies.length).toBeGreaterThan(0);
         expect(completeRes.body.data).toEqual({});
       });
@@ -461,41 +446,28 @@ describe('AuthController (Integration) - success flows', () => {
       const loginRefreshToken = harness.extractCookieValue(loginCookies, 'bsaas_rt');
       expect(loginRefreshToken).toBeDefined();
 
-      await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/refresh'), loginCookies)
-        .send({})
-        .expect(200);
+      await harness.withAuth(request(harness.app.getHttpServer()).post('/auth/refresh'), loginCookies).send({}).expect(200);
 
-      const sessionsRes = await harness
-        .withAuth(request(harness.app.getHttpServer()).get('/auth/sessions'), loginCookies)
-        .expect(200);
+      const sessionsRes = await harness.withAuth(request(harness.app.getHttpServer()).get('/auth/sessions'), loginCookies).expect(200);
       const sessionId: string = sessionsRes.body.data[0].id;
 
-      await harness
-        .withAuth(request(harness.app.getHttpServer()).post(`/auth/sessions/revoke/${sessionId}`), loginCookies)
-        .expect(200);
+      await harness.withAuth(request(harness.app.getHttpServer()).post(`/auth/sessions/revoke/${sessionId}`), loginCookies).expect(200);
 
       // Clearing throttle counters models elapsed time between customer login attempts while keeping the real guard active.
       await harness.resetThrottle();
 
       const loginResTwo = await loginRequest(user.email, 'password').expect(200);
       const cookiesTwo = harness.expectCookies(harness.toCookiesArray(loginResTwo.headers['set-cookie']), { requireAuth: true });
-      const sessionsResTwo = await harness
-        .withAuth(request(harness.app.getHttpServer()).get('/auth/sessions'), cookiesTwo)
-        .expect(200);
+      const sessionsResTwo = await harness.withAuth(request(harness.app.getHttpServer()).get('/auth/sessions'), cookiesTwo).expect(200);
       const sessionIdTwo: string = sessionsResTwo.body.data[0].id;
 
-      await harness
-        .withAuth(request(harness.app.getHttpServer()).post(`/auth/sessions/revoke/${sessionIdTwo}`), cookiesTwo)
-        .expect(200);
+      await harness.withAuth(request(harness.app.getHttpServer()).post(`/auth/sessions/revoke/${sessionIdTwo}`), cookiesTwo).expect(200);
 
       await harness.resetThrottle();
 
       const loginResThree = await loginRequest(user.email, 'password').expect(200);
       const cookiesThree = harness.expectCookies(harness.toCookiesArray(loginResThree.headers['set-cookie']), { requireAuth: true });
-      const sessionsResThree = await harness
-        .withAuth(request(harness.app.getHttpServer()).get('/auth/sessions'), cookiesThree)
-        .expect(200);
+      const sessionsResThree = await harness.withAuth(request(harness.app.getHttpServer()).get('/auth/sessions'), cookiesThree).expect(200);
       const sessionIdThree: string = sessionsResThree.body.data[0].id;
 
       await harness
@@ -504,18 +476,12 @@ describe('AuthController (Integration) - success flows', () => {
 
       const loginResFour = await loginRequest(user.email, 'password').expect(200);
       const cookiesFour = harness.expectCookies(harness.toCookiesArray(loginResFour.headers['set-cookie']), { requireAuth: true });
-      const sessionsResFour = await harness
-        .withAuth(request(harness.app.getHttpServer()).get('/auth/sessions'), cookiesFour)
-        .expect(200);
+      const sessionsResFour = await harness.withAuth(request(harness.app.getHttpServer()).get('/auth/sessions'), cookiesFour).expect(200);
       const sessionIdFour: string = sessionsResFour.body.data[0].id;
 
-      await harness
-        .withAuth(request(harness.app.getHttpServer()).post(`/auth/sessions/revoke/${sessionIdFour}`), cookiesFour)
-        .expect(200);
+      await harness.withAuth(request(harness.app.getHttpServer()).post(`/auth/sessions/revoke/${sessionIdFour}`), cookiesFour).expect(200);
 
-      await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/logout'), cookiesFour)
-        .expect(200);
+      await harness.withAuth(request(harness.app.getHttpServer()).post('/auth/logout'), cookiesFour).expect(200);
     });
 
     it('allows bearer Authorization header without cookies on protected routes', async () => {
@@ -526,10 +492,7 @@ describe('AuthController (Integration) - success flows', () => {
       const accessToken = harness.extractCookieValue(cookies, 'bsaas_at');
       expect(accessToken).toBeDefined();
 
-      await request(harness.app.getHttpServer())
-        .get('/auth/sessions')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .expect(200);
+      await request(harness.app.getHttpServer()).get('/auth/sessions').set('Authorization', `Bearer ${accessToken}`).expect(200);
     });
 
     it('logs out active sessions and clears persisted session records', async () => {
@@ -541,9 +504,7 @@ describe('AuthController (Integration) - success flows', () => {
       const sessionsBeforeLogout = await harness.prisma.session.findMany({ where: { userId: user.id } });
       expect(sessionsBeforeLogout.length).toBeGreaterThan(0);
 
-      await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/logout'), cookies)
-        .expect(200);
+      await harness.withAuth(request(harness.app.getHttpServer()).post('/auth/logout'), cookies).expect(200);
 
       const sessionsAfterLogout = await harness.prisma.session.findMany({ where: { userId: user.id } });
       expect(sessionsAfterLogout).toHaveLength(0);
@@ -560,7 +521,10 @@ describe('AuthController (Integration) - success flows', () => {
 
       const roles = await harness.prisma.role.findMany({ orderBy: { name: 'asc' } });
       const names = roles.map((role) => role.name);
-      const expected = Object.values(UserRole).map((r) => r.toUpperCase()).slice().sort();
+      const expected = Object.values(UserRole)
+        .map((r) => r.toUpperCase())
+        .slice()
+        .sort();
       expect(names).toEqual(expected);
     });
 
@@ -569,16 +533,10 @@ describe('AuthController (Integration) - success flows', () => {
       const agent = request(harness.app.getHttpServer());
 
       for (let i = 0; i < 5; i += 1) {
-        await agent
-          .post('/auth/login')
-          .send({ email: user.email, password: 'wrong-password' })
-          .expect(401);
+        await agent.post('/auth/login').send({ email: user.email, password: 'wrong-password' }).expect(401);
       }
 
-      await agent
-        .post('/auth/login')
-        .send({ email: user.email, password: 'wrong-password' })
-        .expect(429);
+      await agent.post('/auth/login').send({ email: user.email, password: 'wrong-password' }).expect(429);
     });
 
     it('completes TOTP challenge flow', async () => {
@@ -609,7 +567,7 @@ describe('AuthController (Integration) - success flows', () => {
         .withAuth(request(harness.app.getHttpServer()).post('/auth/login/totp'), totpCookies)
         .send({ tempToken, totpCode: challengeCode })
         .expect(200);
-      expect(totpResponse.body).toEqual({ success: true, data: {} });
+      expect(totpResponse.body).toMatchObject({ success: true, data: {} });
 
       const credential = await harness.prisma.credentialTOTP.findUnique({ where: { userId: user.id } });
       expect(credential?.verified).toBe(true);
@@ -621,9 +579,7 @@ describe('AuthController (Integration) - success flows', () => {
       const loginRes = await loginRequest(user.email, 'password').expect(200);
       const cookies = harness.expectCookies(harness.toCookiesArray(loginRes.headers['set-cookie']), { requireAuth: true });
 
-      const setupRes = await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/totp/enroll/start'), cookies)
-        .expect(200);
+      const setupRes = await harness.withAuth(request(harness.app.getHttpServer()).post('/auth/totp/enroll/start'), cookies).expect(200);
       expect(setupRes.body.qrCodeDataUrl).toBeDefined();
       const setupSecret = await decryptTotpSecret(user.id);
 
@@ -651,9 +607,7 @@ describe('AuthController (Integration) - success flows', () => {
       const loginRes = await loginRequest(user.email, 'password').expect(200);
       const cookies = harness.expectCookies(harness.toCookiesArray(loginRes.headers['set-cookie']), { requireAuth: true });
 
-      const generateRes = await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/recovery/generate'), cookies)
-        .expect(200);
+      const generateRes = await harness.withAuth(request(harness.app.getHttpServer()).post('/auth/recovery/generate'), cookies).expect(200);
       expect(Array.isArray(generateRes.body.data)).toBe(true);
       expect(generateRes.body.data).toHaveLength(10);
 
@@ -664,7 +618,6 @@ describe('AuthController (Integration) - success flows', () => {
         .withAuth(request(harness.app.getHttpServer()).post('/auth/recovery/verify'), cookies)
         .send({ code: codes[0] })
         .expect(200);
-
     });
 
     it('handles password reset and change lifecycle', async () => {
@@ -676,10 +629,7 @@ describe('AuthController (Integration) - success flows', () => {
       const sessionsBeforeReset = await harness.prisma.session.findMany({ where: { userId: user.id } });
       expect(sessionsBeforeReset.length).toBeGreaterThan(0);
 
-      await request(harness.app.getHttpServer())
-        .post('/auth/password/forgot')
-        .send({ email: user.email })
-        .expect(202);
+      await request(harness.app.getHttpServer()).post('/auth/password/forgot').send({ email: user.email }).expect(202);
 
       const resetEmail = harness.sentEmails.find((mail) => mail.subject.includes('Password Reset')) ?? harness.sentEmails[0];
       const resetToken = resetEmail?.body.split(': ').pop()?.trim();
@@ -719,10 +669,7 @@ describe('AuthController (Integration) - success flows', () => {
       const changeToken = changeEmail?.body.split(': ').pop()?.trim();
       expect(changeToken).toBeDefined();
 
-      await request(harness.app.getHttpServer())
-        .post('/auth/email/change/confirm')
-        .send({ token: changeToken })
-        .expect(200);
+      await request(harness.app.getHttpServer()).post('/auth/email/change/confirm').send({ token: changeToken }).expect(200);
 
       const updated = await harness.prisma.user.findUnique({ where: { id: user.id } });
       expect(updated?.email).toBe(newEmail);
@@ -731,20 +678,14 @@ describe('AuthController (Integration) - success flows', () => {
     it('verifies email using OTP and token branches', async () => {
       const user = await harness.registerUser({ email: `verify-${randomUUID()}@example.com`, emailVerifiedAt: null, isVerified: false });
 
-      await request(harness.app.getHttpServer())
-        .post('/auth/email/verify/request')
-        .send({ email: user.email })
-        .expect(202);
+      await request(harness.app.getHttpServer()).post('/auth/email/verify/request').send({ email: user.email }).expect(202);
 
       const otpEmail = harness.sentEmails.find((mail) => mail.subject.includes('Verify your email')) ?? harness.sentEmails[0];
       const otpMatch = otpEmail.body.match(/code is: (\d{6})/);
       const otp = otpMatch?.[1];
       expect(otp).toBeDefined();
 
-      await request(harness.app.getHttpServer())
-        .post('/auth/email/verify/confirm')
-        .send({ email: user.email, otp })
-        .expect(200);
+      await request(harness.app.getHttpServer()).post('/auth/email/verify/confirm').send({ email: user.email, otp }).expect(200);
 
       const verifyToken = await harness.jwtService.signAsync(
         { sub: user.id, aud: 'verify' },
@@ -756,14 +697,10 @@ describe('AuthController (Integration) - success flows', () => {
         .send({ token: verifyToken })
         .expect(200);
       expect(aliasConfirmRes.body.data).toEqual({ success: true });
-
-
     });
 
     it('starts OAuth login by redirecting to provider', async () => {
-      const startRes = await request(harness.app.getHttpServer())
-        .get('/auth/oauth/google/start')
-        .expect(302);
+      const startRes = await request(harness.app.getHttpServer()).get('/auth/oauth/google/start').expect(302);
 
       expect(startRes.headers.location).toBeDefined();
     });
@@ -777,14 +714,12 @@ describe('AuthController (Integration) - success flows', () => {
         await harness.prisma.socialAccount.create({
           data: { userId: user.id, provider: 'google', providerUserId: computeProviderUserId(code) },
         });
-        const res = await request(harness.app.getHttpServer())
-          .get(`/auth/oauth/google/callback?code=${code}`)
-          .expect(200);
+        const res = await request(harness.app.getHttpServer()).get(`/auth/oauth/google/callback?code=${code}`).expect(200);
         const cookies = harness.toCookiesArray(res.headers['set-cookie']);
         const arr = harness.expectCookies(cookies, { requireAuth: true });
-        const expectedSec = parseDurationToSeconds(
-          configService.auth.refreshTokenExpiresInCustomer ?? configService.auth.refreshTokenExpiresInDefault,
-        ) ?? 15552000;
+        const expectedSec =
+          parseDurationToSeconds(configService.auth.refreshTokenExpiresInCustomer ?? configService.auth.refreshTokenExpiresInDefault) ??
+          15552000;
         expect(arr.some((c) => c.startsWith('bsaas_rt=') && c.includes(`Max-Age=${expectedSec}`))).toBe(true);
       } finally {
         setRoutePublicFlag(OauthController, 'oauthCallback', originalFlag);
@@ -803,9 +738,7 @@ describe('AuthController (Integration) - success flows', () => {
           data: { userId: user.id, provider: 'google', providerUserId: computeProviderUserId(signInCode) },
         });
 
-        await request(harness.app.getHttpServer())
-          .get(`/auth/oauth/google/callback?code=${signInCode}`)
-          .expect(200);
+        await request(harness.app.getHttpServer()).get(`/auth/oauth/google/callback?code=${signInCode}`).expect(200);
 
         const loginRes = await loginRequest(user.email, 'password').expect(200);
         const cookies = harness.expectCookies(harness.toCookiesArray(loginRes.headers['set-cookie']), { requireAuth: true });
@@ -822,15 +755,11 @@ describe('AuthController (Integration) - success flows', () => {
         });
         expect(linkedAccount).toBeTruthy();
 
-        await harness
-          .withAuth(request(harness.app.getHttpServer()).post('/auth/oauth/google/unlink'), cookies)
-          .expect(200);
+        await harness.withAuth(request(harness.app.getHttpServer()).post('/auth/oauth/google/unlink'), cookies).expect(200);
 
         await harness.prisma.socialAccount.create({
           data: { userId: user.id, provider: 'google', providerUserId: computeProviderUserId('unlink-delete') },
         });
-
-        
       } finally {
         setRoutePublicFlag(OauthController, 'oauthCallback', originalFlag);
       }
@@ -855,10 +784,7 @@ describe('AuthController (Integration) - success flows', () => {
       await harness.registerUser({ email, emailVerifiedAt: null, isVerified: false });
       harness.resetEmails();
 
-      await request(harness.app.getHttpServer())
-        .post('/auth/register')
-        .send({ email, password: 'Password#1' })
-        .expect(201);
+      await request(harness.app.getHttpServer()).post('/auth/register').send({ email, password: 'Password#1' }).expect(201);
 
       const verificationMail = harness.sentEmails.find((mail) => mail.subject.includes('Verify your email'));
       expect(verificationMail).toBeDefined();
@@ -869,10 +795,7 @@ describe('AuthController (Integration) - success flows', () => {
       await harness.registerUser({ email });
       harness.resetEmails();
 
-      await request(harness.app.getHttpServer())
-        .post('/auth/register')
-        .send({ email, password: 'Password#1' })
-        .expect(201);
+      await request(harness.app.getHttpServer()).post('/auth/register').send({ email, password: 'Password#1' }).expect(201);
 
       expect(harness.sentEmails.length).toBe(0);
     });
@@ -892,15 +815,13 @@ describe('AuthController (Integration) - success flows', () => {
     it('allows webauthn login start via explicit userId payload', async () => {
       const user = await harness.registerUser();
 
-      const startRes = await request(harness.app.getHttpServer())
-        .post('/auth/webauthn/login/start')
-        .send({ userId: user.id })
-        .expect(200);
+      const startRes = await request(harness.app.getHttpServer()).post('/auth/webauthn/login/start').send({ userId: user.id }).expect(200);
       expect(startRes.body.success).toBe(true);
     });
 
     it('extractUserId handles fallback id and missing user branches', () => {
-      const extractor = (harness.app.get(WebauthnController) as unknown as { extractUserId: (u?: AuthenticatedUser) => string | undefined }).extractUserId;
+      const extractor = (harness.app.get(WebauthnController) as unknown as { extractUserId: (u?: AuthenticatedUser) => string | undefined })
+        .extractUserId;
       expect(extractor(undefined)).toBeUndefined();
       expect(extractor({ id: 'fallback-id' } as unknown as AuthenticatedUser)).toBe('fallback-id');
       expect(extractor({ id: '' } as unknown as AuthenticatedUser)).toBeUndefined();
@@ -936,7 +857,6 @@ describe('AuthController (Integration) - success flows', () => {
         controller = await harness.app.resolve(AuthController, controllerContext);
         controllerAuthService = Reflect.get(controller as unknown as object, 'authService') as AuthService;
         controllerCookies = Reflect.get(controller as unknown as object, 'authCookies') as AuthCookiesService;
-
       });
 
       afterEach(() => {
@@ -975,18 +895,10 @@ describe('AuthController (Integration) - success flows', () => {
 
       it('covers refresh token cookie/body branches', async () => {
         const rotateSpy = jest.spyOn(controllerCookies, 'rotateOnRefresh').mockImplementation(() => undefined);
-        jest
-          .spyOn(controllerAuthService, 'refreshToken')
-          .mockResolvedValue({ accessToken: 'a', refreshToken: 'r' });
+        jest.spyOn(controllerAuthService, 'refreshToken').mockResolvedValue({ accessToken: 'a', refreshToken: 'r' });
 
-        await controller.refresh(
-          {} as RefreshTokenDto,
-          { headers: { cookie: 'bsaas_rt=cookie-token' } } as unknown as ExpressRequest,
-        );
-        expect(rotateSpy).toHaveBeenCalledWith(
-          expect.objectContaining({ refreshToken: 'r' }),
-          expect.any(Object),
-        );
+        await controller.refresh({} as RefreshTokenDto, { headers: { cookie: 'bsaas_rt=cookie-token' } } as unknown as ExpressRequest);
+        expect(rotateSpy).toHaveBeenCalledWith(expect.objectContaining({ refreshToken: 'r' }), expect.any(Object));
 
         await controller.refresh({ refreshToken: 'body-token' } as RefreshTokenDto, { headers: {} } as unknown as ExpressRequest);
         expect(rotateSpy).toHaveBeenCalledTimes(2);
@@ -998,18 +910,12 @@ describe('AuthController (Integration) - success flows', () => {
         const verifySpy = jest.spyOn(recoveryCodes, 'verifyAndConsume');
         verifySpy.mockResolvedValueOnce(false);
         await expect(
-          recoveryController.verifyRecovery(
-            { code: 'bad' },
-            { user: buildJwtUser() } as unknown as { user: { userId: string } },
-          ),
+          recoveryController.verifyRecovery({ code: 'bad' }, { user: buildJwtUser() } as unknown as { user: { userId: string } }),
         ).rejects.toThrow(BadRequestException);
 
         verifySpy.mockResolvedValueOnce(true);
         await expect(
-          recoveryController.verifyRecovery(
-            { code: 'good' },
-            { user: buildJwtUser() } as unknown as { user: { userId: string } },
-          ),
+          recoveryController.verifyRecovery({ code: 'good' }, { user: buildJwtUser() } as unknown as { user: { userId: string } }),
         ).resolves.toEqual({ success: true });
       });
 
@@ -1019,9 +925,10 @@ describe('AuthController (Integration) - success flows', () => {
 
         const totpResult: AuthSignInResult = { totpRequired: true, tempToken: 'temp-token' };
         signInSpy.mockResolvedValueOnce(totpResult);
-        await expect(
-          controller.signIn({ email: 'totp@example.com', password: 'Password#1' } as LoginDto),
-        ).resolves.toEqual({ totpRequired: true, tempToken: 'temp-token' });
+        await expect(controller.signIn({ email: 'totp@example.com', password: 'Password#1' } as LoginDto)).resolves.toEqual({
+          totpRequired: true,
+          tempToken: 'temp-token',
+        });
         expect(cookieSpy).toHaveBeenNthCalledWith(
           1,
           expect.objectContaining({ accessToken: undefined, refreshToken: undefined }),
@@ -1034,9 +941,9 @@ describe('AuthController (Integration) - success flows', () => {
           refreshToken: 'refresh',
         };
         signInSpy.mockResolvedValueOnce(tokenResult);
-        await expect(
-          controller.signIn({ email: 'regular@example.com', password: 'Password#1' } as LoginDto),
-        ).resolves.toEqual({ totpRequired: false });
+        await expect(controller.signIn({ email: 'regular@example.com', password: 'Password#1' } as LoginDto)).resolves.toEqual({
+          totpRequired: false,
+        });
         expect(cookieSpy).toHaveBeenNthCalledWith(
           2,
           expect.objectContaining({ accessToken: 'access', refreshToken: 'refresh' }),
@@ -1045,9 +952,9 @@ describe('AuthController (Integration) - success flows', () => {
       });
 
       it('covers refresh missing token branch', async () => {
-        await expect(
-          controller.refresh({} as RefreshTokenDto, { headers: {} } as unknown as ExpressRequest),
-        ).rejects.toThrow(BadRequestException);
+        await expect(controller.refresh({} as RefreshTokenDto, { headers: {} } as unknown as ExpressRequest)).rejects.toThrow(
+          BadRequestException,
+        );
       });
 
       it('covers webauthn login start branches', async () => {
@@ -1073,8 +980,6 @@ describe('AuthController (Integration) - success flows', () => {
         expect((startSpy as jest.Mock).mock.calls.length).toBeGreaterThanOrEqual(2);
       });
 
-
-
       it('covers oauth callback missing code branch', async () => {
         const oauthController = await harness.app.resolve(OauthController, controllerContext);
         expect(() => oauthController.oauthCallback('google', undefined, undefined, undefined)).toThrow(BadRequestException);
@@ -1082,11 +987,10 @@ describe('AuthController (Integration) - success flows', () => {
 
       it('covers email verification invalid input branch', async () => {
         const emailController = await harness.app.resolve(EmailController, controllerContext);
-        expect(() =>
-          emailController.emailVerifyConfirm({} as unknown as { token?: string; email?: string; otp?: string }),
-        ).toThrow(BadRequestException);
+        expect(() => emailController.emailVerifyConfirm({} as unknown as { token?: string; email?: string; otp?: string })).toThrow(
+          BadRequestException,
+        );
       });
-
     });
 
     describe('auth cookies service coverage', () => {
@@ -1254,9 +1158,9 @@ describe('AuthController (Integration) - success flows', () => {
         expect(loginFinishRes.body.data).toEqual({});
         const finCookies = harness.toCookiesArray(loginFinishRes.headers['set-cookie']);
         const arr = harness.expectCookies(finCookies, { requireAuth: true });
-        const expectedSec = parseDurationToSeconds(
-          configService.auth.refreshTokenExpiresInCustomer ?? configService.auth.refreshTokenExpiresInDefault,
-        ) ?? 15552000;
+        const expectedSec =
+          parseDurationToSeconds(configService.auth.refreshTokenExpiresInCustomer ?? configService.auth.refreshTokenExpiresInDefault) ??
+          15552000;
         expect(arr.some((c) => c.startsWith('bsaas_rt=') && c.includes(`Max-Age=${expectedSec}`))).toBe(true);
       } finally {
         setRoutePublicFlag(WebauthnController, 'webauthnLoginFinish', originalFinishFlag);
@@ -1297,12 +1201,13 @@ describe('AuthController (Integration) - success flows', () => {
     });
 
     it('requests email verification via alias endpoint', async () => {
-      const user = await harness.registerUser({ email: `verify-request-${randomUUID()}@example.com`, emailVerifiedAt: null, isVerified: false });
+      const user = await harness.registerUser({
+        email: `verify-request-${randomUUID()}@example.com`,
+        emailVerifiedAt: null,
+        isVerified: false,
+      });
 
-      await request(harness.app.getHttpServer())
-        .post('/auth/email/verify/request')
-        .send({ email: user.email })
-        .expect(202);
+      await request(harness.app.getHttpServer()).post('/auth/email/verify/request').send({ email: user.email }).expect(202);
 
       const otpEmail = harness.sentEmails.find((mail) => mail.subject.includes('Verify your email'));
       expect(otpEmail).toBeDefined();
@@ -1316,16 +1221,17 @@ describe('AuthController (Integration) - success flows', () => {
     });
 
     it('confirms email verification with a valid token', async () => {
-      const user = await harness.registerUser({ email: `verify-success-${randomUUID()}@example.com`, emailVerifiedAt: null, isVerified: false });
+      const user = await harness.registerUser({
+        email: `verify-success-${randomUUID()}@example.com`,
+        emailVerifiedAt: null,
+        isVerified: false,
+      });
       const token = await harness.jwtService.signAsync(
         { sub: user.id, aud: 'verify' },
         { secret: configService.auth.jwtVerifyEmailSecret },
       );
 
-      await request(harness.app.getHttpServer())
-        .post('/auth/email/verify/confirm')
-        .send({ token })
-        .expect(200);
+      await request(harness.app.getHttpServer()).post('/auth/email/verify/confirm').send({ token }).expect(200);
 
       const updated = await harness.prisma.user.findUnique({ where: { id: user.id } });
       expect(updated?.emailVerifiedAt).toBeTruthy();
