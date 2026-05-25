@@ -1,0 +1,252 @@
+<section class="settings-shell">
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  }
+
+  <header class="settings-header">
+    <div>
+      <h1>Business settings</h1>
+      <p>Manage business profile, branch profile, hours, holidays, and booking policy.</p>
+    </div>
+    <button mat-stroked-button type="button" (click)="newBranch()">
+      <mat-icon>add_business</mat-icon>
+      Branch
+    </button>
+  </header>
+
+  @if (message()) {
+    <p class="status status-ok">{{ message() }}</p>
+  }
+  @if (error()) {
+    <p class="status status-error">{{ error() }}</p>
+  }
+
+  <mat-tab-group>
+    <mat-tab label="Business">
+      <div class="tab-grid">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Business profile</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <form [formGroup]="businessForm" class="form-grid" (ngSubmit)="saveBusiness()">
+              <mat-form-field appearance="outline">
+                <mat-label>Display name</mat-label>
+                <input matInput formControlName="displayName" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Legal name</mat-label>
+                <input matInput formControlName="legalName" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Status</mat-label>
+                <mat-select formControlName="status">
+                  <mat-option value="ACTIVE">Active</mat-option>
+                  <mat-option value="INACTIVE">Inactive</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <button mat-flat-button type="submit" [disabled]="saving()">Save business</button>
+            </form>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Businesses</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="list">
+              @for (business of businesses(); track business.id) {
+                <button
+                  type="button"
+                  class="list-row"
+                  [class.selected]="selectedBusiness()?.id === business.id"
+                  (click)="selectBusiness(business)"
+                >
+                  <span>{{ business.displayName }}</span>
+                  <small>{{ business.status }}</small>
+                </button>
+              } @empty {
+                <p class="empty">Create the first business profile to start branch setup.</p>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Branches" [disabled]="!hasBusiness()">
+      <div class="tab-grid">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Branch profile</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <form [formGroup]="branchForm" class="form-grid" (ngSubmit)="saveBranch()">
+              <mat-form-field appearance="outline">
+                <mat-label>Name</mat-label>
+                <input matInput formControlName="name" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Phone</mat-label>
+                <input matInput formControlName="phone" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Email</mat-label>
+                <input matInput formControlName="email" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Timezone</mat-label>
+                <input matInput formControlName="timezone" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Currency</mat-label>
+                <input matInput formControlName="currency" />
+              </mat-form-field>
+
+              <fieldset formGroupName="address">
+                <legend>Address</legend>
+                <mat-form-field appearance="outline">
+                  <mat-label>Line 1</mat-label>
+                  <input matInput formControlName="line1" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Line 2</mat-label>
+                  <input matInput formControlName="line2" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>City</mat-label>
+                  <input matInput formControlName="city" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>State</mat-label>
+                  <input matInput formControlName="state" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Postal code</mat-label>
+                  <input matInput formControlName="postalCode" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Country</mat-label>
+                  <input matInput formControlName="country" />
+                </mat-form-field>
+              </fieldset>
+
+              <button mat-flat-button type="submit" [disabled]="saving()">Save branch</button>
+            </form>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Branch list</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="list">
+              @for (branch of branches(); track branch.id) {
+                <button type="button" class="list-row" [class.selected]="selectedBranch()?.id === branch.id" (click)="selectBranch(branch)">
+                  <span>{{ branch.name }}</span>
+                  <small>{{ branch.timezone }} / {{ branch.currency }}</small>
+                </button>
+              } @empty {
+                <p class="empty">No branches are configured for this business.</p>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Hours" [disabled]="!hasBranch()">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Weekly hours</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <form [formGroup]="hoursForm" class="hours-form" (ngSubmit)="saveHours()">
+            <mat-form-field appearance="outline">
+              <mat-label>Timezone</mat-label>
+              <input matInput formControlName="timezone" />
+            </mat-form-field>
+            <div formArrayName="days" class="days">
+              @for (day of dayForms.controls; track $index) {
+                <div [formGroupName]="$index" class="day-row">
+                  <strong>{{ weekdays[$index] }}</strong>
+                  <mat-slide-toggle formControlName="open">Open</mat-slide-toggle>
+                  <div formArrayName="intervals" class="intervals">
+                    <div [formGroupName]="0" class="interval-row">
+                      <mat-form-field appearance="outline">
+                        <mat-label>Start</mat-label>
+                        <input matInput formControlName="start" />
+                      </mat-form-field>
+                      <mat-form-field appearance="outline">
+                        <mat-label>End</mat-label>
+                        <input matInput formControlName="end" />
+                      </mat-form-field>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+            <button mat-flat-button type="submit" [disabled]="saving()">Save hours</button>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </mat-tab>
+
+    <mat-tab label="Holiday" [disabled]="!hasBranch()">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Holiday or special day</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <form [formGroup]="holidayForm" class="form-grid" (ngSubmit)="saveHoliday()">
+            <mat-form-field appearance="outline">
+              <mat-label>Date</mat-label>
+              <input matInput type="date" formControlName="date" />
+            </mat-form-field>
+            <mat-slide-toggle formControlName="closed">Closed</mat-slide-toggle>
+            <mat-form-field appearance="outline">
+              <mat-label>Reason</mat-label>
+              <input matInput formControlName="reason" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Open start</mat-label>
+              <input matInput formControlName="start" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Open end</mat-label>
+              <input matInput formControlName="end" />
+            </mat-form-field>
+            <button mat-flat-button type="submit" [disabled]="saving()">Save holiday</button>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </mat-tab>
+
+    <mat-tab label="Policy" [disabled]="!hasBranch()">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Booking policy</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <form [formGroup]="policyForm" class="form-grid" (ngSubmit)="savePolicy()">
+            <mat-form-field appearance="outline">
+              <mat-label>Booking lead minutes</mat-label>
+              <input matInput type="number" formControlName="bookingLeadMinutes" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Cancellation cutoff minutes</mat-label>
+              <input matInput type="number" formControlName="cancellationCutoffMinutes" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>No-show grace minutes</mat-label>
+              <input matInput type="number" formControlName="noShowGraceMinutes" />
+            </mat-form-field>
+            <button mat-flat-button type="submit" [disabled]="saving()">Save policy</button>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </mat-tab>
+  </mat-tab-group>
+</section>

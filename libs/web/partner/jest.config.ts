@@ -2,14 +2,15 @@
 export default {
   displayName: 'web-partner',
   preset: '../../../jest.preset.cjs',
+  testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../../coverage/libs/web/partner',
   transform: {
-    '^.+\.(ts|mjs|js|html)$ ': [
+    '^.+\\.(ts|mjs|js|html)$': [
       'jest-preset-angular',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
-        stringifyContentPathRegex: '\\.(html|svg)$ ',
+        stringifyContentPathRegex: '\\.(html|svg)$',
       },
     ],
   },
