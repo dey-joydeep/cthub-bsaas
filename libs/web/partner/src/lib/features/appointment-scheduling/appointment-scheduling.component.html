@@ -1,0 +1,169 @@
+<section class="appointment-shell">
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  }
+
+  <header class="appointment-header">
+    <div>
+      <h1>Appointments</h1>
+      <p>Book visits, find slots, manage walk-ins, and move appointments through the service lifecycle.</p>
+    </div>
+  </header>
+
+  @if (message()) {
+    <p class="status status-ok">{{ message() }}</p>
+  }
+  @if (error()) {
+    <p class="status status-error">{{ error() }}</p>
+  }
+
+  <div class="appointment-grid">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Booking</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="appointmentForm" class="form-grid" (ngSubmit)="createAppointment()">
+          <mat-form-field appearance="outline">
+            <mat-label>Branch</mat-label>
+            <mat-select formControlName="branchId">
+              @for (branch of branches(); track branch.id) {
+                <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Customer</mat-label>
+            <mat-select formControlName="customerId">
+              @for (customer of customers(); track customer.id) {
+                <mat-option [value]="customer.id">{{ customer.displayName }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Service</mat-label>
+            <mat-select formControlName="serviceId">
+              @for (service of services(); track service.id) {
+                <mat-option [value]="service.id">{{ service.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Staff</mat-label>
+            <mat-select formControlName="staffId">
+              @for (member of staff(); track member.id) {
+                <mat-option [value]="member.id">{{ member.displayName }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Starts at</mat-label>
+            <input matInput type="datetime-local" formControlName="startsAt" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Walk-in wait minutes</mat-label>
+            <input matInput type="number" formControlName="estimatedWaitMinutes" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Notes</mat-label>
+            <input matInput formControlName="notes" />
+          </mat-form-field>
+          <div class="button-row">
+            <button mat-flat-button type="submit" [disabled]="saving()">Book</button>
+            <button mat-stroked-button type="button" [disabled]="saving()" (click)="createWalkIn()">Walk-in</button>
+            <button mat-stroked-button type="button" [disabled]="saving()" (click)="findSlots()">Slots</button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Slots</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="list">
+          @for (slot of slots(); track slot.staffId + slot.startsAt) {
+            <button type="button" class="list-row" (click)="useSlot(slot)">
+              <span>{{ staffName(slot.staffId) }}</span>
+              <small>{{ slot.startsAt | date: 'shortTime' }} - {{ slot.endsAt | date: 'shortTime' }}</small>
+            </button>
+          } @empty {
+            <p class="empty">No slot results loaded.</p>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="appointment-grid">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Day board</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="boardForm" class="board-form" (ngSubmit)="loadBoard()">
+          <mat-form-field appearance="outline">
+            <mat-label>Branch</mat-label>
+            <mat-select formControlName="branchId">
+              @for (branch of branches(); track branch.id) {
+                <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Date</mat-label>
+            <input matInput type="date" formControlName="date" />
+          </mat-form-field>
+          <button mat-flat-button type="submit" [disabled]="saving()">Load board</button>
+        </form>
+        <div class="list">
+          @for (appointment of appointments(); track appointment.id) {
+            <button
+              type="button"
+              class="list-row"
+              [class.selected]="selectedAppointment()?.id === appointment.id"
+              (click)="selectAppointment(appointment)"
+            >
+              <span>{{ appointment.status }}</span>
+              <small>{{ appointment.lines[0].startsAt | date: 'short' }}</small>
+            </button>
+          } @empty {
+            <p class="empty">No appointments loaded.</p>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Lifecycle</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="selected-summary">
+          <strong>{{ selectedAppointment()?.status ?? 'No appointment selected' }}</strong>
+          <span>{{ selectedAppointment()?.lines?.[0]?.serviceName ?? serviceName(appointmentForm.controls.serviceId.value) }}</span>
+        </div>
+        <div class="button-grid">
+          <button mat-stroked-button type="button" [disabled]="saving() || !selectedAppointment()" (click)="runAction('confirm')">Confirm</button>
+          <button mat-stroked-button type="button" [disabled]="saving() || !selectedAppointment()" (click)="runAction('arrive')">Arrive</button>
+          <button mat-stroked-button type="button" [disabled]="saving() || !selectedAppointment()" (click)="runAction('start')">Start</button>
+          <button mat-stroked-button type="button" [disabled]="saving() || !selectedAppointment()" (click)="runAction('complete')">Complete</button>
+          <button mat-stroked-button type="button" [disabled]="saving() || !selectedAppointment()" (click)="runAction('no-show')">No-show</button>
+          <button mat-stroked-button type="button" [disabled]="saving() || !selectedAppointment()" (click)="runAction('cancel')">Cancel</button>
+        </div>
+        <form [formGroup]="rescheduleForm" class="reschedule-form" (ngSubmit)="reschedule()">
+          <mat-form-field appearance="outline">
+            <mat-label>New start</mat-label>
+            <input matInput type="datetime-local" formControlName="startsAt" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Reason</mat-label>
+            <input matInput formControlName="reason" />
+          </mat-form-field>
+          <button mat-flat-button type="submit" [disabled]="saving() || !selectedAppointment()">Reschedule</button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</section>
