@@ -35,6 +35,13 @@ const implementedOperationIds = new Set([
   'updateService',
   'updateServiceStatus',
   'replaceServiceStaffEligibility',
+  'searchCustomers',
+  'createCustomer',
+  'getCustomer',
+  'updateCustomer',
+  'createCustomerNote',
+  'updateCustomerCommunicationPreferences',
+  'getCustomerVisitHistory',
 ]);
 
 interface ControllerRoute {

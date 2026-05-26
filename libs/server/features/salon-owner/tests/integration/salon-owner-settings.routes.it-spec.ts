@@ -4,8 +4,10 @@ import request from 'supertest';
 
 import { BranchSettingsController } from '../../src/lib/controllers/branch-settings.controller';
 import { BusinessSettingsController } from '../../src/lib/controllers/business-settings.controller';
+import { CustomerCrmController } from '../../src/lib/controllers/customer-crm.controller';
 import { ServiceCatalogController } from '../../src/lib/controllers/service-catalog.controller';
 import { StaffController } from '../../src/lib/controllers/staff.controller';
+import { CustomerCrmService } from '../../src/lib/services/customer-crm.service';
 import { SalonOwnerSettingsService } from '../../src/lib/services/salon-owner-settings.service';
 import { StaffServiceCatalogService } from '../../src/lib/services/staff-service-catalog.service';
 
@@ -21,13 +23,17 @@ describe('Salon owner settings routes', () => {
     createStaff: jest.fn(),
     createService: jest.fn(),
   };
+  const customers = {
+    createCustomer: jest.fn(),
+  };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
-      controllers: [BusinessSettingsController, BranchSettingsController, StaffController, ServiceCatalogController],
+      controllers: [BusinessSettingsController, BranchSettingsController, StaffController, ServiceCatalogController, CustomerCrmController],
       providers: [
         { provide: SalonOwnerSettingsService, useValue: service },
         { provide: StaffServiceCatalogService, useValue: catalog },
+        { provide: CustomerCrmService, useValue: customers },
       ],
     }).compile();
 
@@ -206,6 +212,25 @@ describe('Salon owner settings routes', () => {
     expect(catalog.createService).toHaveBeenCalledWith(
       { user: expect.objectContaining({ tenantId: 'tenant-1' }) },
       expect.objectContaining({ name: 'Cut', categoryId: '00000000-0000-4000-8000-000000000001' }),
+    );
+  });
+
+  it('validates customer payloads before invoking the CRM service', async () => {
+    await request(app.getHttpServer()).post('/partner/customers').send({ displayName: 'A' }).expect(400);
+    expect(customers.createCustomer).not.toHaveBeenCalled();
+  });
+
+  it('routes valid customer requests to the CRM service', async () => {
+    customers.createCustomer.mockResolvedValue({ id: 'customer-1' });
+
+    await request(app.getHttpServer())
+      .post('/partner/customers')
+      .send({ displayName: 'Customer One', phone: '09000000001', consentForMarketing: true })
+      .expect(201);
+
+    expect(customers.createCustomer).toHaveBeenCalledWith(
+      { user: expect.objectContaining({ tenantId: 'tenant-1' }) },
+      expect.objectContaining({ displayName: 'Customer One' }),
     );
   });
 });
