@@ -16,6 +16,8 @@ const slice3OperationIds = new Set([
   'replaceBranchHours',
   'setBranchHoliday',
   'updateBranchPolicy',
+  'getOwnerDashboard',
+  'listDashboardAlerts',
 ]);
 
 interface ControllerRoute {
