@@ -12,6 +12,10 @@ export const OWNER_ROUTES: Routes = [
     pathMatch: 'full',
   },
   {
+    path: 'dashboard',
+    component: OwnerDashboardComponent,
+  },
+  {
     path: 'salon',
     component: SalonManagementComponent,
   },
