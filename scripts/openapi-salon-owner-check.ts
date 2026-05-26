@@ -4,7 +4,7 @@ import path from 'path';
 const repoRoot = process.cwd();
 const controllersDir = path.join(repoRoot, 'libs/server/features/salon-owner/src/lib/controllers');
 const openapiPath = path.join(repoRoot, 'docs/specs/salon-owner/API/openapi.yaml');
-const slice3OperationIds = new Set([
+const implementedOperationIds = new Set([
   'listSalonBusinesses',
   'createSalonBusiness',
   'getSalonBusiness',
@@ -19,6 +19,22 @@ const slice3OperationIds = new Set([
   'replaceBranchHours',
   'setBranchHoliday',
   'updateBranchPolicy',
+  'listStaff',
+  'createStaff',
+  'getStaff',
+  'updateStaff',
+  'replaceStaffRoles',
+  'replaceStaffSkills',
+  'replaceStaffShifts',
+  'createStaffLeaveBlock',
+  'listServiceCategories',
+  'createServiceCategory',
+  'listServices',
+  'createService',
+  'getService',
+  'updateService',
+  'updateServiceStatus',
+  'replaceServiceStaffEligibility',
 ]);
 
 interface ControllerRoute {
@@ -101,7 +117,7 @@ function extractSpecRoutes(yaml: string): SpecRoute[] {
   let currentOperationId: string | undefined;
 
   const flush = () => {
-    if (currentPath && currentMethod && currentOperationId && slice3OperationIds.has(currentOperationId)) {
+    if (currentPath && currentMethod && currentOperationId && implementedOperationIds.has(currentOperationId)) {
       routes.push({ method: currentMethod, path: currentPath, operationId: currentOperationId });
     }
   };
@@ -150,7 +166,7 @@ function main(): void {
     .readdirSync(controllersDir)
     .filter((file) => file.endsWith('.ts') && !file.endsWith('.spec.ts'))
     .flatMap((file) => extractControllerRoutes(read(path.join(controllersDir, file))))
-    .filter((route) => route.operationId && slice3OperationIds.has(route.operationId));
+    .filter((route) => route.operationId && implementedOperationIds.has(route.operationId));
   const specRoutes = extractSpecRoutes(read(openapiPath));
   const implByOperation = new Map(implRoutes.map((route) => [route.operationId, route]));
   const missingInImpl = specRoutes
