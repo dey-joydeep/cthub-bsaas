@@ -39,6 +39,18 @@ const implementedOperationIds = new Set([
   'createCustomerNote',
   'updateCustomerCommunicationPreferences',
   'getCustomerVisitHistory',
+  'getAppointmentDayBoard',
+  'findAppointmentSlots',
+  'createAppointment',
+  'createWalkInAppointment',
+  'getAppointment',
+  'rescheduleAppointment',
+  'confirmAppointment',
+  'cancelAppointment',
+  'markAppointmentNoShow',
+  'markAppointmentArrived',
+  'startAppointmentService',
+  'completeAppointment',
 ]);
 
 interface ControllerRoute {
