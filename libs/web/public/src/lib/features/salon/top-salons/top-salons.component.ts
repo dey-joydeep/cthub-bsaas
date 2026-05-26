@@ -1,30 +1,17 @@
-﻿import { PlatformUtils, PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
-import { Component, Input, OnInit, Inject, PLATFORM_ID, Type } from '@angular/core';
+import { PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
+import { Component, Inject, Input, OnInit, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { SalonService } from '../services/salon.service';
-import { Salon, ISalonDto } from './model/top-salons.model';
+import { RouterModule } from '@angular/router';
 import type { PlatformUtils } from '@cthub-bsaas/web-core-platform';
 
-// Extend ISalonDto with any additional properties needed for this component
-export type Salon = ISalonDto & {
-  distance?: number;
-  isVerified?: boolean;
-  // Add any other properties that might be needed
-  latitude?: number;
-  longitude?: number;
-  location?: {
-    type: string;
-    coordinates: [number, number]; // [lng, lat] format
-  };
-};
+import { Salon } from './model/top-salons.model';
 
 @Component({
   selector: 'app-top-salons',
   standalone: true,
-  imports: [CommonModule, RouterModule, TranslateModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './top-salons.component.html',
   styleUrls: ['./top-salons.component.scss'],
-  // Removed ChangeDetectionStrategy.OnPush as it requires careful state management
 })
 export class TopSalonsComponent implements OnInit {
   @Input() salons: Salon[] = [];
@@ -34,90 +21,59 @@ export class TopSalonsComponent implements OnInit {
   loading = true;
   error: string | null = null;
   locationDenied = false;
-
-  // Default values to prevent template errors
   defaultSalon: Partial<Salon> = {
     averageRating: 0,
     reviewCount: 0,
     address: 'Address not available',
     services: [],
   };
-
-  isBrowser: boolean;
+  readonly isBrowser: boolean;
 
   constructor(
-    private salonService: SalonService,
-    @Inject(PLATFORM_UTILS_TOKEN) private platformUtils: PlatformUtils,
-    @Inject(PLATFORM_ID) private platformId: object,
+    @Inject(PLATFORM_UTILS_TOKEN) private readonly platformUtils: PlatformUtils,
+    @Inject(PLATFORM_ID) private readonly platformId: object,
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
   ngOnInit(): void {
-    // Only fetch salons if none were provided via input
-    if (this.salons.length === 0) {
-      if (this.isBrowser && this.platformUtils.windowRef?.navigator?.geolocation) {
-        this.platformUtils.windowRef.navigator.geolocation.getCurrentPosition(
-          (pos: GeolocationPosition) => {
-            this.fetchTopSalons(pos.coords.latitude, pos.coords.longitude);
-          },
-          (err: GeolocationPositionError) => {
-            this.locationDenied = true;
-            this.fetchTopSalons();
-          },
-          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 },
-        );
-      } else {
-        this.locationDenied = true;
-        this.fetchTopSalons();
-      }
-    } else {
-      this.loading = false;
-    }
+    this.locationDenied = this.salons.length === 0;
+    this.loading = false;
   }
 
   fetchTopSalons(lat?: number, lng?: number): void {
-    this.loading = true;
-    this.error = null;
-
-    this.salonService.getTopSalons(lat, lng).subscribe({
-      next: (salons: Salon[]) => {
-        this.salons = salons;
-        this.loading = false;
-      },
-      error: (err: any) => {
-        this.error = 'Failed to load top salons. Please try again later.';
-        this.loading = false;
-        console.error('Error fetching top salons:', err);
-      },
-    });
+    void lat;
+    void lng;
+    this.salons = [];
+    this.loading = false;
   }
 
   getMapUrl(salon: Salon): string | null {
-    // Check for coordinates in the location object if available
     if (salon.location?.coordinates?.length === 2) {
       const [lng, lat] = salon.location.coordinates;
       return `https://www.google.com/maps?q=${lat},${lng}`;
     }
-    // Fallback to direct lat/lng if available (deprecated, prefer location.coordinates)
-    if ((salon as any).latitude && (salon as any).longitude) {
-      return `https://www.google.com/maps?q=${(salon as any).latitude},${(salon as any).longitude}`;
+    if (salon.latitude && salon.longitude) {
+      return `https://www.google.com/maps?q=${salon.latitude},${salon.longitude}`;
     }
     return null;
   }
 
-  // Helper to safely access salon properties with defaults
-  getSalonProperty(salon: Salon, prop: keyof Salon): any {
+  getSalonProperty(salon: Salon, prop: keyof Salon): Salon[keyof Salon] | undefined {
     return salon[prop] ?? this.defaultSalon[prop];
   }
 
-  openMap(salon: Salon): void {
-    if (!this.isBrowser) return;
+  serviceNames(salon: Salon): string {
+    return salon.services.map((service) => service.name).join(', ');
+  }
 
+  openMap(salon: Salon): void {
+    if (!this.isBrowser) {
+      return;
+    }
     const url = this.getMapUrl(salon);
     if (url && this.platformUtils.windowRef) {
       this.platformUtils.windowRef.open(url, '_blank');
     }
   }
 }
-

@@ -5,11 +5,10 @@ import { ActivatedRoute } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 
 // Core services
-import { CurrentUserService } from '@cthub-bsaas/web-core/auth';
+import { CurrentUserService } from '@cthub-bsaas/web-core-auth';
 
 // Models
 import { Appointment, SalonServiceItem, Salon, Staff, Review } from './model/tenant.model';
-import { AppointmentStatus } from '@cthub-bsaas/shared';
 
 // Pipes
 import { SafeUrlPipe } from '@cthub-bsaas/web-ui';
@@ -58,7 +57,7 @@ export class TenantComponent implements OnInit {
         next: (salon) => {
           this.salon = salon;
           this.staffList = salon.staff || [];
-          // this.serviceList = salon.services || [];
+          this.serviceList = salon.services || [];
           this.fetchReviews(salonId);
         },
         error: (err) => {
@@ -69,9 +68,8 @@ export class TenantComponent implements OnInit {
       if (this.userId) {
         this.tenantService.isEligibleForReview(this.userId, salonId).subscribe({
           next: (res) => (this.eligibleToReview = res.eligible),
-          error: (err) => {
+          error: () => {
             this.eligibleToReview = null;
-            // Optionally show user-friendly error if needed
           },
         });
       }
@@ -95,7 +93,7 @@ export class TenantComponent implements OnInit {
     if (!this.salon) return;
     const { latitude, longitude, name } = this.salon;
     const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}(${encodeURIComponent(name)})`;
-    window.open(url, '_blank');
+    globalThis.window?.open(url, '_blank');
   }
 
   submitReview(rating: string, comment: string) {
@@ -136,7 +134,7 @@ export class TenantComponent implements OnInit {
       serviceId: this.appointment.serviceId,
       startTime,
       endTime,
-      status: AppointmentStatus.PENDING,
+      status: 'PENDING',
       notes: this.appointment.notes || '',
     };
     this.tenantService.submitAppointment(appointmentData).subscribe({

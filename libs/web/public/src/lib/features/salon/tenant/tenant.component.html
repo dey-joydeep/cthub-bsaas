@@ -22,8 +22,7 @@
     <h3>Our Team</h3>
     <ul>
       <li *ngFor="let staff of salon?.staff">
-        <span>{{ staff.name }}</span> - <span>{{ staff.role }}</span>
-        <a *ngIf="staff.portfolioUrl" [href]="staff.portfolioUrl" target="_blank">Portfolio</a>
+        <span>{{ staff.name }}</span>
       </li>
     </ul>
   </section>
@@ -92,7 +91,7 @@
     <div *ngIf="reviews?.length; else noReviews">
       <div *ngFor="let review of reviews" class="review">
         <div class="review-header">
-          <span class="reviewer">{{ review.reviewer || review.userId }}</span>
+          <span class="reviewer">{{ review.author.name }}</span>
           <span class="rating">{{ review.rating }}/5</span>
         </div>
         <p>{{ review.comment }}</p>

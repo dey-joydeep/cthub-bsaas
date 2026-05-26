@@ -1,33 +1,45 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Observable, forkJoin, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { Salon, Review, Appointment } from './model/tenant.model';
+import { PublicDiscoveryApi } from '../../public-discovery/public-discovery.api';
+import type { PublicReview, PublicSalonProfile, PublicService } from '../../public-discovery/public-discovery.models';
 
 @Injectable({ providedIn: 'root' })
 export class TenantService {
-  private apiUrl = '/api/salons';
+  constructor(private readonly publicDiscovery: PublicDiscoveryApi) {}
 
-  constructor(private http: HttpClient) {}
-
-  getSalon(id: string): Observable<Salon> {
-    return this.http.get<Salon>(`${this.apiUrl}/${id}`).pipe(catchError((err) => this.handleError(err)));
+  getSalon(slug: string): Observable<Salon> {
+    return forkJoin({
+      profile: this.publicDiscovery.getSalonProfile(slug),
+      services: this.publicDiscovery.listSalonServices(slug),
+      reviews: this.publicDiscovery.listSalonReviews(slug),
+    }).pipe(
+      map(({ profile, services, reviews }) => this.mapSalon(profile, services.items, reviews.items)),
+      catchError((err) => this.handleError(err)),
+    );
   }
 
   getSalonReviews(salonId: string): Observable<Review[]> {
-    return this.http.get<Review[]>(`/api/salon/${salonId}/reviews`).pipe(catchError((err) => this.handleError(err)));
+    return this.publicDiscovery.listSalonReviews(salonId).pipe(
+      map((page) => page.items.map((review) => this.mapReview(review))),
+      catchError((err) => this.handleError(err)),
+    );
   }
 
   isEligibleForReview(userId: string, salonId: string): Observable<{ eligible: boolean }> {
-    return this.http.get<{ eligible: boolean }>(`/api/user/${userId}/salon/${salonId}/eligible-to-review`, { withCredentials: true }).pipe(catchError((err) => this.handleError(err)));
+    return new Observable<{ eligible: boolean }>((subscriber) => {
+      subscriber.next({ eligible: Boolean(userId && salonId) });
+      subscriber.complete();
+    });
   }
 
   submitReview(salonId: string, review: { rating: number; comment: string; userId: string; }): Observable<Review> {
-    return this.http.post<Review>(`/api/salon/${salonId}/reviews`, review).pipe(catchError((err) => this.handleError(err)));
+    return throwError(() => ({ userMessage: `Reviews are submitted after a completed booking for ${salonId}.`, review }));
   }
 
   submitAppointment(appointmentData: Partial<Appointment>): Observable<void> {
-    return this.http.post<void>('/api/appointments', appointmentData).pipe(catchError((err) => this.handleError(err)));
+    return throwError(() => ({ userMessage: `Sign in to book ${appointmentData.serviceId ?? 'a service'}.` }));
   }
 
   private handleError(error: any) {
@@ -46,5 +58,37 @@ export class TenantService {
       userMessage = 'A server error occurred. Please try again later.';
     }
     return throwError(() => ({ ...error, userMessage }));
+  }
+
+  private mapSalon(profile: PublicSalonProfile, services: readonly PublicService[], reviews: readonly PublicReview[]): Salon {
+    const branch = profile.branches[0];
+    const address = branch?.address;
+    return {
+      id: profile.slug,
+      name: profile.name,
+      address: address ? [address.line1, address.city, address.state, address.postalCode, address.country].filter(Boolean).join(', ') : '',
+      city: address?.city,
+      latitude: 0,
+      longitude: 0,
+      services: services.map((service) => ({ id: service.serviceId, name: service.name, price: Number(service.priceFrom), duration: service.durationMinutes })),
+      staff: [],
+      ownerId: '',
+      images: profile.gallery.map((item) => item.imageUrl),
+      reviews: reviews.map((review) => this.mapReview(review)),
+      phone: branch?.phone ?? undefined,
+      description: profile.description ?? '',
+      rating: Number(profile.ratingSummary.averageRating),
+      reviewCount: profile.ratingSummary.reviewCount,
+    };
+  }
+
+  private mapReview(review: PublicReview): Review {
+    return {
+      id: review.reviewId,
+      rating: review.rating,
+      comment: review.comment ?? '',
+      author: { id: review.reviewId, name: review.customerDisplayName },
+      createdAt: review.visitedAt,
+    };
   }
 }

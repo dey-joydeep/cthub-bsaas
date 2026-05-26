@@ -1,21 +1,35 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { Salon, SalonServiceItem } from './model/salon-search.model';
+import { PublicDiscoveryApi } from '../../public-discovery/public-discovery.api';
+import type { PublicSalonSummary, PublicService } from '../../public-discovery/public-discovery.models';
 
 @Injectable({ providedIn: 'root' })
 export class SalonSearchService {
-  private apiUrl = '/api/salons';
-
-  constructor(private http: HttpClient) {}
+  constructor(private readonly publicDiscovery: PublicDiscoveryApi) {}
 
   searchSalons(params: HttpParams): Observable<{ salons: Salon[]; total: number }> {
-    return this.http.get<{ salons: Salon[]; total: number }>('/api/salons', { params }).pipe(catchError((err) => this.handleError(err)));
+    return this.publicDiscovery
+      .searchSalons({
+        q: params.get('q') ?? params.get('name') ?? undefined,
+        city: params.get('city') ?? undefined,
+        serviceId: params.get('serviceId') ?? undefined,
+        ratingMin: params.get('ratingMin') ? Number(params.get('ratingMin')) : null,
+        limit: Number(params.get('limit') ?? params.get('page_size') ?? 20),
+      })
+      .pipe(
+        map((page) => ({ salons: page.items.map((salon) => this.mapSalon(salon)), total: page.items.length })),
+        catchError((err) => this.handleError(err)),
+      );
   }
 
   getServices(): Observable<SalonServiceItem[]> {
-    return this.http.get<SalonServiceItem[]>('/api/services').pipe(catchError((err) => this.handleError(err)));
+    return this.publicDiscovery.getHome().pipe(
+      map((home) => home.popularServices.map((service) => this.mapService(service))),
+      catchError((err) => this.handleError(err)),
+    );
   }
 
   private handleError(error: any) {
@@ -34,5 +48,31 @@ export class SalonSearchService {
       userMessage = 'A server error occurred. Please try again later.';
     }
     return throwError(() => ({ ...error, userMessage }));
+  }
+
+  private mapSalon(salon: PublicSalonSummary): Salon {
+    return {
+      id: salon.slug,
+      name: salon.name,
+      address: salon.area ?? '',
+      city: salon.area ?? '',
+      latitude: 0,
+      longitude: 0,
+      services: [],
+      staff: [],
+      ownerId: '',
+      rating: Number(salon.rating),
+      averageRating: Number(salon.rating),
+      reviewCount: salon.reviewCount,
+    };
+  }
+
+  private mapService(service: PublicService): SalonServiceItem {
+    return {
+      id: service.serviceId,
+      name: service.name,
+      price: Number(service.priceFrom),
+      duration: service.durationMinutes,
+    };
   }
 }

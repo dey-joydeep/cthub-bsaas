@@ -6,7 +6,7 @@
     <!-- Service dropdown filter -->
     <select [(ngModel)]="service" name="service" (change)="onFilterChange()">
       <option value="">All Services</option>
-      <option *ngFor="let s of services" [value]="s.name">{{ s.name }}</option>
+      <option *ngFor="let s of services" [value]="s.id">{{ s.name }}</option>
     </select>
     <input
       type="number"
@@ -118,7 +118,7 @@
           <strong>Services:</strong> {{ getSalonServices(salon) }}
         </div>
         <div class="salon-actions">
-          <a [routerLink]="['/salon', salon.id]" class="profile-link">View Profile</a>
+          <a [routerLink]="['/salons', salon.id]" class="profile-link">View Profile</a>
           <button type="button" (click)="openMap(salon)">Open Map</button>
         </div>
       </div>

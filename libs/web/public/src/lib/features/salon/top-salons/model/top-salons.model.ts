@@ -1,14 +1,15 @@
-import { ISalonDto } from '@cthub-bsaas/shared/models/salon.dto';
-
-export type { ISalonDto } from '@cthub-bsaas/shared/models/salon.dto';
-
-export type Salon = ISalonDto & {
-  distance?: number;
-  isVerified?: boolean;
-  latitude?: number;
-  longitude?: number;
-  location?: {
-    type: string;
-    coordinates: [number, number]; // [lng, lat] format
+export interface Salon {
+  readonly id: string;
+  readonly name: string;
+  readonly address: string;
+  readonly city?: string;
+  readonly averageRating: number;
+  readonly reviewCount: number;
+  readonly services: readonly { readonly name: string }[];
+  readonly latitude?: number;
+  readonly longitude?: number;
+  readonly location?: {
+    readonly type: string;
+    readonly coordinates: readonly [number, number];
   };
-};
+}
