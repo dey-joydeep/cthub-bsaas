@@ -93,6 +93,7 @@ model SalonBusiness {
   staff       SalonOwnerStaff[]
   categories  SalonOwnerServiceCategory[]
   services    SalonOwnerService[]
+  customers   SalonOwnerCustomer[]
   createdAt   DateTime                    @default(now()) @map("created_at")
   updatedAt   DateTime                    @updatedAt @map("updated_at")
 
@@ -247,6 +248,40 @@ model SalonOwnerServiceStaffEligibility {
   @@id([serviceId, staffId])
   @@index([staffId])
   @@map("salon_owner_service_staff_eligibility")
+}
+
+model SalonOwnerCustomer {
+  id                  String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId          String                   @map("business_id") @db.Uuid
+  business            SalonBusiness            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  displayName         String                   @map("display_name")
+  phone               String
+  email               String?
+  dateOfBirth         DateTime?                @map("date_of_birth") @db.Date
+  consentForMarketing Boolean                  @default(false) @map("consent_for_marketing")
+  smsEnabled          Boolean                  @default(false) @map("sms_enabled")
+  emailEnabled        Boolean                  @default(false) @map("email_enabled")
+  whatsappEnabled     Boolean                  @default(false) @map("whatsapp_enabled")
+  notes               SalonOwnerCustomerNote[]
+  createdAt           DateTime                 @default(now()) @map("created_at")
+  updatedAt           DateTime                 @updatedAt @map("updated_at")
+
+  @@unique([businessId, phone])
+  @@index([businessId, displayName])
+  @@index([businessId, email])
+  @@map("salon_owner_customer")
+}
+
+model SalonOwnerCustomerNote {
+  id         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customerId String             @map("customer_id") @db.Uuid
+  customer   SalonOwnerCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  body       String
+  visibility String
+  createdAt  DateTime           @default(now()) @map("created_at")
+
+  @@index([customerId, createdAt])
+  @@map("salon_owner_customer_note")
 }
 
 model SalonBranchHours {
