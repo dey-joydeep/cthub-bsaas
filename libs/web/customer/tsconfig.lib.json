@@ -13,6 +13,12 @@
       "@cthub-bsaas/web-ui": ["dist/libs/web/ui/index.d.ts"]
     }
   },
-  "include": ["src/index.ts", "src/lib/features/auth/**/*.ts", "src/**/*.d.ts"],
+  "include": [
+    "src/index.ts",
+    "src/lib/customer.routes.ts",
+    "src/lib/features/auth/**/*.ts",
+    "src/lib/features/customer-app/**/*.ts",
+    "src/**/*.d.ts"
+  ],
   "exclude": ["src/test-setup.ts", "**/*.spec.ts", "**/*.test.ts", "jest.config.ts"]
 }

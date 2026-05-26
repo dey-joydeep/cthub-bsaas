@@ -1,0 +1,129 @@
+.customer-shell {
+  display: grid;
+  gap: 24px;
+  padding: 24px;
+}
+
+.customer-shell__header {
+  align-items: start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.customer-shell__header h1 {
+  font-size: 28px;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.customer-shell__eyebrow {
+  color: #5f6368;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  margin: 0 0 4px;
+  text-transform: uppercase;
+}
+
+.customer-shell__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+.customer-shell__error {
+  border-color: #c62828;
+}
+
+.customer-shell__metric {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  margin: 0 0 8px;
+}
+
+.customer-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.customer-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.customer-form {
+  display: grid;
+  gap: 16px;
+}
+
+.customer-form__grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.customer-form textarea {
+  resize: vertical;
+}
+
+.customer-row,
+.customer-list-item {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.customer-list-item {
+  border-bottom: 1px solid #e0e3e7;
+  padding: 14px 0;
+}
+
+.customer-list-item:last-child {
+  border-bottom: 0;
+}
+
+.customer-list-item h2 {
+  font-size: 16px;
+  line-height: 1.25;
+  margin: 0 0 4px;
+}
+
+.customer-list-item p {
+  color: #5f6368;
+  margin: 0 0 4px;
+}
+
+.customer-list-item__actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.customer-empty {
+  color: #5f6368;
+  padding: 16px 0;
+}
+
+@media (max-width: 720px) {
+  .customer-shell {
+    padding: 16px;
+  }
+
+  .customer-shell__header,
+  .customer-list-item {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .customer-shell__nav,
+  .customer-list-item__actions {
+    justify-content: flex-start;
+  }
+}
