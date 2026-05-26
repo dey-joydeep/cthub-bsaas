@@ -1,0 +1,148 @@
+.catalog-shell {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+}
+
+.catalog-header {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+
+  h1 {
+    font-size: 1.75rem;
+    margin: 0;
+  }
+
+  p {
+    color: #4b5563;
+    margin: 4px 0 0;
+  }
+}
+
+.header-actions,
+.status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tab-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+  padding: 16px 0;
+}
+
+.schedule-grid {
+  padding-top: 0;
+}
+
+.form-grid,
+.compact-form,
+.category-form {
+  display: grid;
+  gap: 14px;
+}
+
+.form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  button {
+    justify-self: start;
+  }
+}
+
+.compact-form,
+.category-form {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.subforms {
+  border-top: 1px solid #e5e7eb;
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.list {
+  display: grid;
+  gap: 8px;
+}
+
+.list-row {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 10px 12px;
+  text-align: left;
+
+  &.selected {
+    border-color: #2563eb;
+    box-shadow: inset 3px 0 0 #2563eb;
+  }
+
+  small {
+    color: #6b7280;
+  }
+}
+
+.status {
+  border-radius: 8px;
+  margin: 0;
+  padding: 10px 12px;
+}
+
+.status-ok {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.status-error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.empty {
+  color: #6b7280;
+  margin: 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+
+  span {
+    border: 1px solid #d1d5db;
+    border-radius: 999px;
+    padding: 6px 10px;
+  }
+}
+
+@media (max-width: 820px) {
+  .catalog-shell {
+    padding: 16px;
+  }
+
+  .catalog-header,
+  .tab-grid,
+  .form-grid,
+  .compact-form,
+  .category-form {
+    grid-template-columns: 1fr;
+  }
+
+  .catalog-header {
+    align-items: stretch;
+    display: grid;
+  }
+}
