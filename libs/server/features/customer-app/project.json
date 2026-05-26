@@ -1,0 +1,62 @@
+{
+  "name": "server-feature-customer-app",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/server/features/customer-app/src",
+  "projectType": "library",
+  "tags": ["type:lib", "platform:server", "scope:server-feature", "scope:server", "type:feature"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/server/features/customer-app",
+        "tsConfig": "libs/server/features/customer-app/tsconfig.lib.json",
+        "packageJson": "libs/server/features/customer-app/package.json",
+        "main": "libs/server/features/customer-app/src/index.ts",
+        "assets": [],
+        "buildableProjectDepsInPackageJsonType": "dependencies"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "libs/server/features/customer-app/tsconfig.lib.json"
+        },
+        "development": {
+          "tsConfig": "libs/server/features/customer-app/tsconfig.lib.json"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/server/features/customer-app/**/*.ts"]
+      }
+    },
+    "type-check": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["shared:build", "server-core:build", "server-data-access:build"],
+      "options": {
+        "command": "tsc -b libs/server/features/customer-app/tsconfig.json --pretty false"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/server/features/customer-app/jest.config.ts",
+        "passWithNoTests": true,
+        "codeCoverage": true,
+        "coverageReporters": ["text", "lcov"],
+        "coverageDirectory": "coverage/libs/server/features/customer-app"
+      },
+      "configurations": {
+        "ut": {
+          "jestConfig": "libs/server/features/customer-app/jest.unit.config.ts"
+        },
+        "it": {
+          "jestConfig": "libs/server/features/customer-app/jest.int.config.ts"
+        }
+      }
+    }
+  }
+}

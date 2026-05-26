@@ -26,6 +26,8 @@
       "@cthub-bsaas/server-data-access/*": ["dist/libs/server/data-access/*", "libs/server/data-access/src/*"],
       "@cthub-bsaas/server-feature-auth": ["libs/server/features/auth/src/index.ts"],
       "@cthub-bsaas/server-feature-auth/*": ["dist/libs/server/features/auth/*", "libs/server/features/auth/src/*"],
+      "@cthub-bsaas/server-feature-customer-app": ["libs/server/features/customer-app/src/index.ts"],
+      "@cthub-bsaas/server-feature-public-discovery": ["libs/server/features/public-discovery/src/index.ts"],
       "@cthub-bsaas/server-feature-salon-owner": ["libs/server/features/salon-owner/src/index.ts"],
       "@cthub-bsaas/server-infrastructure": ["libs/server/infrastructure/src/index.ts"],
       "@cthub-bsaas/server-infrastructure/*": ["dist/libs/server/infrastructure/*", "libs/server/infrastructure/src/*"],
