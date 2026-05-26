@@ -51,6 +51,20 @@ const implementedOperationIds = new Set([
   'markAppointmentArrived',
   'startAppointmentService',
   'completeAppointment',
+  'getCheckoutContext',
+  'createInvoice',
+  'getInvoice',
+  'finalizeInvoice',
+  'captureInvoicePayment',
+  'listPendingDues',
+  'listProducts',
+  'createProduct',
+  'getProduct',
+  'updateProduct',
+  'listBranchStock',
+  'createStockMovement',
+  'adjustProductStock',
+  'listLowStockAlerts',
 ]);
 
 interface ControllerRoute {

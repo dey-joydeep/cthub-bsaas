@@ -38,6 +38,14 @@ enum SalonOwnerAppointmentStatus {
   NO_SHOW
 }
 
+enum SalonOwnerInvoiceStatus {
+  DRAFT
+  FINALIZED
+  PARTIALLY_PAID
+  PAID
+  VOID
+}
+
 model BusinessAddress {
   id           String       @id @default(uuid()) @db.Uuid
   countryId    String       @map("country_id") @db.Uuid
@@ -104,6 +112,7 @@ model SalonBusiness {
   categories  SalonOwnerServiceCategory[]
   services    SalonOwnerService[]
   customers   SalonOwnerCustomer[]
+  products    SalonOwnerProduct[]
   createdAt   DateTime                    @default(now()) @map("created_at")
   updatedAt   DateTime                    @updatedAt @map("updated_at")
 
@@ -113,24 +122,26 @@ model SalonBusiness {
 }
 
 model SalonBranch {
-  id           String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  businessId   String                      @map("business_id") @db.Uuid
-  business     SalonBusiness               @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  name         String
-  phone        String?
-  email        String?
-  timezone     String
-  currency     String
-  address      Json                        @db.JsonB
-  hours        SalonBranchHours[]
-  holidays     SalonBranchHoliday[]
-  policy       SalonBranchPolicy?
-  staff        SalonOwnerStaffBranch[]
-  shifts       SalonOwnerStaffShift[]
-  leaveBlocks  SalonOwnerStaffLeaveBlock[]
-  appointments SalonOwnerAppointment[]
-  createdAt    DateTime                    @default(now()) @map("created_at")
-  updatedAt    DateTime                    @updatedAt @map("updated_at")
+  id             String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId     String                      @map("business_id") @db.Uuid
+  business       SalonBusiness               @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name           String
+  phone          String?
+  email          String?
+  timezone       String
+  currency       String
+  address        Json                        @db.JsonB
+  hours          SalonBranchHours[]
+  holidays       SalonBranchHoliday[]
+  policy         SalonBranchPolicy?
+  staff          SalonOwnerStaffBranch[]
+  shifts         SalonOwnerStaffShift[]
+  leaveBlocks    SalonOwnerStaffLeaveBlock[]
+  appointments   SalonOwnerAppointment[]
+  stockMovements SalonOwnerStockMovement[]
+  invoices       SalonOwnerInvoice[]
+  createdAt      DateTime                    @default(now()) @map("created_at")
+  updatedAt      DateTime                    @updatedAt @map("updated_at")
 
   @@unique([businessId, name])
   @@index([businessId])
@@ -277,6 +288,7 @@ model SalonOwnerCustomer {
   whatsappEnabled     Boolean                  @default(false) @map("whatsapp_enabled")
   notes               SalonOwnerCustomerNote[]
   appointments        SalonOwnerAppointment[]
+  invoices            SalonOwnerInvoice[]
   createdAt           DateTime                 @default(now()) @map("created_at")
   updatedAt           DateTime                 @updatedAt @map("updated_at")
 
@@ -310,6 +322,7 @@ model SalonOwnerAppointment {
   rescheduleReason     String?                     @map("reschedule_reason")
   cancellationReason   String?                     @map("cancellation_reason")
   lines                SalonOwnerAppointmentLine[]
+  invoices             SalonOwnerInvoice[]
   createdAt            DateTime                    @default(now()) @map("created_at")
   updatedAt            DateTime                    @updatedAt @map("updated_at")
 
@@ -337,6 +350,96 @@ model SalonOwnerAppointmentLine {
   @@index([staffId, startsAt, endsAt])
   @@index([serviceId])
   @@map("salon_owner_appointment_line")
+}
+
+model SalonOwnerInvoice {
+  id            String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  branchId      String                     @map("branch_id") @db.Uuid
+  branch        SalonBranch                @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  customerId    String                     @map("customer_id") @db.Uuid
+  customer      SalonOwnerCustomer         @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  appointmentId String?                    @map("appointment_id") @db.Uuid
+  appointment   SalonOwnerAppointment?     @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  status        SalonOwnerInvoiceStatus    @default(DRAFT)
+  subtotal      Decimal                    @db.Decimal(10, 2)
+  taxTotal      Decimal                    @default(0) @map("tax_total") @db.Decimal(10, 2)
+  discountTotal Decimal                    @default(0) @map("discount_total") @db.Decimal(10, 2)
+  total         Decimal                    @db.Decimal(10, 2)
+  paidAmount    Decimal                    @default(0) @map("paid_amount") @db.Decimal(10, 2)
+  dueAmount     Decimal                    @map("due_amount") @db.Decimal(10, 2)
+  lines         SalonOwnerInvoiceLine[]
+  payments      SalonOwnerInvoicePayment[]
+  createdAt     DateTime                   @default(now()) @map("created_at")
+  updatedAt     DateTime                   @updatedAt @map("updated_at")
+
+  @@index([branchId, status])
+  @@index([customerId])
+  @@index([appointmentId])
+  @@map("salon_owner_invoice")
+}
+
+model SalonOwnerInvoiceLine {
+  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  invoiceId   String            @map("invoice_id") @db.Uuid
+  invoice     SalonOwnerInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  type        String
+  referenceId String            @map("reference_id") @db.Uuid
+  description String
+  quantity    Decimal           @db.Decimal(10, 3)
+  unitPrice   Decimal           @map("unit_price") @db.Decimal(10, 2)
+  lineTotal   Decimal           @map("line_total") @db.Decimal(10, 2)
+
+  @@index([invoiceId])
+  @@map("salon_owner_invoice_line")
+}
+
+model SalonOwnerInvoicePayment {
+  id         String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  invoiceId  String            @map("invoice_id") @db.Uuid
+  invoice    SalonOwnerInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount     Decimal           @db.Decimal(10, 2)
+  method     String
+  receivedAt DateTime          @map("received_at")
+  reference  String?
+  createdAt  DateTime          @default(now()) @map("created_at")
+
+  @@index([invoiceId])
+  @@map("salon_owner_invoice_payment")
+}
+
+model SalonOwnerProduct {
+  id             String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId     String                    @map("business_id") @db.Uuid
+  business       SalonBusiness             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name           String
+  sku            String
+  unit           String
+  retailPrice    Decimal                   @map("retail_price") @db.Decimal(10, 2)
+  reorderPoint   Decimal?                  @map("reorder_point") @db.Decimal(10, 3)
+  status         SalonOwnerStatus          @default(ACTIVE)
+  stockMovements SalonOwnerStockMovement[]
+  createdAt      DateTime                  @default(now()) @map("created_at")
+  updatedAt      DateTime                  @updatedAt @map("updated_at")
+
+  @@unique([businessId, sku])
+  @@index([businessId, status])
+  @@map("salon_owner_product")
+}
+
+model SalonOwnerStockMovement {
+  id        String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  branchId  String            @map("branch_id") @db.Uuid
+  branch    SalonBranch       @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  productId String            @map("product_id") @db.Uuid
+  product   SalonOwnerProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Decimal           @db.Decimal(10, 3)
+  reason    String
+  note      String?
+  createdAt DateTime          @default(now()) @map("created_at")
+
+  @@index([branchId, productId])
+  @@index([productId])
+  @@map("salon_owner_stock_movement")
 }
 
 model SalonBranchHours {

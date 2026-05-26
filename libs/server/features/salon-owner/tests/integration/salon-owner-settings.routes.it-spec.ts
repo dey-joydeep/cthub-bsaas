@@ -6,10 +6,13 @@ import { AppointmentSchedulingController } from '../../src/lib/controllers/appoi
 import { BranchSettingsController } from '../../src/lib/controllers/branch-settings.controller';
 import { BusinessSettingsController } from '../../src/lib/controllers/business-settings.controller';
 import { CustomerCrmController } from '../../src/lib/controllers/customer-crm.controller';
+import { InventoryController } from '../../src/lib/controllers/inventory.controller';
+import { PosController } from '../../src/lib/controllers/pos.controller';
 import { ServiceCatalogController } from '../../src/lib/controllers/service-catalog.controller';
 import { StaffController } from '../../src/lib/controllers/staff.controller';
 import { AppointmentSchedulingService } from '../../src/lib/services/appointment-scheduling.service';
 import { CustomerCrmService } from '../../src/lib/services/customer-crm.service';
+import { PosInventoryService } from '../../src/lib/services/pos-inventory.service';
 import { SalonOwnerSettingsService } from '../../src/lib/services/salon-owner-settings.service';
 import { StaffServiceCatalogService } from '../../src/lib/services/staff-service-catalog.service';
 
@@ -29,6 +32,11 @@ describe('Salon owner settings routes', () => {
   const appointments = {
     createAppointment: jest.fn(),
   };
+  const posInventory = {
+    createInvoice: jest.fn(),
+    createProduct: jest.fn(),
+    createStockMovement: jest.fn(),
+  };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -39,12 +47,15 @@ describe('Salon owner settings routes', () => {
         ServiceCatalogController,
         CustomerCrmController,
         AppointmentSchedulingController,
+        PosController,
+        InventoryController,
       ],
       providers: [
         { provide: SalonOwnerSettingsService, useValue: service },
         { provide: StaffServiceCatalogService, useValue: catalog },
         { provide: CustomerCrmService, useValue: customers },
         { provide: AppointmentSchedulingService, useValue: appointments },
+        { provide: PosInventoryService, useValue: posInventory },
       ],
     }).compile();
 
@@ -169,6 +180,61 @@ describe('Salon owner settings routes', () => {
     expect(appointments.createAppointment).toHaveBeenCalledWith(
       { user: expect.objectContaining({ tenantId: 'tenant-1' }) },
       expect.objectContaining({ branchId: '00000000-0000-4000-8000-000000000001' }),
+    );
+  });
+
+  it('validates POS invoice payloads before invoking the service', async () => {
+    await request(app.getHttpServer()).post('/partner/pos/invoices').send({ branchId: 'bad', lines: [] }).expect(400);
+    expect(posInventory.createInvoice).not.toHaveBeenCalled();
+  });
+
+  it('routes valid POS invoice requests to the feature service', async () => {
+    posInventory.createInvoice.mockResolvedValue({ id: 'invoice-1' });
+
+    await request(app.getHttpServer())
+      .post('/partner/pos/invoices')
+      .send({
+        branchId: '00000000-0000-4000-8000-000000000001',
+        customerId: '00000000-0000-4000-8000-000000000002',
+        lines: [
+          {
+            type: 'SERVICE',
+            referenceId: '00000000-0000-4000-8000-000000000003',
+            description: 'Cut',
+            quantity: '1',
+            unitPrice: '45.00',
+          },
+        ],
+      })
+      .expect(201);
+
+    expect(posInventory.createInvoice).toHaveBeenCalledWith(
+      { user: expect.objectContaining({ tenantId: 'tenant-1' }) },
+      expect.objectContaining({ branchId: '00000000-0000-4000-8000-000000000001' }),
+    );
+  });
+
+  it('validates inventory payloads before invoking the service', async () => {
+    await request(app.getHttpServer()).post('/partner/inventory/products').send({ sku: 'S' }).expect(400);
+    expect(posInventory.createProduct).not.toHaveBeenCalled();
+  });
+
+  it('routes valid inventory movement requests to the feature service', async () => {
+    posInventory.createStockMovement.mockResolvedValue({ id: 'movement-1' });
+
+    await request(app.getHttpServer())
+      .post('/partner/inventory/stock-movements')
+      .send({
+        branchId: '00000000-0000-4000-8000-000000000001',
+        productId: '00000000-0000-4000-8000-000000000002',
+        quantity: '3',
+        reason: 'PURCHASE',
+      })
+      .expect(201);
+
+    expect(posInventory.createStockMovement).toHaveBeenCalledWith(
+      { user: expect.objectContaining({ tenantId: 'tenant-1' }) },
+      expect.objectContaining({ productId: '00000000-0000-4000-8000-000000000002' }),
     );
   });
 });
