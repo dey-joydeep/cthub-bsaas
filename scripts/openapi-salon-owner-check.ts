@@ -65,6 +65,8 @@ const implementedOperationIds = new Set([
   'createStockMovement',
   'adjustProductStock',
   'listLowStockAlerts',
+  'getOwnerDashboard',
+  'listDashboardAlerts',
 ]);
 
 interface ControllerRoute {
