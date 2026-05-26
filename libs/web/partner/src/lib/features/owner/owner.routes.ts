@@ -3,6 +3,7 @@ import { OwnerDashboardComponent } from './owner-dashboard/owner-dashboard.compo
 import { SalonManagementComponent } from './salon-management/salon-management.component';
 import { AppointmentManagementComponent } from './appointment-management/appointment-management.component';
 import { StaffManagementComponent } from './staff-management/staff-management.component';
+import { POS_INVENTORY_ROUTES } from '../pos-inventory/pos-inventory.routes';
 
 export const OWNER_ROUTES: Routes = [
   {
@@ -22,4 +23,5 @@ export const OWNER_ROUTES: Routes = [
     path: 'staff',
     component: StaffManagementComponent,
   },
+  ...POS_INVENTORY_ROUTES,
 ];
