@@ -1,0 +1,125 @@
+<section class="crm-shell">
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  }
+
+  <header class="crm-header">
+    <div>
+      <h1>Customers</h1>
+      <p>Manage customer profiles, notes, communication preferences, and visit history.</p>
+    </div>
+    <button mat-stroked-button type="button" (click)="newCustomer()">
+      <mat-icon>person_add</mat-icon>
+      Customer
+    </button>
+  </header>
+
+  @if (message()) {
+    <p class="status status-ok">{{ message() }}</p>
+  }
+  @if (error()) {
+    <p class="status status-error">{{ error() }}</p>
+  }
+
+  <div class="crm-grid">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Profile</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="customerForm" class="form-grid" (ngSubmit)="saveCustomer()">
+          <mat-form-field appearance="outline">
+            <mat-label>Display name</mat-label>
+            <input matInput formControlName="displayName" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Phone</mat-label>
+            <input matInput formControlName="phone" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput formControlName="email" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Date of birth</mat-label>
+            <input matInput type="date" formControlName="dateOfBirth" />
+          </mat-form-field>
+          <mat-checkbox formControlName="consentForMarketing">Marketing consent</mat-checkbox>
+          <button mat-flat-button type="submit" [disabled]="saving()">Save customer</button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Customer list</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="searchForm" class="search-row" (ngSubmit)="searchCustomers()">
+          <mat-form-field appearance="outline">
+            <mat-label>Search</mat-label>
+            <input matInput formControlName="q" />
+          </mat-form-field>
+          <button mat-stroked-button type="submit">Search</button>
+        </form>
+        <div class="list">
+          @for (customer of customers(); track customer.id) {
+            <button
+              type="button"
+              class="list-row"
+              [class.selected]="selectedCustomer()?.id === customer.id"
+              (click)="selectCustomer(customer)"
+            >
+              <span>{{ customer.displayName }}</span>
+              <small>{{ customer.phone }}</small>
+            </button>
+          } @empty {
+            <p class="empty">No customers match the current search.</p>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="crm-grid">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Note</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="noteForm" class="form-grid" (ngSubmit)="saveNote()">
+          <mat-form-field appearance="outline">
+            <mat-label>Body</mat-label>
+            <textarea matInput rows="4" formControlName="body"></textarea>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Visibility</mat-label>
+            <mat-select formControlName="visibility">
+              <mat-option value="STAFF_VISIBLE">Staff visible</mat-option>
+              <mat-option value="INTERNAL">Internal</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <button mat-flat-button type="submit" [disabled]="saving() || !selectedCustomer()">Create note</button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Communication</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="preferencesForm" class="preference-list" (ngSubmit)="savePreferences()">
+          <mat-checkbox formControlName="smsEnabled">SMS</mat-checkbox>
+          <mat-checkbox formControlName="emailEnabled">Email</mat-checkbox>
+          <mat-checkbox formControlName="whatsappEnabled">WhatsApp</mat-checkbox>
+          <button mat-flat-button type="submit" [disabled]="saving() || !selectedCustomer()">Save preferences</button>
+        </form>
+        <button class="history-button" mat-stroked-button type="button" [disabled]="saving() || !selectedCustomer()" (click)="loadVisitHistory()">
+          <mat-icon>history</mat-icon>
+          Visit history
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</section>

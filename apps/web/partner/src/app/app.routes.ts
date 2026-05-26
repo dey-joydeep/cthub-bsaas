@@ -6,6 +6,7 @@ export const routes: Routes = [
   { path: 'owner/branches', loadChildren: () => import('@cthub-bsaas/web-partner').then((m) => m.SALON_OWNER_SETTINGS_ROUTES) },
   { path: 'owner/staff', loadChildren: () => import('@cthub-bsaas/web-partner').then((m) => m.STAFF_SERVICE_CATALOG_ROUTES) },
   { path: 'owner/services', loadChildren: () => import('@cthub-bsaas/web-partner').then((m) => m.STAFF_SERVICE_CATALOG_ROUTES) },
+  { path: 'owner/customers', loadChildren: () => import('@cthub-bsaas/web-partner').then((m) => m.CUSTOMER_CRM_ROUTES) },
   { path: '', redirectTo: 'auth', pathMatch: 'full' },
   { path: '**', redirectTo: 'auth' },
 ];
