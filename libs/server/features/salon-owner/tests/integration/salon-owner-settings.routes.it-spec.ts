@@ -4,7 +4,10 @@ import request from 'supertest';
 
 import { BranchSettingsController } from '../../src/lib/controllers/branch-settings.controller';
 import { BusinessSettingsController } from '../../src/lib/controllers/business-settings.controller';
+import { ServiceCatalogController } from '../../src/lib/controllers/service-catalog.controller';
+import { StaffController } from '../../src/lib/controllers/staff.controller';
 import { SalonOwnerSettingsService } from '../../src/lib/services/salon-owner-settings.service';
+import { StaffServiceCatalogService } from '../../src/lib/services/staff-service-catalog.service';
 
 describe('Salon owner settings routes', () => {
   let app: INestApplication;
@@ -12,11 +15,18 @@ describe('Salon owner settings routes', () => {
     createBusiness: jest.fn(),
     replaceBranchHours: jest.fn(),
   };
+  const catalog = {
+    createStaff: jest.fn(),
+    createService: jest.fn(),
+  };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
-      controllers: [BusinessSettingsController, BranchSettingsController],
-      providers: [{ provide: SalonOwnerSettingsService, useValue: service }],
+      controllers: [BusinessSettingsController, BranchSettingsController, StaffController, ServiceCatalogController],
+      providers: [
+        { provide: SalonOwnerSettingsService, useValue: service },
+        { provide: StaffServiceCatalogService, useValue: catalog },
+      ],
     }).compile();
 
     app = moduleRef.createNestApplication();
@@ -65,6 +75,33 @@ describe('Salon owner settings routes', () => {
       { user: expect.objectContaining({ tenantId: 'tenant-1' }) },
       'branch-1',
       expect.objectContaining({ timezone: 'Asia/Tokyo' }),
+    );
+  });
+
+  it('validates staff payloads before invoking the catalog service', async () => {
+    await request(app.getHttpServer()).post('/partner/staff').send({ branchIds: [], displayName: 'A' }).expect(400);
+    expect(catalog.createStaff).not.toHaveBeenCalled();
+  });
+
+  it('routes valid service catalog requests to the catalog service', async () => {
+    catalog.createService.mockResolvedValue({ id: 'service-1' });
+
+    await request(app.getHttpServer())
+      .post('/partner/services')
+      .send({
+        categoryId: '00000000-0000-4000-8000-000000000001',
+        name: 'Cut',
+        durationMinutes: 45,
+        bufferMinutes: 5,
+        basePrice: '35.00',
+        taxRatePercent: '10.00',
+        status: 'ACTIVE',
+      })
+      .expect(201);
+
+    expect(catalog.createService).toHaveBeenCalledWith(
+      { user: expect.objectContaining({ tenantId: 'tenant-1' }) },
+      expect.objectContaining({ name: 'Cut', categoryId: '00000000-0000-4000-8000-000000000001' }),
     );
   });
 });
