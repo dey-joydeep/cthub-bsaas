@@ -2,7 +2,7 @@ import { PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
 import { Component, inject, PLATFORM_ID, OnInit } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpParams } from '@angular/common/http';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { Salon, SalonServiceItem } from './model/salon-search.model';
@@ -39,11 +39,13 @@ export class SalonSearchComponent implements OnInit {
 
   private readonly platformUtils = inject<PlatformUtils>(PLATFORM_UTILS_TOKEN);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly route = inject(ActivatedRoute);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
 
   constructor(private salonService: SalonSearchService) {}
 
   ngOnInit(): void {
+    this.applyQueryParams();
     this.fetchServices();
     this.search();
   }
@@ -103,6 +105,15 @@ export class SalonSearchComponent implements OnInit {
 
   onFilterChange() {
     this.search(true);
+  }
+
+  private applyQueryParams(): void {
+    const params = this.route.snapshot.queryParamMap;
+    this.query = params.get('q') ?? params.get('name') ?? '';
+    this.city = params.get('city') ?? '';
+    this.service = params.get('serviceId') ?? '';
+    const ratingMin = params.get('ratingMin');
+    this.minRating = ratingMin ? Number(ratingMin) : null;
   }
 
   get paginationPages(): number[] {

@@ -120,6 +120,7 @@ export class HomeComponent implements OnInit {
 
     this.homeService.getHomePageData().subscribe({
       next: (data: IHomePageData) => {
+        this.homeData = data;
         this.featuredSalons = data.featuredSalons || [];
         this.newSalons = data.newSalons || [];
         this.featuredServices = data.featuredServices || [];
@@ -150,7 +151,7 @@ export class HomeComponent implements OnInit {
   // Star rating functionality is handled by getRatingStars method
 
   navigateToSalon(salonSlug: string): void {
-    this.router.navigate(['/us', salonSlug]);
+    this.router.navigate(['/salons', salonSlug]);
   }
 
   navigateToService(serviceSlug: string): void {

@@ -2,7 +2,15 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
-import type { ApiEnvelope, PublicHome, PublicPage, PublicReview, PublicSalonProfile, PublicSalonSummary, PublicService } from './public-discovery.models';
+import type {
+  ApiEnvelope,
+  PublicHome,
+  PublicPage,
+  PublicReview,
+  PublicSalonProfile,
+  PublicSalonSummary,
+  PublicService,
+} from './public-discovery.models';
 
 @Injectable({ providedIn: 'root' })
 export class PublicDiscoveryApi {
@@ -34,7 +42,12 @@ export class PublicDiscoveryApi {
     if (options.ratingMin !== null && options.ratingMin !== undefined) {
       params = params.set('ratingMin', options.ratingMin);
     }
-    return this.http.get<ApiEnvelope<PublicPage<PublicSalonSummary>>>(`${this.baseUrl}/salons`, { params }).pipe(map((response) => response.data));
+    if (options.cursor) {
+      params = params.set('cursor', options.cursor);
+    }
+    return this.http
+      .get<ApiEnvelope<PublicPage<PublicSalonSummary>>>(`${this.baseUrl}/salons`, { params })
+      .pipe(map((response) => response.data));
   }
 
   getSalonProfile(slug: string): Observable<PublicSalonProfile> {
@@ -42,11 +55,15 @@ export class PublicDiscoveryApi {
   }
 
   listSalonServices(slug: string): Observable<PublicPage<PublicService>> {
-    return this.http.get<ApiEnvelope<PublicPage<PublicService>>>(`${this.baseUrl}/salons/${slug}/services`).pipe(map((response) => response.data));
+    return this.http
+      .get<ApiEnvelope<PublicPage<PublicService>>>(`${this.baseUrl}/salons/${slug}/services`)
+      .pipe(map((response) => response.data));
   }
 
   listSalonReviews(slug: string): Observable<PublicPage<PublicReview>> {
-    return this.http.get<ApiEnvelope<PublicPage<PublicReview>>>(`${this.baseUrl}/salons/${slug}/reviews`).pipe(map((response) => response.data));
+    return this.http
+      .get<ApiEnvelope<PublicPage<PublicReview>>>(`${this.baseUrl}/salons/${slug}/reviews`)
+      .pipe(map((response) => response.data));
   }
 }
 
@@ -56,4 +73,5 @@ export interface PublicSalonSearchOptions {
   readonly serviceId?: string;
   readonly ratingMin?: number | null;
   readonly limit?: number;
+  readonly cursor?: string;
 }

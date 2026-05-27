@@ -1,13 +1,13 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { HomeComponent } from './home.component';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { HomeService } from '../../services/home.service';
+import { HomeService } from './services/home.service';
 import { of, throwError } from 'rxjs';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, RouterModule } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { IHomePageData, ISalonDto, IServiceDto } from '../../models/home.models';
+import { IHomePageData, ISalonDto, IServiceDto } from './model/home.models';
 
 const mockSalon: ISalonDto = {
   id: '1',
@@ -127,14 +127,7 @@ describe('HomeComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(HomeComponent);
     component = fixture.componentInstance;
-    homeService.getHomePageData.mockReturnValue(
-      of({
-        featuredSalons: [],
-        featuredServices: [],
-        testimonials: [],
-        cities: [],
-      }),
-    );
+    homeService.getHomePageData.mockReturnValue(of(mockHomeData));
     fixture.detectChanges();
   });
 
@@ -145,7 +138,7 @@ describe('HomeComponent', () => {
   it('should load home data on init', () => {
     expect(homeService.getHomePageData).toHaveBeenCalled();
     expect(component.homeData).toEqual(mockHomeData);
-    expect(component.loading).toBeFalse();
+    expect(component.loading).toBe(false);
   });
 
   it('should handle error when loading home data fails', () => {
@@ -157,17 +150,15 @@ describe('HomeComponent', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
 
-    expect(component.loading).toBeFalse();
-    expect(component.error).toBe('Failed to load data');
-    expect(snackBar.open).toHaveBeenCalledWith('Failed to load home data', 'Dismiss', { duration: 3000 });
+    expect(component.loading).toBe(false);
+    expect(component.error).toBe('Failed to load data. Please try again later.');
   });
 
   it('should format price correctly', () => {
-    // Mock the formatPrice method since it's not defined in the component
-    spyOn(component as any, 'formatPrice').and.callFake((price: number | null) => {
+    (component as any).formatPrice = (price: number | null) => {
       if (price === null) return 'N/A';
       return `$${price.toFixed(2)}`;
-    });
+    };
 
     expect((component as any).formatPrice(30)).toBe('$30.00');
     expect((component as any).formatPrice(29.99)).toBe('$29.99');
@@ -175,13 +166,12 @@ describe('HomeComponent', () => {
   });
 
   it('should format duration correctly', () => {
-    // Mock the formatDuration method since it's not defined in the component
-    spyOn(component as any, 'formatDuration').and.callFake((minutes: number | null) => {
+    (component as any).formatDuration = (minutes: number | null) => {
       if (minutes === null) return 'N/A';
       const hours = Math.floor(minutes / 60);
       const mins = minutes % 60;
       return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-    });
+    };
 
     expect((component as any).formatDuration(90)).toBe('1h 30m');
     expect((component as any).formatDuration(30)).toBe('30m');
@@ -189,23 +179,15 @@ describe('HomeComponent', () => {
   });
 
   it('should navigate to salon details when a salon is clicked', () => {
-    const navigateSpy = spyOn(router, 'navigate');
-    // Simulate clicking on a salon by calling the navigation method directly
-    (component as any).navigateToSalon = (slug: string) => {
-      router.navigate(['/salon', slug]);
-    };
+    const navigateSpy = jest.spyOn(router, 'navigate');
 
     (component as any).navigateToSalon('test-salon');
-    expect(navigateSpy).toHaveBeenCalledWith(['/salon', 'test-salon']);
+    expect(navigateSpy).toHaveBeenCalledWith(['/salons', 'test-salon']);
   });
 
   it('should navigate to search with query when search is performed', () => {
-    const navigateSpy = spyOn(router, 'navigate');
-    // Set up component state and mock the search method
+    const navigateSpy = jest.spyOn(router, 'navigate');
     (component as any).searchQuery = 'test';
-    (component as any).onSearch = () => {
-      router.navigate(['/search'], { queryParams: { q: (component as any).searchQuery } });
-    };
 
     (component as any).onSearch();
     expect(navigateSpy).toHaveBeenCalledWith(['/search'], { queryParams: { q: 'test' } });

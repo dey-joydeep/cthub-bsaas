@@ -3,9 +3,9 @@ import { SalonSearchComponent } from './salon-search.component';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
+import { SafeUrlPipe } from '@cthub-bsaas/web-ui';
 import { RouterTestingModule } from '@angular/router/testing';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { of } from 'rxjs';
 
 describe('SalonSearchComponent', () => {
@@ -23,7 +23,13 @@ describe('SalonSearchComponent', () => {
         SafeUrlPipe,
         RouterTestingModule.withRoutes([]),
       ],
-      providers: [SafeUrlPipe, { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => null } } } }],
+      providers: [
+        SafeUrlPipe,
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: { get: () => null }, queryParamMap: convertToParamMap({}) } },
+        },
+      ],
     }).compileComponents();
   }));
 
@@ -33,12 +39,56 @@ describe('SalonSearchComponent', () => {
     httpMock = TestBed.inject(HttpTestingController);
   });
 
-  it('should call backend with correct sort param', () => {
-    component.sort = 'reviews';
+  it('should call public search with filter params', () => {
+    component.query = 'cut';
     component.search();
-    const req = httpMock.expectOne((r) => r.url.includes('/api/salons'));
-    expect(req.request.params.get('sort')).toBe('reviews');
-    req.flush({ salons: [], total: 0 });
+    const req = httpMock.expectOne((r) => r.url === '/api/public/salons');
+    expect(req.request.params.get('q')).toBe('cut');
+    expect(req.request.params.get('limit')).toBe('10');
+    req.flush({ success: true, data: { items: [], page: { limit: 10, nextCursor: null, hasMore: false } } });
+  });
+
+  it('should initialize search filters from route query params', () => {
+    const route = TestBed.inject(ActivatedRoute);
+    route.snapshot.queryParamMap = convertToParamMap({ q: 'cut', city: 'Tokyo', ratingMin: '4' });
+
+    component.ngOnInit();
+
+    const homeReq = httpMock.expectOne('/api/public/home');
+    homeReq.flush({ success: true, data: { featuredSalons: [], popularServices: [], nearbyAreas: [] } });
+    const searchReq = httpMock.expectOne((r) => r.url === '/api/public/salons');
+    expect(searchReq.request.params.get('q')).toBe('cut');
+    expect(searchReq.request.params.get('city')).toBe('Tokyo');
+    expect(searchReq.request.params.get('ratingMin')).toBe('4');
+    searchReq.flush({ success: true, data: { items: [], page: { limit: 10, nextCursor: null, hasMore: false } } });
+  });
+
+  it('should send the stored cursor when moving to the next search page', () => {
+    component.search();
+    const firstReq = httpMock.expectOne((r) => r.url === '/api/public/salons');
+    firstReq.flush({
+      success: true,
+      data: {
+        items: [
+          {
+            salonId: 'business-1',
+            slug: 'glow-1',
+            name: 'Glow',
+            area: 'Tokyo',
+            rating: '4.8',
+            reviewCount: 9,
+            startingPrice: '40.00',
+            nextAvailability: null,
+          },
+        ],
+        page: { limit: 10, nextCursor: 'cursor-2', hasMore: true },
+      },
+    });
+
+    component.goToPage(2);
+
+    const nextReq = httpMock.expectOne((r) => r.url === '/api/public/salons' && r.params.get('cursor') === 'cursor-2');
+    nextReq.flush({ success: true, data: { items: [], page: { limit: 10, nextCursor: null, hasMore: false } } });
   });
 
   it('should render salons in correct order after sorting', () => {
@@ -145,13 +195,15 @@ describe('SalonSearchComponent', () => {
 
   it('should show empty state if no salons found', waitForAsync(() => {
     component.ngOnInit();
-    // Flush all /api/services requests
-    httpMock.match((r) => r.url.includes('/api/services')).forEach((req) => req.flush([]));
+    httpMock
+      .match((r) => r.url === '/api/public/home')
+      .forEach((req) => req.flush({ success: true, data: { featuredSalons: [], popularServices: [], nearbyAreas: [] } }));
     fixture.detectChanges();
-    // Flush all /api/salons requests
-    httpMock.match((r) => r.url.includes('/api/salons')).forEach((req) => req.flush({ salons: [], total: 0 }));
+    httpMock
+      .match((r) => r.url === '/api/public/salons')
+      .forEach((req) => req.flush({ success: true, data: { items: [], page: { limit: 10, nextCursor: null, hasMore: false } } }));
     fixture.detectChanges();
-    expect(component.loading).toBeFalse();
+    expect(component.loading).toBe(false);
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('No salons found. Try adjusting your search or filters.');
   }));
