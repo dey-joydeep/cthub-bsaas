@@ -56,6 +56,14 @@
   margin-top: 16px;
 }
 
+.history-list {
+  margin-top: 12px;
+
+  .list-row {
+    cursor: default;
+  }
+}
+
 .list {
   display: grid;
   gap: 8px;

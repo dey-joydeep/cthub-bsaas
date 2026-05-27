@@ -27,6 +27,9 @@ describe('CustomerCrmComponent', () => {
             email: 'customer@example.com',
             dateOfBirth: '1990-01-01',
             consentForMarketing: true,
+            smsEnabled: true,
+            emailEnabled: false,
+            whatsappEnabled: true,
             createdAt: '2026-05-26T00:00:00.000Z',
             updatedAt: '2026-05-26T00:00:00.000Z',
           },
@@ -36,6 +39,12 @@ describe('CustomerCrmComponent', () => {
     );
     api.createCustomerNote.mockReturnValue(of({ body: 'Prefers morning', visibility: 'STAFF_VISIBLE' }));
     api.updateCustomerCommunicationPreferences.mockReturnValue(of({ smsEnabled: true, emailEnabled: false, whatsappEnabled: false }));
+    api.getCustomerVisitHistory.mockReturnValue(
+      of({
+        items: [{ id: 'visit-1', branchName: 'Main', visitedAt: '2026-05-26T09:00:00.000Z', status: 'COMPLETED', total: '45.00' }],
+        page: { limit: 1, nextCursor: null, hasMore: false },
+      }),
+    );
 
     await TestBed.configureTestingModule({
       imports: [NoopAnimationsModule, CustomerCrmComponent],
@@ -67,9 +76,61 @@ describe('CustomerCrmComponent', () => {
     component.savePreferences();
 
     expect(api.updateCustomerCommunicationPreferences).toHaveBeenCalledWith('customer-1', {
-      smsEnabled: false,
+      smsEnabled: true,
       emailEnabled: false,
-      whatsappEnabled: false,
+      whatsappEnabled: true,
     });
+  });
+
+  it('resets dependent forms when switching customers', () => {
+    const component = fixture.componentInstance as unknown as {
+      noteForm: { patchValue: (value: Record<string, string>) => void; controls: { body: { value: string } } };
+      preferencesForm: {
+        patchValue: (value: Record<string, boolean>) => void;
+        getRawValue: () => { smsEnabled: boolean; emailEnabled: boolean; whatsappEnabled: boolean };
+      };
+      visitHistory: { set: (value: readonly unknown[]) => void; (): readonly unknown[] };
+      selectCustomer: (customer: {
+        id: string;
+        displayName: string;
+        phone: string;
+        consentForMarketing: boolean;
+        smsEnabled?: boolean;
+        emailEnabled?: boolean;
+        whatsappEnabled?: boolean;
+        createdAt: string;
+        updatedAt: string;
+      }) => void;
+    };
+    component.noteForm.patchValue({ body: 'Draft for previous customer' });
+    component.preferencesForm.patchValue({ smsEnabled: false, emailEnabled: true, whatsappEnabled: false });
+    component.visitHistory.set([{ id: 'old-visit' }]);
+
+    component.selectCustomer({
+      id: 'customer-2',
+      displayName: 'Customer Two',
+      phone: '09000000002',
+      consentForMarketing: false,
+      smsEnabled: false,
+      emailEnabled: true,
+      whatsappEnabled: false,
+      createdAt: '',
+      updatedAt: '',
+    });
+
+    expect(component.noteForm.controls.body.value).toBe('');
+    expect(component.preferencesForm.getRawValue()).toEqual({ smsEnabled: false, emailEnabled: true, whatsappEnabled: false });
+    expect(component.visitHistory()).toEqual([]);
+  });
+
+  it('loads and renders visit history for the selected customer', () => {
+    const component = fixture.componentInstance as unknown as { loadVisitHistory: () => void };
+
+    component.loadVisitHistory();
+    fixture.detectChanges();
+
+    expect(api.getCustomerVisitHistory).toHaveBeenCalledWith('customer-1');
+    expect(fixture.nativeElement.textContent).toContain('Main');
+    expect(fixture.nativeElement.textContent).toContain('COMPLETED');
   });
 });

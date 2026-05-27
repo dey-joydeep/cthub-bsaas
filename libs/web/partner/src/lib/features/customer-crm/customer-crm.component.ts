@@ -12,7 +12,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { Observable } from 'rxjs';
 
-import { Customer, CustomerInput } from './models/customer-crm.models';
+import { Customer, CustomerInput, CustomerVisitHistoryItem } from './models/customer-crm.models';
 import { CustomerCrmApi } from './customer-crm.api';
 
 @Component({
@@ -44,6 +44,7 @@ export class CustomerCrmComponent {
   protected readonly error = signal<string | null>(null);
   protected readonly customers = signal<readonly Customer[]>([]);
   protected readonly selectedCustomer = signal<Customer | null>(null);
+  protected readonly visitHistory = signal<readonly CustomerVisitHistoryItem[]>([]);
 
   protected readonly searchForm = this.fb.nonNullable.group({
     q: [''],
@@ -97,6 +98,7 @@ export class CustomerCrmComponent {
       dateOfBirth: customer.dateOfBirth ?? '',
       consentForMarketing: customer.consentForMarketing,
     });
+    this.resetDependentForms(customer);
   }
 
   protected newCustomer(): void {
@@ -108,8 +110,7 @@ export class CustomerCrmComponent {
       dateOfBirth: '',
       consentForMarketing: false,
     });
-    this.noteForm.reset({ body: '', visibility: 'STAFF_VISIBLE' });
-    this.preferencesForm.reset({ smsEnabled: false, emailEnabled: false, whatsappEnabled: false });
+    this.resetDependentForms();
   }
 
   protected saveCustomer(): void {
@@ -133,7 +134,9 @@ export class CustomerCrmComponent {
       this.error.set('Select a customer and enter a note.');
       return;
     }
-    this.persist(this.api.createCustomerNote(customer.id, this.noteForm.getRawValue()), () => this.noteForm.reset({ body: '', visibility: 'STAFF_VISIBLE' }));
+    this.persist(this.api.createCustomerNote(customer.id, this.noteForm.getRawValue()), () =>
+      this.noteForm.reset({ body: '', visibility: 'STAFF_VISIBLE' }),
+    );
   }
 
   protected savePreferences(): void {
@@ -151,7 +154,15 @@ export class CustomerCrmComponent {
       this.error.set('Select a customer before loading visit history.');
       return;
     }
-    this.persist(this.api.getCustomerVisitHistory(customer.id));
+    this.persist(this.api.getCustomerVisitHistory(customer.id), (history) => this.visitHistory.set(history.items));
+  }
+
+  protected visitTitle(visit: CustomerVisitHistoryItem): string {
+    return visit.branchName ?? visit.branchId ?? 'Visit';
+  }
+
+  protected visitSummary(visit: CustomerVisitHistoryItem): string {
+    return [visit.visitedAt ?? visit.startsAt, visit.status, visit.total].filter(Boolean).join(' · ');
   }
 
   private normalizeCustomerInput(): CustomerInput {
@@ -163,6 +174,16 @@ export class CustomerCrmComponent {
       dateOfBirth: value.dateOfBirth || undefined,
       consentForMarketing: value.consentForMarketing,
     };
+  }
+
+  private resetDependentForms(customer?: Customer): void {
+    this.noteForm.reset({ body: '', visibility: 'STAFF_VISIBLE' });
+    this.preferencesForm.reset({
+      smsEnabled: customer?.smsEnabled ?? false,
+      emailEnabled: customer?.emailEnabled ?? false,
+      whatsappEnabled: customer?.whatsappEnabled ?? false,
+    });
+    this.visitHistory.set([]);
   }
 
   private persist<T>(request: Observable<T>, onSuccess?: (value: T) => void): void {

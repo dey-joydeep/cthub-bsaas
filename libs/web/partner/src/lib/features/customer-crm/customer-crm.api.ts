@@ -2,8 +2,15 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
-import type { ApiEnvelope, PagedEnvelope } from '../salon-owner-settings/models/salon-owner-settings.models';
-import { CommunicationPreferencesInput, Customer, CustomerInput, CustomerNoteInput, CustomerPage } from './models/customer-crm.models';
+import type { ApiEnvelope } from '../salon-owner-settings/models/salon-owner-settings.models';
+import {
+  CommunicationPreferencesInput,
+  Customer,
+  CustomerInput,
+  CustomerNoteInput,
+  CustomerPage,
+  CustomerVisitHistoryPage,
+} from './models/customer-crm.models';
 
 @Injectable({ providedIn: 'root' })
 export class CustomerCrmApi {
@@ -24,7 +31,9 @@ export class CustomerCrmApi {
   }
 
   createCustomerNote(customerId: string, input: CustomerNoteInput): Observable<CustomerNoteInput> {
-    return this.http.post<ApiEnvelope<CustomerNoteInput>>(`${this.baseUrl}/${customerId}/notes`, input).pipe(map((response) => response.data));
+    return this.http
+      .post<ApiEnvelope<CustomerNoteInput>>(`${this.baseUrl}/${customerId}/notes`, input)
+      .pipe(map((response) => response.data));
   }
 
   updateCustomerCommunicationPreferences(
@@ -36,9 +45,9 @@ export class CustomerCrmApi {
       .pipe(map((response) => response.data));
   }
 
-  getCustomerVisitHistory(customerId: string): Observable<PagedEnvelope<unknown>> {
+  getCustomerVisitHistory(customerId: string): Observable<CustomerVisitHistoryPage> {
     return this.http
-      .get<ApiEnvelope<PagedEnvelope<unknown>>>(`${this.baseUrl}/${customerId}/visit-history`)
+      .get<ApiEnvelope<CustomerVisitHistoryPage>>(`${this.baseUrl}/${customerId}/visit-history`)
       .pipe(map((response) => response.data));
   }
 }

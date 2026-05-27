@@ -11,6 +11,9 @@ export interface CustomerInput {
 export interface Customer extends CustomerInput {
   readonly id: string;
   readonly consentForMarketing: boolean;
+  readonly smsEnabled?: boolean;
+  readonly emailEnabled?: boolean;
+  readonly whatsappEnabled?: boolean;
   readonly createdAt: string;
   readonly updatedAt: string;
 }
@@ -26,4 +29,16 @@ export interface CommunicationPreferencesInput {
   readonly whatsappEnabled: boolean;
 }
 
+export interface CustomerVisitHistoryItem {
+  readonly id?: string;
+  readonly branchId?: string;
+  readonly branchName?: string;
+  readonly visitedAt?: string;
+  readonly startsAt?: string;
+  readonly status?: string;
+  readonly total?: string;
+  readonly serviceNames?: readonly string[];
+}
+
 export type CustomerPage = PagedEnvelope<Customer>;
+export type CustomerVisitHistoryPage = PagedEnvelope<CustomerVisitHistoryItem>;

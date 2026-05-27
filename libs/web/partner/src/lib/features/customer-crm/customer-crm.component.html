@@ -115,10 +115,26 @@
           <mat-checkbox formControlName="whatsappEnabled">WhatsApp</mat-checkbox>
           <button mat-flat-button type="submit" [disabled]="saving() || !selectedCustomer()">Save preferences</button>
         </form>
-        <button class="history-button" mat-stroked-button type="button" [disabled]="saving() || !selectedCustomer()" (click)="loadVisitHistory()">
+        <button
+          class="history-button"
+          mat-stroked-button
+          type="button"
+          [disabled]="saving() || !selectedCustomer()"
+          (click)="loadVisitHistory()"
+        >
           <mat-icon>history</mat-icon>
           Visit history
         </button>
+        <div class="list history-list">
+          @for (visit of visitHistory(); track visit.id ?? $index) {
+            <div class="list-row">
+              <span>{{ visitTitle(visit) }}</span>
+              <small>{{ visitSummary(visit) }}</small>
+            </div>
+          } @empty {
+            <p class="empty">No visit history loaded.</p>
+          }
+        </div>
       </mat-card-content>
     </mat-card>
   </div>
