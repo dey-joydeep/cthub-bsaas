@@ -10,6 +10,26 @@ import { AppointmentSchedulingComponent } from './appointment-scheduling.compone
 
 describe('AppointmentSchedulingComponent', () => {
   let fixture: ComponentFixture<AppointmentSchedulingComponent>;
+  const appointment = {
+    id: 'appointment-1',
+    branchId: 'branch-1',
+    customerId: 'customer-1',
+    status: 'BOOKED',
+    lines: [
+      {
+        id: 'line-1',
+        serviceId: 'selected-service',
+        staffId: 'selected-staff',
+        startsAt: '2026-05-26T09:00:00.000Z',
+        endsAt: '2026-05-26T09:50:00.000Z',
+        serviceName: 'Color',
+        staffName: 'Stylist Two',
+        durationMinutes: 50,
+      },
+    ],
+    createdAt: '',
+    updatedAt: '',
+  };
   const settingsApi = { listBranches: jest.fn() };
   const customerApi = { searchCustomers: jest.fn() };
   const catalogApi = { listStaff: jest.fn(), listServices: jest.fn() };
@@ -30,25 +50,95 @@ describe('AppointmentSchedulingComponent', () => {
   beforeEach(async () => {
     settingsApi.listBranches.mockReturnValue(
       of({
-        items: [{ id: 'branch-1', businessId: 'business-1', name: 'Main', timezone: 'Asia/Tokyo', currency: 'JPY', address: {}, createdAt: '', updatedAt: '' }],
+        items: [
+          {
+            id: 'branch-1',
+            businessId: 'business-1',
+            name: 'Main',
+            timezone: 'Asia/Tokyo',
+            currency: 'JPY',
+            address: {},
+            createdAt: '',
+            updatedAt: '',
+          },
+        ],
         page: { limit: 1, nextCursor: null, hasMore: false },
       }),
     );
     customerApi.searchCustomers.mockReturnValue(
-      of({ items: [{ id: 'customer-1', displayName: 'Customer One', phone: '09000000001', consentForMarketing: false, createdAt: '', updatedAt: '' }], page: { limit: 1, nextCursor: null, hasMore: false } }),
+      of({
+        items: [
+          { id: 'customer-1', displayName: 'Customer One', phone: '09000000001', consentForMarketing: false, createdAt: '', updatedAt: '' },
+        ],
+        page: { limit: 1, nextCursor: null, hasMore: false },
+      }),
     );
     catalogApi.listStaff.mockReturnValue(
-      of({ items: [{ id: 'staff-1', branchIds: ['branch-1'], displayName: 'Stylist One', phone: '09000000001', status: 'ACTIVE', roles: [], skillServiceIds: [], createdAt: '', updatedAt: '' }], page: { limit: 1, nextCursor: null, hasMore: false } }),
+      of({
+        items: [
+          {
+            id: 'staff-1',
+            branchIds: ['branch-1'],
+            displayName: 'Stylist One',
+            phone: '09000000001',
+            status: 'ACTIVE',
+            roles: [],
+            skillServiceIds: [],
+            createdAt: '',
+            updatedAt: '',
+          },
+        ],
+        page: { limit: 1, nextCursor: null, hasMore: false },
+      }),
     );
     catalogApi.listServices.mockReturnValue(
-      of({ items: [{ id: 'service-1', categoryId: 'category-1', name: 'Cut', durationMinutes: 45, bufferMinutes: 5, basePrice: '35.00', taxRatePercent: '10.00', status: 'ACTIVE', eligibleStaffIds: [] }], page: { limit: 1, nextCursor: null, hasMore: false } }),
+      of({
+        items: [
+          {
+            id: 'service-1',
+            categoryId: 'category-1',
+            name: 'Cut',
+            durationMinutes: 45,
+            bufferMinutes: 5,
+            basePrice: '35.00',
+            taxRatePercent: '10.00',
+            status: 'ACTIVE',
+            eligibleStaffIds: [],
+          },
+        ],
+        page: { limit: 1, nextCursor: null, hasMore: false },
+      }),
     );
     appointmentApi.findSlots.mockReturnValue(
-      of({ items: [{ staffId: 'staff-1', startsAt: '2026-05-26T09:00:00.000Z', endsAt: '2026-05-26T09:50:00.000Z' }], page: { limit: 1, nextCursor: null, hasMore: false } }),
+      of({
+        items: [{ staffId: 'staff-1', startsAt: '2026-05-26T09:00:00.000Z', endsAt: '2026-05-26T09:50:00.000Z' }],
+        page: { limit: 1, nextCursor: null, hasMore: false },
+      }),
     );
     appointmentApi.getDayBoard.mockReturnValue(of({ branchId: 'branch-1', date: '2026-05-26', appointments: [] }));
-    appointmentApi.createAppointment.mockReturnValue(of({ id: 'appointment-1', branchId: 'branch-1', customerId: 'customer-1', status: 'BOOKED', lines: [], createdAt: '', updatedAt: '' }));
-    appointmentApi.confirmAppointment.mockReturnValue(of({ id: 'appointment-1', branchId: 'branch-1', customerId: 'customer-1', status: 'CONFIRMED', lines: [], createdAt: '', updatedAt: '' }));
+    appointmentApi.createAppointment.mockReturnValue(
+      of({
+        id: 'appointment-1',
+        branchId: 'branch-1',
+        customerId: 'customer-1',
+        status: 'BOOKED',
+        lines: [],
+        createdAt: '',
+        updatedAt: '',
+      }),
+    );
+    appointmentApi.rescheduleAppointment.mockReturnValue(of(appointment));
+    appointmentApi.confirmAppointment.mockReturnValue(
+      of({
+        id: 'appointment-1',
+        branchId: 'branch-1',
+        customerId: 'customer-1',
+        status: 'CONFIRMED',
+        lines: [],
+        createdAt: '',
+        updatedAt: '',
+      }),
+    );
 
     await TestBed.configureTestingModule({
       imports: [NoopAnimationsModule, AppointmentSchedulingComponent],
@@ -78,6 +168,14 @@ describe('AppointmentSchedulingComponent', () => {
     expect(appointmentApi.findSlots).toHaveBeenCalledWith('branch-1', ['service-1'], expect.any(String));
   });
 
+  it('initializes the board with a local calendar date', () => {
+    const component = fixture.componentInstance as unknown as {
+      boardForm: { controls: { date: { value: string } } };
+    };
+
+    expect(component.boardForm.controls.date.value).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
   it('creates appointments from the current form state', () => {
     const component = fixture.componentInstance as unknown as {
       appointmentForm: { patchValue: (value: Record<string, string>) => void };
@@ -93,5 +191,24 @@ describe('AppointmentSchedulingComponent', () => {
         lines: [{ serviceId: 'service-1', staffId: 'staff-1', startsAt: '2026-05-26T09:00:00.000Z' }],
       }),
     );
+  });
+
+  it('reschedules using line identity from the selected appointment', () => {
+    const component = fixture.componentInstance as unknown as {
+      appointmentForm: { patchValue: (value: Record<string, string>) => void };
+      rescheduleForm: { patchValue: (value: Record<string, string>) => void };
+      selectedAppointment: { set: (value: unknown) => void };
+      reschedule: () => void;
+    };
+    component.appointmentForm.patchValue({ serviceId: 'form-service', staffId: 'form-staff' });
+    component.rescheduleForm.patchValue({ startsAt: '2026-05-27T10:00:00.000Z', reason: 'Customer request' });
+    component.selectedAppointment.set(appointment);
+
+    component.reschedule();
+
+    expect(appointmentApi.rescheduleAppointment).toHaveBeenCalledWith('appointment-1', {
+      reason: 'Customer request',
+      lines: [{ serviceId: 'selected-service', staffId: 'selected-staff', startsAt: '2026-05-27T10:00:00.000Z' }],
+    });
   });
 });
