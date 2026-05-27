@@ -12,7 +12,16 @@ function user(overrides: Partial<AuthenticatedUser> = {}): AuthenticatedUser {
 }
 
 function branch() {
-  return { id: 'branch-1', businessId: 'business-1', name: 'Main', timezone: 'Asia/Tokyo', currency: 'JPY', address: {}, createdAt: now, updatedAt: now };
+  return {
+    id: 'branch-1',
+    businessId: 'business-1',
+    name: 'Main',
+    timezone: 'Asia/Tokyo',
+    currency: 'JPY',
+    address: {},
+    createdAt: now,
+    updatedAt: now,
+  };
 }
 
 function serviceRecord() {
@@ -87,8 +96,10 @@ function createPrismaMock() {
     salonOwnerAppointment: {
       findMany: jest.fn(),
       findFirst: jest.fn(),
+      findFirstOrThrow: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
     },
     salonOwnerAppointmentLine: {
       findFirst: jest.fn(),
@@ -120,6 +131,9 @@ describe('AppointmentSchedulingService', () => {
     prisma.salonOwnerService.findMany.mockResolvedValue([serviceRecord()]);
     prisma.salonOwnerStaff.findMany.mockResolvedValue([staff()]);
     prisma.salonOwnerAppointmentLine.findFirst.mockResolvedValue(null);
+    prisma.salonOwnerAppointment.update.mockResolvedValue(appointment());
+    prisma.salonOwnerAppointment.findFirstOrThrow.mockResolvedValue(appointment({ status: 'CONFIRMED' }));
+    prisma.salonOwnerAppointment.updateMany.mockResolvedValue({ count: 1 });
   });
 
   it('requires tenant scope', async () => {
@@ -138,7 +152,15 @@ describe('AppointmentSchedulingService', () => {
   });
 
   it('rejects invalid day-board dates', async () => {
-    await expect(service.getAppointmentDayBoard({ user: user() }, 'branch-1', 'bad-date')).rejects.toBeInstanceOf(UnprocessableEntityException);
+    await expect(service.getAppointmentDayBoard({ user: user() }, 'branch-1', 'bad-date')).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+  });
+
+  it('rejects invalid slot dates', async () => {
+    await expect(service.findAppointmentSlots({ user: user() }, 'branch-1', ['service-1'], 'bad-date')).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
   });
 
   it('finds simple slots from active staff and active services', async () => {
@@ -148,11 +170,24 @@ describe('AppointmentSchedulingService', () => {
   });
 
   it('creates regular and walk-in appointments after conflict checks', async () => {
-    prisma.salonOwnerAppointment.create.mockResolvedValueOnce(appointment()).mockResolvedValueOnce(appointment({ estimatedWaitMinutes: 10 }));
+    prisma.salonOwnerAppointment.create
+      .mockResolvedValueOnce(appointment())
+      .mockResolvedValueOnce(appointment({ estimatedWaitMinutes: 10 }));
 
     await expect(service.createAppointment({ user: user() }, appointmentInput)).resolves.toMatchObject({ id: 'appointment-1' });
-    await expect(service.createWalkInAppointment({ user: user() }, { ...appointmentInput, estimatedWaitMinutes: 10 })).resolves.toMatchObject({
+    await expect(
+      service.createWalkInAppointment({ user: user() }, { ...appointmentInput, estimatedWaitMinutes: 10 }),
+    ).resolves.toMatchObject({
       estimatedWaitMinutes: 10,
+    });
+  });
+
+  it('requires appointment staff to belong to the selected branch', async () => {
+    prisma.salonOwnerStaff.findMany.mockResolvedValue([]);
+
+    await expect(service.createAppointment({ user: user() }, appointmentInput)).rejects.toBeInstanceOf(NotFoundException);
+    expect(prisma.salonOwnerStaff.findMany).toHaveBeenCalledWith({
+      where: { id: { in: ['staff-1'] }, businessId: 'business-1', branches: { some: { branchId: 'branch-1' } }, status: 'ACTIVE' },
     });
   });
 
@@ -162,9 +197,9 @@ describe('AppointmentSchedulingService', () => {
     await expect(service.createAppointment({ user: user() }, appointmentInput)).rejects.toBeInstanceOf(ConflictException);
   });
 
-  it('reschedules and transitions existing appointments', async () => {
+  it('reschedules and confirms existing appointments', async () => {
     prisma.salonOwnerAppointment.findFirst.mockResolvedValue(appointment());
-    prisma.salonOwnerAppointment.update.mockResolvedValue(appointment({ status: 'CONFIRMED' }));
+    prisma.salonOwnerAppointment.findFirstOrThrow.mockResolvedValue(appointment({ status: 'CONFIRMED' }));
 
     await expect(
       service.rescheduleAppointment({ user: user() }, 'appointment-1', {
@@ -173,13 +208,40 @@ describe('AppointmentSchedulingService', () => {
       }),
     ).resolves.toMatchObject({ id: 'appointment-1' });
     await expect(service.confirmAppointment({ user: user() }, 'appointment-1')).resolves.toMatchObject({ status: 'CONFIRMED' });
-    await expect(service.cancelAppointment({ user: user() }, 'appointment-1', { reason: 'Customer request' })).resolves.toMatchObject({
-      status: 'CONFIRMED',
+    expect(prisma.salonOwnerAppointment.updateMany).toHaveBeenCalledWith({
+      where: { id: 'appointment-1', status: { in: ['BOOKED'] } },
+      data: { status: 'CONFIRMED' },
     });
-    await expect(service.markAppointmentNoShow({ user: user() }, 'appointment-1')).resolves.toMatchObject({ status: 'CONFIRMED' });
-    await expect(service.markAppointmentArrived({ user: user() }, 'appointment-1')).resolves.toMatchObject({ status: 'CONFIRMED' });
-    await expect(service.startAppointmentService({ user: user() }, 'appointment-1')).resolves.toMatchObject({ status: 'CONFIRMED' });
-    await expect(service.completeAppointment({ user: user() }, 'appointment-1')).resolves.toMatchObject({ status: 'CONFIRMED' });
+  });
+
+  it('enforces lifecycle transition rules', async () => {
+    prisma.salonOwnerAppointment.findFirst.mockResolvedValue(appointment({ status: 'COMPLETED' }));
+
+    await expect(service.markAppointmentArrived({ user: user() }, 'appointment-1')).rejects.toBeInstanceOf(ConflictException);
+    expect(prisma.salonOwnerAppointment.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('supports valid lifecycle action transitions', async () => {
+    prisma.salonOwnerAppointment.findFirst
+      .mockResolvedValueOnce(appointment({ status: 'CONFIRMED' }))
+      .mockResolvedValueOnce(appointment({ status: 'ARRIVED' }))
+      .mockResolvedValueOnce(appointment({ status: 'IN_SERVICE' }))
+      .mockResolvedValueOnce(appointment({ status: 'BOOKED' }))
+      .mockResolvedValueOnce(appointment({ status: 'ARRIVED' }));
+    prisma.salonOwnerAppointment.findFirstOrThrow
+      .mockResolvedValueOnce(appointment({ status: 'ARRIVED' }))
+      .mockResolvedValueOnce(appointment({ status: 'IN_SERVICE' }))
+      .mockResolvedValueOnce(appointment({ status: 'COMPLETED' }))
+      .mockResolvedValueOnce(appointment({ status: 'NO_SHOW' }))
+      .mockResolvedValueOnce(appointment({ status: 'CANCELLED' }));
+
+    await expect(service.markAppointmentArrived({ user: user() }, 'appointment-1')).resolves.toMatchObject({ status: 'ARRIVED' });
+    await expect(service.startAppointmentService({ user: user() }, 'appointment-1')).resolves.toMatchObject({ status: 'IN_SERVICE' });
+    await expect(service.completeAppointment({ user: user() }, 'appointment-1')).resolves.toMatchObject({ status: 'COMPLETED' });
+    await expect(service.markAppointmentNoShow({ user: user() }, 'appointment-1')).resolves.toMatchObject({ status: 'NO_SHOW' });
+    await expect(service.cancelAppointment({ user: user() }, 'appointment-1', { reason: 'Customer request' })).resolves.toMatchObject({
+      status: 'CANCELLED',
+    });
   });
 
   it('returns not found for out-of-scope appointments and missing services', async () => {

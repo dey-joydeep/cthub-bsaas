@@ -3,16 +3,38 @@ import { Prisma, SalonOwnerAppointmentStatus as PrismaAppointmentStatus } from '
 import { COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 import { PrismaService } from '@cthub-bsaas/server-data-access';
 
-import { AppointmentInputDto, AppointmentLineInputDto, ReasonInputDto, RescheduleAppointmentInputDto, WalkInAppointmentInputDto } from '../dto/appointment-scheduling.dto';
-import { AppointmentDayBoardModel, AppointmentLineModel, AppointmentModel, AppointmentStatus, AvailableSlotModel } from '../models/appointment-scheduling.models';
+import {
+  AppointmentInputDto,
+  AppointmentLineInputDto,
+  ReasonInputDto,
+  RescheduleAppointmentInputDto,
+  WalkInAppointmentInputDto,
+} from '../dto/appointment-scheduling.dto';
+import {
+  AppointmentDayBoardModel,
+  AppointmentLineModel,
+  AppointmentModel,
+  AppointmentStatus,
+  AvailableSlotModel,
+} from '../models/appointment-scheduling.models';
 import { PagedResult, SalonOwnerRequestContext } from '../models/salon-owner-settings.models';
 
 const conflictMessage = 'error.appointment.booking.staff_conflict';
+const invalidTransitionMessage = 'error.appointment.status.transition_invalid';
 const validationMessage = COMMON_MESSAGE_KEYS.ERROR.VALIDATION;
 const forbiddenMessage = COMMON_MESSAGE_KEYS.ERROR.FORBIDDEN_SCOPE;
 const notFoundMessage = COMMON_MESSAGE_KEYS.ERROR.NOT_FOUND;
 
 const appointmentInclude = { lines: true } as const;
+const allowedPreviousStatuses: Record<AppointmentStatus, readonly AppointmentStatus[]> = {
+  BOOKED: [],
+  CONFIRMED: ['BOOKED'],
+  ARRIVED: ['BOOKED', 'CONFIRMED'],
+  IN_SERVICE: ['ARRIVED'],
+  COMPLETED: ['IN_SERVICE'],
+  CANCELLED: ['BOOKED', 'CONFIRMED', 'ARRIVED', 'IN_SERVICE'],
+  NO_SHOW: ['BOOKED', 'CONFIRMED', 'ARRIVED'],
+};
 type AppointmentRecord = Prisma.SalonOwnerAppointmentGetPayload<{ include: typeof appointmentInclude }>;
 type BranchRecord = Awaited<ReturnType<PrismaService['salonBranch']['findFirstOrThrow']>>;
 type ServiceRecord = Awaited<ReturnType<PrismaService['salonOwnerService']['findFirstOrThrow']>>;
@@ -31,13 +53,26 @@ function parseIso(value: string): Date {
 }
 
 function dayRange(date: string): { startsAt: Date; endsAt: Date } {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    throw new UnprocessableEntityException(validationMessage);
-  }
+  assertCalendarDate(date);
   const startsAt = new Date(`${date}T00:00:00.000Z`);
   const endsAt = new Date(startsAt);
   endsAt.setUTCDate(endsAt.getUTCDate() + 1);
   return { startsAt, endsAt };
+}
+
+function assertCalendarDate(date: string): void {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  if (!match) {
+    throw new UnprocessableEntityException(validationMessage);
+  }
+  const [, yearValue, monthValue, dayValue] = match;
+  const year = Number(yearValue);
+  const month = Number(monthValue);
+  const day = Number(dayValue);
+  const normalized = new Date(Date.UTC(year, month - 1, day));
+  if (normalized.getUTCFullYear() !== year || normalized.getUTCMonth() !== month - 1 || normalized.getUTCDate() !== day) {
+    throw new UnprocessableEntityException(validationMessage);
+  }
 }
 
 @Injectable()
@@ -65,6 +100,7 @@ export class AppointmentSchedulingService {
     date: string,
   ): Promise<PagedResult<AvailableSlotModel>> {
     const branch = await this.findBranchInScope(context, branchId);
+    assertCalendarDate(date);
     const services = await this.findServicesInBusiness(branch.businessId, serviceIds);
     const staff = await this.prisma.salonOwnerStaff.findMany({
       where: { businessId: branch.businessId, branches: { some: { branchId } }, status: 'ACTIVE' },
@@ -198,19 +234,31 @@ export class AppointmentSchedulingService {
     return services;
   }
 
-  private async findStaffInBusiness(businessId: string, staffIds: readonly string[]): Promise<StaffRecord[]> {
+  private async findStaffInBranch(businessId: string, branchId: string, staffIds: readonly string[]): Promise<StaffRecord[]> {
     const ids = [...new Set(staffIds)];
-    const staff = await this.prisma.salonOwnerStaff.findMany({ where: { id: { in: ids }, businessId, status: 'ACTIVE' } });
+    const staff = await this.prisma.salonOwnerStaff.findMany({
+      where: { id: { in: ids }, businessId, branches: { some: { branchId } }, status: 'ACTIVE' },
+    });
     if (staff.length !== ids.length) {
       throw new NotFoundException(notFoundMessage);
     }
     return staff;
   }
 
-  private async buildLineData(branchId: string, lines: readonly AppointmentLineInputDto[]): Promise<Prisma.SalonOwnerAppointmentLineUncheckedCreateWithoutAppointmentInput[]> {
+  private async buildLineData(
+    branchId: string,
+    lines: readonly AppointmentLineInputDto[],
+  ): Promise<Prisma.SalonOwnerAppointmentLineUncheckedCreateWithoutAppointmentInput[]> {
     const branch = await this.prisma.salonBranch.findFirstOrThrow({ where: { id: branchId } });
-    const services = await this.findServicesInBusiness(branch.businessId, lines.map((line) => line.serviceId));
-    const staff = await this.findStaffInBusiness(branch.businessId, lines.map((line) => line.staffId));
+    const services = await this.findServicesInBusiness(
+      branch.businessId,
+      lines.map((line) => line.serviceId),
+    );
+    const staff = await this.findStaffInBranch(
+      branch.businessId,
+      branchId,
+      lines.map((line) => line.staffId),
+    );
     return lines.map((line) => {
       const service = services.find((candidate) => candidate.id === line.serviceId);
       const member = staff.find((candidate) => candidate.id === line.staffId);
@@ -231,7 +279,11 @@ export class AppointmentSchedulingService {
     });
   }
 
-  private async assertLinesAvailable(branchId: string, lines: readonly AppointmentLineInputDto[], excludeAppointmentId?: string): Promise<void> {
+  private async assertLinesAvailable(
+    branchId: string,
+    lines: readonly AppointmentLineInputDto[],
+    excludeAppointmentId?: string,
+  ): Promise<void> {
     const builtLines = await this.buildLineData(branchId, lines);
     for (const line of builtLines) {
       const conflict = await this.prisma.salonOwnerAppointmentLine.findFirst({
@@ -255,10 +307,20 @@ export class AppointmentSchedulingService {
     status: AppointmentStatus,
     data: Partial<Prisma.SalonOwnerAppointmentUncheckedUpdateInput> = {},
   ): Promise<AppointmentModel> {
-    await this.findAppointmentInScope(context, appointmentId);
-    const appointment = await this.prisma.salonOwnerAppointment.update({
-      where: { id: appointmentId },
+    const current = await this.findAppointmentInScope(context, appointmentId);
+    const allowedFrom = allowedPreviousStatuses[status];
+    if (!allowedFrom.includes(current.status)) {
+      throw new ConflictException(invalidTransitionMessage);
+    }
+    const updated = await this.prisma.salonOwnerAppointment.updateMany({
+      where: { id: appointmentId, status: { in: [...allowedFrom] } },
       data: { ...data, status: status as PrismaAppointmentStatus },
+    });
+    if (updated.count !== 1) {
+      throw new ConflictException(invalidTransitionMessage);
+    }
+    const appointment = await this.prisma.salonOwnerAppointment.findFirstOrThrow({
+      where: { id: appointmentId },
       include: appointmentInclude,
     });
     return this.mapAppointment(appointment);
