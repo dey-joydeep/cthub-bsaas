@@ -1,12 +1,14 @@
-import { IsBoolean, IsEmail, IsIn, IsISO8601, IsOptional, IsString, Length, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsIn, IsISO8601, IsOptional, IsString, Length, Matches, MaxLength, MinLength } from 'class-validator';
 
 export class CustomerInputDto {
   @IsString()
   @Length(2, 120)
+  @Matches(/\S/)
   displayName!: string;
 
   @IsString()
   @MaxLength(30)
+  @Matches(/\S/)
   phone!: string;
 
   @IsOptional()
@@ -26,6 +28,7 @@ export class CustomerNoteInputDto {
   @IsString()
   @MinLength(1)
   @MaxLength(2000)
+  @Matches(/\S/)
   body!: string;
 
   @IsIn(['INTERNAL', 'STAFF_VISIBLE'])

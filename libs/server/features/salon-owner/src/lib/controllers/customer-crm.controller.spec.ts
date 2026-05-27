@@ -25,7 +25,7 @@ describe('CustomerCrmController', () => {
     const note = { body: 'Prefers morning', visibility: 'STAFF_VISIBLE' as const };
     const preferences = { smsEnabled: true, emailEnabled: false, whatsappEnabled: false };
 
-    await controller.searchCustomers(user, 'cust');
+    await controller.searchCustomers(user, 'cust', '2', '25');
     await controller.createCustomer(user, customer);
     await controller.getCustomer(user, 'customer-1');
     await controller.updateCustomer(user, 'customer-1', customer);
@@ -33,7 +33,7 @@ describe('CustomerCrmController', () => {
     await controller.updateCustomerCommunicationPreferences(user, 'customer-1', preferences);
     await controller.getCustomerVisitHistory(user, 'customer-1');
 
-    expect(service.searchCustomers).toHaveBeenCalledWith({ user }, 'cust');
+    expect(service.searchCustomers).toHaveBeenCalledWith({ user }, { search: 'cust', page: '2', pageSize: '25' });
     expect(service.createCustomer).toHaveBeenCalledWith({ user }, customer);
     expect(service.getCustomer).toHaveBeenCalledWith({ user }, 'customer-1');
     expect(service.updateCustomer).toHaveBeenCalledWith({ user }, 'customer-1', customer);
