@@ -1,0 +1,33 @@
+name: Work Slice
+about: Define a small work unit for Codex and human review
+title: "slice: "
+labels: ["aidd", "slice"]
+body:
+  - type: textarea
+    id: boundary
+    attributes:
+      label: Boundary
+      description: What is included and what is excluded?
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Source docs
+      description: Link relevant planning, story, design, API, validation, web, and test docs.
+    validations:
+      required: true
+  - type: textarea
+    id: impacted-areas
+    attributes:
+      label: Impacted areas
+      description: List apps, libs, contracts, schema, tests, and docs.
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Required validation
+      description: List expected commands and checks.
+    validations:
+      required: false
