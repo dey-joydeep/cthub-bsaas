@@ -1,12 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CurrentUser } from '@cthub-bsaas/server-core';
-import type { AuthenticatedUser } from '@cthub-bsaas/shared';
+import { CurrentUser, Roles } from '@cthub-bsaas/server-core';
+import { UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
 
 import { SalonBusinessInputDto } from '../dto/salon-business.dto';
 import { SalonOwnerSettingsService } from '../services/salon-owner-settings.service';
 
 @ApiTags('Business Settings')
+@Roles(UserRole.OWNER, UserRole.ADMIN)
 @Controller('partner/businesses')
 export class BusinessSettingsController {
   constructor(private readonly settings: SalonOwnerSettingsService) {}
@@ -25,13 +26,17 @@ export class BusinessSettingsController {
 
   @Get(':businessId')
   @ApiOperation({ operationId: 'getSalonBusiness' })
-  getBusiness(@CurrentUser() user: AuthenticatedUser, @Param('businessId') businessId: string) {
+  getBusiness(@CurrentUser() user: AuthenticatedUser, @Param('businessId', new ParseUUIDPipe()) businessId: string) {
     return this.settings.getBusiness({ user }, businessId);
   }
 
   @Patch(':businessId')
   @ApiOperation({ operationId: 'updateSalonBusiness' })
-  updateBusiness(@CurrentUser() user: AuthenticatedUser, @Param('businessId') businessId: string, @Body() body: SalonBusinessInputDto) {
+  updateBusiness(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('businessId', new ParseUUIDPipe()) businessId: string,
+    @Body() body: SalonBusinessInputDto,
+  ) {
     return this.settings.updateBusiness({ user }, businessId, body);
   }
 }

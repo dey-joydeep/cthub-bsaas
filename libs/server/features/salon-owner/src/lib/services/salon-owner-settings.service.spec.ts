@@ -266,6 +266,12 @@ describe('SalonOwnerSettingsService', () => {
         intervals: [{ start: '12:00', end: '11:00' }],
       }),
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    await expect(
+      service.setBranchHoliday({ user: user() }, 'branch-1', '2026-02-31', {
+        closed: true,
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
   });
 
   it('upserts holidays and branch policy', async () => {

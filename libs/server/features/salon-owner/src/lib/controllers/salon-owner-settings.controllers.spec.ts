@@ -1,4 +1,5 @@
-import type { AuthenticatedUser } from '@cthub-bsaas/shared';
+import { ROLES_KEY } from '@cthub-bsaas/server-core';
+import { UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
 
 import { BranchSettingsController } from './branch-settings.controller';
 import { BusinessSettingsController } from './business-settings.controller';
@@ -28,6 +29,11 @@ function serviceMock() {
 }
 
 describe('Salon owner settings controllers', () => {
+  it('restricts settings controllers to owner and admin roles', () => {
+    expect(Reflect.getMetadata(ROLES_KEY, BusinessSettingsController)).toEqual([UserRole.OWNER, UserRole.ADMIN]);
+    expect(Reflect.getMetadata(ROLES_KEY, BranchSettingsController)).toEqual([UserRole.OWNER, UserRole.ADMIN]);
+  });
+
   it('delegates business routes to the service with authenticated context', async () => {
     const service = serviceMock();
     const controller = new BusinessSettingsController(service as unknown as SalonOwnerSettingsService);
