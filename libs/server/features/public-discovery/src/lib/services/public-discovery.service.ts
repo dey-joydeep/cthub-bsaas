@@ -65,7 +65,12 @@ function requestedServices(input?: string | string[]): string[] {
   if (!input) {
     return [];
   }
-  return Array.isArray(input) ? input : input.split(',').map((value) => value.trim()).filter(Boolean);
+  return Array.isArray(input)
+    ? input
+    : input
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean);
 }
 
 @Injectable()
@@ -103,7 +108,7 @@ export class PublicDiscoveryService {
         branches: { include: { policy: true }, orderBy: { name: 'asc' } },
         services: { include: { category: true }, where: { status: SalonOwnerStatus.ACTIVE }, orderBy: { basePrice: 'asc' } },
       },
-      orderBy: { displayName: 'asc' },
+      orderBy: { id: 'asc' },
       take: limit + 1,
       skip: query.cursor ? 1 : 0,
       cursor: query.cursor ? { id: query.cursor } : undefined,
@@ -114,7 +119,7 @@ export class PublicDiscoveryService {
       items: query.ratingMin ? summaries.filter((summary) => Number(summary.rating) >= Number(query.ratingMin)) : summaries,
       page: {
         limit,
-        nextCursor: businesses.length > limit ? businesses[limit]?.id ?? null : null,
+        nextCursor: businesses.length > limit ? (businesses[limit]?.id ?? null) : null,
         hasMore: businesses.length > limit,
       },
     };
@@ -204,7 +209,9 @@ export class PublicDiscoveryService {
     }
     return business.branches.some((branch) => {
       const address = addressValue(branch.address);
-      return (!city || address.city.toLowerCase() === city.toLowerCase()) && (!area || address.line1.toLowerCase().includes(area.toLowerCase()));
+      return (
+        (!city || address.city.toLowerCase() === city.toLowerCase()) && (!area || address.line1.toLowerCase().includes(area.toLowerCase()))
+      );
     });
   }
 

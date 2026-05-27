@@ -77,6 +77,10 @@ function customerEmail(user: AuthenticatedUser): string {
   return user.email;
 }
 
+function isUniqueConstraint(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
+}
+
 @Injectable()
 export class CustomerAppService {
   constructor(private readonly prisma: PrismaService) {}
@@ -84,10 +88,15 @@ export class CustomerAppService {
   async getCustomerDashboard(user: AuthenticatedUser): Promise<CustomerDashboardModel> {
     const now = new Date();
     const appointments = await this.findAppointmentsForUser(user, { take: 20 });
-    const upcoming = appointments.find((appointment) => appointment.status !== 'CANCELLED' && this.appointmentStart(appointment) >= now) ?? null;
+    const upcoming =
+      appointments.find((appointment) => appointment.status !== 'CANCELLED' && this.appointmentStart(appointment) >= now) ?? null;
     const recentVisits = appointments.filter((appointment) => appointment.status === 'COMPLETED').slice(0, 5);
     const receipts = await this.listCustomerReceipts(user, undefined, 5);
-    const recommended = await this.prisma.salonBusiness.findMany({ where: { status: SalonOwnerStatus.ACTIVE }, orderBy: { displayName: 'asc' }, take: 5 });
+    const recommended = await this.prisma.salonBusiness.findMany({
+      where: { status: SalonOwnerStatus.ACTIVE },
+      orderBy: { displayName: 'asc' },
+      take: 5,
+    });
     return {
       upcomingAppointment: upcoming ? this.mapAppointment(upcoming) : null,
       recentVisits: recentVisits.map((appointment) => this.mapAppointment(appointment)),
@@ -110,7 +119,11 @@ export class CustomerAppService {
       orderBy: { name: 'asc' },
     });
     const staff = await this.prisma.salonOwnerStaff.findMany({
-      where: { businessId: business.id, status: SalonOwnerStatus.ACTIVE, ...(query.branchId ? { branches: { some: { branchId: query.branchId } } } : {}) },
+      where: {
+        businessId: business.id,
+        status: SalonOwnerStatus.ACTIVE,
+        ...(query.branchId ? { branches: { some: { branchId: query.branchId } } } : {}),
+      },
       orderBy: { displayName: 'asc' },
     });
     const firstPolicy = branches[0]?.policy;
@@ -119,7 +132,12 @@ export class CustomerAppService {
     to.setUTCDate(to.getUTCDate() + 30);
     return {
       salon: { businessId: business.id, name: business.displayName },
-      branches: branches.map((branch) => ({ branchId: branch.id, name: branch.name, timezone: branch.timezone, currency: branch.currency })),
+      branches: branches.map((branch) => ({
+        branchId: branch.id,
+        name: branch.name,
+        timezone: branch.timezone,
+        currency: branch.currency,
+      })),
       services: services.map((service) => this.mapService(service)),
       staffOptions: staff.map((member) => ({ staffId: member.id, displayName: member.displayName })),
       policySummary: {
@@ -152,16 +170,25 @@ export class CustomerAppService {
 
   async listCustomerAppointments(user: AuthenticatedUser, limit = defaultLimit): Promise<CustomerPage<CustomerAppointmentModel>> {
     const appointments = await this.findAppointmentsForUser(user, { take: limit });
-    return this.page(appointments.map((appointment) => this.mapAppointment(appointment)), limit);
+    return this.page(
+      appointments.map((appointment) => this.mapAppointment(appointment)),
+      limit,
+    );
   }
 
-  async rescheduleCustomerAppointment(user: AuthenticatedUser, appointmentId: string, input: CustomerRescheduleInputDto): Promise<CustomerAppointmentModel> {
+  async rescheduleCustomerAppointment(
+    user: AuthenticatedUser,
+    appointmentId: string,
+    input: CustomerRescheduleInputDto,
+  ): Promise<CustomerAppointmentModel> {
     const appointment = await this.findOwnedAppointment(user, appointmentId);
     const services = await this.findServices(
       appointment.branch.businessId,
       appointment.lines.map((line) => line.serviceId),
     );
-    const staff = input.staffId ? await this.resolveStaff(appointment.branch.businessId, appointment.branchId, input.staffId) : appointment.lines[0]?.staff;
+    const staff = input.staffId
+      ? await this.resolveStaff(appointment.branch.businessId, appointment.branchId, input.staffId)
+      : appointment.lines[0]?.staff;
     if (!staff) {
       throw new NotFoundException(notFoundMessage);
     }
@@ -179,13 +206,22 @@ export class CustomerAppService {
     return this.mapAppointment(updated);
   }
 
-  async cancelCustomerAppointment(user: AuthenticatedUser, appointmentId: string, input: CustomerCancelInputDto): Promise<{ appointmentId: string; status: string; cancelledAt: string; policyImpact: string }> {
+  async cancelCustomerAppointment(
+    user: AuthenticatedUser,
+    appointmentId: string,
+    input: CustomerCancelInputDto,
+  ): Promise<{ appointmentId: string; status: string; cancelledAt: string; policyImpact: string }> {
     await this.findOwnedAppointment(user, appointmentId);
     const updated = await this.prisma.salonOwnerAppointment.update({
       where: { id: appointmentId },
       data: { status: 'CANCELLED', cancellationReason: input.notes ? `${input.reason}: ${input.notes}` : input.reason },
     });
-    return { appointmentId: updated.id, status: updated.status, cancelledAt: toIso(updated.updatedAt), policyImpact: 'standard_cancellation_policy_applies' };
+    return {
+      appointmentId: updated.id,
+      status: updated.status,
+      cancelledAt: toIso(updated.updatedAt),
+      policyImpact: 'standard_cancellation_policy_applies',
+    };
   }
 
   async listCustomerFavorites(user: AuthenticatedUser, targetType?: string): Promise<CustomerPage<CustomerFavoriteModel>> {
@@ -204,7 +240,12 @@ export class CustomerAppService {
     );
   }
 
-  async upsertCustomerFavorite(user: AuthenticatedUser, targetType: string, targetId: string, input: CustomerFavoriteInputDto): Promise<CustomerFavoriteMutationModel> {
+  async upsertCustomerFavorite(
+    user: AuthenticatedUser,
+    targetType: string,
+    targetId: string,
+    input: CustomerFavoriteInputDto,
+  ): Promise<CustomerFavoriteMutationModel> {
     if (!['salon', 'service'].includes(targetType)) {
       throw new UnprocessableEntityException(invalidTargetTypeMessage);
     }
@@ -226,33 +267,51 @@ export class CustomerAppService {
     const totalPaid = receipts.items.reduce((sum, receipt) => sum + Number(receipt.paid), 0);
     const points = Math.floor(totalPaid / 10);
     const groupedBusinessId = businessId ?? 'all';
-    return this.page([{ businessId: groupedBusinessId, pointsBalance: points, tier: points >= 1000 ? 'gold' : 'standard', availableBenefits: points >= 100 ? ['priority_booking'] : [], expiresAt: null }]);
+    return this.page([
+      {
+        businessId: groupedBusinessId,
+        pointsBalance: points,
+        tier: points >= 1000 ? 'gold' : 'standard',
+        availableBenefits: points >= 100 ? ['priority_booking'] : [],
+        expiresAt: null,
+      },
+    ]);
   }
 
-  async listCustomerReceipts(user: AuthenticatedUser, businessId?: string, limit = defaultLimit): Promise<CustomerPage<CustomerReceiptModel>> {
+  async listCustomerReceipts(
+    user: AuthenticatedUser,
+    businessId?: string,
+    limit = defaultLimit,
+  ): Promise<CustomerPage<CustomerReceiptModel>> {
     const invoices = await this.prisma.salonOwnerInvoice.findMany({
       where: { customer: { email: customerEmail(user) }, ...(businessId ? { branch: { businessId } } : {}) },
       include: { branch: { include: { business: true } }, customer: true },
       orderBy: { createdAt: 'desc' },
       take: limit,
     });
-    return this.page(invoices.map((invoice) => this.mapReceipt(invoice)), limit);
+    return this.page(
+      invoices.map((invoice) => this.mapReceipt(invoice)),
+      limit,
+    );
   }
 
   async submitCustomerReview(user: AuthenticatedUser, input: CustomerReviewInputDto): Promise<CustomerReviewSubmissionModel> {
     await this.findOwnedAppointment(user, input.appointmentId);
-    const existing = await this.prisma.customerReview.findUnique({ where: { userId_appointmentId: { userId: userId(user), appointmentId: input.appointmentId } } });
+    const existing = await this.prisma.customerReview.findUnique({
+      where: { userId_appointmentId: { userId: userId(user), appointmentId: input.appointmentId } },
+    });
     if (existing) {
       throw new ConflictException(duplicateReviewMessage);
     }
-    const review = await this.prisma.customerReview.create({
-      data: { userId: userId(user), appointmentId: input.appointmentId, rating: input.rating, comment: input.comment?.trim() || undefined },
-    });
+    const review = await this.createReviewOrThrowConflict(user, input);
     return { reviewId: review.id, status: 'submitted', submittedAt: toIso(review.createdAt), moderationState: review.status };
   }
 
   private async resolveBusiness(businessId?: string) {
-    const business = await this.prisma.salonBusiness.findFirst({ where: { ...(businessId ? { id: businessId } : {}), status: SalonOwnerStatus.ACTIVE }, orderBy: { displayName: 'asc' } });
+    const business = await this.prisma.salonBusiness.findFirst({
+      where: { ...(businessId ? { id: businessId } : {}), status: SalonOwnerStatus.ACTIVE },
+      orderBy: { displayName: 'asc' },
+    });
     if (!business) {
       throw new NotFoundException(notFoundMessage);
     }
@@ -260,11 +319,32 @@ export class CustomerAppService {
   }
 
   private async findBranch(businessId: string, branchId: string): Promise<BranchRecord> {
-    const branch = await this.prisma.salonBranch.findFirst({ where: { id: branchId, businessId }, include: { business: true, policy: true } });
+    const branch = await this.prisma.salonBranch.findFirst({
+      where: { id: branchId, businessId, business: { status: SalonOwnerStatus.ACTIVE } },
+      include: { business: true, policy: true },
+    });
     if (!branch) {
       throw new NotFoundException(notFoundMessage);
     }
     return branch;
+  }
+
+  private async createReviewOrThrowConflict(user: AuthenticatedUser, input: CustomerReviewInputDto) {
+    try {
+      return await this.prisma.customerReview.create({
+        data: {
+          userId: userId(user),
+          appointmentId: input.appointmentId,
+          rating: input.rating,
+          comment: input.comment?.trim() || undefined,
+        },
+      });
+    } catch (error) {
+      if (isUniqueConstraint(error)) {
+        throw new ConflictException(duplicateReviewMessage);
+      }
+      throw error;
+    }
   }
 
   private async findOrCreateCustomer(user: AuthenticatedUser, businessId: string) {
@@ -287,7 +367,9 @@ export class CustomerAppService {
     if (services.length !== new Set(serviceIds).size) {
       throw new NotFoundException(notFoundMessage);
     }
-    return serviceIds.map((id) => services.find((service) => service.id === id)).filter((service): service is ServiceRecord => Boolean(service));
+    return serviceIds
+      .map((id) => services.find((service) => service.id === id))
+      .filter((service): service is ServiceRecord => Boolean(service));
   }
 
   private async resolveStaff(businessId: string, branchId: string, staffId?: string): Promise<StaffRecord> {
@@ -301,7 +383,11 @@ export class CustomerAppService {
     return staff;
   }
 
-  private buildLines(startAt: string, services: readonly ServiceRecord[], staff: Pick<StaffRecord, 'id' | 'displayName'>): Prisma.SalonOwnerAppointmentLineUncheckedCreateWithoutAppointmentInput[] {
+  private buildLines(
+    startAt: string,
+    services: readonly ServiceRecord[],
+    staff: Pick<StaffRecord, 'id' | 'displayName'>,
+  ): Prisma.SalonOwnerAppointmentLineUncheckedCreateWithoutAppointmentInput[] {
     let startsAt = parseIso(startAt);
     return services.map((service) => {
       const endsAt = new Date(startsAt.getTime() + (service.durationMinutes + service.bufferMinutes) * 60_000);
@@ -359,10 +445,20 @@ export class CustomerAppService {
       appointmentId: appointment.id,
       status: appointment.status,
       salon: { businessId: appointment.branch.business.id, name: appointment.branch.business.displayName },
-      branch: { branchId: appointment.branch.id, name: appointment.branch.name, timezone: appointment.branch.timezone, currency: appointment.branch.currency },
+      branch: {
+        branchId: appointment.branch.id,
+        name: appointment.branch.name,
+        timezone: appointment.branch.timezone,
+        currency: appointment.branch.currency,
+      },
       startAt: toIso(this.appointmentStart(appointment)),
       endAt: toIso(this.appointmentEnd(appointment)),
-      services: appointment.lines.map((line) => ({ serviceId: line.serviceId, name: line.serviceName, durationMinutes: line.durationMinutes, price: money(line.service.basePrice) })),
+      services: appointment.lines.map((line) => ({
+        serviceId: line.serviceId,
+        name: line.serviceName,
+        durationMinutes: line.durationMinutes,
+        price: money(line.service.basePrice),
+      })),
       actions: appointment.status === 'BOOKED' || appointment.status === 'CONFIRMED' ? ['reschedule', 'cancel'] : [],
     };
   }
@@ -374,7 +470,12 @@ export class CustomerAppService {
       startAt: toIso(this.appointmentStart(appointment)),
       endAt: toIso(this.appointmentEnd(appointment)),
       salon: { businessId: appointment.branch.business.id, name: appointment.branch.business.displayName },
-      services: appointment.lines.map((line) => ({ serviceId: line.serviceId, name: line.serviceName, durationMinutes: line.durationMinutes, price: money(line.service.basePrice) })),
+      services: appointment.lines.map((line) => ({
+        serviceId: line.serviceId,
+        name: line.serviceName,
+        durationMinutes: line.durationMinutes,
+        price: money(line.service.basePrice),
+      })),
       policySnapshot: { cancellationCutoffMinutes: appointment.branch.policy?.cancellationCutoffMinutes ?? 0 },
     };
   }
