@@ -1,0 +1,33 @@
+name: Spec Gap
+about: Track a missing or conflicting requirement, design, API, validation, web, or test detail
+title: "docs: "
+labels: ["aidd", "spec-gap"]
+body:
+  - type: textarea
+    id: gap
+    attributes:
+      label: Gap
+      description: What is missing, contradictory, or not implementation-ready?
+    validations:
+      required: true
+  - type: textarea
+    id: affected-docs
+    attributes:
+      label: Affected docs
+      description: Link the affected user story, FRD, FNRD, HLD, LLD, API, validation, web, test, diagram, or wireframe files.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: What implementation, testing, or review decision is blocked?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-resolution
+    attributes:
+      label: Proposed resolution
+      description: Suggested doc/code/test update, if known.
+    validations:
+      required: false
