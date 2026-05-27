@@ -90,10 +90,15 @@ export class CustomerAppComponent implements OnInit, OnDestroy {
       this.view = (data['view'] as CustomerAppView | undefined) ?? 'dashboard';
     });
     this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      const nextBusinessId = params.get('businessId');
+      const nextBranchId = params.get('branchId');
+      const nextServiceId = params.get('serviceId');
+      const businessChanged = !!nextBusinessId && nextBusinessId !== this.bookingForm.controls.businessId.value;
       this.bookingForm.patchValue({
-        businessId: params.get('businessId') ?? this.bookingForm.controls.businessId.value,
-        branchId: params.get('branchId') ?? this.bookingForm.controls.branchId.value,
-        serviceIds: params.get('serviceId') ? [params.get('serviceId') as string] : this.bookingForm.controls.serviceIds.value,
+        businessId: nextBusinessId ?? this.bookingForm.controls.businessId.value,
+        branchId: nextBranchId ?? (businessChanged ? '' : this.bookingForm.controls.branchId.value),
+        serviceIds: nextServiceId ? [nextServiceId] : businessChanged ? [] : this.bookingForm.controls.serviceIds.value,
+        staffId: businessChanged ? '' : this.bookingForm.controls.staffId.value,
       });
       if (!this.loading) {
         this.loadBookingContext();
@@ -143,14 +148,20 @@ export class CustomerAppComponent implements OnInit, OnDestroy {
     this.api.getBookingContext({ businessId, branchId, serviceId }).subscribe({
       next: (context) => {
         this.bookingContext = context;
+        const currentBranchId = this.bookingForm.controls.branchId.value;
+        const currentServiceIds = this.bookingForm.controls.serviceIds.value;
+        const currentStaffId = this.bookingForm.controls.staffId.value;
+        const validBranchId = context.branches.some((branch) => branch.branchId === currentBranchId)
+          ? currentBranchId
+          : context.branches[0]?.branchId || '';
+        const serviceIds = new Set(context.services.map((service) => service.serviceId));
+        const validServiceIds = currentServiceIds.filter((serviceId) => serviceIds.has(serviceId));
+        const validStaffId = context.staffOptions.some((staff) => staff.staffId === currentStaffId) ? currentStaffId : '';
         this.bookingForm.patchValue({
           businessId: context.salon.businessId,
-          branchId: this.bookingForm.controls.branchId.value || context.branches[0]?.branchId || '',
-          serviceIds: this.bookingForm.controls.serviceIds.value.length
-            ? this.bookingForm.controls.serviceIds.value
-            : context.services[0]
-              ? [context.services[0].serviceId]
-              : [],
+          branchId: validBranchId,
+          serviceIds: validServiceIds.length ? validServiceIds : context.services[0] ? [context.services[0].serviceId] : [],
+          staffId: validStaffId,
         });
       },
       error: () => {
