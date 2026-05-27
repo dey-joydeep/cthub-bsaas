@@ -18,6 +18,18 @@ import { SalonOwnerSettingsApi } from './salon-owner-settings.api';
 
 const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 
+function localDateInputValue(date = new Date()): string {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function optionalText(value: string): string | undefined {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 @Component({
   selector: 'lib-salon-owner-settings',
   standalone: true,
@@ -83,7 +95,7 @@ export class SalonOwnerSettingsComponent {
   });
 
   protected readonly holidayForm = this.fb.nonNullable.group({
-    date: [new Date().toISOString().slice(0, 10), Validators.required],
+    date: [localDateInputValue(), Validators.required],
     closed: [true],
     reason: ['', Validators.maxLength(160)],
     start: ['09:00'],
@@ -182,9 +194,17 @@ export class SalonOwnerSettingsComponent {
     }
 
     const selected = this.selectedBranch();
-    const request = selected
-      ? this.api.updateBranch(selected.id, this.branchForm.getRawValue())
-      : this.api.createBranch(this.branchForm.getRawValue());
+    const value = this.branchForm.getRawValue();
+    const input = {
+      ...value,
+      phone: optionalText(value.phone),
+      email: optionalText(value.email),
+      address: {
+        ...value.address,
+        line2: optionalText(value.address.line2),
+      },
+    };
+    const request = selected ? this.api.updateBranch(selected.id, input) : this.api.createBranch(input);
 
     this.persist(request, (branch) => {
       this.selectedBranch.set(branch);
@@ -202,7 +222,10 @@ export class SalonOwnerSettingsComponent {
     this.persist(
       this.api.replaceBranchHours(branch.id, {
         timezone: this.hoursForm.controls.timezone.value,
-        days: this.hoursForm.controls.days.getRawValue() as WeeklyHoursDay[],
+        days: (this.hoursForm.controls.days.getRawValue() as WeeklyHoursDay[]).map((day) => ({
+          ...day,
+          intervals: day.open ? day.intervals : [],
+        })),
       }),
     );
   }
@@ -228,6 +251,10 @@ export class SalonOwnerSettingsComponent {
     const branch = this.selectedBranch();
     if (!branch) {
       this.error.set('Select a branch before saving policy.');
+      return;
+    }
+    if (this.policyForm.invalid) {
+      this.policyForm.markAllAsTouched();
       return;
     }
 
@@ -276,7 +303,12 @@ export class SalonOwnerSettingsComponent {
           this.newBranch();
         }
       },
-      error: () => this.error.set('Branches could not be loaded.'),
+      error: () => {
+        this.branches.set([]);
+        this.selectedBranch.set(null);
+        this.newBranch();
+        this.error.set('Branches could not be loaded.');
+      },
     });
   }
 
