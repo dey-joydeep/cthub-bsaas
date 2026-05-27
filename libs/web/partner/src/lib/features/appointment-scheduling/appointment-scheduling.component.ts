@@ -20,6 +20,15 @@ import { StaffServiceCatalogApi } from '../staff-service-catalog/staff-service-c
 import { Appointment, AvailableSlot } from './models/appointment-scheduling.models';
 import { AppointmentSchedulingApi } from './appointment-scheduling.api';
 
+interface LocalDateTimeParts {
+  readonly year: number;
+  readonly month: number;
+  readonly day: number;
+  readonly hour: number;
+  readonly minute: number;
+  readonly second: number;
+}
+
 @Component({
   selector: 'lib-appointment-scheduling',
   standalone: true,
@@ -77,6 +86,10 @@ export class AppointmentSchedulingComponent {
     reason: ['Customer request', Validators.required],
   });
 
+  protected readonly lifecycleReasonForm = this.fb.nonNullable.group({
+    reason: ['', Validators.required],
+  });
+
   constructor() {
     this.loadReferences();
   }
@@ -119,7 +132,7 @@ export class AppointmentSchedulingComponent {
         branchId: value.branchId,
         customerId: value.customerId,
         notes: value.notes || undefined,
-        lines: [{ serviceId: value.serviceId, staffId: value.staffId, startsAt: value.startsAt }],
+        lines: [{ serviceId: value.serviceId, staffId: value.staffId, startsAt: this.toBranchUtcIso(value.startsAt, value.branchId) }],
       }),
       (appointment) => {
         this.selectedAppointment.set(appointment);
@@ -140,7 +153,7 @@ export class AppointmentSchedulingComponent {
         customerId: value.customerId,
         notes: value.notes || undefined,
         estimatedWaitMinutes: value.estimatedWaitMinutes,
-        lines: [{ serviceId: value.serviceId, staffId: value.staffId, startsAt: value.startsAt }],
+        lines: [{ serviceId: value.serviceId, staffId: value.staffId, startsAt: this.toBranchUtcIso(value.startsAt, value.branchId) }],
       }),
       (appointment) => this.selectedAppointment.set(appointment),
     );
@@ -156,7 +169,11 @@ export class AppointmentSchedulingComponent {
     this.persist(
       this.appointmentApi.rescheduleAppointment(appointment.id, {
         reason: reschedule.reason,
-        lines: appointment.lines.map((line) => ({ serviceId: line.serviceId, staffId: line.staffId, startsAt: reschedule.startsAt })),
+        lines: appointment.lines.map((line) => ({
+          serviceId: line.serviceId,
+          staffId: line.staffId,
+          startsAt: this.toBranchUtcIso(reschedule.startsAt, appointment.branchId),
+        })),
       }),
       (updated) => this.selectedAppointment.set(updated),
     );
@@ -166,6 +183,12 @@ export class AppointmentSchedulingComponent {
     const appointment = this.selectedAppointment();
     if (!appointment) {
       this.error.set('Select an appointment before changing status.');
+      return;
+    }
+    const reason = this.lifecycleReasonForm.controls.reason.value.trim();
+    if ((action === 'cancel' || action === 'no-show') && !reason) {
+      this.lifecycleReasonForm.markAllAsTouched();
+      this.error.set('Enter a reason before cancelling or marking no-show.');
       return;
     }
     const request =
@@ -178,8 +201,8 @@ export class AppointmentSchedulingComponent {
             : action === 'complete'
               ? this.appointmentApi.completeAppointment(appointment.id)
               : action === 'no-show'
-                ? this.appointmentApi.markAppointmentNoShow(appointment.id)
-                : this.appointmentApi.cancelAppointment(appointment.id, 'Customer request');
+                ? this.appointmentApi.markAppointmentNoShow(appointment.id, reason)
+                : this.appointmentApi.cancelAppointment(appointment.id, reason);
     this.persist(request, (updated) => this.selectedAppointment.set(updated));
   }
 
@@ -232,6 +255,65 @@ export class AppointmentSchedulingComponent {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  private toBranchUtcIso(value: string, branchId: string): string {
+    if (/(?:z|[+-]\d{2}:\d{2})$/i.test(value)) {
+      return new Date(value).toISOString();
+    }
+    const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(value);
+    if (!match) {
+      return new Date(value).toISOString();
+    }
+    const parts: LocalDateTimeParts = {
+      year: Number(match[1]),
+      month: Number(match[2]),
+      day: Number(match[3]),
+      hour: Number(match[4]),
+      minute: Number(match[5]),
+      second: Number(match[6] ?? 0),
+    };
+    return this.zonedLocalDateTimeToUtcIso(parts, this.branchTimezone(branchId));
+  }
+
+  private branchTimezone(branchId: string): string {
+    return this.branches().find((branch) => branch.id === branchId)?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+  }
+
+  private zonedLocalDateTimeToUtcIso(parts: LocalDateTimeParts, timeZone: string): string {
+    const desiredWallTime = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second);
+    let utcTime = desiredWallTime;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const actual = this.timeZoneParts(new Date(utcTime), timeZone);
+      const actualWallTime = Date.UTC(actual.year, actual.month - 1, actual.day, actual.hour, actual.minute, actual.second);
+      utcTime -= actualWallTime - desiredWallTime;
+    }
+    return new Date(utcTime).toISOString();
+  }
+
+  private timeZoneParts(date: Date, timeZone: string): LocalDateTimeParts {
+    const values = new Map(
+      new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hourCycle: 'h23',
+      })
+        .formatToParts(date)
+        .map((part) => [part.type, part.value]),
+    );
+    return {
+      year: Number(values.get('year')),
+      month: Number(values.get('month')),
+      day: Number(values.get('day')),
+      hour: Number(values.get('hour')),
+      minute: Number(values.get('minute')),
+      second: Number(values.get('second')),
+    };
   }
 
   private persist<T>(request: Observable<T>, onSuccess?: (value: T) => void): void {

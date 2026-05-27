@@ -60,6 +60,13 @@ describe('AppointmentSchedulingApi', () => {
     api.cancelAppointment('appointment-1', 'Customer request').subscribe();
     const cancel = http.expectOne('/api/partner/appointments/appointment-1/cancel');
     expect(cancel.request.method).toBe('POST');
+    expect(cancel.request.body).toEqual({ reason: 'Customer request' });
     cancel.flush({ success: true, data: { id: 'appointment-1' } });
+
+    api.markAppointmentNoShow('appointment-1', 'Customer request').subscribe();
+    const noShow = http.expectOne('/api/partner/appointments/appointment-1/no-show');
+    expect(noShow.request.method).toBe('POST');
+    expect(noShow.request.body).toEqual({ reason: 'Customer request' });
+    noShow.flush({ success: true, data: { id: 'appointment-1' } });
   });
 });

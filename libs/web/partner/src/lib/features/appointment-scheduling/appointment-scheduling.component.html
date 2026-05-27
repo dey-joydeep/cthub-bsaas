@@ -144,6 +144,12 @@
           <strong>{{ selectedAppointment()?.status ?? 'No appointment selected' }}</strong>
           <span>{{ selectedAppointment()?.lines?.[0]?.serviceName ?? serviceName(appointmentForm.controls.serviceId.value) }}</span>
         </div>
+        <form [formGroup]="lifecycleReasonForm" class="reschedule-form">
+          <mat-form-field appearance="outline">
+            <mat-label>Cancel/no-show reason</mat-label>
+            <input matInput formControlName="reason" />
+          </mat-form-field>
+        </form>
         <div class="button-grid">
           <button mat-stroked-button type="button" [disabled]="saving() || !selectedAppointment()" (click)="runAction('confirm')">Confirm</button>
           <button mat-stroked-button type="button" [disabled]="saving() || !selectedAppointment()" (click)="runAction('arrive')">Arrive</button>

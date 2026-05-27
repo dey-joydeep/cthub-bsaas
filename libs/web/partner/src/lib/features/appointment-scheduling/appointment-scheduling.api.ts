@@ -54,8 +54,8 @@ export class AppointmentSchedulingApi {
     return this.http.post<ApiEnvelope<Appointment>>(`${this.baseUrl}/${appointmentId}/cancel`, { reason }).pipe(map((response) => response.data));
   }
 
-  markAppointmentNoShow(appointmentId: string): Observable<Appointment> {
-    return this.postAction(appointmentId, 'no-show');
+  markAppointmentNoShow(appointmentId: string, reason: string): Observable<Appointment> {
+    return this.http.post<ApiEnvelope<Appointment>>(`${this.baseUrl}/${appointmentId}/no-show`, { reason }).pipe(map((response) => response.data));
   }
 
   markAppointmentArrived(appointmentId: string): Observable<Appointment> {
