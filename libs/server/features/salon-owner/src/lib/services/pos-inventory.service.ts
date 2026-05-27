@@ -1,15 +1,22 @@
 import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, SalonOwnerInvoiceStatus as PrismaInvoiceStatus, SalonOwnerStatus as PrismaSalonOwnerStatus } from '@prisma/client';
+import { Prisma, SalonOwnerStatus as PrismaSalonOwnerStatus } from '@prisma/client';
 import { COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 import { PrismaService } from '@cthub-bsaas/server-data-access';
 
-import { FinalizeInvoiceInputDto, InvoiceInputDto, PaymentInputDto, ProductInputDto, StockMovementInputDto } from '../dto/pos-inventory.dto';
+import {
+  FinalizeInvoiceInputDto,
+  InvoiceInputDto,
+  PaymentInputDto,
+  ProductInputDto,
+  StockMovementInputDto,
+} from '../dto/pos-inventory.dto';
 import { PagedResult, SalonOwnerRequestContext } from '../models/salon-owner-settings.models';
 import { BranchStockModel, InvoiceModel, ProductModel, StockMovementModel } from '../models/pos-inventory.models';
 
 const duplicateProductMessage = 'error.product.sku.duplicate';
 const totalMismatchMessage = 'error.pos.invoice.total_mismatch';
 const invalidInvoiceStatusMessage = 'error.pos.invoice.status_invalid';
+const paymentExceedsDueMessage = 'error.pos.payment.amount_exceeds_due';
 const negativeStockMessage = 'error.inventory.stock.negative_not_allowed';
 const forbiddenMessage = COMMON_MESSAGE_KEYS.ERROR.FORBIDDEN_SCOPE;
 const notFoundMessage = COMMON_MESSAGE_KEYS.ERROR.NOT_FOUND;
@@ -29,6 +36,10 @@ type NormalizedInvoiceLineInput = {
 type ProductStockRecord = Prisma.SalonOwnerProductGetPayload<{ include: { stockMovements: true } }>;
 type ProductRecord = Awaited<ReturnType<PrismaService['salonOwnerProduct']['create']>>;
 type StockMovementRecord = Awaited<ReturnType<PrismaService['salonOwnerStockMovement']['create']>>;
+type PosInventoryDataClient = Pick<
+  PrismaService,
+  'salonOwnerInvoice' | 'salonOwnerInvoicePayment' | 'salonOwnerProduct' | 'salonOwnerStockMovement'
+>;
 
 function trimRequired(value: string): string {
   return value.trim();
@@ -97,6 +108,7 @@ export class PosInventoryService {
 
   async finalizeInvoice(context: SalonOwnerRequestContext, invoiceId: string, input: FinalizeInvoiceInputDto): Promise<InvoiceModel> {
     const invoice = await this.findInvoiceInScope(context, invoiceId);
+    const branch = await this.findBranchInScope(context, invoice.branchId);
     if (invoice.status !== 'DRAFT') {
       throw new ConflictException(invalidInvoiceStatusMessage);
     }
@@ -104,11 +116,20 @@ export class PosInventoryService {
       throw new ConflictException(totalMismatchMessage);
     }
     const productLines = invoice.lines.filter((line) => line.type === 'PRODUCT');
-    for (const line of productLines) {
-      await this.assertStockBalanceAllows(invoice.branchId, line.referenceId, line.quantity.negated());
-    }
+    const productQuantities = this.aggregateProductLineQuantities(productLines);
     return this.mapInvoice(
       await this.prisma.$transaction(async (tx) => {
+        const statusUpdate = await tx.salonOwnerInvoice.updateMany({
+          where: { id: invoiceId, status: 'DRAFT' },
+          data: { status: 'FINALIZED' },
+        });
+        if (statusUpdate.count !== 1) {
+          throw new ConflictException(invalidInvoiceStatusMessage);
+        }
+        await this.assertProductsInBusiness(tx, branch.businessId, [...productQuantities.keys()]);
+        for (const [productId, saleQuantity] of productQuantities) {
+          await this.assertStockBalanceAllows(tx, invoice.branchId, productId, saleQuantity.negated());
+        }
         for (const line of productLines) {
           await tx.salonOwnerStockMovement.create({
             data: {
@@ -120,9 +141,8 @@ export class PosInventoryService {
             },
           });
         }
-        return tx.salonOwnerInvoice.update({
+        return tx.salonOwnerInvoice.findFirstOrThrow({
           where: { id: invoiceId },
-          data: { status: 'FINALIZED' },
           include: invoiceInclude,
         });
       }),
@@ -130,12 +150,22 @@ export class PosInventoryService {
   }
 
   async captureInvoicePayment(context: SalonOwnerRequestContext, invoiceId: string, input: PaymentInputDto): Promise<InvoiceModel> {
-    const invoice = await this.findInvoiceInScope(context, invoiceId);
+    const tenantId = this.requireTenantId(context);
     const amount = decimal(input.amount);
-    const paidAmount = invoice.paidAmount.plus(amount);
-    const dueAmount = Prisma.Decimal.max(invoice.total.minus(paidAmount), decimal(0));
-    const status: PrismaInvoiceStatus = dueAmount.equals(0) ? 'PAID' : 'PARTIALLY_PAID';
     const updated = await this.prisma.$transaction(async (tx) => {
+      const invoice = await tx.salonOwnerInvoice.findFirst({
+        where: { id: invoiceId, branch: { business: { tenantId } } },
+        include: invoiceInclude,
+      });
+      if (!invoice) {
+        throw new NotFoundException(notFoundMessage);
+      }
+      if (!['FINALIZED', 'PARTIALLY_PAID'].includes(invoice.status)) {
+        throw new ConflictException(invalidInvoiceStatusMessage);
+      }
+      if (amount.lte(0) || amount.gt(invoice.dueAmount)) {
+        throw new ConflictException(paymentExceedsDueMessage);
+      }
       await tx.salonOwnerInvoicePayment.create({
         data: {
           invoiceId,
@@ -145,13 +175,49 @@ export class PosInventoryService {
           reference: optionalTrim(input.reference),
         },
       });
-      return tx.salonOwnerInvoice.update({
+      const invoiceUpdate = await tx.salonOwnerInvoice.updateMany({
+        where: { id: invoiceId, status: { in: ['FINALIZED', 'PARTIALLY_PAID'] }, dueAmount: { gte: amount } },
+        data: { paidAmount: { increment: amount }, dueAmount: { decrement: amount }, status: 'PARTIALLY_PAID' },
+      });
+      if (invoiceUpdate.count !== 1) {
+        throw new ConflictException(paymentExceedsDueMessage);
+      }
+      const current = await tx.salonOwnerInvoice.findFirstOrThrow({
         where: { id: invoiceId },
-        data: { paidAmount, dueAmount, status },
         include: invoiceInclude,
       });
+      if (current.dueAmount.equals(0)) {
+        return tx.salonOwnerInvoice.update({
+          where: { id: invoiceId },
+          data: { status: 'PAID' },
+          include: invoiceInclude,
+        });
+      }
+      return current;
     });
     return this.mapInvoice(updated);
+  }
+
+  private aggregateProductLineQuantities(
+    lines: readonly Pick<NormalizedInvoiceLineInput, 'referenceId' | 'quantity'>[],
+  ): Map<string, Prisma.Decimal> {
+    return lines.reduce((totals, line) => {
+      totals.set(line.referenceId, (totals.get(line.referenceId) ?? decimal(0)).plus(line.quantity));
+      return totals;
+    }, new Map<string, Prisma.Decimal>());
+  }
+
+  private async assertProductsInBusiness(client: PosInventoryDataClient, businessId: string, productIds: readonly string[]): Promise<void> {
+    if (productIds.length === 0) {
+      return;
+    }
+    const products = await client.salonOwnerProduct.findMany({
+      where: { id: { in: [...productIds] }, businessId },
+      select: { id: true },
+    });
+    if (products.length !== productIds.length) {
+      throw new NotFoundException(notFoundMessage);
+    }
   }
 
   async listPendingDues(context: SalonOwnerRequestContext, branchId?: string): Promise<PagedResult<InvoiceModel>> {
@@ -172,7 +238,9 @@ export class PosInventoryService {
     const products = await this.prisma.salonOwnerProduct.findMany({
       where: {
         businessId: business.id,
-        ...(search ? { OR: [{ name: { contains: search, mode: 'insensitive' } }, { sku: { contains: search, mode: 'insensitive' } }] } : {}),
+        ...(search
+          ? { OR: [{ name: { contains: search, mode: 'insensitive' } }, { sku: { contains: search, mode: 'insensitive' } }] }
+          : {}),
       },
       orderBy: { name: 'asc' },
     });
@@ -229,7 +297,7 @@ export class PosInventoryService {
   async createStockMovement(context: SalonOwnerRequestContext, input: StockMovementInputDto): Promise<StockMovementModel> {
     const branch = await this.findBranchInScope(context, input.branchId);
     await this.findProductInBusiness(branch.businessId, input.productId);
-    await this.assertStockBalanceAllows(input.branchId, input.productId, decimal(input.quantity));
+    await this.assertStockBalanceAllows(this.prisma, input.branchId, input.productId, decimal(input.quantity));
     return this.mapStockMovement(
       await this.prisma.salonOwnerStockMovement.create({
         data: this.normalizeStockMovementInput(input),
@@ -237,7 +305,11 @@ export class PosInventoryService {
     );
   }
 
-  async adjustProductStock(context: SalonOwnerRequestContext, productId: string, input: StockMovementInputDto): Promise<StockMovementModel> {
+  async adjustProductStock(
+    context: SalonOwnerRequestContext,
+    productId: string,
+    input: StockMovementInputDto,
+  ): Promise<StockMovementModel> {
     if (productId !== input.productId) {
       throw new NotFoundException(notFoundMessage);
     }
@@ -353,11 +425,16 @@ export class PosInventoryService {
     }
   }
 
-  private async assertStockBalanceAllows(branchId: string, productId: string, quantityChange: Prisma.Decimal): Promise<void> {
+  private async assertStockBalanceAllows(
+    client: PosInventoryDataClient,
+    branchId: string,
+    productId: string,
+    quantityChange: Prisma.Decimal,
+  ): Promise<void> {
     if (quantityChange.gte(0)) {
       return;
     }
-    const movements = await this.prisma.salonOwnerStockMovement.findMany({ where: { branchId, productId } });
+    const movements = await client.salonOwnerStockMovement.findMany({ where: { branchId, productId } });
     const current = this.stockBalance(movements);
     if (current.plus(quantityChange).lt(0)) {
       throw new ConflictException(negativeStockMessage);
