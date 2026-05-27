@@ -95,7 +95,10 @@
     "nx:affected:test": "nx affected:test",
     "nx:affected:lint": "nx affected:lint",
     "openapi:lint:auth": "redocly lint docs/specs/auth/API/openapi.yaml --config .redocly.yaml --max-problems=0",
-    "openapi:check:auth": "tsx scripts/openapi-auth-check.ts"
+    "openapi:check:auth": "tsx scripts/openapi-auth-check.ts",
+    "aidd:check": "node scripts/aidd/check-aidd-setup.mjs",
+    "aidd:assets": "node scripts/aidd/check-codex-assets.mjs",
+    "aidd:links": "node scripts/aidd/check-doc-links.mjs"
   },
   "devDependencies": {
     "@redocly/cli": "2.7.0",
