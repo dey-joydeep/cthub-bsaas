@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
+import { vi } from 'vitest';
 
 import { CustomerCrmApi } from './customer-crm.api';
 import { CustomerCrmComponent } from './customer-crm.component';
@@ -8,12 +9,12 @@ import { CustomerCrmComponent } from './customer-crm.component';
 describe('CustomerCrmComponent', () => {
   let fixture: ComponentFixture<CustomerCrmComponent>;
   const api = {
-    searchCustomers: jest.fn(),
-    createCustomer: jest.fn(),
-    updateCustomer: jest.fn(),
-    createCustomerNote: jest.fn(),
-    updateCustomerCommunicationPreferences: jest.fn(),
-    getCustomerVisitHistory: jest.fn(),
+    searchCustomers: vi.fn(),
+    createCustomer: vi.fn(),
+    updateCustomer: vi.fn(),
+    createCustomerNote: vi.fn(),
+    updateCustomerCommunicationPreferences: vi.fn(),
+    getCustomerVisitHistory: vi.fn(),
   };
 
   beforeEach(async () => {

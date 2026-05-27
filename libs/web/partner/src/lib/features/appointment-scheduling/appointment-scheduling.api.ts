@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
-import type { ApiEnvelope } from '../salon-owner-settings/models/salon-owner-settings.models';
+import type { ResponseEnvelope as ApiEnvelope } from '../salon-owner-settings/models/salon-owner-settings.models';
 import {
   Appointment,
   AppointmentDayBoard,
@@ -43,7 +43,9 @@ export class AppointmentSchedulingApi {
   }
 
   rescheduleAppointment(appointmentId: string, input: RescheduleAppointmentInput): Observable<Appointment> {
-    return this.http.post<ApiEnvelope<Appointment>>(`${this.baseUrl}/${appointmentId}/reschedule`, input).pipe(map((response) => response.data));
+    return this.http
+      .post<ApiEnvelope<Appointment>>(`${this.baseUrl}/${appointmentId}/reschedule`, input)
+      .pipe(map((response) => response.data));
   }
 
   confirmAppointment(appointmentId: string): Observable<Appointment> {
@@ -51,11 +53,15 @@ export class AppointmentSchedulingApi {
   }
 
   cancelAppointment(appointmentId: string, reason: string): Observable<Appointment> {
-    return this.http.post<ApiEnvelope<Appointment>>(`${this.baseUrl}/${appointmentId}/cancel`, { reason }).pipe(map((response) => response.data));
+    return this.http
+      .post<ApiEnvelope<Appointment>>(`${this.baseUrl}/${appointmentId}/cancel`, { reason })
+      .pipe(map((response) => response.data));
   }
 
-  markAppointmentNoShow(appointmentId: string): Observable<Appointment> {
-    return this.postAction(appointmentId, 'no-show');
+  markAppointmentNoShow(appointmentId: string, reason: string): Observable<Appointment> {
+    return this.http
+      .post<ApiEnvelope<Appointment>>(`${this.baseUrl}/${appointmentId}/no-show`, { reason })
+      .pipe(map((response) => response.data));
   }
 
   markAppointmentArrived(appointmentId: string): Observable<Appointment> {
@@ -71,6 +77,8 @@ export class AppointmentSchedulingApi {
   }
 
   private postAction(appointmentId: string, action: string): Observable<Appointment> {
-    return this.http.post<ApiEnvelope<Appointment>>(`${this.baseUrl}/${appointmentId}/${action}`, {}).pipe(map((response) => response.data));
+    return this.http
+      .post<ApiEnvelope<Appointment>>(`${this.baseUrl}/${appointmentId}/${action}`, {})
+      .pipe(map((response) => response.data));
   }
 }

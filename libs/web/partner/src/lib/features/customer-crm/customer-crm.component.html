@@ -64,12 +64,7 @@
         </form>
         <div class="list">
           @for (customer of customers(); track customer.id) {
-            <button
-              type="button"
-              class="list-row"
-              [class.selected]="selectedCustomer()?.id === customer.id"
-              (click)="selectCustomer(customer)"
-            >
+            <button type="button" class="list-row" [class.selected]="selectedCustomer()?.id === customer.id" (click)="selectCustomer(customer)">
               <span>{{ customer.displayName }}</span>
               <small>{{ customer.phone }}</small>
             </button>
@@ -115,13 +110,7 @@
           <mat-checkbox formControlName="whatsappEnabled">WhatsApp</mat-checkbox>
           <button mat-flat-button type="submit" [disabled]="saving() || !selectedCustomer()">Save preferences</button>
         </form>
-        <button
-          class="history-button"
-          mat-stroked-button
-          type="button"
-          [disabled]="saving() || !selectedCustomer()"
-          (click)="loadVisitHistory()"
-        >
+        <button class="history-button" mat-stroked-button type="button" [disabled]="saving() || !selectedCustomer()" (click)="loadVisitHistory()">
           <mat-icon>history</mat-icon>
           Visit history
         </button>

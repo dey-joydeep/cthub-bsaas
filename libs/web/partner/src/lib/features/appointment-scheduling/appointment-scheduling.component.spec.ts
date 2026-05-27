@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
+import { vi } from 'vitest';
 
 import { CustomerCrmApi } from '../customer-crm/customer-crm.api';
 import { SalonOwnerSettingsApi } from '../salon-owner-settings/salon-owner-settings.api';
@@ -30,24 +31,25 @@ describe('AppointmentSchedulingComponent', () => {
     createdAt: '',
     updatedAt: '',
   };
-  const settingsApi = { listBranches: jest.fn() };
-  const customerApi = { searchCustomers: jest.fn() };
-  const catalogApi = { listStaff: jest.fn(), listServices: jest.fn() };
+  const settingsApi = { listBranches: vi.fn() };
+  const customerApi = { searchCustomers: vi.fn() };
+  const catalogApi = { listStaff: vi.fn(), listServices: vi.fn() };
   const appointmentApi = {
-    getDayBoard: jest.fn(),
-    findSlots: jest.fn(),
-    createAppointment: jest.fn(),
-    createWalkInAppointment: jest.fn(),
-    rescheduleAppointment: jest.fn(),
-    confirmAppointment: jest.fn(),
-    cancelAppointment: jest.fn(),
-    markAppointmentNoShow: jest.fn(),
-    markAppointmentArrived: jest.fn(),
-    startAppointmentService: jest.fn(),
-    completeAppointment: jest.fn(),
+    getDayBoard: vi.fn(),
+    findSlots: vi.fn(),
+    createAppointment: vi.fn(),
+    createWalkInAppointment: vi.fn(),
+    rescheduleAppointment: vi.fn(),
+    confirmAppointment: vi.fn(),
+    cancelAppointment: vi.fn(),
+    markAppointmentNoShow: vi.fn(),
+    markAppointmentArrived: vi.fn(),
+    startAppointmentService: vi.fn(),
+    completeAppointment: vi.fn(),
   };
 
   beforeEach(async () => {
+    vi.clearAllMocks();
     settingsApi.listBranches.mockReturnValue(
       of({
         items: [
@@ -127,6 +129,17 @@ describe('AppointmentSchedulingComponent', () => {
         updatedAt: '',
       }),
     );
+    appointmentApi.createWalkInAppointment.mockReturnValue(
+      of({
+        id: 'appointment-1',
+        branchId: 'branch-1',
+        customerId: 'customer-1',
+        status: 'BOOKED',
+        lines: [],
+        createdAt: '',
+        updatedAt: '',
+      }),
+    );
     appointmentApi.rescheduleAppointment.mockReturnValue(of(appointment));
     appointmentApi.confirmAppointment.mockReturnValue(
       of({
@@ -139,6 +152,8 @@ describe('AppointmentSchedulingComponent', () => {
         updatedAt: '',
       }),
     );
+    appointmentApi.cancelAppointment.mockReturnValue(of({ ...appointment, status: 'CANCELLED' }));
+    appointmentApi.markAppointmentNoShow.mockReturnValue(of({ ...appointment, status: 'NO_SHOW' }));
 
     await TestBed.configureTestingModule({
       imports: [NoopAnimationsModule, AppointmentSchedulingComponent],
@@ -176,19 +191,36 @@ describe('AppointmentSchedulingComponent', () => {
     expect(component.boardForm.controls.date.value).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
-  it('creates appointments from the current form state', () => {
+  it('creates appointments from branch-local date time input', () => {
     const component = fixture.componentInstance as unknown as {
       appointmentForm: { patchValue: (value: Record<string, string>) => void };
       createAppointment: () => void;
     };
-    component.appointmentForm.patchValue({ startsAt: '2026-05-26T09:00:00.000Z' });
+    component.appointmentForm.patchValue({ startsAt: '2026-05-26T09:00' });
     component.createAppointment();
 
     expect(appointmentApi.createAppointment).toHaveBeenCalledWith(
       expect.objectContaining({
         branchId: 'branch-1',
         customerId: 'customer-1',
-        lines: [{ serviceId: 'service-1', staffId: 'staff-1', startsAt: '2026-05-26T09:00:00.000Z' }],
+        lines: [{ serviceId: 'service-1', staffId: 'staff-1', startsAt: '2026-05-26T00:00:00.000Z' }],
+      }),
+    );
+  });
+
+  it('creates walk-ins from branch-local date time input', () => {
+    const component = fixture.componentInstance as unknown as {
+      appointmentForm: { patchValue: (value: Record<string, string>) => void };
+      createWalkIn: () => void;
+    };
+    component.appointmentForm.patchValue({ startsAt: '2026-05-26T09:00' });
+    component.createWalkIn();
+
+    expect(appointmentApi.createWalkInAppointment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        branchId: 'branch-1',
+        customerId: 'customer-1',
+        lines: [{ serviceId: 'service-1', staffId: 'staff-1', startsAt: '2026-05-26T00:00:00.000Z' }],
       }),
     );
   });
@@ -201,14 +233,34 @@ describe('AppointmentSchedulingComponent', () => {
       reschedule: () => void;
     };
     component.appointmentForm.patchValue({ serviceId: 'form-service', staffId: 'form-staff' });
-    component.rescheduleForm.patchValue({ startsAt: '2026-05-27T10:00:00.000Z', reason: 'Customer request' });
+    component.rescheduleForm.patchValue({ startsAt: '2026-05-27T10:00', reason: 'Customer request' });
     component.selectedAppointment.set(appointment);
 
     component.reschedule();
 
     expect(appointmentApi.rescheduleAppointment).toHaveBeenCalledWith('appointment-1', {
       reason: 'Customer request',
-      lines: [{ serviceId: 'selected-service', staffId: 'selected-staff', startsAt: '2026-05-27T10:00:00.000Z' }],
+      lines: [{ serviceId: 'selected-service', staffId: 'selected-staff', startsAt: '2026-05-27T01:00:00.000Z' }],
     });
+  });
+
+  it('requires and submits lifecycle reasons for cancel and no-show', () => {
+    const component = fixture.componentInstance as unknown as {
+      lifecycleReasonForm: { patchValue: (value: Record<string, string>) => void };
+      selectedAppointment: { set: (value: unknown) => void };
+      runAction: (action: 'cancel' | 'no-show') => void;
+    };
+    component.selectedAppointment.set(appointment);
+
+    component.runAction('cancel');
+
+    expect(appointmentApi.cancelAppointment).not.toHaveBeenCalled();
+
+    component.lifecycleReasonForm.patchValue({ reason: 'Customer called' });
+    component.runAction('cancel');
+    component.runAction('no-show');
+
+    expect(appointmentApi.cancelAppointment).toHaveBeenCalledWith('appointment-1', 'Customer called');
+    expect(appointmentApi.markAppointmentNoShow).toHaveBeenCalledWith('appointment-1', 'Customer called');
   });
 });

@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
-import type { ApiEnvelope } from '../salon-owner-settings/models/salon-owner-settings.models';
+import type { ResponseEnvelope as ApiEnvelope } from '../salon-owner-settings/models/salon-owner-settings.models';
 import {
   CommunicationPreferencesInput,
   Customer,

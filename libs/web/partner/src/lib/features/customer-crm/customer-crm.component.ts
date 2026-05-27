@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -33,6 +33,7 @@ import { CustomerCrmApi } from './customer-crm.api';
   ],
   templateUrl: './customer-crm.component.html',
   styleUrls: ['./customer-crm.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CustomerCrmComponent {
   private readonly fb = inject(FormBuilder);
@@ -79,7 +80,11 @@ export class CustomerCrmComponent {
       next: (result) => {
         this.customers.set(result.items);
         const selected = result.items.find((customer) => customer.id === this.selectedCustomer()?.id) ?? result.items[0] ?? null;
-        selected ? this.selectCustomer(selected) : this.newCustomer();
+        if (selected) {
+          this.selectCustomer(selected);
+        } else {
+          this.newCustomer();
+        }
         this.loading.set(false);
       },
       error: () => {
