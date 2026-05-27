@@ -1,0 +1,35 @@
+name: AIDD Correction
+about: Track a defect or validation follow-up through the AIDD workflow
+title: "fix: "
+labels: ["aidd", "correction"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe the observed behavior or failing command.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Paste relevant output, screenshots, affected routes, or PR links.
+    validations:
+      required: false
+  - type: dropdown
+    id: task-type
+    attributes:
+      label: Task type
+      options:
+        - New task
+        - Continuation inside active task
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Expected validation
+      description: Commands or checks expected before completion.
+    validations:
+      required: false
