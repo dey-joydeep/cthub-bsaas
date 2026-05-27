@@ -6,7 +6,7 @@ export interface DashboardRevenueModel {
 
 export interface DashboardModel {
   readonly businessDate: string;
-  readonly branchId: string;
+  readonly branchId: string | null;
   readonly appointments: Readonly<Record<string, number>>;
   readonly revenue: DashboardRevenueModel;
   readonly inventoryAlerts: number;
