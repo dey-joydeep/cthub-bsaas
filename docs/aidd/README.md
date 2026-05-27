@@ -25,6 +25,8 @@ When instructions overlap, use this order:
 | [Codex Task Policy](codex-task-policy.md)                 | Depth, stop conditions, and completion expectations by task type.                             |
 | [Codex Review Checklist](codex-review-checklist.md)       | Checklist for PR reviews and self-review before handoff.                                      |
 | [Codex Validation Commands](codex-validation-commands.md) | Current validation commands and reporting rules.                                              |
+| [MCP Configuration Policy](mcp-configuration-policy.md)   | Repository-vs-global MCP configuration split and safety policy.                               |
+| [Codex CLI Operator Guide](codex-cli-operator-guide.md)   | Practical local Codex commands and operator prompts.                                          |
 
 ## Prompt Templates
 
@@ -36,6 +38,10 @@ When instructions overlap, use this order:
 | `.codex/prompts/fix-ci.md`             | Fixing failing local validation or CI.                          |
 | `.codex/prompts/create-tests.md`       | Adding or improving tests.                                      |
 
+## Playbooks
+
+Playbooks under `docs/aidd/playbooks/` provide copy-ready local operator prompts for startup, new tasks, correction work, implementation slices, PR review, validation follow-up, and merge readiness.
+
 ## Maintenance Rule
 
-Keep these docs aligned with package scripts, Nx project names, OpenAPI locations, and current documentation standards. If a command or source-of-truth path changes, update this folder in the same PR.
+Keep these docs aligned with package scripts, Nx project names, OpenAPI locations, current documentation standards, and safe Codex/MCP configuration. If a command or source-of-truth path changes, update this folder in the same PR.
