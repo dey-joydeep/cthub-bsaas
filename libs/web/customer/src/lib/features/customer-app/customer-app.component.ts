@@ -95,6 +95,9 @@ export class CustomerAppComponent implements OnInit, OnDestroy {
         branchId: params.get('branchId') ?? this.bookingForm.controls.branchId.value,
         serviceIds: params.get('serviceId') ? [params.get('serviceId') as string] : this.bookingForm.controls.serviceIds.value,
       });
+      if (!this.loading) {
+        this.loadBookingContext();
+      }
     });
     this.loadCustomerApp();
   }
@@ -241,7 +244,7 @@ export class CustomerAppComponent implements OnInit, OnDestroy {
   }
 
   visible(section: CustomerAppView): boolean {
-    return this.view === 'dashboard' || this.view === section;
+    return this.view === section;
   }
 
   formatDateTime(value: string): string {
