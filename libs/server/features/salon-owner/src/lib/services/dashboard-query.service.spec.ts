@@ -38,6 +38,13 @@ function invoice(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function payment(overrides: Record<string, unknown> = {}) {
+  return {
+    amount: new Prisma.Decimal('30.00'),
+    ...overrides,
+  };
+}
+
 function product(overrides: Record<string, unknown> = {}) {
   return {
     id: 'product-1',
@@ -60,6 +67,7 @@ function createPrismaMock() {
     salonBranch: { findFirst: jest.fn(), findMany: jest.fn() },
     salonOwnerAppointment: { findMany: jest.fn() },
     salonOwnerInvoice: { findMany: jest.fn() },
+    salonOwnerInvoicePayment: { findMany: jest.fn() },
     salonOwnerProduct: { findMany: jest.fn() },
   };
 }
@@ -78,6 +86,7 @@ describe('DashboardQueryService', () => {
       { status: 'ARRIVED', estimatedWaitMinutes: 10 },
     ]);
     prisma.salonOwnerInvoice.findMany.mockResolvedValue([invoice()]);
+    prisma.salonOwnerInvoicePayment.findMany.mockResolvedValue([payment()]);
     prisma.salonOwnerProduct.findMany.mockResolvedValue([product()]);
   });
 
@@ -122,6 +131,26 @@ describe('DashboardQueryService', () => {
       },
       select: { id: true, branchId: true, customerId: true, status: true, total: true, paidAmount: true, dueAmount: true },
     });
+    expect(prisma.salonOwnerInvoicePayment.findMany).toHaveBeenCalledWith({
+      where: {
+        OR: [
+          {
+            receivedAt: { gte: new Date('2026-05-25T15:00:00.000Z'), lt: new Date('2026-05-26T15:00:00.000Z') },
+            invoice: { branchId: 'branch-1', status: { in: ['FINALIZED', 'PARTIALLY_PAID', 'PAID'] } },
+          },
+        ],
+      },
+      select: { amount: true },
+    });
+  });
+
+  it('uses payment received dates for paid revenue', async () => {
+    prisma.salonOwnerInvoice.findMany.mockResolvedValue([invoice({ paidAmount: new Prisma.Decimal('999.00') })]);
+    prisma.salonOwnerInvoicePayment.findMany.mockResolvedValue([payment({ amount: new Prisma.Decimal('18.00') })]);
+
+    const result = await service.getOwnerDashboard({ user: user() }, 'branch-1', '2026-05-26');
+
+    expect(result.revenue).toEqual({ gross: '45.00', paid: '18.00', due: '15.00' });
   });
 
   it('aggregates all tenant branches when branchId is omitted', async () => {
@@ -147,6 +176,21 @@ describe('DashboardQueryService', () => {
         ],
       },
       select: { id: true, branchId: true, customerId: true, status: true, total: true, paidAmount: true, dueAmount: true },
+    });
+    expect(prisma.salonOwnerInvoicePayment.findMany).toHaveBeenCalledWith({
+      where: {
+        OR: [
+          {
+            receivedAt: { gte: new Date('2026-05-25T15:00:00.000Z'), lt: new Date('2026-05-26T15:00:00.000Z') },
+            invoice: { branchId: 'branch-1', status: { in: ['FINALIZED', 'PARTIALLY_PAID', 'PAID'] } },
+          },
+          {
+            receivedAt: { gte: new Date('2026-05-26T00:00:00.000Z'), lt: new Date('2026-05-27T00:00:00.000Z') },
+            invoice: { branchId: 'branch-2', status: { in: ['FINALIZED', 'PARTIALLY_PAID', 'PAID'] } },
+          },
+        ],
+      },
+      select: { amount: true },
     });
   });
 

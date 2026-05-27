@@ -15,6 +15,7 @@ type InvoiceSummary = Pick<
   Prisma.SalonOwnerInvoiceGetPayload<object>,
   'id' | 'branchId' | 'customerId' | 'status' | 'total' | 'paidAmount' | 'dueAmount'
 >;
+type InvoicePaymentSummary = Pick<Prisma.SalonOwnerInvoicePaymentGetPayload<object>, 'amount'>;
 type ProductStockRecord = Prisma.SalonOwnerProductGetPayload<{ include: { stockMovements: true } }>;
 type DateRange = { readonly gte: Date; readonly lt: Date };
 type BranchDateRange = { readonly branchId: string; readonly range: DateRange };
@@ -138,9 +139,10 @@ export class DashboardQueryService {
     const branches = await this.resolveBranches(context, branchId);
     const businessDate = parseBusinessDate(branches[0].timezone, date);
     const branchRanges = branches.map((branch) => ({ branchId: branch.id, range: dateRangeUtc(businessDate, branch.timezone) }));
-    const [appointments, invoices, lowStock] = await Promise.all([
+    const [appointments, invoices, payments, lowStock] = await Promise.all([
       this.findDashboardAppointments(branchRanges),
       this.findRevenueInvoices(branchRanges),
+      this.findRevenuePayments(branchRanges),
       Promise.all(branches.map((branch) => this.findLowStock(branch))),
     ]);
     const appointmentCounts = appointments.reduce<Record<string, number>>((counts, appointment) => {
@@ -155,7 +157,7 @@ export class DashboardQueryService {
       businessDate,
       branchId: branchId ? branches[0].id : null,
       appointments: appointmentCounts,
-      revenue: this.mapRevenue(invoices),
+      revenue: this.mapRevenue(invoices, payments),
       inventoryAlerts: lowStock.flat().length,
     };
   }
@@ -241,6 +243,21 @@ export class DashboardQueryService {
     });
   }
 
+  private async findRevenuePayments(branchRanges: readonly BranchDateRange[]): Promise<InvoicePaymentSummary[]> {
+    return this.prisma.salonOwnerInvoicePayment.findMany({
+      where: {
+        OR: branchRanges.map((branchRange) => ({
+          receivedAt: branchRange.range,
+          invoice: {
+            branchId: branchRange.branchId,
+            status: { in: ['FINALIZED', 'PARTIALLY_PAID', 'PAID'] },
+          },
+        })),
+      },
+      select: { amount: true },
+    });
+  }
+
   private async findPendingDues(branchIds: readonly string[]): Promise<InvoiceSummary[]> {
     return this.prisma.salonOwnerInvoice.findMany({
       where: { branchId: { in: [...branchIds] }, dueAmount: { gt: 0 } },
@@ -261,15 +278,15 @@ export class DashboardQueryService {
     });
   }
 
-  private mapRevenue(invoices: readonly InvoiceSummary[]) {
-    const summary = invoices.reduce(
+  private mapRevenue(invoices: readonly InvoiceSummary[], payments: readonly InvoicePaymentSummary[]) {
+    const invoiceSummary = invoices.reduce(
       (summary, invoice) => ({
         gross: summary.gross.plus(invoice.total),
-        paid: summary.paid.plus(invoice.paidAmount),
         due: summary.due.plus(invoice.dueAmount),
       }),
-      { gross: decimal(0), paid: decimal(0), due: decimal(0) },
+      { gross: decimal(0), due: decimal(0) },
     );
-    return { gross: money(summary.gross), paid: money(summary.paid), due: money(summary.due) };
+    const paid = payments.reduce((sum, payment) => sum.plus(payment.amount), decimal(0));
+    return { gross: money(invoiceSummary.gross), paid: money(paid), due: money(invoiceSummary.due) };
   }
 }
