@@ -59,7 +59,7 @@ export class AppointmentSchedulingComponent {
 
   protected readonly boardForm = this.fb.nonNullable.group({
     branchId: ['', Validators.required],
-    date: [new Date().toISOString().slice(0, 10), Validators.required],
+    date: [this.localDateInputValue(), Validators.required],
   });
 
   protected readonly appointmentForm = this.fb.nonNullable.group({
@@ -148,8 +148,7 @@ export class AppointmentSchedulingComponent {
 
   protected reschedule(): void {
     const appointment = this.selectedAppointment();
-    const value = this.appointmentForm.getRawValue();
-    if (!appointment || !value.serviceId || !value.staffId || this.rescheduleForm.invalid) {
+    if (!appointment || appointment.lines.length === 0 || this.rescheduleForm.invalid) {
       this.error.set('Select an appointment and complete reschedule details.');
       return;
     }
@@ -157,7 +156,7 @@ export class AppointmentSchedulingComponent {
     this.persist(
       this.appointmentApi.rescheduleAppointment(appointment.id, {
         reason: reschedule.reason,
-        lines: [{ serviceId: value.serviceId, staffId: value.staffId, startsAt: reschedule.startsAt }],
+        lines: appointment.lines.map((line) => ({ serviceId: line.serviceId, staffId: line.staffId, startsAt: reschedule.startsAt })),
       }),
       (updated) => this.selectedAppointment.set(updated),
     );
@@ -226,6 +225,13 @@ export class AppointmentSchedulingComponent {
     const staffId = this.staff()[0]?.id ?? '';
     this.boardForm.patchValue({ branchId });
     this.appointmentForm.patchValue({ branchId, customerId, serviceId, staffId });
+  }
+
+  private localDateInputValue(date = new Date()): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   private persist<T>(request: Observable<T>, onSuccess?: (value: T) => void): void {
