@@ -27,7 +27,7 @@
     <p class="status status-error">{{ error() }}</p>
   }
 
-  <mat-tab-group>
+  <mat-tab-group [selectedIndex]="selectedTabIndex()" (selectedIndexChange)="selectedTabIndex.set($event)">
     <mat-tab label="Staff">
       <div class="tab-grid">
         <mat-card>
@@ -262,12 +262,8 @@
               }
             </div>
             <div class="status-actions">
-              <button mat-stroked-button type="button" [disabled]="saving() || !selectedService()" (click)="setServiceStatus('ACTIVE')">
-                Active
-              </button>
-              <button mat-stroked-button type="button" [disabled]="saving() || !selectedService()" (click)="setServiceStatus('INACTIVE')">
-                Inactive
-              </button>
+              <button mat-stroked-button type="button" [disabled]="saving() || !selectedService()" (click)="setServiceStatus('ACTIVE')">Active</button>
+              <button mat-stroked-button type="button" [disabled]="saving() || !selectedService()" (click)="setServiceStatus('INACTIVE')">Inactive</button>
             </div>
           </mat-card-content>
         </mat-card>

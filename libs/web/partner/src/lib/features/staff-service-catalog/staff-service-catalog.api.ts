@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
-import type { ApiEnvelope } from '../salon-owner-settings/models/salon-owner-settings.models';
+import type { ResponseEnvelope as ApiEnvelope } from '../salon-owner-settings/models/salon-owner-settings.models';
 import {
   Service,
   ServiceCategory,
@@ -64,9 +64,7 @@ export class StaffServiceCatalogApi {
   }
 
   createServiceCategory(input: ServiceCategoryInput): Observable<ServiceCategory> {
-    return this.http
-      .post<ApiEnvelope<ServiceCategory>>(`${this.baseUrl}/service-categories`, input)
-      .pipe(map((response) => response.data));
+    return this.http.post<ApiEnvelope<ServiceCategory>>(`${this.baseUrl}/service-categories`, input).pipe(map((response) => response.data));
   }
 
   listServices(categoryId?: string): Observable<ServicePage> {

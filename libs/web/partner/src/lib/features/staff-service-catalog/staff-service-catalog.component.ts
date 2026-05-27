@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -11,17 +11,12 @@ import { MatOptionModule } from '@angular/material/core';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
+import { ActivatedRoute } from '@angular/router';
 import { Observable, forkJoin } from 'rxjs';
 
 import { BranchProfile } from '../salon-owner-settings/models/salon-owner-settings.models';
 import { SalonOwnerSettingsApi } from '../salon-owner-settings/salon-owner-settings.api';
-import {
-  Service,
-  ServiceCategory,
-  Staff,
-  StaffInput,
-  StaffRole,
-} from './models/staff-service-catalog.models';
+import { Service, ServiceCategory, Staff, StaffInput, StaffRole } from './models/staff-service-catalog.models';
 import { StaffServiceCatalogApi } from './staff-service-catalog.api';
 
 const staffRoles: readonly StaffRole[] = ['OWNER', 'MANAGER', 'RECEPTIONIST', 'STYLIST', 'CASHIER', 'INVENTORY_MANAGER'];
@@ -46,11 +41,13 @@ const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
   ],
   templateUrl: './staff-service-catalog.component.html',
   styleUrls: ['./staff-service-catalog.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StaffServiceCatalogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly settingsApi = inject(SalonOwnerSettingsApi);
   private readonly catalogApi = inject(StaffServiceCatalogApi);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly staffRoles = staffRoles;
   protected readonly weekdays = weekdays;
@@ -67,6 +64,7 @@ export class StaffServiceCatalogComponent {
   protected readonly hasBranches = computed(() => this.branches().length > 0);
   protected readonly hasStaff = computed(() => this.staff().length > 0);
   protected readonly hasServices = computed(() => this.services().length > 0);
+  protected readonly selectedTabIndex = signal(this.initialTabIndex());
 
   protected readonly staffForm = this.fb.nonNullable.group({
     branchIds: this.fb.nonNullable.control<string[]>([], Validators.required),
@@ -209,7 +207,15 @@ export class StaffServiceCatalogComponent {
       this.error.set('Select staff and complete the leave form.');
       return;
     }
-    this.persist(this.catalogApi.createStaffLeaveBlock(member.id, this.leaveForm.getRawValue()));
+    const value = this.leaveForm.getRawValue();
+    this.persist(
+      this.catalogApi.createStaffLeaveBlock(member.id, {
+        branchId: value.branchId,
+        startsAt: this.localDateTimeToUtcIso(value.startsAt),
+        endsAt: this.localDateTimeToUtcIso(value.endsAt),
+        reason: value.reason,
+      }),
+    );
   }
 
   protected saveCategory(): void {
@@ -280,7 +286,10 @@ export class StaffServiceCatalogComponent {
       this.error.set('Select a service before changing status.');
       return;
     }
-    this.persist(this.catalogApi.updateServiceStatus(service.id, { status }), (updated) => this.selectedService.set(updated));
+    this.persist(this.catalogApi.updateServiceStatus(service.id, { status }), (updated) => {
+      this.selectedService.set(updated);
+      this.serviceForm.patchValue({ status: updated.status });
+    });
   }
 
   protected branchName(branchId: string): string {
@@ -306,6 +315,15 @@ export class StaffServiceCatalogComponent {
     return this.branches().find((branch) => branch.id === branchId)?.timezone ?? 'Asia/Tokyo';
   }
 
+  private initialTabIndex(): number {
+    const tab = this.route.snapshot.data['catalogTab'] ?? this.route.parent?.snapshot.data['catalogTab'];
+    return tab === 'services' ? 1 : 0;
+  }
+
+  private localDateTimeToUtcIso(value: string): string {
+    return new Date(value).toISOString();
+  }
+
   private loadCatalog(selectStaffId?: string, selectServiceId?: string): void {
     this.loading.set(true);
     forkJoin({
@@ -321,8 +339,16 @@ export class StaffServiceCatalogComponent {
         this.services.set(services.items);
         const selectedStaff = staff.items.find((member) => member.id === selectStaffId) ?? staff.items[0] ?? null;
         const selectedService = services.items.find((service) => service.id === selectServiceId) ?? services.items[0] ?? null;
-        selectedStaff ? this.selectStaff(selectedStaff) : this.newStaff();
-        selectedService ? this.selectService(selectedService) : this.newService();
+        if (selectedStaff) {
+          this.selectStaff(selectedStaff);
+        } else {
+          this.newStaff();
+        }
+        if (selectedService) {
+          this.selectService(selectedService);
+        } else {
+          this.newService();
+        }
         this.loading.set(false);
       },
       error: () => {
