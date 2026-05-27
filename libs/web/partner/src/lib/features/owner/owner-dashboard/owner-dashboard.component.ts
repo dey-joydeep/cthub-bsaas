@@ -67,6 +67,7 @@ interface MetricCard {
             <mat-form-field appearance="outline">
               <mat-label>Branch</mat-label>
               <mat-select formControlName="branchId">
+                <mat-option value="">All branches</mat-option>
                 @for (branch of branches(); track branch.id) {
                   <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
                 }
@@ -279,8 +280,8 @@ export class OwnerDashboardComponent {
   protected readonly alerts = signal<readonly DashboardAlert[]>([]);
 
   protected readonly filterForm = this.fb.nonNullable.group({
-    branchId: ['', Validators.required],
-    date: [new Date().toISOString().slice(0, 10), Validators.required],
+    branchId: [''],
+    date: [this.localDateInputValue(), Validators.required],
   });
 
   constructor() {
@@ -330,17 +331,19 @@ export class OwnerDashboardComponent {
     this.settingsApi.listBranches().subscribe({
       next: (branches) => {
         this.branches.set(branches.items);
-        this.filterForm.patchValue({ branchId: branches.items[0]?.id ?? '' });
-        if (branches.items[0]) {
-          this.loadDashboard();
-        } else {
-          this.loading.set(false);
-        }
+        this.loadDashboard();
       },
       error: () => {
         this.error.set('Dashboard branches could not be loaded.');
         this.loading.set(false);
       },
     });
+  }
+
+  private localDateInputValue(date = new Date()): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }

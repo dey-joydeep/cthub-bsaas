@@ -20,7 +20,18 @@ describe('OwnerDashboardComponent', () => {
   beforeEach(async () => {
     settingsApi.listBranches.mockReturnValue(
       of({
-        items: [{ id: 'branch-1', businessId: 'business-1', name: 'Main', timezone: 'Asia/Tokyo', currency: 'JPY', address: {}, createdAt: '', updatedAt: '' }],
+        items: [
+          {
+            id: 'branch-1',
+            businessId: 'business-1',
+            name: 'Main',
+            timezone: 'Asia/Tokyo',
+            currency: 'JPY',
+            address: {},
+            createdAt: '',
+            updatedAt: '',
+          },
+        ],
         page: { limit: 1, nextCursor: null, hasMore: false },
       }),
     );
@@ -64,8 +75,8 @@ describe('OwnerDashboardComponent', () => {
 
   it('loads branch-scoped dashboard panels', () => {
     expect(settingsApi.listBranches).toHaveBeenCalled();
-    expect(dashboardApi.getOwnerDashboard).toHaveBeenCalledWith('branch-1', expect.any(String));
-    expect(dashboardApi.listDashboardAlerts).toHaveBeenCalledWith('branch-1');
+    expect(dashboardApi.getOwnerDashboard).toHaveBeenCalledWith('', expect.any(String));
+    expect(dashboardApi.listDashboardAlerts).toHaveBeenCalledWith('');
     expect(fixture.nativeElement.textContent).toContain('Owner Dashboard');
     expect(fixture.nativeElement.textContent).toContain('90.00');
   });

@@ -10,13 +10,16 @@ export class OwnerDashboardApi {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/partner/dashboard';
 
-  getOwnerDashboard(branchId: string, date: string): Observable<OwnerDashboard> {
-    const params = new HttpParams().set('branchId', branchId).set('date', date);
+  getOwnerDashboard(branchId: string | undefined, date: string): Observable<OwnerDashboard> {
+    let params = new HttpParams().set('date', date);
+    if (branchId) {
+      params = params.set('branchId', branchId);
+    }
     return this.http.get<ApiEnvelope<OwnerDashboard>>(`${this.baseUrl}/owner`, { params }).pipe(map((response) => response.data));
   }
 
-  listDashboardAlerts(branchId: string): Observable<DashboardAlertPage> {
-    const params = new HttpParams().set('branchId', branchId);
+  listDashboardAlerts(branchId?: string): Observable<DashboardAlertPage> {
+    const params = branchId ? new HttpParams().set('branchId', branchId) : undefined;
     return this.http.get<ApiEnvelope<DashboardAlertPage>>(`${this.baseUrl}/alerts`, { params }).pipe(map((response) => response.data));
   }
 }
