@@ -26,7 +26,7 @@
         <div class="toolbar" [formGroup]="branchForm">
           <mat-form-field appearance="outline">
             <mat-label>Search</mat-label>
-            <input matInput formControlName="q" />
+            <input matInput formControlName="q" (input)="reloadProducts()" />
           </mat-form-field>
           <button mat-stroked-button type="button" (click)="newProduct()">New</button>
         </div>

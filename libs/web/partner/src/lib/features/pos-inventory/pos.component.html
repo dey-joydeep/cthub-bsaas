@@ -26,7 +26,7 @@
         <form [formGroup]="invoiceForm" class="form-grid" (ngSubmit)="createInvoice()">
           <mat-form-field appearance="outline">
             <mat-label>Branch</mat-label>
-            <mat-select formControlName="branchId">
+            <mat-select formControlName="branchId" (selectionChange)="onBranchChanged($event.value)">
               @for (branch of branches(); track branch.id) {
                 <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
               }
@@ -146,7 +146,7 @@
             <mat-label>Reference</mat-label>
             <input matInput formControlName="reference" />
           </mat-form-field>
-          <button mat-flat-button type="submit" [disabled]="saving() || !currentInvoice()">Capture payment</button>
+          <button mat-flat-button type="submit" [disabled]="saving() || !isCurrentInvoicePayable()">Capture payment</button>
         </form>
       </mat-card-content>
     </mat-card>

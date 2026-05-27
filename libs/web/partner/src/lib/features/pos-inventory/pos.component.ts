@@ -134,6 +134,10 @@ export class PosComponent {
       this.paymentForm.markAllAsTouched();
       return;
     }
+    if (!this.isInvoicePayable(invoice)) {
+      this.error.set('Finalize the invoice before capturing payment.');
+      return;
+    }
     const value = this.paymentForm.getRawValue();
     this.persist(
       this.posApi.captureInvoicePayment(invoice.id, {
@@ -153,6 +157,19 @@ export class PosComponent {
   protected selectInvoice(invoice: Invoice): void {
     this.currentInvoice.set(invoice);
     this.paymentForm.patchValue({ amount: invoice.dueAmount });
+  }
+
+  protected onBranchChanged(branchId: string): void {
+    this.currentInvoice.set(null);
+    this.pendingDues.set([]);
+    if (branchId) {
+      this.loadPendingDues(branchId);
+    }
+  }
+
+  protected isCurrentInvoicePayable(): boolean {
+    const invoice = this.currentInvoice();
+    return invoice ? this.isInvoicePayable(invoice) : false;
   }
 
   protected customerName(customerId: string): string {
@@ -202,6 +219,10 @@ export class PosComponent {
       next: (result) => this.pendingDues.set(result.items),
       error: () => this.pendingDues.set([]),
     });
+  }
+
+  private isInvoicePayable(invoice: Invoice): boolean {
+    return ['FINALIZED', 'PARTIALLY_PAID'].includes(invoice.status) && Number(invoice.dueAmount) > 0;
   }
 
   private persist<T>(request: Observable<T>, onSuccess: (value: T) => void): void {

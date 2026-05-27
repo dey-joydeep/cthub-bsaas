@@ -10,8 +10,25 @@ import { PosComponent } from './pos.component';
 import { PosInventoryApi } from './pos-inventory.api';
 
 const page = { limit: 1, nextCursor: null, hasMore: false };
-const branch = { id: 'branch-1', businessId: 'business-1', name: 'Main', timezone: 'Asia/Tokyo', currency: 'JPY', address: {}, createdAt: '', updatedAt: '' };
-const customer = { id: 'customer-1', displayName: 'Customer One', phone: '09000000001', consentForMarketing: false, createdAt: '', updatedAt: '' };
+const branch = {
+  id: 'branch-1',
+  businessId: 'business-1',
+  name: 'Main',
+  timezone: 'Asia/Tokyo',
+  currency: 'JPY',
+  address: {},
+  createdAt: '',
+  updatedAt: '',
+};
+const secondBranch = { ...branch, id: 'branch-2', name: 'Second' };
+const customer = {
+  id: 'customer-1',
+  displayName: 'Customer One',
+  phone: '09000000001',
+  consentForMarketing: false,
+  createdAt: '',
+  updatedAt: '',
+};
 const service = {
   id: 'service-1',
   categoryId: 'category-1',
@@ -23,13 +40,23 @@ const service = {
   status: 'ACTIVE',
   eligibleStaffIds: [],
 };
-const product = { id: 'product-1', name: 'Shampoo', sku: 'SKU-1', unit: 'PIECE', retailPrice: '12.00', reorderPoint: '2', status: 'ACTIVE' };
+const product = {
+  id: 'product-1',
+  name: 'Shampoo',
+  sku: 'SKU-1',
+  unit: 'PIECE',
+  retailPrice: '12.00',
+  reorderPoint: '2',
+  status: 'ACTIVE',
+};
 const invoice = {
   id: 'invoice-1',
   branchId: 'branch-1',
   customerId: 'customer-1',
   status: 'DRAFT',
-  lines: [{ id: 'line-1', type: 'SERVICE', referenceId: 'service-1', description: 'Cut', quantity: '1', unitPrice: '45.00', lineTotal: '45.00' }],
+  lines: [
+    { id: 'line-1', type: 'SERVICE', referenceId: 'service-1', description: 'Cut', quantity: '1', unitPrice: '45.00', lineTotal: '45.00' },
+  ],
   subtotal: '45.00',
   taxTotal: '0.00',
   discountTotal: '0.00',
@@ -111,6 +138,30 @@ describe('PosComponent', () => {
     );
     expect(posInventoryApi.finalizeInvoice).toHaveBeenCalledWith('invoice-1', { confirmedTotal: '45.00' });
   });
+
+  it('reloads pending dues and clears selected invoice when branch changes', () => {
+    const component = fixture.componentInstance as unknown as {
+      currentInvoice: { set: (value: unknown) => void };
+      onBranchChanged: (branchId: string) => void;
+    };
+    component.currentInvoice.set(invoice);
+
+    component.onBranchChanged(secondBranch.id);
+
+    expect(posInventoryApi.listPendingDues).toHaveBeenLastCalledWith('branch-2');
+  });
+
+  it('does not capture payment for draft invoices', () => {
+    const component = fixture.componentInstance as unknown as {
+      currentInvoice: { set: (value: unknown) => void };
+      capturePayment: () => void;
+    };
+    component.currentInvoice.set(invoice);
+
+    component.capturePayment();
+
+    expect(posInventoryApi.captureInvoicePayment).not.toHaveBeenCalled();
+  });
 });
 
 describe('InventoryComponent', () => {
@@ -150,5 +201,30 @@ describe('InventoryComponent', () => {
     expect(posInventoryApi.createStockMovement).toHaveBeenCalledWith(
       expect.objectContaining({ branchId: 'branch-1', productId: 'product-1', quantity: '3', reason: 'PURCHASE' }),
     );
+  });
+
+  it('reloads products with the current search query', () => {
+    const component = fixture.componentInstance as unknown as {
+      branchForm: { patchValue: (value: Record<string, string>) => void };
+      reloadProducts: () => void;
+    };
+    component.branchForm.patchValue({ q: 'shampoo' });
+
+    component.reloadProducts();
+
+    expect(posInventoryApi.listProducts).toHaveBeenLastCalledWith('shampoo');
+  });
+
+  it('rejects zero-quantity stock movements before submit', () => {
+    const component = fixture.componentInstance as unknown as {
+      movementForm: { patchValue: (value: Record<string, string>) => void };
+      recordMovement: () => void;
+    };
+    posInventoryApi.createStockMovement.mockClear();
+    component.movementForm.patchValue({ productId: 'product-1', quantity: '0', reason: 'PURCHASE' });
+
+    component.recordMovement();
+
+    expect(posInventoryApi.createStockMovement).not.toHaveBeenCalled();
   });
 });

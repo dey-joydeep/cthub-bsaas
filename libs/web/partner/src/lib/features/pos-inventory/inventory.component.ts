@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators, type AbstractControl, type ValidationErrors } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -16,6 +16,14 @@ import { BranchProfile } from '../salon-owner-settings/models/salon-owner-settin
 import { SalonOwnerSettingsApi } from '../salon-owner-settings/salon-owner-settings.api';
 import { BranchStock, Product, ProductStatus, ProductUnit, StockMovementReason } from './models/pos-inventory.models';
 import { PosInventoryApi } from './pos-inventory.api';
+
+function nonZeroQuantity(control: AbstractControl<string>): ValidationErrors | null {
+  const value = control.value.trim();
+  if (!/^-?\d+(\.\d{1,3})?$/.test(value)) {
+    return null;
+  }
+  return Number(value) === 0 ? { nonZeroQuantity: true } : null;
+}
 
 @Component({
   selector: 'lib-owner-inventory',
@@ -72,7 +80,7 @@ export class InventoryComponent {
 
   protected readonly movementForm = this.fb.nonNullable.group({
     productId: ['', Validators.required],
-    quantity: ['1', [Validators.required, Validators.pattern(/^-?\d+(\.\d{1,3})?$/)]],
+    quantity: ['1', [Validators.required, Validators.pattern(/^-?\d+(\.\d{1,3})?$/), nonZeroQuantity]],
     reason: this.fb.nonNullable.control<StockMovementReason>('PURCHASE', Validators.required),
     note: [''],
   });
@@ -191,7 +199,7 @@ export class InventoryComponent {
     });
   }
 
-  private reloadProducts(): void {
+  protected reloadProducts(): void {
     this.inventoryApi.listProducts(this.branchForm.controls.q.value).subscribe({
       next: (result) => this.products.set(result.items),
       error: () => this.error.set('Products could not be loaded.'),
