@@ -10,7 +10,7 @@ import { MatOptionModule } from '@angular/material/core';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { RouterModule } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 
 import { BranchProfile } from '../../salon-owner-settings/models/salon-owner-settings.models';
 import { SalonOwnerSettingsApi } from '../../salon-owner-settings/salon-owner-settings.api';
@@ -298,7 +298,12 @@ export class OwnerDashboardComponent {
     this.error.set(null);
     forkJoin({
       dashboard: this.dashboardApi.getOwnerDashboard(value.branchId, value.date),
-      alerts: this.dashboardApi.listDashboardAlerts(value.branchId),
+      alerts: this.dashboardApi.listDashboardAlerts(value.branchId).pipe(
+        catchError(() => {
+          this.error.set('Dashboard alerts could not be loaded.');
+          return of({ items: [], page: { limit: 0, nextCursor: null, hasMore: false } });
+        }),
+      ),
     }).subscribe({
       next: ({ dashboard, alerts }) => {
         this.dashboard.set(dashboard);
@@ -331,6 +336,7 @@ export class OwnerDashboardComponent {
     this.settingsApi.listBranches().subscribe({
       next: (branches) => {
         this.branches.set(branches.items);
+        this.filterForm.patchValue({ date: this.localDateInputValue(new Date(), branches.items[0]?.timezone) });
         this.loadDashboard();
       },
       error: () => {
@@ -340,10 +346,28 @@ export class OwnerDashboardComponent {
     });
   }
 
-  private localDateInputValue(date = new Date()): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+  private localDateInputValue(date = new Date(), timezone?: string): string {
+    const parts = timezone ? this.datePartsInTimezone(date, timezone) : { year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate() };
+    const year = parts.year;
+    const month = String(parts.month).padStart(2, '0');
+    const day = String(parts.day).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  private datePartsInTimezone(date: Date, timezone: string): { readonly year: number; readonly month: number; readonly day: number } {
+    const values = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    })
+      .formatToParts(date)
+      .reduce<Record<string, number>>((parts, part) => {
+        if (part.type !== 'literal') {
+          parts[part.type] = Number(part.value);
+        }
+        return parts;
+      }, {});
+    return { year: values['year'], month: values['month'], day: values['day'] };
   }
 }

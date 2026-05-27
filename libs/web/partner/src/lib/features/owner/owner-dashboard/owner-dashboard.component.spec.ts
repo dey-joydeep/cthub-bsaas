@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 import { SalonOwnerSettingsApi } from '../../salon-owner-settings/salon-owner-settings.api';
 import { OwnerDashboardApi } from './owner-dashboard.api';
@@ -18,6 +18,8 @@ describe('OwnerDashboardComponent', () => {
   };
 
   beforeEach(async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-05-25T11:00:00.000Z'));
+    jest.clearAllMocks();
     settingsApi.listBranches.mockReturnValue(
       of({
         items: [
@@ -25,7 +27,7 @@ describe('OwnerDashboardComponent', () => {
             id: 'branch-1',
             businessId: 'business-1',
             name: 'Main',
-            timezone: 'Asia/Tokyo',
+            timezone: 'Pacific/Kiritimati',
             currency: 'JPY',
             address: {},
             createdAt: '',
@@ -73,9 +75,13 @@ describe('OwnerDashboardComponent', () => {
     fixture.detectChanges();
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   it('loads branch-scoped dashboard panels', () => {
     expect(settingsApi.listBranches).toHaveBeenCalled();
-    expect(dashboardApi.getOwnerDashboard).toHaveBeenCalledWith('', expect.any(String));
+    expect(dashboardApi.getOwnerDashboard).toHaveBeenCalledWith('', '2026-05-26');
     expect(dashboardApi.listDashboardAlerts).toHaveBeenCalledWith('');
     expect(fixture.nativeElement.textContent).toContain('Owner Dashboard');
     expect(fixture.nativeElement.textContent).toContain('90.00');
@@ -90,5 +96,15 @@ describe('OwnerDashboardComponent', () => {
     component.loadDashboard();
 
     expect(dashboardApi.getOwnerDashboard).toHaveBeenLastCalledWith('branch-1', '2026-05-27');
+  });
+
+  it('keeps dashboard metrics visible when alerts fail', () => {
+    dashboardApi.listDashboardAlerts.mockReturnValueOnce(throwError(() => new Error('alerts down')));
+
+    const alertsFailureFixture = TestBed.createComponent(OwnerDashboardComponent);
+    alertsFailureFixture.detectChanges();
+
+    expect(alertsFailureFixture.nativeElement.textContent).toContain('90.00');
+    expect(alertsFailureFixture.nativeElement.textContent).toContain('Dashboard alerts could not be loaded.');
   });
 });
