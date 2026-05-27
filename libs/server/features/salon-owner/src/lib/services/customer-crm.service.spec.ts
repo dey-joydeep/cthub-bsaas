@@ -69,15 +69,18 @@ describe('CustomerCrmService', () => {
 
   it('searches customers within the default tenant business', async () => {
     prisma.salonBusiness.findFirst.mockResolvedValue(business());
-    prisma.salonOwnerCustomer.findMany.mockResolvedValue([customer()]);
+    prisma.salonOwnerCustomer.findMany.mockResolvedValue([customer(), customer({ id: 'customer-2', phone: '09000000002' })]);
 
-    const result = await service.searchCustomers({ user: user() }, 'cust');
+    const result = await service.searchCustomers({ user: user() }, { search: 'cust', page: '2', pageSize: '1' });
 
     expect(prisma.salonOwnerCustomer.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ businessId: 'business-1' }),
+        skip: 1,
+        take: 2,
       }),
     );
+    expect(result.page).toEqual({ limit: 1, nextCursor: '3', hasMore: true });
     expect(result.items[0]).toMatchObject({ id: 'customer-1', dateOfBirth: '1990-01-01' });
   });
 
@@ -113,6 +116,21 @@ describe('CustomerCrmService', () => {
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
   });
 
+  it('rejects required customer text that is blank after trimming', async () => {
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonOwnerCustomer.findFirst.mockResolvedValue(customer());
+
+    await expect(service.createCustomer({ user: user() }, { displayName: '   ', phone: '09000000001' })).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+    await expect(service.createCustomer({ user: user() }, { displayName: 'Customer One', phone: '   ' })).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+    await expect(
+      service.createCustomerNote({ user: user() }, 'customer-1', { body: '   ', visibility: 'STAFF_VISIBLE' }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
   it('updates customer profile, notes, preferences, and visit history', async () => {
     prisma.salonOwnerCustomer.findFirst.mockResolvedValue(customer());
     prisma.salonOwnerCustomer.update.mockResolvedValue(customer({ smsEnabled: true, emailEnabled: true, whatsappEnabled: false }));
@@ -126,17 +144,22 @@ describe('CustomerCrmService', () => {
 
     await expect(service.getCustomer({ user: user() }, 'customer-1')).resolves.toMatchObject({ id: 'customer-1' });
     await expect(
-      service.updateCustomer({ user: user() }, 'customer-1', { displayName: 'Customer One', phone: '09000000001', consentForMarketing: true }),
+      service.updateCustomer({ user: user() }, 'customer-1', { displayName: 'Customer One', phone: '09000000001' }),
     ).resolves.toMatchObject({ id: 'customer-1' });
+    expect(prisma.salonOwnerCustomer.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.not.objectContaining({ consentForMarketing: expect.any(Boolean) }),
+      }),
+    );
     await expect(
       service.createCustomerNote({ user: user() }, 'customer-1', { body: ' Prefers morning ', visibility: 'STAFF_VISIBLE' }),
     ).resolves.toMatchObject({ id: 'note-1', body: 'Prefers morning' });
     await expect(
-      service.updateCustomerCommunicationPreferences(
-        { user: user() },
-        'customer-1',
-        { smsEnabled: true, emailEnabled: true, whatsappEnabled: false },
-      ),
+      service.updateCustomerCommunicationPreferences({ user: user() }, 'customer-1', {
+        smsEnabled: true,
+        emailEnabled: true,
+        whatsappEnabled: false,
+      }),
     ).resolves.toEqual({ customerId: 'customer-1', smsEnabled: true, emailEnabled: true, whatsappEnabled: false });
     await expect(service.getCustomerVisitHistory({ user: user() }, 'customer-1')).resolves.toMatchObject({ items: [] });
   });

@@ -13,8 +13,13 @@ export class CustomerCrmController {
 
   @Get()
   @ApiOperation({ operationId: 'searchCustomers' })
-  searchCustomers(@CurrentUser() user: AuthenticatedUser, @Query('q') search?: string) {
-    return this.customers.searchCustomers({ user }, search);
+  searchCustomers(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('q') search?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.customers.searchCustomers({ user }, { search, page, pageSize });
   }
 
   @Post()

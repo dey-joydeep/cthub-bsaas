@@ -15,9 +15,18 @@ const notFoundMessage = COMMON_MESSAGE_KEYS.ERROR.NOT_FOUND;
 type BusinessRecord = Awaited<ReturnType<PrismaService['salonBusiness']['findFirst']>>;
 type CustomerRecord = Awaited<ReturnType<PrismaService['salonOwnerCustomer']['findFirstOrThrow']>>;
 type CustomerNoteRecord = Awaited<ReturnType<PrismaService['salonOwnerCustomerNote']['create']>>;
+interface CustomerSearchOptions {
+  readonly search?: string;
+  readonly page?: string;
+  readonly pageSize?: string;
+}
 
 function trimRequired(value: string): string {
-  return value.trim();
+  const trimmed = value.trim();
+  if (!trimmed) {
+    throw new UnprocessableEntityException(validationMessage);
+  }
+  return trimmed;
 }
 
 function optionalTrim(value?: string): string | undefined {
@@ -49,13 +58,29 @@ function isDuplicate(error: unknown): boolean {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
 }
 
+function parsePositiveInteger(value: string | undefined, fallback: number, max: number): number {
+  if (value === undefined) {
+    return fallback;
+  }
+  if (!/^\d+$/.test(value)) {
+    throw new UnprocessableEntityException(validationMessage);
+  }
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > max) {
+    throw new UnprocessableEntityException(validationMessage);
+  }
+  return parsed;
+}
+
 @Injectable()
 export class CustomerCrmService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async searchCustomers(context: SalonOwnerRequestContext, search?: string): Promise<PagedResult<CustomerModel>> {
+  async searchCustomers(context: SalonOwnerRequestContext, options: CustomerSearchOptions = {}): Promise<PagedResult<CustomerModel>> {
     const business = await this.resolveDefaultBusiness(context);
-    const normalizedSearch = optionalTrim(search);
+    const normalizedSearch = optionalTrim(options.search);
+    const pageNumber = parsePositiveInteger(options.page, 1, 10_000);
+    const limit = parsePositiveInteger(options.pageSize, 25, 100);
     const customers = await this.prisma.salonOwnerCustomer.findMany({
       where: {
         businessId: business.id,
@@ -70,8 +95,15 @@ export class CustomerCrmService {
           : {}),
       },
       orderBy: { createdAt: 'desc' },
+      skip: (pageNumber - 1) * limit,
+      take: limit + 1,
     });
-    return this.page(customers.map((customer) => this.mapCustomer(customer)));
+    return this.page(
+      customers.slice(0, limit).map((customer) => this.mapCustomer(customer)),
+      limit,
+      customers.length > limit,
+      String(pageNumber + 1),
+    );
   }
 
   async createCustomer(context: SalonOwnerRequestContext, input: CustomerInputDto): Promise<CustomerModel> {
@@ -112,7 +144,7 @@ export class CustomerCrmService {
             phone: trimRequired(input.phone),
             email: optionalTrim(input.email),
             dateOfBirth: parseBirthDate(input.dateOfBirth),
-            consentForMarketing: input.consentForMarketing ?? false,
+            ...(input.consentForMarketing !== undefined ? { consentForMarketing: input.consentForMarketing } : {}),
           },
         }),
       );
@@ -224,13 +256,13 @@ export class CustomerCrmService {
     };
   }
 
-  private page<T>(items: readonly T[]): PagedResult<T> {
+  private page<T>(items: readonly T[], limit = items.length, hasMore = false, nextCursor: string | null = null): PagedResult<T> {
     return {
       items,
       page: {
-        limit: items.length,
-        nextCursor: null,
-        hasMore: false,
+        limit,
+        nextCursor: hasMore ? nextCursor : null,
+        hasMore,
       },
     };
   }
