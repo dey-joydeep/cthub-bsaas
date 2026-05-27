@@ -91,9 +91,15 @@ export class TenantComponent implements OnInit {
 
   openMap() {
     if (!this.salon) return;
-    const { latitude, longitude, name } = this.salon;
-    const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}(${encodeURIComponent(name)})`;
+    const url = `https://www.google.com/maps/search/?api=1&query=${this.mapQuery(this.salon)}`;
     globalThis.window?.open(url, '_blank');
+  }
+
+  mapQuery(salon: Salon): string {
+    if (typeof salon.latitude === 'number' && typeof salon.longitude === 'number') {
+      return encodeURIComponent(`${salon.latitude},${salon.longitude} ${salon.name}`);
+    }
+    return encodeURIComponent([salon.name, salon.address, salon.city].filter(Boolean).join(', '));
   }
 
   submitReview(rating: string, comment: string) {

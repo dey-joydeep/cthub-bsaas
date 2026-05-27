@@ -23,8 +23,8 @@ export interface Salon {
   address: string;
   zipCode?: string;
   city?: string;
-  latitude: number;
-  longitude: number;
+  latitude?: number;
+  longitude?: number;
   services: SalonServiceItem[];
   staff: Staff[];
   ownerId: string;

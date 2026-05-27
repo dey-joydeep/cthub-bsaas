@@ -51,7 +51,7 @@
       <iframe
         width="100%"
         height="250"
-        [src]="'https://maps.google.com/maps?q=' + (salon?.latitude || 0) + ',' + (salon?.longitude || 0) + '&z=15&output=embed' | safeUrl"
+        [src]="'https://maps.google.com/maps?q=' + (salon ? mapQuery(salon) : '') + '&z=15&output=embed' | safeUrl"
         allowfullscreen
         loading="lazy"
         referrerpolicy="no-referrer-when-downgrade"

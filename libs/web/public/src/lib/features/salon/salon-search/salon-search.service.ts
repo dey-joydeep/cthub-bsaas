@@ -4,7 +4,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Salon, SalonServiceItem } from './model/salon-search.model';
 import { PublicDiscoveryApi } from '../../public-discovery/public-discovery.api';
-import type { PublicSalonSummary, PublicService } from '../../public-discovery/public-discovery.models';
+import type { PublicPage, PublicSalonSummary, PublicService } from '../../public-discovery/public-discovery.models';
 
 @Injectable({ providedIn: 'root' })
 export class SalonSearchService {
@@ -20,7 +20,7 @@ export class SalonSearchService {
         limit: Number(params.get('limit') ?? params.get('page_size') ?? 20),
       })
       .pipe(
-        map((page) => ({ salons: page.items.map((salon) => this.mapSalon(salon)), total: page.items.length })),
+        map((page) => ({ salons: page.items.map((salon) => this.mapSalon(salon)), total: this.estimatedTotal(page) })),
         catchError((err) => this.handleError(err)),
       );
   }
@@ -74,5 +74,9 @@ export class SalonSearchService {
       price: Number(service.priceFrom),
       duration: service.durationMinutes,
     };
+  }
+
+  private estimatedTotal<T>(page: PublicPage<T>): number {
+    return page.items.length + (page.page.hasMore ? 1 : 0);
   }
 }

@@ -5,7 +5,7 @@ import { Observable, map } from 'rxjs';
 // Import interfaces from the models file
 import type { IHomePageData, ISalonDto, IServiceDto, ITestimonialDto, ICityDto } from '../model/home.models';
 import { PublicDiscoveryApi } from '../../public-discovery/public-discovery.api';
-import type { PublicSalonSummary, PublicService } from '../../public-discovery/public-discovery.models';
+import type { PublicPage, PublicSalonSummary, PublicService } from '../../public-discovery/public-discovery.models';
 
 export type { IHomePageData, ISalonDto, IServiceDto, ITestimonialDto, ICityDto };
 
@@ -63,9 +63,11 @@ export class HomeService {
    * @returns Observable with array of cities
    */
   getCities(): Observable<ICityDto[]> {
-    return this.publicDiscovery.getHome().pipe(
-      map((home) => home.nearbyAreas.map((area) => ({ id: area, name: area, state: '', country: '', isActive: true, salonCount: 0 }))),
-    );
+    return this.publicDiscovery
+      .getHome()
+      .pipe(
+        map((home) => home.nearbyAreas.map((area) => ({ id: area, name: area, state: '', country: '', isActive: true, salonCount: 0 }))),
+      );
   }
 
   /**
@@ -75,12 +77,12 @@ export class HomeService {
     const params = new HttpParams({ fromObject: { q: query, ...filters } });
     return this.publicDiscovery
       .searchSalons({ q: params.get('q') ?? undefined, city: params.get('city') ?? undefined, limit: Number(params.get('limit') ?? 20) })
-      .pipe(map((page) => ({ salons: page.items.map((salon) => this.mapSalon(salon)), total: page.items.length })));
+      .pipe(map((page) => ({ salons: page.items.map((salon) => this.mapSalon(salon)), total: this.estimatedTotal(page) })));
   }
 
   private mapSalon(salon: PublicSalonSummary): ISalonDto {
     return {
-      id: salon.salonId,
+      id: salon.slug,
       name: salon.name,
       slug: salon.slug,
       description: '',
@@ -99,6 +101,10 @@ export class HomeService {
       gallery: [],
       reviews: [],
     };
+  }
+
+  private estimatedTotal<T>(page: PublicPage<T>): number {
+    return page.items.length + (page.page.hasMore ? 1 : 0);
   }
 
   private mapService(service: PublicService): IServiceDto {

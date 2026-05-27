@@ -34,7 +34,7 @@ export class TenantService {
     });
   }
 
-  submitReview(salonId: string, review: { rating: number; comment: string; userId: string; }): Observable<Review> {
+  submitReview(salonId: string, review: { rating: number; comment: string; userId: string }): Observable<Review> {
     return throwError(() => ({ userMessage: `Reviews are submitted after a completed booking for ${salonId}.`, review }));
   }
 
@@ -68,9 +68,12 @@ export class TenantService {
       name: profile.name,
       address: address ? [address.line1, address.city, address.state, address.postalCode, address.country].filter(Boolean).join(', ') : '',
       city: address?.city,
-      latitude: 0,
-      longitude: 0,
-      services: services.map((service) => ({ id: service.serviceId, name: service.name, price: Number(service.priceFrom), duration: service.durationMinutes })),
+      services: services.map((service) => ({
+        id: service.serviceId,
+        name: service.name,
+        price: Number(service.priceFrom),
+        duration: service.durationMinutes,
+      })),
       staff: [],
       ownerId: '',
       images: profile.gallery.map((item) => item.imageUrl),
