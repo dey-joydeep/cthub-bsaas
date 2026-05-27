@@ -40,9 +40,9 @@ This document maps feature specifications to OpenAPI operations. The executable 
 
 | Capability                | Method | Path                                              | Operation ID                     |
 | ------------------------- | ------ | ------------------------------------------------- | -------------------------------- |
-| List categories           | `GET`  | `/partner/service-categories`                     | `listServiceCategories`          |
+| List categories           | `GET`  | `/partner/service-categories?businessId={id}`     | `listServiceCategories`          |
 | Create category           | `POST` | `/partner/service-categories`                     | `createServiceCategory`          |
-| List services             | `GET`  | `/partner/services`                               | `listServices`                   |
+| List services             | `GET`  | `/partner/services?businessId={id}`               | `listServices`                   |
 | Create service            | `POST` | `/partner/services`                               | `createService`                  |
 | Get service               | `GET`  | `/partner/services/{serviceId}`                   | `getService`                     |
 | Update service            | `PUT`  | `/partner/services/{serviceId}`                   | `updateService`                  |

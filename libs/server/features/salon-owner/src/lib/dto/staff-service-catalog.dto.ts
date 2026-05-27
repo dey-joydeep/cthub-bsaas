@@ -106,6 +106,10 @@ export class StaffLeaveBlockInputDto {
 }
 
 export class ServiceCategoryInputDto {
+  @IsOptional()
+  @IsUUID()
+  businessId?: string;
+
   @IsString()
   @Length(2, 120)
   name!: string;
@@ -116,6 +120,10 @@ export class ServiceCategoryInputDto {
 }
 
 export class ServiceInputDto {
+  @IsOptional()
+  @IsUUID()
+  businessId?: string;
+
   @IsUUID()
   categoryId!: string;
 
@@ -134,11 +142,11 @@ export class ServiceInputDto {
   bufferMinutes?: number;
 
   @IsString()
-  @Matches(/^\d+(\.\d{1,2})?$/)
+  @Matches(/^\d{1,8}(\.\d{1,2})?$/)
   basePrice!: string;
 
   @IsString()
-  @Matches(/^\d+(\.\d{1,2})?$/)
+  @Matches(/^\d{1,3}(\.\d{1,2})?$/)
   taxRatePercent!: string;
 
   @IsIn(salonOwnerStatusValues)

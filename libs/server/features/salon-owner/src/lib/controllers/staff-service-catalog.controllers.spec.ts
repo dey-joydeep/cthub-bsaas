@@ -77,18 +77,18 @@ describe('Staff and service catalog controllers', () => {
       status: 'ACTIVE' as const,
     };
 
-    await controller.listServiceCategories(user);
+    await controller.listServiceCategories(user, 'business-1');
     await controller.createServiceCategory(user, category);
-    await controller.listServices(user, 'category-1');
+    await controller.listServices(user, 'category-1', 'business-1');
     await controller.createService(user, serviceInput);
     await controller.getService(user, 'service-1');
     await controller.updateService(user, 'service-1', serviceInput);
     await controller.updateServiceStatus(user, 'service-1', { status: 'INACTIVE' });
     await controller.replaceServiceStaffEligibility(user, 'service-1', { staffIds: ['staff-1'] });
 
-    expect(service.listServiceCategories).toHaveBeenCalledWith({ user });
+    expect(service.listServiceCategories).toHaveBeenCalledWith({ user }, 'business-1');
     expect(service.createServiceCategory).toHaveBeenCalledWith({ user }, category);
-    expect(service.listServices).toHaveBeenCalledWith({ user }, 'category-1');
+    expect(service.listServices).toHaveBeenCalledWith({ user }, { categoryId: 'category-1', businessId: 'business-1' });
     expect(service.createService).toHaveBeenCalledWith({ user }, serviceInput);
     expect(service.getService).toHaveBeenCalledWith({ user }, 'service-1');
     expect(service.updateService).toHaveBeenCalledWith({ user }, 'service-1', serviceInput);

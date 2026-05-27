@@ -46,6 +46,10 @@ type StaffRecord = Prisma.SalonOwnerStaffGetPayload<{ include: typeof staffInclu
 type ServiceRecord = Prisma.SalonOwnerServiceGetPayload<{ include: typeof serviceInclude }>;
 type ServiceCategoryRecord = Awaited<ReturnType<PrismaService['salonOwnerServiceCategory']['create']>>;
 type StaffLeaveBlockRecord = Awaited<ReturnType<PrismaService['salonOwnerStaffLeaveBlock']['create']>>;
+interface ServiceListOptions {
+  categoryId?: string;
+  businessId?: string;
+}
 
 function trimRequired(value: string): string {
   return value.trim();
@@ -125,11 +129,21 @@ function toJsonShiftDays(days: readonly StaffShiftDayModel[]): Prisma.InputJsonV
 }
 
 function isDuplicate(error: unknown): boolean {
-  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    return error.code === 'P2002';
+  }
+  return error instanceof Error && error.message === 'A unique constraint was violated';
 }
 
 function decimalToString(value: Prisma.Decimal): string {
   return value.toFixed(2);
+}
+
+function assertDecimalPrecision(value: string, maxIntegerDigits: number): void {
+  const [integerPart = '', decimalPart = ''] = value.split('.');
+  if (integerPart.length > maxIntegerDigits || decimalPart.length > 2) {
+    throw new UnprocessableEntityException(validationMessage);
+  }
 }
 
 @Injectable()
@@ -256,6 +270,9 @@ export class StaffServiceCatalogService {
     if (branch.businessId !== staff.businessId || !staff.branches.some((assigned) => assigned.branchId === branch.id)) {
       throw new ForbiddenException(forbiddenMessage);
     }
+    if (input.timezone !== branch.timezone) {
+      throw new UnprocessableEntityException(validationMessage);
+    }
 
     const days = normalizeShiftDays(input.days);
     const shift = await this.prisma.salonOwnerStaffShift.upsert({
@@ -291,8 +308,8 @@ export class StaffServiceCatalogService {
     );
   }
 
-  async listServiceCategories(context: SalonOwnerRequestContext): Promise<PagedResult<ServiceCategoryModel>> {
-    const business = await this.resolveDefaultBusiness(context);
+  async listServiceCategories(context: SalonOwnerRequestContext, businessId?: string): Promise<PagedResult<ServiceCategoryModel>> {
+    const business = await this.resolveBusinessInScope(context, businessId);
     const categories = await this.prisma.salonOwnerServiceCategory.findMany({
       where: { businessId: business.id },
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
@@ -301,7 +318,7 @@ export class StaffServiceCatalogService {
   }
 
   async createServiceCategory(context: SalonOwnerRequestContext, input: ServiceCategoryInputDto): Promise<ServiceCategoryModel> {
-    const business = await this.resolveDefaultBusiness(context);
+    const business = await this.resolveBusinessInScope(context, input.businessId);
     try {
       return this.mapCategory(
         await this.prisma.salonOwnerServiceCategory.create({
@@ -316,8 +333,9 @@ export class StaffServiceCatalogService {
     }
   }
 
-  async listServices(context: SalonOwnerRequestContext, categoryId?: string): Promise<PagedResult<ServiceModel>> {
-    const business = await this.resolveDefaultBusiness(context);
+  async listServices(context: SalonOwnerRequestContext, options: ServiceListOptions = {}): Promise<PagedResult<ServiceModel>> {
+    const { categoryId, businessId } = options;
+    const business = await this.resolveBusinessInScope(context, businessId);
     if (categoryId) {
       await this.findCategoryInBusiness(business.id, categoryId);
     }
@@ -331,7 +349,7 @@ export class StaffServiceCatalogService {
   }
 
   async createService(context: SalonOwnerRequestContext, input: ServiceInputDto): Promise<ServiceModel> {
-    const business = await this.resolveDefaultBusiness(context);
+    const business = await this.resolveBusinessInScope(context, input.businessId);
     await this.findCategoryInBusiness(business.id, input.categoryId);
 
     try {
@@ -355,6 +373,9 @@ export class StaffServiceCatalogService {
 
   async updateService(context: SalonOwnerRequestContext, serviceId: string, input: ServiceInputDto): Promise<ServiceModel> {
     const current = await this.findServiceInScope(context, serviceId);
+    if (input.businessId && input.businessId !== current.businessId) {
+      throw new ForbiddenException(forbiddenMessage);
+    }
     await this.findCategoryInBusiness(current.businessId, input.categoryId);
 
     try {
@@ -413,16 +434,28 @@ export class StaffServiceCatalogService {
     return context.user.tenantId;
   }
 
-  private async resolveDefaultBusiness(context: SalonOwnerRequestContext): Promise<NonNullable<BusinessRecord>> {
+  private async resolveBusinessInScope(context: SalonOwnerRequestContext, businessId?: string): Promise<NonNullable<BusinessRecord>> {
     const tenantId = this.requireTenantId(context);
-    const business = await this.prisma.salonBusiness.findFirst({
+    if (businessId) {
+      const business = await this.prisma.salonBusiness.findFirst({ where: { id: businessId, tenantId } });
+      if (!business) {
+        throw new NotFoundException(notFoundMessage);
+      }
+      return business;
+    }
+
+    const businesses = await this.prisma.salonBusiness.findMany({
       where: { tenantId },
       orderBy: { createdAt: 'asc' },
+      take: 2,
     });
-    if (!business) {
+    if (businesses.length === 0) {
       throw new NotFoundException(notFoundMessage);
     }
-    return business;
+    if (businesses.length > 1) {
+      throw new UnprocessableEntityException(validationMessage);
+    }
+    return businesses[0];
   }
 
   private async findBranchInScope(context: SalonOwnerRequestContext, branchId: string): Promise<BranchRecord> {
@@ -514,6 +547,8 @@ export class StaffServiceCatalogService {
   }
 
   private normalizeServiceInput(businessId: string, input: ServiceInputDto): Prisma.SalonOwnerServiceUncheckedCreateInput {
+    assertDecimalPrecision(input.basePrice, 8);
+    assertDecimalPrecision(input.taxRatePercent, 3);
     return {
       businessId,
       categoryId: input.categoryId,

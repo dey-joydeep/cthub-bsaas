@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Put, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@cthub-bsaas/server-core';
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
@@ -18,8 +18,11 @@ export class ServiceCatalogController {
 
   @Get('service-categories')
   @ApiOperation({ operationId: 'listServiceCategories' })
-  listServiceCategories(@CurrentUser() user: AuthenticatedUser) {
-    return this.catalog.listServiceCategories({ user });
+  listServiceCategories(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('businessId', new ParseUUIDPipe({ optional: true })) businessId?: string,
+  ) {
+    return this.catalog.listServiceCategories({ user }, businessId);
   }
 
   @Post('service-categories')
@@ -30,8 +33,12 @@ export class ServiceCatalogController {
 
   @Get('services')
   @ApiOperation({ operationId: 'listServices' })
-  listServices(@CurrentUser() user: AuthenticatedUser, @Query('categoryId') categoryId?: string) {
-    return this.catalog.listServices({ user }, categoryId);
+  listServices(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('categoryId', new ParseUUIDPipe({ optional: true })) categoryId?: string,
+    @Query('businessId', new ParseUUIDPipe({ optional: true })) businessId?: string,
+  ) {
+    return this.catalog.listServices({ user }, { categoryId, businessId });
   }
 
   @Post('services')
@@ -42,19 +49,27 @@ export class ServiceCatalogController {
 
   @Get('services/:serviceId')
   @ApiOperation({ operationId: 'getService' })
-  getService(@CurrentUser() user: AuthenticatedUser, @Param('serviceId') serviceId: string) {
+  getService(@CurrentUser() user: AuthenticatedUser, @Param('serviceId', new ParseUUIDPipe()) serviceId: string) {
     return this.catalog.getService({ user }, serviceId);
   }
 
   @Patch('services/:serviceId')
   @ApiOperation({ operationId: 'updateService' })
-  updateService(@CurrentUser() user: AuthenticatedUser, @Param('serviceId') serviceId: string, @Body() body: ServiceInputDto) {
+  updateService(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('serviceId', new ParseUUIDPipe()) serviceId: string,
+    @Body() body: ServiceInputDto,
+  ) {
     return this.catalog.updateService({ user }, serviceId, body);
   }
 
   @Put('services/:serviceId/status')
   @ApiOperation({ operationId: 'updateServiceStatus' })
-  updateServiceStatus(@CurrentUser() user: AuthenticatedUser, @Param('serviceId') serviceId: string, @Body() body: ServiceStatusInputDto) {
+  updateServiceStatus(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('serviceId', new ParseUUIDPipe()) serviceId: string,
+    @Body() body: ServiceStatusInputDto,
+  ) {
     return this.catalog.updateServiceStatus({ user }, serviceId, body);
   }
 
@@ -62,7 +77,7 @@ export class ServiceCatalogController {
   @ApiOperation({ operationId: 'replaceServiceStaffEligibility' })
   replaceServiceStaffEligibility(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('serviceId') serviceId: string,
+    @Param('serviceId', new ParseUUIDPipe()) serviceId: string,
     @Body() body: StaffEligibilityInputDto,
   ) {
     return this.catalog.replaceServiceStaffEligibility({ user }, serviceId, body);
