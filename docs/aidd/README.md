@@ -38,10 +38,6 @@ When instructions overlap, use this order:
 | `.codex/prompts/fix-ci.md`             | Fixing failing local validation or CI.                          |
 | `.codex/prompts/create-tests.md`       | Adding or improving tests.                                      |
 
-## Playbooks
-
-Playbooks under `docs/aidd/playbooks/` provide copy-ready local operator prompts for startup, new tasks, correction work, implementation slices, PR review, validation follow-up, and merge readiness.
-
 ## Maintenance Rule
 
 Keep these docs aligned with package scripts, Nx project names, OpenAPI locations, current documentation standards, and safe Codex/MCP configuration. If a command or source-of-truth path changes, update this folder in the same PR.
