@@ -1,5 +1,5 @@
 name: Work Slice
-about: Define a small work unit for Codex and human review
+description: Define a small work unit for Codex and human review
 title: "slice: "
 labels: ["aidd", "slice"]
 body:
