@@ -8,20 +8,28 @@ Use this playbook before merging a Codex-created or Codex-reviewed pull request.
 Use AIDD mode. Check merge readiness for:
 <PR URL or branch>
 
-Read AGENTS.md, docs/aidd/README.md, docs/aidd/codex-review-checklist.md, and the changed files.
+Read:
+- AGENTS.md
+- nearest scoped AGENTS.md files for the changed areas
+- docs/aidd/README.md
+- docs/aidd/codex-review-checklist.md
+- changed files
+
 Do not edit. First produce:
 1. PR scope summary
 2. changed files by area
-3. source docs checked
-4. validation claimed in the PR
-5. validation still required locally
-6. conflicts or stale branch risks
-7. final merge recommendation
+3. root and scoped instruction files checked
+4. source docs checked
+5. validation claimed in the PR
+6. validation still required locally
+7. conflicts or stale branch risks
+8. final merge recommendation
 ```
 
 ## Merge readiness criteria
 
 - PR scope is clear and limited.
+- Relevant root and scoped `AGENTS.md` instructions were checked.
 - Relevant docs/specs are aligned.
 - No unrelated formatting or file moves.
 - Validation is run or explicitly deferred with a reason.
