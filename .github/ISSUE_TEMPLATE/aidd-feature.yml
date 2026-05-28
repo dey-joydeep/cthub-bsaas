@@ -1,5 +1,5 @@
 name: AIDD Feature
-about: Plan a new feature through the AIDD workflow
+description: Plan a new feature through the AIDD workflow
 title: "feat: "
 labels: ["aidd", "feature"]
 body:
