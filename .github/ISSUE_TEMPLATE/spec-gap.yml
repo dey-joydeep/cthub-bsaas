@@ -1,5 +1,5 @@
 name: Spec Gap
-about: Track a missing or conflicting requirement, design, API, validation, web, or test detail
+description: Track a missing or inconsistent requirement, design, API, validation, web, or test detail
 title: "docs: "
 labels: ["aidd", "spec-gap"]
 body:
@@ -7,7 +7,7 @@ body:
     id: gap
     attributes:
       label: Gap
-      description: What is missing, contradictory, or not implementation-ready?
+      description: What is missing, inconsistent, or not implementation-ready?
     validations:
       required: true
   - type: textarea
@@ -21,13 +21,13 @@ body:
     id: impact
     attributes:
       label: Impact
-      description: What implementation, testing, or review decision is blocked?
+      description: What implementation, testing, or review decision is waiting on this clarification?
     validations:
       required: true
   - type: textarea
     id: proposed-resolution
     attributes:
       label: Proposed resolution
-      description: Suggested doc/code/test update, if known.
+      description: Suggested doc, code, or test update, if known.
     validations:
       required: false
