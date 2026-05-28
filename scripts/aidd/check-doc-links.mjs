@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { dirname, extname, join, normalize, relative } from 'node:path';
+import { dirname, extname, isAbsolute, join, normalize, relative } from 'node:path';
 
 const root = process.cwd();
 const scanRoots = ['docs', '.codex', '.agents'];
@@ -16,6 +16,11 @@ const ignoredPathPrefixes = [
 
 function toRepoRelativePath(filePath) {
   return relative(root, filePath).replaceAll('\\', '/');
+}
+
+function isInsideRepo(path) {
+  const repoRelativePath = relative(root, path);
+  return repoRelativePath === '' || (!repoRelativePath.startsWith('..') && !isAbsolute(repoRelativePath));
 }
 
 function shouldIgnorePath(filePath) {
@@ -81,7 +86,7 @@ function checkFile(filePath) {
     }
 
     const resolved = normalize(join(dirname(filePath), decodeURIComponent(target)));
-    if (!resolved.startsWith(root)) {
+    if (!isInsideRepo(resolved)) {
       errors.push(`Link escapes repository root in ${toRepoRelativePath(filePath)}: ${rawTarget}`);
       continue;
     }
