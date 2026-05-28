@@ -70,10 +70,6 @@ Use relevant reviewer agents for architecture, API contract, security, tests, fr
 
 ## Local validation after AIDD/tooling changes
 
-```powershell
-npm run aidd:check
-npm run aidd:assets
-npm run aidd:links
-```
+Use the validation commands that exist in the checked-out branch and match the PR scope. When the AIDD verification scripts are not yet present in that branch, report that they are unavailable instead of running them.
 
-If those scripts are not merged yet, note that clearly in the completion report.
+For documentation-only changes, use the narrowest existing validation available and document anything not run.
