@@ -1,5 +1,5 @@
 name: AIDD Correction
-about: Track a defect or validation follow-up through the AIDD workflow
+description: Track a defect or validation follow-up through the AIDD workflow
 title: "fix: "
 labels: ["aidd", "correction"]
 body:
