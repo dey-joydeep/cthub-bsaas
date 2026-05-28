@@ -30,10 +30,19 @@ Do not edit. First produce:
 
 ## Local commands before merging
 
+Run the AIDD checks when the verification scripts are present in the checked-out branch:
+
 ```powershell
 npm run aidd:check
 npm run aidd:assets
 npm run aidd:links
+```
+
+If the AIDD verification scripts are not present yet, skip those commands and state that the branch does not include them.
+
+Run the normal project validation commands when relevant to the PR scope:
+
+```powershell
 npm run lint:affected
 npm run test:affected
 npm run build:affected
