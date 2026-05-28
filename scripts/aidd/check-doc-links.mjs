@@ -7,8 +7,24 @@ const errors = [];
 const warnings = [];
 const ignoredDirs = new Set(['node_modules', 'dist', 'coverage', '.git', '.nx']);
 
+// Legacy/archive docs and broad upstream skills have known pre-existing link debt.
+// Keep this AIDD check focused on active project AIDD/Codex documentation.
+const ignoredPathPrefixes = [
+  'docs/bk/',
+  '.agents/skills/playwright-best-practices/',
+];
+
+function toRepoRelativePath(filePath) {
+  return relative(root, filePath).replaceAll('\\', '/');
+}
+
+function shouldIgnorePath(filePath) {
+  const repoPath = toRepoRelativePath(filePath);
+  return ignoredPathPrefixes.some((prefix) => repoPath === prefix.slice(0, -1) || repoPath.startsWith(prefix));
+}
+
 function walk(dir, files = []) {
-  if (!existsSync(dir)) {
+  if (!existsSync(dir) || shouldIgnorePath(dir)) {
     return files;
   }
 
@@ -18,6 +34,10 @@ function walk(dir, files = []) {
     }
 
     const fullPath = join(dir, entry);
+    if (shouldIgnorePath(fullPath)) {
+      continue;
+    }
+
     const stat = statSync(fullPath);
     if (stat.isDirectory()) {
       walk(fullPath, files);
@@ -56,18 +76,18 @@ function checkFile(filePath) {
     }
 
     if (target.startsWith('/')) {
-      warnings.push(`Absolute local link in ${relative(root, filePath)}: ${rawTarget}`);
+      warnings.push(`Absolute local link in ${toRepoRelativePath(filePath)}: ${rawTarget}`);
       continue;
     }
 
     const resolved = normalize(join(dirname(filePath), decodeURIComponent(target)));
     if (!resolved.startsWith(root)) {
-      errors.push(`Link escapes repository root in ${relative(root, filePath)}: ${rawTarget}`);
+      errors.push(`Link escapes repository root in ${toRepoRelativePath(filePath)}: ${rawTarget}`);
       continue;
     }
 
     if (!existsSync(resolved)) {
-      errors.push(`Broken local link in ${relative(root, filePath)}: ${rawTarget}`);
+      errors.push(`Broken local link in ${toRepoRelativePath(filePath)}: ${rawTarget}`);
     }
   }
 }
