@@ -8,10 +8,16 @@
       <h1>Business settings</h1>
       <p>Manage business profile, branch profile, hours, holidays, and booking policy.</p>
     </div>
-    <button mat-stroked-button type="button" (click)="newBranch()">
-      <mat-icon>add_business</mat-icon>
-      Branch
-    </button>
+    <div class="header-actions">
+      <button mat-stroked-button type="button" (click)="newBusiness()">
+        <mat-icon>storefront</mat-icon>
+        Business
+      </button>
+      <button mat-stroked-button type="button" (click)="newBranch()">
+        <mat-icon>add_business</mat-icon>
+        Branch
+      </button>
+    </div>
   </header>
 
   @if (message()) {
@@ -175,16 +181,18 @@
                   <mat-slide-toggle formControlName="open">Open</mat-slide-toggle>
                   @if (day.get('open')?.value) {
                     <div formArrayName="intervals" class="intervals">
-                      <div [formGroupName]="0" class="interval-row">
-                        <mat-form-field appearance="outline">
-                          <mat-label>Start</mat-label>
-                          <input matInput formControlName="start" />
-                        </mat-form-field>
-                        <mat-form-field appearance="outline">
-                          <mat-label>End</mat-label>
-                          <input matInput formControlName="end" />
-                        </mat-form-field>
-                      </div>
+                      @for (_ of day.get('intervals')?.value ?? []; track $index) {
+                        <div [formGroupName]="$index" class="interval-row">
+                          <mat-form-field appearance="outline">
+                            <mat-label>Start</mat-label>
+                            <input matInput formControlName="start" />
+                          </mat-form-field>
+                          <mat-form-field appearance="outline">
+                            <mat-label>End</mat-label>
+                            <input matInput formControlName="end" />
+                          </mat-form-field>
+                        </div>
+                      }
                     </div>
                   }
                 </div>

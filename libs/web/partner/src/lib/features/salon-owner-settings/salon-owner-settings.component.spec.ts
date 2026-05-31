@@ -11,11 +11,17 @@ interface SettingsComponentHarness {
   saveHours(): void;
   savePolicy(): void;
   saveHoliday(): void;
+  saveBusiness(): void;
+  newBusiness(): void;
   selectBusiness(business: SalonBusiness): void;
-  branchForm: { patchValue(value: Partial<{ email: string }>): void };
+  branchForm: { patchValue(value: Partial<{ email: string }>): void; getRawValue(): { businessId: string } };
   hoursForm: { patchValue(value: Partial<{ timezone: string }>): void };
-  holidayForm: { patchValue(value: Partial<{ date: string }>): void };
+  holidayForm: {
+    patchValue(value: Partial<{ date: string; closed: boolean; start: string; end: string }>): void;
+    controls: { start: { errors: Record<string, unknown> | null }; end: { errors: Record<string, unknown> | null } };
+  };
   policyForm: { controls: { bookingLeadMinutes: { setValue(value: number): void } } };
+  businesses(): readonly SalonBusiness[];
   branches(): readonly BranchProfile[];
   selectedBranch(): BranchProfile | null;
 }
@@ -96,6 +102,17 @@ describe('SalonOwnerSettingsComponent', () => {
       }),
     );
     api.updateBranch.mockReturnValue(of(branch));
+    api.createBusiness.mockReturnValue(
+      of({
+        id: 'business-2',
+        tenantId: 'tenant-1',
+        displayName: 'Salon Two',
+        legalName: 'Salon Two Legal',
+        status: 'ACTIVE',
+        createdAt: '2026-05-26T00:00:00.000Z',
+        updatedAt: '2026-05-26T00:00:00.000Z',
+      }),
+    );
     api.replaceBranchHours.mockReturnValue(of({ branchId: 'branch-1', timezone: 'Asia/Tokyo', days: [] }));
     api.updateBranchPolicy.mockReturnValue(of({}));
 
@@ -114,6 +131,28 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(api.getBranchHours).toHaveBeenCalledWith('branch-1');
     expect(api.getBranchPolicy).toHaveBeenCalledWith('branch-1');
     expect(fixture.nativeElement.textContent).toContain('Salon One');
+  });
+
+  it('allows creating another business after one is already selected', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      businessForm: { patchValue(value: { displayName: string; legalName: string }): void };
+    };
+    api.createBusiness.mockClear();
+    api.updateBusiness.mockClear();
+
+    component.newBusiness();
+    component.businessForm.patchValue({
+      displayName: 'Salon Two',
+      legalName: 'Salon Two Legal',
+    });
+    component.saveBusiness();
+
+    expect(api.createBusiness).toHaveBeenCalledWith({
+      displayName: 'Salon Two',
+      legalName: 'Salon Two Legal',
+      status: 'ACTIVE',
+    });
+    expect(api.updateBusiness).not.toHaveBeenCalled();
   });
 
   it('saves branch policy for the selected branch', () => {
@@ -206,6 +245,15 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(api.replaceBranchHours).not.toHaveBeenCalled();
   });
 
+  it('requires holiday start and end times when the branch stays open', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness;
+
+    component.holidayForm.patchValue({ closed: false, start: '', end: '' });
+
+    expect(component.holidayForm.controls.start.errors).toEqual(expect.objectContaining({ required: true }));
+    expect(component.holidayForm.controls.end.errors).toEqual(expect.objectContaining({ required: true }));
+  });
+
   it('ignores stale branch-list responses after the selected business changes', () => {
     let firstRequestHandler: ((result: { items: BranchProfile[]; page: { limit: number; nextCursor: null; hasMore: false } }) => void) | undefined;
     api.listBranches
@@ -249,5 +297,119 @@ describe('SalonOwnerSettingsComponent', () => {
     });
 
     expect(component.branches()).toEqual([expect.objectContaining({ id: 'branch-2', businessId: 'business-2' })]);
+  });
+
+  it('invalidates stale branch-settings responses after switching businesses', () => {
+    let firstHoursHandler:
+      | ((result: {
+          branchId: string;
+          timezone: string;
+          days: { dayOfWeek: number; open: boolean; intervals: { start: string; end: string }[] }[];
+        }) => void)
+      | undefined;
+    let firstPolicyHandler:
+      | ((result: {
+          branchId: string;
+          bookingLeadMinutes: number;
+          cancellationCutoffMinutes: number;
+          noShowGraceMinutes: number;
+        }) => void)
+      | undefined;
+
+    api.getBranchHours
+      .mockReturnValueOnce(
+        new Observable((subscriber) => {
+          firstHoursHandler = (result) => {
+            subscriber.next(result);
+            subscriber.complete();
+          };
+        }),
+      )
+      .mockReturnValue(of({ branchId: 'branch-2', timezone: 'Asia/Tokyo', days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({ dayOfWeek, open: dayOfWeek > 0, intervals: dayOfWeek > 0 ? [{ start: '10:00', end: '18:00' }] : [] })) }));
+    api.getBranchPolicy
+      .mockReturnValueOnce(
+        new Observable((subscriber) => {
+          firstPolicyHandler = (result) => {
+            subscriber.next(result);
+            subscriber.complete();
+          };
+        }),
+      )
+      .mockReturnValue(of({ branchId: 'branch-2', bookingLeadMinutes: 90, cancellationCutoffMinutes: 240, noShowGraceMinutes: 20 }));
+    api.listBranches
+      .mockReturnValueOnce(
+        of({
+          items: [branch],
+          page: { limit: 1, nextCursor: null, hasMore: false },
+        }),
+      )
+      .mockReturnValueOnce(
+        of({
+          items: [{ ...branch, id: 'branch-2', businessId: 'business-2', name: 'Second' }],
+          page: { limit: 1, nextCursor: null, hasMore: false },
+        }),
+      );
+
+    const staleFixture = TestBed.createComponent(SalonOwnerSettingsComponent);
+    staleFixture.detectChanges();
+    const component = staleFixture.componentInstance as unknown as SettingsComponentHarness & {
+      hoursForm: { getRawValue(): { timezone: string } };
+      policyForm: { getRawValue(): { bookingLeadMinutes: number } };
+    };
+
+    component.selectBusiness({
+      id: 'business-2',
+      tenantId: 'tenant-1',
+      displayName: 'Salon Two',
+      legalName: 'Salon Two Legal',
+      status: 'ACTIVE',
+      createdAt: '2026-05-26T00:00:00.000Z',
+      updatedAt: '2026-05-26T00:00:00.000Z',
+    });
+
+    firstHoursHandler?.({
+      branchId: 'branch-1',
+      timezone: 'UTC',
+      days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+        dayOfWeek,
+        open: dayOfWeek > 0,
+        intervals: dayOfWeek > 0 ? [{ start: '01:00', end: '02:00' }] : [],
+      })),
+    });
+    firstPolicyHandler?.({
+      branchId: 'branch-1',
+      bookingLeadMinutes: 5,
+      cancellationCutoffMinutes: 15,
+      noShowGraceMinutes: 1,
+    });
+
+    expect(component.selectedBranch()).toEqual(expect.objectContaining({ id: 'branch-2' }));
+    expect(component.hoursForm.getRawValue().timezone).toBe('Asia/Tokyo');
+    expect(component.policyForm.getRawValue().bookingLeadMinutes).toBe(90);
+  });
+
+  it('renders every saved hours interval', async () => {
+    api.getBranchHours.mockReturnValueOnce(
+      of({
+        branchId: 'branch-1',
+        timezone: 'Asia/Tokyo',
+        days: [
+          { dayOfWeek: 0, open: false, intervals: [] },
+          { dayOfWeek: 1, open: true, intervals: [{ start: '09:00', end: '12:00' }, { start: '13:00', end: '17:00' }] },
+          ...[2, 3, 4, 5, 6].map((dayOfWeek) => ({ dayOfWeek, open: true, intervals: [{ start: '09:00', end: '17:00' }] })),
+        ],
+      }),
+    );
+
+    const splitFixture = TestBed.createComponent(SalonOwnerSettingsComponent);
+    splitFixture.detectChanges();
+    await splitFixture.whenStable();
+
+    const tabs = Array.from(splitFixture.nativeElement.querySelectorAll('[role="tab"]')) as HTMLElement[];
+    tabs.find((tab) => tab.textContent?.includes('Hours'))?.click();
+    splitFixture.detectChanges();
+    await splitFixture.whenStable();
+
+    expect(splitFixture.nativeElement.querySelectorAll('.interval-row')).toHaveLength(7);
   });
 });

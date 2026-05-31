@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -58,6 +59,7 @@ function optionalText(value: string): string | undefined {
 export class SalonOwnerSettingsComponent {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(SalonOwnerSettingsApi);
+  private readonly destroyRef = inject(DestroyRef);
   private branchLoadVersion = 0;
   private branchSettingsLoadVersion = 0;
 
@@ -116,6 +118,10 @@ export class SalonOwnerSettingsComponent {
   });
 
   constructor() {
+    this.holidayForm.controls.closed.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((closed) => {
+      this.updateHolidayTimeValidators(closed);
+    });
+    this.updateHolidayTimeValidators(this.holidayForm.controls.closed.value);
     this.loadBusinesses();
   }
 
@@ -125,12 +131,14 @@ export class SalonOwnerSettingsComponent {
 
   protected selectBusiness(business: SalonBusiness): void {
     this.selectedBusiness.set(business);
+    this.branchSettingsLoadVersion += 1;
+    this.branches.set([]);
     this.businessForm.reset({
       displayName: business.displayName,
       legalName: business.legalName,
       status: business.status,
     });
-    this.branchForm.patchValue({ businessId: business.id });
+    this.newBranch();
     this.loadBranches(business.id);
   }
 
@@ -153,6 +161,20 @@ export class SalonOwnerSettingsComponent {
       },
     });
     this.loadBranchSettings(branch);
+  }
+
+  protected newBusiness(): void {
+    this.selectedBusiness.set(null);
+    this.selectedBranch.set(null);
+    this.branches.set([]);
+    this.branchLoadVersion += 1;
+    this.branchSettingsLoadVersion += 1;
+    this.businessForm.reset({
+      displayName: '',
+      legalName: '',
+      status: 'ACTIVE',
+    });
+    this.newBranch();
   }
 
   protected newBranch(): void {
@@ -291,6 +313,14 @@ export class SalonOwnerSettingsComponent {
         ),
       ]),
     });
+  }
+
+  private updateHolidayTimeValidators(closed: boolean): void {
+    const validators = closed ? [] : [Validators.required, Validators.pattern(/^\d{2}:\d{2}$/)];
+    this.holidayForm.controls.start.setValidators(validators);
+    this.holidayForm.controls.end.setValidators(validators);
+    this.holidayForm.controls.start.updateValueAndValidity({ emitEvent: false });
+    this.holidayForm.controls.end.updateValueAndValidity({ emitEvent: false });
   }
 
   private loadBusinesses(selectBusinessId?: string): void {
