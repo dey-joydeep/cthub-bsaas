@@ -173,18 +173,20 @@
                 <div [formGroupName]="$index" class="day-row">
                   <strong>{{ weekdays[$index] }}</strong>
                   <mat-slide-toggle formControlName="open">Open</mat-slide-toggle>
-                  <div formArrayName="intervals" class="intervals">
-                    <div [formGroupName]="0" class="interval-row">
-                      <mat-form-field appearance="outline">
-                        <mat-label>Start</mat-label>
-                        <input matInput formControlName="start" />
-                      </mat-form-field>
-                      <mat-form-field appearance="outline">
-                        <mat-label>End</mat-label>
-                        <input matInput formControlName="end" />
-                      </mat-form-field>
+                  @if (day.get('open')?.value) {
+                    <div formArrayName="intervals" class="intervals">
+                      <div [formGroupName]="0" class="interval-row">
+                        <mat-form-field appearance="outline">
+                          <mat-label>Start</mat-label>
+                          <input matInput formControlName="start" />
+                        </mat-form-field>
+                        <mat-form-field appearance="outline">
+                          <mat-label>End</mat-label>
+                          <input matInput formControlName="end" />
+                        </mat-form-field>
+                      </div>
                     </div>
-                  </div>
+                  }
                 </div>
               }
             </div>

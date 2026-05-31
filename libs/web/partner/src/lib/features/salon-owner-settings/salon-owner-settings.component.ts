@@ -11,12 +11,17 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTabsModule } from '@angular/material/tabs';
-import { Observable } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 
-import { BranchProfile, SalonBusiness, WeeklyHoursDay } from './models/salon-owner-settings.models';
+import { BranchHours, BranchPolicy, BranchProfile, SalonBusiness, WeeklyHoursDay } from './models/salon-owner-settings.models';
 import { SalonOwnerSettingsApi } from './salon-owner-settings.api';
 
 const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+const defaultPolicy: Omit<BranchPolicy, 'branchId'> = {
+  bookingLeadMinutes: 30,
+  cancellationCutoffMinutes: 120,
+  noShowGraceMinutes: 10,
+};
 
 function localDateInputValue(date = new Date()): string {
   const year = date.getFullYear();
@@ -53,6 +58,8 @@ function optionalText(value: string): string | undefined {
 export class SalonOwnerSettingsComponent {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(SalonOwnerSettingsApi);
+  private branchLoadVersion = 0;
+  private branchSettingsLoadVersion = 0;
 
   protected readonly weekdays = weekdays;
   protected readonly loading = signal(false);
@@ -103,9 +110,9 @@ export class SalonOwnerSettingsComponent {
   });
 
   protected readonly policyForm = this.fb.nonNullable.group({
-    bookingLeadMinutes: [30, [Validators.required, Validators.min(0)]],
-    cancellationCutoffMinutes: [120, [Validators.required, Validators.min(0)]],
-    noShowGraceMinutes: [10, [Validators.required, Validators.min(0)]],
+    bookingLeadMinutes: [defaultPolicy.bookingLeadMinutes, [Validators.required, Validators.min(0)]],
+    cancellationCutoffMinutes: [defaultPolicy.cancellationCutoffMinutes, [Validators.required, Validators.min(0)]],
+    noShowGraceMinutes: [defaultPolicy.noShowGraceMinutes, [Validators.required, Validators.min(0)]],
   });
 
   constructor() {
@@ -145,7 +152,7 @@ export class SalonOwnerSettingsComponent {
         country: branch.address.country,
       },
     });
-    this.hoursForm.patchValue({ timezone: branch.timezone });
+    this.loadBranchSettings(branch);
   }
 
   protected newBranch(): void {
@@ -167,7 +174,8 @@ export class SalonOwnerSettingsComponent {
         country: 'JP',
       },
     });
-    this.hoursForm.patchValue({ timezone: 'Asia/Tokyo' });
+    this.applyBranchHours(this.defaultHours('Asia/Tokyo'));
+    this.policyForm.reset(defaultPolicy);
   }
 
   protected saveBusiness(): void {
@@ -218,6 +226,10 @@ export class SalonOwnerSettingsComponent {
       this.error.set('Select a branch before saving hours.');
       return;
     }
+    if (this.hoursForm.invalid) {
+      this.hoursForm.markAllAsTouched();
+      return;
+    }
 
     this.persist(
       this.api.replaceBranchHours(branch.id, {
@@ -234,6 +246,10 @@ export class SalonOwnerSettingsComponent {
     const branch = this.selectedBranch();
     if (!branch) {
       this.error.set('Select a branch before saving a holiday.');
+      return;
+    }
+    if (this.holidayForm.invalid) {
+      this.holidayForm.markAllAsTouched();
       return;
     }
 
@@ -261,15 +277,18 @@ export class SalonOwnerSettingsComponent {
     this.persist(this.api.updateBranchPolicy(branch.id, this.policyForm.getRawValue()));
   }
 
-  private createDayGroup(dayOfWeek: number) {
+  private createDayGroup(dayOfWeek: number, value?: WeeklyHoursDay) {
+    const intervals = value?.intervals.length ? value.intervals : [{ start: '09:00', end: '17:00' }];
     return this.fb.nonNullable.group({
-      dayOfWeek: [dayOfWeek],
-      open: [dayOfWeek > 0],
+      dayOfWeek: [value?.dayOfWeek ?? dayOfWeek],
+      open: [value?.open ?? dayOfWeek > 0],
       intervals: this.fb.nonNullable.array([
-        this.fb.nonNullable.group({
-          start: ['09:00', Validators.required],
-          end: ['17:00', Validators.required],
-        }),
+        ...intervals.map((interval) =>
+          this.fb.nonNullable.group({
+            start: [interval.start, Validators.required],
+            end: [interval.end, Validators.required],
+          }),
+        ),
       ]),
     });
   }
@@ -293,8 +312,12 @@ export class SalonOwnerSettingsComponent {
   }
 
   private loadBranches(businessId: string, selectBranchId?: string): void {
+    const requestVersion = ++this.branchLoadVersion;
     this.api.listBranches(businessId).subscribe({
       next: (result) => {
+        if (requestVersion !== this.branchLoadVersion || this.selectedBusiness()?.id !== businessId) {
+          return;
+        }
         this.branches.set(result.items);
         const selected = result.items.find((branch) => branch.id === selectBranchId) ?? result.items[0] ?? null;
         if (selected) {
@@ -304,12 +327,62 @@ export class SalonOwnerSettingsComponent {
         }
       },
       error: () => {
+        if (requestVersion !== this.branchLoadVersion || this.selectedBusiness()?.id !== businessId) {
+          return;
+        }
         this.branches.set([]);
         this.selectedBranch.set(null);
         this.newBranch();
         this.error.set('Branches could not be loaded.');
       },
     });
+  }
+
+  private loadBranchSettings(branch: BranchProfile): void {
+    const requestVersion = ++this.branchSettingsLoadVersion;
+    forkJoin({
+      hours: this.api.getBranchHours(branch.id),
+      policy: this.api.getBranchPolicy(branch.id),
+    }).subscribe({
+      next: ({ hours, policy }) => {
+        if (requestVersion !== this.branchSettingsLoadVersion || this.selectedBranch()?.id !== branch.id) {
+          return;
+        }
+        this.applyBranchHours(hours);
+        this.policyForm.reset({
+          bookingLeadMinutes: policy.bookingLeadMinutes,
+          cancellationCutoffMinutes: policy.cancellationCutoffMinutes,
+          noShowGraceMinutes: policy.noShowGraceMinutes,
+        });
+      },
+      error: () => {
+        if (requestVersion !== this.branchSettingsLoadVersion || this.selectedBranch()?.id !== branch.id) {
+          return;
+        }
+        this.error.set('Branch settings could not be loaded.');
+      },
+    });
+  }
+
+  private applyBranchHours(hours: BranchHours): void {
+    this.hoursForm.controls.timezone.setValue(hours.timezone);
+    this.dayForms.clear();
+    hours.days
+      .slice()
+      .sort((left, right) => left.dayOfWeek - right.dayOfWeek)
+      .forEach((day) => this.dayForms.push(this.createDayGroup(day.dayOfWeek, day)));
+  }
+
+  private defaultHours(timezone: string): BranchHours {
+    return {
+      branchId: '',
+      timezone,
+      days: weekdays.map((_, dayOfWeek) => ({
+        dayOfWeek,
+        open: dayOfWeek > 0,
+        intervals: dayOfWeek > 0 ? [{ start: '09:00', end: '17:00' }] : [],
+      })),
+    };
   }
 
   private persist<T>(request: Observable<T>, onSuccess?: (value: T) => void): void {

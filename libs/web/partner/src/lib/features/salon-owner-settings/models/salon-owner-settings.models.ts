@@ -1,13 +1,5 @@
 export type SalonBusinessStatus = 'ACTIVE' | 'INACTIVE';
 
-export interface ApiEnvelope<T> {
-  readonly success: boolean;
-  readonly data: T;
-  readonly meta?: {
-    readonly correlationId?: string;
-  };
-}
-
 export interface PagedEnvelope<T> {
   readonly items: readonly T[];
   readonly page: {
@@ -71,6 +63,10 @@ export interface WeeklyHoursInput {
   readonly days: readonly WeeklyHoursDay[];
 }
 
+export interface BranchHours extends WeeklyHoursInput {
+  readonly branchId: string;
+}
+
 export interface BranchHolidayInput {
   readonly closed: boolean;
   readonly reason?: string;
@@ -81,4 +77,8 @@ export interface BranchPolicyInput {
   readonly bookingLeadMinutes: number;
   readonly cancellationCutoffMinutes: number;
   readonly noShowGraceMinutes: number;
+}
+
+export interface BranchPolicy extends BranchPolicyInput {
+  readonly branchId: string;
 }

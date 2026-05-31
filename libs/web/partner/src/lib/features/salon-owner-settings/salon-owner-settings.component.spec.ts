@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { of, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 
 import { BranchProfile, SalonBusiness } from './models/salon-owner-settings.models';
 import { SalonOwnerSettingsApi } from './salon-owner-settings.api';
@@ -10,8 +10,11 @@ interface SettingsComponentHarness {
   saveBranch(): void;
   saveHours(): void;
   savePolicy(): void;
+  saveHoliday(): void;
   selectBusiness(business: SalonBusiness): void;
   branchForm: { patchValue(value: Partial<{ email: string }>): void };
+  hoursForm: { patchValue(value: Partial<{ timezone: string }>): void };
+  holidayForm: { patchValue(value: Partial<{ date: string }>): void };
   policyForm: { controls: { bookingLeadMinutes: { setValue(value: number): void } } };
   branches(): readonly BranchProfile[];
   selectedBranch(): BranchProfile | null;
@@ -42,6 +45,8 @@ describe('SalonOwnerSettingsComponent', () => {
     updateBusiness: jest.fn(),
     createBranch: jest.fn(),
     updateBranch: jest.fn(),
+    getBranchHours: jest.fn(),
+    getBranchPolicy: jest.fn(),
     replaceBranchHours: jest.fn(),
     setBranchHoliday: jest.fn(),
     updateBranchPolicy: jest.fn(),
@@ -71,8 +76,27 @@ describe('SalonOwnerSettingsComponent', () => {
         page: { limit: 1, nextCursor: null, hasMore: false },
       }),
     );
+    api.getBranchHours.mockReturnValue(
+      of({
+        branchId: 'branch-1',
+        timezone: 'Asia/Tokyo',
+        days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+          dayOfWeek,
+          open: dayOfWeek > 0,
+          intervals: dayOfWeek > 0 ? [{ start: '09:00', end: '17:00' }] : [],
+        })),
+      }),
+    );
+    api.getBranchPolicy.mockReturnValue(
+      of({
+        branchId: 'branch-1',
+        bookingLeadMinutes: 45,
+        cancellationCutoffMinutes: 180,
+        noShowGraceMinutes: 15,
+      }),
+    );
     api.updateBranch.mockReturnValue(of(branch));
-    api.replaceBranchHours.mockReturnValue(of({ timezone: 'Asia/Tokyo', days: [] }));
+    api.replaceBranchHours.mockReturnValue(of({ branchId: 'branch-1', timezone: 'Asia/Tokyo', days: [] }));
     api.updateBranchPolicy.mockReturnValue(of({}));
 
     await TestBed.configureTestingModule({
@@ -87,6 +111,8 @@ describe('SalonOwnerSettingsComponent', () => {
   it('loads business and branch state on initialization', () => {
     expect(api.listBusinesses).toHaveBeenCalled();
     expect(api.listBranches).toHaveBeenCalledWith('business-1');
+    expect(api.getBranchHours).toHaveBeenCalledWith('branch-1');
+    expect(api.getBranchPolicy).toHaveBeenCalledWith('branch-1');
     expect(fixture.nativeElement.textContent).toContain('Salon One');
   });
 
@@ -95,9 +121,9 @@ describe('SalonOwnerSettingsComponent', () => {
     component.savePolicy();
 
     expect(api.updateBranchPolicy).toHaveBeenCalledWith('branch-1', {
-      bookingLeadMinutes: 30,
-      cancellationCutoffMinutes: 120,
-      noShowGraceMinutes: 10,
+      bookingLeadMinutes: 45,
+      cancellationCutoffMinutes: 180,
+      noShowGraceMinutes: 15,
     });
   });
 
@@ -160,5 +186,68 @@ describe('SalonOwnerSettingsComponent', () => {
     component.savePolicy();
 
     expect(api.updateBranchPolicy).not.toHaveBeenCalled();
+  });
+
+  it('does not submit invalid holiday or weekly-hours values', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      holidayForm: { patchValue(value: { date: string }): void };
+      hoursForm: { patchValue(value: { timezone: string }): void };
+      saveHoliday(): void;
+    };
+    api.setBranchHoliday.mockClear();
+    api.replaceBranchHours.mockClear();
+
+    component.holidayForm.patchValue({ date: '' });
+    component.saveHoliday();
+    component.hoursForm.patchValue({ timezone: '' });
+    component.saveHours();
+
+    expect(api.setBranchHoliday).not.toHaveBeenCalled();
+    expect(api.replaceBranchHours).not.toHaveBeenCalled();
+  });
+
+  it('ignores stale branch-list responses after the selected business changes', () => {
+    let firstRequestHandler: ((result: { items: BranchProfile[]; page: { limit: number; nextCursor: null; hasMore: false } }) => void) | undefined;
+    api.listBranches
+      .mockReturnValueOnce(
+        new Observable((subscriber) => {
+          firstRequestHandler = (result) => {
+            subscriber.next(result);
+            subscriber.complete();
+          };
+        }),
+      )
+      .mockReturnValueOnce(
+        of({
+          items: [
+            {
+              ...branch,
+              id: 'branch-2',
+              businessId: 'business-2',
+              name: 'Second',
+            },
+          ],
+          page: { limit: 1, nextCursor: null, hasMore: false },
+        }),
+      );
+
+    const staleFixture = TestBed.createComponent(SalonOwnerSettingsComponent);
+    staleFixture.detectChanges();
+    const component = staleFixture.componentInstance as unknown as SettingsComponentHarness;
+    component.selectBusiness({
+      id: 'business-2',
+      tenantId: 'tenant-1',
+      displayName: 'Salon Two',
+      legalName: 'Salon Two Legal',
+      status: 'ACTIVE',
+      createdAt: '2026-05-26T00:00:00.000Z',
+      updatedAt: '2026-05-26T00:00:00.000Z',
+    });
+    firstRequestHandler?.({
+      items: [branch],
+      page: { limit: 1, nextCursor: null, hasMore: false },
+    });
+
+    expect(component.branches()).toEqual([expect.objectContaining({ id: 'branch-2', businessId: 'business-2' })]);
   });
 });

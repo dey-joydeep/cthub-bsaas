@@ -1,10 +1,11 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import {
-  ApiEnvelope,
+  BranchHours,
   BranchHolidayInput,
+  BranchPolicy,
   BranchPolicyInput,
   BranchProfile,
   BranchProfileInput,
@@ -17,54 +18,50 @@ import {
 @Injectable({ providedIn: 'root' })
 export class SalonOwnerSettingsApi {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = '/api/partner';
+  private readonly baseUrl = '/partner';
 
   listBusinesses(): Observable<PagedEnvelope<SalonBusiness>> {
-    return this.http.get<ApiEnvelope<PagedEnvelope<SalonBusiness>>>(`${this.baseUrl}/businesses`).pipe(map((response) => response.data));
+    return this.http.get<PagedEnvelope<SalonBusiness>>(`${this.baseUrl}/businesses`);
   }
 
   createBusiness(input: SalonBusinessInput): Observable<SalonBusiness> {
-    return this.http.post<ApiEnvelope<SalonBusiness>>(`${this.baseUrl}/businesses`, input).pipe(map((response) => response.data));
+    return this.http.post<SalonBusiness>(`${this.baseUrl}/businesses`, input);
   }
 
   updateBusiness(businessId: string, input: SalonBusinessInput): Observable<SalonBusiness> {
-    return this.http
-      .patch<ApiEnvelope<SalonBusiness>>(`${this.baseUrl}/businesses/${businessId}`, input)
-      .pipe(map((response) => response.data));
+    return this.http.patch<SalonBusiness>(`${this.baseUrl}/businesses/${businessId}`, input);
   }
 
   listBranches(businessId?: string): Observable<PagedEnvelope<BranchProfile>> {
     const params = businessId ? new HttpParams().set('businessId', businessId) : undefined;
-    return this.http
-      .get<ApiEnvelope<PagedEnvelope<BranchProfile>>>(`${this.baseUrl}/branches`, { params })
-      .pipe(map((response) => response.data));
+    return this.http.get<PagedEnvelope<BranchProfile>>(`${this.baseUrl}/branches`, { params });
   }
 
   createBranch(input: BranchProfileInput): Observable<BranchProfile> {
-    return this.http.post<ApiEnvelope<BranchProfile>>(`${this.baseUrl}/branches`, input).pipe(map((response) => response.data));
+    return this.http.post<BranchProfile>(`${this.baseUrl}/branches`, input);
   }
 
   updateBranch(branchId: string, input: BranchProfileInput): Observable<BranchProfile> {
-    return this.http
-      .patch<ApiEnvelope<BranchProfile>>(`${this.baseUrl}/branches/${branchId}`, input)
-      .pipe(map((response) => response.data));
+    return this.http.patch<BranchProfile>(`${this.baseUrl}/branches/${branchId}`, input);
   }
 
-  replaceBranchHours(branchId: string, input: WeeklyHoursInput): Observable<WeeklyHoursInput> {
-    return this.http
-      .put<ApiEnvelope<WeeklyHoursInput>>(`${this.baseUrl}/branches/${branchId}/hours`, input)
-      .pipe(map((response) => response.data));
+  getBranchHours(branchId: string): Observable<BranchHours> {
+    return this.http.get<BranchHours>(`${this.baseUrl}/branches/${branchId}/hours`);
+  }
+
+  replaceBranchHours(branchId: string, input: WeeklyHoursInput): Observable<BranchHours> {
+    return this.http.put<BranchHours>(`${this.baseUrl}/branches/${branchId}/hours`, input);
   }
 
   setBranchHoliday(branchId: string, date: string, input: BranchHolidayInput): Observable<BranchHolidayInput> {
-    return this.http
-      .put<ApiEnvelope<BranchHolidayInput>>(`${this.baseUrl}/branches/${branchId}/holidays/${date}`, input)
-      .pipe(map((response) => response.data));
+    return this.http.put<BranchHolidayInput>(`${this.baseUrl}/branches/${branchId}/holidays/${date}`, input);
   }
 
-  updateBranchPolicy(branchId: string, input: BranchPolicyInput): Observable<BranchPolicyInput> {
-    return this.http
-      .put<ApiEnvelope<BranchPolicyInput>>(`${this.baseUrl}/branches/${branchId}/policy`, input)
-      .pipe(map((response) => response.data));
+  getBranchPolicy(branchId: string): Observable<BranchPolicy> {
+    return this.http.get<BranchPolicy>(`${this.baseUrl}/branches/${branchId}/policy`);
+  }
+
+  updateBranchPolicy(branchId: string, input: BranchPolicyInput): Observable<BranchPolicy> {
+    return this.http.put<BranchPolicy>(`${this.baseUrl}/branches/${branchId}/policy`, input);
   }
 }
