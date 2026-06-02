@@ -18,7 +18,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class SalonOwnerSettingsApi {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = '/partner';
+  private readonly baseUrl = '/api/partner';
 
   listBusinesses(): Observable<PagedEnvelope<SalonBusiness>> {
     return this.http.get<PagedEnvelope<SalonBusiness>>(`${this.baseUrl}/businesses`);

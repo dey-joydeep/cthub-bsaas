@@ -299,6 +299,33 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(component.branches()).toEqual([expect.objectContaining({ id: 'branch-2', businessId: 'business-2' })]);
   });
 
+  it('invalidates pending branch-list responses when starting a new branch', () => {
+    let firstRequestHandler: ((result: { items: BranchProfile[]; page: { limit: number; nextCursor: null; hasMore: false } }) => void) | undefined;
+    api.listBranches.mockReturnValueOnce(
+      new Observable((subscriber) => {
+        firstRequestHandler = (result) => {
+          subscriber.next(result);
+          subscriber.complete();
+        };
+      }),
+    );
+
+    const staleFixture = TestBed.createComponent(SalonOwnerSettingsComponent);
+    staleFixture.detectChanges();
+    const component = staleFixture.componentInstance as unknown as SettingsComponentHarness & { newBranch(): void };
+
+    component.newBranch();
+
+    firstRequestHandler?.({
+      items: [branch],
+      page: { limit: 1, nextCursor: null, hasMore: false },
+    });
+
+    expect(component.selectedBranch()).toBeNull();
+    expect(component.branches()).toEqual([]);
+    expect(component.branchForm.getRawValue().businessId).toBe('business-1');
+  });
+
   it('invalidates stale branch-settings responses after switching businesses', () => {
     let firstHoursHandler:
       | ((result: {

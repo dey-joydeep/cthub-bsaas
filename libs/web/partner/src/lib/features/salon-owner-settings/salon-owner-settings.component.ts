@@ -179,6 +179,7 @@ export class SalonOwnerSettingsComponent {
 
   protected newBranch(): void {
     const businessId = this.selectedBusiness()?.id ?? '';
+    this.branchLoadVersion += 1;
     this.selectedBranch.set(null);
     this.branchForm.reset({
       businessId,
