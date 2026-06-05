@@ -12,6 +12,7 @@ interface BranchCreateArgs {
     readonly businessId: string;
     readonly name: string;
     readonly currency: string;
+    readonly status: string;
     readonly address: {
       readonly country: string;
     };
@@ -50,6 +51,7 @@ function branch(overrides: Record<string, unknown> = {}) {
     email: 'branch@example.com',
     timezone: 'Asia/Tokyo',
     currency: 'JPY',
+    status: 'ACTIVE',
     address: {
       line1: '1 Main St',
       city: 'Tokyo',
@@ -153,6 +155,21 @@ describe('SalonOwnerSettingsService', () => {
     ).rejects.toBeInstanceOf(ConflictException);
   });
 
+  it('rejects business names that are too short after trimming', async () => {
+    await expect(
+      service.createBusiness(
+        { user: user() },
+        {
+          displayName: ' A ',
+          legalName: ' Legal ',
+          status: 'ACTIVE',
+        },
+      ),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    expect(prisma.salonBusiness.create).not.toHaveBeenCalled();
+  });
+
   it('updates only an in-scope business', async () => {
     prisma.salonBusiness.findFirst.mockResolvedValue(business());
     prisma.salonBusiness.update.mockResolvedValue(business({ status: 'INACTIVE' }));
@@ -171,7 +188,7 @@ describe('SalonOwnerSettingsService', () => {
 
   it('creates branches after validating business scope and normalizing address', async () => {
     prisma.salonBusiness.findFirst.mockResolvedValue(business());
-    prisma.salonBranch.create.mockResolvedValue(branch({ name: 'Downtown' }));
+    prisma.salonBranch.create.mockResolvedValue(branch({ name: 'Downtown', status: 'INACTIVE' }));
 
     await expect(
       service.createBranch(
@@ -183,6 +200,7 @@ describe('SalonOwnerSettingsService', () => {
           email: ' branch@example.com ',
           timezone: 'Asia/Tokyo',
           currency: 'jpy',
+          status: 'INACTIVE',
           address: {
             line1: ' 1 Main St ',
             city: ' Tokyo ',
@@ -192,12 +210,13 @@ describe('SalonOwnerSettingsService', () => {
           },
         },
       ),
-    ).resolves.toMatchObject({ name: 'Downtown', currency: 'JPY' });
+    ).resolves.toMatchObject({ name: 'Downtown', currency: 'JPY', status: 'INACTIVE' });
 
     const [createArgs] = prisma.salonBranch.create.mock.calls[0] as [BranchCreateArgs];
     expect(createArgs.data.businessId).toBe('business-1');
     expect(createArgs.data.name).toBe('Downtown');
     expect(createArgs.data.currency).toBe('JPY');
+    expect(createArgs.data.status).toBe('INACTIVE');
     expect(createArgs.data.address.country).toBe('JP');
   });
 
@@ -210,6 +229,7 @@ describe('SalonOwnerSettingsService', () => {
         name: 'Main Branch',
         timezone: 'Asia/Tokyo',
         currency: 'JPY',
+        status: 'ACTIVE',
         address: {
           line1: '1 Main St',
           city: 'Tokyo',

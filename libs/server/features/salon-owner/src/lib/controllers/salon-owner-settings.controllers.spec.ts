@@ -1,4 +1,5 @@
-import { ROLES_KEY } from '@cthub-bsaas/server-core';
+import { INTERCEPTORS_METADATA } from '@nestjs/common/constants';
+import { ResponseEnvelopeInterceptor, ROLES_KEY } from '@cthub-bsaas/server-core';
 import { UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
 
 import { BranchSettingsController } from './branch-settings.controller';
@@ -34,6 +35,11 @@ describe('Salon owner settings controllers', () => {
     expect(Reflect.getMetadata(ROLES_KEY, BranchSettingsController)).toEqual([UserRole.OWNER, UserRole.ADMIN]);
   });
 
+  it('wraps settings controller responses in the API envelope', () => {
+    expect(Reflect.getMetadata(INTERCEPTORS_METADATA, BusinessSettingsController)).toContain(ResponseEnvelopeInterceptor);
+    expect(Reflect.getMetadata(INTERCEPTORS_METADATA, BranchSettingsController)).toContain(ResponseEnvelopeInterceptor);
+  });
+
   it('delegates business routes to the service with authenticated context', async () => {
     const service = serviceMock();
     const controller = new BusinessSettingsController(service as unknown as SalonOwnerSettingsService);
@@ -58,6 +64,7 @@ describe('Salon owner settings controllers', () => {
       name: 'Main Branch',
       timezone: 'Asia/Tokyo',
       currency: 'JPY',
+      status: 'ACTIVE' as const,
       address: {
         line1: '1 Main St',
         city: 'Tokyo',

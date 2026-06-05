@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, UseInterceptors } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CurrentUser, Roles } from '@cthub-bsaas/server-core';
+import { CurrentUser, ResponseEnvelopeInterceptor, Roles } from '@cthub-bsaas/server-core';
 import { UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
 
 import { SalonBusinessInputDto } from '../dto/salon-business.dto';
@@ -8,6 +8,7 @@ import { SalonOwnerSettingsService } from '../services/salon-owner-settings.serv
 
 @ApiTags('Business Settings')
 @Roles(UserRole.OWNER, UserRole.ADMIN)
+@UseInterceptors(ResponseEnvelopeInterceptor)
 @Controller('partner/businesses')
 export class BusinessSettingsController {
   constructor(private readonly settings: SalonOwnerSettingsService) {}

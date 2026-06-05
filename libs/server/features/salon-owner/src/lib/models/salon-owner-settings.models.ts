@@ -29,6 +29,7 @@ export interface BranchProfileModel {
   readonly email?: string;
   readonly timezone: string;
   readonly currency: string;
+  readonly status: SalonOwnerStatus;
   readonly address: SalonOwnerAddress;
   readonly createdAt: string;
   readonly updatedAt: string;

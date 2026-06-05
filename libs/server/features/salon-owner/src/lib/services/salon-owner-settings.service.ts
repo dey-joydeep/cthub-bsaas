@@ -29,8 +29,12 @@ type BusinessRecord = Awaited<ReturnType<PrismaService['salonBusiness']['findFir
 type PolicyRecord = Awaited<ReturnType<PrismaService['salonBranchPolicy']['upsert']>>;
 type HolidayRecord = Awaited<ReturnType<PrismaService['salonBranchHoliday']['upsert']>>;
 
-function trimRequired(value: string): string {
-  return value.trim();
+function trimRequired(value: string, minimumLength = 1): string {
+  const trimmed = value.trim();
+  if (trimmed.length < minimumLength) {
+    throw new UnprocessableEntityException(validationMessage);
+  }
+  return trimmed;
 }
 
 function optionalTrim(value?: string): string | undefined {
@@ -208,8 +212,8 @@ export class SalonOwnerSettingsService {
       const business = await this.prisma.salonBusiness.create({
         data: {
           tenantId,
-          displayName: trimRequired(input.displayName),
-          legalName: trimRequired(input.legalName),
+          displayName: trimRequired(input.displayName, 2),
+          legalName: trimRequired(input.legalName, 2),
           status: input.status as PrismaSalonOwnerStatus,
         },
       });
@@ -233,8 +237,8 @@ export class SalonOwnerSettingsService {
       const business = await this.prisma.salonBusiness.update({
         where: { id: businessId },
         data: {
-          displayName: trimRequired(input.displayName),
-          legalName: trimRequired(input.legalName),
+          displayName: trimRequired(input.displayName, 2),
+          legalName: trimRequired(input.legalName, 2),
           status: input.status as PrismaSalonOwnerStatus,
         },
       });
@@ -431,6 +435,7 @@ export class SalonOwnerSettingsService {
       email: optionalTrim(input.email),
       timezone: input.timezone,
       currency,
+      status: input.status as PrismaSalonOwnerStatus,
       address: normalizeAddress(input.address) as unknown as Prisma.InputJsonObject,
     };
   }
@@ -456,6 +461,7 @@ export class SalonOwnerSettingsService {
       ...(branch.email ? { email: branch.email } : {}),
       timezone: branch.timezone,
       currency: branch.currency,
+      status: branch.status,
       address: readAddress(branch.address),
       createdAt: toIso(branch.createdAt),
       updatedAt: toIso(branch.updatedAt),

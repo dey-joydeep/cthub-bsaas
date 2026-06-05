@@ -4,8 +4,11 @@ import {
   ArrayMinSize,
   IsArray,
   IsBoolean,
+  IsDefined,
+  IsEnum,
   IsEmail,
   IsInt,
+  IsObject,
   IsOptional,
   IsString,
   IsUUID,
@@ -16,6 +19,10 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
+
+import type { SalonOwnerStatus } from '../models/salon-owner-settings.models';
+
+const salonOwnerStatuses: readonly SalonOwnerStatus[] = ['ACTIVE', 'INACTIVE'];
 
 export class AddressDto {
   @IsString()
@@ -68,6 +75,11 @@ export class BranchProfileInputDto {
   @Length(3, 3)
   currency!: string;
 
+  @IsEnum(salonOwnerStatuses)
+  status!: SalonOwnerStatus;
+
+  @IsDefined()
+  @IsObject()
   @ValidateNested()
   @Type(() => AddressDto)
   address!: AddressDto;

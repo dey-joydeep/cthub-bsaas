@@ -107,6 +107,7 @@ model SalonBranch {
   email      String?
   timezone   String
   currency   String
+  status     SalonOwnerStatus     @default(ACTIVE)
   address    Json                 @db.JsonB
   hours      SalonBranchHours[]
   holidays   SalonBranchHoliday[]
@@ -116,6 +117,7 @@ model SalonBranch {
 
   @@unique([businessId, name])
   @@index([businessId])
+  @@index([businessId, status])
   @@map("salon_branch")
 }
 

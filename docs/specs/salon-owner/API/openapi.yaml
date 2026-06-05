@@ -268,7 +268,7 @@ components:
               $ref: '#/components/schemas/IsoDateTime'
     BranchProfileInput:
       type: object
-      required: [businessId, name, timezone, currency, address]
+      required: [businessId, name, timezone, currency, status, address]
       properties:
         businessId:
           $ref: '#/components/schemas/Uuid'
@@ -290,6 +290,8 @@ components:
           minLength: 3
           maxLength: 3
           examples: ['INR']
+        status:
+          $ref: '#/components/schemas/Status'
         address:
           $ref: '#/components/schemas/AddressDto'
     BranchDto:
