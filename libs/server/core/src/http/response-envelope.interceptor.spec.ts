@@ -86,4 +86,16 @@ describe('ResponseEnvelopeInterceptor', () => {
       done();
     });
   });
+
+  it('should move paged result metadata to top-level meta', (done) => {
+    const handler = { handle: () => of({ items: [{ id: 1 }], page: { limit: 1, nextCursor: null, hasMore: false } }) };
+    interceptor.intercept({} as ExecutionContext, handler).subscribe((result) => {
+      expect(result).toEqual({
+        success: true,
+        data: { items: [{ id: 1 }] },
+        meta: { page: 1, pageSize: 1, total: 1 },
+      });
+      done();
+    });
+  });
 });

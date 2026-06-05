@@ -1,7 +1,19 @@
-import base from './jest.config';
-
 export default {
-  ...base,
+  displayName: 'server-feature-salon-owner',
+  preset: '../../../../jest.preset.cjs',
+  testEnvironment: 'node',
+  testTimeout: 30000,
+  moduleFileExtensions: ['ts', 'js', 'html'],
+  coverageDirectory: '../../../../coverage/libs/server/features/salon-owner',
+  coveragePathIgnorePatterns: ['[\\/]dto[\\/]'],
+  coverageThreshold: {
+    global: {
+      statements: 70,
+      branches: 40,
+      functions: 80,
+      lines: 69,
+    },
+  },
   globalSetup: undefined,
   globalTeardown: undefined,
   testMatch: ['<rootDir>/src/**/*.spec.ts', '<rootDir>/src/**/*.test.ts'],

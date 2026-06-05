@@ -430,7 +430,7 @@ export class SalonOwnerSettingsService {
 
     return {
       businessId,
-      name: trimRequired(input.name),
+      name: trimRequired(input.name, 2),
       phone: optionalTrim(input.phone),
       email: optionalTrim(input.email),
       timezone: input.timezone,
@@ -461,7 +461,7 @@ export class SalonOwnerSettingsService {
       ...(branch.email ? { email: branch.email } : {}),
       timezone: branch.timezone,
       currency: branch.currency,
-      status: branch.status,
+      status: branch.status as BranchProfileModel['status'],
       address: readAddress(branch.address),
       createdAt: toIso(branch.createdAt),
       updatedAt: toIso(branch.updatedAt),

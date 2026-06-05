@@ -7,6 +7,7 @@ import { BusinessSettingsController } from '../../src/lib/controllers/business-s
 import { SalonOwnerSettingsService } from '../../src/lib/services/salon-owner-settings.service';
 
 describe('Salon owner settings routes', () => {
+  const branchId = '11111111-1111-4111-8111-111111111111';
   let app: INestApplication;
   const service = {
     createBusiness: jest.fn(),
@@ -47,10 +48,10 @@ describe('Salon owner settings routes', () => {
   });
 
   it('routes valid branch hours requests to the feature service', async () => {
-    service.replaceBranchHours.mockResolvedValue({ branchId: 'branch-1', timezone: 'Asia/Tokyo', days: [] });
+    service.replaceBranchHours.mockResolvedValue({ branchId, timezone: 'Asia/Tokyo', days: [] });
 
     await request(app.getHttpServer())
-      .put('/partner/branches/branch-1/hours')
+      .put(`/partner/branches/${branchId}/hours`)
       .send({
         timezone: 'Asia/Tokyo',
         days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
@@ -63,7 +64,7 @@ describe('Salon owner settings routes', () => {
 
     expect(service.replaceBranchHours).toHaveBeenCalledWith(
       { user: expect.objectContaining({ tenantId: 'tenant-1' }) },
-      'branch-1',
+      branchId,
       expect.objectContaining({ timezone: 'Asia/Tokyo' }),
     );
   });

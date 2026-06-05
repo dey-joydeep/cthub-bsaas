@@ -220,6 +220,32 @@ describe('SalonOwnerSettingsService', () => {
     expect(createArgs.data.address.country).toBe('JP');
   });
 
+  it('rejects branch names that are too short after trimming', async () => {
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+
+    await expect(
+      service.createBranch(
+        { user: user() },
+        {
+          businessId: 'business-1',
+          name: ' A ',
+          timezone: 'Asia/Tokyo',
+          currency: 'JPY',
+          status: 'ACTIVE',
+          address: {
+            line1: '1 Main St',
+            city: 'Tokyo',
+            state: 'Tokyo',
+            postalCode: '1000001',
+            country: 'JP',
+          },
+        },
+      ),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    expect(prisma.salonBranch.create).not.toHaveBeenCalled();
+  });
+
   it('blocks branch updates that try to move a branch across businesses', async () => {
     prisma.salonBranch.findFirst.mockResolvedValue(branch({ businessId: 'business-1' }));
 
