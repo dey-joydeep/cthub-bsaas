@@ -9,6 +9,7 @@
       "@cthub-bsaas/web-core-auth": ["dist/libs/web/core/auth/index.d.ts"],
       "@cthub-bsaas/web-core/auth": ["dist/libs/web/core/auth/index.d.ts"],
       "@cthub-bsaas/web-core-common": ["dist/libs/web/core/common/index.d.ts"],
+      "@cthub-bsaas/web-core-http": ["dist/libs/web/core/http/index.d.ts"],
       "@cthub-bsaas/web-core-platform": ["dist/libs/web/core/platform/index.d.ts"],
       "@cthub-bsaas/web-ui": ["dist/libs/web/ui/index.d.ts"]
     }

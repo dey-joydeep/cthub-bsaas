@@ -2,6 +2,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import { PARTNER_API_BASE_URL } from '@cthub-bsaas/web-core-http';
+
 import {
   BranchHours,
   BranchHolidayInput,
@@ -18,7 +20,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class SalonOwnerSettingsApi {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = '/api/partner';
+  private readonly baseUrl = inject(PARTNER_API_BASE_URL);
 
   listBusinesses(): Observable<PagedEnvelope<SalonBusiness>> {
     return this.http.get<PagedEnvelope<SalonBusiness>>(`${this.baseUrl}/businesses`);

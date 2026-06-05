@@ -14,6 +14,8 @@ import { TranslateLoader, TranslateModule, TranslateStore } from '@ngx-translate
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { of } from 'rxjs';
 
+import { environment } from '@cthub-bsaas/web-config/environments/partner/environment';
+
 // Material Modules
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -43,6 +45,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 // App imports
 import { AUTH_STATE_PORT, CURRENT_USER, CurrentUserService } from '@cthub-bsaas/web-core-auth';
 import { ERROR_INTERCEPTOR_PROVIDER, ErrorHandlerService, loadingInterceptor } from '@cthub-bsaas/web-core-common';
+import { PARTNER_API_BASE_URL } from '@cthub-bsaas/web-core-http';
 import { ssrInterceptor, ssrTranslateInterceptor } from '@cthub-bsaas/web-core-platform';
 import { routes } from './app.routes';
 import { LOGIN_API, AUTH_STATE_SETTER } from '@cthub-bsaas/web-partner/auth';
@@ -58,6 +61,13 @@ import { AuthService } from '@cthub-bsaas/web-partner/auth';
 // AoT requires an exported function for factories
 export function httpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
+}
+
+export function resolveSalonOwnerSettingsApiBase(configuredApiUrl: string): string {
+  const trimmedApiUrl = configuredApiUrl.replace(/\/+$/, '');
+  const backendBaseUrl = trimmedApiUrl.endsWith('/api') ? trimmedApiUrl.slice(0, -4) : trimmedApiUrl;
+
+  return backendBaseUrl ? `${backendBaseUrl}/partner` : '/partner';
 }
 
 export const appConfig: ApplicationConfig = {
@@ -127,6 +137,7 @@ export const appConfig: ApplicationConfig = {
     { provide: LOGIN_API, useClass: LoginApiService },
     { provide: AUTH_STATE_SETTER, useExisting: AuthService },
     { provide: CURRENT_USER, useExisting: CurrentUserService },
+    { provide: PARTNER_API_BASE_URL, useValue: resolveSalonOwnerSettingsApiBase(environment.apiUrl) },
     // Token-based auth APIs (temporary placeholder implementations)
     {
       provide: FORGOT_PASSWORD_API,
