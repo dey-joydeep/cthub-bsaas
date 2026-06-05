@@ -66,6 +66,14 @@ function isReferenceStyle(target) {
   return target.startsWith('[') || target.length === 0;
 }
 
+function stripLinkTitle(rawTarget) {
+  return rawTarget
+    .replace(/\s+"[^"]*"\s*$/, '')
+    .replace(/\s+'[^']*'\s*$/, '')
+    .replace(/\s+\([^)]*\)?\s*$/, '')
+    .trim();
+}
+
 function checkFile(filePath) {
   const content = readFileSync(filePath, 'utf8');
   const linkPattern = /!??\[[^\]\n]*\]\(([^)]+)\)/g;
@@ -73,7 +81,7 @@ function checkFile(filePath) {
 
   while ((match = linkPattern.exec(content)) !== null) {
     const rawTarget = match[1].trim();
-    const targetWithoutTitle = rawTarget.split(/\s+"/)[0].trim();
+    const targetWithoutTitle = stripLinkTitle(rawTarget);
     const target = stripAnchor(targetWithoutTitle);
 
     if (isExternal(targetWithoutTitle) || isReferenceStyle(target)) {
