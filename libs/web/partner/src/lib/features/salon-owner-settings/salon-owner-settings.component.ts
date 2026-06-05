@@ -18,6 +18,7 @@ import { BranchHours, BranchPolicy, BranchProfile, SalonBusiness, WeeklyHoursDay
 import { SalonOwnerSettingsApi } from './salon-owner-settings.api';
 
 const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 const defaultPolicy: Omit<BranchPolicy, 'branchId'> = {
   bookingLeadMinutes: 30,
   cancellationCutoffMinutes: 120,
@@ -72,6 +73,7 @@ export class SalonOwnerSettingsComponent {
   protected readonly branches = signal<readonly BranchProfile[]>([]);
   protected readonly selectedBusiness = signal<SalonBusiness | null>(null);
   protected readonly selectedBranch = signal<BranchProfile | null>(null);
+  protected readonly branchSettingsLoaded = signal(false);
   protected readonly hasBusiness = computed(() => this.businesses().length > 0);
   protected readonly hasBranch = computed(() => this.branches().length > 0);
 
@@ -144,6 +146,7 @@ export class SalonOwnerSettingsComponent {
 
   protected selectBranch(branch: BranchProfile): void {
     this.selectedBranch.set(branch);
+    this.branchSettingsLoaded.set(false);
     this.branchForm.reset({
       businessId: branch.businessId,
       name: branch.name,
@@ -181,6 +184,7 @@ export class SalonOwnerSettingsComponent {
     const businessId = this.selectedBusiness()?.id ?? '';
     this.branchLoadVersion += 1;
     this.selectedBranch.set(null);
+    this.branchSettingsLoaded.set(false);
     this.branchForm.reset({
       businessId,
       name: '',
@@ -238,6 +242,9 @@ export class SalonOwnerSettingsComponent {
     const request = selected ? this.api.updateBranch(selected.id, input) : this.api.createBranch(input);
 
     this.persist(request, (branch) => {
+      if (this.selectedBusiness()?.id !== branch.businessId) {
+        return;
+      }
       this.selectedBranch.set(branch);
       this.loadBranches(branch.businessId, branch.id);
     });
@@ -247,6 +254,10 @@ export class SalonOwnerSettingsComponent {
     const branch = this.selectedBranch();
     if (!branch) {
       this.error.set('Select a branch before saving hours.');
+      return;
+    }
+    if (!this.branchSettingsLoaded()) {
+      this.error.set('Branch settings are still loading.');
       return;
     }
     if (this.hoursForm.invalid) {
@@ -271,6 +282,10 @@ export class SalonOwnerSettingsComponent {
       this.error.set('Select a branch before saving a holiday.');
       return;
     }
+    if (!this.branchSettingsLoaded()) {
+      this.error.set('Branch settings are still loading.');
+      return;
+    }
     if (this.holidayForm.invalid) {
       this.holidayForm.markAllAsTouched();
       return;
@@ -292,6 +307,10 @@ export class SalonOwnerSettingsComponent {
       this.error.set('Select a branch before saving policy.');
       return;
     }
+    if (!this.branchSettingsLoaded()) {
+      this.error.set('Branch settings are still loading.');
+      return;
+    }
     if (this.policyForm.invalid) {
       this.policyForm.markAllAsTouched();
       return;
@@ -308,8 +327,8 @@ export class SalonOwnerSettingsComponent {
       intervals: this.fb.nonNullable.array([
         ...intervals.map((interval) =>
           this.fb.nonNullable.group({
-            start: [interval.start, Validators.required],
-            end: [interval.end, Validators.required],
+            start: [interval.start, [Validators.required, Validators.pattern(timePattern)]],
+            end: [interval.end, [Validators.required, Validators.pattern(timePattern)]],
           }),
         ),
       ]),
@@ -317,7 +336,7 @@ export class SalonOwnerSettingsComponent {
   }
 
   private updateHolidayTimeValidators(closed: boolean): void {
-    const validators = closed ? [] : [Validators.required, Validators.pattern(/^\d{2}:\d{2}$/)];
+    const validators = closed ? [] : [Validators.required, Validators.pattern(timePattern)];
     this.holidayForm.controls.start.setValidators(validators);
     this.holidayForm.controls.end.setValidators(validators);
     this.holidayForm.controls.start.updateValueAndValidity({ emitEvent: false });
@@ -385,11 +404,13 @@ export class SalonOwnerSettingsComponent {
           cancellationCutoffMinutes: policy.cancellationCutoffMinutes,
           noShowGraceMinutes: policy.noShowGraceMinutes,
         });
+        this.branchSettingsLoaded.set(true);
       },
       error: () => {
         if (requestVersion !== this.branchSettingsLoadVersion || this.selectedBranch()?.id !== branch.id) {
           return;
         }
+        this.branchSettingsLoaded.set(false);
         this.error.set('Branch settings could not be loaded.');
       },
     });

@@ -24,6 +24,7 @@ interface SettingsComponentHarness {
   businesses(): readonly SalonBusiness[];
   branches(): readonly BranchProfile[];
   selectedBranch(): BranchProfile | null;
+  branchSettingsLoaded(): boolean;
 }
 
 describe('SalonOwnerSettingsComponent', () => {
@@ -245,6 +246,44 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(api.replaceBranchHours).not.toHaveBeenCalled();
   });
 
+  it('does not submit weekly-hours values outside the HH:MM range', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      dayForms: {
+        at(index: number): {
+          get(path: string): {
+            at(index: number): { patchValue(value: { start?: string; end?: string }): void };
+          };
+        };
+      };
+    };
+    api.replaceBranchHours.mockClear();
+
+    component.dayForms.at(1).get('intervals').at(0).patchValue({ start: '9:00', end: '25:99' });
+    component.saveHours();
+
+    expect(api.replaceBranchHours).not.toHaveBeenCalled();
+  });
+
+  it('does not save hours or policy while branch settings are still loading', () => {
+    api.getBranchHours.mockReturnValueOnce(new Observable(() => undefined));
+    api.getBranchPolicy.mockReturnValueOnce(new Observable(() => undefined));
+
+    const loadingFixture = TestBed.createComponent(SalonOwnerSettingsComponent);
+    loadingFixture.detectChanges();
+    const component = loadingFixture.componentInstance as unknown as SettingsComponentHarness;
+    api.replaceBranchHours.mockClear();
+    api.updateBranchPolicy.mockClear();
+
+    expect(component.selectedBranch()).toEqual(expect.objectContaining({ id: 'branch-1' }));
+    expect(component.branchSettingsLoaded()).toBe(false);
+
+    component.saveHours();
+    component.savePolicy();
+
+    expect(api.replaceBranchHours).not.toHaveBeenCalled();
+    expect(api.updateBranchPolicy).not.toHaveBeenCalled();
+  });
+
   it('requires holiday start and end times when the branch stays open', () => {
     const component = fixture.componentInstance as unknown as SettingsComponentHarness;
 
@@ -254,8 +293,52 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(component.holidayForm.controls.end.errors).toEqual(expect.objectContaining({ required: true }));
   });
 
+  it('rejects holiday times outside the HH:MM range when the branch stays open', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness;
+
+    component.holidayForm.patchValue({ closed: false, start: '24:00', end: '12:99' });
+
+    expect(component.holidayForm.controls.start.errors).toEqual(expect.objectContaining({ pattern: expect.any(Object) }));
+    expect(component.holidayForm.controls.end.errors).toEqual(expect.objectContaining({ pattern: expect.any(Object) }));
+  });
+
+  it('ignores stale branch-save responses after the selected business changes', () => {
+    let saveHandler: ((savedBranch: BranchProfile) => void) | undefined;
+    api.updateBranch.mockReturnValueOnce(
+      new Observable((subscriber) => {
+        saveHandler = (savedBranch) => {
+          subscriber.next(savedBranch);
+          subscriber.complete();
+        };
+      }),
+    );
+    api.listBranches.mockReturnValueOnce(
+      of({
+        items: [{ ...branch, id: 'branch-2', businessId: 'business-2', name: 'Second' }],
+        page: { limit: 1, nextCursor: null, hasMore: false },
+      }),
+    );
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness;
+
+    component.saveBranch();
+    component.selectBusiness({
+      id: 'business-2',
+      tenantId: 'tenant-1',
+      displayName: 'Salon Two',
+      legalName: 'Salon Two Legal',
+      status: 'ACTIVE',
+      createdAt: '2026-05-26T00:00:00.000Z',
+      updatedAt: '2026-05-26T00:00:00.000Z',
+    });
+    saveHandler?.(branch);
+
+    expect(component.selectedBranch()).toEqual(expect.objectContaining({ id: 'branch-2', businessId: 'business-2' }));
+  });
+
   it('ignores stale branch-list responses after the selected business changes', () => {
-    let firstRequestHandler: ((result: { items: BranchProfile[]; page: { limit: number; nextCursor: null; hasMore: false } }) => void) | undefined;
+    let firstRequestHandler:
+      | ((result: { items: BranchProfile[]; page: { limit: number; nextCursor: null; hasMore: false } }) => void)
+      | undefined;
     api.listBranches
       .mockReturnValueOnce(
         new Observable((subscriber) => {
@@ -300,7 +383,9 @@ describe('SalonOwnerSettingsComponent', () => {
   });
 
   it('invalidates pending branch-list responses when starting a new branch', () => {
-    let firstRequestHandler: ((result: { items: BranchProfile[]; page: { limit: number; nextCursor: null; hasMore: false } }) => void) | undefined;
+    let firstRequestHandler:
+      | ((result: { items: BranchProfile[]; page: { limit: number; nextCursor: null; hasMore: false } }) => void)
+      | undefined;
     api.listBranches.mockReturnValueOnce(
       new Observable((subscriber) => {
         firstRequestHandler = (result) => {
@@ -335,12 +420,7 @@ describe('SalonOwnerSettingsComponent', () => {
         }) => void)
       | undefined;
     let firstPolicyHandler:
-      | ((result: {
-          branchId: string;
-          bookingLeadMinutes: number;
-          cancellationCutoffMinutes: number;
-          noShowGraceMinutes: number;
-        }) => void)
+      | ((result: { branchId: string; bookingLeadMinutes: number; cancellationCutoffMinutes: number; noShowGraceMinutes: number }) => void)
       | undefined;
 
     api.getBranchHours
@@ -352,7 +432,17 @@ describe('SalonOwnerSettingsComponent', () => {
           };
         }),
       )
-      .mockReturnValue(of({ branchId: 'branch-2', timezone: 'Asia/Tokyo', days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({ dayOfWeek, open: dayOfWeek > 0, intervals: dayOfWeek > 0 ? [{ start: '10:00', end: '18:00' }] : [] })) }));
+      .mockReturnValue(
+        of({
+          branchId: 'branch-2',
+          timezone: 'Asia/Tokyo',
+          days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+            dayOfWeek,
+            open: dayOfWeek > 0,
+            intervals: dayOfWeek > 0 ? [{ start: '10:00', end: '18:00' }] : [],
+          })),
+        }),
+      );
     api.getBranchPolicy
       .mockReturnValueOnce(
         new Observable((subscriber) => {
@@ -422,7 +512,14 @@ describe('SalonOwnerSettingsComponent', () => {
         timezone: 'Asia/Tokyo',
         days: [
           { dayOfWeek: 0, open: false, intervals: [] },
-          { dayOfWeek: 1, open: true, intervals: [{ start: '09:00', end: '12:00' }, { start: '13:00', end: '17:00' }] },
+          {
+            dayOfWeek: 1,
+            open: true,
+            intervals: [
+              { start: '09:00', end: '12:00' },
+              { start: '13:00', end: '17:00' },
+            ],
+          },
           ...[2, 3, 4, 5, 6].map((dayOfWeek) => ({ dayOfWeek, open: true, intervals: [{ start: '09:00', end: '17:00' }] })),
         ],
       }),

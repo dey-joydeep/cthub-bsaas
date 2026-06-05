@@ -163,7 +163,7 @@
       </div>
     </mat-tab>
 
-    <mat-tab label="Hours" [disabled]="!hasBranch()">
+    <mat-tab label="Hours" [disabled]="!hasBranch() || !branchSettingsLoaded()">
       <mat-card>
         <mat-card-header>
           <mat-card-title>Weekly hours</mat-card-title>
@@ -198,13 +198,13 @@
                 </div>
               }
             </div>
-            <button mat-flat-button type="submit" [disabled]="saving()">Save hours</button>
+            <button mat-flat-button type="submit" [disabled]="saving() || !branchSettingsLoaded()">Save hours</button>
           </form>
         </mat-card-content>
       </mat-card>
     </mat-tab>
 
-    <mat-tab label="Holiday" [disabled]="!hasBranch()">
+    <mat-tab label="Holiday" [disabled]="!hasBranch() || !branchSettingsLoaded()">
       <mat-card>
         <mat-card-header>
           <mat-card-title>Holiday or special day</mat-card-title>
@@ -228,13 +228,13 @@
               <mat-label>Open end</mat-label>
               <input matInput formControlName="end" />
             </mat-form-field>
-            <button mat-flat-button type="submit" [disabled]="saving()">Save holiday</button>
+            <button mat-flat-button type="submit" [disabled]="saving() || !branchSettingsLoaded()">Save holiday</button>
           </form>
         </mat-card-content>
       </mat-card>
     </mat-tab>
 
-    <mat-tab label="Policy" [disabled]="!hasBranch()">
+    <mat-tab label="Policy" [disabled]="!hasBranch() || !branchSettingsLoaded()">
       <mat-card>
         <mat-card-header>
           <mat-card-title>Booking policy</mat-card-title>
@@ -253,7 +253,7 @@
               <mat-label>No-show grace minutes</mat-label>
               <input matInput type="number" formControlName="noShowGraceMinutes" />
             </mat-form-field>
-            <button mat-flat-button type="submit" [disabled]="saving()">Save policy</button>
+            <button mat-flat-button type="submit" [disabled]="saving() || !branchSettingsLoaded()">Save policy</button>
           </form>
         </mat-card-content>
       </mat-card>
