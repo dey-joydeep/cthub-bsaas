@@ -1,11 +1,12 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Put, Query, UseInterceptors } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CurrentUser } from '@cthub-bsaas/server-core';
+import { CurrentUser, ResponseEnvelopeInterceptor } from '@cthub-bsaas/server-core';
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 
 import {
   StaffInputDto,
   StaffLeaveBlockInputDto,
+  StaffListQueryDto,
   StaffRolesInputDto,
   StaffShiftInputDto,
   StaffSkillsInputDto,
@@ -13,14 +14,15 @@ import {
 import { StaffServiceCatalogService } from '../services/staff-service-catalog.service';
 
 @ApiTags('Staff')
+@UseInterceptors(ResponseEnvelopeInterceptor)
 @Controller('partner/staff')
 export class StaffController {
   constructor(private readonly catalog: StaffServiceCatalogService) {}
 
   @Get()
   @ApiOperation({ operationId: 'listStaff' })
-  listStaff(@CurrentUser() user: AuthenticatedUser, @Query('branchId', new ParseUUIDPipe({ optional: true })) branchId?: string) {
-    return this.catalog.listStaff({ user }, branchId);
+  listStaff(@CurrentUser() user: AuthenticatedUser, @Query() query: StaffListQueryDto) {
+    return this.catalog.listStaff({ user }, query);
   }
 
   @Post()

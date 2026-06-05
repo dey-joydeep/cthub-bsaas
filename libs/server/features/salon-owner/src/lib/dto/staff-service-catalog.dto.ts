@@ -27,6 +27,7 @@ export class StaffInputDto {
   branchIds!: string[];
 
   @IsString()
+  @Matches(/\S/)
   @Length(2, 120)
   displayName!: string;
 
@@ -95,14 +96,40 @@ export class StaffLeaveBlockInputDto {
   branchId!: string;
 
   @IsISO8601()
+  @Matches(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/)
   startsAt!: string;
 
   @IsISO8601()
+  @Matches(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/)
   endsAt!: string;
 
   @IsString()
   @MaxLength(160)
   reason!: string;
+}
+
+export class StaffListQueryDto {
+  @IsOptional()
+  @IsUUID()
+  branchId?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  q?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  pageSize?: number;
 }
 
 export class ServiceCategoryInputDto {

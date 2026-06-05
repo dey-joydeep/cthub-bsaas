@@ -231,15 +231,36 @@ components:
           const: true
         data:
           type: object
-          required: [items]
+          required: [items, page]
           properties:
             items:
               type: array
               items:
                 type: object
                 additionalProperties: true
+            page:
+              type: object
+              required: [limit, nextCursor, hasMore]
+              properties:
+                limit:
+                  type: integer
+                  minimum: 0
+                nextCursor:
+                  type: string
+                  nullable: true
+                hasMore:
+                  type: boolean
+                page:
+                  type: integer
+                  minimum: 1
+                pageSize:
+                  type: integer
+                  minimum: 1
+                total:
+                  type: integer
+                  minimum: 0
         meta:
-          $ref: '#/components/schemas/PageMeta'
+          $ref: '#/components/schemas/ApiMeta'
     AddressDto:
       type: object
       required: [line1, city, state, postalCode, country]

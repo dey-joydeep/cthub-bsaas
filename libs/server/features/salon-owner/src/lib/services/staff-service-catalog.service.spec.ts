@@ -165,19 +165,24 @@ describe('StaffServiceCatalogService', () => {
 
   it('lists staff by authenticated tenant and optional branch', async () => {
     prisma.salonBranch.findFirst.mockResolvedValue(branch());
+    prisma.salonOwnerStaff.count.mockResolvedValue(1);
     prisma.salonOwnerStaff.findMany.mockResolvedValue([staff()]);
 
-    const result = await service.listStaff({ user: user() }, 'branch-1');
+    const result = await service.listStaff({ user: user() }, { branchId: 'branch-1', q: 'stylist', page: 2, pageSize: 25 });
 
     expect(prisma.salonOwnerStaff.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           business: { tenantId: 'tenant-1' },
           branches: { some: { branchId: 'branch-1' } },
+          OR: expect.arrayContaining([expect.objectContaining({ displayName: expect.objectContaining({ contains: 'stylist' }) })]),
         }),
+        skip: 25,
+        take: 25,
       }),
     );
     expect(result.items[0]).toMatchObject({ id: 'staff-1', branchIds: ['branch-1'] });
+    expect(result.page).toMatchObject({ page: 2, pageSize: 25, total: 1 });
   });
 
   it('requires tenant scope', async () => {
@@ -228,6 +233,16 @@ describe('StaffServiceCatalogService', () => {
         { branchIds: ['branch-1'], displayName: 'Stylist One', phone: '09000000001', status: 'ACTIVE' },
       ),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('rejects staff display names that are too short after trimming', async () => {
+    prisma.salonBranch.findMany.mockResolvedValue([branch()]);
+
+    await expect(
+      service.createStaff({ user: user() }, { branchIds: ['branch-1'], displayName: ' A ', phone: '09000000001', status: 'ACTIVE' }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    expect(prisma.salonOwnerStaff.create).not.toHaveBeenCalled();
   });
 
   it('rejects staff assignments across businesses', async () => {

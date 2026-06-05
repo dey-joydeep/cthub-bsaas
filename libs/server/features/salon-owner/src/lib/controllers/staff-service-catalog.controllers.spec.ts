@@ -1,3 +1,5 @@
+import { INTERCEPTORS_METADATA } from '@nestjs/common/constants';
+import { ResponseEnvelopeInterceptor } from '@cthub-bsaas/server-core';
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 
 import { ServiceCatalogController } from './service-catalog.controller';
@@ -33,9 +35,15 @@ function serviceMock() {
 }
 
 describe('Staff and service catalog controllers', () => {
+  it('wraps staff and service catalog responses in the API envelope', () => {
+    expect(Reflect.getMetadata(INTERCEPTORS_METADATA, StaffController)).toContain(ResponseEnvelopeInterceptor);
+    expect(Reflect.getMetadata(INTERCEPTORS_METADATA, ServiceCatalogController)).toContain(ResponseEnvelopeInterceptor);
+  });
+
   it('delegates staff routes with route parameters and authenticated context', async () => {
     const service = serviceMock();
     const controller = new StaffController(service as unknown as StaffServiceCatalogService);
+    const query = { branchId: 'branch-1', q: 'ann', page: 2, pageSize: 25 };
     const staff = { branchIds: ['branch-1'], displayName: 'Stylist One', phone: '09000000001', status: 'ACTIVE' as const };
     const shift = { branchId: 'branch-1', timezone: 'Asia/Tokyo', days: [] };
     const leave = {
@@ -45,7 +53,7 @@ describe('Staff and service catalog controllers', () => {
       reason: 'Personal',
     };
 
-    await controller.listStaff(user, 'branch-1');
+    await controller.listStaff(user, query);
     await controller.createStaff(user, staff);
     await controller.getStaff(user, 'staff-1');
     await controller.updateStaff(user, 'staff-1', staff);
@@ -54,7 +62,7 @@ describe('Staff and service catalog controllers', () => {
     await controller.replaceStaffShifts(user, 'staff-1', shift);
     await controller.createStaffLeaveBlock(user, 'staff-1', leave);
 
-    expect(service.listStaff).toHaveBeenCalledWith({ user }, 'branch-1');
+    expect(service.listStaff).toHaveBeenCalledWith({ user }, query);
     expect(service.createStaff).toHaveBeenCalledWith({ user }, staff);
     expect(service.getStaff).toHaveBeenCalledWith({ user }, 'staff-1');
     expect(service.updateStaff).toHaveBeenCalledWith({ user }, 'staff-1', staff);

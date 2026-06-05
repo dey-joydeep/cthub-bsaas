@@ -10,6 +10,7 @@ import {
   StaffEligibilityInputDto,
   StaffInputDto,
   StaffLeaveBlockInputDto,
+  StaffListQueryDto,
   StaffRolesInputDto,
   StaffShiftDayDto,
   StaffShiftInputDto,
@@ -51,8 +52,12 @@ interface ServiceListOptions {
   businessId?: string;
 }
 
-function trimRequired(value: string): string {
-  return value.trim();
+function trimRequired(value: string, minimumLength = 1): string {
+  const trimmed = value.trim();
+  if (trimmed.length < minimumLength) {
+    throw new UnprocessableEntityException(validationMessage);
+  }
+  return trimmed;
 }
 
 function optionalTrim(value?: string): string | undefined {
@@ -150,22 +155,43 @@ function assertDecimalPrecision(value: string, maxIntegerDigits: number): void {
 export class StaffServiceCatalogService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async listStaff(context: SalonOwnerRequestContext, branchId?: string): Promise<PagedResult<StaffModel>> {
+  async listStaff(context: SalonOwnerRequestContext, options: StaffListQueryDto = {}): Promise<PagedResult<StaffModel>> {
     const tenantId = this.requireTenantId(context);
+    const { branchId } = options;
     if (branchId) {
       await this.findBranchInScope(context, branchId);
     }
 
+    const query = optionalTrim(options.q);
+    const page = options.page ?? 1;
+    const pageSize = options.pageSize ?? 50;
+    const where: Prisma.SalonOwnerStaffWhereInput = {
+      business: { tenantId },
+      ...(branchId ? { branches: { some: { branchId } } } : {}),
+      ...(query
+        ? {
+            OR: [
+              { displayName: { contains: query, mode: 'insensitive' } },
+              { phone: { contains: query, mode: 'insensitive' } },
+              { email: { contains: query, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    };
+
+    const total = await this.prisma.salonOwnerStaff.count({ where });
     const staff = await this.prisma.salonOwnerStaff.findMany({
-      where: {
-        business: { tenantId },
-        ...(branchId ? { branches: { some: { branchId } } } : {}),
-      },
+      where,
       include: staffInclude,
       orderBy: { createdAt: 'asc' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     });
 
-    return this.page(staff.map((member) => this.mapStaff(member)));
+    return this.page(
+      staff.map((member) => this.mapStaff(member)),
+      { page, pageSize, total },
+    );
   }
 
   async createStaff(context: SalonOwnerRequestContext, input: StaffInputDto): Promise<StaffModel> {
@@ -177,7 +203,7 @@ export class StaffServiceCatalogService {
         const created = await tx.salonOwnerStaff.create({
           data: {
             businessId,
-            displayName: trimRequired(input.displayName),
+            displayName: trimRequired(input.displayName, 2),
             phone: trimRequired(input.phone),
             email: optionalTrim(input.email),
             status: input.status as PrismaSalonOwnerStatus,
@@ -214,7 +240,7 @@ export class StaffServiceCatalogService {
         await tx.salonOwnerStaff.update({
           where: { id: staffId },
           data: {
-            displayName: trimRequired(input.displayName),
+            displayName: trimRequired(input.displayName, 2),
             phone: trimRequired(input.phone),
             email: optionalTrim(input.email),
             status: input.status as PrismaSalonOwnerStatus,
@@ -609,13 +635,14 @@ export class StaffServiceCatalogService {
     };
   }
 
-  private page<T>(items: readonly T[]): PagedResult<T> {
+  private page<T>(items: readonly T[], pagination?: { page: number; pageSize: number; total: number }): PagedResult<T> {
     return {
       items,
       page: {
-        limit: items.length,
+        limit: pagination?.pageSize ?? items.length,
         nextCursor: null,
-        hasMore: false,
+        hasMore: pagination ? pagination.page * pagination.pageSize < pagination.total : false,
+        ...(pagination ? { page: pagination.page, pageSize: pagination.pageSize, total: pagination.total } : {}),
       },
     };
   }

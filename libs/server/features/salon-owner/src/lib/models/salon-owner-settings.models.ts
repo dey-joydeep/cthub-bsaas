@@ -80,6 +80,9 @@ export interface PagedResult<T> {
     readonly totalItems?: number;
     readonly nextCursor: string | null;
     readonly hasMore: boolean;
+    readonly page?: number;
+    readonly pageSize?: number;
+    readonly total?: number;
   };
 }
 
