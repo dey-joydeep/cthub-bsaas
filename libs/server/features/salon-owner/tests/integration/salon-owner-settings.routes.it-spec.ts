@@ -2,11 +2,13 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 
+import { AppointmentSchedulingController } from '../../src/lib/controllers/appointment-scheduling.controller';
 import { BranchSettingsController } from '../../src/lib/controllers/branch-settings.controller';
 import { BusinessSettingsController } from '../../src/lib/controllers/business-settings.controller';
 import { CustomerCrmController } from '../../src/lib/controllers/customer-crm.controller';
 import { ServiceCatalogController } from '../../src/lib/controllers/service-catalog.controller';
 import { StaffController } from '../../src/lib/controllers/staff.controller';
+import { AppointmentSchedulingService } from '../../src/lib/services/appointment-scheduling.service';
 import { CustomerCrmService } from '../../src/lib/services/customer-crm.service';
 import { SalonOwnerSettingsService } from '../../src/lib/services/salon-owner-settings.service';
 import { StaffServiceCatalogService } from '../../src/lib/services/staff-service-catalog.service';
@@ -24,14 +26,25 @@ describe('Salon owner settings routes', () => {
   const customers = {
     createCustomer: jest.fn(),
   };
+  const appointments = {
+    createAppointment: jest.fn(),
+  };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
-      controllers: [BusinessSettingsController, BranchSettingsController, StaffController, ServiceCatalogController, CustomerCrmController],
+      controllers: [
+        BusinessSettingsController,
+        BranchSettingsController,
+        StaffController,
+        ServiceCatalogController,
+        CustomerCrmController,
+        AppointmentSchedulingController,
+      ],
       providers: [
         { provide: SalonOwnerSettingsService, useValue: service },
         { provide: StaffServiceCatalogService, useValue: catalog },
         { provide: CustomerCrmService, useValue: customers },
+        { provide: AppointmentSchedulingService, useValue: appointments },
       ],
     }).compile();
 
@@ -127,6 +140,35 @@ describe('Salon owner settings routes', () => {
     expect(customers.createCustomer).toHaveBeenCalledWith(
       { user: expect.objectContaining({ tenantId: 'tenant-1' }) },
       expect.objectContaining({ displayName: 'Customer One' }),
+    );
+  });
+
+  it('validates appointment payloads before invoking the scheduling service', async () => {
+    await request(app.getHttpServer()).post('/partner/appointments').send({ branchId: 'bad' }).expect(400);
+    expect(appointments.createAppointment).not.toHaveBeenCalled();
+  });
+
+  it('routes valid appointment requests to the scheduling service', async () => {
+    appointments.createAppointment.mockResolvedValue({ id: 'appointment-1' });
+
+    await request(app.getHttpServer())
+      .post('/partner/appointments')
+      .send({
+        branchId: '00000000-0000-4000-8000-000000000001',
+        customerId: '00000000-0000-4000-8000-000000000002',
+        lines: [
+          {
+            serviceId: '00000000-0000-4000-8000-000000000003',
+            staffId: '00000000-0000-4000-8000-000000000004',
+            startsAt: '2026-05-26T09:00:00.000Z',
+          },
+        ],
+      })
+      .expect(201);
+
+    expect(appointments.createAppointment).toHaveBeenCalledWith(
+      { user: expect.objectContaining({ tenantId: 'tenant-1' }) },
+      expect.objectContaining({ branchId: '00000000-0000-4000-8000-000000000001' }),
     );
   });
 });
