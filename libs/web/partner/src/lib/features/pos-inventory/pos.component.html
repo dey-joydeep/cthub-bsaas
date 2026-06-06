@@ -1,0 +1,172 @@
+<section class="pos-shell">
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  }
+
+  <header class="pos-header">
+    <div>
+      <h1>Checkout</h1>
+      <p>Build invoices, finalize sale lines, capture payment, and keep pending dues visible.</p>
+    </div>
+  </header>
+
+  @if (message()) {
+    <p class="status status-ok">{{ message() }}</p>
+  }
+  @if (error()) {
+    <p class="status status-error">{{ error() }}</p>
+  }
+
+  <div class="pos-grid">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Sale draft</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="invoiceForm" class="form-grid" (ngSubmit)="createInvoice()">
+          <mat-form-field appearance="outline">
+            <mat-label>Branch</mat-label>
+            <mat-select formControlName="branchId" (selectionChange)="onBranchChanged($event.value)">
+              @for (branch of branches(); track branch.id) {
+                <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Customer</mat-label>
+            <mat-select formControlName="customerId">
+              @for (customer of customers(); track customer.id) {
+                <mat-option [value]="customer.id">{{ customer.displayName }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Appointment ID</mat-label>
+            <input matInput formControlName="appointmentId" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Line type</mat-label>
+            <mat-select formControlName="type">
+              @for (type of lineTypes; track type) {
+                <mat-option [value]="type">{{ type }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Reference ID</mat-label>
+            <input matInput formControlName="referenceId" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Description</mat-label>
+            <input matInput formControlName="description" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Quantity</mat-label>
+            <input matInput formControlName="quantity" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Unit price</mat-label>
+            <input matInput formControlName="unitPrice" />
+          </mat-form-field>
+          <button mat-flat-button type="submit" [disabled]="saving()">Create invoice</button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Catalog pickers</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="picker-list">
+          @for (service of services(); track service.id) {
+            <button type="button" class="picker-row" (click)="useCatalogItem('SERVICE', service)">
+              <span>{{ service.name }}</span>
+              <small>{{ service.basePrice }}</small>
+            </button>
+          }
+          @for (product of products(); track product.id) {
+            <button type="button" class="picker-row" (click)="useCatalogItem('PRODUCT', product)">
+              <span>{{ product.name }}</span>
+              <small>{{ product.retailPrice }}</small>
+            </button>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="pos-grid">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Invoice</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="invoice-summary">
+          <strong>{{ currentInvoice()?.status ?? 'No invoice selected' }}</strong>
+          <span>Total {{ currentInvoice()?.total ?? '0.00' }}</span>
+          <span>Paid {{ currentInvoice()?.paidAmount ?? '0.00' }}</span>
+          <span>Due {{ currentInvoice()?.dueAmount ?? '0.00' }}</span>
+        </div>
+        <div class="line-list">
+          @for (line of currentInvoice()?.lines ?? []; track line.id) {
+            <div class="line-row">
+              <span>{{ line.description }}</span>
+              <small>{{ line.quantity }} x {{ line.unitPrice }} = {{ line.lineTotal }}</small>
+            </div>
+          } @empty {
+            <p class="empty">Create or select an invoice.</p>
+          }
+        </div>
+        <div class="button-row">
+          <button mat-flat-button type="button" [disabled]="saving() || !currentInvoice()" (click)="finalizeInvoice()">Finalize</button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Payment</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="paymentForm" class="payment-form" (ngSubmit)="capturePayment()">
+          <mat-form-field appearance="outline">
+            <mat-label>Amount</mat-label>
+            <input matInput formControlName="amount" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Method</mat-label>
+            <mat-select formControlName="method">
+              @for (method of paymentMethods; track method) {
+                <mat-option [value]="method">{{ method }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Reference</mat-label>
+            <input matInput formControlName="reference" />
+          </mat-form-field>
+          <button mat-flat-button type="submit" [disabled]="saving() || !isCurrentInvoicePayable()">Capture payment</button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Pending dues</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="dues-list">
+        @for (invoice of pendingDues(); track invoice.id) {
+          <button type="button" class="due-row" [class.selected]="currentInvoice()?.id === invoice.id" (click)="selectInvoice(invoice)">
+            <span>{{ customerName(invoice.customerId) }}</span>
+            <small>{{ invoice.status }} · due {{ invoice.dueAmount }}</small>
+          </button>
+        } @empty {
+          <p class="empty">No pending dues for the selected branch.</p>
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+</section>

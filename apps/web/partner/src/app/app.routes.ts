@@ -8,6 +8,7 @@ export const routes: Routes = [
   { path: 'owner/services', loadChildren: () => import('@cthub-bsaas/web-partner').then((m) => m.STAFF_SERVICE_CATALOG_ROUTES) },
   { path: 'owner/customers', loadChildren: () => import('@cthub-bsaas/web-partner').then((m) => m.CUSTOMER_CRM_ROUTES) },
   { path: 'owner/appointments', loadChildren: () => import('@cthub-bsaas/web-partner').then((m) => m.APPOINTMENT_SCHEDULING_ROUTES) },
+  { path: 'owner', loadChildren: () => import('@cthub-bsaas/web-partner').then((m) => m.POS_INVENTORY_ROUTES) },
   { path: '', redirectTo: 'auth', pathMatch: 'full' },
   { path: '**', redirectTo: 'auth' },
 ];

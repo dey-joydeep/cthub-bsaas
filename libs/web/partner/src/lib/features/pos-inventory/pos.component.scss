@@ -1,0 +1,113 @@
+.pos-shell {
+  display: grid;
+  gap: 20px;
+  padding: 24px;
+}
+
+.pos-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  h1 {
+    margin: 0;
+    font-size: 2rem;
+  }
+
+  p {
+    margin: 6px 0 0;
+    color: #52606d;
+  }
+}
+
+.pos-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 16px;
+}
+
+.form-grid,
+.payment-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.form-grid button,
+.payment-form button {
+  min-height: 48px;
+}
+
+.picker-list,
+.line-list,
+.dues-list {
+  display: grid;
+  gap: 8px;
+}
+
+.picker-row,
+.due-row,
+.line-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #d7dde4;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.picker-row,
+.due-row {
+  cursor: pointer;
+}
+
+.selected {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.invoice-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.button-row {
+  margin-top: 14px;
+}
+
+.status {
+  margin: 0;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.status-ok {
+  background: #ecfdf3;
+  color: #166534;
+}
+
+.status-error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.empty {
+  margin: 0;
+  color: #697586;
+}
+
+@media (max-width: 900px) {
+  .pos-grid,
+  .form-grid,
+  .payment-form,
+  .invoice-summary {
+    grid-template-columns: 1fr;
+  }
+}
