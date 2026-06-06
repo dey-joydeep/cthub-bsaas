@@ -6,12 +6,14 @@ import { AppointmentSchedulingController } from '../../src/lib/controllers/appoi
 import { BranchSettingsController } from '../../src/lib/controllers/branch-settings.controller';
 import { BusinessSettingsController } from '../../src/lib/controllers/business-settings.controller';
 import { CustomerCrmController } from '../../src/lib/controllers/customer-crm.controller';
+import { DashboardController } from '../../src/lib/controllers/dashboard.controller';
 import { InventoryController } from '../../src/lib/controllers/inventory.controller';
 import { PosController } from '../../src/lib/controllers/pos.controller';
 import { ServiceCatalogController } from '../../src/lib/controllers/service-catalog.controller';
 import { StaffController } from '../../src/lib/controllers/staff.controller';
 import { AppointmentSchedulingService } from '../../src/lib/services/appointment-scheduling.service';
 import { CustomerCrmService } from '../../src/lib/services/customer-crm.service';
+import { DashboardQueryService } from '../../src/lib/services/dashboard-query.service';
 import { PosInventoryService } from '../../src/lib/services/pos-inventory.service';
 import { SalonOwnerSettingsService } from '../../src/lib/services/salon-owner-settings.service';
 import { StaffServiceCatalogService } from '../../src/lib/services/staff-service-catalog.service';
@@ -37,6 +39,10 @@ describe('Salon owner settings routes', () => {
     createProduct: jest.fn(),
     createStockMovement: jest.fn(),
   };
+  const dashboard = {
+    getOwnerDashboard: jest.fn(),
+    listDashboardAlerts: jest.fn(),
+  };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -49,6 +55,7 @@ describe('Salon owner settings routes', () => {
         AppointmentSchedulingController,
         PosController,
         InventoryController,
+        DashboardController,
       ],
       providers: [
         { provide: SalonOwnerSettingsService, useValue: service },
@@ -56,6 +63,7 @@ describe('Salon owner settings routes', () => {
         { provide: CustomerCrmService, useValue: customers },
         { provide: AppointmentSchedulingService, useValue: appointments },
         { provide: PosInventoryService, useValue: posInventory },
+        { provide: DashboardQueryService, useValue: dashboard },
       ],
     }).compile();
 
@@ -236,5 +244,22 @@ describe('Salon owner settings routes', () => {
       { user: expect.objectContaining({ tenantId: 'tenant-1' }) },
       expect.objectContaining({ productId: '00000000-0000-4000-8000-000000000002' }),
     );
+  });
+
+  it('routes dashboard queries to the query service', async () => {
+    dashboard.getOwnerDashboard.mockResolvedValue({ branchId: 'branch-1' });
+    dashboard.listDashboardAlerts.mockResolvedValue({ items: [], page: { limit: 0, nextCursor: null, hasMore: false } });
+
+    await request(app.getHttpServer())
+      .get('/partner/dashboard/owner?branchId=branch-1&date=2026-05-26')
+      .expect(200);
+    await request(app.getHttpServer()).get('/partner/dashboard/alerts?branchId=branch-1').expect(200);
+
+    expect(dashboard.getOwnerDashboard).toHaveBeenCalledWith(
+      { user: expect.objectContaining({ tenantId: 'tenant-1' }) },
+      'branch-1',
+      '2026-05-26',
+    );
+    expect(dashboard.listDashboardAlerts).toHaveBeenCalledWith({ user: expect.objectContaining({ tenantId: 'tenant-1' }) }, 'branch-1');
   });
 });
