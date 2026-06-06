@@ -1,0 +1,226 @@
+<section class="customer-shell">
+  <header class="customer-shell__header">
+    <div>
+      <p class="customer-shell__eyebrow">Customer app</p>
+      <h1>Appointments, rewards, and receipts</h1>
+    </div>
+    <nav class="customer-shell__nav" aria-label="Customer app views">
+      <a mat-button routerLink="/dashboard">Dashboard</a>
+      <a mat-button routerLink="/book">Book</a>
+      <a mat-button routerLink="/appointments">Appointments</a>
+      <a mat-button routerLink="/rewards">Rewards</a>
+      <a mat-button routerLink="/receipts">Receipts</a>
+      <a mat-button routerLink="/reviews">Reviews</a>
+    </nav>
+  </header>
+
+  <mat-progress-spinner *ngIf="loading" mode="indeterminate" diameter="36" aria-label="Loading customer app"></mat-progress-spinner>
+
+  <mat-card *ngIf="error && !loading" class="customer-shell__error" appearance="outlined">
+    <mat-card-content>{{ error }}</mat-card-content>
+    <mat-card-actions>
+      <button mat-button type="button" (click)="loadCustomerApp()">Retry</button>
+    </mat-card-actions>
+  </mat-card>
+
+  <ng-container *ngIf="!loading && !error">
+    <section *ngIf="visible('dashboard')" class="customer-grid">
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Next appointment</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <ng-container *ngIf="dashboard?.upcomingAppointment as appointment; else noUpcomingAppointment">
+            <h2>{{ appointment.salon.name }}</h2>
+            <p>{{ formatDateTime(appointment.startAt) }}</p>
+            <p>{{ primaryServiceName(appointment) }} at {{ appointment.branch.name }}</p>
+            <mat-chip-set aria-label="Appointment status">
+              <mat-chip>{{ appointment.status }}</mat-chip>
+            </mat-chip-set>
+          </ng-container>
+          <ng-template #noUpcomingAppointment>
+            <p>No upcoming appointment is scheduled.</p>
+          </ng-template>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Rewards</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="customer-shell__metric">{{ dashboard?.rewardSummary?.pointsBalance || 0 }}</p>
+          <p>{{ dashboard?.rewardSummary?.tier || 'standard' }} tier</p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Recommended salons</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngFor="let salon of dashboard?.recommendedSalons || []" class="customer-row">
+            <span>{{ salon.name }}</span>
+            <button
+              mat-icon-button
+              type="button"
+              [attr.aria-label]="isFavorite(salon) ? 'Remove favorite' : 'Add favorite'"
+              (click)="toggleFavorite(salon)"
+            >
+              <mat-icon>{{ isFavorite(salon) ? 'favorite' : 'favorite_border' }}</mat-icon>
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <section *ngIf="visible('book')" class="customer-panel">
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Book a visit</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <form [formGroup]="bookingForm" class="customer-form" (ngSubmit)="createBooking()">
+            <div class="customer-form__grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Salon</mat-label>
+                <input matInput formControlName="businessId" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Branch</mat-label>
+                <mat-select formControlName="branchId">
+                  <mat-option *ngFor="let branch of bookingContext?.branches || []" [value]="branch.branchId">{{ branch.name }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Services</mat-label>
+                <mat-select formControlName="serviceIds" multiple>
+                  <mat-option *ngFor="let service of bookingContext?.services || []" [value]="service.serviceId">
+                    {{ service.name }} · {{ service.price | currency: bookingContext?.branches?.[0]?.currency || 'USD' }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Staff</mat-label>
+                <mat-select formControlName="staffId">
+                  <mat-option value="">Any available staff</mat-option>
+                  <mat-option *ngFor="let staff of bookingContext?.staffOptions || []" [value]="staff.staffId">{{
+                    staff.displayName
+                  }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Start time</mat-label>
+                <input matInput type="datetime-local" formControlName="startAt" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Notes</mat-label>
+                <textarea matInput rows="3" formControlName="notes"></textarea>
+              </mat-form-field>
+            </div>
+            <button mat-flat-button color="primary" type="submit" [disabled]="actionLoading">Create booking</button>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <section *ngIf="visible('appointments')" class="customer-panel">
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Appointments</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngIf="!appointments.length" class="customer-empty">No appointments yet.</div>
+          <div *ngFor="let appointment of appointments" class="customer-list-item">
+            <div>
+              <h2>{{ appointment.salon.name }}</h2>
+              <p>{{ formatDateTime(appointment.startAt) }} · {{ appointment.branch.name }}</p>
+              <p>{{ primaryServiceName(appointment) }}</p>
+            </div>
+            <div class="customer-list-item__actions">
+              <mat-chip>{{ appointment.status }}</mat-chip>
+              <button
+                mat-button
+                type="button"
+                [disabled]="!appointment.actions.includes('cancel') || actionLoading"
+                (click)="cancelAppointment(appointment)"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <section *ngIf="visible('rewards')" class="customer-grid">
+      <mat-card *ngFor="let reward of rewards" appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>{{ reward.tier }} tier</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="customer-shell__metric">{{ reward.pointsBalance }}</p>
+          <mat-chip-set aria-label="Reward benefits">
+            <mat-chip *ngFor="let benefit of reward.availableBenefits">{{ benefit }}</mat-chip>
+            <mat-chip *ngIf="!reward.availableBenefits.length">No active benefits</mat-chip>
+          </mat-chip-set>
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <section *ngIf="visible('receipts')" class="customer-panel">
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Receipts</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngIf="!receipts.length" class="customer-empty">No receipts yet.</div>
+          <div *ngFor="let receipt of receipts" class="customer-list-item">
+            <div>
+              <h2>{{ receipt.businessName }}</h2>
+              <p>{{ receipt.invoiceNumber }} · {{ receipt.issuedAt | date: 'mediumDate' }}</p>
+            </div>
+            <div>
+              <strong>{{ receipt.total | currency: receipt.currency }}</strong>
+              <p>Due {{ receipt.due | currency: receipt.currency }}</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <section *ngIf="visible('reviews')" class="customer-panel">
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Submit a review</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <form [formGroup]="reviewForm" class="customer-form" (ngSubmit)="submitReview()">
+            <mat-form-field appearance="outline">
+              <mat-label>Appointment</mat-label>
+              <mat-select formControlName="appointmentId">
+                <mat-option *ngFor="let appointment of appointments" [value]="appointment.appointmentId">
+                  {{ appointment.salon.name }} · {{ formatDateTime(appointment.startAt) }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Rating</mat-label>
+              <input matInput type="number" min="1" max="5" formControlName="rating" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Comment</mat-label>
+              <textarea matInput rows="4" formControlName="comment"></textarea>
+            </mat-form-field>
+            <button mat-flat-button color="primary" type="submit" [disabled]="actionLoading">Submit review</button>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </section>
+  </ng-container>
+</section>

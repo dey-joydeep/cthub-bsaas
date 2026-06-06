@@ -35,7 +35,11 @@
           "libs/web/customer/src/index.ts",
           "libs/web/customer/src/lib/features/auth/**/*.ts",
           "libs/web/customer/src/lib/features/auth/**/*.html",
-          "libs/web/customer/src/lib/features/auth/**/*.scss"
+          "libs/web/customer/src/lib/features/auth/**/*.scss",
+          "libs/web/customer/src/lib/customer.routes.ts",
+          "libs/web/customer/src/lib/features/customer-app/**/*.ts",
+          "libs/web/customer/src/lib/features/customer-app/**/*.html",
+          "libs/web/customer/src/lib/features/customer-app/**/*.scss"
         ]
       }
     },
