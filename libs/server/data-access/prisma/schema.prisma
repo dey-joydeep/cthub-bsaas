@@ -323,6 +323,7 @@ model SalonOwnerAppointment {
   cancellationReason   String?                     @map("cancellation_reason")
   lines                SalonOwnerAppointmentLine[]
   invoices             SalonOwnerInvoice[]
+  customerReviews      CustomerReview[]
   createdAt            DateTime                    @default(now()) @map("created_at")
   updatedAt            DateTime                    @updatedAt @map("updated_at")
 
@@ -376,6 +377,40 @@ model SalonOwnerInvoice {
   @@index([customerId])
   @@index([appointmentId])
   @@map("salon_owner_invoice")
+}
+
+model CustomerFavorite {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetType String   @map("target_type")
+  targetId   String   @map("target_id") @db.Uuid
+  label      String?
+  imageUrl   String?  @map("image_url")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, targetType, targetId])
+  @@index([userId, targetType])
+  @@map("customer_favorite")
+}
+
+model CustomerReview {
+  id            String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String                @map("user_id") @db.Uuid
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointmentId String                @map("appointment_id") @db.Uuid
+  appointment   SalonOwnerAppointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  rating        Int                   @db.SmallInt
+  comment       String?               @db.Text
+  status        ReviewStatus          @default(PENDING)
+  createdAt     DateTime              @default(now()) @map("created_at")
+  updatedAt     DateTime              @updatedAt @map("updated_at")
+
+  @@unique([userId, appointmentId])
+  @@index([appointmentId])
+  @@index([status])
+  @@map("customer_review")
 }
 
 model SalonOwnerInvoiceLine {
@@ -535,6 +570,8 @@ model User {
   refreshTokens     RefreshToken[]
   recoveryCodes     RecoveryCode[]
   passwordResets    PasswordReset[]
+  customerFavorites CustomerFavorite[]
+  customerReviews   CustomerReview[]
 
   @@map("user")
 }
