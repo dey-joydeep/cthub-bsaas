@@ -17,9 +17,9 @@
         {{ getSalonProperty(salon, 'address') }}
         <span *ngIf="getSalonProperty(salon, 'city')">, {{ getSalonProperty(salon, 'city') }}</span>
       </div>
-      <div *ngIf="getSalonProperty(salon, 'services')?.length">Services: {{ getSalonProperty(salon, 'services').join(', ') }}</div>
+      <div *ngIf="salon.services.length">Services: {{ serviceNames(salon) }}</div>
       <div class="salon-actions">
-        <a [routerLink]="['/salon', salon.id]" class="profile-link">View Profile</a>
+        <a [routerLink]="['/salons', salon.id]" class="profile-link">View Profile</a>
         <button type="button" *ngIf="getMapUrl(salon)" (click)="openMap(salon)">Open Map</button>
       </div>
     </div>

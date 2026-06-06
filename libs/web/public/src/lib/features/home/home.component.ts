@@ -120,6 +120,7 @@ export class HomeComponent implements OnInit {
 
     this.homeService.getHomePageData().subscribe({
       next: (data: IHomePageData) => {
+        this.homeData = data;
         this.featuredSalons = data.featuredSalons || [];
         this.newSalons = data.newSalons || [];
         this.featuredServices = data.featuredServices || [];
@@ -136,14 +137,6 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  private mapToSalon(salonDto: ISalonDto): ISalonDto {
-    return {
-      ...salonDto,
-      averageRating: salonDto.averageRating ?? salonDto.rating ?? 0, // Fallback to rating if averageRating is not available
-      services: salonDto.services || [],
-    };
-  }
-
   /**
    * Handles search form submission
    */
@@ -155,34 +148,10 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  /**
-   * Gets the primary CTA route based on authentication status
-   */
-  getPrimaryCtaRoute(): string {
-      return this.isAuthenticated ? ['/appointments'] : ['/us/salons'];
-  }
-
-  /**
-   * Gets the primary CTA text based on authentication status
-   */
-  getPrimaryCtaText(): string {
-    return this.isAuthenticated ? 'My Appointments' : 'Find a Salon';
-  }
-
-  /**
-   * Shows an error message using MatSnackBar
-   */
-  private showError(message: string): void {
-    this.snackBar.open(message, 'Dismiss', {
-      duration: 5000,
-      panelClass: ['error-snackbar'],
-    });
-  }
-
   // Star rating functionality is handled by getRatingStars method
 
   navigateToSalon(salonSlug: string): void {
-    this.router.navigate(['/us', salonSlug]);
+    this.router.navigate(['/salons', salonSlug]);
   }
 
   navigateToService(serviceSlug: string): void {
