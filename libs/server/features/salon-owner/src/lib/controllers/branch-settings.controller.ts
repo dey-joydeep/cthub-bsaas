@@ -7,7 +7,7 @@ import { BranchHolidayInputDto, BranchPolicyInputDto, BranchProfileInputDto, Wee
 import { SalonOwnerSettingsService } from '../services/salon-owner-settings.service';
 
 @ApiTags('Business Settings')
-@Roles(UserRole.OWNER, UserRole.ADMIN)
+@Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF)
 @UseInterceptors(ResponseEnvelopeInterceptor)
 @Controller('partner/branches')
 export class BranchSettingsController {

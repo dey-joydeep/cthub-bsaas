@@ -86,12 +86,14 @@ export interface Config {
   log: LogConfig;
 }
 
+const env = process.env;
+
 export const configuration = registerAs('config', () => ({
   app: {
-    port: parseInt(process.env.PORT || '3000', 10),
-    nodeEnv: process.env.NODE_ENV || 'development',
-    bodyLimitJson: process.env.API_BODY_LIMIT_JSON || '10mb',
-    bodyLimitUrlEncoded: process.env.API_BODY_LIMIT_URLENCODED || '10mb',
+    port: parseInt(env['PORT'] || '3000', 10),
+    nodeEnv: env['NODE_ENV'] || 'development',
+    bodyLimitJson: env['API_BODY_LIMIT_JSON'] || '10mb',
+    bodyLimitUrlEncoded: env['API_BODY_LIMIT_URLENCODED'] || '10mb',
     get isProduction() {
       return this.nodeEnv === 'production';
     },
@@ -103,22 +105,22 @@ export const configuration = registerAs('config', () => ({
     },
   },
   database: {
-    url: process.env.DATABASE_URL || '',
+    url: env['DATABASE_URL'] || '',
   },
   auth: {
-    jwtAccessSecret: process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET || 'test-access-secret',
-    jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET || 'test-refresh-secret',
-    jwtEmailChangeSecret: process.env.JWT_EMAIL_CHANGE_SECRET || process.env.JWT_SECRET || 'test-email-change-secret',
+    jwtAccessSecret: env['JWT_ACCESS_SECRET'] || env['JWT_SECRET'] || 'test-access-secret',
+    jwtRefreshSecret: env['JWT_REFRESH_SECRET'] || env['JWT_SECRET'] || 'test-refresh-secret',
+    jwtEmailChangeSecret: env['JWT_EMAIL_CHANGE_SECRET'] || env['JWT_SECRET'] || 'test-email-change-secret',
     jwtVerifyEmailSecret:
-      process.env.JWT_VERIFY_EMAIL_SECRET || process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET || 'test-verify-email-secret',
-    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1h',
+      env['JWT_VERIFY_EMAIL_SECRET'] || env['JWT_ACCESS_SECRET'] || env['JWT_SECRET'] || 'test-verify-email-secret',
+    jwtExpiresIn: env['JWT_EXPIRES_IN'] || '1h',
     // Separate TTLs for refresh token cookie/JWT
-    refreshTokenExpiresInDefault: process.env.REFRESH_TOKEN_EXPIRES_IN_DEFAULT || '7d',
-    refreshTokenExpiresInCustomer: process.env.REFRESH_TOKEN_EXPIRES_IN_CUSTOMER || '180d',
-    cookieDomain: process.env.AUTH_COOKIE_DOMAIN,
+    refreshTokenExpiresInDefault: env['REFRESH_TOKEN_EXPIRES_IN_DEFAULT'] || '7d',
+    refreshTokenExpiresInCustomer: env['REFRESH_TOKEN_EXPIRES_IN_CUSTOMER'] || '180d',
+    cookieDomain: env['AUTH_COOKIE_DOMAIN'],
   },
   cors: {
-    origins: process.env.CORS_ORIGINS?.split(',').map((origin) => origin.trim()) || [],
+    origins: env['CORS_ORIGINS']?.split(',').map((origin) => origin.trim()) || [],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'X-XSRF-TOKEN', 'X-Request-Id'],
     exposedHeaders: ['X-Request-Id'],
@@ -126,37 +128,37 @@ export const configuration = registerAs('config', () => ({
     maxAge: 600,
   },
   file: {
-    uploadDir: process.env.UPLOAD_DIR || 'uploads',
+    uploadDir: env['UPLOAD_DIR'] || 'uploads',
     maxFileSize: 10 * 1024 * 1024, // 10MB
     allowedFileTypes: ['image/jpeg', 'image/png', 'image/webp'],
   },
   rateLimit: {
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 minutes
-    max: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
+    windowMs: parseInt(env['RATE_LIMIT_WINDOW_MS'] || '900000', 10), // 15 minutes
+    max: parseInt(env['RATE_LIMIT_MAX'] || '100', 10),
   },
   email: {
-    host: process.env.EMAIL_HOST || 'smtp.example.com',
-    port: parseInt(process.env.EMAIL_PORT || '587', 10),
-    secure: process.env.EMAIL_SECURE === 'true',
-    user: process.env.EMAIL_USER || '',
-    password: process.env.EMAIL_PASS || '',
-    from: process.env.EMAIL_FROM || '',
+    host: env['EMAIL_HOST'] || 'smtp.example.com',
+    port: parseInt(env['EMAIL_PORT'] || '587', 10),
+    secure: env['EMAIL_SECURE'] === 'true',
+    user: env['EMAIL_USER'] || '',
+    password: env['EMAIL_PASS'] || '',
+    from: env['EMAIL_FROM'] || '',
   },
   encryption: {
     key:
-      process.env.ENCRYPTION_KEY ||
-      process.env.ENCRYPTION_TEST_KEY ||
-      (process.env.NODE_ENV === 'test' ? '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef' : ''),
+      env['ENCRYPTION_KEY'] ||
+      env['ENCRYPTION_TEST_KEY'] ||
+      (env['NODE_ENV'] === 'test' ? '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef' : ''),
   },
   log: {
-    dir: process.env.LOG_DIR || 'logs',
+    dir: env['LOG_DIR'] || 'logs',
     app: {
-      file: process.env.LOG_APP_FILE || 'app.log',
-      level: process.env.LOG_APP_LEVEL || process.env.LOG_LEVEL || 'info',
+      file: env['LOG_APP_FILE'] || 'app.log',
+      level: env['LOG_APP_LEVEL'] || env['LOG_LEVEL'] || 'info',
     },
     access: {
-      file: process.env.LOG_ACCESS_FILE || 'access.log',
-      level: process.env.LOG_ACCESS_LEVEL || process.env.LOG_LEVEL || 'info',
+      file: env['LOG_ACCESS_FILE'] || 'access.log',
+      level: env['LOG_ACCESS_LEVEL'] || env['LOG_LEVEL'] || 'info',
     },
   },
 }));

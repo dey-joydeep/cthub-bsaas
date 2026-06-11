@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, UseInterceptors } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, ResponseEnvelopeInterceptor, Roles } from '@cthub-bsaas/server-core';
-import { UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
+import { COMMON_MESSAGE_KEYS, UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
 
 import { SalonBusinessInputDto } from '../dto/salon-business.dto';
 import { SalonOwnerSettingsService } from '../services/salon-owner-settings.service';
@@ -21,7 +21,15 @@ export class BusinessSettingsController {
 
   @Post()
   @ApiOperation({ operationId: 'createSalonBusiness' })
-  createBusiness(@CurrentUser() user: AuthenticatedUser, @Body() body: SalonBusinessInputDto) {
+  createBusiness(
+    @CurrentUser() user: AuthenticatedUser,
+    @Headers('Idempotency-Key') idempotencyKey: string | undefined,
+    @Body() body: SalonBusinessInputDto,
+  ) {
+    if (!idempotencyKey?.trim()) {
+      throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION);
+    }
+
     return this.settings.createBusiness({ user }, body);
   }
 

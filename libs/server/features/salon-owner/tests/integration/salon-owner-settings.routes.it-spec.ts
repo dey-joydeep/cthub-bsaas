@@ -47,6 +47,38 @@ describe('Salon owner settings routes', () => {
     expect(service.createBusiness).not.toHaveBeenCalled();
   });
 
+  it('requires an idempotency key for create business requests', async () => {
+    await request(app.getHttpServer())
+      .post('/partner/businesses')
+      .send({ displayName: 'Salon One', legalName: 'Salon One Legal', status: 'ACTIVE' })
+      .expect(400);
+
+    expect(service.createBusiness).not.toHaveBeenCalled();
+  });
+
+  it('accepts create business requests when the idempotency key is present', async () => {
+    service.createBusiness.mockResolvedValue({
+      id: 'business-1',
+      tenantId: 'tenant-1',
+      displayName: 'Salon One',
+      legalName: 'Salon One Legal',
+      status: 'ACTIVE',
+      createdAt: '2026-05-26T00:00:00.000Z',
+      updatedAt: '2026-05-26T00:00:00.000Z',
+    });
+
+    await request(app.getHttpServer())
+      .post('/partner/businesses')
+      .set('Idempotency-Key', 'key-1')
+      .send({ displayName: 'Salon One', legalName: 'Salon One Legal', status: 'ACTIVE' })
+      .expect(201);
+
+    expect(service.createBusiness).toHaveBeenCalledWith(
+      { user: expect.objectContaining({ tenantId: 'tenant-1' }) },
+      expect.objectContaining({ displayName: 'Salon One' }),
+    );
+  });
+
   it('routes valid branch hours requests to the feature service', async () => {
     service.replaceBranchHours.mockResolvedValue({ branchId, timezone: 'Asia/Tokyo', days: [] });
 

@@ -60,7 +60,7 @@ const structuredConfigSchema = Joi.object<Config, true>({
   imports: [
     NestConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env', `.env.${process.env.NODE_ENV || 'development'}`],
+      envFilePath: ['.env', `.env.${process.env['NODE_ENV'] || 'development'}`],
       load: [configuration],
       validationSchema: rawEnvSchema, // Use the simple schema for raw env vars
       validationOptions: {
@@ -68,7 +68,8 @@ const structuredConfigSchema = Joi.object<Config, true>({
       },
       // After loading and parsing, validate the final structured object
       validate: (config) => {
-        const { error } = structuredConfigSchema.validate(config.config, {
+        const configRecord = config as Record<string, unknown>;
+        const { error } = structuredConfigSchema.validate(configRecord['config'], {
           abortEarly: false,
         });
         if (error) {

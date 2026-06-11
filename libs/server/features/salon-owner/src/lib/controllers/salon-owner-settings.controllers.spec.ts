@@ -32,7 +32,7 @@ function serviceMock() {
 describe('Salon owner settings controllers', () => {
   it('restricts settings controllers to owner and admin roles', () => {
     expect(Reflect.getMetadata(ROLES_KEY, BusinessSettingsController)).toEqual([UserRole.OWNER, UserRole.ADMIN]);
-    expect(Reflect.getMetadata(ROLES_KEY, BranchSettingsController)).toEqual([UserRole.OWNER, UserRole.ADMIN]);
+    expect(Reflect.getMetadata(ROLES_KEY, BranchSettingsController)).toEqual([UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF]);
   });
 
   it('wraps settings controller responses in the API envelope', () => {
@@ -46,7 +46,7 @@ describe('Salon owner settings controllers', () => {
     const body = { displayName: 'Salon One', legalName: 'Salon One Legal', status: 'ACTIVE' as const };
 
     await controller.listBusinesses(user);
-    await controller.createBusiness(user, body);
+    await controller.createBusiness(user, 'key-1', body);
     await controller.getBusiness(user, 'business-1');
     await controller.updateBusiness(user, 'business-1', body);
 

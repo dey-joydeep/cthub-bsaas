@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 
-import { BranchProfileInputDto } from './branch-settings.dto';
+import { BranchPolicyInputDto, BranchProfileInputDto } from './branch-settings.dto';
 
 const validBranchProfile = {
   businessId: '11111111-1111-4111-8111-111111111111',
@@ -36,5 +36,19 @@ describe('BranchProfileInputDto', () => {
     const dto = plainToInstance(BranchProfileInputDto, validBranchProfile);
 
     await expect(validate(dto)).resolves.toEqual([]);
+  });
+});
+
+describe('BranchPolicyInputDto', () => {
+  it('rejects minute values above PostgreSQL integer range', async () => {
+    const dto = plainToInstance(BranchPolicyInputDto, {
+      bookingLeadMinutes: 2147483648,
+      cancellationCutoffMinutes: 30,
+      noShowGraceMinutes: 15,
+    });
+
+    const errors = await validate(dto);
+
+    expect(errors.map((error) => error.property)).toContain('bookingLeadMinutes');
   });
 });

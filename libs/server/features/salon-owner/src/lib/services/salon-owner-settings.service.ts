@@ -1,6 +1,6 @@
 import { ConflictException, ForbiddenException, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { Prisma, SalonOwnerStatus as PrismaSalonOwnerStatus } from '@prisma/client';
-import { COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
+import { COMMON_MESSAGE_KEYS, UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
 import { PrismaService } from '@cthub-bsaas/server-data-access';
 
 import { BranchHolidayInputDto, BranchPolicyInputDto, BranchProfileInputDto, WeeklyHoursInputDto } from '../dto/branch-settings.dto';
@@ -20,9 +20,16 @@ import {
 
 const duplicateBusinessMessage = 'error.business.profile.duplicate';
 const duplicateBranchMessage = 'error.branch.profile.name.duplicate';
+const businessStatusConflictMessage = 'error.business.profile.status_conflict';
+const inactiveBusinessMessage = 'error.branch.profile.business_inactive';
 const validationMessage = COMMON_MESSAGE_KEYS.ERROR.VALIDATION;
 const forbiddenMessage = COMMON_MESSAGE_KEYS.ERROR.FORBIDDEN_SCOPE;
 const notFoundMessage = COMMON_MESSAGE_KEYS.ERROR.NOT_FOUND;
+const supportedCurrencyCodes = new Set(
+  ((Intl as typeof Intl & { supportedValuesOf?: (key: string) => string[] }).supportedValuesOf?.('currency') ?? []).map((code) =>
+    code.toUpperCase(),
+  ),
+);
 
 type BranchRecord = Awaited<ReturnType<PrismaService['salonBranch']['findFirstOrThrow']>>;
 type BusinessRecord = Awaited<ReturnType<PrismaService['salonBusiness']['findFirstOrThrow']>>;
@@ -42,6 +49,11 @@ function optionalTrim(value?: string): string | undefined {
   return trimmed && trimmed.length > 0 ? trimmed : undefined;
 }
 
+function optionalTrimOrNull(value?: string): string | null {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : null;
+}
+
 function toIso(value: Date): string {
   return value.toISOString();
 }
@@ -55,9 +67,40 @@ function assertTimezone(value: string): void {
 }
 
 function assertCurrency(value: string): void {
-  if (!/^[A-Z]{3}$/.test(value)) {
+  if (!/^[A-Z]{3}$/.test(value) || (supportedCurrencyCodes.size > 0 && !supportedCurrencyCodes.has(value))) {
     throw new UnprocessableEntityException(validationMessage);
   }
+}
+
+function hasRole(user: AuthenticatedUser, role: string): boolean {
+  return user.roles.some((entry) => {
+    const roleName =
+      typeof entry === 'string' ? entry : typeof entry?.name === 'string' ? String(entry.name) : undefined;
+    return roleName === role;
+  });
+}
+
+function readStringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value
+        .filter((entry): entry is string => typeof entry === 'string')
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length > 0)
+    : [];
+}
+
+function readManagedTenantIds(user: AuthenticatedUser): string[] {
+  const direct = readStringArray(user['managedTenants']);
+  if (direct.length > 0) {
+    return direct;
+  }
+
+  const saasOwner = user['saasOwner'];
+  if (!saasOwner || typeof saasOwner !== 'object' || Array.isArray(saasOwner)) {
+    return [];
+  }
+
+  return readStringArray((saasOwner as Record<string, unknown>)['managedTenants']);
 }
 
 function parseMinutes(value: string): number {
@@ -196,9 +239,9 @@ export class SalonOwnerSettingsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async listBusinesses(context: SalonOwnerRequestContext): Promise<PagedResult<SalonBusinessModel>> {
-    const tenantId = this.requireTenantId(context);
+    const tenantIds = this.requireTenantIds(context);
     const businesses = await this.prisma.salonBusiness.findMany({
-      where: { tenantId },
+      where: { tenantId: this.tenantScopeFilter(tenantIds) },
       orderBy: { createdAt: 'asc' },
     });
 
@@ -231,7 +274,20 @@ export class SalonOwnerSettingsService {
   }
 
   async updateBusiness(context: SalonOwnerRequestContext, businessId: string, input: SalonBusinessInputDto): Promise<SalonBusinessModel> {
-    await this.findBusinessInScope(context, businessId);
+    const current = await this.findBusinessInScope(context, businessId);
+
+    if (current.status !== PrismaSalonOwnerStatus.INACTIVE && input.status === 'INACTIVE') {
+      const activeBranchCount = await this.prisma.salonBranch.count({
+        where: {
+          businessId,
+          status: PrismaSalonOwnerStatus.ACTIVE,
+        },
+      });
+
+      if (activeBranchCount > 0) {
+        throw new ConflictException(businessStatusConflictMessage);
+      }
+    }
 
     try {
       const business = await this.prisma.salonBusiness.update({
@@ -252,7 +308,7 @@ export class SalonOwnerSettingsService {
   }
 
   async listBranches(context: SalonOwnerRequestContext, businessId?: string): Promise<PagedResult<BranchProfileModel>> {
-    const tenantId = this.requireTenantId(context);
+    const tenantIds = this.requireTenantIds(context);
     if (businessId) {
       await this.findBusinessInScope(context, businessId);
     }
@@ -260,7 +316,7 @@ export class SalonOwnerSettingsService {
     const branches = await this.prisma.salonBranch.findMany({
       where: {
         ...(businessId ? { businessId } : {}),
-        business: { tenantId },
+        business: { tenantId: this.tenantScopeFilter(tenantIds) },
       },
       orderBy: { createdAt: 'asc' },
     });
@@ -270,6 +326,10 @@ export class SalonOwnerSettingsService {
 
   async createBranch(context: SalonOwnerRequestContext, input: BranchProfileInputDto): Promise<BranchProfileModel> {
     const business = await this.findBusinessInScope(context, input.businessId);
+    if (business.status === PrismaSalonOwnerStatus.INACTIVE) {
+      throw new ConflictException(inactiveBusinessMessage);
+    }
+
     const data = this.normalizeBranchInput(input, business.id);
 
     try {
@@ -350,12 +410,12 @@ export class SalonOwnerSettingsService {
         branchId,
         date: holidayDate,
         closed: input.closed,
-        reason: optionalTrim(input.reason),
+        reason: optionalTrimOrNull(input.reason),
         intervals: toJsonArray(intervals),
       },
       update: {
         closed: input.closed,
-        reason: optionalTrim(input.reason),
+        reason: optionalTrimOrNull(input.reason),
         intervals: toJsonArray(intervals),
       },
     });
@@ -384,19 +444,40 @@ export class SalonOwnerSettingsService {
     return this.mapPolicy(policy);
   }
 
+  private requireTenantIds(context: SalonOwnerRequestContext): string[] {
+    if (typeof context.user.tenantId === 'string' && context.user.tenantId.trim().length > 0) {
+      return [context.user.tenantId];
+    }
+
+    if (hasRole(context.user, UserRole.ADMIN)) {
+      const managedTenantIds = readManagedTenantIds(context.user);
+      if (managedTenantIds.length > 0) {
+        return [...new Set(managedTenantIds)];
+      }
+    }
+
+    throw new ForbiddenException(forbiddenMessage);
+  }
+
   private requireTenantId(context: SalonOwnerRequestContext): string {
-    if (!context.user.tenantId) {
+    const tenantIds = this.requireTenantIds(context);
+    if (tenantIds.length !== 1) {
       throw new ForbiddenException(forbiddenMessage);
     }
-    return context.user.tenantId;
+
+    return tenantIds[0];
+  }
+
+  private tenantScopeFilter(tenantIds: readonly string[]): string | { in: string[] } {
+    return tenantIds.length === 1 ? tenantIds[0] : { in: [...tenantIds] };
   }
 
   private async findBusinessInScope(context: SalonOwnerRequestContext, businessId: string): Promise<BusinessRecord> {
-    const tenantId = this.requireTenantId(context);
+    const tenantIds = this.requireTenantIds(context);
     const business = await this.prisma.salonBusiness.findFirst({
       where: {
         id: businessId,
-        tenantId,
+        tenantId: this.tenantScopeFilter(tenantIds),
       },
     });
 
@@ -408,11 +489,11 @@ export class SalonOwnerSettingsService {
   }
 
   private async findBranchInScope(context: SalonOwnerRequestContext, branchId: string): Promise<BranchRecord> {
-    const tenantId = this.requireTenantId(context);
+    const tenantIds = this.requireTenantIds(context);
     const branch = await this.prisma.salonBranch.findFirst({
       where: {
         id: branchId,
-        business: { tenantId },
+        business: { tenantId: this.tenantScopeFilter(tenantIds) },
       },
     });
 
@@ -431,8 +512,8 @@ export class SalonOwnerSettingsService {
     return {
       businessId,
       name: trimRequired(input.name, 2),
-      phone: optionalTrim(input.phone),
-      email: optionalTrim(input.email),
+      phone: optionalTrimOrNull(input.phone),
+      email: optionalTrimOrNull(input.email),
       timezone: input.timezone,
       currency,
       status: input.status as PrismaSalonOwnerStatus,
@@ -508,7 +589,7 @@ export class SalonOwnerSettingsService {
     return {
       items,
       page: {
-        limit: items.length,
+        limit: Math.max(items.length, 1),
         nextCursor: null,
         hasMore: false,
       },

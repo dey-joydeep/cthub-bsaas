@@ -141,13 +141,16 @@ export class BranchHolidayInputDto {
 export class BranchPolicyInputDto {
   @IsInt()
   @Min(0)
+  @Max(2147483647)
   bookingLeadMinutes!: number;
 
   @IsInt()
   @Min(0)
+  @Max(2147483647)
   cancellationCutoffMinutes!: number;
 
   @IsInt()
   @Min(0)
+  @Max(2147483647)
   noShowGraceMinutes!: number;
 }

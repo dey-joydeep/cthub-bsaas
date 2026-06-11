@@ -70,19 +70,19 @@ export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'que
    * Helper method to handle database operations with error handling
    */
   // Overload for array of Prisma promises
-  async $transaction<P extends PrismaPromise<unknown>[]>(
+  override async $transaction<P extends PrismaPromise<unknown>[]>(
     arg: [...P],
     options?: { isolationLevel?: Prisma.TransactionIsolationLevel },
   ): Promise<UnwrapTuple<P>>;
 
   // Overload for transaction callback
-  async $transaction<P>(
+  override async $transaction<P>(
     fn: (prisma: Omit<PrismaClient, '$transaction' | '$on' | '$connect' | '$disconnect' | '$use' | '$extends'>) => Promise<P>,
     options?: { maxWait?: number; timeout?: number },
   ): Promise<P>;
 
   // Implementation
-  async $transaction(
+  override async $transaction(
     arg: unknown,
     options?: {
       maxWait?: number;
