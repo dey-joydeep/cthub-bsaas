@@ -5,11 +5,17 @@
 
 ## Branch Profile Form
 
+Current implementation baseline:
+
+- Settings API access is limited to `Owner` and `Platform Admin support`.
+- Delegated Branch Manager settings flows are not enabled in this slice.
+- Branch profile currency is validated as a supported ISO 4217 code; invoice-history locking is not enforced in this slice.
+
 | Property    | Value                                              |
 | ----------- | -------------------------------------------------- |
 | Screen ID   | `settings.branches.profile`                        |
 | Form ID     | `branch.profile.upsert`                            |
-| Actors      | Owner, Branch Manager, Platform Admin support      |
+| Actors      | Owner, Platform Admin support                      |
 | Context     | `tenantId`, `salonBusinessId`; `branchId` for edit |
 | Operations  | `createBranch`, `updateBranch`                     |
 | Idempotency | Required for create                                |
@@ -21,12 +27,8 @@
 | `phone`      | tel input               | current/empty    | actor can manage branch profile                      | max 30 chars              | max 30 chars                                             | `error.branch.profile.phone.invalid`     |
 | `email`      | email input             | current/empty    | actor can manage branch profile                      | email format when present | email format when present                                | `error.branch.profile.email.invalid`     |
 | `timezone`   | timezone select         | business default | create; edit allowed before bookings or with warning | required valid timezone   | valid timezone; affects future business-day logic        | `error.branch.profile.timezone.invalid`  |
-| `currency`   | select                  | `INR`            | create only after first invoice                      | required 3-letter code    | immutable after finalized invoice unless admin migration | `error.branch.profile.currency.invalid`  |
+| `currency`   | select                  | `INR`            | actor can manage branch profile                      | required 3-letter code    | required supported ISO 4217 code                         | `error.branch.profile.currency.invalid`  |
 | `address`    | address group           | current/empty    | actor can manage branch profile                      | required address fields   | required address fields                                  | `error.branch.profile.address.invalid`   |
-
-Conflict behavior:
-
-- Currency change after finalized invoice returns `409` with `error.branch.profile.currency_locked`.
 
 ## Weekly Hours Form
 
@@ -34,7 +36,7 @@ Conflict behavior:
 | --------- | ----------------------------------------- |
 | Screen ID | `settings.branches.hours`                 |
 | Form ID   | `branch.hours.replace`                    |
-| Actors    | Owner, Branch Manager                     |
+| Actors    | Owner, Platform Admin support            |
 | Context   | `tenantId`, `salonBusinessId`, `branchId` |
 | Operation | `replaceBranchHours`                      |
 
@@ -51,9 +53,9 @@ Cross-field rules:
 - Open days must have at least one interval.
 - Existing appointments are not changed by hours update.
 
-Conflict behavior:
+Current implementation note:
 
-- Hours update that would make existing appointments outside hours saves only with explicit warning acknowledgement and audit.
+- Hours update replaces stored hours without branch-scoped appointment conflict detection in this slice.
 
 ## Holiday/Special Day Form
 
@@ -61,7 +63,7 @@ Conflict behavior:
 | --------- | ------------------------------------------------- |
 | Screen ID | `settings.branches.holidays`                      |
 | Form ID   | `branch.holiday.upsert`                           |
-| Actors    | Owner, Branch Manager                             |
+| Actors    | Owner, Platform Admin support                    |
 | Context   | `tenantId`, `salonBusinessId`, `branchId`, `date` |
 | Operation | `setBranchHoliday`                                |
 
@@ -78,7 +80,7 @@ Conflict behavior:
 | --------- | ----------------------------------------- |
 | Screen ID | `settings.branches.policy`                |
 | Form ID   | `branch.policy.update`                    |
-| Actors    | Owner, delegated Branch Manager           |
+| Actors    | Owner, Platform Admin support             |
 | Context   | `tenantId`, `salonBusinessId`, `branchId` |
 | Operation | `updateBranchPolicy`                      |
 
@@ -92,4 +94,4 @@ Test mapping:
 
 - `VAL-BR-001`: open day without interval fails.
 - `VAL-BR-002`: overlapping intervals fail.
-- `VAL-BR-003`: branch manager without delegation cannot edit policy.
+- `VAL-BR-003`: policy minutes above PostgreSQL integer max fail.
