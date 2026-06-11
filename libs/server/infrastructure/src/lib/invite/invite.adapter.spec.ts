@@ -50,7 +50,12 @@ describe('InvitePrismaAdapter', () => {
   describe('validateOwner', () => {
     it('should return email and salonId if token is valid', async () => {
       const token = 'valid-token';
-      const rec = { email: 'test@example.com', salonId: 'salon-id', expiresAt: new Date(Date.now() + 10000) };
+      const rec = {
+        email: 'test@example.com',
+        salonId: 'salon-id',
+        expiresAt: new Date(Date.now() + 10000),
+        salon: { tenantId: 'tenant-1' },
+      };
       (prisma.registrationLink.findFirst as jest.Mock).mockResolvedValue(rec);
 
       const result = await adapter.validateOwner(token);
@@ -67,7 +72,12 @@ describe('InvitePrismaAdapter', () => {
 
     it('should throw GoneException if token is expired', async () => {
       const token = 'expired-token';
-      const rec = { email: 'test@example.com', salonId: 'salon-id', expiresAt: new Date(Date.now() - 10000) };
+      const rec = {
+        email: 'test@example.com',
+        salonId: 'salon-id',
+        expiresAt: new Date(Date.now() - 10000),
+        salon: { tenantId: 'tenant-1' },
+      };
       (prisma.registrationLink.findFirst as jest.Mock).mockResolvedValue(rec);
 
       await expect(adapter.validateOwner(token)).rejects.toThrow(GoneException);
@@ -77,7 +87,13 @@ describe('InvitePrismaAdapter', () => {
   describe('completeOwner', () => {
     it('should complete owner registration', async () => {
       const input = { token: 'valid-token', password: 'password' };
-      const rec = { id: 'rec-id', email: 'test@example.com', salonId: 'salon-id', expiresAt: new Date(Date.now() + 10000) };
+      const rec = {
+        id: 'rec-id',
+        email: 'test@example.com',
+        salonId: 'salon-id',
+        expiresAt: new Date(Date.now() + 10000),
+        salon: { tenantId: 'tenant-1' },
+      };
       const user = { id: 'user-id', isMFAEnrollRequired: false };
       const role = { id: 'role-id', name: 'OWNER' };
 
@@ -88,7 +104,12 @@ describe('InvitePrismaAdapter', () => {
 
       const result = await adapter.completeOwner(input);
 
-      expect(prisma.user.upsert).toHaveBeenCalled();
+      expect(prisma.user.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({ salonTenantId: 'tenant-1' }),
+          create: expect.objectContaining({ salonTenantId: 'tenant-1' }),
+        }),
+      );
       expect(prisma.userRole.upsert).toHaveBeenCalled();
       expect(prisma.registrationLink.update).toHaveBeenCalled();
       expect(result).toEqual({ userId: user.id, requireMfa: user.isMFAEnrollRequired });
@@ -96,7 +117,13 @@ describe('InvitePrismaAdapter', () => {
 
     it('should complete owner registration if role is not found', async () => {
       const input = { token: 'valid-token', password: 'password' };
-      const rec = { id: 'rec-id', email: 'test@example.com', salonId: 'salon-id', expiresAt: new Date(Date.now() + 10000) };
+      const rec = {
+        id: 'rec-id',
+        email: 'test@example.com',
+        salonId: 'salon-id',
+        expiresAt: new Date(Date.now() + 10000),
+        salon: { tenantId: 'tenant-1' },
+      };
       const user = { id: 'user-id', isMFAEnrollRequired: false };
 
       (prisma.registrationLink.findFirst as jest.Mock).mockResolvedValue(rec);
@@ -116,7 +143,13 @@ describe('InvitePrismaAdapter', () => {
   describe('validateStaff', () => {
     it('should return email, salonId and role if token is valid', async () => {
       const token = 'valid-token';
-      const rec = { email: 'test@example.com', salonId: 'salon-id', role: 'STAFF', expiresAt: new Date(Date.now() + 10000) };
+      const rec = {
+        email: 'test@example.com',
+        salonId: 'salon-id',
+        role: 'STAFF',
+        expiresAt: new Date(Date.now() + 10000),
+        salon: { tenantId: 'tenant-1' },
+      };
       (prisma.staffInvite.findFirst as jest.Mock).mockResolvedValue(rec);
 
       const result = await adapter.validateStaff(token);
@@ -133,7 +166,13 @@ describe('InvitePrismaAdapter', () => {
 
     it('should throw GoneException if token is expired', async () => {
       const token = 'expired-token';
-      const rec = { email: 'test@example.com', salonId: 'salon-id', role: 'STAFF', expiresAt: new Date(Date.now() - 10000) };
+      const rec = {
+        email: 'test@example.com',
+        salonId: 'salon-id',
+        role: 'STAFF',
+        expiresAt: new Date(Date.now() - 10000),
+        salon: { tenantId: 'tenant-1' },
+      };
       (prisma.staffInvite.findFirst as jest.Mock).mockResolvedValue(rec);
 
       await expect(adapter.validateStaff(token)).rejects.toThrow(GoneException);
@@ -143,7 +182,13 @@ describe('InvitePrismaAdapter', () => {
   describe('completeStaff', () => {
     it('should complete staff registration', async () => {
       const input = { token: 'valid-token', password: 'password' };
-      const rec = { id: 'rec-id', email: 'test@example.com', salonId: 'salon-id', expiresAt: new Date(Date.now() + 10000) };
+      const rec = {
+        id: 'rec-id',
+        email: 'test@example.com',
+        salonId: 'salon-id',
+        expiresAt: new Date(Date.now() + 10000),
+        salon: { tenantId: 'tenant-1' },
+      };
       const user = { id: 'user-id', isMFAEnrollRequired: false };
       const role = { id: 'role-id', name: 'STAFF' };
 
@@ -154,7 +199,12 @@ describe('InvitePrismaAdapter', () => {
 
       const result = await adapter.completeStaff(input);
 
-      expect(prisma.user.upsert).toHaveBeenCalled();
+      expect(prisma.user.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({ salonTenantId: 'tenant-1' }),
+          create: expect.objectContaining({ salonTenantId: 'tenant-1' }),
+        }),
+      );
       expect(prisma.userRole.upsert).toHaveBeenCalled();
       expect(prisma.staffInvite.update).toHaveBeenCalled();
       expect(result).toEqual({ userId: user.id, requireMfa: user.isMFAEnrollRequired });
@@ -162,7 +212,13 @@ describe('InvitePrismaAdapter', () => {
 
     it('should complete staff registration if role is not found', async () => {
       const input = { token: 'valid-token', password: 'password' };
-      const rec = { id: 'rec-id', email: 'test@example.com', salonId: 'salon-id', expiresAt: new Date(Date.now() + 10000) };
+      const rec = {
+        id: 'rec-id',
+        email: 'test@example.com',
+        salonId: 'salon-id',
+        expiresAt: new Date(Date.now() + 10000),
+        salon: { tenantId: 'tenant-1' },
+      };
       const user = { id: 'user-id', isMFAEnrollRequired: false };
 
       (prisma.staffInvite.findFirst as jest.Mock).mockResolvedValue(rec);

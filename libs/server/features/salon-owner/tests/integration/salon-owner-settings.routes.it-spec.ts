@@ -11,6 +11,7 @@ describe('Salon owner settings routes', () => {
   let app: INestApplication;
   const service = {
     createBusiness: jest.fn(),
+    createBranch: jest.fn(),
     replaceBranchHours: jest.fn(),
   };
 
@@ -74,8 +75,74 @@ describe('Salon owner settings routes', () => {
       .expect(201);
 
     expect(service.createBusiness).toHaveBeenCalledWith(
-      { user: expect.objectContaining({ tenantId: 'tenant-1' }) },
+      { user: expect.objectContaining({ tenantId: 'tenant-1' }), idempotencyKey: 'key-1' },
       expect.objectContaining({ displayName: 'Salon One' }),
+    );
+  });
+
+  it('requires an idempotency key for create branch requests', async () => {
+    await request(app.getHttpServer())
+      .post('/partner/branches')
+      .send({
+        businessId: '11111111-1111-4111-8111-111111111112',
+        name: 'Main Branch',
+        timezone: 'Asia/Tokyo',
+        currency: 'JPY',
+        status: 'ACTIVE',
+        address: {
+          line1: '1 Main St',
+          city: 'Tokyo',
+          state: 'Tokyo',
+          postalCode: '1000001',
+          country: 'JP',
+        },
+      })
+      .expect(400);
+
+    expect(service.createBranch).not.toHaveBeenCalled();
+  });
+
+  it('accepts create branch requests when the idempotency key is present', async () => {
+    service.createBranch.mockResolvedValue({
+      id: branchId,
+      businessId: '11111111-1111-4111-8111-111111111112',
+      name: 'Main Branch',
+      timezone: 'Asia/Tokyo',
+      currency: 'JPY',
+      status: 'ACTIVE',
+      address: {
+        line1: '1 Main St',
+        city: 'Tokyo',
+        state: 'Tokyo',
+        postalCode: '1000001',
+        country: 'JP',
+      },
+      createdAt: '2026-05-26T00:00:00.000Z',
+      updatedAt: '2026-05-26T00:00:00.000Z',
+    });
+
+    await request(app.getHttpServer())
+      .post('/partner/branches')
+      .set('Idempotency-Key', 'key-2')
+      .send({
+        businessId: '11111111-1111-4111-8111-111111111112',
+        name: 'Main Branch',
+        timezone: 'Asia/Tokyo',
+        currency: 'JPY',
+        status: 'ACTIVE',
+        address: {
+          line1: '1 Main St',
+          city: 'Tokyo',
+          state: 'Tokyo',
+          postalCode: '1000001',
+          country: 'JP',
+        },
+      })
+      .expect(201);
+
+    expect(service.createBranch).toHaveBeenCalledWith(
+      { user: expect.objectContaining({ tenantId: 'tenant-1' }), idempotencyKey: 'key-2' },
+      expect.objectContaining({ name: 'Main Branch' }),
     );
   });
 

@@ -16,6 +16,13 @@ export class InvitePrismaAdapter implements InvitePort {
     const tokenHash = sha256(token);
     const rec = await this.prisma.registrationLink.findFirst({
       where: { tokenHash, usedAt: null },
+      include: {
+        salon: {
+          select: {
+            tenantId: true,
+          },
+        },
+      },
     });
     if (!rec) throw new BadRequestException('error.validation');
     if (rec.expiresAt <= new Date()) throw new GoneException();
@@ -26,6 +33,13 @@ export class InvitePrismaAdapter implements InvitePort {
     const tokenHash = sha256(token);
     const rec = await this.prisma.staffInvite.findFirst({
       where: { tokenHash, usedAt: null },
+      include: {
+        salon: {
+          select: {
+            tenantId: true,
+          },
+        },
+      },
     });
     if (!rec) throw new BadRequestException('error.validation');
     if (rec.expiresAt <= new Date()) throw new GoneException();
@@ -42,8 +56,22 @@ export class InvitePrismaAdapter implements InvitePort {
     const passwordHash = await bcrypt.hash(input.password, 10);
     const user = await this.prisma.user.upsert({
       where: { email: rec.email },
-      update: { passwordHash, isVerified: true, emailVerifiedAt: new Date(), registrationStatus: 'COMPLETED' },
-      create: { email: rec.email, passwordHash, isVerified: true, emailVerifiedAt: new Date(), registrationStatus: 'COMPLETED', isActive: true },
+      update: {
+        passwordHash,
+        isVerified: true,
+        emailVerifiedAt: new Date(),
+        registrationStatus: 'COMPLETED',
+        salonTenantId: rec.salon.tenantId,
+      },
+      create: {
+        email: rec.email,
+        passwordHash,
+        isVerified: true,
+        emailVerifiedAt: new Date(),
+        registrationStatus: 'COMPLETED',
+        isActive: true,
+        salonTenantId: rec.salon.tenantId,
+      },
     });
     // Assign OWNER role if not present
     const role = await this.prisma.role.findUnique({ where: { name: 'OWNER' } });
@@ -68,8 +96,22 @@ export class InvitePrismaAdapter implements InvitePort {
     const passwordHash = await bcrypt.hash(input.password, 10);
     const user = await this.prisma.user.upsert({
       where: { email: rec.email },
-      update: { passwordHash, isVerified: true, emailVerifiedAt: new Date(), registrationStatus: 'COMPLETED' },
-      create: { email: rec.email, passwordHash, isVerified: true, emailVerifiedAt: new Date(), registrationStatus: 'COMPLETED', isActive: true },
+      update: {
+        passwordHash,
+        isVerified: true,
+        emailVerifiedAt: new Date(),
+        registrationStatus: 'COMPLETED',
+        salonTenantId: rec.salon.tenantId,
+      },
+      create: {
+        email: rec.email,
+        passwordHash,
+        isVerified: true,
+        emailVerifiedAt: new Date(),
+        registrationStatus: 'COMPLETED',
+        isActive: true,
+        salonTenantId: rec.salon.tenantId,
+      },
     });
     // Assign STAFF role
     const role = await this.prisma.role.findUnique({ where: { name: 'STAFF' } });
@@ -84,4 +126,3 @@ export class InvitePrismaAdapter implements InvitePort {
     return { userId: user.id, requireMfa: user.isMFAEnrollRequired };
   }
 }
-

@@ -78,7 +78,7 @@ export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'que
   // Overload for transaction callback
   override async $transaction<P>(
     fn: (prisma: Omit<PrismaClient, '$transaction' | '$on' | '$connect' | '$disconnect' | '$use' | '$extends'>) => Promise<P>,
-    options?: { maxWait?: number; timeout?: number },
+    options?: { maxWait?: number; timeout?: number; isolationLevel?: Prisma.TransactionIsolationLevel },
   ): Promise<P>;
 
   // Implementation
@@ -115,17 +115,8 @@ export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'que
    */
   private handlePrismaError(error: unknown): never {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      // Handle known request errors
       this.logger.error(`Prisma Known Request Error (${error.code}): ${error.message}`, error.meta);
-
-      // Add custom error handling for specific error codes
-      switch (error.code) {
-        case 'P2002':
-          throw new Error('A unique constraint was violated');
-        case 'P2025':
-          throw new Error('Record not found');
-        // Add more specific error codes as needed
-      }
+      throw error;
     } else if (error instanceof Prisma.PrismaClientUnknownRequestError) {
       this.logger.error('Prisma Unknown Request Error:', error);
       throw new Error('An unknown database error occurred');
@@ -137,7 +128,7 @@ export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'que
       throw new Error('Failed to initialize the database connection');
     } else if (error instanceof Prisma.PrismaClientValidationError) {
       this.logger.error('Prisma Validation Error:', error);
-      throw new Error('Invalid database operation');
+      throw error;
     }
 
     // Re-throw if it's not a Prisma error

@@ -871,7 +871,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
-        '422':
+        '400':
           $ref: '#/components/responses/ValidationError'
   /partner/businesses/{businessId}:
     parameters:
@@ -908,7 +908,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
-        '422':
+        '400':
           $ref: '#/components/responses/ValidationError'
   /partner/branches:
     get:
@@ -931,6 +931,7 @@ paths:
       operationId: createBranch
       parameters:
         - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -944,7 +945,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
-        '422':
+        '400':
           $ref: '#/components/responses/ValidationError'
   /partner/branches/{branchId}:
     parameters:
@@ -981,7 +982,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
-        '422':
+        '400':
           $ref: '#/components/responses/ValidationError'
   /partner/branches/{branchId}/hours:
     put:

@@ -114,6 +114,7 @@ function createPrismaMock() {
     salonBranchHours: {
       deleteMany: jest.fn(),
       createMany: jest.fn(),
+      updateMany: jest.fn(),
     },
     salonBranchHoliday: {
       upsert: jest.fn(),
@@ -123,6 +124,7 @@ function createPrismaMock() {
     },
     auditEvent: {
       create: jest.fn(),
+      findFirst: jest.fn(),
     },
     $transaction: jest.fn(),
   };

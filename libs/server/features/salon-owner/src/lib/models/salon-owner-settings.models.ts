@@ -78,4 +78,5 @@ export interface PagedResult<T> {
 
 export interface SalonOwnerRequestContext {
   readonly user: AuthenticatedUser;
+  readonly idempotencyKey?: string;
 }

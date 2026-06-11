@@ -51,7 +51,7 @@ describe('Salon owner settings controllers', () => {
     await controller.updateBusiness(user, 'business-1', body);
 
     expect(service.listBusinesses).toHaveBeenCalledWith({ user });
-    expect(service.createBusiness).toHaveBeenCalledWith({ user }, body);
+    expect(service.createBusiness).toHaveBeenCalledWith({ user, idempotencyKey: 'key-1' }, body);
     expect(service.getBusiness).toHaveBeenCalledWith({ user }, 'business-1');
     expect(service.updateBusiness).toHaveBeenCalledWith({ user }, 'business-1', body);
   });
@@ -85,7 +85,7 @@ describe('Salon owner settings controllers', () => {
     const policy = { bookingLeadMinutes: 30, cancellationCutoffMinutes: 120, noShowGraceMinutes: 10 };
 
     await controller.listBranches(user, 'business-1');
-    await controller.createBranch(user, profile);
+    await controller.createBranch(user, 'key-2', profile);
     await controller.getBranch(user, 'branch-1');
     await controller.updateBranch(user, 'branch-1', profile);
     await controller.replaceBranchHours(user, 'branch-1', hours);
@@ -93,7 +93,7 @@ describe('Salon owner settings controllers', () => {
     await controller.updateBranchPolicy(user, 'branch-1', policy);
 
     expect(service.listBranches).toHaveBeenCalledWith({ user }, 'business-1');
-    expect(service.createBranch).toHaveBeenCalledWith({ user }, profile);
+    expect(service.createBranch).toHaveBeenCalledWith({ user, idempotencyKey: 'key-2' }, profile);
     expect(service.getBranch).toHaveBeenCalledWith({ user }, 'branch-1');
     expect(service.updateBranch).toHaveBeenCalledWith({ user }, 'branch-1', profile);
     expect(service.replaceBranchHours).toHaveBeenCalledWith({ user }, 'branch-1', hours);

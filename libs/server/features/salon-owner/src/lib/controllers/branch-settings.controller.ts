@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Put, Query, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, Put, Query, UseInterceptors } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, ResponseEnvelopeInterceptor, Roles } from '@cthub-bsaas/server-core';
-import { UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
+import { COMMON_MESSAGE_KEYS, UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
 
 import { BranchHolidayInputDto, BranchPolicyInputDto, BranchProfileInputDto, WeeklyHoursInputDto } from '../dto/branch-settings.dto';
 import { SalonOwnerSettingsService } from '../services/salon-owner-settings.service';
@@ -21,8 +21,16 @@ export class BranchSettingsController {
 
   @Post()
   @ApiOperation({ operationId: 'createBranch' })
-  createBranch(@CurrentUser() user: AuthenticatedUser, @Body() body: BranchProfileInputDto) {
-    return this.settings.createBranch({ user }, body);
+  createBranch(
+    @CurrentUser() user: AuthenticatedUser,
+    @Headers('Idempotency-Key') idempotencyKey: string | undefined,
+    @Body() body: BranchProfileInputDto,
+  ) {
+    if (!idempotencyKey?.trim()) {
+      throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION);
+    }
+
+    return this.settings.createBranch({ user, idempotencyKey: idempotencyKey.trim() }, body);
   }
 
   @Get(':branchId')

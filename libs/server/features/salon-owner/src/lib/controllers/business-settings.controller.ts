@@ -30,7 +30,7 @@ export class BusinessSettingsController {
       throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION);
     }
 
-    return this.settings.createBusiness({ user }, body);
+    return this.settings.createBusiness({ user, idempotencyKey: idempotencyKey.trim() }, body);
   }
 
   @Get(':businessId')

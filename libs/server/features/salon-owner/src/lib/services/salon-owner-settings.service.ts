@@ -3,6 +3,7 @@ import { Prisma, SalonOwnerStatus as PrismaSalonOwnerStatus } from '@prisma/clie
 import { COMMON_MESSAGE_KEYS, UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
 import { PrismaService } from '@cthub-bsaas/server-data-access';
 import { CorrelationId } from '@cthub-bsaas/server-core';
+import { createHash } from 'crypto';
 
 import { BranchHolidayInputDto, BranchPolicyInputDto, BranchProfileInputDto, WeeklyHoursInputDto } from '../dto/branch-settings.dto';
 import { SalonBusinessInputDto } from '../dto/salon-business.dto';
@@ -26,6 +27,7 @@ const inactiveBusinessMessage = 'error.branch.profile.business_inactive';
 const validationMessage = COMMON_MESSAGE_KEYS.ERROR.VALIDATION;
 const forbiddenMessage = COMMON_MESSAGE_KEYS.ERROR.FORBIDDEN_SCOPE;
 const notFoundMessage = COMMON_MESSAGE_KEYS.ERROR.NOT_FOUND;
+const conflictMessage = COMMON_MESSAGE_KEYS.ERROR.CONFLICT;
 const supportedCurrencyCodes = new Set(
   ((Intl as typeof Intl & { supportedValuesOf?: (key: string) => string[] }).supportedValuesOf?.('currency') ?? []).map((code) =>
     code.toUpperCase(),
@@ -79,8 +81,12 @@ function hasRole(user: AuthenticatedUser, role: string): boolean {
   return user.roles.some((entry) => {
     const roleName =
       typeof entry === 'string' ? entry : typeof entry?.name === 'string' ? String(entry.name) : undefined;
-    return roleName === role;
+    return roleName?.toLowerCase() === role.toLowerCase();
   });
+}
+
+function hashIdempotencyPayload(input: unknown): string {
+  return createHash('sha256').update(JSON.stringify(input)).digest('hex');
 }
 
 function readStringArray(value: unknown): string[] {
@@ -198,13 +204,18 @@ function parseLocalDate(value: string): Date {
 }
 
 function normalizeAddress(input: BranchProfileInputDto['address']): SalonOwnerAddress {
+  const country = trimRequired(input.country).toUpperCase();
+  if (!/^[A-Z]{2}$/.test(country)) {
+    throw new UnprocessableEntityException(validationMessage);
+  }
+
   return {
     line1: trimRequired(input.line1),
     ...(optionalTrim(input.line2) ? { line2: optionalTrim(input.line2) } : {}),
     city: trimRequired(input.city),
     state: trimRequired(input.state),
     postalCode: trimRequired(input.postalCode),
-    country: trimRequired(input.country).toUpperCase(),
+    country,
   };
 }
 
@@ -253,9 +264,15 @@ export class SalonOwnerSettingsService {
 
   async createBusiness(context: SalonOwnerRequestContext, input: SalonBusinessInputDto): Promise<SalonBusinessModel> {
     const tenantId = this.requireTenantId(context);
+    const requestHash = hashIdempotencyPayload(input);
 
     try {
-      const business = await this.prisma.$transaction(async (tx) => {
+      const business = await this.prisma.$transaction(async (tx: TransactionClient) => {
+        const replayed = await this.findIdempotentBusinessReplay(tx, context, tenantId, requestHash);
+        if (replayed) {
+          return replayed;
+        }
+
         const created = await tx.salonBusiness.create({
           data: {
             tenantId,
@@ -264,11 +281,16 @@ export class SalonOwnerSettingsService {
             status: input.status as PrismaSalonOwnerStatus,
           },
         });
+        await this.recordIdempotentCreate(tx, context, tenantId, 'salon_owner.business.create.idempotency', requestHash, created.id);
         await this.createAuditEvent(tx, context, tenantId, 'salon_owner.business.create');
         return created;
-      });
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
       return this.mapBusiness(business);
     } catch (error) {
+      const replayed = await this.findIdempotentBusinessReplay(this.prisma, context, tenantId, requestHash);
+      if (replayed) {
+        return this.mapBusiness(replayed);
+      }
       if (isDuplicate(error)) {
         throw new ConflictException(duplicateBusinessMessage);
       }
@@ -283,21 +305,31 @@ export class SalonOwnerSettingsService {
   async updateBusiness(context: SalonOwnerRequestContext, businessId: string, input: SalonBusinessInputDto): Promise<SalonBusinessModel> {
     const current = await this.findBusinessInScope(context, businessId);
 
-    if (current.status !== PrismaSalonOwnerStatus.INACTIVE && input.status === 'INACTIVE') {
-      const activeBranchCount = await this.prisma.salonBranch.count({
-        where: {
-          businessId,
-          status: PrismaSalonOwnerStatus.ACTIVE,
-        },
-      });
-
-      if (activeBranchCount > 0) {
-        throw new ConflictException(businessStatusConflictMessage);
-      }
-    }
-
     try {
-      const business = await this.prisma.$transaction(async (tx) => {
+      const business = await this.prisma.$transaction(async (tx: TransactionClient) => {
+        const scopedBusiness = await tx.salonBusiness.findFirst({
+          where: {
+            id: businessId,
+            tenantId: this.tenantScopeFilter(this.requireTenantIds(context)),
+          },
+        });
+        if (!scopedBusiness) {
+          throw new NotFoundException(notFoundMessage);
+        }
+
+        if (scopedBusiness.status !== PrismaSalonOwnerStatus.INACTIVE && input.status === 'INACTIVE') {
+          const activeBranchCount = await tx.salonBranch.count({
+            where: {
+              businessId,
+              status: PrismaSalonOwnerStatus.ACTIVE,
+            },
+          });
+
+          if (activeBranchCount > 0) {
+            throw new ConflictException(businessStatusConflictMessage);
+          }
+        }
+
         const updated = await tx.salonBusiness.update({
           where: { id: businessId },
           data: {
@@ -308,7 +340,7 @@ export class SalonOwnerSettingsService {
         });
         await this.createAuditEvent(tx, context, current.tenantId, 'salon_owner.business.update');
         return updated;
-      });
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
       return this.mapBusiness(business);
     } catch (error) {
       if (isDuplicate(error)) {
@@ -336,21 +368,42 @@ export class SalonOwnerSettingsService {
   }
 
   async createBranch(context: SalonOwnerRequestContext, input: BranchProfileInputDto): Promise<BranchProfileModel> {
-    const business = await this.findBusinessInScope(context, input.businessId);
-    if (business.status === PrismaSalonOwnerStatus.INACTIVE) {
-      throw new ConflictException(inactiveBusinessMessage);
-    }
-
-    const data = this.normalizeBranchCreateInput(input, business.id);
+    const tenantIds = this.requireTenantIds(context);
+    const requestHash = hashIdempotencyPayload(input);
 
     try {
-      const branch = await this.prisma.$transaction(async (tx) => {
+      const branch = await this.prisma.$transaction(async (tx: TransactionClient) => {
+        const business = await tx.salonBusiness.findFirst({
+          where: {
+            id: input.businessId,
+            tenantId: this.tenantScopeFilter(tenantIds),
+          },
+        });
+        if (!business) {
+          throw new NotFoundException(notFoundMessage);
+        }
+        if (business.status === PrismaSalonOwnerStatus.INACTIVE) {
+          throw new ConflictException(inactiveBusinessMessage);
+        }
+
+        const replayed = await this.findIdempotentBranchReplay(tx, context, business.tenantId, requestHash);
+        if (replayed) {
+          return replayed;
+        }
+
+        const data = this.normalizeBranchCreateInput(input, business.id);
         const created = await tx.salonBranch.create({ data });
+        await this.recordIdempotentCreate(tx, context, business.tenantId, 'salon_owner.branch.create.idempotency', requestHash, created.id);
         await this.createAuditEvent(tx, context, business.tenantId, 'salon_owner.branch.create');
         return created;
-      });
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
       return this.mapBranch(branch);
     } catch (error) {
+      const business = await this.findBusinessInScope(context, input.businessId);
+      const replayed = await this.findIdempotentBranchReplay(this.prisma, context, business.tenantId, requestHash);
+      if (replayed) {
+        return this.mapBranch(replayed);
+      }
       if (isDuplicate(error)) {
         throw new ConflictException(duplicateBranchMessage);
       }
@@ -369,19 +422,35 @@ export class SalonOwnerSettingsService {
     }
 
     const business = await this.findBusinessInScope(context, current.businessId);
-    if (input.status === 'ACTIVE' && business.status === PrismaSalonOwnerStatus.INACTIVE) {
-      throw new ConflictException(inactiveBusinessMessage);
-    }
 
     try {
-      const branch = await this.prisma.$transaction(async (tx) => {
+      const branch = await this.prisma.$transaction(async (tx: TransactionClient) => {
+        const scopedBusiness = await tx.salonBusiness.findFirst({
+          where: {
+            id: current.businessId,
+            tenantId: this.tenantScopeFilter(this.requireTenantIds(context)),
+          },
+        });
+        if (!scopedBusiness) {
+          throw new NotFoundException(notFoundMessage);
+        }
+        if (input.status === 'ACTIVE' && scopedBusiness.status === PrismaSalonOwnerStatus.INACTIVE) {
+          throw new ConflictException(inactiveBusinessMessage);
+        }
+
         const updated = await tx.salonBranch.update({
           where: { id: branchId },
           data: this.normalizeBranchUpdateInput(input, input.businessId),
         });
+        if (input.timezone !== current.timezone) {
+          await tx.salonBranchHours.updateMany({
+            where: { branchId },
+            data: { timezone: input.timezone },
+          });
+        }
         await this.createAuditEvent(tx, context, business.tenantId, 'salon_owner.branch.update');
         return updated;
-      });
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
       return this.mapBranch(branch);
     } catch (error) {
       if (isDuplicate(error)) {
@@ -399,7 +468,7 @@ export class SalonOwnerSettingsService {
 
     const days = normalizeWeeklyDays(input);
     const business = await this.findBusinessInScope(context, branch.businessId);
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx: TransactionClient) => {
       await tx.salonBranchHours.deleteMany({ where: { branchId } });
       await tx.salonBranchHours.createMany({
         data: days.map((day) => ({
@@ -431,7 +500,7 @@ export class SalonOwnerSettingsService {
     const branch = await this.findBranchInScope(context, branchId);
     const business = await this.findBusinessInScope(context, branch.businessId);
 
-    const holiday = await this.prisma.$transaction(async (tx) => {
+    const holiday = await this.prisma.$transaction(async (tx: TransactionClient) => {
       const upserted = await tx.salonBranchHoliday.upsert({
         where: { branchId_date: { branchId, date: holidayDate } },
         create: {
@@ -458,7 +527,7 @@ export class SalonOwnerSettingsService {
     const branch = await this.findBranchInScope(context, branchId);
     const business = await this.findBusinessInScope(context, branch.businessId);
 
-    const policy = await this.prisma.$transaction(async (tx) => {
+    const policy = await this.prisma.$transaction(async (tx: TransactionClient) => {
       const upserted = await tx.salonBranchPolicy.upsert({
         where: { branchId },
         create: {
@@ -506,6 +575,118 @@ export class SalonOwnerSettingsService {
 
   private tenantScopeFilter(tenantIds: readonly string[]): string | { in: string[] } {
     return tenantIds.length === 1 ? tenantIds[0] : { in: [...tenantIds] };
+  }
+
+  private parseIdempotencyRecord(reason: string | null): { requestHash: string; resourceId: string } | null {
+    if (!reason) {
+      return null;
+    }
+
+    const [requestHash, resourceId] = reason.split(':', 2);
+    if (!requestHash || !resourceId) {
+      return null;
+    }
+
+    return { requestHash, resourceId };
+  }
+
+  private async recordIdempotentCreate(
+    tx: Pick<TransactionClient, 'auditEvent'>,
+    context: SalonOwnerRequestContext,
+    tenantId: string,
+    action: string,
+    requestHash: string,
+    resourceId: string,
+  ): Promise<void> {
+    const idempotencyKey = context.idempotencyKey;
+    if (!idempotencyKey) {
+      return;
+    }
+
+    await tx.auditEvent.create({
+      data: {
+        userId: context.user.id,
+        tenantId,
+        action,
+        result: 'success',
+        reason: `${requestHash}:${resourceId}`,
+        correlationId: idempotencyKey,
+      },
+    });
+  }
+
+  private async findIdempotentBusinessReplay(
+    prisma: Pick<TransactionClient, 'auditEvent' | 'salonBusiness'>,
+    context: SalonOwnerRequestContext,
+    tenantId: string,
+    requestHash: string,
+  ): Promise<BusinessRecord | null> {
+    const idempotencyKey = context.idempotencyKey;
+    if (!idempotencyKey) {
+      return null;
+    }
+
+    const record = await prisma.auditEvent.findFirst({
+      where: {
+        userId: context.user.id,
+        tenantId,
+        action: 'salon_owner.business.create.idempotency',
+        correlationId: idempotencyKey,
+      },
+      orderBy: { ts: 'desc' },
+    });
+    const parsed = this.parseIdempotencyRecord(record?.reason ?? null);
+    if (!parsed) {
+      return null;
+    }
+    if (parsed.requestHash !== requestHash) {
+      throw new ConflictException(conflictMessage);
+    }
+
+    const business = await prisma.salonBusiness.findFirst({
+      where: {
+        id: parsed.resourceId,
+        tenantId,
+      },
+    });
+    return business ?? null;
+  }
+
+  private async findIdempotentBranchReplay(
+    prisma: Pick<TransactionClient, 'auditEvent' | 'salonBranch'>,
+    context: SalonOwnerRequestContext,
+    tenantId: string,
+    requestHash: string,
+  ): Promise<BranchRecord | null> {
+    const idempotencyKey = context.idempotencyKey;
+    if (!idempotencyKey) {
+      return null;
+    }
+
+    const record = await prisma.auditEvent.findFirst({
+      where: {
+        userId: context.user.id,
+        tenantId,
+        action: 'salon_owner.branch.create.idempotency',
+        correlationId: idempotencyKey,
+      },
+      orderBy: { ts: 'desc' },
+    });
+    const parsed = this.parseIdempotencyRecord(record?.reason ?? null);
+    if (!parsed) {
+      return null;
+    }
+    if (parsed.requestHash !== requestHash) {
+      throw new ConflictException(conflictMessage);
+    }
+
+    const branch = await prisma.salonBranch.findFirst({
+      where: {
+        id: parsed.resourceId,
+        business: { tenantId },
+      },
+    });
+    return branch ?? null;
   }
 
   private async findBusinessInScope(context: SalonOwnerRequestContext, businessId: string): Promise<BusinessRecord> {
