@@ -4,14 +4,12 @@
 
 - Branch profile validation covers address, contact, status, and timezone.
 - Weekly hours validation rejects overlaps and invalid intervals.
-- Archive guard detects future confirmed appointments.
 
 ## Backend Integration Tests
 
 - Owner creates branch under own business.
 - Branch manager edits assigned branch policy only.
 - Holiday upsert is idempotent by branch and date.
-- Archive with future appointments returns conflict.
 
 ## Web Tests
 

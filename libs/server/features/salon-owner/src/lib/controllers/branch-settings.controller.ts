@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, Put, Query, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, Put, Query, UseInterceptors, VERSION_NEUTRAL } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, ResponseEnvelopeInterceptor, Roles } from '@cthub-bsaas/server-core';
 import { COMMON_MESSAGE_KEYS, UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
@@ -9,7 +9,7 @@ import { SalonOwnerSettingsService } from '../services/salon-owner-settings.serv
 @ApiTags('Business Settings')
 @Roles(UserRole.OWNER, UserRole.ADMIN)
 @UseInterceptors(ResponseEnvelopeInterceptor)
-@Controller('partner/branches')
+@Controller({ path: 'partner/branches', version: VERSION_NEUTRAL })
 export class BranchSettingsController {
   constructor(private readonly settings: SalonOwnerSettingsService) {}
 
