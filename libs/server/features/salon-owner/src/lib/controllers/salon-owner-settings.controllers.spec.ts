@@ -32,7 +32,7 @@ function serviceMock() {
 describe('Salon owner settings controllers', () => {
   it('restricts settings controllers to owner and admin roles', () => {
     expect(Reflect.getMetadata(ROLES_KEY, BusinessSettingsController)).toEqual([UserRole.OWNER, UserRole.ADMIN]);
-    expect(Reflect.getMetadata(ROLES_KEY, BranchSettingsController)).toEqual([UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF]);
+    expect(Reflect.getMetadata(ROLES_KEY, BranchSettingsController)).toEqual([UserRole.OWNER, UserRole.ADMIN]);
   });
 
   it('wraps settings controller responses in the API envelope', () => {

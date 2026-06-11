@@ -2,6 +2,7 @@ import { ConflictException, ForbiddenException, Injectable, NotFoundException, U
 import { Prisma, SalonOwnerStatus as PrismaSalonOwnerStatus } from '@prisma/client';
 import { COMMON_MESSAGE_KEYS, UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
 import { PrismaService } from '@cthub-bsaas/server-data-access';
+import { CorrelationId } from '@cthub-bsaas/server-core';
 
 import { BranchHolidayInputDto, BranchPolicyInputDto, BranchProfileInputDto, WeeklyHoursInputDto } from '../dto/branch-settings.dto';
 import { SalonBusinessInputDto } from '../dto/salon-business.dto';
@@ -35,6 +36,8 @@ type BranchRecord = Awaited<ReturnType<PrismaService['salonBranch']['findFirstOr
 type BusinessRecord = Awaited<ReturnType<PrismaService['salonBusiness']['findFirstOrThrow']>>;
 type PolicyRecord = Awaited<ReturnType<PrismaService['salonBranchPolicy']['upsert']>>;
 type HolidayRecord = Awaited<ReturnType<PrismaService['salonBranchHoliday']['upsert']>>;
+type TransactionClient = Prisma.TransactionClient;
+type BranchMutationData = Prisma.SalonBranchUncheckedCreateInput | Prisma.SalonBranchUncheckedUpdateInput;
 
 function trimRequired(value: string, minimumLength = 1): string {
   const trimmed = value.trim();
@@ -252,13 +255,17 @@ export class SalonOwnerSettingsService {
     const tenantId = this.requireTenantId(context);
 
     try {
-      const business = await this.prisma.salonBusiness.create({
-        data: {
-          tenantId,
-          displayName: trimRequired(input.displayName, 2),
-          legalName: trimRequired(input.legalName, 2),
-          status: input.status as PrismaSalonOwnerStatus,
-        },
+      const business = await this.prisma.$transaction(async (tx) => {
+        const created = await tx.salonBusiness.create({
+          data: {
+            tenantId,
+            displayName: trimRequired(input.displayName, 2),
+            legalName: trimRequired(input.legalName, 2),
+            status: input.status as PrismaSalonOwnerStatus,
+          },
+        });
+        await this.createAuditEvent(tx, context, tenantId, 'salon_owner.business.create');
+        return created;
       });
       return this.mapBusiness(business);
     } catch (error) {
@@ -290,13 +297,17 @@ export class SalonOwnerSettingsService {
     }
 
     try {
-      const business = await this.prisma.salonBusiness.update({
-        where: { id: businessId },
-        data: {
-          displayName: trimRequired(input.displayName, 2),
-          legalName: trimRequired(input.legalName, 2),
-          status: input.status as PrismaSalonOwnerStatus,
-        },
+      const business = await this.prisma.$transaction(async (tx) => {
+        const updated = await tx.salonBusiness.update({
+          where: { id: businessId },
+          data: {
+            displayName: trimRequired(input.displayName, 2),
+            legalName: trimRequired(input.legalName, 2),
+            status: input.status as PrismaSalonOwnerStatus,
+          },
+        });
+        await this.createAuditEvent(tx, context, current.tenantId, 'salon_owner.business.update');
+        return updated;
       });
       return this.mapBusiness(business);
     } catch (error) {
@@ -330,10 +341,14 @@ export class SalonOwnerSettingsService {
       throw new ConflictException(inactiveBusinessMessage);
     }
 
-    const data = this.normalizeBranchInput(input, business.id);
+    const data = this.normalizeBranchCreateInput(input, business.id);
 
     try {
-      const branch = await this.prisma.salonBranch.create({ data });
+      const branch = await this.prisma.$transaction(async (tx) => {
+        const created = await tx.salonBranch.create({ data });
+        await this.createAuditEvent(tx, context, business.tenantId, 'salon_owner.branch.create');
+        return created;
+      });
       return this.mapBranch(branch);
     } catch (error) {
       if (isDuplicate(error)) {
@@ -353,10 +368,19 @@ export class SalonOwnerSettingsService {
       throw new ForbiddenException(forbiddenMessage);
     }
 
+    const business = await this.findBusinessInScope(context, current.businessId);
+    if (input.status === 'ACTIVE' && business.status === PrismaSalonOwnerStatus.INACTIVE) {
+      throw new ConflictException(inactiveBusinessMessage);
+    }
+
     try {
-      const branch = await this.prisma.salonBranch.update({
-        where: { id: branchId },
-        data: this.normalizeBranchInput(input, input.businessId),
+      const branch = await this.prisma.$transaction(async (tx) => {
+        const updated = await tx.salonBranch.update({
+          where: { id: branchId },
+          data: this.normalizeBranchUpdateInput(input, input.businessId),
+        });
+        await this.createAuditEvent(tx, context, business.tenantId, 'salon_owner.branch.update');
+        return updated;
       });
       return this.mapBranch(branch);
     } catch (error) {
@@ -374,9 +398,10 @@ export class SalonOwnerSettingsService {
     }
 
     const days = normalizeWeeklyDays(input);
-    await this.prisma.$transaction([
-      this.prisma.salonBranchHours.deleteMany({ where: { branchId } }),
-      this.prisma.salonBranchHours.createMany({
+    const business = await this.findBusinessInScope(context, branch.businessId);
+    await this.prisma.$transaction(async (tx) => {
+      await tx.salonBranchHours.deleteMany({ where: { branchId } });
+      await tx.salonBranchHours.createMany({
         data: days.map((day) => ({
           branchId,
           timezone: input.timezone,
@@ -384,8 +409,9 @@ export class SalonOwnerSettingsService {
           open: day.open,
           intervals: toJsonArray(day.intervals),
         })),
-      }),
-    ]);
+      });
+      await this.createAuditEvent(tx, context, business.tenantId, 'salon_owner.branch.hours.replace');
+    });
 
     return {
       branchId,
@@ -400,45 +426,55 @@ export class SalonOwnerSettingsService {
     date: string,
     input: BranchHolidayInputDto,
   ): Promise<BranchHolidayModel> {
-    await this.findBranchInScope(context, branchId);
     const holidayDate = parseLocalDate(date);
     const intervals = normalizeHolidayIntervals(input);
+    const branch = await this.findBranchInScope(context, branchId);
+    const business = await this.findBusinessInScope(context, branch.businessId);
 
-    const holiday = await this.prisma.salonBranchHoliday.upsert({
-      where: { branchId_date: { branchId, date: holidayDate } },
-      create: {
-        branchId,
-        date: holidayDate,
-        closed: input.closed,
-        reason: optionalTrimOrNull(input.reason),
-        intervals: toJsonArray(intervals),
-      },
-      update: {
-        closed: input.closed,
-        reason: optionalTrimOrNull(input.reason),
-        intervals: toJsonArray(intervals),
-      },
+    const holiday = await this.prisma.$transaction(async (tx) => {
+      const upserted = await tx.salonBranchHoliday.upsert({
+        where: { branchId_date: { branchId, date: holidayDate } },
+        create: {
+          branchId,
+          date: holidayDate,
+          closed: input.closed,
+          reason: optionalTrimOrNull(input.reason),
+          intervals: toJsonArray(intervals),
+        },
+        update: {
+          closed: input.closed,
+          reason: optionalTrimOrNull(input.reason),
+          intervals: toJsonArray(intervals),
+        },
+      });
+      await this.createAuditEvent(tx, context, business.tenantId, 'salon_owner.branch.holiday.set');
+      return upserted;
     });
 
     return this.mapHoliday(holiday);
   }
 
   async updateBranchPolicy(context: SalonOwnerRequestContext, branchId: string, input: BranchPolicyInputDto): Promise<BranchPolicyModel> {
-    await this.findBranchInScope(context, branchId);
+    const branch = await this.findBranchInScope(context, branchId);
+    const business = await this.findBusinessInScope(context, branch.businessId);
 
-    const policy = await this.prisma.salonBranchPolicy.upsert({
-      where: { branchId },
-      create: {
-        branchId,
-        bookingLeadMinutes: input.bookingLeadMinutes,
-        cancellationCutoffMinutes: input.cancellationCutoffMinutes,
-        noShowGraceMinutes: input.noShowGraceMinutes,
-      },
-      update: {
-        bookingLeadMinutes: input.bookingLeadMinutes,
-        cancellationCutoffMinutes: input.cancellationCutoffMinutes,
-        noShowGraceMinutes: input.noShowGraceMinutes,
-      },
+    const policy = await this.prisma.$transaction(async (tx) => {
+      const upserted = await tx.salonBranchPolicy.upsert({
+        where: { branchId },
+        create: {
+          branchId,
+          bookingLeadMinutes: input.bookingLeadMinutes,
+          cancellationCutoffMinutes: input.cancellationCutoffMinutes,
+          noShowGraceMinutes: input.noShowGraceMinutes,
+        },
+        update: {
+          bookingLeadMinutes: input.bookingLeadMinutes,
+          cancellationCutoffMinutes: input.cancellationCutoffMinutes,
+          noShowGraceMinutes: input.noShowGraceMinutes,
+        },
+      });
+      await this.createAuditEvent(tx, context, business.tenantId, 'salon_owner.branch.policy.update');
+      return upserted;
     });
 
     return this.mapPolicy(policy);
@@ -504,7 +540,7 @@ export class SalonOwnerSettingsService {
     return branch;
   }
 
-  private normalizeBranchInput(input: BranchProfileInputDto, businessId: string): Prisma.SalonBranchUncheckedCreateInput {
+  private normalizeBranchCreateInput(input: BranchProfileInputDto, businessId: string): Prisma.SalonBranchUncheckedCreateInput {
     assertTimezone(input.timezone);
     const currency = input.currency.toUpperCase();
     assertCurrency(currency);
@@ -519,6 +555,35 @@ export class SalonOwnerSettingsService {
       status: input.status as PrismaSalonOwnerStatus,
       address: normalizeAddress(input.address) as unknown as Prisma.InputJsonObject,
     };
+  }
+
+  private normalizeBranchUpdateInput(input: BranchProfileInputDto, businessId: string): Prisma.SalonBranchUncheckedUpdateInput {
+    const phoneProvided = Object.prototype.hasOwnProperty.call(input, 'phone');
+    const emailProvided = Object.prototype.hasOwnProperty.call(input, 'email');
+    const { phone: _phone, email: _email, ...data } = this.normalizeBranchCreateInput(input, businessId) as BranchMutationData;
+
+    return {
+      ...data,
+      ...(phoneProvided ? { phone: optionalTrimOrNull(input.phone) } : {}),
+      ...(emailProvided ? { email: optionalTrimOrNull(input.email) } : {}),
+    };
+  }
+
+  private async createAuditEvent(
+    tx: TransactionClient,
+    context: SalonOwnerRequestContext,
+    tenantId: string,
+    action: string,
+  ): Promise<void> {
+    await tx.auditEvent.create({
+      data: {
+        userId: context.user.id,
+        tenantId,
+        action,
+        result: 'success',
+        correlationId: CorrelationId.get() ?? null,
+      },
+    });
   }
 
   private mapBusiness(business: BusinessRecord): SalonBusinessModel {

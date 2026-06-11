@@ -35,6 +35,14 @@ interface HolidayUpsertArgs {
   };
 }
 
+interface AuditCreateArgs {
+  readonly data: {
+    readonly tenantId: string;
+    readonly action: string;
+    readonly result?: string;
+  };
+}
+
 function user(overrides: Partial<AuthenticatedUser> = {}): AuthenticatedUser {
   return {
     id: 'user-1',
@@ -113,8 +121,26 @@ function createPrismaMock() {
     salonBranchPolicy: {
       upsert: jest.fn(),
     },
+    auditEvent: {
+      create: jest.fn(),
+    },
     $transaction: jest.fn(),
   };
+}
+
+function expectAuditCall(
+  calls: readonly [AuditCreateArgs][],
+  expected: { tenantId?: string; action: string; result?: string },
+): void {
+  expect(
+    calls.some(([arg]) => {
+      return (
+        arg.data.action === expected.action &&
+        (expected.tenantId === undefined || arg.data.tenantId === expected.tenantId) &&
+        (expected.result === undefined || arg.data.result === expected.result)
+      );
+    }),
+  ).toBe(true);
 }
 
 describe('SalonOwnerSettingsService', () => {
@@ -124,6 +150,12 @@ describe('SalonOwnerSettingsService', () => {
   beforeEach(() => {
     prisma = createPrismaMock();
     service = new SalonOwnerSettingsService(prisma as unknown as PrismaService);
+    prisma.$transaction.mockImplementation(async (arg: unknown) => {
+      if (typeof arg === 'function') {
+        return await arg(prisma as unknown as PrismaService);
+      }
+      return [];
+    });
   });
 
   it('lists businesses for the authenticated tenant', async () => {
@@ -195,6 +227,11 @@ describe('SalonOwnerSettingsService', () => {
         status: 'ACTIVE',
       },
     });
+    expectAuditCall(prisma.auditEvent.create.mock.calls as [AuditCreateArgs][], {
+      tenantId: 'tenant-1',
+      action: 'salon_owner.business.create',
+      result: 'success',
+    });
 
     prisma.salonBusiness.create.mockRejectedValueOnce(prismaKnownError('P2002'));
     await expect(
@@ -232,6 +269,10 @@ describe('SalonOwnerSettingsService', () => {
 
     prisma.salonBusiness.findFirst.mockResolvedValueOnce(null);
     await expect(service.getBusiness({ user: user() }, 'missing-business')).rejects.toBeInstanceOf(NotFoundException);
+    expectAuditCall(prisma.auditEvent.create.mock.calls as [AuditCreateArgs][], {
+      tenantId: 'tenant-1',
+      action: 'salon_owner.business.update',
+    });
   });
 
   it('blocks deactivating a business while active branches remain', async () => {
@@ -281,6 +322,10 @@ describe('SalonOwnerSettingsService', () => {
     expect(createArgs.data.currency).toBe('JPY');
     expect(createArgs.data.status).toBe('INACTIVE');
     expect(createArgs.data.address.country).toBe('JP');
+    expectAuditCall(prisma.auditEvent.create.mock.calls as [AuditCreateArgs][], {
+      tenantId: 'tenant-1',
+      action: 'salon_owner.branch.create',
+    });
   });
 
   it('rejects branch creation under an inactive business', async () => {
@@ -382,6 +427,7 @@ describe('SalonOwnerSettingsService', () => {
 
   it('clears branch contact fields when the update omits them', async () => {
     prisma.salonBranch.findFirst.mockResolvedValue(branch({ phone: '123', email: 'branch@example.com' }));
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
     prisma.salonBranch.update.mockResolvedValue(branch({ phone: null, email: null }));
 
     await service.updateBranch({ user: user() }, 'branch-1', {
@@ -407,11 +453,59 @@ describe('SalonOwnerSettingsService', () => {
     expect(updateArgs.data.email).toBeNull();
   });
 
+  it('preserves branch contact fields when patch omits them entirely', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValue(branch({ phone: '123', email: 'branch@example.com' }));
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBranch.update.mockResolvedValue(branch());
+
+    await service.updateBranch({ user: user() }, 'branch-1', {
+      businessId: 'business-1',
+      name: 'Main Branch',
+      timezone: 'Asia/Tokyo',
+      currency: 'JPY',
+      status: 'ACTIVE',
+      address: {
+        line1: '1 Main St',
+        city: 'Tokyo',
+        state: 'Tokyo',
+        postalCode: '1000001',
+        country: 'JP',
+      },
+    });
+
+    const [updateArgs] = prisma.salonBranch.update.mock.calls[0] as [Record<string, unknown>];
+    const data = updateArgs['data'] as Record<string, unknown>;
+    expect(Object.prototype.hasOwnProperty.call(data, 'phone')).toBe(false);
+    expect(Object.prototype.hasOwnProperty.call(data, 'email')).toBe(false);
+  });
+
+  it('blocks reactivating a branch beneath an inactive business', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValue(branch({ status: 'INACTIVE' }));
+    prisma.salonBusiness.findFirst.mockResolvedValue(business({ status: 'INACTIVE' }));
+
+    await expect(
+      service.updateBranch({ user: user() }, 'branch-1', {
+        businessId: 'business-1',
+        name: 'Main Branch',
+        timezone: 'Asia/Tokyo',
+        currency: 'JPY',
+        status: 'ACTIVE',
+        address: {
+          line1: '1 Main St',
+          city: 'Tokyo',
+          state: 'Tokyo',
+          postalCode: '1000001',
+          country: 'JP',
+        },
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
   it('replaces weekly hours atomically', async () => {
     prisma.salonBranch.findFirst.mockResolvedValue(branch());
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
     prisma.salonBranchHours.deleteMany.mockReturnValue('delete-op');
     prisma.salonBranchHours.createMany.mockReturnValue('create-op');
-    prisma.$transaction.mockResolvedValue(['deleted', 'created']);
 
     const days = [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
       dayOfWeek,
@@ -425,7 +519,11 @@ describe('SalonOwnerSettingsService', () => {
     });
 
     expect(result.days).toHaveLength(7);
-    expect(prisma.$transaction).toHaveBeenCalledWith(['delete-op', 'create-op']);
+    expect(prisma.salonBranchHours.deleteMany).toHaveBeenCalledWith({ where: { branchId: 'branch-1' } });
+    expect(prisma.salonBranchHours.createMany).toHaveBeenCalled();
+    expectAuditCall(prisma.auditEvent.create.mock.calls as [AuditCreateArgs][], {
+      action: 'salon_owner.branch.hours.replace',
+    });
   });
 
   it('rejects invalid hours and holiday intervals', async () => {
@@ -462,6 +560,7 @@ describe('SalonOwnerSettingsService', () => {
 
   it('upserts holidays and branch policy', async () => {
     prisma.salonBranch.findFirst.mockResolvedValue(branch());
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
     prisma.salonBranchHoliday.upsert.mockResolvedValue({
       id: 'holiday-1',
       branchId: 'branch-1',
@@ -484,6 +583,9 @@ describe('SalonOwnerSettingsService', () => {
     await expect(
       service.setBranchHoliday({ user: user() }, 'branch-1', '2026-05-26', { closed: true, reason: ' Maintenance ' }),
     ).resolves.toMatchObject({ date: '2026-05-26', reason: 'Maintenance' });
+    expectAuditCall(prisma.auditEvent.create.mock.calls as [AuditCreateArgs][], {
+      action: 'salon_owner.branch.holiday.set',
+    });
 
     await expect(
       service.updateBranchPolicy({ user: user() }, 'branch-1', {
@@ -497,10 +599,14 @@ describe('SalonOwnerSettingsService', () => {
       cancellationCutoffMinutes: 120,
       noShowGraceMinutes: 10,
     });
+    expectAuditCall(prisma.auditEvent.create.mock.calls as [AuditCreateArgs][], {
+      action: 'salon_owner.branch.policy.update',
+    });
   });
 
   it('clears an existing holiday reason when the replacement omits it', async () => {
     prisma.salonBranch.findFirst.mockResolvedValue(branch());
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
     prisma.salonBranchHoliday.upsert.mockResolvedValue({
       id: 'holiday-1',
       branchId: 'branch-1',
