@@ -98,7 +98,24 @@ function prismaKnownError(code: string): Prisma.PrismaClientKnownRequestError {
 }
 
 function hashIdempotencyPayload(input: unknown): string {
-  return createHash('sha256').update(JSON.stringify(input)).digest('hex');
+  const canonicalize = (value: unknown): unknown => {
+    if (Array.isArray(value)) {
+      return value.map((entry) => canonicalize(entry));
+    }
+
+    if (value && typeof value === 'object') {
+      return Object.keys(value as Record<string, unknown>)
+        .sort()
+        .reduce<Record<string, unknown>>((result, key) => {
+          result[key] = canonicalize((value as Record<string, unknown>)[key]);
+          return result;
+        }, {});
+    }
+
+    return value;
+  };
+
+  return createHash('sha256').update(JSON.stringify(canonicalize(input))).digest('hex');
 }
 
 function createPrismaMock() {
@@ -1238,6 +1255,46 @@ describe('SalonOwnerSettingsService', () => {
     });
 
     await expect(service.createBranch({ user: user(), idempotencyKey: 'idem-1' }, input)).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('treats equivalent idempotency payloads with different object key order as the same request', async () => {
+    const originalInput = {
+      businessId: 'business-1',
+      name: 'Downtown',
+      timezone: 'Asia/Tokyo',
+      currency: 'JPY',
+      status: 'ACTIVE' as const,
+      address: {
+        line1: '1 Main St',
+        city: 'Tokyo',
+        state: 'Tokyo',
+        postalCode: '1000001',
+        country: 'JP',
+      },
+    };
+    const reorderedInput = {
+      address: {
+        country: 'JP',
+        postalCode: '1000001',
+        state: 'Tokyo',
+        city: 'Tokyo',
+        line1: '1 Main St',
+      },
+      status: 'ACTIVE' as const,
+      currency: 'JPY',
+      timezone: 'Asia/Tokyo',
+      name: 'Downtown',
+      businessId: 'business-1',
+    };
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.auditEvent.findFirst.mockResolvedValue({
+      reason: `${hashIdempotencyPayload(originalInput)}:branch-1`,
+    });
+    prisma.salonBranch.findFirst.mockResolvedValue(branch({ name: 'Downtown' }));
+
+    await expect(service.createBranch({ user: user(), idempotencyKey: 'idem-1' }, reorderedInput)).resolves.toMatchObject({
+      id: 'branch-1',
+    });
   });
 
   it('maps stored holiday intervals back into API models', () => {

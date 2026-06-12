@@ -6,6 +6,14 @@ import { COMMON_MESSAGE_KEYS, UserRole, type AuthenticatedUser } from '@cthub-bs
 import { SalonBusinessInputDto } from '../dto/salon-business.dto';
 import { SalonOwnerSettingsService } from '../services/salon-owner-settings.service';
 
+function readIdempotencyKey(value: string | undefined): string {
+  const trimmed = value?.trim();
+  if (!trimmed || trimmed.length < 8 || trimmed.length > 128) {
+    throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION);
+  }
+  return trimmed;
+}
+
 @ApiTags('Business Settings')
 @Roles(UserRole.OWNER, UserRole.ADMIN)
 @UseInterceptors(ResponseEnvelopeInterceptor)
@@ -26,11 +34,7 @@ export class BusinessSettingsController {
     @Headers('Idempotency-Key') idempotencyKey: string | undefined,
     @Body() body: SalonBusinessInputDto,
   ) {
-    if (!idempotencyKey?.trim()) {
-      throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION);
-    }
-
-    return this.settings.createBusiness({ user, idempotencyKey: idempotencyKey.trim() }, body);
+    return this.settings.createBusiness({ user, idempotencyKey: readIdempotencyKey(idempotencyKey) }, body);
   }
 
   @Get(':businessId')

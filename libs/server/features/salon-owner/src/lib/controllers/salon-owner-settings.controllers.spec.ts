@@ -47,12 +47,12 @@ describe('Salon owner settings controllers', () => {
     const body = { displayName: 'Salon One', legalName: 'Salon One Legal', status: 'ACTIVE' as const };
 
     await controller.listBusinesses(user);
-    await controller.createBusiness(user, 'key-1', body);
+    await controller.createBusiness(user, 'key-12345', body);
     await controller.getBusiness(user, 'business-1');
     await controller.updateBusiness(user, 'business-1', body);
 
     expect(service.listBusinesses).toHaveBeenCalledWith({ user });
-    expect(service.createBusiness).toHaveBeenCalledWith({ user, idempotencyKey: 'key-1' }, body);
+    expect(service.createBusiness).toHaveBeenCalledWith({ user, idempotencyKey: 'key-12345' }, body);
     expect(service.getBusiness).toHaveBeenCalledWith({ user }, 'business-1');
     expect(service.updateBusiness).toHaveBeenCalledWith({ user }, 'business-1', body);
   });
@@ -62,6 +62,21 @@ describe('Salon owner settings controllers', () => {
 
     expect(() =>
       controller.createBusiness(user, '   ', { displayName: 'Salon One', legalName: 'Salon One Legal', status: 'ACTIVE' }),
+    ).toThrow(BadRequestException);
+  });
+
+  it('rejects business creation when the idempotency key falls outside the documented bounds', () => {
+    const controller = new BusinessSettingsController(serviceMock() as unknown as SalonOwnerSettingsService);
+
+    expect(() =>
+      controller.createBusiness(user, 'short', { displayName: 'Salon One', legalName: 'Salon One Legal', status: 'ACTIVE' }),
+    ).toThrow(BadRequestException);
+    expect(() =>
+      controller.createBusiness(user, 'x'.repeat(129), {
+        displayName: 'Salon One',
+        legalName: 'Salon One Legal',
+        status: 'ACTIVE',
+      }),
     ).toThrow(BadRequestException);
   });
 
@@ -94,7 +109,7 @@ describe('Salon owner settings controllers', () => {
     const policy = { bookingLeadMinutes: 30, cancellationCutoffMinutes: 120, noShowGraceMinutes: 10 };
 
     await controller.listBranches(user, 'business-1');
-    await controller.createBranch(user, 'key-2', profile);
+    await controller.createBranch(user, 'key-23456', profile);
     await controller.getBranch(user, 'branch-1');
     await controller.updateBranch(user, 'branch-1', profile);
     await controller.replaceBranchHours(user, 'branch-1', hours);
@@ -102,7 +117,7 @@ describe('Salon owner settings controllers', () => {
     await controller.updateBranchPolicy(user, 'branch-1', policy);
 
     expect(service.listBranches).toHaveBeenCalledWith({ user }, 'business-1');
-    expect(service.createBranch).toHaveBeenCalledWith({ user, idempotencyKey: 'key-2' }, profile);
+    expect(service.createBranch).toHaveBeenCalledWith({ user, idempotencyKey: 'key-23456' }, profile);
     expect(service.getBranch).toHaveBeenCalledWith({ user }, 'branch-1');
     expect(service.updateBranch).toHaveBeenCalledWith({ user }, 'branch-1', profile);
     expect(service.replaceBranchHours).toHaveBeenCalledWith({ user }, 'branch-1', hours);
@@ -129,5 +144,26 @@ describe('Salon owner settings controllers', () => {
         },
       }),
     ).toThrow(BadRequestException);
+  });
+
+  it('rejects branch creation when the idempotency key falls outside the documented bounds', () => {
+    const controller = new BranchSettingsController(serviceMock() as unknown as SalonOwnerSettingsService);
+    const body = {
+      businessId: 'business-1',
+      name: 'Main Branch',
+      timezone: 'Asia/Tokyo',
+      currency: 'JPY',
+      status: 'ACTIVE' as const,
+      address: {
+        line1: '1 Main St',
+        city: 'Tokyo',
+        state: 'Tokyo',
+        postalCode: '1000001',
+        country: 'JP',
+      },
+    };
+
+    expect(() => controller.createBranch(user, 'short', body)).toThrow(BadRequestException);
+    expect(() => controller.createBranch(user, 'x'.repeat(129), body)).toThrow(BadRequestException);
   });
 });

@@ -85,8 +85,25 @@ function hasRole(user: AuthenticatedUser, role: string): boolean {
   });
 }
 
+function canonicalizeForHash(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => canonicalizeForHash(entry));
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.keys(value as Record<string, unknown>)
+      .sort()
+      .reduce<Record<string, unknown>>((result, key) => {
+        result[key] = canonicalizeForHash((value as Record<string, unknown>)[key]);
+        return result;
+      }, {});
+  }
+
+  return value;
+}
+
 function hashIdempotencyPayload(input: unknown): string {
-  return createHash('sha256').update(JSON.stringify(input)).digest('hex');
+  return createHash('sha256').update(JSON.stringify(canonicalizeForHash(input))).digest('hex');
 }
 
 function readStringArray(value: unknown): string[] {

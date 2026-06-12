@@ -109,7 +109,7 @@ ALTER TABLE "public"."salon_branch_holiday" ADD CONSTRAINT "salon_branch_holiday
 -- AddForeignKey
 ALTER TABLE "public"."salon_branch_policy" ADD CONSTRAINT "salon_branch_policy_branch_id_fkey" FOREIGN KEY ("branch_id") REFERENCES "public"."salon_branch"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
-WITH salon_business_backfill AS (
+WITH RECURSIVE ordered_salons AS (
     SELECT
         s."id" AS "salon_id",
         s."tenant_id",
@@ -121,19 +121,63 @@ WITH salon_business_backfill AS (
         s."created_at",
         s."updated_at",
         ROW_NUMBER() OVER (
-            PARTITION BY s."tenant_id", COALESCE(NULLIF(BTRIM(s."name"), ''), 'Salon')
+            PARTITION BY s."tenant_id"
             ORDER BY s."created_at", s."id"
-        ) AS "tenant_name_rank"
+        ) AS "tenant_order"
     FROM "public"."salon" s
+),
+salon_business_backfill AS (
+    SELECT
+        ordered."salon_id",
+        ordered."tenant_id",
+        ordered."salon_name",
+        ordered."status",
+        ordered."created_at",
+        ordered."updated_at",
+        ordered."tenant_order",
+        ordered."salon_name" AS "display_name",
+        ARRAY[ordered."salon_name"]::TEXT[] AS "used_display_names"
+    FROM ordered_salons ordered
+    WHERE ordered."tenant_order" = 1
+
+    UNION ALL
+
+    SELECT
+        ordered."salon_id",
+        ordered."tenant_id",
+        ordered."salon_name",
+        ordered."status",
+        ordered."created_at",
+        ordered."updated_at",
+        ordered."tenant_order",
+        candidate."display_name",
+        previous."used_display_names" || candidate."display_name"
+    FROM salon_business_backfill previous
+    INNER JOIN ordered_salons ordered
+        ON ordered."tenant_id" = previous."tenant_id"
+       AND ordered."tenant_order" = previous."tenant_order" + 1
+    CROSS JOIN LATERAL (
+        SELECT
+            CASE
+                WHEN suffix."value" = 1 THEN ordered."salon_name"
+                ELSE ordered."salon_name" || ' ' || suffix."value"::TEXT
+            END AS "display_name"
+        FROM GENERATE_SERIES(1, 10000) AS suffix("value")
+        WHERE NOT (
+            CASE
+                WHEN suffix."value" = 1 THEN ordered."salon_name"
+                ELSE ordered."salon_name" || ' ' || suffix."value"::TEXT
+            END = ANY(previous."used_display_names")
+        )
+        ORDER BY suffix."value"
+        LIMIT 1
+    ) candidate
 )
 INSERT INTO "public"."salon_business" ("id", "tenant_id", "display_name", "legal_name", "status", "created_at", "updated_at")
 SELECT
     backfill."salon_id",
     backfill."tenant_id",
-    CASE
-        WHEN backfill."tenant_name_rank" = 1 THEN backfill."salon_name"
-        ELSE backfill."salon_name" || ' ' || backfill."tenant_name_rank"::text
-    END,
+    backfill."display_name",
     backfill."salon_name",
     backfill."status",
     backfill."created_at",

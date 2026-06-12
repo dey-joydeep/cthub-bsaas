@@ -52,6 +52,15 @@ components:
         minLength: 8
         maxLength: 128
       description: Required by policy for payment capture, invoice finalization, appointment creation, and stock adjustments.
+    RequiredIdempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 128
+      description: Required by policy for payment capture, invoice finalization, appointment creation, and stock adjustments.
     BranchIdQuery:
       name: branchId
       in: query
@@ -858,7 +867,7 @@ paths:
       operationId: createSalonBusiness
       parameters:
         - $ref: '#/components/parameters/CorrelationIdHeader'
-        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - $ref: '#/components/parameters/RequiredIdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -932,7 +941,7 @@ paths:
       operationId: createBranch
       parameters:
         - $ref: '#/components/parameters/CorrelationIdHeader'
-        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - $ref: '#/components/parameters/RequiredIdempotencyKeyHeader'
       requestBody:
         required: true
         content:

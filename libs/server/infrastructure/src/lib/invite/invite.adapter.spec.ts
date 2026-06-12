@@ -27,7 +27,8 @@ describe('InvitePrismaAdapter', () => {
             },
             user: {
               findUnique: jest.fn(),
-              upsert: jest.fn(),
+              create: jest.fn(),
+              update: jest.fn(),
             },
             role: {
               findUnique: jest.fn(),
@@ -35,6 +36,7 @@ describe('InvitePrismaAdapter', () => {
             userRole: {
               upsert: jest.fn(),
             },
+            $transaction: jest.fn(),
           },
         },
       ],
@@ -42,6 +44,7 @@ describe('InvitePrismaAdapter', () => {
 
     adapter = module.get<InvitePrismaAdapter>(InvitePrismaAdapter);
     prisma = module.get<PrismaService>(PrismaService);
+    (prisma.$transaction as jest.Mock).mockImplementation((callback: (tx: PrismaService) => unknown) => callback(prisma));
   });
 
   it('should be defined', () => {
@@ -101,19 +104,17 @@ describe('InvitePrismaAdapter', () => {
       (prisma.registrationLink.findFirst as jest.Mock).mockResolvedValue(rec);
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
-      (prisma.user.upsert as jest.Mock).mockResolvedValue(user);
+      (prisma.user.create as jest.Mock).mockResolvedValue(user);
       (prisma.role.findUnique as jest.Mock).mockResolvedValue(role);
 
       const result = await adapter.completeOwner(input);
-      const [ownerUpsertArgs] = (prisma.user.upsert as jest.Mock).mock.calls[0] as [
+      const [ownerCreateArgs] = (prisma.user.create as jest.Mock).mock.calls[0] as [
         {
-          update: { salonTenantId: string };
-          create: { salonTenantId: string };
+          data: { salonTenantId: string };
         },
       ];
 
-      expect(ownerUpsertArgs.update.salonTenantId).toBe('tenant-1');
-      expect(ownerUpsertArgs.create.salonTenantId).toBe('tenant-1');
+      expect(ownerCreateArgs.data.salonTenantId).toBe('tenant-1');
       expect(prisma.userRole.upsert).toHaveBeenCalled();
       expect(prisma.registrationLink.update).toHaveBeenCalled();
       expect(result).toEqual({ userId: user.id, requireMfa: user.isMFAEnrollRequired });
@@ -133,12 +134,12 @@ describe('InvitePrismaAdapter', () => {
       (prisma.registrationLink.findFirst as jest.Mock).mockResolvedValue(rec);
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
-      (prisma.user.upsert as jest.Mock).mockResolvedValue(user);
+      (prisma.user.create as jest.Mock).mockResolvedValue(user);
       (prisma.role.findUnique as jest.Mock).mockResolvedValue(null);
 
       const result = await adapter.completeOwner(input);
 
-      expect(prisma.user.upsert).toHaveBeenCalled();
+      expect(prisma.user.create).toHaveBeenCalled();
       expect(prisma.userRole.upsert).not.toHaveBeenCalled();
       expect(prisma.registrationLink.update).toHaveBeenCalled();
       expect(result).toEqual({ userId: user.id, requireMfa: user.isMFAEnrollRequired });
@@ -159,7 +160,8 @@ describe('InvitePrismaAdapter', () => {
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
 
       await expect(adapter.completeOwner(input)).rejects.toThrow(ConflictException);
-      expect(prisma.user.upsert).not.toHaveBeenCalled();
+      expect(prisma.user.update).not.toHaveBeenCalled();
+      expect(prisma.user.create).not.toHaveBeenCalled();
     });
   });
 
@@ -218,19 +220,17 @@ describe('InvitePrismaAdapter', () => {
       (prisma.staffInvite.findFirst as jest.Mock).mockResolvedValue(rec);
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
-      (prisma.user.upsert as jest.Mock).mockResolvedValue(user);
+      (prisma.user.create as jest.Mock).mockResolvedValue(user);
       (prisma.role.findUnique as jest.Mock).mockResolvedValue(role);
 
       const result = await adapter.completeStaff(input);
-      const [staffUpsertArgs] = (prisma.user.upsert as jest.Mock).mock.calls[0] as [
+      const [staffCreateArgs] = (prisma.user.create as jest.Mock).mock.calls[0] as [
         {
-          update: { salonTenantId: string };
-          create: { salonTenantId: string };
+          data: { salonTenantId: string };
         },
       ];
 
-      expect(staffUpsertArgs.update.salonTenantId).toBe('tenant-1');
-      expect(staffUpsertArgs.create.salonTenantId).toBe('tenant-1');
+      expect(staffCreateArgs.data.salonTenantId).toBe('tenant-1');
       expect(prisma.userRole.upsert).toHaveBeenCalled();
       expect(prisma.staffInvite.update).toHaveBeenCalled();
       expect(result).toEqual({ userId: user.id, requireMfa: user.isMFAEnrollRequired });
@@ -250,12 +250,12 @@ describe('InvitePrismaAdapter', () => {
       (prisma.staffInvite.findFirst as jest.Mock).mockResolvedValue(rec);
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
-      (prisma.user.upsert as jest.Mock).mockResolvedValue(user);
+      (prisma.user.create as jest.Mock).mockResolvedValue(user);
       (prisma.role.findUnique as jest.Mock).mockResolvedValue(null);
 
       const result = await adapter.completeStaff(input);
 
-      expect(prisma.user.upsert).toHaveBeenCalled();
+      expect(prisma.user.create).toHaveBeenCalled();
       expect(prisma.userRole.upsert).not.toHaveBeenCalled();
       expect(prisma.staffInvite.update).toHaveBeenCalled();
       expect(result).toEqual({ userId: user.id, requireMfa: user.isMFAEnrollRequired });
@@ -276,7 +276,40 @@ describe('InvitePrismaAdapter', () => {
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
 
       await expect(adapter.completeStaff(input)).rejects.toThrow(ConflictException);
-      expect(prisma.user.upsert).not.toHaveBeenCalled();
+      expect(prisma.user.update).not.toHaveBeenCalled();
+      expect(prisma.user.create).not.toHaveBeenCalled();
+    });
+
+    it('updates an existing unscoped user inside the transaction instead of creating a new one', async () => {
+      const input = { token: 'valid-token', password: 'password' };
+      const rec = {
+        id: 'rec-id',
+        email: 'test@example.com',
+        salonId: 'salon-id',
+        expiresAt: new Date(Date.now() + 10000),
+        salon: { tenantId: 'tenant-1' },
+      };
+      const user = { id: 'user-id', isMFAEnrollRequired: false };
+
+      (prisma.staffInvite.findFirst as jest.Mock).mockResolvedValue(rec);
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 'user-id', salonTenantId: null });
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
+      (prisma.user.update as jest.Mock).mockResolvedValue(user);
+      (prisma.role.findUnique as jest.Mock).mockResolvedValue(null);
+
+      await expect(adapter.completeStaff(input)).resolves.toEqual({ userId: 'user-id', requireMfa: false });
+      expect(prisma.user.create).not.toHaveBeenCalled();
+      const [updateCallArgs] = (prisma.user.update as jest.Mock).mock.calls as [
+        [
+          {
+            where: { id: string };
+            data: { salonTenantId: string };
+          },
+        ],
+      ];
+      const [updateCall] = updateCallArgs;
+      expect(updateCall.where).toEqual({ id: 'user-id' });
+      expect(updateCall.data.salonTenantId).toBe('tenant-1');
     });
   });
 });
