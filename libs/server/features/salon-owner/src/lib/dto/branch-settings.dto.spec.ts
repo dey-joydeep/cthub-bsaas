@@ -37,6 +37,15 @@ describe('BranchProfileInputDto', () => {
 
     await expect(validate(dto)).resolves.toEqual([]);
   });
+
+  it('accepts a nullable email to clear an existing branch email', async () => {
+    const dto = plainToInstance(BranchProfileInputDto, {
+      ...validBranchProfile,
+      email: null,
+    });
+
+    await expect(validate(dto)).resolves.toEqual([]);
+  });
 });
 
 describe('BranchPolicyInputDto', () => {

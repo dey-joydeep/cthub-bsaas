@@ -15,9 +15,9 @@
 
 - Hours editor prevents overlapping intervals before submit.
 - Holiday calendar displays open and closed state.
-- Archive blocker dialog displays future appointment count.
+- Archive dialog displays branch status conflicts.
 
 ## Contract Tests
 
 - Branch list filters and pagination match OpenAPI.
-- Conflict response schema includes blocker details.
+- Conflict response schema matches branch and business status rules.

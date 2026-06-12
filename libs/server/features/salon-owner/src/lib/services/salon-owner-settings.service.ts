@@ -49,12 +49,12 @@ function trimRequired(value: string, minimumLength = 1): string {
   return trimmed;
 }
 
-function optionalTrim(value?: string): string | undefined {
+function optionalTrim(value?: string | null): string | undefined {
   const trimmed = value?.trim();
   return trimmed && trimmed.length > 0 ? trimmed : undefined;
 }
 
-function optionalTrimOrNull(value?: string): string | null {
+function optionalTrimOrNull(value?: string | null): string | null {
   const trimmed = value?.trim();
   return trimmed && trimmed.length > 0 ? trimmed : null;
 }
@@ -382,13 +382,12 @@ export class SalonOwnerSettingsService {
         if (!business) {
           throw new NotFoundException(notFoundMessage);
         }
-        if (business.status === PrismaSalonOwnerStatus.INACTIVE) {
-          throw new ConflictException(inactiveBusinessMessage);
-        }
-
         const replayed = await this.findIdempotentBranchReplay(tx, context, business.tenantId, requestHash);
         if (replayed) {
           return replayed;
+        }
+        if (business.status === PrismaSalonOwnerStatus.INACTIVE) {
+          throw new ConflictException(inactiveBusinessMessage);
         }
 
         const data = this.normalizeBranchCreateInput(input, business.id);
@@ -461,14 +460,29 @@ export class SalonOwnerSettingsService {
   }
 
   async replaceBranchHours(context: SalonOwnerRequestContext, branchId: string, input: WeeklyHoursInputDto): Promise<BranchHoursModel> {
-    const branch = await this.findBranchInScope(context, branchId);
-    if (input.timezone !== branch.timezone) {
-      throw new UnprocessableEntityException(validationMessage);
-    }
-
     const days = normalizeWeeklyDays(input);
-    const business = await this.findBusinessInScope(context, branch.businessId);
+    const tenantIds = this.requireTenantIds(context);
     await this.prisma.$transaction(async (tx: TransactionClient) => {
+      const branch = await tx.salonBranch.findFirst({
+        where: {
+          id: branchId,
+          business: { tenantId: this.tenantScopeFilter(tenantIds) },
+        },
+        include: {
+          business: {
+            select: {
+              tenantId: true,
+            },
+          },
+        },
+      });
+      if (!branch) {
+        throw new NotFoundException(notFoundMessage);
+      }
+      if (input.timezone !== branch.timezone) {
+        throw new UnprocessableEntityException(validationMessage);
+      }
+
       await tx.salonBranchHours.deleteMany({ where: { branchId } });
       await tx.salonBranchHours.createMany({
         data: days.map((day) => ({
@@ -479,8 +493,8 @@ export class SalonOwnerSettingsService {
           intervals: toJsonArray(day.intervals),
         })),
       });
-      await this.createAuditEvent(tx, context, business.tenantId, 'salon_owner.branch.hours.replace');
-    });
+      await this.createAuditEvent(tx, context, branch.business.tenantId, 'salon_owner.branch.hours.replace');
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 
     return {
       branchId,

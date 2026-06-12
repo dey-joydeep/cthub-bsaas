@@ -2,6 +2,7 @@ import { ConflictException, ForbiddenException, NotFoundException, Unprocessable
 import { Prisma } from '@prisma/client';
 import { UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
 import type { PrismaService } from '@cthub-bsaas/server-data-access';
+import { createHash } from 'crypto';
 
 import { SalonOwnerSettingsService } from './salon-owner-settings.service';
 
@@ -94,6 +95,10 @@ function prismaKnownError(code: string): Prisma.PrismaClientKnownRequestError {
     code,
     clientVersion: 'test',
   });
+}
+
+function hashIdempotencyPayload(input: unknown): string {
+  return createHash('sha256').update(JSON.stringify(input)).digest('hex');
 }
 
 function createPrismaMock() {
@@ -203,6 +208,39 @@ describe('SalonOwnerSettingsService', () => {
     });
   });
 
+  it('reads managed tenant scope from the nested saas owner payload', async () => {
+    prisma.salonBusiness.findMany.mockResolvedValue([business({ tenantId: 'tenant-9' })]);
+
+    await expect(
+      service.listBusinesses({
+        user: user({
+          tenantId: undefined,
+          roles: [UserRole.ADMIN],
+          saasOwner: { managedTenants: ['tenant-9', 'tenant-10'] },
+        }),
+      }),
+    ).resolves.toMatchObject({
+      items: [expect.objectContaining({ tenantId: 'tenant-9' })],
+    });
+
+    expect(prisma.salonBusiness.findMany).toHaveBeenCalledWith({
+      where: { tenantId: { in: ['tenant-9', 'tenant-10'] } },
+      orderBy: { createdAt: 'asc' },
+    });
+  });
+
+  it('rejects admin scope when nested saas owner data does not carry managed tenants', async () => {
+    await expect(
+      service.listBusinesses({
+        user: user({
+          tenantId: undefined,
+          roles: [UserRole.ADMIN],
+          saasOwner: [],
+        }),
+      }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
   it('requires tenant scope from the authenticated token', async () => {
     await expect(service.listBusinesses({ user: user({ tenantId: undefined }) })).rejects.toBeInstanceOf(ForbiddenException);
   });
@@ -238,6 +276,56 @@ describe('SalonOwnerSettingsService', () => {
     prisma.salonBusiness.create.mockRejectedValueOnce(prismaKnownError('P2002'));
     await expect(
       service.createBusiness({ user: user() }, { displayName: 'Salon One', legalName: 'Salon One Legal', status: 'ACTIVE' }),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('replays a previously created business when the same idempotency key is reused', async () => {
+    const input = {
+      displayName: 'Salon One',
+      legalName: 'Salon One Legal',
+      status: 'ACTIVE' as const,
+    };
+    prisma.auditEvent.findFirst.mockResolvedValue({
+      reason: `${hashIdempotencyPayload(input)}:business-1`,
+    });
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+
+    await expect(service.createBusiness({ user: user(), idempotencyKey: 'idem-1' }, input)).resolves.toMatchObject({
+      id: 'business-1',
+    });
+
+    expect(prisma.salonBusiness.create).not.toHaveBeenCalled();
+  });
+
+  it('replays a business after a post-commit retry race in the catch path', async () => {
+    const input = {
+      displayName: 'Salon One',
+      legalName: 'Salon One Legal',
+      status: 'ACTIVE' as const,
+    };
+    prisma.salonBusiness.create.mockRejectedValue(new Error('write lost'));
+    prisma.auditEvent.findFirst
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        reason: `${hashIdempotencyPayload(input)}:business-1`,
+      });
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+
+    await expect(service.createBusiness({ user: user(), idempotencyKey: 'idem-1' }, input)).resolves.toMatchObject({
+      id: 'business-1',
+    });
+  });
+
+  it('rejects business replay when the same idempotency key is reused with a different payload', async () => {
+    prisma.auditEvent.findFirst.mockResolvedValue({
+      reason: 'different-hash:business-1',
+    });
+
+    await expect(
+      service.createBusiness(
+        { user: user(), idempotencyKey: 'idem-1' },
+        { displayName: 'Salon One', legalName: 'Salon One Legal', status: 'ACTIVE' },
+      ),
     ).rejects.toBeInstanceOf(ConflictException);
   });
 
@@ -277,6 +365,21 @@ describe('SalonOwnerSettingsService', () => {
     });
   });
 
+  it('rejects business creation when the authenticated scope spans multiple tenants', async () => {
+    await expect(
+      service.createBusiness(
+        {
+          user: user({
+            tenantId: undefined,
+            roles: [UserRole.ADMIN],
+            managedTenants: ['tenant-1', 'tenant-2'],
+          }),
+        },
+        { displayName: 'Salon One', legalName: 'Salon One Legal', status: 'ACTIVE' },
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
   it('blocks deactivating a business while active branches remain', async () => {
     prisma.salonBusiness.findFirst.mockResolvedValue(business({ status: 'ACTIVE' }));
     prisma.salonBranch.count.mockResolvedValue(2);
@@ -292,13 +395,49 @@ describe('SalonOwnerSettingsService', () => {
     expect(prisma.salonBusiness.update).not.toHaveBeenCalled();
   });
 
+  it('surfaces not-found and duplicate update failures for business updates', async () => {
+    prisma.salonBusiness.findFirst.mockResolvedValueOnce(business());
+    prisma.salonBusiness.findFirst.mockResolvedValueOnce(null);
+
+    await expect(
+      service.updateBusiness({ user: user() }, 'business-1', {
+        displayName: 'Salon One',
+        legalName: 'Salon One Legal',
+        status: 'ACTIVE',
+      }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBusiness.update.mockRejectedValueOnce(prismaKnownError('P2002'));
+
+    await expect(
+      service.updateBusiness({ user: user() }, 'business-1', {
+        displayName: 'Salon One',
+        legalName: 'Salon One Legal',
+        status: 'ACTIVE',
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('lists branches with and without an explicit business filter', async () => {
+    prisma.salonBranch.findMany.mockResolvedValue([branch()]);
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+
+    await expect(service.listBranches({ user: user() })).resolves.toMatchObject({
+      items: [expect.objectContaining({ id: 'branch-1' })],
+    });
+    await expect(service.listBranches({ user: user() }, 'business-1')).resolves.toMatchObject({
+      items: [expect.objectContaining({ businessId: 'business-1' })],
+    });
+  });
+
   it('creates branches after validating business scope and normalizing address', async () => {
     prisma.salonBusiness.findFirst.mockResolvedValue(business());
     prisma.salonBranch.create.mockResolvedValue(branch({ name: 'Downtown', status: 'INACTIVE' }));
 
     await expect(
       service.createBranch(
-        { user: user() },
+        { user: user(), idempotencyKey: 'idem-create-branch' },
         {
           businessId: 'business-1',
           name: ' Downtown ',
@@ -356,6 +495,111 @@ describe('SalonOwnerSettingsService', () => {
     expect(prisma.salonBranch.create).not.toHaveBeenCalled();
   });
 
+  it('replays branch creation before applying the inactive-business check', async () => {
+    const input = {
+      businessId: 'business-1',
+      name: 'Downtown',
+      timezone: 'Asia/Tokyo',
+      currency: 'JPY',
+      status: 'ACTIVE' as const,
+      address: {
+        line1: '1 Main St',
+        city: 'Tokyo',
+        state: 'Tokyo',
+        postalCode: '1000001',
+        country: 'JP',
+      },
+    };
+    prisma.salonBusiness.findFirst.mockResolvedValue(business({ status: 'INACTIVE' }));
+    prisma.auditEvent.findFirst.mockResolvedValue({
+      reason: `${hashIdempotencyPayload(input)}:branch-1`,
+    });
+    prisma.salonBranch.findFirst.mockResolvedValue(branch({ name: 'Downtown' }));
+
+    await expect(service.createBranch({ user: user(), idempotencyKey: 'idem-1' }, input)).resolves.toMatchObject({
+      id: 'branch-1',
+      name: 'Downtown',
+    });
+
+    expect(prisma.salonBranch.create).not.toHaveBeenCalled();
+  });
+
+  it('replays a branch after a post-commit retry race in the catch path', async () => {
+    const input = {
+      businessId: 'business-1',
+      name: 'Downtown',
+      timezone: 'Asia/Tokyo',
+      currency: 'JPY',
+      status: 'ACTIVE' as const,
+      address: {
+        line1: '1 Main St',
+        city: 'Tokyo',
+        state: 'Tokyo',
+        postalCode: '1000001',
+        country: 'JP',
+      },
+    };
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBranch.create.mockRejectedValue(new Error('write lost'));
+    prisma.auditEvent.findFirst
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        reason: `${hashIdempotencyPayload(input)}:branch-1`,
+      });
+    prisma.salonBranch.findFirst.mockResolvedValue(branch({ name: 'Downtown' }));
+
+    await expect(service.createBranch({ user: user(), idempotencyKey: 'idem-1' }, input)).resolves.toMatchObject({
+      id: 'branch-1',
+    });
+  });
+
+  it('surfaces branch creation not-found and duplicate failures', async () => {
+    prisma.salonBusiness.findFirst.mockResolvedValueOnce(null);
+
+    await expect(
+      service.createBranch(
+        { user: user() },
+        {
+          businessId: 'business-1',
+          name: 'Downtown',
+          timezone: 'Asia/Tokyo',
+          currency: 'JPY',
+          status: 'ACTIVE',
+          address: {
+            line1: '1 Main St',
+            city: 'Tokyo',
+            state: 'Tokyo',
+            postalCode: '1000001',
+            country: 'JP',
+          },
+        },
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBranch.create.mockRejectedValueOnce(prismaKnownError('P2002'));
+
+    await expect(
+      service.createBranch(
+        { user: user() },
+        {
+          businessId: 'business-1',
+          name: 'Downtown',
+          timezone: 'Asia/Tokyo',
+          currency: 'JPY',
+          status: 'ACTIVE',
+          address: {
+            line1: '1 Main St',
+            city: 'Tokyo',
+            state: 'Tokyo',
+            postalCode: '1000001',
+            country: 'JP',
+          },
+        },
+      ),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
   it('rejects branch names that are too short after trimming', async () => {
     prisma.salonBusiness.findFirst.mockResolvedValue(business());
 
@@ -404,6 +648,62 @@ describe('SalonOwnerSettingsService', () => {
         },
       ),
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('rejects invalid branch timezone and address country inputs', async () => {
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+
+    await expect(
+      service.createBranch(
+        { user: user() },
+        {
+          businessId: 'business-1',
+          name: 'Main Branch',
+          timezone: 'Mars/Base',
+          currency: 'JPY',
+          status: 'ACTIVE',
+          address: {
+            line1: '1 Main St',
+            city: 'Tokyo',
+            state: 'Tokyo',
+            postalCode: '1000001',
+            country: 'JP',
+          },
+        },
+      ),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    await expect(
+      service.createBranch(
+        { user: user() },
+        {
+          businessId: 'business-1',
+          name: 'Main Branch',
+          timezone: 'Asia/Tokyo',
+          currency: 'JPY',
+          status: 'ACTIVE',
+          address: {
+            line1: '1 Main St',
+            city: 'Tokyo',
+            state: 'Tokyo',
+            postalCode: '1000001',
+            country: 'JPN',
+          },
+        },
+      ),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('gets a branch and reports missing branches', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValueOnce(branch({ phone: null, email: null }));
+
+    const result = await service.getBranch({ user: user() }, 'branch-1');
+    expect(result.id).toBe('branch-1');
+    expect(result).not.toHaveProperty('phone');
+    expect(result).not.toHaveProperty('email');
+
+    prisma.salonBranch.findFirst.mockResolvedValueOnce(null);
+    await expect(service.getBranch({ user: user() }, 'missing-branch')).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('blocks branch updates that try to move a branch across businesses', async () => {
@@ -503,9 +803,83 @@ describe('SalonOwnerSettingsService', () => {
     ).rejects.toBeInstanceOf(ConflictException);
   });
 
-  it('replaces weekly hours atomically', async () => {
+  it('updates branch hours timezone alongside a branch timezone change and maps duplicate branch updates to conflict', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValue(branch({ timezone: 'Asia/Tokyo' }));
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBranch.update.mockResolvedValue(branch({ timezone: 'Asia/Seoul' }));
+
+    await expect(
+      service.updateBranch({ user: user() }, 'branch-1', {
+        businessId: 'business-1',
+        name: 'Main Branch',
+        timezone: 'Asia/Seoul',
+        currency: 'JPY',
+        status: 'ACTIVE',
+        address: {
+          line1: '1 Main St',
+          city: 'Tokyo',
+          state: 'Tokyo',
+          postalCode: '1000001',
+          country: 'JP',
+        },
+      }),
+    ).resolves.toMatchObject({ timezone: 'Asia/Seoul' });
+
+    expect(prisma.salonBranchHours.updateMany).toHaveBeenCalledWith({
+      where: { branchId: 'branch-1' },
+      data: { timezone: 'Asia/Seoul' },
+    });
+
     prisma.salonBranch.findFirst.mockResolvedValue(branch());
     prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBranch.update.mockRejectedValueOnce(prismaKnownError('P2002'));
+
+    await expect(
+      service.updateBranch({ user: user() }, 'branch-1', {
+        businessId: 'business-1',
+        name: 'Main Branch',
+        timezone: 'Asia/Tokyo',
+        currency: 'JPY',
+        status: 'ACTIVE',
+        address: {
+          line1: '1 Main St',
+          city: 'Tokyo',
+          state: 'Tokyo',
+          postalCode: '1000001',
+          country: 'JP',
+        },
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('surfaces an in-transaction branch lookup miss during update', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValue(branch());
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBusiness.findFirst.mockResolvedValueOnce(business()).mockResolvedValueOnce(null);
+
+    await expect(
+      service.updateBranch({ user: user() }, 'branch-1', {
+        businessId: 'business-1',
+        name: 'Main Branch',
+        timezone: 'Asia/Tokyo',
+        currency: 'JPY',
+        status: 'ACTIVE',
+        address: {
+          line1: '1 Main St',
+          city: 'Tokyo',
+          state: 'Tokyo',
+          postalCode: '1000001',
+          country: 'JP',
+        },
+      }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('replaces weekly hours atomically', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValue({
+      ...branch(),
+      business: { tenantId: 'tenant-1' },
+    });
     prisma.salonBranchHours.deleteMany.mockReturnValue('delete-op');
     prisma.salonBranchHours.createMany.mockReturnValue('create-op');
 
@@ -526,6 +900,26 @@ describe('SalonOwnerSettingsService', () => {
     expectAuditCall(prisma.auditEvent.create.mock.calls as [AuditCreateArgs][], {
       action: 'salon_owner.branch.hours.replace',
     });
+  });
+
+  it('rejects hours replacement when the branch timezone changed before the transaction writes', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValue({
+      ...branch({ timezone: 'Asia/Seoul' }),
+      business: { tenantId: 'tenant-1' },
+    });
+
+    await expect(
+      service.replaceBranchHours({ user: user() }, 'branch-1', {
+        timezone: 'Asia/Tokyo',
+        days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+          dayOfWeek,
+          open: dayOfWeek !== 0,
+          intervals: dayOfWeek === 0 ? [] : [{ start: '09:00', end: '17:00' }],
+        })),
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    expect(prisma.salonBranchHours.deleteMany).not.toHaveBeenCalled();
   });
 
   it('rejects invalid hours and holiday intervals', async () => {
@@ -556,6 +950,101 @@ describe('SalonOwnerSettingsService', () => {
     await expect(
       service.setBranchHoliday({ user: user() }, 'branch-1', '2026-02-31', {
         closed: true,
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    await expect(
+      service.setBranchHoliday({ user: user() }, 'branch-1', 'not-a-date', {
+        closed: true,
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('rejects closed-day weekly hours that still carry intervals', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValue({
+      ...branch(),
+      business: { tenantId: 'tenant-1' },
+    });
+
+    await expect(
+      service.replaceBranchHours({ user: user() }, 'branch-1', {
+        timezone: 'Asia/Tokyo',
+        days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+          dayOfWeek,
+          open: false,
+          intervals: dayOfWeek === 1 ? [{ start: '09:00', end: '10:00' }] : [],
+        })),
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('rejects duplicate, incomplete, and overlapping weekly hours payloads', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValue({
+      ...branch(),
+      business: { tenantId: 'tenant-1' },
+    });
+
+    await expect(
+      service.replaceBranchHours({ user: user() }, 'branch-1', {
+        timezone: 'Asia/Tokyo',
+        days: [
+          { dayOfWeek: 0, open: false, intervals: [] },
+          { dayOfWeek: 1, open: false, intervals: [] },
+          { dayOfWeek: 2, open: false, intervals: [] },
+          { dayOfWeek: 3, open: false, intervals: [] },
+          { dayOfWeek: 4, open: false, intervals: [] },
+          { dayOfWeek: 5, open: false, intervals: [] },
+        ],
+      } as never),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    await expect(
+      service.replaceBranchHours({ user: user() }, 'branch-1', {
+        timezone: 'Asia/Tokyo',
+        days: [0, 0, 2, 3, 4, 5, 6].map((dayOfWeek, index) => ({
+          dayOfWeek,
+          open: index === 1,
+          intervals: index === 1 ? [{ start: '09:00', end: '10:00' }] : [],
+        })),
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    await expect(
+      service.replaceBranchHours({ user: user() }, 'branch-1', {
+        timezone: 'Asia/Tokyo',
+        days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+          dayOfWeek,
+          open: dayOfWeek === 1,
+          intervals: dayOfWeek === 1 ? [{ start: '09:00', end: '09:00' }] : [],
+        })),
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    await expect(
+      service.replaceBranchHours({ user: user() }, 'branch-1', {
+        timezone: 'Asia/Tokyo',
+        days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+          dayOfWeek,
+          open: dayOfWeek === 1,
+          intervals:
+            dayOfWeek === 1
+              ? [
+                  { start: '09:00', end: '11:00' },
+                  { start: '10:30', end: '12:00' },
+                ]
+              : [],
+        })),
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    await expect(
+      service.replaceBranchHours({ user: user() }, 'branch-1', {
+        timezone: 'Asia/Tokyo',
+        days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+          dayOfWeek,
+          open: dayOfWeek === 1,
+          intervals: dayOfWeek === 1 ? [{ start: '24:00', end: '25:00' }] : [],
+        })),
       }),
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
   });
@@ -606,6 +1095,38 @@ describe('SalonOwnerSettingsService', () => {
     });
   });
 
+  it('rejects holiday replacements that mix closed state and intervals or omit open intervals', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValue(branch());
+
+    await expect(
+      service.setBranchHoliday({ user: user() }, 'branch-1', '2026-05-26', {
+        closed: true,
+        intervals: [{ start: '09:00', end: '10:00' }],
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    await expect(
+      service.setBranchHoliday({ user: user() }, 'branch-1', '2026-05-26', {
+        closed: false,
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('surfaces an in-transaction branch miss during hours replacement', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValue(null);
+
+    await expect(
+      service.replaceBranchHours({ user: user() }, 'branch-1', {
+        timezone: 'Asia/Tokyo',
+        days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+          dayOfWeek,
+          open: false,
+          intervals: [],
+        })),
+      }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
   it('clears an existing holiday reason when the replacement omits it', async () => {
     prisma.salonBranch.findFirst.mockResolvedValue(branch());
     prisma.salonBusiness.findFirst.mockResolvedValue(business());
@@ -626,5 +1147,110 @@ describe('SalonOwnerSettingsService', () => {
 
     const [upsertArgs] = prisma.salonBranchHoliday.upsert.mock.calls[0] as [HolidayUpsertArgs];
     expect(upsertArgs.update.reason).toBeNull();
+  });
+
+  it('handles malformed stored values through the internal mappers', () => {
+    expect(() =>
+      (service as unknown as {
+        mapBranch(input: Record<string, unknown>): unknown;
+      }).mapBranch({
+        ...branch(),
+        address: null,
+      }),
+    ).toThrow('Stored branch address is not an object');
+
+    expect(() =>
+      (service as unknown as {
+        mapHoliday(input: Record<string, unknown>): unknown;
+      }).mapHoliday({
+        branchId: 'branch-1',
+        date: new Date('2026-05-26T00:00:00.000Z'),
+        closed: true,
+        reason: null,
+        intervals: {},
+      }),
+    ).toThrow('Stored intervals are not an array');
+
+    expect(() =>
+      (service as unknown as {
+        readIntervals(input: unknown): unknown;
+      }).readIntervals([null]),
+    ).toThrow('Stored interval is not an object');
+  });
+
+  it('covers idempotency record parsing edge cases', () => {
+    const privateService = service as unknown as {
+      parseIdempotencyRecord(value: string | null): { requestHash: string; resourceId: string } | null;
+    };
+
+    expect(privateService.parseIdempotencyRecord(null)).toBeNull();
+    expect(privateService.parseIdempotencyRecord('missing-separator')).toBeNull();
+    expect(privateService.parseIdempotencyRecord('hash:resource')).toEqual({
+      requestHash: 'hash',
+      resourceId: 'resource',
+    });
+  });
+
+  it('returns null from idempotency replay helpers when audit metadata is absent or malformed', async () => {
+    prisma.auditEvent.findFirst.mockResolvedValueOnce({ reason: null }).mockResolvedValueOnce({ reason: 'bad-reason' });
+
+    await expect(
+      (service as unknown as {
+        findIdempotentBusinessReplay(
+          prismaArg: { auditEvent: { findFirst: jest.Mock }; salonBusiness: { findFirst: jest.Mock } },
+          context: { user: AuthenticatedUser; idempotencyKey?: string },
+          tenantId: string,
+          requestHash: string,
+        ): Promise<unknown>;
+      }).findIdempotentBusinessReplay(prisma as never, { user: user(), idempotencyKey: 'idem-1' }, 'tenant-1', 'hash'),
+    ).resolves.toBeNull();
+
+    await expect(
+      (service as unknown as {
+        findIdempotentBranchReplay(
+          prismaArg: { auditEvent: { findFirst: jest.Mock }; salonBranch: { findFirst: jest.Mock } },
+          context: { user: AuthenticatedUser; idempotencyKey?: string },
+          tenantId: string,
+          requestHash: string,
+        ): Promise<unknown>;
+      }).findIdempotentBranchReplay(prisma as never, { user: user(), idempotencyKey: 'idem-1' }, 'tenant-1', 'hash'),
+    ).resolves.toBeNull();
+  });
+
+  it('rejects branch replay when the same idempotency key is reused with a different payload', async () => {
+    const input = {
+      businessId: 'business-1',
+      name: 'Downtown',
+      timezone: 'Asia/Tokyo',
+      currency: 'JPY',
+      status: 'ACTIVE' as const,
+      address: {
+        line1: '1 Main St',
+        city: 'Tokyo',
+        state: 'Tokyo',
+        postalCode: '1000001',
+        country: 'JP',
+      },
+    };
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.auditEvent.findFirst.mockResolvedValue({
+      reason: 'different-hash:branch-1',
+    });
+
+    await expect(service.createBranch({ user: user(), idempotencyKey: 'idem-1' }, input)).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('maps stored holiday intervals back into API models', () => {
+    const result = (service as unknown as {
+      mapHoliday(input: Record<string, unknown>): { intervals: Array<{ start: string; end: string }> };
+    }).mapHoliday({
+      branchId: 'branch-1',
+      date: new Date('2026-05-26T00:00:00.000Z'),
+      closed: false,
+      reason: null,
+      intervals: [{ start: '09:00', end: '10:00' }],
+    });
+
+    expect(result.intervals).toEqual([{ start: '09:00', end: '10:00' }]);
   });
 });

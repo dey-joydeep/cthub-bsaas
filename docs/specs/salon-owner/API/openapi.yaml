@@ -282,6 +282,7 @@ components:
         email:
           type: string
           format: email
+          nullable: true
         timezone:
           type: string
           examples: ['Asia/Kolkata']

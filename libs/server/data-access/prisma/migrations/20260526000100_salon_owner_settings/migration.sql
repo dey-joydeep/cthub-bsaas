@@ -108,3 +108,79 @@ ALTER TABLE "public"."salon_branch_holiday" ADD CONSTRAINT "salon_branch_holiday
 
 -- AddForeignKey
 ALTER TABLE "public"."salon_branch_policy" ADD CONSTRAINT "salon_branch_policy_branch_id_fkey" FOREIGN KEY ("branch_id") REFERENCES "public"."salon_branch"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+WITH salon_business_backfill AS (
+    SELECT
+        s."id" AS "salon_id",
+        s."tenant_id",
+        COALESCE(NULLIF(BTRIM(s."name"), ''), 'Salon') AS "salon_name",
+        CASE
+            WHEN s."is_active" THEN 'ACTIVE'::"public"."SalonOwnerStatus"
+            ELSE 'INACTIVE'::"public"."SalonOwnerStatus"
+        END AS "status",
+        s."created_at",
+        s."updated_at",
+        ROW_NUMBER() OVER (
+            PARTITION BY s."tenant_id", COALESCE(NULLIF(BTRIM(s."name"), ''), 'Salon')
+            ORDER BY s."created_at", s."id"
+        ) AS "tenant_name_rank"
+    FROM "public"."salon" s
+)
+INSERT INTO "public"."salon_business" ("id", "tenant_id", "display_name", "legal_name", "status", "created_at", "updated_at")
+SELECT
+    backfill."salon_id",
+    backfill."tenant_id",
+    CASE
+        WHEN backfill."tenant_name_rank" = 1 THEN backfill."salon_name"
+        ELSE backfill."salon_name" || ' ' || backfill."tenant_name_rank"::text
+    END,
+    backfill."salon_name",
+    backfill."status",
+    backfill."created_at",
+    backfill."updated_at"
+FROM salon_business_backfill backfill
+ON CONFLICT ("id") DO NOTHING;
+
+WITH salon_branch_backfill AS (
+    SELECT
+        s."id" AS "salon_id",
+        COALESCE(NULLIF(BTRIM(s."name"), ''), 'Salon') AS "salon_name",
+        COALESCE(NULLIF(BTRIM(s."phone"), ''), NULLIF(BTRIM(tenant."phone"), '')) AS "phone",
+        NULLIF(BTRIM(s."email"), '') AS "email",
+        COALESCE(NULLIF(BTRIM(s."metadata" ->> 'timezone'), ''), 'UTC') AS "timezone",
+        COALESCE(NULLIF(BTRIM(country."currency"), ''), 'USD') AS "currency",
+        jsonb_build_object(
+            'line1', address."line1",
+            'city', city."name",
+            'state', state."name",
+            'postalCode', address."postal_code",
+            'country', country."iso2"
+        ) ||
+        CASE
+            WHEN NULLIF(BTRIM(address."line2"), '') IS NOT NULL
+                THEN jsonb_build_object('line2', BTRIM(address."line2"))
+            ELSE '{}'::jsonb
+        END AS "address",
+        s."created_at",
+        s."updated_at"
+    FROM "public"."salon" s
+    INNER JOIN "public"."salon_tenant" tenant ON tenant."id" = s."tenant_id"
+    INNER JOIN "public"."business_address" address ON address."id" = s."business_address_id"
+    INNER JOIN "public"."city" city ON city."id" = address."city_id"
+    INNER JOIN "public"."state" state ON state."id" = address."state_id"
+    INNER JOIN "public"."country" country ON country."id" = address."country_id"
+)
+INSERT INTO "public"."salon_branch" ("id", "business_id", "name", "phone", "email", "timezone", "currency", "address", "created_at", "updated_at")
+SELECT
+    backfill."salon_id",
+    backfill."salon_id",
+    backfill."salon_name",
+    backfill."phone",
+    backfill."email",
+    backfill."timezone",
+    backfill."currency",
+    backfill."address",
+    backfill."created_at",
+    backfill."updated_at"
+FROM salon_branch_backfill backfill
+ON CONFLICT ("id") DO NOTHING;

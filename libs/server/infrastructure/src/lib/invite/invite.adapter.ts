@@ -1,6 +1,7 @@
-import { BadRequestException, GoneException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, GoneException, Injectable } from '@nestjs/common';
 import { PrismaService } from '@cthub-bsaas/server-data-access';
 import { InvitePort, InviteValidationResult, RegistrationCompleteInput, RegistrationCompleteResult } from '@cthub-bsaas/server-contracts-auth';
+import { COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 import * as bcrypt from 'bcryptjs';
 import { createHash } from 'crypto';
 
@@ -54,6 +55,7 @@ export class InvitePrismaAdapter implements InvitePort {
   async completeOwner(input: RegistrationCompleteInput): Promise<RegistrationCompleteResult> {
     const rec = await this.ensureOwnerToken(input.token);
     const passwordHash = await bcrypt.hash(input.password, 10);
+    const salonTenantId = await this.resolveSalonTenantAssignment(rec.email, rec.salon.tenantId);
     const user = await this.prisma.user.upsert({
       where: { email: rec.email },
       update: {
@@ -61,7 +63,7 @@ export class InvitePrismaAdapter implements InvitePort {
         isVerified: true,
         emailVerifiedAt: new Date(),
         registrationStatus: 'COMPLETED',
-        salonTenantId: rec.salon.tenantId,
+        salonTenantId,
       },
       create: {
         email: rec.email,
@@ -70,7 +72,7 @@ export class InvitePrismaAdapter implements InvitePort {
         emailVerifiedAt: new Date(),
         registrationStatus: 'COMPLETED',
         isActive: true,
-        salonTenantId: rec.salon.tenantId,
+        salonTenantId,
       },
     });
     // Assign OWNER role if not present
@@ -94,6 +96,7 @@ export class InvitePrismaAdapter implements InvitePort {
   async completeStaff(input: RegistrationCompleteInput): Promise<RegistrationCompleteResult> {
     const rec = await this.ensureStaffToken(input.token);
     const passwordHash = await bcrypt.hash(input.password, 10);
+    const salonTenantId = await this.resolveSalonTenantAssignment(rec.email, rec.salon.tenantId);
     const user = await this.prisma.user.upsert({
       where: { email: rec.email },
       update: {
@@ -101,7 +104,7 @@ export class InvitePrismaAdapter implements InvitePort {
         isVerified: true,
         emailVerifiedAt: new Date(),
         registrationStatus: 'COMPLETED',
-        salonTenantId: rec.salon.tenantId,
+        salonTenantId,
       },
       create: {
         email: rec.email,
@@ -110,7 +113,7 @@ export class InvitePrismaAdapter implements InvitePort {
         emailVerifiedAt: new Date(),
         registrationStatus: 'COMPLETED',
         isActive: true,
-        salonTenantId: rec.salon.tenantId,
+        salonTenantId,
       },
     });
     // Assign STAFF role
@@ -124,5 +127,20 @@ export class InvitePrismaAdapter implements InvitePort {
     }
     await this.prisma.staffInvite.update({ where: { id: rec.id }, data: { usedAt: new Date() } });
     return { userId: user.id, requireMfa: user.isMFAEnrollRequired };
+  }
+
+  private async resolveSalonTenantAssignment(email: string, invitedTenantId: string): Promise<string> {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email },
+      select: {
+        salonTenantId: true,
+      },
+    });
+
+    if (existingUser?.salonTenantId && existingUser.salonTenantId !== invitedTenantId) {
+      throw new ConflictException(COMMON_MESSAGE_KEYS.ERROR.CONFLICT);
+    }
+
+    return existingUser?.salonTenantId ?? invitedTenantId;
   }
 }

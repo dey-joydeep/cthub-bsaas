@@ -62,11 +62,11 @@ export class BranchProfileInputDto {
   @IsOptional()
   @IsString()
   @MaxLength(30)
-  phone?: string;
+  phone?: string | null;
 
   @IsOptional()
   @IsEmail()
-  email?: string;
+  email?: string | null;
 
   @IsString()
   timezone!: string;

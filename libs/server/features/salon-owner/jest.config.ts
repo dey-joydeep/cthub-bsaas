@@ -8,10 +8,10 @@ export default {
   coveragePathIgnorePatterns: ['[\\/]dto[\\/]'],
   coverageThreshold: {
     global: {
-      statements: 70,
+      statements: 100,
       branches: 40,
-      functions: 80,
-      lines: 69,
+      functions: 100,
+      lines: 100,
     },
   },
 };

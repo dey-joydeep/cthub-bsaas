@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { InvitePrismaAdapter } from './invite.adapter';
 import { PrismaService } from '@cthub-bsaas/server-data-access';
-import { BadRequestException, GoneException } from '@nestjs/common';
+import { BadRequestException, ConflictException, GoneException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 
 jest.mock('bcryptjs');
@@ -26,6 +26,7 @@ describe('InvitePrismaAdapter', () => {
               update: jest.fn(),
             },
             user: {
+              findUnique: jest.fn(),
               upsert: jest.fn(),
             },
             role: {
@@ -98,18 +99,21 @@ describe('InvitePrismaAdapter', () => {
       const role = { id: 'role-id', name: 'OWNER' };
 
       (prisma.registrationLink.findFirst as jest.Mock).mockResolvedValue(rec);
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
       (prisma.user.upsert as jest.Mock).mockResolvedValue(user);
       (prisma.role.findUnique as jest.Mock).mockResolvedValue(role);
 
       const result = await adapter.completeOwner(input);
+      const [ownerUpsertArgs] = (prisma.user.upsert as jest.Mock).mock.calls[0] as [
+        {
+          update: { salonTenantId: string };
+          create: { salonTenantId: string };
+        },
+      ];
 
-      expect(prisma.user.upsert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          update: expect.objectContaining({ salonTenantId: 'tenant-1' }),
-          create: expect.objectContaining({ salonTenantId: 'tenant-1' }),
-        }),
-      );
+      expect(ownerUpsertArgs.update.salonTenantId).toBe('tenant-1');
+      expect(ownerUpsertArgs.create.salonTenantId).toBe('tenant-1');
       expect(prisma.userRole.upsert).toHaveBeenCalled();
       expect(prisma.registrationLink.update).toHaveBeenCalled();
       expect(result).toEqual({ userId: user.id, requireMfa: user.isMFAEnrollRequired });
@@ -127,6 +131,7 @@ describe('InvitePrismaAdapter', () => {
       const user = { id: 'user-id', isMFAEnrollRequired: false };
 
       (prisma.registrationLink.findFirst as jest.Mock).mockResolvedValue(rec);
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
       (prisma.user.upsert as jest.Mock).mockResolvedValue(user);
       (prisma.role.findUnique as jest.Mock).mockResolvedValue(null);
@@ -137,6 +142,24 @@ describe('InvitePrismaAdapter', () => {
       expect(prisma.userRole.upsert).not.toHaveBeenCalled();
       expect(prisma.registrationLink.update).toHaveBeenCalled();
       expect(result).toEqual({ userId: user.id, requireMfa: user.isMFAEnrollRequired });
+    });
+
+    it('rejects owner invite completion when the existing user belongs to another tenant', async () => {
+      const input = { token: 'valid-token', password: 'password' };
+      const rec = {
+        id: 'rec-id',
+        email: 'test@example.com',
+        salonId: 'salon-id',
+        expiresAt: new Date(Date.now() + 10000),
+        salon: { tenantId: 'tenant-1' },
+      };
+
+      (prisma.registrationLink.findFirst as jest.Mock).mockResolvedValue(rec);
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({ salonTenantId: 'tenant-2' });
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
+
+      await expect(adapter.completeOwner(input)).rejects.toThrow(ConflictException);
+      expect(prisma.user.upsert).not.toHaveBeenCalled();
     });
   });
 
@@ -193,18 +216,21 @@ describe('InvitePrismaAdapter', () => {
       const role = { id: 'role-id', name: 'STAFF' };
 
       (prisma.staffInvite.findFirst as jest.Mock).mockResolvedValue(rec);
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
       (prisma.user.upsert as jest.Mock).mockResolvedValue(user);
       (prisma.role.findUnique as jest.Mock).mockResolvedValue(role);
 
       const result = await adapter.completeStaff(input);
+      const [staffUpsertArgs] = (prisma.user.upsert as jest.Mock).mock.calls[0] as [
+        {
+          update: { salonTenantId: string };
+          create: { salonTenantId: string };
+        },
+      ];
 
-      expect(prisma.user.upsert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          update: expect.objectContaining({ salonTenantId: 'tenant-1' }),
-          create: expect.objectContaining({ salonTenantId: 'tenant-1' }),
-        }),
-      );
+      expect(staffUpsertArgs.update.salonTenantId).toBe('tenant-1');
+      expect(staffUpsertArgs.create.salonTenantId).toBe('tenant-1');
       expect(prisma.userRole.upsert).toHaveBeenCalled();
       expect(prisma.staffInvite.update).toHaveBeenCalled();
       expect(result).toEqual({ userId: user.id, requireMfa: user.isMFAEnrollRequired });
@@ -222,6 +248,7 @@ describe('InvitePrismaAdapter', () => {
       const user = { id: 'user-id', isMFAEnrollRequired: false };
 
       (prisma.staffInvite.findFirst as jest.Mock).mockResolvedValue(rec);
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
       (prisma.user.upsert as jest.Mock).mockResolvedValue(user);
       (prisma.role.findUnique as jest.Mock).mockResolvedValue(null);
@@ -232,6 +259,24 @@ describe('InvitePrismaAdapter', () => {
       expect(prisma.userRole.upsert).not.toHaveBeenCalled();
       expect(prisma.staffInvite.update).toHaveBeenCalled();
       expect(result).toEqual({ userId: user.id, requireMfa: user.isMFAEnrollRequired });
+    });
+
+    it('rejects staff invite completion when the existing user belongs to another tenant', async () => {
+      const input = { token: 'valid-token', password: 'password' };
+      const rec = {
+        id: 'rec-id',
+        email: 'test@example.com',
+        salonId: 'salon-id',
+        expiresAt: new Date(Date.now() + 10000),
+        salon: { tenantId: 'tenant-1' },
+      };
+
+      (prisma.staffInvite.findFirst as jest.Mock).mockResolvedValue(rec);
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({ salonTenantId: 'tenant-2' });
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
+
+      await expect(adapter.completeStaff(input)).rejects.toThrow(ConflictException);
+      expect(prisma.user.upsert).not.toHaveBeenCalled();
     });
   });
 });

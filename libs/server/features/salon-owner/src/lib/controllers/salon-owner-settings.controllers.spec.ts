@@ -1,4 +1,5 @@
 import { INTERCEPTORS_METADATA } from '@nestjs/common/constants';
+import { BadRequestException } from '@nestjs/common';
 import { ResponseEnvelopeInterceptor, ROLES_KEY } from '@cthub-bsaas/server-core';
 import { UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
 
@@ -56,6 +57,14 @@ describe('Salon owner settings controllers', () => {
     expect(service.updateBusiness).toHaveBeenCalledWith({ user }, 'business-1', body);
   });
 
+  it('rejects business creation when the idempotency key is missing', () => {
+    const controller = new BusinessSettingsController(serviceMock() as unknown as SalonOwnerSettingsService);
+
+    expect(() =>
+      controller.createBusiness(user, '   ', { displayName: 'Salon One', legalName: 'Salon One Legal', status: 'ACTIVE' }),
+    ).toThrow(BadRequestException);
+  });
+
   it('delegates branch routes to the service with route parameters', async () => {
     const service = serviceMock();
     const controller = new BranchSettingsController(service as unknown as SalonOwnerSettingsService);
@@ -99,5 +108,26 @@ describe('Salon owner settings controllers', () => {
     expect(service.replaceBranchHours).toHaveBeenCalledWith({ user }, 'branch-1', hours);
     expect(service.setBranchHoliday).toHaveBeenCalledWith({ user }, 'branch-1', '2026-05-26', holiday);
     expect(service.updateBranchPolicy).toHaveBeenCalledWith({ user }, 'branch-1', policy);
+  });
+
+  it('rejects branch creation when the idempotency key is missing', () => {
+    const controller = new BranchSettingsController(serviceMock() as unknown as SalonOwnerSettingsService);
+
+    expect(() =>
+      controller.createBranch(user, undefined, {
+        businessId: 'business-1',
+        name: 'Main Branch',
+        timezone: 'Asia/Tokyo',
+        currency: 'JPY',
+        status: 'ACTIVE',
+        address: {
+          line1: '1 Main St',
+          city: 'Tokyo',
+          state: 'Tokyo',
+          postalCode: '1000001',
+          country: 'JP',
+        },
+      }),
+    ).toThrow(BadRequestException);
   });
 });
