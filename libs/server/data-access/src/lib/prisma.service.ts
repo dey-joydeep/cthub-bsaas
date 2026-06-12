@@ -116,6 +116,12 @@ export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'que
   private handlePrismaError(error: unknown): never {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       this.logger.error(`Prisma Known Request Error (${error.code}): ${error.message}`, error.meta);
+      if (error.code === 'P2002') {
+        throw new Error('A unique constraint was violated');
+      }
+      if (error.code === 'P2025') {
+        throw new Error('Record not found');
+      }
       throw error;
     } else if (error instanceof Prisma.PrismaClientUnknownRequestError) {
       this.logger.error('Prisma Unknown Request Error:', error);
@@ -128,7 +134,7 @@ export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'que
       throw new Error('Failed to initialize the database connection');
     } else if (error instanceof Prisma.PrismaClientValidationError) {
       this.logger.error('Prisma Validation Error:', error);
-      throw error;
+      throw new Error('Invalid database operation');
     }
 
     // Re-throw if it's not a Prisma error

@@ -148,6 +148,9 @@ function createPrismaMock() {
       create: jest.fn(),
       findFirst: jest.fn(),
     },
+    saasOwner: {
+      findUnique: jest.fn(),
+    },
     $transaction: jest.fn(),
   };
 }
@@ -244,9 +247,37 @@ describe('SalonOwnerSettingsService', () => {
       where: { tenantId: { in: ['tenant-9', 'tenant-10'] } },
       orderBy: { createdAt: 'asc' },
     });
+    expect(prisma.saasOwner.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('loads managed tenant scope from the persisted saas owner record when auth context omits it', async () => {
+    prisma.saasOwner.findUnique.mockResolvedValue({ managedTenants: ['tenant-4', 'tenant-5', 'tenant-4'] });
+    prisma.salonBusiness.findMany.mockResolvedValue([business({ tenantId: 'tenant-4' })]);
+
+    await expect(
+      service.listBusinesses({
+        user: user({
+          tenantId: undefined,
+          roles: [UserRole.ADMIN],
+        }),
+      }),
+    ).resolves.toMatchObject({
+      items: [expect.objectContaining({ tenantId: 'tenant-4' })],
+    });
+
+    expect(prisma.saasOwner.findUnique).toHaveBeenCalledWith({
+      where: { userId: 'user-1' },
+      select: { managedTenants: true },
+    });
+    expect(prisma.salonBusiness.findMany).toHaveBeenCalledWith({
+      where: { tenantId: { in: ['tenant-4', 'tenant-5'] } },
+      orderBy: { createdAt: 'asc' },
+    });
   });
 
   it('rejects admin scope when nested saas owner data does not carry managed tenants', async () => {
+    prisma.saasOwner.findUnique.mockResolvedValue(null);
+
     await expect(
       service.listBusinesses({
         user: user({
@@ -260,6 +291,7 @@ describe('SalonOwnerSettingsService', () => {
 
   it('requires tenant scope from the authenticated token', async () => {
     await expect(service.listBusinesses({ user: user({ tenantId: undefined }) })).rejects.toBeInstanceOf(ForbiddenException);
+    expect(prisma.saasOwner.findUnique).not.toHaveBeenCalled();
   });
 
   it('creates a business and maps duplicate names to conflict', async () => {

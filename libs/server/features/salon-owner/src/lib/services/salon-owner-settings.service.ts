@@ -85,25 +85,23 @@ function hasRole(user: AuthenticatedUser, role: string): boolean {
   });
 }
 
-function canonicalizeForHash(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map((entry) => canonicalizeForHash(entry));
-  }
-
-  if (value && typeof value === 'object') {
-    return Object.keys(value as Record<string, unknown>)
-      .sort()
-      .reduce<Record<string, unknown>>((result, key) => {
-        result[key] = canonicalizeForHash((value as Record<string, unknown>)[key]);
-        return result;
-      }, {});
-  }
-
-  return value;
-}
-
 function hashIdempotencyPayload(input: unknown): string {
-  return createHash('sha256').update(JSON.stringify(canonicalizeForHash(input))).digest('hex');
+  return createHash('sha256')
+    .update(
+      JSON.stringify(input, (_key, value: unknown) => {
+        if (!value || typeof value !== 'object' || Array.isArray(value)) {
+          return value;
+        }
+
+        return Object.keys(value as Record<string, unknown>)
+          .sort()
+          .reduce<Record<string, unknown>>((result, key) => {
+            result[key] = (value as Record<string, unknown>)[key];
+            return result;
+          }, {});
+      }),
+    )
+    .digest('hex');
 }
 
 function readStringArray(value: unknown): string[] {
@@ -270,7 +268,7 @@ export class SalonOwnerSettingsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async listBusinesses(context: SalonOwnerRequestContext): Promise<PagedResult<SalonBusinessModel>> {
-    const tenantIds = this.requireTenantIds(context);
+    const tenantIds = await this.requireTenantIds(context);
     const businesses = await this.prisma.salonBusiness.findMany({
       where: { tenantId: this.tenantScopeFilter(tenantIds) },
       orderBy: { createdAt: 'asc' },
@@ -280,7 +278,7 @@ export class SalonOwnerSettingsService {
   }
 
   async createBusiness(context: SalonOwnerRequestContext, input: SalonBusinessInputDto): Promise<SalonBusinessModel> {
-    const tenantId = this.requireTenantId(context);
+    const tenantId = await this.requireTenantId(context);
     const requestHash = hashIdempotencyPayload(input);
 
     try {
@@ -321,13 +319,14 @@ export class SalonOwnerSettingsService {
 
   async updateBusiness(context: SalonOwnerRequestContext, businessId: string, input: SalonBusinessInputDto): Promise<SalonBusinessModel> {
     const current = await this.findBusinessInScope(context, businessId);
+    const tenantIds = await this.requireTenantIds(context);
 
     try {
       const business = await this.prisma.$transaction(async (tx: TransactionClient) => {
         const scopedBusiness = await tx.salonBusiness.findFirst({
           where: {
             id: businessId,
-            tenantId: this.tenantScopeFilter(this.requireTenantIds(context)),
+            tenantId: this.tenantScopeFilter(tenantIds),
           },
         });
         if (!scopedBusiness) {
@@ -368,7 +367,7 @@ export class SalonOwnerSettingsService {
   }
 
   async listBranches(context: SalonOwnerRequestContext, businessId?: string): Promise<PagedResult<BranchProfileModel>> {
-    const tenantIds = this.requireTenantIds(context);
+    const tenantIds = await this.requireTenantIds(context);
     if (businessId) {
       await this.findBusinessInScope(context, businessId);
     }
@@ -385,7 +384,7 @@ export class SalonOwnerSettingsService {
   }
 
   async createBranch(context: SalonOwnerRequestContext, input: BranchProfileInputDto): Promise<BranchProfileModel> {
-    const tenantIds = this.requireTenantIds(context);
+    const tenantIds = await this.requireTenantIds(context);
     const requestHash = hashIdempotencyPayload(input);
 
     try {
@@ -438,13 +437,14 @@ export class SalonOwnerSettingsService {
     }
 
     const business = await this.findBusinessInScope(context, current.businessId);
+    const tenantIds = await this.requireTenantIds(context);
 
     try {
       const branch = await this.prisma.$transaction(async (tx: TransactionClient) => {
         const scopedBusiness = await tx.salonBusiness.findFirst({
           where: {
             id: current.businessId,
-            tenantId: this.tenantScopeFilter(this.requireTenantIds(context)),
+            tenantId: this.tenantScopeFilter(tenantIds),
           },
         });
         if (!scopedBusiness) {
@@ -478,7 +478,7 @@ export class SalonOwnerSettingsService {
 
   async replaceBranchHours(context: SalonOwnerRequestContext, branchId: string, input: WeeklyHoursInputDto): Promise<BranchHoursModel> {
     const days = normalizeWeeklyDays(input);
-    const tenantIds = this.requireTenantIds(context);
+    const tenantIds = await this.requireTenantIds(context);
     await this.prisma.$transaction(async (tx: TransactionClient) => {
       const branch = await tx.salonBranch.findFirst({
         where: {
@@ -580,7 +580,7 @@ export class SalonOwnerSettingsService {
     return this.mapPolicy(policy);
   }
 
-  private requireTenantIds(context: SalonOwnerRequestContext): string[] {
+  private async requireTenantIds(context: SalonOwnerRequestContext): Promise<string[]> {
     if (typeof context.user.tenantId === 'string' && context.user.tenantId.trim().length > 0) {
       return [context.user.tenantId];
     }
@@ -590,13 +590,18 @@ export class SalonOwnerSettingsService {
       if (managedTenantIds.length > 0) {
         return [...new Set(managedTenantIds)];
       }
+
+      const persistedManagedTenantIds = await this.readPersistedManagedTenantIds(context.user.id);
+      if (persistedManagedTenantIds.length > 0) {
+        return persistedManagedTenantIds;
+      }
     }
 
     throw new ForbiddenException(forbiddenMessage);
   }
 
-  private requireTenantId(context: SalonOwnerRequestContext): string {
-    const tenantIds = this.requireTenantIds(context);
+  private async requireTenantId(context: SalonOwnerRequestContext): Promise<string> {
+    const tenantIds = await this.requireTenantIds(context);
     if (tenantIds.length !== 1) {
       throw new ForbiddenException(forbiddenMessage);
     }
@@ -721,7 +726,7 @@ export class SalonOwnerSettingsService {
   }
 
   private async findBusinessInScope(context: SalonOwnerRequestContext, businessId: string): Promise<BusinessRecord> {
-    const tenantIds = this.requireTenantIds(context);
+    const tenantIds = await this.requireTenantIds(context);
     const business = await this.prisma.salonBusiness.findFirst({
       where: {
         id: businessId,
@@ -737,7 +742,7 @@ export class SalonOwnerSettingsService {
   }
 
   private async findBranchInScope(context: SalonOwnerRequestContext, branchId: string): Promise<BranchRecord> {
-    const tenantIds = this.requireTenantIds(context);
+    const tenantIds = await this.requireTenantIds(context);
     const branch = await this.prisma.salonBranch.findFirst({
       where: {
         id: branchId,
@@ -750,6 +755,15 @@ export class SalonOwnerSettingsService {
     }
 
     return branch;
+  }
+
+  private async readPersistedManagedTenantIds(userId: string): Promise<string[]> {
+    const saasOwner = await this.prisma.saasOwner.findUnique({
+      where: { userId },
+      select: { managedTenants: true },
+    });
+
+    return [...new Set(readStringArray(saasOwner?.managedTenants))];
   }
 
   private normalizeBranchCreateInput(input: BranchProfileInputDto, businessId: string): Prisma.SalonBranchUncheckedCreateInput {
