@@ -44,11 +44,52 @@ interface AuditCreateArgs {
   };
 }
 
+interface SalonUpsertArgs {
+  readonly where: {
+    readonly id: string;
+  };
+  readonly create: {
+    readonly id: string;
+    readonly tenant: {
+      readonly connect: {
+        readonly id: string;
+      };
+    };
+    readonly owner: {
+      readonly connect: {
+        readonly id: string;
+      };
+    };
+    readonly name: string;
+    readonly phone: string | null;
+    readonly email: string | null;
+    readonly isActive: boolean;
+    readonly metadata?: Record<string, unknown>;
+  };
+  readonly update: {
+    readonly tenant: {
+      readonly connect: {
+        readonly id: string;
+      };
+    };
+    readonly owner: {
+      readonly connect: {
+        readonly id: string;
+      };
+    };
+    readonly name: string;
+    readonly phone: string | null;
+    readonly email: string | null;
+    readonly isActive: boolean;
+    readonly metadata?: Record<string, unknown>;
+  };
+}
+
 function user(overrides: Partial<AuthenticatedUser> = {}): AuthenticatedUser {
   return {
     id: 'user-1',
     email: 'owner@example.com',
-    roles: [],
+    roles: [UserRole.OWNER],
     tenantId: 'tenant-1',
     ...overrides,
   };
@@ -144,6 +185,24 @@ function createPrismaMock() {
     salonBranchPolicy: {
       upsert: jest.fn(),
     },
+    salon: {
+      findUnique: jest.fn(),
+      upsert: jest.fn(),
+    },
+    user: {
+      findFirst: jest.fn(),
+    },
+    country: {
+      findUnique: jest.fn(),
+    },
+    state: {
+      findFirst: jest.fn(),
+      create: jest.fn(),
+    },
+    city: {
+      findFirst: jest.fn(),
+      create: jest.fn(),
+    },
     auditEvent: {
       create: jest.fn(),
       findFirst: jest.fn(),
@@ -177,6 +236,10 @@ describe('SalonOwnerSettingsService', () => {
   beforeEach(() => {
     prisma = createPrismaMock();
     service = new SalonOwnerSettingsService(prisma as unknown as PrismaService);
+    prisma.country.findUnique.mockResolvedValue({ id: 'country-1' });
+    prisma.state.findFirst.mockResolvedValue({ id: 'state-1' });
+    prisma.city.findFirst.mockResolvedValue({ id: 'city-1' });
+    prisma.salon.upsert.mockResolvedValue({ id: 'branch-1' });
     prisma.$transaction.mockImplementation(async (arg: unknown) => {
       if (typeof arg === 'function') {
         return await arg(prisma as unknown as PrismaService);
@@ -482,7 +545,7 @@ describe('SalonOwnerSettingsService', () => {
 
   it('creates branches after validating business scope and normalizing address', async () => {
     prisma.salonBusiness.findFirst.mockResolvedValue(business());
-    prisma.salonBranch.create.mockResolvedValue(branch({ name: 'Downtown', status: 'INACTIVE' }));
+    prisma.salonBranch.create.mockResolvedValue(branch({ name: 'Downtown', status: 'INACTIVE', phone: '555', email: 'branch@example.com' }));
 
     await expect(
       service.createBranch(
@@ -512,6 +575,17 @@ describe('SalonOwnerSettingsService', () => {
     expect(createArgs.data.currency).toBe('JPY');
     expect(createArgs.data.status).toBe('INACTIVE');
     expect(createArgs.data.address.country).toBe('JP');
+    const [salonUpsertArgs] = prisma.salon.upsert.mock.calls[0] as [SalonUpsertArgs];
+    expect(salonUpsertArgs.where).toEqual({ id: 'branch-1' });
+    expect(salonUpsertArgs.create).toMatchObject({
+      id: 'branch-1',
+      tenant: { connect: { id: 'tenant-1' } },
+      owner: { connect: { id: 'user-1' } },
+      name: 'Downtown',
+      phone: '555',
+      email: 'branch@example.com',
+      isActive: false,
+    });
     expectAuditCall(prisma.auditEvent.create.mock.calls as [AuditCreateArgs][], {
       tenantId: 'tenant-1',
       action: 'salon_owner.branch.create',
@@ -542,6 +616,163 @@ describe('SalonOwnerSettingsService', () => {
     ).rejects.toBeInstanceOf(ConflictException);
 
     expect(prisma.salonBranch.create).not.toHaveBeenCalled();
+  });
+
+  it('inherits the operational salon owner from the migrated business root when creating a new branch', async () => {
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBranch.create.mockResolvedValue(branch({ id: 'branch-2', name: 'Downtown' }));
+    prisma.salon.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ ownerId: 'owner-2' });
+
+    await service.createBranch(
+      { user: user({ roles: [UserRole.ADMIN] }) },
+      {
+        businessId: 'business-1',
+        name: 'Downtown',
+        timezone: 'Asia/Tokyo',
+        currency: 'JPY',
+        status: 'ACTIVE',
+        address: {
+          line1: '1 Main St',
+          city: 'Tokyo',
+          state: 'Tokyo',
+          postalCode: '1000001',
+          country: 'JP',
+        },
+      },
+    );
+
+    const [salonUpsertArgs] = prisma.salon.upsert.mock.calls[0] as [SalonUpsertArgs];
+    expect(salonUpsertArgs.create.owner.connect.id).toBe('owner-2');
+  });
+
+  it('falls back to the tenant owner when an admin creates a branch without a migrated business root salon', async () => {
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBranch.create.mockResolvedValue(branch({ id: 'branch-2', name: 'Downtown' }));
+    prisma.salon.findUnique.mockResolvedValue(null);
+    prisma.user.findFirst.mockResolvedValue({ id: 'owner-3' });
+
+    await service.createBranch(
+      { user: user({ roles: [UserRole.ADMIN], tenantId: undefined, managedTenants: ['tenant-1'] }) },
+      {
+        businessId: 'business-1',
+        name: 'Downtown',
+        timezone: 'Asia/Tokyo',
+        currency: 'JPY',
+        status: 'ACTIVE',
+        address: {
+          line1: '1 Main St',
+          city: 'Tokyo',
+          state: 'Tokyo',
+          postalCode: '1000001',
+          country: 'JP',
+        },
+      },
+    );
+
+    const [salonUpsertArgs] = prisma.salon.upsert.mock.calls[0] as [SalonUpsertArgs];
+    expect(salonUpsertArgs.create.owner.connect.id).toBe('owner-3');
+  });
+
+  it('rejects branch creation when no operational owner can be resolved', async () => {
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBranch.create.mockResolvedValue(branch({ id: 'branch-2', name: 'Downtown' }));
+    prisma.salon.findUnique.mockResolvedValue(null);
+    prisma.user.findFirst.mockResolvedValue(null);
+
+    await expect(
+      service.createBranch(
+        { user: user({ roles: [UserRole.ADMIN], tenantId: undefined, managedTenants: ['tenant-1'] }) },
+        {
+          businessId: 'business-1',
+          name: 'Downtown',
+          timezone: 'Asia/Tokyo',
+          currency: 'JPY',
+          status: 'ACTIVE',
+          address: {
+            line1: '1 Main St',
+            city: 'Tokyo',
+            state: 'Tokyo',
+            postalCode: '1000001',
+            country: 'JP',
+          },
+        },
+      ),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('creates missing state and city records when the branch address is new to master data', async () => {
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBranch.create.mockResolvedValue(
+      branch({
+        id: 'branch-2',
+        name: 'Downtown',
+        address: {
+          line1: '1 Main St',
+          city: 'Shibuya',
+          state: 'Tokyo Metropolis',
+          postalCode: '1000001',
+          country: 'JP',
+        },
+      }),
+    );
+    prisma.state.findFirst.mockResolvedValue(null);
+    prisma.state.create.mockResolvedValue({ id: 'state-2' });
+    prisma.city.findFirst.mockResolvedValue(null);
+    prisma.city.create.mockResolvedValue({ id: 'city-2' });
+
+    await service.createBranch(
+      { user: user() },
+      {
+        businessId: 'business-1',
+        name: 'Downtown',
+        timezone: 'Asia/Tokyo',
+        currency: 'JPY',
+        status: 'ACTIVE',
+        address: {
+          line1: '1 Main St',
+          city: 'Shibuya',
+          state: 'Tokyo Metropolis',
+          postalCode: '1000001',
+          country: 'JP',
+        },
+      },
+    );
+
+    expect(prisma.state.create).toHaveBeenCalled();
+    expect(prisma.city.create).toHaveBeenCalledWith({
+      data: {
+        countryId: 'country-1',
+        stateId: 'state-2',
+        name: 'Shibuya',
+      },
+      select: { id: true },
+    });
+  });
+
+  it('rejects branch creation when the address country is missing from master data', async () => {
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBranch.create.mockResolvedValue(branch({ id: 'branch-2', name: 'Downtown' }));
+    prisma.country.findUnique.mockResolvedValue(null);
+
+    await expect(
+      service.createBranch(
+        { user: user() },
+        {
+          businessId: 'business-1',
+          name: 'Downtown',
+          timezone: 'Asia/Tokyo',
+          currency: 'JPY',
+          status: 'ACTIVE',
+          address: {
+            line1: '1 Main St',
+            city: 'Tokyo',
+            state: 'Tokyo',
+            postalCode: '1000001',
+            country: 'JP',
+          },
+        },
+      ),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
   });
 
   it('replays branch creation before applying the inactive-business check', async () => {
@@ -855,6 +1086,7 @@ describe('SalonOwnerSettingsService', () => {
   it('updates branch hours timezone alongside a branch timezone change and maps duplicate branch updates to conflict', async () => {
     prisma.salonBranch.findFirst.mockResolvedValue(branch({ timezone: 'Asia/Tokyo' }));
     prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salon.findUnique.mockResolvedValueOnce({ id: 'branch-1', ownerId: 'user-1', metadata: { label: 'existing' } });
     prisma.salonBranch.update.mockResolvedValue(branch({ timezone: 'Asia/Seoul' }));
 
     await expect(
@@ -877,6 +1109,19 @@ describe('SalonOwnerSettingsService', () => {
     expect(prisma.salonBranchHours.updateMany).toHaveBeenCalledWith({
       where: { branchId: 'branch-1' },
       data: { timezone: 'Asia/Seoul' },
+    });
+    const [salonUpsertArgs] = prisma.salon.upsert.mock.calls[0] as [SalonUpsertArgs];
+    expect(salonUpsertArgs.update).toMatchObject({
+      tenant: { connect: { id: 'tenant-1' } },
+      owner: { connect: { id: 'user-1' } },
+      name: 'Main Branch',
+      phone: '1234567890',
+      email: 'branch@example.com',
+      isActive: true,
+    });
+    expect(salonUpsertArgs.update.metadata).toMatchObject({
+      label: 'existing',
+      timezone: 'Asia/Seoul',
     });
 
     prisma.salonBranch.findFirst.mockResolvedValue(branch());

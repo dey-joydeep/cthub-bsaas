@@ -3,7 +3,7 @@ import { Prisma, SalonOwnerStatus as PrismaSalonOwnerStatus } from '@prisma/clie
 import { COMMON_MESSAGE_KEYS, UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
 import { PrismaService } from '@cthub-bsaas/server-data-access';
 import { CorrelationId } from '@cthub-bsaas/server-core';
-import { createHash } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 
 import { BranchHolidayInputDto, BranchPolicyInputDto, BranchProfileInputDto, WeeklyHoursInputDto } from '../dto/branch-settings.dto';
 import { SalonBusinessInputDto } from '../dto/salon-business.dto';
@@ -406,8 +406,10 @@ export class SalonOwnerSettingsService {
           throw new ConflictException(inactiveBusinessMessage);
         }
 
-        const data = this.normalizeBranchCreateInput(input, business.id);
+        const branchId = randomUUID();
+        const data = this.normalizeBranchCreateInput(input, business.id, branchId);
         const created = await tx.salonBranch.create({ data });
+        await this.upsertOperationalSalon(tx, context, business, created);
         await this.recordIdempotentCreate(tx, context, business.tenantId, 'salon_owner.branch.create.idempotency', requestHash, created.id);
         await this.createAuditEvent(tx, context, business.tenantId, 'salon_owner.branch.create');
         return created;
@@ -458,6 +460,7 @@ export class SalonOwnerSettingsService {
           where: { id: branchId },
           data: this.normalizeBranchUpdateInput(input, input.businessId),
         });
+        await this.upsertOperationalSalon(tx, context, scopedBusiness, updated);
         if (input.timezone !== current.timezone) {
           await tx.salonBranchHours.updateMany({
             where: { branchId },
@@ -766,12 +769,17 @@ export class SalonOwnerSettingsService {
     return [...new Set(readStringArray(saasOwner?.managedTenants))];
   }
 
-  private normalizeBranchCreateInput(input: BranchProfileInputDto, businessId: string): Prisma.SalonBranchUncheckedCreateInput {
+  private normalizeBranchCreateInput(
+    input: BranchProfileInputDto,
+    businessId: string,
+    branchId = randomUUID(),
+  ): Prisma.SalonBranchUncheckedCreateInput {
     assertTimezone(input.timezone);
     const currency = input.currency.toUpperCase();
     assertCurrency(currency);
 
     return {
+      id: branchId,
       businessId,
       name: trimRequired(input.name, 2),
       phone: optionalTrimOrNull(input.phone),
@@ -792,6 +800,205 @@ export class SalonOwnerSettingsService {
       ...data,
       ...(phoneProvided ? { phone: optionalTrimOrNull(input.phone) } : {}),
       ...(emailProvided ? { email: optionalTrimOrNull(input.email) } : {}),
+    };
+  }
+
+  private async upsertOperationalSalon(
+    tx: TransactionClient,
+    context: SalonOwnerRequestContext,
+    business: BusinessRecord,
+    branch: BranchRecord,
+  ): Promise<void> {
+    const address = readAddress(branch.address);
+    const [country, existingSalon] = await Promise.all([
+      this.resolveCountry(tx, address.country),
+      tx.salon.findUnique({
+        where: { id: branch.id },
+        select: {
+          id: true,
+          ownerId: true,
+          metadata: true,
+        },
+      }),
+    ]);
+    const state = await this.resolveState(tx, country.id, address.state);
+    const city = await this.resolveCity(tx, country.id, state.id, address.city);
+    const ownerId = existingSalon?.ownerId ?? (await this.resolveSalonOwnerId(tx, context, business));
+    const mergedMetadata = this.mergeSalonMetadata(existingSalon?.metadata ?? null, branch.timezone);
+
+    await tx.salon.upsert({
+      where: { id: branch.id },
+      create: {
+        id: branch.id,
+        tenant: { connect: { id: business.tenantId } },
+        owner: { connect: { id: ownerId } },
+        name: branch.name,
+        slug: this.buildSalonSlug(branch.name, branch.id),
+        phone: branch.phone,
+        email: branch.email,
+        isActive: branch.status === PrismaSalonOwnerStatus.ACTIVE,
+        metadata: mergedMetadata,
+        businessAddress: {
+          create: {
+            line1: address.line1,
+            line2: address.line2 ?? null,
+            postalCode: address.postalCode,
+            isActive: branch.status === PrismaSalonOwnerStatus.ACTIVE,
+            country: { connect: { id: country.id } },
+            state: { connect: { id: state.id } },
+            city: { connect: { id: city.id } },
+          },
+        },
+      },
+      update: {
+        tenant: { connect: { id: business.tenantId } },
+        owner: { connect: { id: ownerId } },
+        name: branch.name,
+        phone: branch.phone,
+        email: branch.email,
+        isActive: branch.status === PrismaSalonOwnerStatus.ACTIVE,
+        metadata: mergedMetadata,
+        businessAddress: {
+          update: {
+            line1: address.line1,
+            line2: address.line2 ?? null,
+            postalCode: address.postalCode,
+            isActive: branch.status === PrismaSalonOwnerStatus.ACTIVE,
+            country: { connect: { id: country.id } },
+            state: { connect: { id: state.id } },
+            city: { connect: { id: city.id } },
+          },
+        },
+      },
+    });
+  }
+
+  private async resolveSalonOwnerId(
+    tx: TransactionClient,
+    context: SalonOwnerRequestContext,
+    business: BusinessRecord,
+  ): Promise<string> {
+    const businessSalon = await tx.salon.findUnique({
+      where: { id: business.id },
+      select: { ownerId: true },
+    });
+    if (businessSalon?.ownerId) {
+      return businessSalon.ownerId;
+    }
+
+    if (hasRole(context.user, UserRole.OWNER)) {
+      return context.user.id;
+    }
+
+    const tenantOwner = await tx.user.findFirst({
+      where: {
+        salonTenantId: business.tenantId,
+        isActive: true,
+        roles: {
+          some: {
+            role: {
+              name: UserRole.OWNER,
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true },
+    });
+    if (tenantOwner?.id) {
+      return tenantOwner.id;
+    }
+
+    throw new ConflictException('error.branch.profile.owner_missing');
+  }
+
+  private async resolveCountry(tx: TransactionClient, iso2: string) {
+    const country = await tx.country.findUnique({
+      where: { iso2 },
+      select: { id: true },
+    });
+    if (!country) {
+      throw new UnprocessableEntityException(validationMessage);
+    }
+    return country;
+  }
+
+  private async resolveState(tx: TransactionClient, countryId: string, stateName: string) {
+    const state = await tx.state.findFirst({
+      where: {
+        countryId,
+        OR: [
+          { stateCode: stateName.trim().toUpperCase() },
+          {
+            name: {
+              equals: stateName,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      },
+      select: { id: true },
+    });
+    if (state) {
+      return state;
+    }
+
+    return tx.state.create({
+      data: {
+        countryId,
+        name: stateName,
+        stateCode: this.buildSyntheticStateCode(countryId, stateName),
+      },
+      select: { id: true },
+    });
+  }
+
+  private async resolveCity(tx: TransactionClient, countryId: string, stateId: string, cityName: string) {
+    const city = await tx.city.findFirst({
+      where: {
+        countryId,
+        stateId,
+        name: {
+          equals: cityName,
+          mode: 'insensitive',
+        },
+      },
+      select: { id: true },
+    });
+    if (city) {
+      return city;
+    }
+
+    return tx.city.create({
+      data: {
+        countryId,
+        stateId,
+        name: cityName,
+      },
+      select: { id: true },
+    });
+  }
+
+  private buildSyntheticStateCode(countryId: string, stateName: string): string {
+    const prefix = stateName.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8) || 'STATE';
+    const suffix = createHash('sha1').update(`${countryId}:${stateName.toLowerCase()}`).digest('hex').slice(0, 4).toUpperCase();
+    return `${prefix}-${suffix}`;
+  }
+
+  private buildSalonSlug(name: string, branchId: string): string {
+    const base = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 48);
+    return `${base || 'salon'}-${branchId.slice(0, 8)}`;
+  }
+
+  private mergeSalonMetadata(metadata: Prisma.JsonValue | null, timezone: string): Prisma.InputJsonValue {
+    const metadataObject = metadata && typeof metadata === 'object' && !Array.isArray(metadata) ? { ...metadata } : {};
+    return {
+      ...metadataObject,
+      timezone,
     };
   }
 

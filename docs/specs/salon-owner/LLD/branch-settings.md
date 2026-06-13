@@ -45,4 +45,6 @@ Visual flow references:
 
 - Branch address normalization is server-side.
 - Branch timezone defaults to business timezone when omitted.
+- Branch profile create/update must also synchronize the operational `Salon` row used by appointments, auth, invites, and staff until those flows are fully branch-native.
+- The current implementation keeps `SalonBranch.id` equal to the corresponding operational `Salon.id` for durable cross-module identity.
 - Availability cache invalidation occurs after branch hours, holiday, or status changes.

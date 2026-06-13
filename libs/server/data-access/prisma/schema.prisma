@@ -201,7 +201,7 @@ model User {
   portfolios Portfolio[] @relation("UserPortfolios")
 
   // Business Relations
-  ownedSalon Salon? @relation("SalonOwner")
+  ownedSalons Salon[] @relation("SalonOwner")
 
   // Social & Commerce
   social            Social[]            @relation("UserSocials")
@@ -410,7 +410,7 @@ model Salon {
   name              String
   slug              String          @unique
   description       String?
-  phone             String
+  phone             String?
   email             String?
   website           String?
   logoUrl           String?         @map("logo_url")
@@ -425,7 +425,7 @@ model Salon {
 
   // Relations
   owner             User               @relation("SalonOwner", fields: [ownerId], references: [id])
-  ownerId           String             @unique @map("owner_id") @db.Uuid
+  ownerId           String             @map("owner_id") @db.Uuid
   metadata          Json?              @db.JsonB
   tenant            SalonTenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   portfolios        Portfolio[]        @relation("SalonPortfolios")
@@ -438,6 +438,7 @@ model Salon {
 
   // Indexes for better query performance
   @@index([tenantId])
+  @@index([ownerId])
   @@index([isActive])
   @@index([isVerified])
   @@index([averageRating])
