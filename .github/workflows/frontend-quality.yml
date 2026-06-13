@@ -65,8 +65,12 @@ jobs:
       - name: Run quality checks
         shell: bash
         run: |
-          FRONTEND_LINT_PROJECTS="$(npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --projects 'web-*,shared' --withTarget=lint | paste -sd, -)"
-          FRONTEND_TEST_PROJECTS="$(npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --projects 'web-*,shared' --withTarget=test | paste -sd, -)"
+          filter_frontend_projects() {
+            grep -E '^(web-.*|shared)$' | paste -sd, -
+          }
+
+          FRONTEND_LINT_PROJECTS="$(npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=lint | filter_frontend_projects)"
+          FRONTEND_TEST_PROJECTS="$(npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=test | filter_frontend_projects)"
 
           if [ -n "$FRONTEND_LINT_PROJECTS" ]; then
             npx nx run-many --target=lint --projects="$FRONTEND_LINT_PROJECTS" --parallel=3 --configuration=ci

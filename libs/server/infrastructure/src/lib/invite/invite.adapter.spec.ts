@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { InvitePrismaAdapter } from './invite.adapter';
 import { PrismaService } from '@cthub-bsaas/server-data-access';
 import { BadRequestException, ConflictException, GoneException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 jest.mock('bcryptjs');
@@ -27,8 +28,10 @@ describe('InvitePrismaAdapter', () => {
             },
             user: {
               findUnique: jest.fn(),
+              findUniqueOrThrow: jest.fn(),
               create: jest.fn(),
               update: jest.fn(),
+              updateMany: jest.fn(),
             },
             role: {
               findUnique: jest.fn(),
@@ -294,22 +297,78 @@ describe('InvitePrismaAdapter', () => {
       (prisma.staffInvite.findFirst as jest.Mock).mockResolvedValue(rec);
       (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 'user-id', salonTenantId: null });
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
-      (prisma.user.update as jest.Mock).mockResolvedValue(user);
+      (prisma.user.updateMany as jest.Mock).mockResolvedValue({ count: 1 });
+      (prisma.user.findUniqueOrThrow as jest.Mock).mockResolvedValue(user);
       (prisma.role.findUnique as jest.Mock).mockResolvedValue(null);
 
       await expect(adapter.completeStaff(input)).resolves.toEqual({ userId: 'user-id', requireMfa: false });
       expect(prisma.user.create).not.toHaveBeenCalled();
-      const [updateCallArgs] = (prisma.user.update as jest.Mock).mock.calls as [
+      const [updateCallArgs] = (prisma.user.updateMany as jest.Mock).mock.calls as [
         [
           {
-            where: { id: string };
+            where: { id: string; salonTenantId: null };
             data: { salonTenantId: string };
           },
         ],
       ];
       const [updateCall] = updateCallArgs;
-      expect(updateCall.where).toEqual({ id: 'user-id' });
+      expect(updateCall.where).toEqual({ id: 'user-id', salonTenantId: null });
       expect(updateCall.data.salonTenantId).toBe('tenant-1');
+      expect(prisma.user.findUniqueOrThrow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'user-id' },
+        }),
+      );
+    });
+
+    it('rejects a concurrent tenant assignment when another invite claims the unscoped user first', async () => {
+      const input = { token: 'valid-token', password: 'password' };
+      const rec = {
+        id: 'rec-id',
+        email: 'test@example.com',
+        salonId: 'salon-id',
+        expiresAt: new Date(Date.now() + 10000),
+        salon: { tenantId: 'tenant-1' },
+      };
+
+      (prisma.staffInvite.findFirst as jest.Mock).mockResolvedValue(rec);
+      (prisma.user.findUnique as jest.Mock)
+        .mockResolvedValueOnce({ id: 'user-id', salonTenantId: null })
+        .mockResolvedValueOnce({ salonTenantId: 'tenant-2' });
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
+      (prisma.user.updateMany as jest.Mock).mockResolvedValue({ count: 0 });
+
+      await expect(adapter.completeStaff(input)).rejects.toThrow(ConflictException);
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('retries through the atomic path when create loses an email uniqueness race', async () => {
+      const input = { token: 'valid-token', password: 'password' };
+      const rec = {
+        id: 'rec-id',
+        email: 'test@example.com',
+        salonId: 'salon-id',
+        expiresAt: new Date(Date.now() + 10000),
+        salon: { tenantId: 'tenant-1' },
+      };
+      const user = { id: 'user-id', isMFAEnrollRequired: false };
+
+      (prisma.staffInvite.findFirst as jest.Mock).mockResolvedValue(rec);
+      (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'user-id', salonTenantId: null });
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
+      (prisma.user.create as jest.Mock).mockRejectedValueOnce(
+        new Prisma.PrismaClientKnownRequestError('known request error', {
+          code: 'P2002',
+          clientVersion: 'test',
+        }),
+      );
+      (prisma.user.updateMany as jest.Mock).mockResolvedValue({ count: 1 });
+      (prisma.user.findUniqueOrThrow as jest.Mock).mockResolvedValue(user);
+      (prisma.role.findUnique as jest.Mock).mockResolvedValue(null);
+
+      await expect(adapter.completeStaff(input)).resolves.toEqual({ userId: 'user-id', requireMfa: false });
+      expect(prisma.user.create).toHaveBeenCalledTimes(1);
+      expect(prisma.user.updateMany).toHaveBeenCalledTimes(1);
     });
   });
 });

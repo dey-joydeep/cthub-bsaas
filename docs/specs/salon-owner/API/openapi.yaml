@@ -275,6 +275,9 @@ components:
               $ref: '#/components/schemas/IsoDateTime'
             updatedAt:
               $ref: '#/components/schemas/IsoDateTime'
+    SalonOwnerStatus:
+      type: string
+      enum: [ACTIVE, INACTIVE]
     BranchProfileInput:
       type: object
       required: [businessId, name, timezone, currency, status, address]
@@ -301,7 +304,7 @@ components:
           maxLength: 3
           examples: ['INR']
         status:
-          $ref: '#/components/schemas/Status'
+          $ref: '#/components/schemas/SalonOwnerStatus'
         address:
           $ref: '#/components/schemas/AddressDto'
     BranchDto:

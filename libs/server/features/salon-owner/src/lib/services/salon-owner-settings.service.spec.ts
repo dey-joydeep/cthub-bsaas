@@ -24,10 +24,7 @@ interface BranchUpdateArgs {
   readonly where: {
     readonly id: string;
   };
-  readonly data: {
-    readonly phone: string | null;
-    readonly email: string | null;
-  };
+  readonly data: Record<string, unknown>;
 }
 
 interface HolidayUpsertArgs {
@@ -61,10 +58,20 @@ interface SalonUpsertArgs {
       };
     };
     readonly name: string;
+    readonly slug: string;
     readonly phone: string | null;
     readonly email: string | null;
     readonly isActive: boolean;
     readonly metadata?: Record<string, unknown>;
+    readonly businessAddress?: {
+      readonly create: {
+        readonly state: {
+          readonly connect: {
+            readonly id: string;
+          };
+        };
+      };
+    };
   };
   readonly update: {
     readonly tenant: {
@@ -78,10 +85,12 @@ interface SalonUpsertArgs {
       };
     };
     readonly name: string;
+    readonly slug?: string;
     readonly phone: string | null;
     readonly email: string | null;
     readonly isActive: boolean;
     readonly metadata?: Record<string, unknown>;
+    readonly businessAddress?: Record<string, unknown>;
   };
 }
 
@@ -156,7 +165,9 @@ function hashIdempotencyPayload(input: unknown): string {
     return value;
   };
 
-  return createHash('sha256').update(JSON.stringify(canonicalize(input))).digest('hex');
+  return createHash('sha256')
+    .update(JSON.stringify(canonicalize(input)))
+    .digest('hex');
 }
 
 function createPrismaMock() {
@@ -214,10 +225,7 @@ function createPrismaMock() {
   };
 }
 
-function expectAuditCall(
-  calls: readonly [AuditCreateArgs][],
-  expected: { tenantId?: string; action: string; result?: string },
-): void {
+function expectAuditCall(calls: readonly [AuditCreateArgs][], expected: { tenantId?: string; action: string; result?: string }): void {
   expect(
     calls.some(([arg]) => {
       return (
@@ -416,11 +424,9 @@ describe('SalonOwnerSettingsService', () => {
       status: 'ACTIVE' as const,
     };
     prisma.salonBusiness.create.mockRejectedValue(new Error('write lost'));
-    prisma.auditEvent.findFirst
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({
-        reason: `${hashIdempotencyPayload(input)}:business-1`,
-      });
+    prisma.auditEvent.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({
+      reason: `${hashIdempotencyPayload(input)}:business-1`,
+    });
     prisma.salonBusiness.findFirst.mockResolvedValue(business());
 
     await expect(service.createBusiness({ user: user(), idempotencyKey: 'idem-1' }, input)).resolves.toMatchObject({
@@ -545,7 +551,9 @@ describe('SalonOwnerSettingsService', () => {
 
   it('creates branches after validating business scope and normalizing address', async () => {
     prisma.salonBusiness.findFirst.mockResolvedValue(business());
-    prisma.salonBranch.create.mockResolvedValue(branch({ name: 'Downtown', status: 'INACTIVE', phone: '555', email: 'branch@example.com' }));
+    prisma.salonBranch.create.mockResolvedValue(
+      branch({ name: 'Downtown', status: 'INACTIVE', phone: '555', email: 'branch@example.com' }),
+    );
 
     await expect(
       service.createBranch(
@@ -582,6 +590,7 @@ describe('SalonOwnerSettingsService', () => {
       tenant: { connect: { id: 'tenant-1' } },
       owner: { connect: { id: 'user-1' } },
       name: 'Downtown',
+      slug: 'downtown-branch-1',
       phone: '555',
       email: 'branch@example.com',
       isActive: false,
@@ -749,6 +758,37 @@ describe('SalonOwnerSettingsService', () => {
     });
   });
 
+  it('recovers from a concurrent state create collision and reuses the winner row', async () => {
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBranch.create.mockResolvedValue(branch({ id: 'branch-2', name: 'Downtown' }));
+    prisma.state.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'state-2' });
+    prisma.state.create.mockRejectedValueOnce(prismaKnownError('P2002'));
+
+    await expect(
+      service.createBranch(
+        { user: user() },
+        {
+          businessId: 'business-1',
+          name: 'Downtown',
+          timezone: 'Asia/Tokyo',
+          currency: 'JPY',
+          status: 'ACTIVE',
+          address: {
+            line1: '1 Main St',
+            city: 'Tokyo',
+            state: 'Tokyo Metropolis',
+            postalCode: '1000001',
+            country: 'JP',
+          },
+        },
+      ),
+    ).resolves.toMatchObject({ id: 'branch-2' });
+
+    expect(prisma.state.create).toHaveBeenCalledTimes(1);
+    const [salonUpsertArgs] = prisma.salon.upsert.mock.calls[0] as [SalonUpsertArgs];
+    expect(salonUpsertArgs.create.businessAddress?.create.state.connect.id).toBe('state-2');
+  });
+
   it('rejects branch creation when the address country is missing from master data', async () => {
     prisma.salonBusiness.findFirst.mockResolvedValue(business());
     prisma.salonBranch.create.mockResolvedValue(branch({ id: 'branch-2', name: 'Downtown' }));
@@ -821,11 +861,9 @@ describe('SalonOwnerSettingsService', () => {
     };
     prisma.salonBusiness.findFirst.mockResolvedValue(business());
     prisma.salonBranch.create.mockRejectedValue(new Error('write lost'));
-    prisma.auditEvent.findFirst
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({
-        reason: `${hashIdempotencyPayload(input)}:branch-1`,
-      });
+    prisma.auditEvent.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({
+      reason: `${hashIdempotencyPayload(input)}:branch-1`,
+    });
     prisma.salonBranch.findFirst.mockResolvedValue(branch({ name: 'Downtown' }));
 
     await expect(service.createBranch({ user: user(), idempotencyKey: 'idem-1' }, input)).resolves.toMatchObject({
@@ -1031,8 +1069,9 @@ describe('SalonOwnerSettingsService', () => {
 
     const [updateArgs] = prisma.salonBranch.update.mock.calls[0] as [BranchUpdateArgs];
     expect(updateArgs.where).toEqual({ id: 'branch-1' });
-    expect(updateArgs.data.phone).toBeNull();
-    expect(updateArgs.data.email).toBeNull();
+    expect(updateArgs.data['phone']).toBeNull();
+    expect(updateArgs.data['email']).toBeNull();
+    expect(updateArgs.data['id']).toBeUndefined();
   });
 
   it('preserves branch contact fields when patch omits them entirely', async () => {
@@ -1144,6 +1183,32 @@ describe('SalonOwnerSettingsService', () => {
         },
       }),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('builds operational salon slugs from the full branch id', async () => {
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBranch.create.mockResolvedValue(branch({ id: '11111111-1111-4111-8111-111111111111', name: 'Main Branch' }));
+
+    await service.createBranch(
+      { user: user() },
+      {
+        businessId: 'business-1',
+        name: 'Main Branch',
+        timezone: 'Asia/Tokyo',
+        currency: 'JPY',
+        status: 'ACTIVE',
+        address: {
+          line1: '1 Main St',
+          city: 'Tokyo',
+          state: 'Tokyo',
+          postalCode: '1000001',
+          country: 'JP',
+        },
+      },
+    );
+
+    const [salonUpsertArgs] = prisma.salon.upsert.mock.calls[0] as [SalonUpsertArgs];
+    expect(salonUpsertArgs.create.slug).toBe('main-branch-11111111-1111-4111-8111-111111111111');
   });
 
   it('surfaces an in-transaction branch lookup miss during update', async () => {
@@ -1445,18 +1510,22 @@ describe('SalonOwnerSettingsService', () => {
 
   it('handles malformed stored values through the internal mappers', () => {
     expect(() =>
-      (service as unknown as {
-        mapBranch(input: Record<string, unknown>): unknown;
-      }).mapBranch({
+      (
+        service as unknown as {
+          mapBranch(input: Record<string, unknown>): unknown;
+        }
+      ).mapBranch({
         ...branch(),
         address: null,
       }),
     ).toThrow('Stored branch address is not an object');
 
     expect(() =>
-      (service as unknown as {
-        mapHoliday(input: Record<string, unknown>): unknown;
-      }).mapHoliday({
+      (
+        service as unknown as {
+          mapHoliday(input: Record<string, unknown>): unknown;
+        }
+      ).mapHoliday({
         branchId: 'branch-1',
         date: new Date('2026-05-26T00:00:00.000Z'),
         closed: true,
@@ -1466,9 +1535,11 @@ describe('SalonOwnerSettingsService', () => {
     ).toThrow('Stored intervals are not an array');
 
     expect(() =>
-      (service as unknown as {
-        readIntervals(input: unknown): unknown;
-      }).readIntervals([null]),
+      (
+        service as unknown as {
+          readIntervals(input: unknown): unknown;
+        }
+      ).readIntervals([null]),
     ).toThrow('Stored interval is not an object');
   });
 
@@ -1489,25 +1560,29 @@ describe('SalonOwnerSettingsService', () => {
     prisma.auditEvent.findFirst.mockResolvedValueOnce({ reason: null }).mockResolvedValueOnce({ reason: 'bad-reason' });
 
     await expect(
-      (service as unknown as {
-        findIdempotentBusinessReplay(
-          prismaArg: { auditEvent: { findFirst: jest.Mock }; salonBusiness: { findFirst: jest.Mock } },
-          context: { user: AuthenticatedUser; idempotencyKey?: string },
-          tenantId: string,
-          requestHash: string,
-        ): Promise<unknown>;
-      }).findIdempotentBusinessReplay(prisma as never, { user: user(), idempotencyKey: 'idem-1' }, 'tenant-1', 'hash'),
+      (
+        service as unknown as {
+          findIdempotentBusinessReplay(
+            prismaArg: { auditEvent: { findFirst: jest.Mock }; salonBusiness: { findFirst: jest.Mock } },
+            context: { user: AuthenticatedUser; idempotencyKey?: string },
+            tenantId: string,
+            requestHash: string,
+          ): Promise<unknown>;
+        }
+      ).findIdempotentBusinessReplay(prisma as never, { user: user(), idempotencyKey: 'idem-1' }, 'tenant-1', 'hash'),
     ).resolves.toBeNull();
 
     await expect(
-      (service as unknown as {
-        findIdempotentBranchReplay(
-          prismaArg: { auditEvent: { findFirst: jest.Mock }; salonBranch: { findFirst: jest.Mock } },
-          context: { user: AuthenticatedUser; idempotencyKey?: string },
-          tenantId: string,
-          requestHash: string,
-        ): Promise<unknown>;
-      }).findIdempotentBranchReplay(prisma as never, { user: user(), idempotencyKey: 'idem-1' }, 'tenant-1', 'hash'),
+      (
+        service as unknown as {
+          findIdempotentBranchReplay(
+            prismaArg: { auditEvent: { findFirst: jest.Mock }; salonBranch: { findFirst: jest.Mock } },
+            context: { user: AuthenticatedUser; idempotencyKey?: string },
+            tenantId: string,
+            requestHash: string,
+          ): Promise<unknown>;
+        }
+      ).findIdempotentBranchReplay(prisma as never, { user: user(), idempotencyKey: 'idem-1' }, 'tenant-1', 'hash'),
     ).resolves.toBeNull();
   });
 
@@ -1575,9 +1650,11 @@ describe('SalonOwnerSettingsService', () => {
   });
 
   it('maps stored holiday intervals back into API models', () => {
-    const result = (service as unknown as {
-      mapHoliday(input: Record<string, unknown>): { intervals: Array<{ start: string; end: string }> };
-    }).mapHoliday({
+    const result = (
+      service as unknown as {
+        mapHoliday(input: Record<string, unknown>): { intervals: Array<{ start: string; end: string }> };
+      }
+    ).mapHoliday({
       branchId: 'branch-1',
       date: new Date('2026-05-26T00:00:00.000Z'),
       closed: false,

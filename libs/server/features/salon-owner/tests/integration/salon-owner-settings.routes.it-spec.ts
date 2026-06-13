@@ -74,12 +74,12 @@ describe('Salon owner settings routes', () => {
 
     await request(app.getHttpServer())
       .post('/partner/businesses')
-      .set('Idempotency-Key', 'key-1')
+      .set('Idempotency-Key', 'key-12345')
       .send({ displayName: 'Salon One', legalName: 'Salon One Legal', status: 'ACTIVE' })
       .expect(201);
 
     expect(service.createBusiness).toHaveBeenCalledWith(
-      { user: expect.objectContaining({ tenantId: 'tenant-1' }), idempotencyKey: 'key-1' },
+      { user: expect.objectContaining({ tenantId: 'tenant-1' }), idempotencyKey: 'key-12345' },
       expect.objectContaining({ displayName: 'Salon One' }),
     );
   });
@@ -127,7 +127,7 @@ describe('Salon owner settings routes', () => {
 
     await request(app.getHttpServer())
       .post('/partner/branches')
-      .set('Idempotency-Key', 'key-2')
+      .set('Idempotency-Key', 'key-23456')
       .send({
         businessId: '11111111-1111-4111-8111-111111111112',
         name: 'Main Branch',
@@ -145,7 +145,7 @@ describe('Salon owner settings routes', () => {
       .expect(201);
 
     expect(service.createBranch).toHaveBeenCalledWith(
-      { user: expect.objectContaining({ tenantId: 'tenant-1' }), idempotencyKey: 'key-2' },
+      { user: expect.objectContaining({ tenantId: 'tenant-1' }), idempotencyKey: 'key-23456' },
       expect.objectContaining({ name: 'Main Branch' }),
     );
   });
