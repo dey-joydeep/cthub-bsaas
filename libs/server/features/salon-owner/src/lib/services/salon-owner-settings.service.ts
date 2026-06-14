@@ -14,6 +14,7 @@ import {
   BranchProfileModel,
   PagedResult,
   SalonBusinessModel,
+  SalonOwnerPagination,
   SalonOwnerAddress,
   SalonOwnerRequestContext,
   TimeIntervalModel,
@@ -269,16 +270,30 @@ function isUniqueConstraintViolation(error: unknown): boolean {
 
 @Injectable()
 export class SalonOwnerSettingsService {
+  private static readonly defaultPageNumber = 1;
+  private static readonly defaultPageSize = 25;
+  private static readonly maxPageSize = 100;
+
   constructor(private readonly prisma: PrismaService) {}
 
-  async listBusinesses(context: SalonOwnerRequestContext): Promise<PagedResult<SalonBusinessModel>> {
+  async listBusinesses(
+    context: SalonOwnerRequestContext,
+    pagination: SalonOwnerPagination = {},
+  ): Promise<PagedResult<SalonBusinessModel>> {
     const tenantIds = await this.requireTenantIds(context);
-    const businesses = await this.prisma.salonBusiness.findMany({
-      where: { tenantId: this.tenantScopeFilter(tenantIds) },
-      orderBy: { createdAt: 'asc' },
-    });
+    const page = this.normalizePagination(pagination);
+    const where = { tenantId: this.tenantScopeFilter(tenantIds) } as const;
+    const [businesses, totalItems] = await Promise.all([
+      this.prisma.salonBusiness.findMany({
+        where,
+        orderBy: { createdAt: 'asc' },
+        skip: (page.pageNumber - 1) * page.limit,
+        take: page.limit,
+      }),
+      this.prisma.salonBusiness.count({ where }),
+    ]);
 
-    return this.page(businesses.map((business) => this.mapBusiness(business)));
+    return this.page(businesses.map((business) => this.mapBusiness(business)), page.pageNumber, page.limit, totalItems);
   }
 
   async createBusiness(context: SalonOwnerRequestContext, input: SalonBusinessInputDto): Promise<SalonBusinessModel> {
@@ -376,21 +391,32 @@ export class SalonOwnerSettingsService {
     }
   }
 
-  async listBranches(context: SalonOwnerRequestContext, businessId?: string): Promise<PagedResult<BranchProfileModel>> {
+  async listBranches(
+    context: SalonOwnerRequestContext,
+    businessId?: string,
+    pagination: SalonOwnerPagination = {},
+  ): Promise<PagedResult<BranchProfileModel>> {
     const tenantIds = await this.requireTenantIds(context);
     if (businessId) {
       await this.findBusinessInScope(context, businessId);
     }
+    const page = this.normalizePagination(pagination);
+    const where = {
+      ...(businessId ? { businessId } : {}),
+      business: { tenantId: this.tenantScopeFilter(tenantIds) },
+    } as const;
 
-    const branches = await this.prisma.salonBranch.findMany({
-      where: {
-        ...(businessId ? { businessId } : {}),
-        business: { tenantId: this.tenantScopeFilter(tenantIds) },
-      },
-      orderBy: { createdAt: 'asc' },
-    });
+    const [branches, totalItems] = await Promise.all([
+      this.prisma.salonBranch.findMany({
+        where,
+        orderBy: { createdAt: 'asc' },
+        skip: (page.pageNumber - 1) * page.limit,
+        take: page.limit,
+      }),
+      this.prisma.salonBranch.count({ where }),
+    ]);
 
-    return this.page(branches.map((branch) => this.mapBranch(branch)));
+    return this.page(branches.map((branch) => this.mapBranch(branch)), page.pageNumber, page.limit, totalItems);
   }
 
   async createBranch(context: SalonOwnerRequestContext, input: BranchProfileInputDto): Promise<BranchProfileModel> {
@@ -1172,13 +1198,28 @@ export class SalonOwnerSettingsService {
     });
   }
 
-  private page<T>(items: readonly T[]): PagedResult<T> {
+  private normalizePagination(pagination: SalonOwnerPagination): { pageNumber: number; limit: number } {
+    const pageNumber = pagination.page ?? SalonOwnerSettingsService.defaultPageNumber;
+    const limit = pagination.pageSize ?? SalonOwnerSettingsService.defaultPageSize;
+    if (!Number.isInteger(pageNumber) || pageNumber < 1) {
+      throw new UnprocessableEntityException(validationMessage);
+    }
+    if (!Number.isInteger(limit) || limit < 1 || limit > SalonOwnerSettingsService.maxPageSize) {
+      throw new UnprocessableEntityException(validationMessage);
+    }
+
+    return { pageNumber, limit };
+  }
+
+  private page<T>(items: readonly T[], pageNumber: number, limit: number, totalItems: number): PagedResult<T> {
     return {
       items,
       page: {
-        limit: Math.max(items.length, 1),
+        pageNumber,
+        limit,
+        totalItems,
         nextCursor: null,
-        hasMore: false,
+        hasMore: pageNumber * limit < totalItems,
       },
     };
   }

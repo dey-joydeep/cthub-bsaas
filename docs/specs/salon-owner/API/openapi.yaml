@@ -857,6 +857,8 @@ paths:
       operationId: listSalonBusinesses
       parameters:
         - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/PageSizeQuery'
       responses:
         '200':
           description: Salon businesses available to the caller.
@@ -935,6 +937,8 @@ paths:
       parameters:
         - $ref: '#/components/parameters/CorrelationIdHeader'
         - $ref: '#/components/parameters/BusinessIdQuery'
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/PageSizeQuery'
       responses:
         '200':
           description: Branches available to the caller.

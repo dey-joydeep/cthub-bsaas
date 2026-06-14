@@ -182,6 +182,7 @@ function createPrismaMock() {
       create: jest.fn(),
       findFirst: jest.fn(),
       update: jest.fn(),
+      count: jest.fn(),
     },
     salonBranch: {
       findMany: jest.fn(),
@@ -267,28 +268,33 @@ describe('SalonOwnerSettingsService', () => {
 
   it('lists businesses for the authenticated tenant', async () => {
     prisma.salonBusiness.findMany.mockResolvedValue([business()]);
+    prisma.salonBusiness.count.mockResolvedValue(1);
 
     const result = await service.listBusinesses({ user: user() });
 
     expect(prisma.salonBusiness.findMany).toHaveBeenCalledWith({
       where: { tenantId: 'tenant-1' },
       orderBy: { createdAt: 'asc' },
+      skip: 0,
+      take: 25,
     });
     expect(result.items[0]).toMatchObject({ id: 'business-1', tenantId: 'tenant-1' });
-    expect(result.page).toEqual({ limit: 1, nextCursor: null, hasMore: false });
+    expect(result.page).toEqual({ pageNumber: 1, limit: 25, totalItems: 1, nextCursor: null, hasMore: false });
   });
 
   it('keeps empty business pagination metadata schema-valid', async () => {
     prisma.salonBusiness.findMany.mockResolvedValue([]);
+    prisma.salonBusiness.count.mockResolvedValue(0);
 
     await expect(service.listBusinesses({ user: user() })).resolves.toEqual({
       items: [],
-      page: { limit: 1, nextCursor: null, hasMore: false },
+      page: { pageNumber: 1, limit: 25, totalItems: 0, nextCursor: null, hasMore: false },
     });
   });
 
   it('lists businesses across managed tenant scope for platform admins', async () => {
     prisma.salonBusiness.findMany.mockResolvedValue([business({ tenantId: 'tenant-2' })]);
+    prisma.salonBusiness.count.mockResolvedValue(1);
 
     await expect(
       service.listBusinesses({
@@ -305,11 +311,14 @@ describe('SalonOwnerSettingsService', () => {
     expect(prisma.salonBusiness.findMany).toHaveBeenCalledWith({
       where: { tenantId: { in: ['tenant-2', 'tenant-3'] } },
       orderBy: { createdAt: 'asc' },
+      skip: 0,
+      take: 25,
     });
   });
 
   it('reads managed tenant scope from the nested saas owner payload', async () => {
     prisma.salonBusiness.findMany.mockResolvedValue([business({ tenantId: 'tenant-9' })]);
+    prisma.salonBusiness.count.mockResolvedValue(1);
 
     await expect(
       service.listBusinesses({
@@ -326,6 +335,8 @@ describe('SalonOwnerSettingsService', () => {
     expect(prisma.salonBusiness.findMany).toHaveBeenCalledWith({
       where: { tenantId: { in: ['tenant-9', 'tenant-10'] } },
       orderBy: { createdAt: 'asc' },
+      skip: 0,
+      take: 25,
     });
     expect(prisma.saasOwner.findUnique).not.toHaveBeenCalled();
   });
@@ -333,6 +344,7 @@ describe('SalonOwnerSettingsService', () => {
   it('loads managed tenant scope from the persisted saas owner record when auth context omits it', async () => {
     prisma.saasOwner.findUnique.mockResolvedValue({ managedTenants: ['tenant-4', 'tenant-5', 'tenant-4'] });
     prisma.salonBusiness.findMany.mockResolvedValue([business({ tenantId: 'tenant-4' })]);
+    prisma.salonBusiness.count.mockResolvedValue(1);
 
     await expect(
       service.listBusinesses({
@@ -352,6 +364,8 @@ describe('SalonOwnerSettingsService', () => {
     expect(prisma.salonBusiness.findMany).toHaveBeenCalledWith({
       where: { tenantId: { in: ['tenant-4', 'tenant-5'] } },
       orderBy: { createdAt: 'asc' },
+      skip: 0,
+      take: 25,
     });
   });
 
@@ -566,6 +580,7 @@ describe('SalonOwnerSettingsService', () => {
 
   it('lists branches with and without an explicit business filter', async () => {
     prisma.salonBranch.findMany.mockResolvedValue([branch()]);
+    prisma.salonBranch.count.mockResolvedValue(1);
     prisma.salonBusiness.findFirst.mockResolvedValue(business());
 
     await expect(service.listBranches({ user: user() })).resolves.toMatchObject({
@@ -574,6 +589,41 @@ describe('SalonOwnerSettingsService', () => {
     await expect(service.listBranches({ user: user() }, 'business-1')).resolves.toMatchObject({
       items: [expect.objectContaining({ businessId: 'business-1' })],
     });
+  });
+
+  it('applies page and pageSize to business and branch listings', async () => {
+    prisma.salonBusiness.findMany.mockResolvedValue([business()]);
+    prisma.salonBusiness.count.mockResolvedValue(3);
+    prisma.salonBranch.findMany.mockResolvedValue([branch()]);
+    prisma.salonBranch.count.mockResolvedValue(4);
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+
+    await expect(service.listBusinesses({ user: user() }, { page: 2, pageSize: 2 })).resolves.toMatchObject({
+      page: { pageNumber: 2, limit: 2, totalItems: 3, hasMore: false },
+    });
+    expect(prisma.salonBusiness.findMany).toHaveBeenCalledWith({
+      where: { tenantId: 'tenant-1' },
+      orderBy: { createdAt: 'asc' },
+      skip: 2,
+      take: 2,
+    });
+
+    await expect(service.listBranches({ user: user() }, 'business-1', { page: 1, pageSize: 3 })).resolves.toMatchObject({
+      page: { pageNumber: 1, limit: 3, totalItems: 4, hasMore: true },
+    });
+    expect(prisma.salonBranch.findMany).toHaveBeenCalledWith({
+      where: { businessId: 'business-1', business: { tenantId: 'tenant-1' } },
+      orderBy: { createdAt: 'asc' },
+      skip: 0,
+      take: 3,
+    });
+  });
+
+  it('rejects invalid settings list pagination values', async () => {
+    await expect(service.listBusinesses({ user: user() }, { page: 0 })).rejects.toBeInstanceOf(UnprocessableEntityException);
+    await expect(service.listBranches({ user: user() }, undefined, { pageSize: 101 })).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
   });
 
   it('creates branches after validating business scope and normalizing address', async () => {

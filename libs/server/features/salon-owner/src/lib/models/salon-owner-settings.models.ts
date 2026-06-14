@@ -70,10 +70,17 @@ export interface BranchPolicyModel {
 export interface PagedResult<T> {
   readonly items: readonly T[];
   readonly page: {
+    readonly pageNumber?: number;
     readonly limit: number;
+    readonly totalItems?: number;
     readonly nextCursor: string | null;
     readonly hasMore: boolean;
   };
+}
+
+export interface SalonOwnerPagination {
+  readonly page?: number;
+  readonly pageSize?: number;
 }
 
 export interface SalonOwnerRequestContext {

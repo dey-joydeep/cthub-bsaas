@@ -1,4 +1,19 @@
-import { BadRequestException, Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, Put, Query, UseInterceptors, VERSION_NEUTRAL } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  ParseIntPipe,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Put,
+  Query,
+  UseInterceptors,
+  VERSION_NEUTRAL,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, ResponseEnvelopeInterceptor, Roles } from '@cthub-bsaas/server-core';
 import { COMMON_MESSAGE_KEYS, UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
@@ -23,8 +38,13 @@ export class BranchSettingsController {
 
   @Get()
   @ApiOperation({ operationId: 'listBranches' })
-  listBranches(@CurrentUser() user: AuthenticatedUser, @Query('businessId', new ParseUUIDPipe({ optional: true })) businessId?: string) {
-    return this.settings.listBranches({ user }, businessId);
+  listBranches(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('businessId', new ParseUUIDPipe({ optional: true })) businessId?: string,
+    @Query('page', new ParseIntPipe({ optional: true })) page?: number,
+    @Query('pageSize', new ParseIntPipe({ optional: true })) pageSize?: number,
+  ) {
+    return this.settings.listBranches({ user }, businessId, { page, pageSize });
   }
 
   @Post()

@@ -1,4 +1,18 @@
-import { BadRequestException, Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, UseInterceptors, VERSION_NEUTRAL } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  ParseIntPipe,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UseInterceptors,
+  VERSION_NEUTRAL,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, ResponseEnvelopeInterceptor, Roles } from '@cthub-bsaas/server-core';
 import { COMMON_MESSAGE_KEYS, UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
@@ -23,8 +37,12 @@ export class BusinessSettingsController {
 
   @Get()
   @ApiOperation({ operationId: 'listSalonBusinesses' })
-  listBusinesses(@CurrentUser() user: AuthenticatedUser) {
-    return this.settings.listBusinesses({ user });
+  listBusinesses(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('page', new ParseIntPipe({ optional: true })) page?: number,
+    @Query('pageSize', new ParseIntPipe({ optional: true })) pageSize?: number,
+  ) {
+    return this.settings.listBusinesses({ user }, { page, pageSize });
   }
 
   @Post()

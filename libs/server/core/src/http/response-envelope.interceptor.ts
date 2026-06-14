@@ -21,7 +21,10 @@ interface SuccessEnvelope<T> {
   readonly meta?: SuccessMeta;
 }
 
-function isPagedResult(value: Record<string, unknown>): value is { items: unknown[]; page: { limit: number } } {
+function isPagedResult(value: Record<string, unknown>): value is {
+  items: unknown[];
+  page: { limit: number; pageNumber?: number; totalItems?: number };
+} {
   return Array.isArray(value['items']) && isPlainObject(value['page']) && typeof value['page']['limit'] === 'number';
 }
 
@@ -69,9 +72,9 @@ export class ResponseEnvelopeInterceptor implements NestInterceptor {
             return buildSuccessEnvelope(
               { items: value.items },
               {
-                page: 1,
+                page: value.page.pageNumber ?? 1,
                 pageSize: value.page.limit,
-                total: value.items.length,
+                total: value.page.totalItems ?? value.items.length,
               },
             );
           }
