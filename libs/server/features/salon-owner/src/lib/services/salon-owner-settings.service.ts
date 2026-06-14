@@ -302,7 +302,7 @@ export class SalonOwnerSettingsService {
             },
           });
           await this.recordIdempotentCreate(tx, context, tenantId, 'salon_owner.business.create.idempotency', requestHash, created.id);
-          await this.createAuditEvent(tx, context, tenantId, 'salon_owner.business.create');
+          await this.createAuditEvent(tx, context, tenantId, 'salon_owner.business.create', created.id);
           return created;
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
@@ -362,7 +362,7 @@ export class SalonOwnerSettingsService {
               status: input.status as PrismaSalonOwnerStatus,
             },
           });
-          await this.createAuditEvent(tx, context, current.tenantId, 'salon_owner.business.update');
+          await this.createAuditEvent(tx, context, current.tenantId, 'salon_owner.business.update', businessId);
           return updated;
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
@@ -429,7 +429,7 @@ export class SalonOwnerSettingsService {
             requestHash,
             created.id,
           );
-          await this.createAuditEvent(tx, context, business.tenantId, 'salon_owner.branch.create');
+          await this.createAuditEvent(tx, context, business.tenantId, 'salon_owner.branch.create', created.id);
           return created;
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
@@ -488,7 +488,7 @@ export class SalonOwnerSettingsService {
               data: { timezone: input.timezone },
             });
           }
-          await this.createAuditEvent(tx, context, business.tenantId, 'salon_owner.branch.update');
+          await this.createAuditEvent(tx, context, business.tenantId, 'salon_owner.branch.update', branchId);
           return updated;
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
@@ -537,7 +537,7 @@ export class SalonOwnerSettingsService {
             intervals: toJsonArray(day.intervals),
           })),
         });
-        await this.createAuditEvent(tx, context, branch.business.tenantId, 'salon_owner.branch.hours.replace');
+        await this.createAuditEvent(tx, context, branch.business.tenantId, 'salon_owner.branch.hours.replace', branchId);
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
@@ -576,7 +576,7 @@ export class SalonOwnerSettingsService {
           intervals: toJsonArray(intervals),
         },
       });
-      await this.createAuditEvent(tx, context, business.tenantId, 'salon_owner.branch.holiday.set');
+      await this.createAuditEvent(tx, context, business.tenantId, 'salon_owner.branch.holiday.set', branchId);
       return upserted;
     });
 
@@ -602,7 +602,7 @@ export class SalonOwnerSettingsService {
           noShowGraceMinutes: input.noShowGraceMinutes,
         },
       });
-      await this.createAuditEvent(tx, context, business.tenantId, 'salon_owner.branch.policy.update');
+      await this.createAuditEvent(tx, context, business.tenantId, 'salon_owner.branch.policy.update', branchId);
       return upserted;
     });
 
@@ -676,6 +676,7 @@ export class SalonOwnerSettingsService {
         result: 'success',
         reason: `${requestHash}:${resourceId}`,
         correlationId: idempotencyKey,
+        targetId: resourceId,
       },
     });
   }
@@ -924,7 +925,9 @@ export class SalonOwnerSettingsService {
         roles: {
           some: {
             role: {
-              name: UserRole.OWNER,
+              name: {
+                in: [UserRole.OWNER, UserRole.OWNER.toUpperCase()],
+              },
             },
           },
         },
@@ -1091,12 +1094,14 @@ export class SalonOwnerSettingsService {
     context: SalonOwnerRequestContext,
     tenantId: string,
     action: string,
+    targetId?: string,
   ): Promise<void> {
     await tx.auditEvent.create({
       data: {
         userId: context.user.id,
         tenantId,
         action,
+        targetId,
         result: 'success',
         correlationId: CorrelationId.get() ?? null,
       },

@@ -292,9 +292,10 @@ components:
           type: string
           maxLength: 30
         email:
-          type: string
-          format: email
-          nullable: true
+          anyOf:
+            - type: string
+              format: email
+            - type: 'null'
         timezone:
           type: string
           examples: ['Asia/Kolkata']
@@ -886,6 +887,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
         '400':
           $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /partner/businesses/{businessId}:
     parameters:
       - name: businessId
@@ -923,6 +926,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
         '400':
           $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /partner/branches:
     get:
       tags: [Business Settings]
@@ -960,6 +965,10 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
         '400':
           $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
   /partner/branches/{branchId}:
     parameters:
       - name: branchId
@@ -996,6 +1005,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
         '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
           $ref: '#/components/responses/ValidationError'
   /partner/branches/{branchId}/hours:
     put:

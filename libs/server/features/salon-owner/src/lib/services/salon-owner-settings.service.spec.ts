@@ -38,6 +38,7 @@ interface AuditCreateArgs {
     readonly tenantId: string;
     readonly action: string;
     readonly result?: string;
+    readonly targetId?: string;
   };
 }
 
@@ -229,13 +230,17 @@ function createPrismaMock() {
   };
 }
 
-function expectAuditCall(calls: readonly [AuditCreateArgs][], expected: { tenantId?: string; action: string; result?: string }): void {
+function expectAuditCall(
+  calls: readonly [AuditCreateArgs][],
+  expected: { tenantId?: string; action: string; result?: string; targetId?: string },
+): void {
   expect(
     calls.some(([arg]) => {
       return (
         arg.data.action === expected.action &&
         (expected.tenantId === undefined || arg.data.tenantId === expected.tenantId) &&
-        (expected.result === undefined || arg.data.result === expected.result)
+        (expected.result === undefined || arg.data.result === expected.result) &&
+        (expected.targetId === undefined || arg.data.targetId === expected.targetId)
       );
     }),
   ).toBe(true);
@@ -395,6 +400,7 @@ describe('SalonOwnerSettingsService', () => {
       tenantId: 'tenant-1',
       action: 'salon_owner.business.create',
       result: 'success',
+      targetId: 'business-1',
     });
 
     prisma.salonBusiness.create.mockRejectedValueOnce(prismaKnownError('P2002'));
@@ -489,6 +495,7 @@ describe('SalonOwnerSettingsService', () => {
     expectAuditCall(prisma.auditEvent.create.mock.calls as [AuditCreateArgs][], {
       tenantId: 'tenant-1',
       action: 'salon_owner.business.update',
+      targetId: 'business-1',
     });
   });
 
@@ -618,6 +625,7 @@ describe('SalonOwnerSettingsService', () => {
     expectAuditCall(prisma.auditEvent.create.mock.calls as [AuditCreateArgs][], {
       tenantId: 'tenant-1',
       action: 'salon_owner.branch.create',
+      targetId: 'branch-1',
     });
   });
 
@@ -700,6 +708,22 @@ describe('SalonOwnerSettingsService', () => {
 
     const [salonUpsertArgs] = prisma.salon.upsert.mock.calls[0] as [SalonUpsertArgs];
     expect(salonUpsertArgs.create.owner.connect.id).toBe('owner-3');
+    const [userFindArgs] = prisma.user.findFirst.mock.calls[0] as [
+      {
+        readonly where: {
+          readonly roles: {
+            readonly some: {
+              readonly role: {
+                readonly name: {
+                  readonly in: string[];
+                };
+              };
+            };
+          };
+        };
+      },
+    ];
+    expect(userFindArgs.where.roles.some.role.name.in).toEqual(['owner', 'OWNER']);
   });
 
   it('rejects branch creation when no operational owner can be resolved', async () => {
@@ -850,6 +874,56 @@ describe('SalonOwnerSettingsService', () => {
     ).resolves.toMatchObject({ id: 'branch-2' });
 
     expect(prisma.city.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('rethrows state and city create errors when the collision fallback cannot recover a winner row', async () => {
+    const nonUniqueStateError = new Error('state write failed');
+    prisma.state.findFirst.mockResolvedValueOnce(null);
+    prisma.state.create.mockRejectedValueOnce(nonUniqueStateError);
+
+    await expect(
+      (
+        service as unknown as {
+          resolveState(prismaArg: typeof prisma, countryId: string, stateName: string): Promise<unknown>;
+        }
+      ).resolveState(prisma as never, 'country-1', 'Tokyo Metropolis'),
+    ).rejects.toBe(nonUniqueStateError);
+
+    const uniqueStateError = prismaKnownError('P2002');
+    prisma.state.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+    prisma.state.create.mockRejectedValueOnce(uniqueStateError);
+
+    await expect(
+      (
+        service as unknown as {
+          resolveState(prismaArg: typeof prisma, countryId: string, stateName: string): Promise<unknown>;
+        }
+      ).resolveState(prisma as never, 'country-1', 'Tokyo Metropolis'),
+    ).rejects.toBe(uniqueStateError);
+
+    const nonUniqueCityError = new Error('city write failed');
+    prisma.city.findFirst.mockResolvedValueOnce(null);
+    prisma.city.create.mockRejectedValueOnce(nonUniqueCityError);
+
+    await expect(
+      (
+        service as unknown as {
+          resolveCity(prismaArg: typeof prisma, countryId: string, stateId: string, cityName: string): Promise<unknown>;
+        }
+      ).resolveCity(prisma as never, 'country-1', 'state-1', 'Shibuya'),
+    ).rejects.toBe(nonUniqueCityError);
+
+    const uniqueCityError = prismaKnownError('P2002');
+    prisma.city.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+    prisma.city.create.mockRejectedValueOnce(uniqueCityError);
+
+    await expect(
+      (
+        service as unknown as {
+          resolveCity(prismaArg: typeof prisma, countryId: string, stateId: string, cityName: string): Promise<unknown>;
+        }
+      ).resolveCity(prisma as never, 'country-1', 'state-1', 'Shibuya'),
+    ).rejects.toBe(uniqueCityError);
   });
 
   it('rejects branch creation when the address country is missing from master data', async () => {
@@ -1365,6 +1439,7 @@ describe('SalonOwnerSettingsService', () => {
     expect(prisma.salonBranchHours.createMany).toHaveBeenCalled();
     expectAuditCall(prisma.auditEvent.create.mock.calls as [AuditCreateArgs][], {
       action: 'salon_owner.branch.hours.replace',
+      targetId: 'branch-1',
     });
   });
 
@@ -1542,6 +1617,7 @@ describe('SalonOwnerSettingsService', () => {
     ).resolves.toMatchObject({ date: '2026-05-26', reason: 'Maintenance' });
     expectAuditCall(prisma.auditEvent.create.mock.calls as [AuditCreateArgs][], {
       action: 'salon_owner.branch.holiday.set',
+      targetId: 'branch-1',
     });
 
     await expect(
@@ -1558,6 +1634,7 @@ describe('SalonOwnerSettingsService', () => {
     });
     expectAuditCall(prisma.auditEvent.create.mock.calls as [AuditCreateArgs][], {
       action: 'salon_owner.branch.policy.update',
+      targetId: 'branch-1',
     });
   });
 
