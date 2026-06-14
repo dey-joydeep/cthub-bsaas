@@ -1144,6 +1144,5 @@ model AuditEvent {
   @@index([userId, ts])
   @@index([tenantId, ts])
   @@index([action, ts])
-  @@unique([userId, tenantId, action, correlationId], map: "audit_event_user_id_tenant_id_action_correlation_id_key")
   @@map("audit_event")
 }

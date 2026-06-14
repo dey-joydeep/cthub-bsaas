@@ -289,8 +289,10 @@ components:
           minLength: 2
           maxLength: 120
         phone:
-          type: string
-          maxLength: 30
+          anyOf:
+            - type: string
+              maxLength: 30
+            - type: 'null'
         email:
           anyOf:
             - type: string

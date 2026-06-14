@@ -15,7 +15,7 @@ duplicate_city AS (
   SELECT id, canonical_id
   FROM ranked_city
   WHERE duplicate_rank > 1
-)
+),
 repointed_address AS (
   UPDATE "business_address" AS business_address
   SET "city_id" = duplicate_city.canonical_id
