@@ -28,6 +28,7 @@ const validationMessage = COMMON_MESSAGE_KEYS.ERROR.VALIDATION;
 const forbiddenMessage = COMMON_MESSAGE_KEYS.ERROR.FORBIDDEN_SCOPE;
 const notFoundMessage = COMMON_MESSAGE_KEYS.ERROR.NOT_FOUND;
 const conflictMessage = COMMON_MESSAGE_KEYS.ERROR.CONFLICT;
+const translatedUniqueConstraintMessage = 'A unique constraint was violated';
 const supportedCurrencyCodes = new Set(
   ((Intl as typeof Intl & { supportedValuesOf?: (key: string) => string[] }).supportedValuesOf?.('currency') ?? []).map((code) =>
     code.toUpperCase(),
@@ -258,8 +259,12 @@ function toJsonArray(intervals: readonly TimeIntervalModel[]): Prisma.InputJsonV
   return intervals.map((interval) => ({ start: interval.start, end: interval.end }));
 }
 
-function isDuplicate(error: unknown): boolean {
-  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
+function isUniqueConstraintViolation(error: unknown): boolean {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    return error.code === 'P2002';
+  }
+
+  return error instanceof Error && error.message === translatedUniqueConstraintMessage;
 }
 
 @Injectable()
@@ -308,7 +313,7 @@ export class SalonOwnerSettingsService {
       if (replayed) {
         return this.mapBusiness(replayed);
       }
-      if (isDuplicate(error)) {
+      if (isUniqueConstraintViolation(error)) {
         throw new ConflictException(duplicateBusinessMessage);
       }
       throw error;
@@ -364,7 +369,7 @@ export class SalonOwnerSettingsService {
       );
       return this.mapBusiness(business);
     } catch (error) {
-      if (isDuplicate(error)) {
+      if (isUniqueConstraintViolation(error)) {
         throw new ConflictException(duplicateBusinessMessage);
       }
       throw error;
@@ -436,7 +441,7 @@ export class SalonOwnerSettingsService {
       if (replayed) {
         return this.mapBranch(replayed);
       }
-      if (isDuplicate(error)) {
+      if (isUniqueConstraintViolation(error)) {
         throw new ConflictException(duplicateBranchMessage);
       }
       throw error;
@@ -490,7 +495,7 @@ export class SalonOwnerSettingsService {
       );
       return this.mapBranch(branch);
     } catch (error) {
-      if (isDuplicate(error)) {
+      if (isUniqueConstraintViolation(error)) {
         throw new ConflictException(duplicateBranchMessage);
       }
       throw error;
@@ -975,7 +980,7 @@ export class SalonOwnerSettingsService {
         select: { id: true },
       });
     } catch (error) {
-      if (!isDuplicate(error)) {
+      if (!isUniqueConstraintViolation(error)) {
         throw error;
       }
 
@@ -1021,14 +1026,37 @@ export class SalonOwnerSettingsService {
       return city;
     }
 
-    return tx.city.create({
-      data: {
-        countryId,
-        stateId,
-        name: cityName,
-      },
-      select: { id: true },
-    });
+    try {
+      return await tx.city.create({
+        data: {
+          countryId,
+          stateId,
+          name: cityName,
+        },
+        select: { id: true },
+      });
+    } catch (error) {
+      if (!isUniqueConstraintViolation(error)) {
+        throw error;
+      }
+
+      const existingCity = await tx.city.findFirst({
+        where: {
+          countryId,
+          stateId,
+          name: {
+            equals: cityName,
+            mode: 'insensitive',
+          },
+        },
+        select: { id: true },
+      });
+      if (existingCity) {
+        return existingCity;
+      }
+
+      throw error;
+    }
   }
 
   private buildSyntheticStateCode(countryId: string, stateName: string): string {

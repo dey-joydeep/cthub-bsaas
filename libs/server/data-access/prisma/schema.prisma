@@ -698,6 +698,7 @@ model City {
 
   @@index([stateId])
   @@index([countryId])
+  @@unique([countryId, stateId, name])
   @@map("city")
 }
 

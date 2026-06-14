@@ -147,6 +147,10 @@ function prismaKnownError(code: string): Prisma.PrismaClientKnownRequestError {
   });
 }
 
+function translatedUniqueConstraintError(): Error {
+  return new Error('A unique constraint was violated');
+}
+
 function hashIdempotencyPayload(input: unknown): string {
   const canonicalize = (value: unknown): unknown => {
     if (Array.isArray(value)) {
@@ -397,6 +401,11 @@ describe('SalonOwnerSettingsService', () => {
     await expect(
       service.createBusiness({ user: user() }, { displayName: 'Salon One', legalName: 'Salon One Legal', status: 'ACTIVE' }),
     ).rejects.toBeInstanceOf(ConflictException);
+
+    prisma.salonBusiness.create.mockRejectedValueOnce(translatedUniqueConstraintError());
+    await expect(
+      service.createBusiness({ user: user() }, { displayName: 'Salon One', legalName: 'Salon One Legal', status: 'ACTIVE' }),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 
   it('replays a previously created business when the same idempotency key is reused', async () => {
@@ -527,6 +536,17 @@ describe('SalonOwnerSettingsService', () => {
 
     prisma.salonBusiness.findFirst.mockResolvedValue(business());
     prisma.salonBusiness.update.mockRejectedValueOnce(prismaKnownError('P2002'));
+
+    await expect(
+      service.updateBusiness({ user: user() }, 'business-1', {
+        displayName: 'Salon One',
+        legalName: 'Salon One Legal',
+        status: 'ACTIVE',
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBusiness.update.mockRejectedValueOnce(translatedUniqueConstraintError());
 
     await expect(
       service.updateBusiness({ user: user() }, 'business-1', {
@@ -789,6 +809,49 @@ describe('SalonOwnerSettingsService', () => {
     expect(salonUpsertArgs.create.businessAddress?.create.state.connect.id).toBe('state-2');
   });
 
+  it('recovers from a concurrent city create collision and reuses the winner row', async () => {
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBranch.create.mockResolvedValue(
+      branch({
+        id: 'branch-2',
+        name: 'Downtown',
+        address: {
+          line1: '1 Main St',
+          city: 'Shibuya',
+          state: 'Tokyo Metropolis',
+          postalCode: '1000001',
+          country: 'JP',
+        },
+      }),
+    );
+    prisma.state.findFirst.mockResolvedValue(null);
+    prisma.state.create.mockResolvedValue({ id: 'state-2' });
+    prisma.city.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'city-2' });
+    prisma.city.create.mockRejectedValueOnce(prismaKnownError('P2002'));
+
+    await expect(
+      service.createBranch(
+        { user: user() },
+        {
+          businessId: 'business-1',
+          name: 'Downtown',
+          timezone: 'Asia/Tokyo',
+          currency: 'JPY',
+          status: 'ACTIVE',
+          address: {
+            line1: '1 Main St',
+            city: 'Shibuya',
+            state: 'Tokyo Metropolis',
+            postalCode: '1000001',
+            country: 'JP',
+          },
+        },
+      ),
+    ).resolves.toMatchObject({ id: 'branch-2' });
+
+    expect(prisma.city.create).toHaveBeenCalledTimes(1);
+  });
+
   it('rejects branch creation when the address country is missing from master data', async () => {
     prisma.salonBusiness.findFirst.mockResolvedValue(business());
     prisma.salonBranch.create.mockResolvedValue(branch({ id: 'branch-2', name: 'Downtown' }));
@@ -896,6 +959,29 @@ describe('SalonOwnerSettingsService', () => {
 
     prisma.salonBusiness.findFirst.mockResolvedValue(business());
     prisma.salonBranch.create.mockRejectedValueOnce(prismaKnownError('P2002'));
+
+    await expect(
+      service.createBranch(
+        { user: user() },
+        {
+          businessId: 'business-1',
+          name: 'Downtown',
+          timezone: 'Asia/Tokyo',
+          currency: 'JPY',
+          status: 'ACTIVE',
+          address: {
+            line1: '1 Main St',
+            city: 'Tokyo',
+            state: 'Tokyo',
+            postalCode: '1000001',
+            country: 'JP',
+          },
+        },
+      ),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBranch.create.mockRejectedValueOnce(translatedUniqueConstraintError());
 
     await expect(
       service.createBranch(
@@ -1103,6 +1189,27 @@ describe('SalonOwnerSettingsService', () => {
   it('blocks reactivating a branch beneath an inactive business', async () => {
     prisma.salonBranch.findFirst.mockResolvedValue(branch({ status: 'INACTIVE' }));
     prisma.salonBusiness.findFirst.mockResolvedValue(business({ status: 'INACTIVE' }));
+
+    await expect(
+      service.updateBranch({ user: user() }, 'branch-1', {
+        businessId: 'business-1',
+        name: 'Main Branch',
+        timezone: 'Asia/Tokyo',
+        currency: 'JPY',
+        status: 'ACTIVE',
+        address: {
+          line1: '1 Main St',
+          city: 'Tokyo',
+          state: 'Tokyo',
+          postalCode: '1000001',
+          country: 'JP',
+        },
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    prisma.salonBranch.findFirst.mockResolvedValue(branch());
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBranch.update.mockRejectedValueOnce(translatedUniqueConstraintError());
 
     await expect(
       service.updateBranch({ user: user() }, 'branch-1', {
