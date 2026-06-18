@@ -192,14 +192,17 @@ function createPrismaMock() {
       count: jest.fn(),
     },
     salonBranchHours: {
+      findMany: jest.fn(),
       deleteMany: jest.fn(),
       createMany: jest.fn(),
       updateMany: jest.fn(),
     },
     salonBranchHoliday: {
+      findMany: jest.fn(),
       upsert: jest.fn(),
     },
     salonBranchPolicy: {
+      findUnique: jest.fn(),
       upsert: jest.fn(),
     },
     salon: {
@@ -215,10 +218,12 @@ function createPrismaMock() {
     state: {
       findFirst: jest.fn(),
       create: jest.fn(),
+      createMany: jest.fn(),
     },
     city: {
       findFirst: jest.fn(),
       create: jest.fn(),
+      createMany: jest.fn(),
     },
     auditEvent: {
       create: jest.fn(),
@@ -591,6 +596,30 @@ describe('SalonOwnerSettingsService', () => {
     });
   });
 
+  it('applies branch status and search filters before pagination', async () => {
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBranch.findMany.mockResolvedValue([branch({ name: 'Downtown' })]);
+    prisma.salonBranch.count.mockResolvedValue(1);
+
+    await expect(
+      service.listBranches({ user: user() }, 'business-1', { status: 'ACTIVE', q: '  town ' }, { page: 1, pageSize: 10 }),
+    ).resolves.toMatchObject({
+      items: [expect.objectContaining({ name: 'Downtown' })],
+    });
+
+    expect(prisma.salonBranch.findMany).toHaveBeenCalledWith({
+      where: {
+        businessId: 'business-1',
+        status: 'ACTIVE',
+        name: { contains: 'town', mode: 'insensitive' },
+        business: { tenantId: 'tenant-1' },
+      },
+      orderBy: { createdAt: 'asc' },
+      skip: 0,
+      take: 10,
+    });
+  });
+
   it('applies page and pageSize to business and branch listings', async () => {
     prisma.salonBusiness.findMany.mockResolvedValue([business()]);
     prisma.salonBusiness.count.mockResolvedValue(3);
@@ -608,7 +637,7 @@ describe('SalonOwnerSettingsService', () => {
       take: 2,
     });
 
-    await expect(service.listBranches({ user: user() }, 'business-1', { page: 1, pageSize: 3 })).resolves.toMatchObject({
+    await expect(service.listBranches({ user: user() }, 'business-1', {}, { page: 1, pageSize: 3 })).resolves.toMatchObject({
       page: { pageNumber: 1, limit: 3, totalItems: 4, hasMore: true },
     });
     expect(prisma.salonBranch.findMany).toHaveBeenCalledWith({
@@ -621,7 +650,7 @@ describe('SalonOwnerSettingsService', () => {
 
   it('rejects invalid settings list pagination values', async () => {
     await expect(service.listBusinesses({ user: user() }, { page: 0 })).rejects.toBeInstanceOf(UnprocessableEntityException);
-    await expect(service.listBranches({ user: user() }, undefined, { pageSize: 101 })).rejects.toBeInstanceOf(
+    await expect(service.listBranches({ user: user() }, undefined, {}, { pageSize: 101 })).rejects.toBeInstanceOf(
       UnprocessableEntityException,
     );
   });
@@ -818,10 +847,10 @@ describe('SalonOwnerSettingsService', () => {
         },
       }),
     );
-    prisma.state.findFirst.mockResolvedValue(null);
-    prisma.state.create.mockResolvedValue({ id: 'state-2' });
-    prisma.city.findFirst.mockResolvedValue(null);
-    prisma.city.create.mockResolvedValue({ id: 'city-2' });
+    prisma.state.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'state-2' });
+    prisma.state.createMany.mockResolvedValue({ count: 1 });
+    prisma.city.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'city-2' });
+    prisma.city.createMany.mockResolvedValue({ count: 1 });
 
     await service.createBranch(
       { user: user() },
@@ -841,14 +870,28 @@ describe('SalonOwnerSettingsService', () => {
       },
     );
 
-    expect(prisma.state.create).toHaveBeenCalled();
-    expect(prisma.city.create).toHaveBeenCalledWith({
-      data: {
-        countryId: 'country-1',
-        stateId: 'state-2',
-        name: 'Shibuya',
+    const [stateCreateManyArgs] = prisma.state.createMany.mock.calls[0] as [
+      {
+        data: Array<{ countryId: string; name: string; stateCode: string }>;
+        skipDuplicates: boolean;
       },
-      select: { id: true },
+    ];
+    expect(stateCreateManyArgs.skipDuplicates).toBe(true);
+    expect(stateCreateManyArgs.data).toHaveLength(1);
+    expect(stateCreateManyArgs.data[0]).toMatchObject({
+      countryId: 'country-1',
+      name: 'Tokyo Metropolis',
+    });
+    expect(stateCreateManyArgs.data[0].stateCode).toMatch(/^TOKYOMET-\w{4}$/);
+    expect(prisma.city.createMany).toHaveBeenCalledWith({
+      data: [
+        {
+          countryId: 'country-1',
+          stateId: 'state-2',
+          name: 'Shibuya',
+        },
+      ],
+      skipDuplicates: true,
     });
   });
 
@@ -856,7 +899,7 @@ describe('SalonOwnerSettingsService', () => {
     prisma.salonBusiness.findFirst.mockResolvedValue(business());
     prisma.salonBranch.create.mockResolvedValue(branch({ id: 'branch-2', name: 'Downtown' }));
     prisma.state.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'state-2' });
-    prisma.state.create.mockRejectedValueOnce(prismaKnownError('P2002'));
+    prisma.state.createMany.mockResolvedValue({ count: 0 });
 
     await expect(
       service.createBranch(
@@ -878,7 +921,7 @@ describe('SalonOwnerSettingsService', () => {
       ),
     ).resolves.toMatchObject({ id: 'branch-2' });
 
-    expect(prisma.state.create).toHaveBeenCalledTimes(1);
+    expect(prisma.state.createMany).toHaveBeenCalledTimes(1);
     const [salonUpsertArgs] = prisma.salon.upsert.mock.calls[0] as [SalonUpsertArgs];
     expect(salonUpsertArgs.create.businessAddress?.create.state.connect.id).toBe('state-2');
   });
@@ -898,10 +941,10 @@ describe('SalonOwnerSettingsService', () => {
         },
       }),
     );
-    prisma.state.findFirst.mockResolvedValue(null);
-    prisma.state.create.mockResolvedValue({ id: 'state-2' });
+    prisma.state.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'state-2' });
+    prisma.state.createMany.mockResolvedValue({ count: 1 });
     prisma.city.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'city-2' });
-    prisma.city.create.mockRejectedValueOnce(prismaKnownError('P2002'));
+    prisma.city.createMany.mockResolvedValue({ count: 0 });
 
     await expect(
       service.createBranch(
@@ -923,13 +966,13 @@ describe('SalonOwnerSettingsService', () => {
       ),
     ).resolves.toMatchObject({ id: 'branch-2' });
 
-    expect(prisma.city.create).toHaveBeenCalledTimes(1);
+    expect(prisma.city.createMany).toHaveBeenCalledTimes(1);
   });
 
-  it('rethrows state and city create errors when the collision fallback cannot recover a winner row', async () => {
+  it('propagates master-data insert failures and surfaces an explicit conflict when no winner row appears', async () => {
     const nonUniqueStateError = new Error('state write failed');
     prisma.state.findFirst.mockResolvedValueOnce(null);
-    prisma.state.create.mockRejectedValueOnce(nonUniqueStateError);
+    prisma.state.createMany.mockRejectedValueOnce(nonUniqueStateError);
 
     await expect(
       (
@@ -939,9 +982,8 @@ describe('SalonOwnerSettingsService', () => {
       ).resolveState(prisma as never, 'country-1', 'Tokyo Metropolis'),
     ).rejects.toBe(nonUniqueStateError);
 
-    const uniqueStateError = prismaKnownError('P2002');
     prisma.state.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
-    prisma.state.create.mockRejectedValueOnce(uniqueStateError);
+    prisma.state.createMany.mockResolvedValueOnce({ count: 0 });
 
     await expect(
       (
@@ -949,11 +991,11 @@ describe('SalonOwnerSettingsService', () => {
           resolveState(prismaArg: typeof prisma, countryId: string, stateName: string): Promise<unknown>;
         }
       ).resolveState(prisma as never, 'country-1', 'Tokyo Metropolis'),
-    ).rejects.toBe(uniqueStateError);
+    ).rejects.toBeInstanceOf(ConflictException);
 
     const nonUniqueCityError = new Error('city write failed');
     prisma.city.findFirst.mockResolvedValueOnce(null);
-    prisma.city.create.mockRejectedValueOnce(nonUniqueCityError);
+    prisma.city.createMany.mockRejectedValueOnce(nonUniqueCityError);
 
     await expect(
       (
@@ -963,9 +1005,8 @@ describe('SalonOwnerSettingsService', () => {
       ).resolveCity(prisma as never, 'country-1', 'state-1', 'Shibuya'),
     ).rejects.toBe(nonUniqueCityError);
 
-    const uniqueCityError = prismaKnownError('P2002');
     prisma.city.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
-    prisma.city.create.mockRejectedValueOnce(uniqueCityError);
+    prisma.city.createMany.mockResolvedValueOnce({ count: 0 });
 
     await expect(
       (
@@ -973,7 +1014,73 @@ describe('SalonOwnerSettingsService', () => {
           resolveCity(prismaArg: typeof prisma, countryId: string, stateId: string, cityName: string): Promise<unknown>;
         }
       ).resolveCity(prisma as never, 'country-1', 'state-1', 'Shibuya'),
-    ).rejects.toBe(uniqueCityError);
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('loads stored branch hours, holidays, and policy', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValue(branch());
+    prisma.salonBranchHours.findMany.mockResolvedValue([
+      {
+        branchId: 'branch-1',
+        timezone: 'Asia/Tokyo',
+        dayOfWeek: 0,
+        open: false,
+        intervals: [],
+      },
+      {
+        branchId: 'branch-1',
+        timezone: 'Asia/Tokyo',
+        dayOfWeek: 1,
+        open: true,
+        intervals: [{ start: '09:00', end: '17:00' }],
+      },
+    ]);
+    prisma.salonBranchHoliday.findMany.mockResolvedValue([
+      {
+        branchId: 'branch-1',
+        date: new Date('2026-05-26T00:00:00.000Z'),
+        closed: true,
+        reason: 'Holiday',
+        intervals: [],
+      },
+    ]);
+    prisma.salonBranchPolicy.findUnique.mockResolvedValue({
+      branchId: 'branch-1',
+      bookingLeadMinutes: 30,
+      cancellationCutoffMinutes: 120,
+      noShowGraceMinutes: 10,
+    });
+
+    await expect(service.getBranchHours({ user: user() }, 'branch-1')).resolves.toEqual({
+      branchId: 'branch-1',
+      timezone: 'Asia/Tokyo',
+      days: [
+        { dayOfWeek: 0, open: false, intervals: [] },
+        { dayOfWeek: 1, open: true, intervals: [{ start: '09:00', end: '17:00' }] },
+      ],
+    });
+    await expect(service.listBranchHolidays({ user: user() }, 'branch-1')).resolves.toEqual([
+      {
+        branchId: 'branch-1',
+        date: '2026-05-26',
+        closed: true,
+        reason: 'Holiday',
+        intervals: [],
+      },
+    ]);
+    await expect(service.getBranchPolicy({ user: user() }, 'branch-1')).resolves.toEqual({
+      branchId: 'branch-1',
+      bookingLeadMinutes: 30,
+      cancellationCutoffMinutes: 120,
+      noShowGraceMinutes: 10,
+    });
+  });
+
+  it('returns null when a branch has no stored weekly hours yet', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValue(branch());
+    prisma.salonBranchHours.findMany.mockResolvedValue([]);
+
+    await expect(service.getBranchHours({ user: user() }, 'branch-1')).resolves.toBeNull();
   });
 
   it('rejects branch creation when the address country is missing from master data', async () => {

@@ -8,6 +8,7 @@ import { createHash, randomUUID } from 'crypto';
 import { BranchHolidayInputDto, BranchPolicyInputDto, BranchProfileInputDto, WeeklyHoursInputDto } from '../dto/branch-settings.dto';
 import { SalonBusinessInputDto } from '../dto/salon-business.dto';
 import {
+  BranchListFilters,
   BranchHolidayModel,
   BranchHoursModel,
   BranchPolicyModel,
@@ -38,6 +39,7 @@ const supportedCurrencyCodes = new Set(
 
 type BranchRecord = Awaited<ReturnType<PrismaService['salonBranch']['findFirstOrThrow']>>;
 type BusinessRecord = Awaited<ReturnType<PrismaService['salonBusiness']['findFirstOrThrow']>>;
+type HoursRecord = Awaited<ReturnType<PrismaService['salonBranchHours']['findMany']>>[number];
 type PolicyRecord = Awaited<ReturnType<PrismaService['salonBranchPolicy']['upsert']>>;
 type HolidayRecord = Awaited<ReturnType<PrismaService['salonBranchHoliday']['upsert']>>;
 type TransactionClient = Prisma.TransactionClient;
@@ -276,10 +278,7 @@ export class SalonOwnerSettingsService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async listBusinesses(
-    context: SalonOwnerRequestContext,
-    pagination: SalonOwnerPagination = {},
-  ): Promise<PagedResult<SalonBusinessModel>> {
+  async listBusinesses(context: SalonOwnerRequestContext, pagination: SalonOwnerPagination = {}): Promise<PagedResult<SalonBusinessModel>> {
     const tenantIds = await this.requireTenantIds(context);
     const page = this.normalizePagination(pagination);
     const where = { tenantId: this.tenantScopeFilter(tenantIds) } as const;
@@ -293,7 +292,12 @@ export class SalonOwnerSettingsService {
       this.prisma.salonBusiness.count({ where }),
     ]);
 
-    return this.page(businesses.map((business) => this.mapBusiness(business)), page.pageNumber, page.limit, totalItems);
+    return this.page(
+      businesses.map((business) => this.mapBusiness(business)),
+      page.pageNumber,
+      page.limit,
+      totalItems,
+    );
   }
 
   async createBusiness(context: SalonOwnerRequestContext, input: SalonBusinessInputDto): Promise<SalonBusinessModel> {
@@ -394,6 +398,7 @@ export class SalonOwnerSettingsService {
   async listBranches(
     context: SalonOwnerRequestContext,
     businessId?: string,
+    filters: BranchListFilters = {},
     pagination: SalonOwnerPagination = {},
   ): Promise<PagedResult<BranchProfileModel>> {
     const tenantIds = await this.requireTenantIds(context);
@@ -401,10 +406,20 @@ export class SalonOwnerSettingsService {
       await this.findBusinessInScope(context, businessId);
     }
     const page = this.normalizePagination(pagination);
+    const search = optionalTrim(filters.q);
     const where = {
       ...(businessId ? { businessId } : {}),
+      ...(filters.status ? { status: filters.status as PrismaSalonOwnerStatus } : {}),
+      ...(search
+        ? {
+            name: {
+              contains: search,
+              mode: 'insensitive' as const,
+            },
+          }
+        : {}),
       business: { tenantId: this.tenantScopeFilter(tenantIds) },
-    } as const;
+    };
 
     const [branches, totalItems] = await Promise.all([
       this.prisma.salonBranch.findMany({
@@ -416,7 +431,12 @@ export class SalonOwnerSettingsService {
       this.prisma.salonBranch.count({ where }),
     ]);
 
-    return this.page(branches.map((branch) => this.mapBranch(branch)), page.pageNumber, page.limit, totalItems);
+    return this.page(
+      branches.map((branch) => this.mapBranch(branch)),
+      page.pageNumber,
+      page.limit,
+      totalItems,
+    );
   }
 
   async createBranch(context: SalonOwnerRequestContext, input: BranchProfileInputDto): Promise<BranchProfileModel> {
@@ -476,6 +496,38 @@ export class SalonOwnerSettingsService {
 
   async getBranch(context: SalonOwnerRequestContext, branchId: string): Promise<BranchProfileModel> {
     return this.mapBranch(await this.findBranchInScope(context, branchId));
+  }
+
+  async getBranchHours(context: SalonOwnerRequestContext, branchId: string): Promise<BranchHoursModel | null> {
+    await this.findBranchInScope(context, branchId);
+    const rows = await this.prisma.salonBranchHours.findMany({
+      where: { branchId },
+      orderBy: { dayOfWeek: 'asc' },
+    });
+    if (rows.length === 0) {
+      return null;
+    }
+
+    return this.mapHours(branchId, rows);
+  }
+
+  async listBranchHolidays(context: SalonOwnerRequestContext, branchId: string): Promise<readonly BranchHolidayModel[]> {
+    await this.findBranchInScope(context, branchId);
+    const holidays = await this.prisma.salonBranchHoliday.findMany({
+      where: { branchId },
+      orderBy: { date: 'asc' },
+    });
+
+    return holidays.map((holiday) => this.mapHoliday(holiday));
+  }
+
+  async getBranchPolicy(context: SalonOwnerRequestContext, branchId: string): Promise<BranchPolicyModel | null> {
+    await this.findBranchInScope(context, branchId);
+    const policy = await this.prisma.salonBranchPolicy.findUnique({
+      where: { branchId },
+    });
+
+    return policy ? this.mapPolicy(policy) : null;
   }
 
   async updateBranch(context: SalonOwnerRequestContext, branchId: string, input: BranchProfileInputDto): Promise<BranchProfileModel> {
@@ -999,44 +1051,40 @@ export class SalonOwnerSettingsService {
       return state;
     }
 
-    try {
-      return await tx.state.create({
-        data: {
+    await tx.state.createMany({
+      data: [
+        {
           countryId,
           name: stateName,
           stateCode: this.buildSyntheticStateCode(countryId, stateName),
         },
-        select: { id: true },
-      });
-    } catch (error) {
-      if (!isUniqueConstraintViolation(error)) {
-        throw error;
-      }
+      ],
+      skipDuplicates: true,
+    });
 
-      const existingState = await tx.state.findFirst({
-        where: {
-          countryId,
-          OR: [
-            { stateCode: stateName.trim().toUpperCase() },
-            {
-              name: {
-                equals: stateName,
-                mode: 'insensitive',
-              },
+    const existingState = await tx.state.findFirst({
+      where: {
+        countryId,
+        OR: [
+          { stateCode: stateName.trim().toUpperCase() },
+          {
+            name: {
+              equals: stateName,
+              mode: 'insensitive',
             },
-            {
-              stateCode: this.buildSyntheticStateCode(countryId, stateName),
-            },
-          ],
-        },
-        select: { id: true },
-      });
-      if (existingState) {
-        return existingState;
-      }
-
-      throw error;
+          },
+          {
+            stateCode: this.buildSyntheticStateCode(countryId, stateName),
+          },
+        ],
+      },
+      select: { id: true },
+    });
+    if (existingState) {
+      return existingState;
     }
+
+    throw new ConflictException(conflictMessage);
   }
 
   private async resolveCity(tx: TransactionClient, countryId: string, stateId: string, cityName: string) {
@@ -1055,37 +1103,33 @@ export class SalonOwnerSettingsService {
       return city;
     }
 
-    try {
-      return await tx.city.create({
-        data: {
+    await tx.city.createMany({
+      data: [
+        {
           countryId,
           stateId,
           name: cityName,
         },
-        select: { id: true },
-      });
-    } catch (error) {
-      if (!isUniqueConstraintViolation(error)) {
-        throw error;
-      }
+      ],
+      skipDuplicates: true,
+    });
 
-      const existingCity = await tx.city.findFirst({
-        where: {
-          countryId,
-          stateId,
-          name: {
-            equals: cityName,
-            mode: 'insensitive',
-          },
+    const existingCity = await tx.city.findFirst({
+      where: {
+        countryId,
+        stateId,
+        name: {
+          equals: cityName,
+          mode: 'insensitive',
         },
-        select: { id: true },
-      });
-      if (existingCity) {
-        return existingCity;
-      }
-
-      throw error;
+      },
+      select: { id: true },
+    });
+    if (existingCity) {
+      return existingCity;
     }
+
+    throw new ConflictException(conflictMessage);
   }
 
   private buildSyntheticStateCode(countryId: string, stateName: string): string {
@@ -1169,6 +1213,18 @@ export class SalonOwnerSettingsService {
       closed: holiday.closed,
       ...(holiday.reason ? { reason: holiday.reason } : {}),
       intervals: this.readIntervals(holiday.intervals),
+    };
+  }
+
+  private mapHours(branchId: string, rows: readonly HoursRecord[]): BranchHoursModel {
+    return {
+      branchId,
+      timezone: rows[0]?.timezone ?? '',
+      days: rows.map((row) => ({
+        dayOfWeek: row.dayOfWeek,
+        open: row.open,
+        intervals: this.readIntervals(row.intervals),
+      })),
     };
   }
 

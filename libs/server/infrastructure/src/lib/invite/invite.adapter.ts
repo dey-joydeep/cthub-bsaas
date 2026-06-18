@@ -37,6 +37,7 @@ type OwnerInviteRecord = Prisma.RegistrationLinkGetPayload<{ include: typeof inv
 type StaffInviteRecord = Prisma.StaffInviteGetPayload<{ include: typeof inviteSalonInclude }>;
 type InvitedUserIdentity = Prisma.UserGetPayload<{ select: typeof invitedUserIdentitySelect }>;
 type InvitedUserResult = Prisma.UserGetPayload<{ select: typeof invitedUserResultSelect }>;
+const serializableRetryLimit = 3;
 
 @Injectable()
 export class InvitePrismaAdapter implements InvitePort {
@@ -79,24 +80,21 @@ export class InvitePrismaAdapter implements InvitePort {
   }
 
   async completeOwner(input: RegistrationCompleteInput): Promise<RegistrationCompleteResult> {
-    return this.prisma.$transaction(
-      async (tx: TransactionClient) => {
-        const rec = await this.ensureOwnerTokenInTransaction(tx, input.token);
-        const passwordHash = await bcrypt.hash(input.password, 10);
-        const user = await this.upsertInvitedUser(tx, rec.email, rec.salon.tenantId, passwordHash);
-        const role = await tx.role.findUnique({ where: { name: 'OWNER' } });
-        if (role) {
-          await tx.userRole.upsert({
-            where: { userId_roleId: { userId: user.id, roleId: role.id } },
-            update: {},
-            create: { userId: user.id, roleId: role.id },
-          });
-        }
-        await tx.registrationLink.update({ where: { id: rec.id }, data: { usedAt: new Date() } });
-        return { userId: user.id, requireMfa: user.isMFAEnrollRequired };
-      },
-      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-    );
+    return this.runSerializableTransaction(async (tx: TransactionClient) => {
+      const rec = await this.ensureOwnerTokenInTransaction(tx, input.token);
+      const passwordHash = await bcrypt.hash(input.password, 10);
+      const user = await this.upsertInvitedUser(tx, rec.email, rec.salon.tenantId, passwordHash);
+      const role = await tx.role.findUnique({ where: { name: 'OWNER' } });
+      if (role) {
+        await tx.userRole.upsert({
+          where: { userId_roleId: { userId: user.id, roleId: role.id } },
+          update: {},
+          create: { userId: user.id, roleId: role.id },
+        });
+      }
+      await tx.registrationLink.update({ where: { id: rec.id }, data: { usedAt: new Date() } });
+      return { userId: user.id, requireMfa: user.isMFAEnrollRequired };
+    });
   }
 
   async validateStaff(token: string): Promise<InviteValidationResult> {
@@ -105,24 +103,21 @@ export class InvitePrismaAdapter implements InvitePort {
   }
 
   async completeStaff(input: RegistrationCompleteInput): Promise<RegistrationCompleteResult> {
-    return this.prisma.$transaction(
-      async (tx: TransactionClient) => {
-        const rec = await this.ensureStaffTokenInTransaction(tx, input.token);
-        const passwordHash = await bcrypt.hash(input.password, 10);
-        const user = await this.upsertInvitedUser(tx, rec.email, rec.salon.tenantId, passwordHash);
-        const role = await tx.role.findUnique({ where: { name: 'STAFF' } });
-        if (role) {
-          await tx.userRole.upsert({
-            where: { userId_roleId: { userId: user.id, roleId: role.id } },
-            update: {},
-            create: { userId: user.id, roleId: role.id },
-          });
-        }
-        await tx.staffInvite.update({ where: { id: rec.id }, data: { usedAt: new Date() } });
-        return { userId: user.id, requireMfa: user.isMFAEnrollRequired };
-      },
-      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-    );
+    return this.runSerializableTransaction(async (tx: TransactionClient) => {
+      const rec = await this.ensureStaffTokenInTransaction(tx, input.token);
+      const passwordHash = await bcrypt.hash(input.password, 10);
+      const user = await this.upsertInvitedUser(tx, rec.email, rec.salon.tenantId, passwordHash);
+      const role = await tx.role.findUnique({ where: { name: 'STAFF' } });
+      if (role) {
+        await tx.userRole.upsert({
+          where: { userId_roleId: { userId: user.id, roleId: role.id } },
+          update: {},
+          create: { userId: user.id, roleId: role.id },
+        });
+      }
+      await tx.staffInvite.update({ where: { id: rec.id }, data: { usedAt: new Date() } });
+      return { userId: user.id, requireMfa: user.isMFAEnrollRequired };
+    });
   }
 
   private async ensureOwnerTokenInTransaction(tx: Pick<TransactionClient, 'registrationLink'>, token: string): Promise<OwnerInviteRecord> {
@@ -213,22 +208,93 @@ export class InvitePrismaAdapter implements InvitePort {
       });
     }
 
-    try {
-      return await tx.user.create({
-        data: {
+    await tx.user.createMany({
+      data: [
+        {
           email,
           ...this.invitedUserData(passwordHash),
           isActive: true,
           salonTenantId: invitedTenantId,
         },
+      ],
+      skipDuplicates: true,
+    });
+
+    const currentUser = await tx.user.findUnique({
+      where: { email },
+      select: invitedUserIdentitySelect,
+    });
+    if (!currentUser) {
+      throw new ConflictException(COMMON_MESSAGE_KEYS.ERROR.CONFLICT);
+    }
+    if (currentUser.salonTenantId && currentUser.salonTenantId !== invitedTenantId) {
+      throw new ConflictException(COMMON_MESSAGE_KEYS.ERROR.CONFLICT);
+    }
+
+    if (currentUser.salonTenantId === invitedTenantId) {
+      return tx.user.update({
+        where: { id: currentUser.id },
+        data: {
+          ...this.invitedUserData(passwordHash),
+          salonTenantId: invitedTenantId,
+        },
         select: invitedUserResultSelect,
       });
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        return this.upsertInvitedUser(tx, email, invitedTenantId, passwordHash);
-      }
-
-      throw error;
     }
+
+    const updateResult = await tx.user.updateMany({
+      where: {
+        id: currentUser.id,
+        salonTenantId: null,
+      },
+      data: {
+        ...this.invitedUserData(passwordHash),
+        salonTenantId: invitedTenantId,
+      },
+    });
+
+    if (updateResult.count === 1) {
+      return tx.user.findUniqueOrThrow({
+        where: { id: currentUser.id },
+        select: invitedUserResultSelect,
+      });
+    }
+
+    const latestUser = await tx.user.findUnique({
+      where: { id: currentUser.id },
+      select: invitedUserIdentitySelect,
+    });
+    if (!latestUser || (latestUser.salonTenantId && latestUser.salonTenantId !== invitedTenantId)) {
+      throw new ConflictException(COMMON_MESSAGE_KEYS.ERROR.CONFLICT);
+    }
+
+    return tx.user.update({
+      where: { id: currentUser.id },
+      data: {
+        ...this.invitedUserData(passwordHash),
+        salonTenantId: invitedTenantId,
+      },
+      select: invitedUserResultSelect,
+    });
+  }
+
+  private async runSerializableTransaction<T>(callback: (tx: TransactionClient) => Promise<T>): Promise<T> {
+    for (let attempt = 1; attempt <= serializableRetryLimit; attempt += 1) {
+      try {
+        return await this.prisma.$transaction(callback, {
+          isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        });
+      } catch (error) {
+        if (!this.isSerializableRetryError(error) || attempt === serializableRetryLimit) {
+          throw error;
+        }
+      }
+    }
+
+    throw new ConflictException(COMMON_MESSAGE_KEYS.ERROR.CONFLICT);
+  }
+
+  private isSerializableRetryError(error: unknown): boolean {
+    return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2034';
   }
 }

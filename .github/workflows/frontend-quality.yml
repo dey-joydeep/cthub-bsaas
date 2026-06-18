@@ -66,11 +66,11 @@ jobs:
         shell: bash
         run: |
           filter_frontend_projects() {
-            grep -E '^(web-.*|shared)$' | paste -sd, -
+            grep -E '^(web-.*|shared)$' || true
           }
 
-          FRONTEND_LINT_PROJECTS="$(npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=lint | filter_frontend_projects)"
-          FRONTEND_TEST_PROJECTS="$(npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=test | filter_frontend_projects)"
+          FRONTEND_LINT_PROJECTS="$(npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=lint | filter_frontend_projects | paste -sd, -)"
+          FRONTEND_TEST_PROJECTS="$(npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=test | filter_frontend_projects | paste -sd, -)"
 
           if [ -n "$FRONTEND_LINT_PROJECTS" ]; then
             npx nx run-many --target=lint --projects="$FRONTEND_LINT_PROJECTS" --parallel=3 --configuration=ci

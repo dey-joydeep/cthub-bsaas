@@ -5,13 +5,16 @@ const repoRoot = process.cwd();
 const controllersDir = path.join(repoRoot, 'libs/server/features/salon-owner/src/lib/controllers');
 const openapiPath = path.join(repoRoot, 'docs/specs/salon-owner/API/openapi.yaml');
 const slice3OperationIds = new Set([
-  'listSalonBusinesses',
-  'createSalonBusiness',
-  'getSalonBusiness',
-  'updateSalonBusiness',
+  'listBusinesses',
+  'createBusiness',
+  'getBusiness',
+  'updateBusiness',
   'listBranches',
   'createBranch',
   'getBranch',
+  'getBranchHours',
+  'listBranchHolidays',
+  'getBranchPolicy',
   'updateBranch',
   'replaceBranchHours',
   'setBranchHoliday',

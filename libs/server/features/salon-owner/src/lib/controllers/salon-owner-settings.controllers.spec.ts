@@ -23,6 +23,9 @@ function serviceMock() {
     listBranches: jest.fn(),
     createBranch: jest.fn(),
     getBranch: jest.fn(),
+    getBranchHours: jest.fn(),
+    listBranchHolidays: jest.fn(),
+    getBranchPolicy: jest.fn(),
     updateBranch: jest.fn(),
     replaceBranchHours: jest.fn(),
     setBranchHoliday: jest.fn(),
@@ -108,17 +111,28 @@ describe('Salon owner settings controllers', () => {
     const holiday = { closed: true };
     const policy = { bookingLeadMinutes: 30, cancellationCutoffMinutes: 120, noShowGraceMinutes: 10 };
 
-    await controller.listBranches(user, 'business-1', 3, 5);
+    await controller.listBranches(user, 'business-1', 'ACTIVE', 'downtown', 3, 5);
     await controller.createBranch(user, 'key-23456', profile);
     await controller.getBranch(user, 'branch-1');
+    await controller.getBranchHours(user, 'branch-1');
+    await controller.listBranchHolidays(user, 'branch-1');
+    await controller.getBranchPolicy(user, 'branch-1');
     await controller.updateBranch(user, 'branch-1', profile);
     await controller.replaceBranchHours(user, 'branch-1', hours);
     await controller.setBranchHoliday(user, 'branch-1', '2026-05-26', holiday);
     await controller.updateBranchPolicy(user, 'branch-1', policy);
 
-    expect(service.listBranches).toHaveBeenCalledWith({ user }, 'business-1', { page: 3, pageSize: 5 });
+    expect(service.listBranches).toHaveBeenCalledWith(
+      { user },
+      'business-1',
+      { status: 'ACTIVE', q: 'downtown' },
+      { page: 3, pageSize: 5 },
+    );
     expect(service.createBranch).toHaveBeenCalledWith({ user, idempotencyKey: 'key-23456' }, profile);
     expect(service.getBranch).toHaveBeenCalledWith({ user }, 'branch-1');
+    expect(service.getBranchHours).toHaveBeenCalledWith({ user }, 'branch-1');
+    expect(service.listBranchHolidays).toHaveBeenCalledWith({ user }, 'branch-1');
+    expect(service.getBranchPolicy).toHaveBeenCalledWith({ user }, 'branch-1');
     expect(service.updateBranch).toHaveBeenCalledWith({ user }, 'branch-1', profile);
     expect(service.replaceBranchHours).toHaveBeenCalledWith({ user }, 'branch-1', hours);
     expect(service.setBranchHoliday).toHaveBeenCalledWith({ user }, 'branch-1', '2026-05-26', holiday);

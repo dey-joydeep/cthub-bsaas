@@ -83,6 +83,11 @@ export interface SalonOwnerPagination {
   readonly pageSize?: number;
 }
 
+export interface BranchListFilters {
+  readonly status?: SalonOwnerStatus;
+  readonly q?: string;
+}
+
 export interface SalonOwnerRequestContext {
   readonly user: AuthenticatedUser;
   readonly idempotencyKey?: string;

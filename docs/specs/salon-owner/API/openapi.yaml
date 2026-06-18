@@ -939,6 +939,12 @@ paths:
       parameters:
         - $ref: '#/components/parameters/CorrelationIdHeader'
         - $ref: '#/components/parameters/BusinessIdQuery'
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/SalonOwnerStatus'
+        - $ref: '#/components/parameters/SearchQuery'
         - $ref: '#/components/parameters/PageQuery'
         - $ref: '#/components/parameters/PageSizeQuery'
       responses:
@@ -1017,6 +1023,22 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationError'
   /partner/branches/{branchId}/hours:
+    get:
+      tags: [Business Settings]
+      operationId: getBranchHours
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Stored branch hours.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
     put:
       tags: [Business Settings]
       operationId: replaceBranchHours
@@ -1035,6 +1057,23 @@ paths:
       responses:
         '200':
           description: Branch hours replaced.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/branches/{branchId}/holidays:
+    get:
+      tags: [Business Settings]
+      operationId: listBranchHolidays
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Stored branch holidays and special days.
           content:
             application/json:
               schema:
@@ -1069,6 +1108,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /partner/branches/{branchId}/policy:
+    get:
+      tags: [Business Settings]
+      operationId: getBranchPolicy
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Stored booking policy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
     put:
       tags: [Business Settings]
       operationId: updateBranchPolicy

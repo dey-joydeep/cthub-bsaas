@@ -20,6 +20,7 @@ import { COMMON_MESSAGE_KEYS, UserRole, type AuthenticatedUser } from '@cthub-bs
 
 import { BranchHolidayInputDto, BranchPolicyInputDto, BranchProfileInputDto, WeeklyHoursInputDto } from '../dto/branch-settings.dto';
 import { SalonOwnerSettingsService } from '../services/salon-owner-settings.service';
+import type { SalonOwnerStatus } from '../models/salon-owner-settings.models';
 
 function readIdempotencyKey(value: string | undefined): string {
   const trimmed = value?.trim();
@@ -41,10 +42,12 @@ export class BranchSettingsController {
   listBranches(
     @CurrentUser() user: AuthenticatedUser,
     @Query('businessId', new ParseUUIDPipe({ optional: true })) businessId?: string,
+    @Query('status') status?: SalonOwnerStatus,
+    @Query('q') q?: string,
     @Query('page', new ParseIntPipe({ optional: true })) page?: number,
     @Query('pageSize', new ParseIntPipe({ optional: true })) pageSize?: number,
   ) {
-    return this.settings.listBranches({ user }, businessId, { page, pageSize });
+    return this.settings.listBranches({ user }, businessId, { status, q }, { page, pageSize });
   }
 
   @Post()
@@ -61,6 +64,24 @@ export class BranchSettingsController {
   @ApiOperation({ operationId: 'getBranch' })
   getBranch(@CurrentUser() user: AuthenticatedUser, @Param('branchId', new ParseUUIDPipe()) branchId: string) {
     return this.settings.getBranch({ user }, branchId);
+  }
+
+  @Get(':branchId/hours')
+  @ApiOperation({ operationId: 'getBranchHours' })
+  getBranchHours(@CurrentUser() user: AuthenticatedUser, @Param('branchId', new ParseUUIDPipe()) branchId: string) {
+    return this.settings.getBranchHours({ user }, branchId);
+  }
+
+  @Get(':branchId/holidays')
+  @ApiOperation({ operationId: 'listBranchHolidays' })
+  listBranchHolidays(@CurrentUser() user: AuthenticatedUser, @Param('branchId', new ParseUUIDPipe()) branchId: string) {
+    return this.settings.listBranchHolidays({ user }, branchId);
+  }
+
+  @Get(':branchId/policy')
+  @ApiOperation({ operationId: 'getBranchPolicy' })
+  getBranchPolicy(@CurrentUser() user: AuthenticatedUser, @Param('branchId', new ParseUUIDPipe()) branchId: string) {
+    return this.settings.getBranchPolicy({ user }, branchId);
   }
 
   @Patch(':branchId')
