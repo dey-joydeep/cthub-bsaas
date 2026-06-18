@@ -188,4 +188,18 @@ describe('Salon owner settings controllers', () => {
     expect(() => controller.listBranches(user, 'business-1', 'BROKEN', 'downtown', 1, 10)).toThrow(BadRequestException);
     expect(service.listBranches).not.toHaveBeenCalled();
   });
+
+  it('passes an omitted branch status filter through as undefined', async () => {
+    const service = serviceMock();
+    const controller = new BranchSettingsController(service as unknown as SalonOwnerSettingsService);
+
+    await controller.listBranches(user, 'business-1', undefined, 'downtown', 1, 10);
+
+    expect(service.listBranches).toHaveBeenCalledWith(
+      { user },
+      'business-1',
+      { status: undefined, q: 'downtown' },
+      { page: 1, pageSize: 10 },
+    );
+  });
 });
