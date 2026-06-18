@@ -1,6 +1,7 @@
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 
 export type SalonOwnerStatus = 'ACTIVE' | 'INACTIVE';
+export const salonOwnerStatuses = ['ACTIVE', 'INACTIVE'] as const;
 
 export interface SalonOwnerAddress {
   readonly line1: string;
@@ -58,6 +59,10 @@ export interface BranchHolidayModel {
   readonly closed: boolean;
   readonly reason?: string;
   readonly intervals: readonly TimeIntervalModel[];
+}
+
+export interface BranchHolidayListModel {
+  readonly items: readonly BranchHolidayModel[];
 }
 
 export interface BranchPolicyModel {

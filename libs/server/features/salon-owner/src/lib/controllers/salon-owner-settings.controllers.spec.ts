@@ -180,4 +180,12 @@ describe('Salon owner settings controllers', () => {
     expect(() => controller.createBranch(user, 'short', body)).toThrow(BadRequestException);
     expect(() => controller.createBranch(user, 'x'.repeat(129), body)).toThrow(BadRequestException);
   });
+
+  it('rejects invalid branch status filters before calling the service', () => {
+    const service = serviceMock();
+    const controller = new BranchSettingsController(service as unknown as SalonOwnerSettingsService);
+
+    expect(() => controller.listBranches(user, 'business-1', 'BROKEN', 'downtown', 1, 10)).toThrow(BadRequestException);
+    expect(service.listBranches).not.toHaveBeenCalled();
+  });
 });

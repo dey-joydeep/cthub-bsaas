@@ -20,7 +20,7 @@ import { COMMON_MESSAGE_KEYS, UserRole, type AuthenticatedUser } from '@cthub-bs
 
 import { BranchHolidayInputDto, BranchPolicyInputDto, BranchProfileInputDto, WeeklyHoursInputDto } from '../dto/branch-settings.dto';
 import { SalonOwnerSettingsService } from '../services/salon-owner-settings.service';
-import type { SalonOwnerStatus } from '../models/salon-owner-settings.models';
+import { salonOwnerStatuses, type SalonOwnerStatus } from '../models/salon-owner-settings.models';
 
 function readIdempotencyKey(value: string | undefined): string {
   const trimmed = value?.trim();
@@ -28,6 +28,18 @@ function readIdempotencyKey(value: string | undefined): string {
     throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION);
   }
   return trimmed;
+}
+
+function readStatus(value: string | undefined): SalonOwnerStatus | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  if (!salonOwnerStatuses.includes(value as SalonOwnerStatus)) {
+    throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION);
+  }
+
+  return value as SalonOwnerStatus;
 }
 
 @ApiTags('Business Settings')
@@ -42,12 +54,12 @@ export class BranchSettingsController {
   listBranches(
     @CurrentUser() user: AuthenticatedUser,
     @Query('businessId', new ParseUUIDPipe({ optional: true })) businessId?: string,
-    @Query('status') status?: SalonOwnerStatus,
+    @Query('status') status?: string,
     @Query('q') q?: string,
     @Query('page', new ParseIntPipe({ optional: true })) page?: number,
     @Query('pageSize', new ParseIntPipe({ optional: true })) pageSize?: number,
   ) {
-    return this.settings.listBranches({ user }, businessId, { status, q }, { page, pageSize });
+    return this.settings.listBranches({ user }, businessId, { status: readStatus(status), q }, { page, pageSize });
   }
 
   @Post()

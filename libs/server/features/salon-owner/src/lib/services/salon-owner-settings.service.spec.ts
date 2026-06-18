@@ -191,6 +191,9 @@ function createPrismaMock() {
       update: jest.fn(),
       count: jest.fn(),
     },
+    appointment: {
+      count: jest.fn(),
+    },
     salonBranchHours: {
       findMany: jest.fn(),
       deleteMany: jest.fn(),
@@ -1059,15 +1062,17 @@ describe('SalonOwnerSettingsService', () => {
         { dayOfWeek: 1, open: true, intervals: [{ start: '09:00', end: '17:00' }] },
       ],
     });
-    await expect(service.listBranchHolidays({ user: user() }, 'branch-1')).resolves.toEqual([
-      {
-        branchId: 'branch-1',
-        date: '2026-05-26',
-        closed: true,
-        reason: 'Holiday',
-        intervals: [],
-      },
-    ]);
+    await expect(service.listBranchHolidays({ user: user() }, 'branch-1')).resolves.toEqual({
+      items: [
+        {
+          branchId: 'branch-1',
+          date: '2026-05-26',
+          closed: true,
+          reason: 'Holiday',
+          intervals: [],
+        },
+      ],
+    });
     await expect(service.getBranchPolicy({ user: user() }, 'branch-1')).resolves.toEqual({
       branchId: 'branch-1',
       bookingLeadMinutes: 30,
@@ -1076,11 +1081,19 @@ describe('SalonOwnerSettingsService', () => {
     });
   });
 
-  it('returns null when a branch has no stored weekly hours yet', async () => {
+  it('returns a closed weekly-hours skeleton when a branch has no stored hours yet', async () => {
     prisma.salonBranch.findFirst.mockResolvedValue(branch());
     prisma.salonBranchHours.findMany.mockResolvedValue([]);
 
-    await expect(service.getBranchHours({ user: user() }, 'branch-1')).resolves.toBeNull();
+    await expect(service.getBranchHours({ user: user() }, 'branch-1')).resolves.toEqual({
+      branchId: 'branch-1',
+      timezone: 'Asia/Tokyo',
+      days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+        dayOfWeek,
+        open: false,
+        intervals: [],
+      })),
+    });
   });
 
   it('rejects branch creation when the address country is missing from master data', async () => {
@@ -1458,6 +1471,52 @@ describe('SalonOwnerSettingsService', () => {
         },
       }),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('blocks branch archival while future confirmed appointments still reference the operational branch', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValue(branch({ status: 'ACTIVE' }));
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.appointment.count.mockResolvedValue(2);
+
+    await expect(
+      service.updateBranch({ user: user() }, 'branch-1', {
+        businessId: 'business-1',
+        name: 'Main Branch',
+        timezone: 'Asia/Tokyo',
+        currency: 'JPY',
+        status: 'INACTIVE',
+        address: {
+          line1: '1 Main St',
+          city: 'Tokyo',
+          state: 'Tokyo',
+          postalCode: '1000001',
+          country: 'JP',
+        },
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    const [appointmentCountArgs] = prisma.appointment.count.mock.calls as [
+      [
+        {
+          where: {
+            status: string;
+            startTime: { gt: Date };
+            services: {
+              some: {
+                salonService: {
+                  salonId: string;
+                };
+              };
+            };
+          };
+        },
+      ],
+    ];
+    const [appointmentCountCall] = appointmentCountArgs;
+    expect(appointmentCountCall.where.status).toBe('CONFIRMED');
+    expect(appointmentCountCall.where.startTime.gt).toBeInstanceOf(Date);
+    expect(appointmentCountCall.where.services.some.salonService.salonId).toBe('branch-1');
+    expect(prisma.salonBranch.update).not.toHaveBeenCalled();
   });
 
   it('updates branch hours timezone alongside a branch timezone change and maps duplicate branch updates to conflict', async () => {

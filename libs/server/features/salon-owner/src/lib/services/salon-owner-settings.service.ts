@@ -9,6 +9,7 @@ import { BranchHolidayInputDto, BranchPolicyInputDto, BranchProfileInputDto, Wee
 import { SalonBusinessInputDto } from '../dto/salon-business.dto';
 import {
   BranchListFilters,
+  BranchHolidayListModel,
   BranchHolidayModel,
   BranchHoursModel,
   BranchPolicyModel,
@@ -26,6 +27,7 @@ const duplicateBusinessMessage = 'error.business.profile.duplicate';
 const duplicateBranchMessage = 'error.branch.profile.name.duplicate';
 const businessStatusConflictMessage = 'error.business.profile.status_conflict';
 const inactiveBusinessMessage = 'error.branch.profile.business_inactive';
+const branchArchiveBlockedMessage = 'error.branch.profile.status_conflict';
 const validationMessage = COMMON_MESSAGE_KEYS.ERROR.VALIDATION;
 const forbiddenMessage = COMMON_MESSAGE_KEYS.ERROR.FORBIDDEN_SCOPE;
 const notFoundMessage = COMMON_MESSAGE_KEYS.ERROR.NOT_FOUND;
@@ -498,27 +500,29 @@ export class SalonOwnerSettingsService {
     return this.mapBranch(await this.findBranchInScope(context, branchId));
   }
 
-  async getBranchHours(context: SalonOwnerRequestContext, branchId: string): Promise<BranchHoursModel | null> {
-    await this.findBranchInScope(context, branchId);
+  async getBranchHours(context: SalonOwnerRequestContext, branchId: string): Promise<BranchHoursModel> {
+    const branch = await this.findBranchInScope(context, branchId);
     const rows = await this.prisma.salonBranchHours.findMany({
       where: { branchId },
       orderBy: { dayOfWeek: 'asc' },
     });
     if (rows.length === 0) {
-      return null;
+      return this.emptyHours(branch.id, branch.timezone);
     }
 
     return this.mapHours(branchId, rows);
   }
 
-  async listBranchHolidays(context: SalonOwnerRequestContext, branchId: string): Promise<readonly BranchHolidayModel[]> {
+  async listBranchHolidays(context: SalonOwnerRequestContext, branchId: string): Promise<BranchHolidayListModel> {
     await this.findBranchInScope(context, branchId);
     const holidays = await this.prisma.salonBranchHoliday.findMany({
       where: { branchId },
       orderBy: { date: 'asc' },
     });
 
-    return holidays.map((holiday) => this.mapHoliday(holiday));
+    return {
+      items: holidays.map((holiday) => this.mapHoliday(holiday)),
+    };
   }
 
   async getBranchPolicy(context: SalonOwnerRequestContext, branchId: string): Promise<BranchPolicyModel | null> {
@@ -553,6 +557,25 @@ export class SalonOwnerSettingsService {
           }
           if (input.status === 'ACTIVE' && scopedBusiness.status === PrismaSalonOwnerStatus.INACTIVE) {
             throw new ConflictException(inactiveBusinessMessage);
+          }
+          if (current.status !== PrismaSalonOwnerStatus.INACTIVE && input.status === 'INACTIVE') {
+            const futureConfirmedAppointmentCount = await tx.appointment.count({
+              where: {
+                status: 'CONFIRMED',
+                startTime: { gt: new Date() },
+                services: {
+                  some: {
+                    salonService: {
+                      salonId: branchId,
+                    },
+                  },
+                },
+              },
+            });
+
+            if (futureConfirmedAppointmentCount > 0) {
+              throw new ConflictException(branchArchiveBlockedMessage);
+            }
           }
 
           const updated = await tx.salonBranch.update({
@@ -1224,6 +1247,18 @@ export class SalonOwnerSettingsService {
         dayOfWeek: row.dayOfWeek,
         open: row.open,
         intervals: this.readIntervals(row.intervals),
+      })),
+    };
+  }
+
+  private emptyHours(branchId: string, timezone: string): BranchHoursModel {
+    return {
+      branchId,
+      timezone,
+      days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+        dayOfWeek,
+        open: false,
+        intervals: [],
       })),
     };
   }

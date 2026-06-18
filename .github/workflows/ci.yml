@@ -82,13 +82,19 @@ jobs:
       - name: OpenAPI lint (auth)
         run: npm run openapi:lint:auth
 
-      - name: Server auth lint + coverage
-        run: |
-          npx nx run-many -t lint -p server-core,server-data-access,server-feature-auth --parallel=3
-          npx nx run-many -t test -p server-core,server-data-access,server-feature-auth --code-coverage --parallel=1
+      - name: OpenAPI parity (salon owner)
+        run: npm run openapi:check:salon-owner
 
-      - name: Server auth build
-        run: npx nx run-many -t build -p server-core,server-data-access,server-feature-auth --parallel=3
+      - name: OpenAPI lint (salon owner)
+        run: npm run openapi:lint:salon-owner
+
+      - name: Server lint + coverage
+        run: |
+          npx nx run-many -t lint -p server-core,server-data-access,server-feature-auth,server-feature-salon-owner --parallel=3
+          npx nx run-many -t test -p server-core,server-data-access,server-feature-auth,server-feature-salon-owner --code-coverage --parallel=1
+
+      - name: Server build
+        run: npx nx run-many -t build -p server-core,server-data-access,server-feature-auth,server-feature-salon-owner --parallel=3
 
       - name: Guard hygiene (no Guards in feature libs)
         run: |

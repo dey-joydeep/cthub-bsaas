@@ -20,9 +20,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-import type { SalonOwnerStatus } from '../models/salon-owner-settings.models';
-
-const salonOwnerStatuses: readonly SalonOwnerStatus[] = ['ACTIVE', 'INACTIVE'];
+import { salonOwnerStatuses, type SalonOwnerStatus } from '../models/salon-owner-settings.models';
 
 export class AddressDto {
   @IsString()
