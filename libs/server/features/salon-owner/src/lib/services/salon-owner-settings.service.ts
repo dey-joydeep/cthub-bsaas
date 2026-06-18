@@ -287,7 +287,7 @@ export class SalonOwnerSettingsService {
     const [businesses, totalItems] = await Promise.all([
       this.prisma.salonBusiness.findMany({
         where,
-        orderBy: { createdAt: 'asc' },
+        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
         skip: (page.pageNumber - 1) * page.limit,
         take: page.limit,
       }),
@@ -426,7 +426,7 @@ export class SalonOwnerSettingsService {
     const [branches, totalItems] = await Promise.all([
       this.prisma.salonBranch.findMany({
         where,
-        orderBy: { createdAt: 'asc' },
+        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
         skip: (page.pageNumber - 1) * page.limit,
         take: page.limit,
       }),
@@ -525,13 +525,13 @@ export class SalonOwnerSettingsService {
     };
   }
 
-  async getBranchPolicy(context: SalonOwnerRequestContext, branchId: string): Promise<BranchPolicyModel | null> {
+  async getBranchPolicy(context: SalonOwnerRequestContext, branchId: string): Promise<BranchPolicyModel> {
     await this.findBranchInScope(context, branchId);
     const policy = await this.prisma.salonBranchPolicy.findUnique({
       where: { branchId },
     });
 
-    return policy ? this.mapPolicy(policy) : null;
+    return policy ? this.mapPolicy(policy) : this.defaultPolicy(branchId);
   }
 
   async updateBranch(context: SalonOwnerRequestContext, branchId: string, input: BranchProfileInputDto): Promise<BranchProfileModel> {
@@ -1260,6 +1260,15 @@ export class SalonOwnerSettingsService {
         open: false,
         intervals: [],
       })),
+    };
+  }
+
+  private defaultPolicy(branchId: string): BranchPolicyModel {
+    return {
+      branchId,
+      bookingLeadMinutes: 0,
+      cancellationCutoffMinutes: 0,
+      noShowGraceMinutes: 0,
     };
   }
 

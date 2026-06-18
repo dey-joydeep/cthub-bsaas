@@ -30,16 +30,29 @@ function readIdempotencyKey(value: string | undefined): string {
   return trimmed;
 }
 
-function readStatus(value: string | undefined): SalonOwnerStatus | undefined {
-  if (!value) {
+function readOptionalQueryString(value: string | readonly string[] | undefined): string | undefined {
+  if (typeof value === 'undefined') {
     return undefined;
   }
 
-  if (!salonOwnerStatuses.includes(value as SalonOwnerStatus)) {
+  if (typeof value !== 'string') {
     throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION);
   }
 
-  return value as SalonOwnerStatus;
+  return value;
+}
+
+function readStatus(value: string | readonly string[] | undefined): SalonOwnerStatus | undefined {
+  const text = readOptionalQueryString(value);
+  if (!text) {
+    return undefined;
+  }
+
+  if (!salonOwnerStatuses.includes(text as SalonOwnerStatus)) {
+    throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION);
+  }
+
+  return text as SalonOwnerStatus;
 }
 
 @ApiTags('Business Settings')
@@ -54,12 +67,17 @@ export class BranchSettingsController {
   listBranches(
     @CurrentUser() user: AuthenticatedUser,
     @Query('businessId', new ParseUUIDPipe({ optional: true })) businessId?: string,
-    @Query('status') status?: string,
-    @Query('q') q?: string,
+    @Query('status') status?: string | string[],
+    @Query('q') q?: string | string[],
     @Query('page', new ParseIntPipe({ optional: true })) page?: number,
     @Query('pageSize', new ParseIntPipe({ optional: true })) pageSize?: number,
   ) {
-    return this.settings.listBranches({ user }, businessId, { status: readStatus(status), q }, { page, pageSize });
+    return this.settings.listBranches(
+      { user },
+      businessId,
+      { status: readStatus(status), q: readOptionalQueryString(q) },
+      { page, pageSize },
+    );
   }
 
   @Post()

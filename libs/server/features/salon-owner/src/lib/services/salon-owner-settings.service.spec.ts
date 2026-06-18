@@ -282,7 +282,7 @@ describe('SalonOwnerSettingsService', () => {
 
     expect(prisma.salonBusiness.findMany).toHaveBeenCalledWith({
       where: { tenantId: 'tenant-1' },
-      orderBy: { createdAt: 'asc' },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       skip: 0,
       take: 25,
     });
@@ -318,7 +318,7 @@ describe('SalonOwnerSettingsService', () => {
 
     expect(prisma.salonBusiness.findMany).toHaveBeenCalledWith({
       where: { tenantId: { in: ['tenant-2', 'tenant-3'] } },
-      orderBy: { createdAt: 'asc' },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       skip: 0,
       take: 25,
     });
@@ -342,7 +342,7 @@ describe('SalonOwnerSettingsService', () => {
 
     expect(prisma.salonBusiness.findMany).toHaveBeenCalledWith({
       where: { tenantId: { in: ['tenant-9', 'tenant-10'] } },
-      orderBy: { createdAt: 'asc' },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       skip: 0,
       take: 25,
     });
@@ -371,7 +371,7 @@ describe('SalonOwnerSettingsService', () => {
     });
     expect(prisma.salonBusiness.findMany).toHaveBeenCalledWith({
       where: { tenantId: { in: ['tenant-4', 'tenant-5'] } },
-      orderBy: { createdAt: 'asc' },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       skip: 0,
       take: 25,
     });
@@ -617,7 +617,7 @@ describe('SalonOwnerSettingsService', () => {
         name: { contains: 'town', mode: 'insensitive' },
         business: { tenantId: 'tenant-1' },
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       skip: 0,
       take: 10,
     });
@@ -635,7 +635,7 @@ describe('SalonOwnerSettingsService', () => {
     });
     expect(prisma.salonBusiness.findMany).toHaveBeenCalledWith({
       where: { tenantId: 'tenant-1' },
-      orderBy: { createdAt: 'asc' },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       skip: 2,
       take: 2,
     });
@@ -645,7 +645,7 @@ describe('SalonOwnerSettingsService', () => {
     });
     expect(prisma.salonBranch.findMany).toHaveBeenCalledWith({
       where: { businessId: 'business-1', business: { tenantId: 'tenant-1' } },
-      orderBy: { createdAt: 'asc' },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       skip: 0,
       take: 3,
     });
@@ -1093,6 +1093,18 @@ describe('SalonOwnerSettingsService', () => {
         open: false,
         intervals: [],
       })),
+    });
+  });
+
+  it('returns a default branch policy object when no override has been stored yet', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValue(branch());
+    prisma.salonBranchPolicy.findUnique.mockResolvedValue(null);
+
+    await expect(service.getBranchPolicy({ user: user() }, 'branch-1')).resolves.toEqual({
+      branchId: 'branch-1',
+      bookingLeadMinutes: 0,
+      cancellationCutoffMinutes: 0,
+      noShowGraceMinutes: 0,
     });
   });
 

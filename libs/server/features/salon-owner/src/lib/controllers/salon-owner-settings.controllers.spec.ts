@@ -189,6 +189,14 @@ describe('Salon owner settings controllers', () => {
     expect(service.listBranches).not.toHaveBeenCalled();
   });
 
+  it('rejects repeated branch search query values before calling the service', () => {
+    const service = serviceMock();
+    const controller = new BranchSettingsController(service as unknown as SalonOwnerSettingsService);
+
+    expect(() => controller.listBranches(user, 'business-1', 'ACTIVE', ['downtown', 'midtown'], 1, 10)).toThrow(BadRequestException);
+    expect(service.listBranches).not.toHaveBeenCalled();
+  });
+
   it('passes an omitted branch status filter through as undefined', async () => {
     const service = serviceMock();
     const controller = new BranchSettingsController(service as unknown as SalonOwnerSettingsService);
