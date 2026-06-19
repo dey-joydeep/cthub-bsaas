@@ -10,7 +10,7 @@ Current implementation baseline:
 - Settings API access supports `Owner`, `Platform Admin support`, and assigned Branch Manager branch-scope reads and updates.
 - Branch Manager access requires an active branch assignment plus a manager-position staff record on the target branch.
 - `createBranch` remains limited to `Owner` and `Platform Admin support` in this slice because business-scoped branch-creation delegation is not modeled yet.
-- Branch profile currency is validated as a supported ISO 4217 code; invoice-history locking is not enforced in this slice.
+- Branch profile currency is validated as a supported ISO 4217 code and returns `409 error.branch.profile.currency_locked` once finance history has locked the branch currency.
 
 | Property    | Value                                                              |
 | ----------- | ------------------------------------------------------------------ |
@@ -21,15 +21,15 @@ Current implementation baseline:
 | Operations  | `createBranch`, `updateBranch`                                     |
 | Idempotency | Required for create                                                |
 
-| Field        | Control                 | Default          | Enabled when                                         | Client validation         | Backend validation                                      | Error key                                |
-| ------------ | ----------------------- | ---------------- | ---------------------------------------------------- | ------------------------- | ------------------------------------------------------- | ---------------------------------------- |
-| `businessId` | hidden/context selector | active business  | create only                                          | UUID in active scope      | business exists and actor can manage it                 | `error.branch.profile.business_required` |
-| `name`       | text input              | current/empty    | actor can manage branch profile                      | required; 2-120 chars     | required; trimmed; unique per business where configured | `error.branch.profile.name.invalid`      |
-| `phone`      | tel input               | current/empty    | actor can manage branch profile                      | max 30 chars              | max 30 chars                                            | `error.branch.profile.phone.invalid`     |
-| `email`      | email input             | current/empty    | actor can manage branch profile                      | email format when present | email format when present                               | `error.branch.profile.email.invalid`     |
-| `timezone`   | timezone select         | business default | create; edit allowed before bookings or with warning | required valid timezone   | valid timezone; affects future business-day logic       | `error.branch.profile.timezone.invalid`  |
-| `currency`   | select                  | `INR`            | actor can manage branch profile                      | required 3-letter code    | required supported ISO 4217 code                        | `error.branch.profile.currency.invalid`  |
-| `address`    | address group           | current/empty    | actor can manage branch profile                      | required address fields   | required address fields                                 | `error.branch.profile.address.invalid`   |
+| Field        | Control                 | Default          | Enabled when                                         | Client validation         | Backend validation                                                       | Error key                                                                        |
+| ------------ | ----------------------- | ---------------- | ---------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| `businessId` | hidden/context selector | active business  | create only                                          | UUID in active scope      | business exists and actor can manage it                                  | `error.branch.profile.business_required`                                         |
+| `name`       | text input              | current/empty    | actor can manage branch profile                      | required; 2-120 chars     | required; trimmed; unique per business where configured                  | `error.branch.profile.name.invalid`                                              |
+| `phone`      | tel input               | current/empty    | actor can manage branch profile                      | max 30 chars              | max 30 chars                                                             | `error.branch.profile.phone.invalid`                                             |
+| `email`      | email input             | current/empty    | actor can manage branch profile                      | email format when present | email format when present                                                | `error.branch.profile.email.invalid`                                             |
+| `timezone`   | timezone select         | business default | create; edit allowed before bookings or with warning | required valid timezone   | valid timezone; affects future business-day logic                        | `error.branch.profile.timezone.invalid`                                          |
+| `currency`   | select                  | `INR`            | actor can manage branch profile                      | required 3-letter code    | required supported ISO 4217 code; locked branches return `409` on change | `error.branch.profile.currency.invalid` / `error.branch.profile.currency_locked` |
+| `address`    | address group           | current/empty    | actor can manage branch profile                      | required address fields   | required address fields                                                  | `error.branch.profile.address.invalid`                                           |
 
 ## Weekly Hours Form
 

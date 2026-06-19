@@ -107,6 +107,7 @@ model SalonBranch {
   email      String?
   timezone   String
   currency   String
+  currencyLockedAt DateTime?      @map("currency_locked_at")
   status     SalonOwnerStatus     @default(ACTIVE)
   address    Json                 @db.JsonB
   hours      SalonBranchHours[]

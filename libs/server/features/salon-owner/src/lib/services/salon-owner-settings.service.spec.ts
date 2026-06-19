@@ -1841,6 +1841,30 @@ describe('SalonOwnerSettingsService', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
+  it('locks branch currency changes once finance history has marked the branch currency as immutable', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValue(branch({ currencyLockedAt: now }));
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+
+    await expect(
+      service.updateBranch({ user: user() }, 'branch-1', {
+        businessId: 'business-1',
+        name: 'Main Branch',
+        timezone: 'Asia/Tokyo',
+        currency: 'USD',
+        status: 'ACTIVE',
+        address: {
+          line1: '1 Main St',
+          city: 'Tokyo',
+          state: 'Tokyo',
+          postalCode: '1000001',
+          country: 'JP',
+        },
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    expect(prisma.salonBranch.update).not.toHaveBeenCalled();
+  });
+
   it('replaces weekly hours atomically', async () => {
     prisma.salonBranch.findFirst.mockResolvedValue({
       ...branch(),

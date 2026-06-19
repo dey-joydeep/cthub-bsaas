@@ -29,6 +29,7 @@ const duplicateBranchMessage = 'error.branch.profile.name.duplicate';
 const businessStatusConflictMessage = 'error.business.profile.status_conflict';
 const inactiveBusinessMessage = 'error.branch.profile.business_inactive';
 const branchArchiveBlockedMessage = 'error.branch.profile.status_conflict';
+const branchCurrencyLockedMessage = 'error.branch.profile.currency_locked';
 const branchHoursConflictMessage = 'error.branch.hours.appointments_outside_hours';
 const validationMessage = COMMON_MESSAGE_KEYS.ERROR.VALIDATION;
 const forbiddenMessage = COMMON_MESSAGE_KEYS.ERROR.FORBIDDEN_SCOPE;
@@ -629,6 +630,9 @@ export class SalonOwnerSettingsService {
         }
         if (input.status === 'ACTIVE' && scopedBusiness.status === PrismaSalonOwnerStatus.INACTIVE) {
           throw new ConflictException(inactiveBusinessMessage);
+        }
+        if (input.currency.toUpperCase() !== current.currency && current.currencyLockedAt) {
+          throw new ConflictException(branchCurrencyLockedMessage);
         }
         if (current.status !== PrismaSalonOwnerStatus.INACTIVE && input.status === 'INACTIVE') {
           const futureConfirmedAppointmentCount = await tx.appointment.count({
