@@ -586,6 +586,10 @@ describe('SalonOwnerSettingsService', () => {
             roles: [UserRole.ADMIN],
             managedTenants: ['tenant-1', 'tenant-2'],
           }),
+          supportContext: {
+            reference: 'SUP-1234',
+            reason: 'Investigating tenant request',
+          },
         },
         { displayName: 'Salon One', legalName: 'Salon One Legal', status: 'ACTIVE' },
       ),
@@ -1266,6 +1270,37 @@ describe('SalonOwnerSettingsService', () => {
     });
   });
 
+  it('retries branch creation after a serializable transaction abort', async () => {
+    const input = {
+      businessId: 'business-1',
+      name: 'Downtown',
+      timezone: 'Asia/Tokyo',
+      currency: 'JPY',
+      status: 'ACTIVE' as const,
+      address: {
+        line1: '1 Main St',
+        city: 'Tokyo',
+        state: 'Tokyo',
+        postalCode: '1000001',
+        country: 'JP',
+      },
+    };
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonBranch.create.mockResolvedValue(branch({ id: 'branch-2', name: 'Downtown' }));
+    prisma.$transaction.mockRejectedValueOnce(prismaKnownError('P2034')).mockImplementationOnce(async (arg: unknown) => {
+      if (typeof arg === 'function') {
+        return await arg(prisma as unknown as PrismaService);
+      }
+      return [];
+    });
+
+    await expect(service.createBranch({ user: user() }, input)).resolves.toMatchObject({
+      id: 'branch-2',
+    });
+
+    expect(prisma.$transaction).toHaveBeenCalledTimes(2);
+  });
+
   it('surfaces branch creation not-found and duplicate failures', async () => {
     prisma.salonBusiness.findFirst.mockResolvedValueOnce(null);
 
@@ -1587,7 +1622,7 @@ describe('SalonOwnerSettingsService', () => {
       [
         {
           where: {
-            status: string;
+            status: { in: string[] };
             startTime: { gt: Date };
             services: {
               some: {
@@ -1601,7 +1636,7 @@ describe('SalonOwnerSettingsService', () => {
       ],
     ];
     const [appointmentCountCall] = appointmentCountArgs;
-    expect(appointmentCountCall.where.status).toBe('CONFIRMED');
+    expect(appointmentCountCall.where.status).toEqual({ in: ['confirmed', 'CONFIRMED'] });
     expect(appointmentCountCall.where.startTime.gt).toBeInstanceOf(Date);
     expect(appointmentCountCall.where.services.some.salonService.salonId).toBe('branch-1');
     expect(prisma.salonBranch.update).not.toHaveBeenCalled();
