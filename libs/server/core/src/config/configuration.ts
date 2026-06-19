@@ -123,7 +123,17 @@ export const configuration = registerAs('config', () => {
     cors: {
       origins: env['CORS_ORIGINS']?.split(',').map((origin) => origin.trim()) || [],
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'X-XSRF-TOKEN', 'X-Request-Id', 'Idempotency-Key'],
+      allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'X-Requested-With',
+        'Accept',
+        'X-XSRF-TOKEN',
+        'X-Request-Id',
+        'Idempotency-Key',
+        'X-Support-Reference',
+        'X-Support-Reason',
+      ],
       exposedHeaders: ['X-Request-Id'],
       credentials: true,
       maxAge: 600,
