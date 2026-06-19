@@ -41,22 +41,24 @@ Current implementation baseline:
 | Context   | `tenantId`, `salonBusinessId`, `branchId`              |
 | Operation | `replaceBranchHours`                                   |
 
-| Field       | Control         | Default           | Enabled when                 | Client validation              | Backend validation                                          | Error key                              |
-| ----------- | --------------- | ----------------- | ---------------------------- | ------------------------------ | ----------------------------------------------------------- | -------------------------------------- |
-| `timezone`  | timezone select | branch timezone   | branch is active or editable | required valid timezone        | matches branch timezone unless timezone update is permitted | `error.branch.hours.timezone.invalid`  |
-| `days`      | weekly editor   | seven rows        | actor can manage hours       | exactly seven days             | exactly one row per day 0-6                                 | `error.branch.hours.days.invalid`      |
-| `open`      | switch          | false for new day | day row editable             | boolean                        | boolean                                                     | `error.branch.hours.open.invalid`      |
-| `intervals` | time range list | empty             | day is open                  | required when open; no overlap | start before end; no overlap                                | `error.branch.hours.intervals.invalid` |
+| Field                                         | Control                 | Default           | Enabled when                 | Client validation              | Backend validation                                                                               | Error key                                       |
+| --------------------------------------------- | ----------------------- | ----------------- | ---------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
+| `timezone`                                    | timezone select         | branch timezone   | branch is active or editable | required valid timezone        | matches branch timezone unless timezone update is permitted                                      | `error.branch.hours.timezone.invalid`           |
+| `acknowledgeExistingAppointmentsOutsideHours` | warning acknowledgement | `false`           | only when warning is shown   | boolean                        | required when future pending/confirmed appointments would fall outside the proposed weekly hours | `error.branch.hours.appointments_outside_hours` |
+| `days`                                        | weekly editor           | seven rows        | actor can manage hours       | exactly seven days             | exactly one row per day 0-6                                                                      | `error.branch.hours.days.invalid`               |
+| `open`                                        | switch                  | false for new day | day row editable             | boolean                        | boolean                                                                                          | `error.branch.hours.open.invalid`               |
+| `intervals`                                   | time range list         | empty             | day is open                  | required when open; no overlap | start before end; no overlap                                                                     | `error.branch.hours.intervals.invalid`          |
 
 Cross-field rules:
 
 - Closed days must have no intervals.
 - Open days must have at least one interval.
 - Existing appointments are not changed by hours update.
+- Future pending/confirmed appointments that would fall outside the proposed weekly hours must trigger an explicit acknowledgement before save.
 
 Current implementation note:
 
-- Hours update replaces stored hours without branch-scoped appointment conflict detection in this slice.
+- Acknowledged hours changes are audited with the number of affected appointments.
 
 ## Holiday/Special Day Form
 

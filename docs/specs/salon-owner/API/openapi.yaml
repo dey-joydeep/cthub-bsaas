@@ -330,6 +330,9 @@ components:
       properties:
         timezone:
           type: string
+        acknowledgeExistingAppointmentsOutsideHours:
+          type: boolean
+          description: Required when future appointments would fall outside the proposed weekly hours.
         days:
           type: array
           minItems: 7
@@ -1061,6 +1064,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
+        '409':
+          description: Future appointments fall outside the proposed schedule and must be explicitly acknowledged.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /partner/branches/{branchId}/holidays:
     get:
       tags: [Business Settings]

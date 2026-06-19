@@ -112,6 +112,10 @@ export class WeeklyHoursInputDto {
   @IsString()
   timezone!: string;
 
+  @IsOptional()
+  @IsBoolean()
+  acknowledgeExistingAppointmentsOutsideHours?: boolean;
+
   @IsArray()
   @ArrayMinSize(7)
   @ArrayMaxSize(7)

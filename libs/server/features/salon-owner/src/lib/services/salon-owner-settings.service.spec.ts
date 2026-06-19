@@ -194,6 +194,7 @@ function createPrismaMock() {
     },
     appointment: {
       count: jest.fn(),
+      findMany: jest.fn(),
     },
     salonBranchHours: {
       findMany: jest.fn(),
@@ -273,6 +274,7 @@ describe('SalonOwnerSettingsService', () => {
     prisma.salon.upsert.mockResolvedValue({ id: 'branch-1' });
     prisma.$queryRaw.mockResolvedValue([]);
     prisma.salonTenantStaff.findMany.mockResolvedValue([]);
+    prisma.appointment.findMany.mockResolvedValue([]);
     prisma.$transaction.mockImplementation(async (arg: unknown) => {
       if (typeof arg === 'function') {
         return await arg(prisma as unknown as PrismaService);
@@ -1863,6 +1865,127 @@ describe('SalonOwnerSettingsService', () => {
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
 
     expect(prisma.salonBranchHours.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('requires acknowledgement when future appointments fall outside the proposed weekly hours', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValue({
+      ...branch(),
+      business: { tenantId: 'tenant-1' },
+    });
+    prisma.appointment.findMany.mockResolvedValue([
+      {
+        id: 'appointment-1',
+        startTime: new Date('2099-06-01T23:30:00.000Z'),
+        endTime: new Date('2099-06-02T00:30:00.000Z'),
+      },
+    ]);
+
+    await expect(
+      service.replaceBranchHours({ user: user() }, 'branch-1', {
+        timezone: 'Asia/Tokyo',
+        days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+          dayOfWeek,
+          open: true,
+          intervals: [{ start: '09:00', end: '17:00' }],
+        })),
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    expect(prisma.salonBranchHours.deleteMany).not.toHaveBeenCalled();
+    expect(prisma.auditEvent.create).not.toHaveBeenCalled();
+  });
+
+  it('records acknowledged outside-hours appointments when replacing weekly hours', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValue({
+      ...branch(),
+      business: { tenantId: 'tenant-1' },
+    });
+    prisma.salonBranchHours.deleteMany.mockReturnValue('delete-op');
+    prisma.salonBranchHours.createMany.mockReturnValue('create-op');
+    prisma.appointment.findMany.mockResolvedValue([
+      {
+        id: 'appointment-1',
+        startTime: new Date('2099-06-01T14:30:00.000Z'),
+        endTime: new Date('2099-06-01T15:30:00.000Z'),
+      },
+      {
+        id: 'appointment-2',
+        startTime: new Date('2099-06-07T01:00:00.000Z'),
+        endTime: new Date('2099-06-07T02:00:00.000Z'),
+      },
+    ]);
+
+    await service.replaceBranchHours({ user: user() }, 'branch-1', {
+      timezone: 'Asia/Tokyo',
+      acknowledgeExistingAppointmentsOutsideHours: true,
+      days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+        dayOfWeek,
+        open: dayOfWeek !== 0,
+        intervals: dayOfWeek === 0 ? [] : [{ start: '09:00', end: '17:00' }],
+      })),
+    });
+
+    expect(prisma.salonBranchHours.deleteMany).toHaveBeenCalledWith({ where: { branchId: 'branch-1' } });
+    expectAuditCall(prisma.auditEvent.create.mock.calls as [AuditCreateArgs][], {
+      tenantId: 'tenant-1',
+      action: 'salon_owner.branch.hours.replace',
+      targetId: 'branch-1',
+    });
+    const [auditCall] = prisma.auditEvent.create.mock.calls as [AuditCreateArgs][];
+    expect(auditCall[0].data.reason).toBe(
+      JSON.stringify({
+        appointmentOutsideHoursAcknowledged: true,
+        affectedAppointmentCount: 2,
+      }),
+    );
+  });
+
+  it('rejects malformed local schedule parts when checking appointment-hour conflicts', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValue({
+      ...branch(),
+      business: { tenantId: 'tenant-1' },
+    });
+    prisma.appointment.findMany.mockResolvedValue([
+      {
+        id: 'appointment-1',
+        startTime: new Date('2099-06-01T01:00:00.000Z'),
+        endTime: new Date('2099-06-01T02:00:00.000Z'),
+      },
+    ]);
+
+    const originalDateTimeFormat = Intl.DateTimeFormat;
+    const mockedDateTimeFormat = jest.fn().mockImplementation((_locale, options?: Intl.DateTimeFormatOptions) => {
+      if (options?.weekday) {
+        return {
+          formatToParts: () => [
+            { type: 'hour', value: '09' },
+            { type: 'minute', value: '00' },
+          ],
+        };
+      }
+
+      return {
+        format: () => 'ok',
+      };
+    });
+    (Intl as unknown as { DateTimeFormat: typeof Intl.DateTimeFormat }).DateTimeFormat =
+      mockedDateTimeFormat as unknown as typeof Intl.DateTimeFormat;
+
+    try {
+      await expect(
+        service.replaceBranchHours({ user: user() }, 'branch-1', {
+          timezone: 'Asia/Tokyo',
+          acknowledgeExistingAppointmentsOutsideHours: true,
+          days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+            dayOfWeek,
+            open: true,
+            intervals: [{ start: '09:00', end: '17:00' }],
+          })),
+        }),
+      ).rejects.toBeInstanceOf(UnprocessableEntityException);
+    } finally {
+      (Intl as unknown as { DateTimeFormat: typeof Intl.DateTimeFormat }).DateTimeFormat = originalDateTimeFormat;
+    }
   });
 
   it('rejects invalid hours and holiday intervals', async () => {

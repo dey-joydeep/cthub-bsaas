@@ -29,13 +29,29 @@ const duplicateBranchMessage = 'error.branch.profile.name.duplicate';
 const businessStatusConflictMessage = 'error.business.profile.status_conflict';
 const inactiveBusinessMessage = 'error.branch.profile.business_inactive';
 const branchArchiveBlockedMessage = 'error.branch.profile.status_conflict';
+const branchHoursConflictMessage = 'error.branch.hours.appointments_outside_hours';
 const validationMessage = COMMON_MESSAGE_KEYS.ERROR.VALIDATION;
 const forbiddenMessage = COMMON_MESSAGE_KEYS.ERROR.FORBIDDEN_SCOPE;
 const notFoundMessage = COMMON_MESSAGE_KEYS.ERROR.NOT_FOUND;
 const conflictMessage = COMMON_MESSAGE_KEYS.ERROR.CONFLICT;
 const translatedUniqueConstraintMessage = 'A unique constraint was violated';
 const confirmedAppointmentStatuses = [AppointmentStatus.CONFIRMED.toLowerCase(), AppointmentStatus.CONFIRMED] as const;
+const schedulableAppointmentStatuses = [
+  AppointmentStatus.PENDING.toLowerCase(),
+  AppointmentStatus.PENDING,
+  AppointmentStatus.CONFIRMED.toLowerCase(),
+  AppointmentStatus.CONFIRMED,
+] as const;
 const branchManagerPositions = new Set(['branch manager', 'manager']);
+const weekdayByShortName: Readonly<Record<string, number>> = {
+  Sun: 0,
+  Mon: 1,
+  Tue: 2,
+  Wed: 3,
+  Thu: 4,
+  Fri: 5,
+  Sat: 6,
+};
 const supportedCurrencyCodes = new Set(
   ((Intl as typeof Intl & { supportedValuesOf?: (key: string) => string[] }).supportedValuesOf?.('currency') ?? []).map((code) =>
     code.toUpperCase(),
@@ -153,6 +169,28 @@ function parseMinutes(value: string): number {
   return hours * 60 + minutes;
 }
 
+function readLocalTimeSlot(value: Date, timezone: string): { dayOfWeek: number; minutes: number } {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(value);
+  const weekday = parts.find((part) => part.type === 'weekday')?.value;
+  const hours = parts.find((part) => part.type === 'hour')?.value;
+  const minutes = parts.find((part) => part.type === 'minute')?.value;
+  const dayOfWeek = weekday ? weekdayByShortName[weekday] : undefined;
+  if (dayOfWeek === undefined || hours === undefined || minutes === undefined) {
+    throw new UnprocessableEntityException(validationMessage);
+  }
+
+  return {
+    dayOfWeek,
+    minutes: Number(hours) * 60 + Number(minutes),
+  };
+}
+
 function assertIntervals(intervals: readonly TimeIntervalModel[]): void {
   const sorted = intervals
     .map((interval) => ({
@@ -208,6 +246,30 @@ function normalizeWeeklyDays(input: WeeklyHoursInputDto): WeeklyHoursDayModel[] 
   }
 
   return days.sort((left, right) => left.dayOfWeek - right.dayOfWeek);
+}
+
+function isAppointmentInsideHours(
+  startTime: Date,
+  endTime: Date,
+  timezone: string,
+  weeklyHours: ReadonlyMap<number, WeeklyHoursDayModel>,
+): boolean {
+  const localStart = readLocalTimeSlot(startTime, timezone);
+  const localEnd = readLocalTimeSlot(endTime, timezone);
+  if (localStart.dayOfWeek !== localEnd.dayOfWeek || localEnd.minutes <= localStart.minutes) {
+    return false;
+  }
+
+  const day = weeklyHours.get(localStart.dayOfWeek);
+  if (!day?.open) {
+    return false;
+  }
+
+  return day.intervals.some((interval) => {
+    const intervalStart = parseMinutes(interval.start);
+    const intervalEnd = parseMinutes(interval.end);
+    return intervalStart <= localStart.minutes && intervalEnd >= localEnd.minutes;
+  });
 }
 
 function normalizeHolidayIntervals(input: BranchHolidayInputDto): TimeIntervalModel[] {
@@ -614,6 +676,7 @@ export class SalonOwnerSettingsService {
   async replaceBranchHours(context: SalonOwnerRequestContext, branchId: string, input: WeeklyHoursInputDto): Promise<BranchHoursModel> {
     this.requireAdminSupportContext(context);
     const days = normalizeWeeklyDays(input);
+    const weeklyHoursByDay = new Map(days.map((day) => [day.dayOfWeek, day] as const));
     const tenantIds = await this.requireTenantIds(context);
     await this.prisma.$transaction(
       async (tx: TransactionClient) => {
@@ -637,6 +700,31 @@ export class SalonOwnerSettingsService {
           throw new UnprocessableEntityException(validationMessage);
         }
 
+        const appointmentsOutsideHours = await tx.appointment.findMany({
+          where: {
+            status: { in: [...schedulableAppointmentStatuses] },
+            startTime: { gt: new Date() },
+            services: {
+              some: {
+                salonService: {
+                  salonId: branchId,
+                },
+              },
+            },
+          },
+          select: {
+            id: true,
+            startTime: true,
+            endTime: true,
+          },
+        });
+        const outsideScheduleAppointments = appointmentsOutsideHours.filter(
+          (appointment) => !isAppointmentInsideHours(appointment.startTime, appointment.endTime, branch.timezone, weeklyHoursByDay),
+        );
+        if (outsideScheduleAppointments.length > 0 && input.acknowledgeExistingAppointmentsOutsideHours !== true) {
+          throw new ConflictException(branchHoursConflictMessage);
+        }
+
         await tx.salonBranchHours.deleteMany({ where: { branchId } });
         await tx.salonBranchHours.createMany({
           data: days.map((day) => ({
@@ -647,7 +735,14 @@ export class SalonOwnerSettingsService {
             intervals: toJsonArray(day.intervals),
           })),
         });
-        await this.createAuditEvent(tx, context, branch.business.tenantId, 'salon_owner.branch.hours.replace', branchId);
+        await this.createAuditEvent(tx, context, branch.business.tenantId, 'salon_owner.branch.hours.replace', branchId, {
+          ...(outsideScheduleAppointments.length > 0
+            ? {
+                appointmentOutsideHoursAcknowledged: true,
+                affectedAppointmentCount: outsideScheduleAppointments.length,
+              }
+            : {}),
+        });
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
@@ -1276,8 +1371,9 @@ export class SalonOwnerSettingsService {
     tenantId: string,
     action: string,
     targetId?: string,
+    metadata?: Record<string, unknown>,
   ): Promise<void> {
-    const supportContext = this.normalizeSupportContext(context.supportContext);
+    const reason = this.buildAuditReason(context, metadata);
     await tx.auditEvent.create({
       data: {
         userId: context.user.id,
@@ -1285,9 +1381,21 @@ export class SalonOwnerSettingsService {
         action,
         targetId,
         result: 'success',
-        ...(supportContext ? { reason: JSON.stringify({ supportContext }) } : {}),
+        ...(reason ? { reason } : {}),
         correlationId: CorrelationId.get() ?? null,
       },
+    });
+  }
+
+  private buildAuditReason(context: SalonOwnerRequestContext, metadata?: Record<string, unknown>): string | undefined {
+    const supportContext = this.normalizeSupportContext(context.supportContext);
+    if (!supportContext && (!metadata || Object.keys(metadata).length === 0)) {
+      return undefined;
+    }
+
+    return JSON.stringify({
+      ...(supportContext ? { supportContext } : {}),
+      ...(metadata && Object.keys(metadata).length > 0 ? metadata : {}),
     });
   }
 

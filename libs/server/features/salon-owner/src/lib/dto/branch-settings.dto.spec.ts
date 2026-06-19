@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 
-import { BranchPolicyInputDto, BranchProfileInputDto } from './branch-settings.dto';
+import { BranchPolicyInputDto, BranchProfileInputDto, WeeklyHoursInputDto } from './branch-settings.dto';
 
 const validBranchProfile = {
   businessId: '11111111-1111-4111-8111-111111111111',
@@ -59,5 +59,37 @@ describe('BranchPolicyInputDto', () => {
     const errors = await validate(dto);
 
     expect(errors.map((error) => error.property)).toContain('bookingLeadMinutes');
+  });
+});
+
+describe('WeeklyHoursInputDto', () => {
+  it('accepts an optional acknowledgement flag for outside-hours appointments', async () => {
+    const dto = plainToInstance(WeeklyHoursInputDto, {
+      timezone: 'Asia/Tokyo',
+      acknowledgeExistingAppointmentsOutsideHours: true,
+      days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+        dayOfWeek,
+        open: dayOfWeek !== 0,
+        intervals: dayOfWeek === 0 ? [] : [{ start: '09:00', end: '17:00' }],
+      })),
+    });
+
+    await expect(validate(dto)).resolves.toEqual([]);
+  });
+
+  it('rejects a non-boolean acknowledgement flag', async () => {
+    const dto = plainToInstance(WeeklyHoursInputDto, {
+      timezone: 'Asia/Tokyo',
+      acknowledgeExistingAppointmentsOutsideHours: 'yes',
+      days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+        dayOfWeek,
+        open: dayOfWeek !== 0,
+        intervals: dayOfWeek === 0 ? [] : [{ start: '09:00', end: '17:00' }],
+      })),
+    });
+
+    const errors = await validate(dto);
+
+    expect(errors.map((error) => error.property)).toContain('acknowledgeExistingAppointmentsOutsideHours');
   });
 });
