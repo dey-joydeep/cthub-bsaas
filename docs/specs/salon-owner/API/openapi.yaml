@@ -61,6 +61,24 @@ components:
         minLength: 8
         maxLength: 128
       description: Required by policy for payment capture, invoice finalization, appointment creation, and stock adjustments.
+    SupportReferenceHeader:
+      name: X-Support-Reference
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 3
+        maxLength: 160
+      description: Required for platform-admin support mutations. Omit for owner-initiated mutations.
+    SupportReasonHeader:
+      name: X-Support-Reason
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 3
+        maxLength: 500
+      description: Required for platform-admin support mutations. Omit for owner-initiated mutations.
     BranchIdQuery:
       name: branchId
       in: query
@@ -879,6 +897,8 @@ paths:
       parameters:
         - $ref: '#/components/parameters/CorrelationIdHeader'
         - $ref: '#/components/parameters/RequiredIdempotencyKeyHeader'
+        - $ref: '#/components/parameters/SupportReferenceHeader'
+        - $ref: '#/components/parameters/SupportReasonHeader'
       requestBody:
         required: true
         content:
@@ -918,6 +938,9 @@ paths:
     patch:
       tags: [Business Settings]
       operationId: updateSalonBusiness
+      parameters:
+        - $ref: '#/components/parameters/SupportReferenceHeader'
+        - $ref: '#/components/parameters/SupportReasonHeader'
       requestBody:
         required: true
         content:
@@ -965,6 +988,8 @@ paths:
       parameters:
         - $ref: '#/components/parameters/CorrelationIdHeader'
         - $ref: '#/components/parameters/RequiredIdempotencyKeyHeader'
+        - $ref: '#/components/parameters/SupportReferenceHeader'
+        - $ref: '#/components/parameters/SupportReasonHeader'
       requestBody:
         required: true
         content:
@@ -1006,6 +1031,9 @@ paths:
     patch:
       tags: [Business Settings]
       operationId: updateBranch
+      parameters:
+        - $ref: '#/components/parameters/SupportReferenceHeader'
+        - $ref: '#/components/parameters/SupportReasonHeader'
       requestBody:
         required: true
         content:
@@ -1051,6 +1079,8 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/SupportReferenceHeader'
+        - $ref: '#/components/parameters/SupportReasonHeader'
       requestBody:
         required: true
         content:
@@ -1103,6 +1133,8 @@ paths:
           schema:
             type: string
             format: date
+        - $ref: '#/components/parameters/SupportReferenceHeader'
+        - $ref: '#/components/parameters/SupportReasonHeader'
       requestBody:
         required: true
         content:
@@ -1142,6 +1174,8 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/SupportReferenceHeader'
+        - $ref: '#/components/parameters/SupportReasonHeader'
       requestBody:
         required: true
         content:

@@ -678,11 +678,15 @@ export class SalonOwnerSettingsService {
     const days = normalizeWeeklyDays(input);
     const weeklyHoursByDay = new Map(days.map((day) => [day.dayOfWeek, day] as const));
     const tenantIds = await this.requireTenantIds(context);
+    const managedBranchIds = await this.readManagedBranchIds(context, tenantIds);
     await this.prisma.$transaction(
       async (tx: TransactionClient) => {
         const branch = await tx.salonBranch.findFirst({
           where: {
-            id: branchId,
+            AND: [
+              { id: branchId },
+              ...(managedBranchIds ? [{ id: { in: managedBranchIds } }] : []),
+            ],
             business: { tenantId: this.tenantScopeFilter(tenantIds) },
           },
           include: {
@@ -983,8 +987,10 @@ export class SalonOwnerSettingsService {
     const managedBranchIds = await this.readManagedBranchIds(context, tenantIds);
     const branch = await this.prisma.salonBranch.findFirst({
       where: {
-        id: branchId,
-        ...(managedBranchIds ? { id: { in: managedBranchIds } } : {}),
+        AND: [
+          { id: branchId },
+          ...(managedBranchIds ? [{ id: { in: managedBranchIds } }] : []),
+        ],
         business: { tenantId: this.tenantScopeFilter(tenantIds) },
       },
     });

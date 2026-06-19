@@ -345,6 +345,28 @@ describe('SalonOwnerSettingsService', () => {
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
+  it('rejects branch managers reading a different requested branch', async () => {
+    prisma.salonTenantStaff.findMany.mockResolvedValue([{ salonId: 'branch-1', position: 'Branch Manager' }]);
+
+    await expect(
+      service.getBranch(
+        {
+          user: user({
+            roles: [UserRole.STAFF],
+          }),
+        },
+        'branch-2',
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    expect(prisma.salonBranch.findFirst).toHaveBeenCalledWith({
+      where: {
+        AND: [{ id: 'branch-2' }, { id: { in: ['branch-1'] } }],
+        business: { tenantId: 'tenant-1' },
+      },
+    });
+  });
+
   it('rejects non-staff branch access when the actor is outside owner, admin, and branch-manager roles', async () => {
     await expect(
       service.getBranch(
@@ -1938,6 +1960,45 @@ describe('SalonOwnerSettingsService', () => {
         affectedAppointmentCount: 2,
       }),
     );
+  });
+
+  it('rejects weekly hours replacement for managers outside their assigned branch scope', async () => {
+    prisma.salonTenantStaff.findMany.mockResolvedValue([{ salonId: 'branch-1', position: 'Branch Manager' }]);
+    prisma.salonBranch.findFirst.mockResolvedValue(null);
+
+    await expect(
+      service.replaceBranchHours(
+        {
+          user: user({
+            roles: [UserRole.STAFF],
+          }),
+        },
+        'branch-2',
+        {
+          timezone: 'Asia/Tokyo',
+          days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+            dayOfWeek,
+            open: dayOfWeek !== 0,
+            intervals: dayOfWeek === 0 ? [] : [{ start: '09:00', end: '17:00' }],
+          })),
+        },
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    expect(prisma.salonBranch.findFirst).toHaveBeenCalledWith({
+      where: {
+        AND: [{ id: 'branch-2' }, { id: { in: ['branch-1'] } }],
+        business: { tenantId: 'tenant-1' },
+      },
+      include: {
+        business: {
+          select: {
+            tenantId: true,
+          },
+        },
+      },
+    });
+    expect(prisma.salonBranchHours.deleteMany).not.toHaveBeenCalled();
   });
 
   it('rejects malformed local schedule parts when checking appointment-hour conflicts', async () => {
