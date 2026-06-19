@@ -361,6 +361,7 @@ export class SalonOwnerSettingsService {
           if (!scopedBusiness) {
             throw new NotFoundException(notFoundMessage);
           }
+          await this.lockBusiness(tx, scopedBusiness.id);
 
           if (scopedBusiness.status !== PrismaSalonOwnerStatus.INACTIVE && input.status === 'INACTIVE') {
             const activeBranchCount = await tx.salonBranch.count({
@@ -457,6 +458,7 @@ export class SalonOwnerSettingsService {
           if (!business) {
             throw new NotFoundException(notFoundMessage);
           }
+          await this.lockBusiness(tx, business.id);
           const replayed = await this.findIdempotentBranchReplay(tx, context, business.tenantId, requestHash);
           if (replayed) {
             return replayed;
@@ -895,6 +897,10 @@ export class SalonOwnerSettingsService {
     });
 
     return [...new Set(readStringArray(saasOwner?.managedTenants))];
+  }
+
+  private async lockBusiness(tx: Pick<TransactionClient, '$queryRaw'>, businessId: string): Promise<void> {
+    await tx.$queryRaw(Prisma.sql`SELECT id FROM "salon_business" WHERE id = ${businessId}::uuid FOR UPDATE`);
   }
 
   private normalizeBranchCreateInput(

@@ -235,6 +235,7 @@ function createPrismaMock() {
     saasOwner: {
       findUnique: jest.fn(),
     },
+    $queryRaw: jest.fn(),
     $transaction: jest.fn(),
   };
 }
@@ -266,6 +267,7 @@ describe('SalonOwnerSettingsService', () => {
     prisma.state.findFirst.mockResolvedValue({ id: 'state-1' });
     prisma.city.findFirst.mockResolvedValue({ id: 'city-1' });
     prisma.salon.upsert.mockResolvedValue({ id: 'branch-1' });
+    prisma.$queryRaw.mockResolvedValue([]);
     prisma.$transaction.mockImplementation(async (arg: unknown) => {
       if (typeof arg === 'function') {
         return await arg(prisma as unknown as PrismaService);
@@ -514,6 +516,7 @@ describe('SalonOwnerSettingsService', () => {
 
     prisma.salonBusiness.findFirst.mockResolvedValueOnce(null);
     await expect(service.getBusiness({ user: user() }, 'missing-business')).rejects.toBeInstanceOf(NotFoundException);
+    expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
     expectAuditCall(prisma.auditEvent.create.mock.calls as [AuditCreateArgs][], {
       tenantId: 'tenant-1',
       action: 'salon_owner.business.update',
@@ -549,6 +552,7 @@ describe('SalonOwnerSettingsService', () => {
     ).rejects.toBeInstanceOf(ConflictException);
 
     expect(prisma.salonBusiness.update).not.toHaveBeenCalled();
+    expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
   });
 
   it('surfaces not-found and duplicate update failures for business updates', async () => {
@@ -761,6 +765,7 @@ describe('SalonOwnerSettingsService', () => {
     );
 
     const [salonUpsertArgs] = prisma.salon.upsert.mock.calls[0] as [SalonUpsertArgs];
+    expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
     expect(salonUpsertArgs.create.owner.connect.id).toBe('owner-2');
   });
 
