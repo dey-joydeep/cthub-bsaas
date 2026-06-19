@@ -89,6 +89,7 @@ export class BranchSettingsController {
   constructor(private readonly settings: SalonOwnerSettingsService) {}
 
   @Get()
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF)
   @ApiOperation({ operationId: 'listBranches' })
   listBranches(
     @CurrentUser() user: AuthenticatedUser,
@@ -126,30 +127,35 @@ export class BranchSettingsController {
   }
 
   @Get(':branchId')
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF)
   @ApiOperation({ operationId: 'getBranch' })
   getBranch(@CurrentUser() user: AuthenticatedUser, @Param('branchId', new ParseUUIDPipe()) branchId: string) {
     return this.settings.getBranch({ user }, branchId);
   }
 
   @Get(':branchId/hours')
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF)
   @ApiOperation({ operationId: 'getBranchHours' })
   getBranchHours(@CurrentUser() user: AuthenticatedUser, @Param('branchId', new ParseUUIDPipe()) branchId: string) {
     return this.settings.getBranchHours({ user }, branchId);
   }
 
   @Get(':branchId/holidays')
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF)
   @ApiOperation({ operationId: 'listBranchHolidays' })
   listBranchHolidays(@CurrentUser() user: AuthenticatedUser, @Param('branchId', new ParseUUIDPipe()) branchId: string) {
     return this.settings.listBranchHolidays({ user }, branchId);
   }
 
   @Get(':branchId/policy')
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF)
   @ApiOperation({ operationId: 'getBranchPolicy' })
   getBranchPolicy(@CurrentUser() user: AuthenticatedUser, @Param('branchId', new ParseUUIDPipe()) branchId: string) {
     return this.settings.getBranchPolicy({ user }, branchId);
   }
 
   @Patch(':branchId')
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF)
   @ApiOperation({ operationId: 'updateBranch' })
   updateBranch(
     @CurrentUser() user: AuthenticatedUser,
@@ -162,6 +168,7 @@ export class BranchSettingsController {
   }
 
   @Put(':branchId/hours')
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF)
   @ApiOperation({ operationId: 'replaceBranchHours' })
   replaceBranchHours(
     @CurrentUser() user: AuthenticatedUser,
@@ -178,6 +185,7 @@ export class BranchSettingsController {
   }
 
   @Put(':branchId/holidays/:date')
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF)
   @ApiOperation({ operationId: 'setBranchHoliday' })
   setBranchHoliday(
     @CurrentUser() user: AuthenticatedUser,
@@ -196,6 +204,7 @@ export class BranchSettingsController {
   }
 
   @Put(':branchId/policy')
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF)
   @ApiOperation({ operationId: 'updateBranchPolicy' })
   updateBranchPolicy(
     @CurrentUser() user: AuthenticatedUser,

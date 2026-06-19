@@ -35,6 +35,7 @@ const notFoundMessage = COMMON_MESSAGE_KEYS.ERROR.NOT_FOUND;
 const conflictMessage = COMMON_MESSAGE_KEYS.ERROR.CONFLICT;
 const translatedUniqueConstraintMessage = 'A unique constraint was violated';
 const confirmedAppointmentStatuses = [AppointmentStatus.CONFIRMED.toLowerCase(), AppointmentStatus.CONFIRMED] as const;
+const branchManagerPositions = new Set(['branch manager', 'manager']);
 const supportedCurrencyCodes = new Set(
   ((Intl as typeof Intl & { supportedValuesOf?: (key: string) => string[] }).supportedValuesOf?.('currency') ?? []).map((code) =>
     code.toUpperCase(),
@@ -132,6 +133,16 @@ function readManagedTenantIds(user: AuthenticatedUser): string[] {
   }
 
   return readStringArray((saasOwner as Record<string, unknown>)['managedTenants']);
+}
+
+function normalizePosition(value: string | null | undefined): string | null {
+  const normalized = value?.trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+  return normalized && normalized.length > 0 ? normalized : null;
+}
+
+function isBranchManagerPosition(value: string | null | undefined): boolean {
+  const normalized = normalizePosition(value);
+  return normalized !== null && branchManagerPositions.has(normalized);
 }
 
 function parseMinutes(value: string): number {
@@ -409,12 +420,14 @@ export class SalonOwnerSettingsService {
     pagination: SalonOwnerPagination = {},
   ): Promise<PagedResult<BranchProfileModel>> {
     const tenantIds = await this.requireTenantIds(context);
-    if (businessId) {
+    const managedBranchIds = await this.readManagedBranchIds(context, tenantIds);
+    if (businessId && !managedBranchIds) {
       await this.findBusinessInScope(context, businessId);
     }
     const page = this.normalizePagination(pagination);
     const search = optionalTrim(filters.q);
     const where = {
+      ...(managedBranchIds ? { id: { in: managedBranchIds } } : {}),
       ...(businessId ? { businessId } : {}),
       ...(filters.status ? { status: filters.status as PrismaSalonOwnerStatus } : {}),
       ...(search
@@ -872,9 +885,11 @@ export class SalonOwnerSettingsService {
 
   private async findBranchInScope(context: SalonOwnerRequestContext, branchId: string): Promise<BranchRecord> {
     const tenantIds = await this.requireTenantIds(context);
+    const managedBranchIds = await this.readManagedBranchIds(context, tenantIds);
     const branch = await this.prisma.salonBranch.findFirst({
       where: {
         id: branchId,
+        ...(managedBranchIds ? { id: { in: managedBranchIds } } : {}),
         business: { tenantId: this.tenantScopeFilter(tenantIds) },
       },
     });
@@ -884,6 +899,40 @@ export class SalonOwnerSettingsService {
     }
 
     return branch;
+  }
+
+  private async readManagedBranchIds(context: SalonOwnerRequestContext, tenantIds: readonly string[]): Promise<string[] | null> {
+    if (hasRole(context.user, UserRole.OWNER) || hasRole(context.user, UserRole.ADMIN)) {
+      return null;
+    }
+
+    if (!hasRole(context.user, UserRole.STAFF)) {
+      throw new ForbiddenException(forbiddenMessage);
+    }
+
+    const assignments = await this.prisma.salonTenantStaff.findMany({
+      where: {
+        userId: context.user.id,
+        isActive: true,
+        salon: {
+          tenantId: this.tenantScopeFilter(tenantIds),
+        },
+      },
+      select: {
+        salonId: true,
+        position: true,
+      },
+    });
+
+    const managedBranchIds = assignments
+      .filter((assignment) => isBranchManagerPosition(assignment.position))
+      .map((assignment) => assignment.salonId);
+
+    if (managedBranchIds.length === 0) {
+      throw new ForbiddenException(forbiddenMessage);
+    }
+
+    return [...new Set(managedBranchIds)];
   }
 
   private async readPersistedManagedTenantIds(userId: string): Promise<string[]> {

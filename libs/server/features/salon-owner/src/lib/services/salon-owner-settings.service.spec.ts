@@ -236,6 +236,9 @@ function createPrismaMock() {
     saasOwner: {
       findUnique: jest.fn(),
     },
+    salonTenantStaff: {
+      findMany: jest.fn(),
+    },
     $queryRaw: jest.fn(),
     $transaction: jest.fn(),
   };
@@ -269,6 +272,7 @@ describe('SalonOwnerSettingsService', () => {
     prisma.city.findFirst.mockResolvedValue({ id: 'city-1' });
     prisma.salon.upsert.mockResolvedValue({ id: 'branch-1' });
     prisma.$queryRaw.mockResolvedValue([]);
+    prisma.salonTenantStaff.findMany.mockResolvedValue([]);
     prisma.$transaction.mockImplementation(async (arg: unknown) => {
       if (typeof arg === 'function') {
         return await arg(prisma as unknown as PrismaService);
@@ -291,6 +295,65 @@ describe('SalonOwnerSettingsService', () => {
     });
     expect(result.items[0]).toMatchObject({ id: 'business-1', tenantId: 'tenant-1' });
     expect(result.page).toEqual({ pageNumber: 1, limit: 25, totalItems: 1, nextCursor: null, hasMore: false });
+  });
+
+  it('limits branch managers to their assigned branches', async () => {
+    prisma.salonTenantStaff.findMany.mockResolvedValue([{ salonId: 'branch-1', position: 'Branch Manager' }]);
+    prisma.salonBranch.findMany.mockResolvedValue([branch()]);
+    prisma.salonBranch.count.mockResolvedValue(1);
+
+    await expect(
+      service.listBranches(
+        {
+          user: user({
+            roles: [UserRole.STAFF],
+          }),
+        },
+        undefined,
+        {},
+        { page: 1, pageSize: 10 },
+      ),
+    ).resolves.toMatchObject({
+      items: [expect.objectContaining({ id: 'branch-1' })],
+    });
+
+    expect(prisma.salonBranch.findMany).toHaveBeenCalledWith({
+      where: {
+        id: { in: ['branch-1'] },
+        business: { tenantId: 'tenant-1' },
+      },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      skip: 0,
+      take: 10,
+    });
+  });
+
+  it('rejects staff branch access when the staff member is not an assigned branch manager', async () => {
+    prisma.salonTenantStaff.findMany.mockResolvedValue([{ salonId: 'branch-1', position: 'Stylist' }]);
+
+    await expect(
+      service.getBranch(
+        {
+          user: user({
+            roles: [UserRole.STAFF],
+          }),
+        },
+        'branch-1',
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('rejects non-staff branch access when the actor is outside owner, admin, and branch-manager roles', async () => {
+    await expect(
+      service.getBranch(
+        {
+          user: user({
+            roles: [UserRole.CUSTOMER],
+          }),
+        },
+        'branch-1',
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
   it('keeps empty business pagination metadata schema-valid', async () => {

@@ -7,38 +7,39 @@
 
 Current implementation baseline:
 
-- Settings API access is limited to `Owner` and `Platform Admin support`.
-- Delegated Branch Manager settings flows are not enabled in this slice.
+- Settings API access supports `Owner`, `Platform Admin support`, and assigned Branch Manager branch-scope reads and updates.
+- Branch Manager access requires an active branch assignment plus a manager-position staff record on the target branch.
+- `createBranch` remains limited to `Owner` and `Platform Admin support` in this slice because business-scoped branch-creation delegation is not modeled yet.
 - Branch profile currency is validated as a supported ISO 4217 code; invoice-history locking is not enforced in this slice.
 
-| Property    | Value                                              |
-| ----------- | -------------------------------------------------- |
-| Screen ID   | `settings.branches.profile`                        |
-| Form ID     | `branch.profile.upsert`                            |
-| Actors      | Owner, Platform Admin support                      |
-| Context     | `tenantId`, `salonBusinessId`; `branchId` for edit |
-| Operations  | `createBranch`, `updateBranch`                     |
-| Idempotency | Required for create                                |
+| Property    | Value                                                              |
+| ----------- | ------------------------------------------------------------------ |
+| Screen ID   | `settings.branches.profile`                                        |
+| Form ID     | `branch.profile.upsert`                                            |
+| Actors      | Owner, assigned Branch Manager (edit only), Platform Admin support |
+| Context     | `tenantId`, `salonBusinessId`; `branchId` for edit                 |
+| Operations  | `createBranch`, `updateBranch`                                     |
+| Idempotency | Required for create                                                |
 
-| Field        | Control                 | Default          | Enabled when                                         | Client validation         | Backend validation                                       | Error key                                |
-| ------------ | ----------------------- | ---------------- | ---------------------------------------------------- | ------------------------- | -------------------------------------------------------- | ---------------------------------------- |
-| `businessId` | hidden/context selector | active business  | create only                                          | UUID in active scope      | business exists and actor can manage it                  | `error.branch.profile.business_required` |
-| `name`       | text input              | current/empty    | actor can manage branch profile                      | required; 2-120 chars     | required; trimmed; unique per business where configured  | `error.branch.profile.name.invalid`      |
-| `phone`      | tel input               | current/empty    | actor can manage branch profile                      | max 30 chars              | max 30 chars                                             | `error.branch.profile.phone.invalid`     |
-| `email`      | email input             | current/empty    | actor can manage branch profile                      | email format when present | email format when present                                | `error.branch.profile.email.invalid`     |
-| `timezone`   | timezone select         | business default | create; edit allowed before bookings or with warning | required valid timezone   | valid timezone; affects future business-day logic        | `error.branch.profile.timezone.invalid`  |
-| `currency`   | select                  | `INR`            | actor can manage branch profile                      | required 3-letter code    | required supported ISO 4217 code                         | `error.branch.profile.currency.invalid`  |
-| `address`    | address group           | current/empty    | actor can manage branch profile                      | required address fields   | required address fields                                  | `error.branch.profile.address.invalid`   |
+| Field        | Control                 | Default          | Enabled when                                         | Client validation         | Backend validation                                      | Error key                                |
+| ------------ | ----------------------- | ---------------- | ---------------------------------------------------- | ------------------------- | ------------------------------------------------------- | ---------------------------------------- |
+| `businessId` | hidden/context selector | active business  | create only                                          | UUID in active scope      | business exists and actor can manage it                 | `error.branch.profile.business_required` |
+| `name`       | text input              | current/empty    | actor can manage branch profile                      | required; 2-120 chars     | required; trimmed; unique per business where configured | `error.branch.profile.name.invalid`      |
+| `phone`      | tel input               | current/empty    | actor can manage branch profile                      | max 30 chars              | max 30 chars                                            | `error.branch.profile.phone.invalid`     |
+| `email`      | email input             | current/empty    | actor can manage branch profile                      | email format when present | email format when present                               | `error.branch.profile.email.invalid`     |
+| `timezone`   | timezone select         | business default | create; edit allowed before bookings or with warning | required valid timezone   | valid timezone; affects future business-day logic       | `error.branch.profile.timezone.invalid`  |
+| `currency`   | select                  | `INR`            | actor can manage branch profile                      | required 3-letter code    | required supported ISO 4217 code                        | `error.branch.profile.currency.invalid`  |
+| `address`    | address group           | current/empty    | actor can manage branch profile                      | required address fields   | required address fields                                 | `error.branch.profile.address.invalid`   |
 
 ## Weekly Hours Form
 
-| Property  | Value                                     |
-| --------- | ----------------------------------------- |
-| Screen ID | `settings.branches.hours`                 |
-| Form ID   | `branch.hours.replace`                    |
-| Actors    | Owner, Platform Admin support            |
-| Context   | `tenantId`, `salonBusinessId`, `branchId` |
-| Operation | `replaceBranchHours`                      |
+| Property  | Value                                                  |
+| --------- | ------------------------------------------------------ |
+| Screen ID | `settings.branches.hours`                              |
+| Form ID   | `branch.hours.replace`                                 |
+| Actors    | Owner, assigned Branch Manager, Platform Admin support |
+| Context   | `tenantId`, `salonBusinessId`, `branchId`              |
+| Operation | `replaceBranchHours`                                   |
 
 | Field       | Control         | Default           | Enabled when                 | Client validation              | Backend validation                                          | Error key                              |
 | ----------- | --------------- | ----------------- | ---------------------------- | ------------------------------ | ----------------------------------------------------------- | -------------------------------------- |
@@ -59,13 +60,13 @@ Current implementation note:
 
 ## Holiday/Special Day Form
 
-| Property  | Value                                             |
-| --------- | ------------------------------------------------- |
-| Screen ID | `settings.branches.holidays`                      |
-| Form ID   | `branch.holiday.upsert`                           |
-| Actors    | Owner, Platform Admin support                    |
-| Context   | `tenantId`, `salonBusinessId`, `branchId`, `date` |
-| Operation | `setBranchHoliday`                                |
+| Property  | Value                                                  |
+| --------- | ------------------------------------------------------ |
+| Screen ID | `settings.branches.holidays`                           |
+| Form ID   | `branch.holiday.upsert`                                |
+| Actors    | Owner, assigned Branch Manager, Platform Admin support |
+| Context   | `tenantId`, `salonBusinessId`, `branchId`, `date`      |
+| Operation | `setBranchHoliday`                                     |
 
 | Field       | Control                 | Default       | Enabled when              | Client validation              | Backend validation           | Error key                                |
 | ----------- | ----------------------- | ------------- | ------------------------- | ------------------------------ | ---------------------------- | ---------------------------------------- |
@@ -76,13 +77,13 @@ Current implementation note:
 
 ## Branch Policy Form
 
-| Property  | Value                                     |
-| --------- | ----------------------------------------- |
-| Screen ID | `settings.branches.policy`                |
-| Form ID   | `branch.policy.update`                    |
-| Actors    | Owner, Platform Admin support             |
-| Context   | `tenantId`, `salonBusinessId`, `branchId` |
-| Operation | `updateBranchPolicy`                      |
+| Property  | Value                                                  |
+| --------- | ------------------------------------------------------ |
+| Screen ID | `settings.branches.policy`                             |
+| Form ID   | `branch.policy.update`                                 |
+| Actors    | Owner, assigned Branch Manager, Platform Admin support |
+| Context   | `tenantId`, `salonBusinessId`, `branchId`              |
+| Operation | `updateBranchPolicy`                                   |
 
 | Field                       | Control      | Default          | Enabled when            | Client validation | Backend validation | Error key                                         |
 | --------------------------- | ------------ | ---------------- | ----------------------- | ----------------- | ------------------ | ------------------------------------------------- |
