@@ -39,6 +39,7 @@ interface AuditCreateArgs {
     readonly action: string;
     readonly result?: string;
     readonly targetId?: string;
+    readonly reason?: string;
   };
 }
 
@@ -438,6 +439,58 @@ describe('SalonOwnerSettingsService', () => {
     ).rejects.toBeInstanceOf(ConflictException);
   });
 
+  it('requires support context for admin mutations and records it in audit events', async () => {
+    prisma.salonBusiness.create.mockResolvedValue(business({ displayName: 'Trimmed' }));
+
+    await expect(
+      service.createBusiness(
+        {
+          user: user({
+            tenantId: undefined,
+            roles: [UserRole.ADMIN],
+            managedTenants: ['tenant-1'],
+          }),
+        },
+        {
+          displayName: 'Trimmed',
+          legalName: 'Legal',
+          status: 'ACTIVE',
+        },
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+
+    await expect(
+      service.createBusiness(
+        {
+          user: user({
+            tenantId: undefined,
+            roles: [UserRole.ADMIN],
+            managedTenants: ['tenant-1'],
+          }),
+          supportContext: {
+            reference: 'SUP-1234',
+            reason: 'Investigating tenant request',
+          },
+        },
+        {
+          displayName: 'Trimmed',
+          legalName: 'Legal',
+          status: 'ACTIVE',
+        },
+      ),
+    ).resolves.toMatchObject({ displayName: 'Trimmed' });
+
+    const [[auditCall]] = prisma.auditEvent.create.mock.calls as [AuditCreateArgs][];
+    expect(auditCall.data.reason).toBe(
+      JSON.stringify({
+        supportContext: {
+          reference: 'SUP-1234',
+          reason: 'Investigating tenant request',
+        },
+      }),
+    );
+  });
+
   it('replays a previously created business when the same idempotency key is reused', async () => {
     const input = {
       displayName: 'Salon One',
@@ -747,7 +800,13 @@ describe('SalonOwnerSettingsService', () => {
     prisma.salon.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ ownerId: 'owner-2' });
 
     await service.createBranch(
-      { user: user({ roles: [UserRole.ADMIN] }) },
+      {
+        user: user({ roles: [UserRole.ADMIN] }),
+        supportContext: {
+          reference: 'SUP-1234',
+          reason: 'Investigating tenant request',
+        },
+      },
       {
         businessId: 'business-1',
         name: 'Downtown',
@@ -776,7 +835,13 @@ describe('SalonOwnerSettingsService', () => {
     prisma.user.findFirst.mockResolvedValue({ id: 'owner-3' });
 
     await service.createBranch(
-      { user: user({ roles: [UserRole.ADMIN], tenantId: undefined, managedTenants: ['tenant-1'] }) },
+      {
+        user: user({ roles: [UserRole.ADMIN], tenantId: undefined, managedTenants: ['tenant-1'] }),
+        supportContext: {
+          reference: 'SUP-1234',
+          reason: 'Investigating tenant request',
+        },
+      },
       {
         businessId: 'business-1',
         name: 'Downtown',
@@ -821,7 +886,13 @@ describe('SalonOwnerSettingsService', () => {
 
     await expect(
       service.createBranch(
-        { user: user({ roles: [UserRole.ADMIN], tenantId: undefined, managedTenants: ['tenant-1'] }) },
+        {
+          user: user({ roles: [UserRole.ADMIN], tenantId: undefined, managedTenants: ['tenant-1'] }),
+          supportContext: {
+            reference: 'SUP-1234',
+            reason: 'Investigating tenant request',
+          },
+        },
         {
           businessId: 'business-1',
           name: 'Downtown',

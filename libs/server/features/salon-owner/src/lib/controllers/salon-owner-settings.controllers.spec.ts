@@ -14,6 +14,12 @@ const user: AuthenticatedUser = {
   tenantId: 'tenant-1',
 };
 
+const adminUser: AuthenticatedUser = {
+  id: 'admin-1',
+  email: 'admin@example.com',
+  roles: [UserRole.ADMIN],
+};
+
 function serviceMock() {
   return {
     listBusinesses: jest.fn(),
@@ -50,9 +56,9 @@ describe('Salon owner settings controllers', () => {
     const body = { displayName: 'Salon One', legalName: 'Salon One Legal', status: 'ACTIVE' as const };
 
     await controller.listBusinesses(user, 2, 10);
-    await controller.createBusiness(user, 'key-12345', body);
+    await controller.createBusiness(user, 'key-12345', undefined, undefined, body);
     await controller.getBusiness(user, 'business-1');
-    await controller.updateBusiness(user, 'business-1', body);
+    await controller.updateBusiness(user, 'business-1', undefined, undefined, body);
 
     expect(service.listBusinesses).toHaveBeenCalledWith({ user }, { page: 2, pageSize: 10 });
     expect(service.createBusiness).toHaveBeenCalledWith({ user, idempotencyKey: 'key-12345' }, body);
@@ -64,7 +70,11 @@ describe('Salon owner settings controllers', () => {
     const controller = new BusinessSettingsController(serviceMock() as unknown as SalonOwnerSettingsService);
 
     expect(() =>
-      controller.createBusiness(user, '   ', { displayName: 'Salon One', legalName: 'Salon One Legal', status: 'ACTIVE' }),
+      controller.createBusiness(user, '   ', undefined, undefined, {
+        displayName: 'Salon One',
+        legalName: 'Salon One Legal',
+        status: 'ACTIVE',
+      }),
     ).toThrow(BadRequestException);
   });
 
@@ -72,15 +82,47 @@ describe('Salon owner settings controllers', () => {
     const controller = new BusinessSettingsController(serviceMock() as unknown as SalonOwnerSettingsService);
 
     expect(() =>
-      controller.createBusiness(user, 'short', { displayName: 'Salon One', legalName: 'Salon One Legal', status: 'ACTIVE' }),
-    ).toThrow(BadRequestException);
-    expect(() =>
-      controller.createBusiness(user, 'x'.repeat(129), {
+      controller.createBusiness(user, 'short', undefined, undefined, {
         displayName: 'Salon One',
         legalName: 'Salon One Legal',
         status: 'ACTIVE',
       }),
     ).toThrow(BadRequestException);
+    expect(() =>
+      controller.createBusiness(user, 'x'.repeat(129), undefined, undefined, {
+        displayName: 'Salon One',
+        legalName: 'Salon One Legal',
+        status: 'ACTIVE',
+      }),
+    ).toThrow(BadRequestException);
+  });
+
+  it('requires support headers for admin business mutations and passes them through', async () => {
+    const service = serviceMock();
+    const controller = new BusinessSettingsController(service as unknown as SalonOwnerSettingsService);
+    const body = { displayName: 'Salon One', legalName: 'Salon One Legal', status: 'ACTIVE' as const };
+
+    expect(() => controller.createBusiness(adminUser, 'key-12345', undefined, undefined, body)).toThrow(BadRequestException);
+
+    await controller.createBusiness(adminUser, 'key-12345', 'SUP-1234', 'Investigating tenant request', body);
+    await controller.updateBusiness(adminUser, 'business-1', 'SUP-1234', 'Investigating tenant request', body);
+
+    expect(service.createBusiness).toHaveBeenCalledWith(
+      {
+        user: adminUser,
+        idempotencyKey: 'key-12345',
+        supportContext: { reference: 'SUP-1234', reason: 'Investigating tenant request' },
+      },
+      body,
+    );
+    expect(service.updateBusiness).toHaveBeenCalledWith(
+      {
+        user: adminUser,
+        supportContext: { reference: 'SUP-1234', reason: 'Investigating tenant request' },
+      },
+      'business-1',
+      body,
+    );
   });
 
   it('delegates branch routes to the service with route parameters', async () => {
@@ -112,15 +154,15 @@ describe('Salon owner settings controllers', () => {
     const policy = { bookingLeadMinutes: 30, cancellationCutoffMinutes: 120, noShowGraceMinutes: 10 };
 
     await controller.listBranches(user, 'business-1', 'ACTIVE', 'downtown', 3, 5);
-    await controller.createBranch(user, 'key-23456', profile);
+    await controller.createBranch(user, 'key-23456', undefined, undefined, profile);
     await controller.getBranch(user, 'branch-1');
     await controller.getBranchHours(user, 'branch-1');
     await controller.listBranchHolidays(user, 'branch-1');
     await controller.getBranchPolicy(user, 'branch-1');
-    await controller.updateBranch(user, 'branch-1', profile);
-    await controller.replaceBranchHours(user, 'branch-1', hours);
-    await controller.setBranchHoliday(user, 'branch-1', '2026-05-26', holiday);
-    await controller.updateBranchPolicy(user, 'branch-1', policy);
+    await controller.updateBranch(user, 'branch-1', undefined, undefined, profile);
+    await controller.replaceBranchHours(user, 'branch-1', undefined, undefined, hours);
+    await controller.setBranchHoliday(user, 'branch-1', '2026-05-26', undefined, undefined, holiday);
+    await controller.updateBranchPolicy(user, 'branch-1', undefined, undefined, policy);
 
     expect(service.listBranches).toHaveBeenCalledWith(
       { user },
@@ -143,7 +185,7 @@ describe('Salon owner settings controllers', () => {
     const controller = new BranchSettingsController(serviceMock() as unknown as SalonOwnerSettingsService);
 
     expect(() =>
-      controller.createBranch(user, undefined, {
+      controller.createBranch(user, undefined, undefined, undefined, {
         businessId: 'business-1',
         name: 'Main Branch',
         timezone: 'Asia/Tokyo',
@@ -177,8 +219,49 @@ describe('Salon owner settings controllers', () => {
       },
     };
 
-    expect(() => controller.createBranch(user, 'short', body)).toThrow(BadRequestException);
-    expect(() => controller.createBranch(user, 'x'.repeat(129), body)).toThrow(BadRequestException);
+    expect(() => controller.createBranch(user, 'short', undefined, undefined, body)).toThrow(BadRequestException);
+    expect(() => controller.createBranch(user, 'x'.repeat(129), undefined, undefined, body)).toThrow(BadRequestException);
+  });
+
+  it('requires support headers for admin branch mutations and passes them through', async () => {
+    const service = serviceMock();
+    const controller = new BranchSettingsController(service as unknown as SalonOwnerSettingsService);
+    const profile = {
+      businessId: 'business-1',
+      name: 'Main Branch',
+      timezone: 'Asia/Tokyo',
+      currency: 'JPY',
+      status: 'ACTIVE' as const,
+      address: {
+        line1: '1 Main St',
+        city: 'Tokyo',
+        state: 'Tokyo',
+        postalCode: '1000001',
+        country: 'JP',
+      },
+    };
+
+    expect(() => controller.createBranch(adminUser, 'key-23456', undefined, undefined, profile)).toThrow(BadRequestException);
+
+    await controller.createBranch(adminUser, 'key-23456', 'SUP-1234', 'Investigating tenant request', profile);
+    await controller.updateBranch(adminUser, 'branch-1', 'SUP-1234', 'Investigating tenant request', profile);
+
+    expect(service.createBranch).toHaveBeenCalledWith(
+      {
+        user: adminUser,
+        idempotencyKey: 'key-23456',
+        supportContext: { reference: 'SUP-1234', reason: 'Investigating tenant request' },
+      },
+      profile,
+    );
+    expect(service.updateBranch).toHaveBeenCalledWith(
+      {
+        user: adminUser,
+        supportContext: { reference: 'SUP-1234', reason: 'Investigating tenant request' },
+      },
+      'branch-1',
+      profile,
+    );
   });
 
   it('rejects invalid branch status filters before calling the service', () => {

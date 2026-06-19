@@ -93,7 +93,13 @@ export interface BranchListFilters {
   readonly q?: string;
 }
 
+export interface SalonOwnerSupportContext {
+  readonly reference: string;
+  readonly reason: string;
+}
+
 export interface SalonOwnerRequestContext {
   readonly user: AuthenticatedUser;
   readonly idempotencyKey?: string;
+  readonly supportContext?: SalonOwnerSupportContext;
 }

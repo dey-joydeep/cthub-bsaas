@@ -19,6 +19,7 @@ import { CurrentUser, ResponseEnvelopeInterceptor, Roles } from '@cthub-bsaas/se
 import { COMMON_MESSAGE_KEYS, UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
 
 import { BranchHolidayInputDto, BranchPolicyInputDto, BranchProfileInputDto, WeeklyHoursInputDto } from '../dto/branch-settings.dto';
+import type { SalonOwnerSupportContext } from '../models/salon-owner-settings.models';
 import { SalonOwnerSettingsService } from '../services/salon-owner-settings.service';
 import { salonOwnerStatuses, type SalonOwnerStatus } from '../models/salon-owner-settings.models';
 
@@ -28,6 +29,31 @@ function readIdempotencyKey(value: string | undefined): string {
     throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION);
   }
   return trimmed;
+}
+
+function hasRole(user: AuthenticatedUser, role: UserRole): boolean {
+  return user.roles.some((entry) => {
+    const value = typeof entry === 'string' ? entry : entry?.name;
+    return typeof value === 'string' && value.toLowerCase() === role.toLowerCase();
+  });
+}
+
+function readSupportContext(
+  user: AuthenticatedUser,
+  supportReference: string | undefined,
+  supportReason: string | undefined,
+): SalonOwnerSupportContext | undefined {
+  if (!hasRole(user, UserRole.ADMIN) || hasRole(user, UserRole.OWNER)) {
+    return undefined;
+  }
+
+  const reference = supportReference?.trim();
+  const reason = supportReason?.trim();
+  if (!reference || reference.length < 4 || reference.length > 128 || !reason || reason.length < 8 || reason.length > 280) {
+    throw new BadRequestException(COMMON_MESSAGE_KEYS.ERROR.VALIDATION);
+  }
+
+  return { reference, reason };
 }
 
 function readOptionalQueryString(value: string | readonly string[] | undefined): string | undefined {
@@ -85,9 +111,18 @@ export class BranchSettingsController {
   createBranch(
     @CurrentUser() user: AuthenticatedUser,
     @Headers('Idempotency-Key') idempotencyKey: string | undefined,
+    @Headers('X-Support-Reference') supportReference: string | undefined,
+    @Headers('X-Support-Reason') supportReason: string | undefined,
     @Body() body: BranchProfileInputDto,
   ) {
-    return this.settings.createBranch({ user, idempotencyKey: readIdempotencyKey(idempotencyKey) }, body);
+    return this.settings.createBranch(
+      {
+        user,
+        idempotencyKey: readIdempotencyKey(idempotencyKey),
+        supportContext: readSupportContext(user, supportReference, supportReason),
+      },
+      body,
+    );
   }
 
   @Get(':branchId')
@@ -119,9 +154,11 @@ export class BranchSettingsController {
   updateBranch(
     @CurrentUser() user: AuthenticatedUser,
     @Param('branchId', new ParseUUIDPipe()) branchId: string,
+    @Headers('X-Support-Reference') supportReference: string | undefined,
+    @Headers('X-Support-Reason') supportReason: string | undefined,
     @Body() body: BranchProfileInputDto,
   ) {
-    return this.settings.updateBranch({ user }, branchId, body);
+    return this.settings.updateBranch({ user, supportContext: readSupportContext(user, supportReference, supportReason) }, branchId, body);
   }
 
   @Put(':branchId/hours')
@@ -129,9 +166,15 @@ export class BranchSettingsController {
   replaceBranchHours(
     @CurrentUser() user: AuthenticatedUser,
     @Param('branchId', new ParseUUIDPipe()) branchId: string,
+    @Headers('X-Support-Reference') supportReference: string | undefined,
+    @Headers('X-Support-Reason') supportReason: string | undefined,
     @Body() body: WeeklyHoursInputDto,
   ) {
-    return this.settings.replaceBranchHours({ user }, branchId, body);
+    return this.settings.replaceBranchHours(
+      { user, supportContext: readSupportContext(user, supportReference, supportReason) },
+      branchId,
+      body,
+    );
   }
 
   @Put(':branchId/holidays/:date')
@@ -140,9 +183,16 @@ export class BranchSettingsController {
     @CurrentUser() user: AuthenticatedUser,
     @Param('branchId', new ParseUUIDPipe()) branchId: string,
     @Param('date') date: string,
+    @Headers('X-Support-Reference') supportReference: string | undefined,
+    @Headers('X-Support-Reason') supportReason: string | undefined,
     @Body() body: BranchHolidayInputDto,
   ) {
-    return this.settings.setBranchHoliday({ user }, branchId, date, body);
+    return this.settings.setBranchHoliday(
+      { user, supportContext: readSupportContext(user, supportReference, supportReason) },
+      branchId,
+      date,
+      body,
+    );
   }
 
   @Put(':branchId/policy')
@@ -150,8 +200,14 @@ export class BranchSettingsController {
   updateBranchPolicy(
     @CurrentUser() user: AuthenticatedUser,
     @Param('branchId', new ParseUUIDPipe()) branchId: string,
+    @Headers('X-Support-Reference') supportReference: string | undefined,
+    @Headers('X-Support-Reason') supportReason: string | undefined,
     @Body() body: BranchPolicyInputDto,
   ) {
-    return this.settings.updateBranchPolicy({ user }, branchId, body);
+    return this.settings.updateBranchPolicy(
+      { user, supportContext: readSupportContext(user, supportReference, supportReason) },
+      branchId,
+      body,
+    );
   }
 }

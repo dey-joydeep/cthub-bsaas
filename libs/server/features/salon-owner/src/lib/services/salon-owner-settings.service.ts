@@ -19,6 +19,7 @@ import {
   SalonOwnerPagination,
   SalonOwnerAddress,
   SalonOwnerRequestContext,
+  SalonOwnerSupportContext,
   TimeIntervalModel,
   WeeklyHoursDayModel,
 } from '../models/salon-owner-settings.models';
@@ -303,6 +304,7 @@ export class SalonOwnerSettingsService {
   }
 
   async createBusiness(context: SalonOwnerRequestContext, input: SalonBusinessInputDto): Promise<SalonBusinessModel> {
+    this.requireAdminSupportContext(context);
     const tenantId = await this.requireTenantId(context);
     const requestHash = hashIdempotencyPayload(input);
 
@@ -346,6 +348,7 @@ export class SalonOwnerSettingsService {
   }
 
   async updateBusiness(context: SalonOwnerRequestContext, businessId: string, input: SalonBusinessInputDto): Promise<SalonBusinessModel> {
+    this.requireAdminSupportContext(context);
     const current = await this.findBusinessInScope(context, businessId);
     const tenantIds = await this.requireTenantIds(context);
 
@@ -443,6 +446,7 @@ export class SalonOwnerSettingsService {
   }
 
   async createBranch(context: SalonOwnerRequestContext, input: BranchProfileInputDto): Promise<BranchProfileModel> {
+    this.requireAdminSupportContext(context);
     const tenantIds = await this.requireTenantIds(context);
     const requestHash = hashIdempotencyPayload(input);
 
@@ -537,6 +541,7 @@ export class SalonOwnerSettingsService {
   }
 
   async updateBranch(context: SalonOwnerRequestContext, branchId: string, input: BranchProfileInputDto): Promise<BranchProfileModel> {
+    this.requireAdminSupportContext(context);
     const current = await this.findBranchInScope(context, branchId);
     if (current.businessId !== input.businessId) {
       throw new ForbiddenException(forbiddenMessage);
@@ -606,6 +611,7 @@ export class SalonOwnerSettingsService {
   }
 
   async replaceBranchHours(context: SalonOwnerRequestContext, branchId: string, input: WeeklyHoursInputDto): Promise<BranchHoursModel> {
+    this.requireAdminSupportContext(context);
     const days = normalizeWeeklyDays(input);
     const tenantIds = await this.requireTenantIds(context);
     await this.prisma.$transaction(
@@ -658,6 +664,7 @@ export class SalonOwnerSettingsService {
     date: string,
     input: BranchHolidayInputDto,
   ): Promise<BranchHolidayModel> {
+    this.requireAdminSupportContext(context);
     const holidayDate = parseLocalDate(date);
     const intervals = normalizeHolidayIntervals(input);
     const branch = await this.findBranchInScope(context, branchId);
@@ -687,6 +694,7 @@ export class SalonOwnerSettingsService {
   }
 
   async updateBranchPolicy(context: SalonOwnerRequestContext, branchId: string, input: BranchPolicyInputDto): Promise<BranchPolicyModel> {
+    this.requireAdminSupportContext(context);
     const branch = await this.findBranchInScope(context, branchId);
     const business = await this.findBusinessInScope(context, branch.businessId);
 
@@ -897,6 +905,27 @@ export class SalonOwnerSettingsService {
     });
 
     return [...new Set(readStringArray(saasOwner?.managedTenants))];
+  }
+
+  private requireAdminSupportContext(context: SalonOwnerRequestContext): void {
+    if (!hasRole(context.user, UserRole.ADMIN) || hasRole(context.user, UserRole.OWNER)) {
+      return;
+    }
+
+    const supportContext = this.normalizeSupportContext(context.supportContext);
+    if (!supportContext) {
+      throw new ForbiddenException(forbiddenMessage);
+    }
+  }
+
+  private normalizeSupportContext(supportContext?: SalonOwnerSupportContext): SalonOwnerSupportContext | null {
+    const reference = supportContext?.reference?.trim();
+    const reason = supportContext?.reason?.trim();
+    if (!reference || !reason) {
+      return null;
+    }
+
+    return { reference, reason };
   }
 
   private async lockBusiness(tx: Pick<TransactionClient, '$queryRaw'>, businessId: string): Promise<void> {
@@ -1195,6 +1224,7 @@ export class SalonOwnerSettingsService {
     action: string,
     targetId?: string,
   ): Promise<void> {
+    const supportContext = this.normalizeSupportContext(context.supportContext);
     await tx.auditEvent.create({
       data: {
         userId: context.user.id,
@@ -1202,6 +1232,7 @@ export class SalonOwnerSettingsService {
         action,
         targetId,
         result: 'success',
+        ...(supportContext ? { reason: JSON.stringify({ supportContext }) } : {}),
         correlationId: CorrelationId.get() ?? null,
       },
     });
