@@ -4,7 +4,7 @@ import { BehaviorSubject, Observable, firstValueFrom, forkJoin, of } from 'rxjs'
 import { catchError } from 'rxjs/operators';
 
 import { StorageService } from '@cthub-bsaas/web-core-platform';
-import type { AuthStatePort, BaseAuthUser } from '@cthub-bsaas/web-core/auth';
+import type { AuthStatePort } from '@cthub-bsaas/web-core/auth';
 import type { AdminAuthUser } from '../models/auth.models';
 
 @Injectable({ providedIn: 'root' })
@@ -25,7 +25,7 @@ export class AuthService implements AuthStatePort {
     }
   }
 
-  getCurrentUser(): BaseAuthUser | null {
+  getCurrentUser(): { readonly id: string } | null {
     const user = this.currentUserSubject.value;
     return user ? { id: user.id } : null;
   }
