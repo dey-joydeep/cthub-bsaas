@@ -1,7 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject, Observable, firstValueFrom, forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 
 import { StorageService } from '@cthub-bsaas/web-core-platform';
 import type { AuthStatePort, BaseAuthUser } from '@cthub-bsaas/web-core/auth';
@@ -70,7 +70,10 @@ export class AuthService implements AuthStatePort {
 
   private getToken(): Observable<string | null> {
     if (!this.isBrowser) return of(null);
-    return this.storage.getItem$<string>(this.TOKEN_KEY).pipe(catchError(() => of(null)));
+    return this.storage.getItem$<string>(this.TOKEN_KEY).pipe(
+      map((token): string | null => (typeof token === 'string' ? token : null)),
+      catchError(() => of<string | null>(null))
+    );
   }
 
   private isTokenValid(token: string | null | undefined): boolean {
