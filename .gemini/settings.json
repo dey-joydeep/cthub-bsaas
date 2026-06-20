@@ -19,8 +19,13 @@
       "args": [
         "-y",
         "prisma",
-        "mcp"
-      ]
+        "mcp",
+        "--schema",
+        "libs/server/data-access/prisma/schema.prisma"
+      ],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}"
+      }
     },
     "nx-mcp": {
       "command": "npx",

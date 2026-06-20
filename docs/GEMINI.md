@@ -38,8 +38,8 @@
 
 ## Validation & Execution Protocol
 - **Antigravity Workflow:** You must use `run_command` to execute the explicit validation tooling when changing documentation:
-  - For OpenAPI changes, run Redocly lint: `node_modules/.bin/redocly.cmd lint docs/specs/[feature]/API/openapi.yaml --config .redocly.yaml --max-problems=0`
-  - For Auth route docs, run `node_modules/.bin/tsx.cmd scripts/openapi-auth-check.ts`.
+  - For OpenAPI changes, run Redocly lint: `npm run openapi:lint:auth` (or `node_modules/.bin/redocly lint docs/specs/[feature]/API/openapi.yaml --config .redocly.yaml --max-problems=0` on Windows).
+  - For Auth route docs, run `npm run openapi:check:auth` (or `node_modules/.bin/tsx scripts/openapi-auth-check.ts` on Windows).
   - For large doc reorganizations, check `git diff --check`.
   - For Antigravity/AIDD prompt changes, run Prettier on `.codex/prompts/**/*.md` and `docs/aidd/**/*.md`.
   - **Draw.io/Diagrams:** When interacting with visual `.drawio` architectures, leverage the `drawio` MCP server natively to parse XML nodes, interpret structure, and manage updates.

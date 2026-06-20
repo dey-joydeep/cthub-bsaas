@@ -58,7 +58,7 @@ For database-backed integration tests:
 - Use unique emails or IDs, for example with `randomUUID()`.
 - Shared test helpers belong under `libs/server/core/src/testing/`.
 - Prefer typed mocks such as `Pick<Port, 'method'>`; keep `any` local and narrow if unavoidable.
-- **Antigravity Workflow:** If tests fail due to data leakage, use the `postgres` MCP server to inspect the database state and ensure your `afterEach` and `afterAll` cleanup handlers are correctly tearing down master data and dependent rows.
+- **Antigravity Workflow:** If tests fail due to data leakage, inspect the **test** database state — not the dev database. Integration tests run against `bsaas_test` (from `.env.test`), while the `postgres` MCP in `settings.json` is wired to the dev `bsaas` database. Use `npx prisma studio --schema=libs/server/data-access/prisma/schema.prisma` pointed at `DATABASE_URL` from `.env.test`, or run a raw query via `psql` against `bsaas_test`, to ensure `afterEach` and `afterAll` cleanup handlers are correctly tearing down master data and dependent rows.
 
 ## Error Handling
 - Controllers should return appropriate HTTP errors.
