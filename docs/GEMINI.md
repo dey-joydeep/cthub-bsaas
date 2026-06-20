@@ -42,3 +42,4 @@
   - For Auth route docs, run `node_modules/.bin/tsx.cmd scripts/openapi-auth-check.ts`.
   - For large doc reorganizations, check `git diff --check`.
   - For Antigravity/AIDD prompt changes, run Prettier on `.codex/prompts/**/*.md` and `docs/aidd/**/*.md`.
+  - **Draw.io/Diagrams:** When interacting with visual `.drawio` architectures, leverage the `drawio` MCP server natively to parse XML nodes, interpret structure, and manage updates.
