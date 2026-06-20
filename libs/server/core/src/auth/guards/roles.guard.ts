@@ -17,15 +17,23 @@ const ROLE_HIERARCHY: Record<UserRole, UserRole[]> = {
   [UserRole.GUEST]: [UserRole.GUEST],
 };
 
+function normalizeRoleValue(role: UserRole | { name?: string } | string | undefined): UserRole | undefined {
+  const raw = typeof role === 'string' ? role : role?.name;
+  if (!raw) {
+    return undefined;
+  }
+
+  const normalized = raw.toLowerCase();
+  return (Object.values(UserRole) as string[]).includes(normalized) ? (normalized as UserRole) : undefined;
+}
+
 /**
  * @internal Normalizes the roles carried on the authenticated user object into canonical UserRole strings.
  */
 export function normalizeUserRoles(roles: AuthenticatedUser['roles'] | undefined): UserRole[] {
   if (!roles) return [];
   const consumers = roles as Array<UserRole | { name?: string }>;
-  return consumers
-    .map((role) => (typeof role === 'string' ? role : role?.name))
-    .filter((value): value is UserRole => !!value && (Object.values(UserRole) as string[]).includes(value));
+  return consumers.map((role) => normalizeRoleValue(role)).filter((value): value is UserRole => value !== undefined);
 }
 
 /**

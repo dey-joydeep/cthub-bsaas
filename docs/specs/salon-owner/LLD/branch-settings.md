@@ -28,23 +28,23 @@ Visual flow references:
 - Branch profile writes include audit entry in the same transaction.
 - Weekly hours replace the full weekly schedule atomically.
 - Holiday upsert is idempotent by branch ID and local date.
-- Archive checks future confirmed appointments before status update.
 
 ## Validation Mapping
 
 - DTO validation maps to [Branch Settings Validation](../VALIDATION/branch-settings-validation.md).
-- Service validation verifies same-business branch scope, non-overlapping working intervals, holiday date in branch timezone, and archive blockers.
+- Service validation verifies same-business branch scope, non-overlapping working intervals, and holiday date in branch timezone.
 
 ## Error Mapping
 
 - `BRANCH_NOT_FOUND` returns `404`.
 - `BRANCH_SCOPE_MISMATCH` returns `403`.
 - `BRANCH_HOURS_OVERLAP` returns `400`.
-- `BRANCH_HAS_FUTURE_APPOINTMENTS` returns `409`.
 - `BRANCH_VALIDATION_FAILED` returns `400`.
 
 ## Implementation Notes
 
 - Branch address normalization is server-side.
 - Branch timezone defaults to business timezone when omitted.
+- Branch profile create/update must also synchronize the operational `Salon` row used by appointments, auth, invites, and staff until those flows are fully branch-native.
+- The current implementation keeps `SalonBranch.id` equal to the corresponding operational `Salon.id` for durable cross-module identity.
 - Availability cache invalidation occurs after branch hours, holiday, or status changes.

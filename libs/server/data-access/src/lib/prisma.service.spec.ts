@@ -269,6 +269,23 @@ describe('PrismaService', () => {
     expect(errorSpy).toHaveBeenCalledWith(`Prisma Known Request Error (${knownError.code}): ${knownError.message}`, knownError.meta);
   });
 
+  it('rethrows unsupported known request errors after logging them', async () => {
+    jest.spyOn(PrismaClient.prototype, '$on').mockImplementation(function (this: PrismaClient) {
+      return this;
+    });
+    const knownError = new Prisma.PrismaClientKnownRequestError('Foreign key failed', {
+      code: 'P2003',
+      clientVersion: '5.0.0',
+    });
+    jest.spyOn(PrismaClient.prototype, '$transaction').mockImplementation(() => Promise.reject(knownError));
+    const { errorSpy } = mockLogger();
+
+    const service = createService();
+
+    await expect(service.$transaction([] as unknown as PrismaPromise<unknown>[])).rejects.toThrow(knownError);
+    expect(errorSpy).toHaveBeenCalledWith(`Prisma Known Request Error (${knownError.code}): ${knownError.message}`, knownError.meta);
+  });
+
   it('wraps unknown Prisma request errors with a generic message', async () => {
     jest.spyOn(PrismaClient.prototype, '$on').mockImplementation(function (this: PrismaClient) {
       return this;

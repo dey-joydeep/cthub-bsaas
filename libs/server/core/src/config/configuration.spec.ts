@@ -50,6 +50,17 @@ describe('Configuration Factory', () => {
     expect(config.database.url).toBe('');
     expect(config.auth.jwtAccessSecret).toBe('test-access-secret');
     expect(config.cors.origins).toEqual([]);
+    expect(config.cors.allowedHeaders).toEqual([
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+      'X-XSRF-TOKEN',
+      'X-Request-Id',
+      'Idempotency-Key',
+      'X-Support-Reference',
+      'X-Support-Reason',
+    ]);
     expect(config.file.uploadDir).toBe('uploads');
     expect(config.rateLimit.windowMs).toBe(900000);
     expect(config.rateLimit.max).toBe(100);
