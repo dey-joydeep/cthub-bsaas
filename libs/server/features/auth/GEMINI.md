@@ -48,6 +48,6 @@
   - `npx nx test server-feature-auth --configuration=it`
   - `npx nx lint server-feature-auth`
   - `npx nx build server-feature-auth`
-  - `node_modules/.bin/redocly.cmd lint docs/specs/auth/API/openapi.yaml --config .redocly.yaml --max-problems=0`
-  - `node_modules/.bin/tsx.cmd scripts/openapi-auth-check.ts`
+  - `npm run openapi:lint:auth` (or `node_modules/.bin/redocly lint docs/specs/auth/API/openapi.yaml --config .redocly.yaml --max-problems=0` on Windows)
+  - `npm run openapi:check:auth` (or `node_modules/.bin/tsx scripts/openapi-auth-check.ts` on Windows)
 - **Subagent Delegation:** When working on complex Auth interactions, deploy a `self` subagent to monitor the local `postgres` MCP for orphaned sessions or dangling refresh tokens during session revocation tests, ensuring FK constraints and DB cascades execute as designed.

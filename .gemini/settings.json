@@ -30,7 +30,8 @@
     "nx-mcp": {
       "command": "npx",
       "args": [
-        "nx-mcp"
+        "-y",
+        "nx-mcp@latest"
       ]
     },
     "playwright": {

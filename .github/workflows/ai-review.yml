@@ -42,23 +42,29 @@ jobs:
       - name: Run affected lint
         id: lint
         run: |
-          npx nx affected -t lint --base=origin/${{ github.base_ref }} --head=HEAD --output-style=stream 2>&1 | tee lint-results.txt || true
-          LINT_ERRORS=$(grep -c "error" lint-results.txt || echo 0)
-          echo "count=$LINT_ERRORS" >> $GITHUB_OUTPUT
+          set -o pipefail
+          npx nx affected -t lint --base=origin/${{ github.base_ref }} --head=HEAD --output-style=stream 2>&1 | tee lint-results.txt || NX_EXIT=$?
+          LINT_ERRORS=$(grep -c "error" lint-results.txt || true)
+          echo "count=${LINT_ERRORS:-0}" >> $GITHUB_OUTPUT
+          exit ${NX_EXIT:-0}
 
       - name: Run affected type check
         id: typecheck
         run: |
-          npx nx affected -t type-check --base=origin/${{ github.base_ref }} --head=HEAD --output-style=stream 2>&1 | tee type-errors.txt || true
-          TYPE_ERRORS=$(grep -c "error TS" type-errors.txt || echo 0)
-          echo "count=$TYPE_ERRORS" >> $GITHUB_OUTPUT
+          set -o pipefail
+          npx nx affected -t type-check --base=origin/${{ github.base_ref }} --head=HEAD --output-style=stream 2>&1 | tee type-errors.txt || NX_EXIT=$?
+          TYPE_ERRORS=$(grep -c "error TS" type-errors.txt || true)
+          echo "count=${TYPE_ERRORS:-0}" >> $GITHUB_OUTPUT
+          exit ${NX_EXIT:-0}
 
       - name: Run affected tests
         id: tests
         run: |
-          npx nx affected -t test --base=origin/${{ github.base_ref }} --head=HEAD --output-style=stream --passWithNoTests 2>&1 | tee test-results.txt || true
-          FAILED=$(grep -c "FAIL\|failed" test-results.txt || echo 0)
-          echo "failed=$FAILED" >> $GITHUB_OUTPUT
+          set -o pipefail
+          npx nx affected -t test --base=origin/${{ github.base_ref }} --head=HEAD --output-style=stream --passWithNoTests 2>&1 | tee test-results.txt || NX_EXIT=$?
+          FAILED=$(grep -c "FAIL\|failed" test-results.txt || true)
+          echo "failed=${FAILED:-0}" >> $GITHUB_OUTPUT
+          exit ${NX_EXIT:-0}
 
       - name: Post review summary
         if: always()
