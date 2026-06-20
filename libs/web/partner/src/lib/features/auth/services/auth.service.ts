@@ -4,7 +4,7 @@ import { BehaviorSubject, Observable, firstValueFrom, forkJoin, of } from 'rxjs'
 import { catchError } from 'rxjs/operators';
 
 import { StorageService } from '@cthub-bsaas/web-core-platform';
-import type { AuthStatePort, BaseAuthUser } from '@cthub-bsaas/web-core-auth';
+import type { AuthStatePort, BaseAuthUser } from '@cthub-bsaas/web-core/auth';
 import type { PartnerAuthUser } from '../models/auth.models';
 
 @Injectable({ providedIn: 'root' })

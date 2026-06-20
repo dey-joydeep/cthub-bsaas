@@ -109,6 +109,13 @@
                 <mat-label>Currency</mat-label>
                 <input matInput formControlName="currency" />
               </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Status</mat-label>
+                <mat-select formControlName="status">
+                  <mat-option value="ACTIVE">Active</mat-option>
+                  <mat-option value="INACTIVE">Inactive</mat-option>
+                </mat-select>
+              </mat-form-field>
 
               <fieldset formGroupName="address">
                 <legend>Address</legend>
@@ -152,7 +159,7 @@
               @for (branch of branches(); track branch.id) {
                 <button type="button" class="list-row" [class.selected]="selectedBranch()?.id === branch.id" (click)="selectBranch(branch)">
                   <span>{{ branch.name }}</span>
-                  <small>{{ branch.timezone }} / {{ branch.currency }}</small>
+                  <small>{{ branch.status }} / {{ branch.timezone }} / {{ branch.currency }}</small>
                 </button>
               } @empty {
                 <p class="empty">No branches are configured for this business.</p>
@@ -198,6 +205,11 @@
                 </div>
               }
             </div>
+            @if (hoursConflictRequiresAcknowledgement()) {
+              <mat-checkbox formControlName="acknowledgeExistingAppointmentsOutsideHours">
+                Confirm this change even if future appointments fall outside the updated hours.
+              </mat-checkbox>
+            }
             <button mat-flat-button type="submit" [disabled]="saving() || !branchSettingsLoaded()">Save hours</button>
           </form>
         </mat-card-content>

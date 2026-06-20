@@ -4,6 +4,7 @@ import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -12,6 +13,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTabsModule } from '@angular/material/tabs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin, Observable } from 'rxjs';
 
 import { BranchHours, BranchPolicy, BranchProfile, SalonBusiness, WeeklyHoursDay } from './models/salon-owner-settings.models';
@@ -45,6 +47,7 @@ function optionalText(value: string): string | undefined {
     ReactiveFormsModule,
     MatButtonModule,
     MatCardModule,
+    MatCheckboxModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
@@ -74,6 +77,7 @@ export class SalonOwnerSettingsComponent {
   protected readonly selectedBusiness = signal<SalonBusiness | null>(null);
   protected readonly selectedBranch = signal<BranchProfile | null>(null);
   protected readonly branchSettingsLoaded = signal(false);
+  protected readonly hoursConflictRequiresAcknowledgement = signal(false);
   protected readonly hasBusiness = computed(() => this.businesses().length > 0);
   protected readonly hasBranch = computed(() => this.branches().length > 0);
 
@@ -90,6 +94,7 @@ export class SalonOwnerSettingsComponent {
     email: ['', Validators.email],
     timezone: ['Asia/Tokyo', Validators.required],
     currency: ['JPY', [Validators.required, Validators.minLength(3), Validators.maxLength(3)]],
+    status: this.fb.nonNullable.control<'ACTIVE' | 'INACTIVE'>('ACTIVE', Validators.required),
     address: this.fb.nonNullable.group({
       line1: ['', [Validators.required, Validators.maxLength(160)]],
       line2: ['', Validators.maxLength(160)],
@@ -102,6 +107,7 @@ export class SalonOwnerSettingsComponent {
 
   protected readonly hoursForm = this.fb.nonNullable.group({
     timezone: ['Asia/Tokyo', Validators.required],
+    acknowledgeExistingAppointmentsOutsideHours: [false],
     days: this.fb.array(weekdays.map((_, dayOfWeek) => this.createDayGroup(dayOfWeek))),
   });
 
@@ -154,6 +160,7 @@ export class SalonOwnerSettingsComponent {
       email: branch.email ?? '',
       timezone: branch.timezone,
       currency: branch.currency,
+      status: branch.status,
       address: {
         line1: branch.address.line1,
         line2: branch.address.line2 ?? '',
@@ -192,6 +199,7 @@ export class SalonOwnerSettingsComponent {
       email: '',
       timezone: 'Asia/Tokyo',
       currency: 'JPY',
+      status: 'ACTIVE',
       address: {
         line1: '',
         line2: '',
@@ -265,15 +273,28 @@ export class SalonOwnerSettingsComponent {
       return;
     }
 
-    this.persist(
-      this.api.replaceBranchHours(branch.id, {
-        timezone: this.hoursForm.controls.timezone.value,
-        days: (this.hoursForm.controls.days.getRawValue() as WeeklyHoursDay[]).map((day) => ({
-          ...day,
-          intervals: day.open ? day.intervals : [],
-        })),
-      }),
-    );
+    this.saving.set(true);
+    this.error.set(null);
+    this.message.set(null);
+    this.api.replaceBranchHours(branch.id, this.buildWeeklyHoursInput()).subscribe({
+      next: () => {
+        this.hoursConflictRequiresAcknowledgement.set(false);
+        this.hoursForm.controls.acknowledgeExistingAppointmentsOutsideHours.setValue(false);
+        this.message.set('Settings saved.');
+        this.saving.set(false);
+      },
+      error: (error: unknown) => {
+        if (this.isHoursConflictError(error)) {
+          this.hoursConflictRequiresAcknowledgement.set(true);
+          this.error.set('Confirm the hours change before saving because future appointments fall outside the proposed schedule.');
+          this.saving.set(false);
+          return;
+        }
+
+        this.error.set('Settings could not be saved.');
+        this.saving.set(false);
+      },
+    });
   }
 
   protected saveHoliday(): void {
@@ -418,6 +439,8 @@ export class SalonOwnerSettingsComponent {
 
   private applyBranchHours(hours: BranchHours): void {
     this.hoursForm.controls.timezone.setValue(hours.timezone);
+    this.hoursForm.controls.acknowledgeExistingAppointmentsOutsideHours.setValue(false);
+    this.hoursConflictRequiresAcknowledgement.set(false);
     this.dayForms.clear();
     hours.days
       .slice()
@@ -435,6 +458,37 @@ export class SalonOwnerSettingsComponent {
         intervals: dayOfWeek > 0 ? [{ start: '09:00', end: '17:00' }] : [],
       })),
     };
+  }
+
+  private buildWeeklyHoursInput() {
+    return {
+      timezone: this.hoursForm.controls.timezone.value,
+      acknowledgeExistingAppointmentsOutsideHours:
+        this.hoursForm.controls.acknowledgeExistingAppointmentsOutsideHours.value,
+      days: (this.hoursForm.controls.days.getRawValue() as WeeklyHoursDay[]).map((day) => ({
+        ...day,
+        intervals: day.open ? day.intervals : [],
+      })),
+    };
+  }
+
+  private isHoursConflictError(error: unknown): boolean {
+    const responseError =
+      error instanceof HttpErrorResponse
+        ? error.error
+        : typeof error === 'object' && error !== null && 'error' in error
+          ? error.error
+          : null;
+
+    const errorCode =
+      typeof responseError === 'object' &&
+      responseError !== null &&
+      'code' in responseError &&
+      typeof responseError.code === 'string'
+        ? responseError.code
+        : null;
+
+    return errorCode === 'error.branch.hours.appointments_outside_hours';
   }
 
   private persist<T>(request: Observable<T>, onSuccess?: (value: T) => void): void {

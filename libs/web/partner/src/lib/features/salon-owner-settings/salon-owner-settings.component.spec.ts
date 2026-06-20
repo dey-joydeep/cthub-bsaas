@@ -35,6 +35,7 @@ describe('SalonOwnerSettingsComponent', () => {
     name: 'Main',
     timezone: 'Asia/Tokyo',
     currency: 'JPY',
+    status: 'ACTIVE',
     address: {
       line1: '1 Main St',
       city: 'Tokyo',
@@ -74,13 +75,13 @@ describe('SalonOwnerSettingsComponent', () => {
             updatedAt: '2026-05-26T00:00:00.000Z',
           },
         ],
-        page: { limit: 1, nextCursor: null, hasMore: false },
+        page: { page: 1, pageSize: 1, total: 1 },
       }),
     );
     api.listBranches.mockReturnValue(
       of({
         items: [branch],
-        page: { limit: 1, nextCursor: null, hasMore: false },
+        page: { page: 1, pageSize: 1, total: 1 },
       }),
     );
     api.getBranchHours.mockReturnValue(
@@ -177,6 +178,23 @@ describe('SalonOwnerSettingsComponent', () => {
       'branch-1',
       expect.objectContaining({
         email: undefined,
+        status: 'ACTIVE',
+      }),
+    );
+  });
+
+  it('includes branch status in branch saves', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      branchForm: { patchValue(value: { status: 'INACTIVE' }): void };
+    };
+
+    component.branchForm.patchValue({ status: 'INACTIVE' });
+    component.saveBranch();
+
+    expect(api.updateBranch).toHaveBeenCalledWith(
+      'branch-1',
+      expect.objectContaining({
+        status: 'INACTIVE',
       }),
     );
   });
@@ -284,6 +302,34 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(api.updateBranchPolicy).not.toHaveBeenCalled();
   });
 
+  it('retries hours saves with explicit acknowledgement after a conflict response', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      hoursForm: {
+        controls: { acknowledgeExistingAppointmentsOutsideHours: { setValue(value: boolean): void } };
+      };
+      saveHours(): void;
+    };
+    api.replaceBranchHours
+      .mockReturnValueOnce(
+        throwError(() => ({
+          error: { code: 'error.branch.hours.appointments_outside_hours' },
+        })),
+      )
+      .mockReturnValueOnce(of({ branchId: 'branch-1', timezone: 'Asia/Tokyo', days: [] }));
+
+    component.saveHours();
+    component.hoursForm.controls.acknowledgeExistingAppointmentsOutsideHours.setValue(true);
+    component.saveHours();
+
+    expect(api.replaceBranchHours).toHaveBeenNthCalledWith(
+      2,
+      'branch-1',
+      expect.objectContaining({
+        acknowledgeExistingAppointmentsOutsideHours: true,
+      }),
+    );
+  });
+
   it('requires holiday start and end times when the branch stays open', () => {
     const component = fixture.componentInstance as unknown as SettingsComponentHarness;
 
@@ -315,7 +361,7 @@ describe('SalonOwnerSettingsComponent', () => {
     api.listBranches.mockReturnValueOnce(
       of({
         items: [{ ...branch, id: 'branch-2', businessId: 'business-2', name: 'Second' }],
-        page: { limit: 1, nextCursor: null, hasMore: false },
+        page: { page: 1, pageSize: 1, total: 1 },
       }),
     );
     const component = fixture.componentInstance as unknown as SettingsComponentHarness;
@@ -337,7 +383,7 @@ describe('SalonOwnerSettingsComponent', () => {
 
   it('ignores stale branch-list responses after the selected business changes', () => {
     let firstRequestHandler:
-      | ((result: { items: BranchProfile[]; page: { limit: number; nextCursor: null; hasMore: false } }) => void)
+      | ((result: { items: BranchProfile[]; page: { page: number; pageSize: number; total: number } }) => void)
       | undefined;
     api.listBranches
       .mockReturnValueOnce(
@@ -358,7 +404,7 @@ describe('SalonOwnerSettingsComponent', () => {
               name: 'Second',
             },
           ],
-          page: { limit: 1, nextCursor: null, hasMore: false },
+          page: { page: 1, pageSize: 1, total: 1 },
         }),
       );
 
@@ -376,7 +422,7 @@ describe('SalonOwnerSettingsComponent', () => {
     });
     firstRequestHandler?.({
       items: [branch],
-      page: { limit: 1, nextCursor: null, hasMore: false },
+      page: { page: 1, pageSize: 1, total: 1 },
     });
 
     expect(component.branches()).toEqual([expect.objectContaining({ id: 'branch-2', businessId: 'business-2' })]);
@@ -384,7 +430,7 @@ describe('SalonOwnerSettingsComponent', () => {
 
   it('invalidates pending branch-list responses when starting a new branch', () => {
     let firstRequestHandler:
-      | ((result: { items: BranchProfile[]; page: { limit: number; nextCursor: null; hasMore: false } }) => void)
+      | ((result: { items: BranchProfile[]; page: { page: number; pageSize: number; total: number } }) => void)
       | undefined;
     api.listBranches.mockReturnValueOnce(
       new Observable((subscriber) => {
@@ -403,7 +449,7 @@ describe('SalonOwnerSettingsComponent', () => {
 
     firstRequestHandler?.({
       items: [branch],
-      page: { limit: 1, nextCursor: null, hasMore: false },
+      page: { page: 1, pageSize: 1, total: 1 },
     });
 
     expect(component.selectedBranch()).toBeNull();
@@ -457,13 +503,13 @@ describe('SalonOwnerSettingsComponent', () => {
       .mockReturnValueOnce(
         of({
           items: [branch],
-          page: { limit: 1, nextCursor: null, hasMore: false },
+          page: { page: 1, pageSize: 1, total: 1 },
         }),
       )
       .mockReturnValueOnce(
         of({
           items: [{ ...branch, id: 'branch-2', businessId: 'business-2', name: 'Second' }],
-          page: { limit: 1, nextCursor: null, hasMore: false },
+          page: { page: 1, pageSize: 1, total: 1 },
         }),
       );
 

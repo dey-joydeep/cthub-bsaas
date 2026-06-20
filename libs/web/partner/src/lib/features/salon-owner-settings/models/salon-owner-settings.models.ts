@@ -1,11 +1,25 @@
 export type SalonBusinessStatus = 'ACTIVE' | 'INACTIVE';
+export type BranchStatus = 'ACTIVE' | 'INACTIVE';
+
+export interface ResponseEnvelopeMeta {
+  readonly correlationId?: string;
+  readonly page?: number;
+  readonly pageSize?: number;
+  readonly total?: number;
+}
+
+export interface ResponseEnvelope<T> {
+  readonly success: true;
+  readonly data: T;
+  readonly meta?: ResponseEnvelopeMeta;
+}
 
 export interface PagedEnvelope<T> {
   readonly items: readonly T[];
   readonly page: {
-    readonly limit: number;
-    readonly nextCursor: string | null;
-    readonly hasMore: boolean;
+    readonly page: number;
+    readonly pageSize: number;
+    readonly total: number;
   };
 }
 
@@ -38,6 +52,7 @@ export interface BranchProfileInput {
   readonly email?: string;
   readonly timezone: string;
   readonly currency: string;
+  readonly status: BranchStatus;
   readonly address: SalonOwnerAddress;
 }
 
@@ -61,6 +76,7 @@ export interface WeeklyHoursDay {
 export interface WeeklyHoursInput {
   readonly timezone: string;
   readonly days: readonly WeeklyHoursDay[];
+  readonly acknowledgeExistingAppointmentsOutsideHours?: boolean;
 }
 
 export interface BranchHours extends WeeklyHoursInput {
