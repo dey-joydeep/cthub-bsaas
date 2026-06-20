@@ -1,39 +1,44 @@
 {
   "mcpServers": {
-    "filesystem": {
-      "command": "E:\\workspace\\cthub-bsaas\\node_modules\\.bin\\mcp-server-filesystem.cmd",
-      "args": ["E:\\workspace\\cthub-bsaas"]
+    "chrome-devtools-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ]
     },
-    "git": {
-      "command": "E:\\workspace\\cthub-bsaas\\node_modules\\.bin\\git-mcp-server.cmd",
-      "args": ["--repository", "E:\\workspace\\cthub-bsaas"]
-    },
-    "eslint": {
-      "command": "E:\\workspace\\cthub-bsaas\\node_modules\\.bin\\mcp.cmd",
-      "args": []
-    },
-    "postgres": {
-      "command": "E:\\workspace\\cthub-bsaas\\node_modules\\.bin\\mcp-server-postgres.cmd",
-      "args": ["postgresql://postgres:root@localhost:5432/bsaas"]
-    },
-    "github": {
-      "command": "E:\\workspace\\cthub-bsaas\\node_modules\\.bin\\mcp-server-github.cmd",
-      "args": []
-    },
-    "prisma": {
-      "command": "E:\\workspace\\cthub-bsaas\\node_modules\\.bin\\prisma.cmd",
-      "args": ["mcp", "--schema", "E:\\workspace\\cthub-bsaas\\libs\\server\\data-access\\prisma\\schema.prisma", "--early-access"],
-      "env": {
-        "PRISMA_HIDE_UPDATE_MESSAGE": "1",
-        "NO_COLOR": "1",
-        "CI": "1",
-        "DATABASE_URL": "postgresql://postgres:root@localhost:5432/bsaas"
-      }
+    "prisma-mcp-server": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "prisma",
+        "mcp"
+      ]
     },
     "nx-mcp": {
-      "type": "stdio",
       "command": "npx",
-      "args": ["nx-mcp"]
+      "args": [
+        "nx-mcp"
+      ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest"
+      ]
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://postgres:root@localhost:5432/bsaas"
+      ]
+    },
+    "penpot_http": {
+      "type": "http",
+      "url": "https://design.penpot.app/mcp/stream?userToken=eyJhbGciOiJBMjU2S1ciLCJlbmMiOiJBMjU2R0NNIn0.oBhNXE8VC9ewGuRR2cljrzXCZxapxoajri_UwmcIwO2Dez3q3pZR6Q.r-j12a5h7ah_Aklk.eTIA3HhRNAQn26RFewaRn-ss4_fRVsM2-oFplDHrGgs3jmYojRgcdm5HFxP7XiEegdg9tWTVbpbBq-Mg1EKxImXsyVq-Htwq-D5DUvbfWvQNpa2vuIMPwnMuxDXNL8Y1LoJTnHG6M7TkAiByrGftIZ2hXFkSNHYs7NfhAvy841rJQBJvAOVhe76FynNuF0OscGC8DCy0rz_G.wW5O_rara8pAJ9sagVLBJw"
     }
   }
 }
