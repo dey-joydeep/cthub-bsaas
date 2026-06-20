@@ -45,7 +45,7 @@
     },
     "penpot_http": {
       "type": "http",
-      "url": "https://design.penpot.app/mcp/stream?userToken=eyJhbGciOiJBMjU2S1ciLCJlbmMiOiJBMjU2R0NNIn0.oBhNXE8VC9ewGuRR2cljrzXCZxapxoajri_UwmcIwO2Dez3q3pZR6Q.r-j12a5h7ah_Aklk.eTIA3HhRNAQn26RFewaRn-ss4_fRVsM2-oFplDHrGgs3jmYojRgcdm5HFxP7XiEegdg9tWTVbpbBq-Mg1EKxImXsyVq-Htwq-D5DUvbfWvQNpa2vuIMPwnMuxDXNL8Y1LoJTnHG6M7TkAiByrGftIZ2hXFkSNHYs7NfhAvy841rJQBJvAOVhe76FynNuF0OscGC8DCy0rz_G.wW5O_rara8pAJ9sagVLBJw"
+      "url": "${PENPOT_MCP_URL}"
     }
   }
 }

@@ -35,7 +35,7 @@
 - Use meaningful migrations.
 - Keep schema and migrations in the server data-access area.
 - Do not rely on test-only encryption/JWT fallback behavior in production.
-- **Antigravity Workflow:** Use `prisma-mcp-server` to inspect schemas and run `npx prisma db push` via `run_command` to apply changes natively. When optimizing queries, use the `postgres` MCP server to execute `EXPLAIN ANALYZE` directly against `postgresql://postgres:root@localhost:5432/bsaas`.
+- **Antigravity Workflow:** Use `prisma-mcp-server` to inspect schemas. The schema is located at `libs/server/data-access/prisma/schema.prisma`. For schema changes, use the `prisma-mcp-server` `migrate-dev` tool (or `npx prisma migrate dev --schema=libs/server/data-access/prisma/schema.prisma` via `run_command`) to create a named migration and preserve migration history. Do NOT use `db push` as it bypasses migration files. When optimizing queries, use the `postgres` MCP server to execute `EXPLAIN ANALYZE` directly against `postgresql://postgres:root@localhost:5432/bsaas`.
 - **Planning Mode:** Any change to `schema.prisma` automatically triggers Planning Mode. Submit an `implementation_plan.md` detailing the schema changes to the user before editing.
 
 ## Server Testing

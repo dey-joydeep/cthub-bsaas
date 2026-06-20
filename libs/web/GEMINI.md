@@ -27,7 +27,7 @@
 - Defer DOM access to browser-safe lifecycle hooks.
 - Prefer Angular abstractions that work in SSR, such as `HttpClient`, `TransferState`, and CDK utilities.
 - Use relative API URLs unless a server-side proxy/config requires otherwise.
-- **Antigravity Workflow:** Start the server with `npx nx serve web --ssr` in the background. Use the `chrome-devtools-mcp` to navigate the route. Read the console logs explicitly to verify there are zero hydration mismatches or `document is not defined` crashes.
+- **Antigravity Workflow:** Start the relevant app server in the background using its explicit project name (e.g., `npx nx run web-app-admin:serve`, `npx nx run web-app-customer:serve`, or `npx nx run web-app-partner:serve`). Use the `chrome-devtools-mcp` to navigate the route. Read the console logs explicitly to verify there are zero hydration mismatches or `document is not defined` crashes.
 
 ## Client Models And APIs
 - Any object parameter or object return must use a named interface/type/model/DTO.

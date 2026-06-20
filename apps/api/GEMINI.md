@@ -23,5 +23,5 @@
 
 ## Antigravity Execution Protocol
 - **Validation Workflow:** Use `run_command` to start the API (`npx nx serve api`). While running, use `curl` to directly validate `Retry-After` throttling responses, Canonical Error Envelopes from the `GlobalExceptionFilter`, and CSRF semantics natively rather than relying on static analysis.
-- **Auth Interoperability Check:** If you alter global auth wiring, immediately trigger `npx nx test server-features-auth --configuration=it` to prove you haven't broken downstream domain behavior.
+- **Auth Interoperability Check:** If you alter global auth wiring, immediately trigger `npx nx test server-feature-auth --configuration=it` to prove you haven't broken downstream domain behavior.
 - **OpenAPI Parity Check:** When route registration changes, fetch the `/api-json` endpoint natively (`read_url_content` or `curl`) and validate that the JSON structure maintains OpenAPI parity.
