@@ -1,25 +1,27 @@
-// Frontend application Jest configuration
+/* eslint-disable */
 export default {
-  preset: 'jest-preset-angular/presets/defaults',
+  displayName: 'web-app-partner',
+  preset: '../../../jest.preset.cjs',
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/src/setup-jest.ts'],
-  testMatch: ['**/+(*.)+(spec|test).+(ts|js)'],
-  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+  coverageDirectory: '../../../coverage/apps/web/partner',
   moduleNameMapper: {
-    '^@app/(.*)$': '<rootDir>/src/app/$1',
-    '^@env/(.*)$': '<rootDir>/src/environments/$1',
-    '^@shared/(.*)$': '<rootDir>/../../libs/shared/src/$1',
-    '^@frontend/(.*)$': '<rootDir>/../../libs/frontend/src/$1',
-    '^@cthub-bsaas/(.*)$': '<rootDir>/../../libs/frontend/src/app/$1',
-    '^@cthub-bsaas/shared/(.*)$': '<rootDir>/../../libs/frontend/src/app/shared/$1',
+    '^@cthub-bsaas/web-partner$': '<rootDir>/../../../libs/web/partner/src/index.ts',
+    '^@cthub-bsaas/web-partner/auth$': '<rootDir>/../../../libs/web/partner/src/lib/features/auth/index.ts',
+    '^@cthub-bsaas/web-core/auth$': '<rootDir>/../../../libs/web/core/auth/src/index.ts',
+    '^@cthub-bsaas/web-core-auth$': '<rootDir>/../../../libs/web/core/auth/src/index.ts',
+    '^@cthub-bsaas/shared$': '<rootDir>/../../../libs/shared/src/index.ts',
   },
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.spec.json',
-      stringifyContentPathRegex: '\\.(html|svg)$',
-      isolatedModules: true,
-    },
+  transform: {
+    '^.+\\.(ts|mjs|js|html)$': [
+      'jest-preset-angular',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+        stringifyContentPathRegex: '\\.(html|svg)$',
+      },
+    ],
   },
+  transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
   snapshotSerializers: [
     'jest-preset-angular/build/serializers/no-ng-attributes',
     'jest-preset-angular/build/serializers/ng-snapshot',

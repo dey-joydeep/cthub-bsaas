@@ -17,7 +17,7 @@ export const routes: Routes = [
     path: 'owner/branches',
     canMatch: [authCanMatch],
     canActivate: [roleGuard],
-    data: { roles: [UserRole.OWNER] },
+    data: { roles: [UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF] },
     children: SALON_OWNER_SETTINGS_ROUTES,
   },
   { path: '', redirectTo: 'auth', pathMatch: 'full' },

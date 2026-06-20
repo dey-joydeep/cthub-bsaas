@@ -14,8 +14,7 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { Subscription } from 'rxjs';
 import { AuthService } from '@cthub-bsaas/web-admin/auth';
 import { Inject } from '@angular/core';
-import { CURRENT_USER } from '@cthub-bsaas/web-core/auth';
-import type { CurrentUserPort, CurrentUserMin } from '@cthub-bsaas/web-core/auth';
+import { CURRENT_USER, CurrentUserService, type CurrentUserMin } from '@cthub-bsaas/web-core/auth';
 
 type AdminAppUser = CurrentUserMin & {
   readonly firstName?: string;
@@ -67,7 +66,7 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private authService: AuthService,
-    @Inject(CURRENT_USER) private currentUserService: CurrentUserPort,
+    @Inject(CURRENT_USER) private currentUserService: CurrentUserService,
     private snackBar: MatSnackBar,
   ) {}
 
