@@ -1,5 +1,1 @@
 blank_issues_enabled: false
-contact_links:
-  - name: Jira remains the business planning source
-    url: https://example.atlassian.net
-    about: Use Jira for roadmap, epic, and business planning. Use GitHub Issues for executable engineering work.
