@@ -17,7 +17,7 @@ Before working in a scoped area, read the nearest relevant instruction file manu
 Root instructions define global safety, workflow, and repository conventions. Scoped `GEMINI.md` files define domain rules and override root rules only for their area.
 
 ## Startup Checklist
-1. Use the actual local checkout directory as your project root (e.g. `E:\workspace\cthub-bsaas-front` on Windows). The remote repo is `dey-joydeep/cthub-bsaas` — the local folder name may differ from the repo name depending on how it was cloned.
+1. Use the actual local checkout directory as your project root. The remote repo is `dey-joydeep/cthub-bsaas` — the local folder name may differ from the repo name depending on how it was cloned.
 2. Prefer MCP tools over raw shell when they exist.
 3. Keep approvals `on-request` unless the user changes it.
 4. Confirm runtime environment before commands that depend on OS, shell, Node, npm, database, or network state.
