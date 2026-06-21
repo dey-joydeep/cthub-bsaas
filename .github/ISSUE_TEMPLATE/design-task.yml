@@ -1,0 +1,58 @@
+name: Design Task
+description: HLD, LLD, ADR, architecture, or technical planning work
+title: "[Design]: "
+labels:
+  - type:design
+  - status:triage
+body:
+  - type: dropdown
+    id: design-type
+    attributes:
+      label: Design Artifact Type
+      options:
+        - HLD
+        - LLD
+        - ADR
+        - Review/update existing design
+        - Investigation/spike
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What decision or artifact is needed?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Link related Jira items, issues, PRs, existing docs, or constraints.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-output
+    attributes:
+      label: Expected Output
+      value: |
+        - [ ] Updated or new design document
+        - [ ] Traceability to related implementation issue(s)
+        - [ ] Risks, assumptions, and open questions captured
+    validations:
+      required: true
+
+  - type: textarea
+    id: review-checklist
+    attributes:
+      label: Review Checklist
+      value: |
+        - [ ] Scope and objectives are clear.
+        - [ ] HLD/LLD relationship is explicit where applicable.
+        - [ ] API/DTO/schema/security/test impacts are captured.
+        - [ ] Follow-up implementation issues are created or linked.
+    validations:
+      required: true
