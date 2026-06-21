@@ -100,4 +100,4 @@ Codex responses and PR descriptions should include:
 
 ## Local workspace caution
 
-GitHub-side automation can only see committed GitHub content. The developer may have uncommitted local files under `E:\workspace\cthub-bsaas`. Before merging, compare the PR with the local workspace.
+GitHub-side automation can only see committed GitHub content. The developer may have uncommitted local files under the local workspace root. Before merging, compare the PR with the local workspace.

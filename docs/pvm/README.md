@@ -42,7 +42,7 @@ When running with the root project:
 No project name found in package.json, using parent directory name: cthub-bsaas
 Analyzing project 'cthub-bsaas' packages...
 ...
-Report generated at: E:\workspace\cthub-bsaas\bsaas-docs\pvm\report\cthub-bsaas\20250727_report_cthub-bsaas.html
+Report generated at: <repository-root>\bsaas-docs\pvm\report\cthub-bsaas\20250727_report_cthub-bsaas.html
 ```
 
 ## Running Tests
