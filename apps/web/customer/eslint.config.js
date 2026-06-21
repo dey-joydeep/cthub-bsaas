@@ -14,6 +14,7 @@ export default [
         },
       ],
       '@angular-eslint/prefer-inject': 'off',
+      '@nx/enforce-module-boundaries': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'off',
       '@typescript-eslint/no-implied-eval': 'off',
