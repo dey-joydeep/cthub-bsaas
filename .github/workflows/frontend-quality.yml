@@ -65,6 +65,16 @@ jobs:
       - name: Run quality checks
         shell: bash
         run: |
+          SOURCE_IMPACTING_CHANGES="$(git diff --name-only "$NX_BASE" "$NX_HEAD" | grep -E '^(apps/web/.*/src/|libs/web/.*/src/|libs/shared/src/|package.json$|package-lock.json$|nx.json$|tsconfig.base.json$)' || true)"
+
+          if [ -z "$SOURCE_IMPACTING_CHANGES" ]; then
+            echo "No source-impacting frontend changes detected. Skipping frontend lint/test."
+            exit 0
+          fi
+
+          echo "Source-impacting frontend changes:"
+          echo "$SOURCE_IMPACTING_CHANGES"
+
           filter_frontend_projects() {
             # Keep this workflow scoped to web apps/libs/shared. E2E projects are
             # validated by E2E-specific checks and should not be pulled in by
