@@ -66,7 +66,10 @@ jobs:
         shell: bash
         run: |
           filter_frontend_projects() {
-            grep -E '^(web-.*|shared)$' || true
+            # Keep this workflow scoped to web apps/libs/shared. E2E projects are
+            # validated by E2E-specific checks and should not be pulled in by
+            # the broad web-* project-name prefix.
+            grep -E '^(web-.*|shared)$' | grep -Ev -- '-e2e$' || true
           }
 
           FRONTEND_LINT_PROJECTS="$(npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=lint | filter_frontend_projects | paste -sd, -)"
