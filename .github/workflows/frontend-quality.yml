@@ -76,13 +76,13 @@ jobs:
           FRONTEND_TEST_PROJECTS="$(npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=test | filter_frontend_projects | paste -sd, -)"
 
           if [ -n "$FRONTEND_LINT_PROJECTS" ]; then
-            npx nx run-many --target=lint --projects="$FRONTEND_LINT_PROJECTS" --parallel=3 --configuration=ci
+            npx nx run-many --target=lint --projects="$FRONTEND_LINT_PROJECTS" --parallel=3
           else
             echo "No affected frontend projects with lint target."
           fi
 
           if [ -n "$FRONTEND_TEST_PROJECTS" ]; then
-            npx nx run-many --target=test --projects="$FRONTEND_TEST_PROJECTS" --parallel=3 --configuration=ci
+            npx nx run-many --target=test --projects="$FRONTEND_TEST_PROJECTS" --parallel=3
           else
             echo "No affected frontend projects with test target."
           fi
@@ -108,11 +108,11 @@ jobs:
           if [ -f "coverage/coverage-summary.json" ]; then
             COVERAGE=$(grep -oP '(?<="total":{"lines":{"pct":)[0-9.]+' coverage/coverage-summary.json)
             if (( $(echo "$COVERAGE < ${{ env.COVERAGE_THRESHOLD }}" | bc -l) )); then
-              echo "❌ Coverage ($COVERAGE%) is below threshold (${{ env.COVERAGE_THRESHOLD }}%)"
+              echo "Coverage ($COVERAGE%) is below threshold (${{ env.COVERAGE_THRESHOLD }}%)"
               exit 1
             else
-              echo "✅ Coverage ($COVERAGE%) meets threshold (${{ env.COVERAGE_THRESHOLD }}%)"
+              echo "Coverage ($COVERAGE%) meets threshold (${{ env.COVERAGE_THRESHOLD }}%)"
             fi
           else
-            echo "⚠️ No coverage report found"
+            echo "No coverage report found"
           fi
