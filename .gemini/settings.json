@@ -24,7 +24,7 @@
         "libs/server/data-access/prisma/schema.prisma"
       ],
       "env": {
-        "DATABASE_URL": "${DATABASE_URL}"
+        "DATABASE_URL": "postgresql://postgres:root@localhost:5432/bsaas"
       }
     },
     "nx-mcp": {
@@ -51,7 +51,7 @@
     },
     "penpot_http": {
       "type": "http",
-      "url": "${PENPOT_MCP_URL}"
+      "httpUrl": "${PENPOT_MCP_URL}"
     }
   }
 }
