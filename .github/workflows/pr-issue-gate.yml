@@ -1,0 +1,64 @@
+name: PR Issue Gate
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+
+jobs:
+  issue-gate:
+    name: Validate linked issue
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR issue contract
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TEXT="$PR_TITLE $PR_BODY $BRANCH"
+          ISSUE="$(printf '%s' "$TEXT" | grep -Eoi '(closes|fixes|resolves|refs)[[:space:]]+#[0-9]+' | head -n1 | grep -Eo '[0-9]+' || true)"
+
+          if [ -z "$ISSUE" ]; then
+            ISSUE="$(printf '%s' "$BRANCH" | grep -Eo '(^|/|[-_])[0-9]+([-_]|$)' | head -n1 | grep -Eo '[0-9]+' || true)"
+          fi
+
+          if [ -z "$ISSUE" ]; then
+            echo "PR must reference an issue using Closes #123, Fixes #123, Resolves #123, Refs #123, or include the issue number in the branch name."
+            exit 1
+          fi
+
+          STATE="$(gh issue view "$ISSUE" --repo "$REPO" --json state --jq .state)"
+          if [ "$STATE" != "OPEN" ]; then
+            echo "Linked issue #$ISSUE is not open."
+            exit 1
+          fi
+
+          LABELS="$(gh issue view "$ISSUE" --repo "$REPO" --json labels --jq '.labels[].name')"
+          if printf '%s\n' "$LABELS" | grep -qx "status:blocked"; then
+            echo "Linked issue #$ISSUE is blocked."
+            exit 1
+          fi
+
+          BODY="$(gh issue view "$ISSUE" --repo "$REPO" --json body --jq .body)"
+
+          if ! printf '%s' "$BODY" | grep -q "Acceptance Criteria"; then
+            echo "Linked issue #$ISSUE lacks Acceptance Criteria."
+            exit 1
+          fi
+
+          if ! printf '%s' "$BODY" | grep -q "Test Plan"; then
+            echo "Linked issue #$ISSUE lacks Test Plan."
+            exit 1
+          fi
+
+          echo "Issue gate passed for #$ISSUE."
