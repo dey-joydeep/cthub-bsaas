@@ -69,9 +69,9 @@ jobs:
       - name: Post review summary
         if: always()
         run: |
-          LINT_ERRORS="${{ steps.lint.outputs.count }}"
-          TYPE_ERRORS="${{ steps.typecheck.outputs.count }}"
-          TEST_FAILURES="${{ steps.tests.outputs.failed }}"
+          LINT_ERRORS="${{ steps.lint.outputs.count || '0' }}"
+          TYPE_ERRORS="${{ steps.typecheck.outputs.count || '0' }}"
+          TEST_FAILURES="${{ steps.tests.outputs.failed || '0' }}"
 
           # Determine overall verdict
           if [ "$LINT_ERRORS" -gt 0 ] || [ "$TYPE_ERRORS" -gt 0 ] || [ "$TEST_FAILURES" -gt 0 ]; then
