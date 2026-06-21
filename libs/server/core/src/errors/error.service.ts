@@ -188,16 +188,16 @@ export class ErrorService {
     };
 
     if (options.requestUrl) {
-      payload.requestUrl = options.requestUrl;
+      payload['requestUrl'] = options.requestUrl;
     }
 
     if (normalized.details) {
-      payload.details = normalized.details;
+      payload['details'] = normalized.details;
     }
 
     const cid = CorrelationId.get();
     if (cid) {
-      payload.correlationId = cid;
+      payload['correlationId'] = cid;
     }
 
     return JSON.stringify(payload);
