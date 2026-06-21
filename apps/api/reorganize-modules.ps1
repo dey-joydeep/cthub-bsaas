@@ -1,5 +1,5 @@
 # Define the base directory
-$baseDir = "e:\workspace\cthub-bsaas\bsaas-back\src\modules"
+$baseDir = Join-Path $PSScriptRoot "src\modules"
 
 # Get all module directories
 $modules = Get-ChildItem -Path $baseDir -Directory
