@@ -1,0 +1,130 @@
+name: Agent Task
+description: Executable engineering work for Codex, Antigravity, or a human developer
+title: "[Agent Task]: "
+labels:
+  - status:triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for any task that an AI agent may execute. Jira can remain the planning source, but the GitHub issue is the implementation contract.
+
+  - type: input
+    id: jira-key
+    attributes:
+      label: Jira Key
+      description: Optional Jira story/epic/task reference.
+      placeholder: "BSAAS-123"
+
+  - type: dropdown
+    id: owner-agent
+    attributes:
+      label: Intended Executor
+      description: Who should handle this task first?
+      options:
+        - Human
+        - Codex
+        - Antigravity
+        - Either AI agent
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - server
+        - web-admin
+        - web-partner
+        - web-customer
+        - shared
+        - infra
+        - docs
+        - cross-cutting
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What must change?
+      placeholder: "Implement..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Link related Jira items, PRs, design docs, decisions, errors, screenshots, or logs.
+      placeholder: "Relevant context..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Define both the boundary and the non-goals.
+      value: |
+        In scope:
+        - 
+
+        Out of scope:
+        - 
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      value: |
+        - [ ] 
+        - [ ] 
+    validations:
+      required: true
+
+  - type: textarea
+    id: design-impact
+    attributes:
+      label: Design Impact
+      description: Keep HLD/LLD traceability explicit before implementation starts.
+      value: |
+        HLD update needed: No
+        LLD update needed: No
+        API/DTO/schema impact: None
+        Security/auth/i18n impact: None
+        Migration impact: None
+    validations:
+      required: true
+
+  - type: textarea
+    id: test-plan
+    attributes:
+      label: Test Plan
+      value: |
+        Unit:
+        Integration:
+        E2E/manual:
+        Nx targets expected:
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: agent-preconditions
+    attributes:
+      label: Agent Preconditions
+      options:
+        - label: This task is small enough for one PR.
+          required: true
+        - label: The agent must not start until this issue has status:ready-ai and is not blocked.
+          required: true
+        - label: The agent must claim the issue before coding.
+          required: true
+        - label: The PR must link this issue.
+          required: true
+        - label: Human review is required before merge.
+          required: true
