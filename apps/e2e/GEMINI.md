@@ -21,7 +21,7 @@ E2E projects live at app level:
 - Mock external IO where sensible unless the test explicitly validates an integration boundary.
 - For browser tests, prefer robust locators and accessible roles.
 - **Antigravity Workflow:** When a test fails, do not guess or rely purely on static analysis. Use the `@playwright/mcp` server to natively parse the Playwright trace. Validate locators against the live dev server natively.
-- **Execution Workflow:** Ensure background tasks are running the explicit prerequisite targets (e.g., `npx nx run api:serve` and `npx nx run web-admin:serve`) before executing test commands natively in the terminal. All execution must be headless.
+- **Execution Workflow:** Ensure background tasks are running the explicit prerequisite targets (e.g., `npx nx run api:serve` and `npx nx run web-app-admin:serve`) before executing test commands natively in the terminal. All execution must be headless.
 
 ## Auth E2E Note
 - Auth backend completion does not require expanding web E2E unless the user explicitly scopes that work. Auth library UT/IT and OpenAPI parity remain the backend branch gates.
