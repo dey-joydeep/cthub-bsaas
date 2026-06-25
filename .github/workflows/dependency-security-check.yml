@@ -19,6 +19,7 @@ on:
 permissions:
   actions: read
   contents: read
+  security-events: write
 
 jobs:
   osv-scan:
@@ -27,6 +28,7 @@ jobs:
     permissions:
       actions: read
       contents: read
+      security-events: write
     with:
       ref: ${{ inputs.target_branch }}
       upload-sarif: false
