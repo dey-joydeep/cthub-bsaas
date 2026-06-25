@@ -4,45 +4,33 @@ on:
   workflow_dispatch:
     inputs:
       target_branch:
-        description: 'Branch to scan'
+        description: 'Branch, tag, or commit SHA to scan'
         required: true
         default: 'main'
-      audit_level:
-        description: 'Minimum vulnerability severity that fails the workflow'
+      fail_on_vuln:
+        description: 'Fail the workflow when OSV finds vulnerabilities'
         required: true
         type: choice
         options:
-          - low
-          - moderate
-          - high
-          - critical
-        default: high
+          - 'true'
+          - 'false'
+        default: 'true'
 
 permissions:
+  actions: read
   contents: read
 
 jobs:
-  npm-audit:
-    name: NPM audit
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - name: Checkout selected branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.target_branch }}
-          fetch-depth: 1
-          persist-credentials: false
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'npm'
-
-      - name: Install dependencies without lifecycle scripts
-        run: npm ci --ignore-scripts --no-audit --fund=false
-
-      - name: Audit all dependencies
-        run: npm audit --audit-level="${{ inputs.audit_level }}"
+  osv-scan:
+    name: OSV full vulnerability scan
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.3.8
+    permissions:
+      actions: read
+      contents: read
+    with:
+      ref: ${{ inputs.target_branch }}
+      upload-sarif: false
+      fail-on-vuln: ${{ inputs.fail_on_vuln == 'true' }}
+      scan-args: |-
+        --recursive
+        ./
