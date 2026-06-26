@@ -24,9 +24,13 @@ import { TranslateModule } from '@ngx-translate/core';
 
 // Services
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
-import { PLATFORM_UTILS_TOKEN, type PlatformUtils, StorageService } from '@cthub-bsaas/web-core-platform';
+import { PLATFORM_UTILS_TOKEN, StorageService } from '@cthub-bsaas/web-core-platform';
 import { LoginService } from './login.service';
 import type { InitLoginResponse, PartnerAuthUser } from '../../models/auth.models';
+
+type BrowserPlatformUtils = {
+  isBrowser?: boolean;
+};
 
 @Component({
   standalone: true,
@@ -94,7 +98,7 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
   // Removed unused logError() to satisfy noUnusedLocals
 
   constructor(
-    @Inject(PLATFORM_UTILS_TOKEN) protected platformUtils: PlatformUtils,
+    @Inject(PLATFORM_UTILS_TOKEN) protected platformUtils: BrowserPlatformUtils,
     @Inject(FormBuilder) private fb: FormBuilder,
     @Inject(Router) private router: Router,
     @Inject(ActivatedRoute) private route: ActivatedRoute,

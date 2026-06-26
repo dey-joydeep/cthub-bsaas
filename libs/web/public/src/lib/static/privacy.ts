@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MarkdownModule } from 'ngx-markdown';
-import { StaticContentService } from '../static-content.service';
+import { StaticContentService } from './static-content.service';
 import { Observable } from 'rxjs';
 
 @Component({

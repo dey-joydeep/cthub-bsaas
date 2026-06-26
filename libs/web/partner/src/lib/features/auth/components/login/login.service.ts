@@ -6,19 +6,29 @@ import {
     LOGIN_API,
     type ApiResponse,
     type AuthResponse,
-    type AuthStateSetter,
     type InitLoginResponse,
-    type LoginApiPort,
     type LoginCredentials,
     type PartnerAuthUser,
     type VerifyOtpParams,
 } from '../../tokens/login.tokens';
 
+type LoginApi = {
+    login(credentials: LoginCredentials): Observable<ApiResponse<AuthResponse>>;
+    initLogin(credentials: LoginCredentials): Observable<ApiResponse<InitLoginResponse>>;
+    verifyOtp(params: VerifyOtpParams): Observable<ApiResponse<AuthResponse>>;
+    socialLogin(provider: 'google' | 'facebook', token: string): Observable<ApiResponse<AuthResponse>>;
+    resendOtp(email: string): Observable<ApiResponse<{ success: boolean; message?: string }>>;
+};
+
+type AuthStateSetterPort = {
+    setLoggedInUser(user: PartnerAuthUser): void;
+};
+
 @Injectable({ providedIn: 'root' })
 export class LoginService {
     constructor(
-        @Inject(LOGIN_API) private readonly api: LoginApiPort,
-        @Inject(AUTH_STATE_SETTER) private readonly authState: AuthStateSetter,
+        @Inject(LOGIN_API) private readonly api: LoginApi,
+        @Inject(AUTH_STATE_SETTER) private readonly authState: AuthStateSetterPort,
     ) {}
 
     initLogin(credentials: LoginCredentials): Observable<InitLoginResponse> {

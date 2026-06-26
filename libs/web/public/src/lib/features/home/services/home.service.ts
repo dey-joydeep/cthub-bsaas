@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 // Import environment from the correct path
-import { environment } from '@cthub-bsaas/web-config';
+import { environment } from '@cthub-bsaas/web-config/environments/customer/environment';
 
 // Import interfaces from the models file
 import type { IHomePageData, ISalonDto, IServiceDto, ITestimonialDto, ICityDto } from '../model/home.models';

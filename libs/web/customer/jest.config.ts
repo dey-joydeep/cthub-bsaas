@@ -2,18 +2,19 @@
 export default {
   displayName: 'web-customer',
   preset: '../../../jest.preset.cjs',
+  testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../../coverage/libs/web/customer',
   transform: {
-    '^.+\.(ts|mjs|js|html)$ ': [
+    '^.+\\.(ts|mjs|js|html)$': [
       'jest-preset-angular',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
-        stringifyContentPathRegex: '\\.(html|svg)$ ',
+        stringifyContentPathRegex: '\\.(html|svg)$',
       },
     ],
   },
-  transformIgnorePatterns: ['node_modules/(?!.*\.mjs$)'],
+  transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$|lodash-es)'],
   snapshotSerializers: [
     'jest-preset-angular/build/serializers/no-ng-attributes',
     'jest-preset-angular/build/serializers/ng-snapshot',

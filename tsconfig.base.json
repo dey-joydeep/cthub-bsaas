@@ -33,6 +33,8 @@
       "@cthub-bsaas/server-testing-utils/*": ["dist/libs/server/server-testing-utils/*", "libs/server/server-testing-utils/src/*"],
       "@cthub-bsaas/shared": ["libs/shared/src/index.ts"],
       "@cthub-bsaas/shared/*": ["dist/libs/shared/*", "libs/shared/src/*"],
+      "@cthub-bsaas/shared/components/*": ["libs/shared/src/lib/components/*"],
+      "@cthub-bsaas/shared/enums/*": ["libs/shared/src/lib/enums/*"],
       "@cthub-bsaas/shared/models/*": ["libs/shared/src/lib/models/*"],
       "@cthub-bsaas/web-admin": ["libs/web/admin/src/index.ts"],
       "@cthub-bsaas/web-admin/*": ["libs/web/admin/src/*"],

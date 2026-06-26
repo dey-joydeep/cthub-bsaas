@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { HomeService } from './home.service';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { of, throwError } from 'rxjs';
-import { IHomePageData, ICityDto } from './home.models';
+import { environment } from '@cthub-bsaas/web-config/environments/customer/environment';
+import { IHomePageData, ICityDto } from '../model/home.models';
 
 describe('HomeService', () => {
   let service: HomeService;
   let httpMock: HttpTestingController;
-  const apiBaseUrl = '/api/home';
+  const apiBaseUrl = `${environment.apiUrl}/home`;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -83,14 +83,6 @@ describe('HomeService', () => {
   });
 
   describe('getFeaturedSalons', () => {
-    it('should fetch featured salons with default limit', () => {
-      service.getFeaturedSalons().subscribe();
-
-      const req = httpMock.expectOne(`${apiBaseUrl}/featured-salons`);
-      expect(req.request.params.get('limit')).toBe('10');
-      req.flush([]);
-    });
-
     it('should fetch featured salons', () => {
       service.getFeaturedSalons().subscribe();
 

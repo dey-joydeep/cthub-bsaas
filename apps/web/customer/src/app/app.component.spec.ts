@@ -1,63 +1,61 @@
-import { TestBed } from '@angular/core/testing';
-import { AppComponent } from './app.component';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http';
-import { provideAnimations } from '@angular/platform-browser/animations';
-import { TranslateModule } from '@ngx-translate/core';
-import { CommonModule } from '@angular/common';
-import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
+
+import { type BaseAuthUser, CurrentUserService } from '@cthub-bsaas/web-core/auth';
+import { AuthService } from '@cthub-bsaas/web-customer/auth';
+
+import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
-  beforeEach(async () => {
+  const logout = jest.fn<Promise<void>, []>().mockResolvedValue(undefined);
+  const snackBar = { open: jest.fn() };
+
+  async function renderComponent(currentUser: BaseAuthUser | null = null) {
     await TestBed.configureTestingModule({
-      imports: [CommonModule, AppComponent, TranslateModule.forRoot()],
-      providers: [provideRouter([]), provideHttpClient(), provideAnimations()],
-      schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA],
+      imports: [NoopAnimationsModule, AppComponent],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: { logout } },
+        { provide: CurrentUserService, useValue: { currentUser$: of(currentUser) } },
+        { provide: MatSnackBar, useValue: snackBar },
+      ],
     }).compileComponents();
-  });
 
-  afterEach(() => {
-    // Reset spies on localStorage to prevent duplicate spyOn errors
-    if ((localStorage.getItem as any).calls) {
-      (localStorage.getItem as any).calls.reset();
-    }
-  });
-
-  it('should create the app', () => {
     const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  beforeEach(() => {
+    logout.mockClear();
+    snackBar.open.mockClear();
+    TestBed.resetTestingModule();
+  });
+
+  it('creates the app with the expected title', async () => {
+    const fixture = await renderComponent();
     const app = fixture.componentInstance;
+
     expect(app).toBeTruthy();
+    expect(app.title).toBe('BeautySaaS');
   });
 
-  it('should have the correct title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('BeautySaaS');
-  });
-
-  it('should render sidebar links', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
+  it('shows login actions when there is no authenticated user', async () => {
+    const fixture = await renderComponent();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.sidebar nav')).toBeTruthy();
+
+    expect(compiled.querySelector('.auth-buttons')).toBeTruthy();
+    expect(compiled.querySelector('.main-nav')).toBeNull();
   });
 
-  it('should switch languages', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    // app.switchLang('bn');
-    // expect(app.currentLang).toBe('bn');
-    // app.switchLang('en');
-    // expect(app.currentLang).toBe('en');
-  });
+  it('shows the main navigation when a user is authenticated', async () => {
+    const fixture = await renderComponent({ id: 'user-1' });
+    const compiled = fixture.nativeElement as HTMLElement;
 
-  it('should show/hide links based on login', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const getItemSpy = spyOn(localStorage, 'getItem');
-    getItemSpy.and.returnValue('token');
-    // expect(app.isLoggedIn).toBeTrue();
-    getItemSpy.and.returnValue(null);
-    // expect(app.isLoggedIn).toBeFalse();
+    expect(compiled.querySelector('.main-nav')).toBeTruthy();
+    expect(compiled.querySelector('.auth-buttons')).toBeNull();
   });
 });

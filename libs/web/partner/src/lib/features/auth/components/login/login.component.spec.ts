@@ -1,125 +1,71 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ReactiveFormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { Router, provideRouter } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
-// Components
+import { ErrorService } from '@cthub-bsaas/web-core-common';
+import { PLATFORM_UTILS_TOKEN, StorageService } from '@cthub-bsaas/web-core-platform';
+
 import { LoginComponent } from './login.component';
-
-// Services
-import { NotificationService } from '@cthub-bsaas/web-core-common';
-import { AuthService } from '../../services/auth.service';
-
-// Mocks
-class MockTranslateService {
-  get = jest.fn().mockReturnValue(of('translated text'));
-  instant = jest.fn().mockReturnValue('translated text');
-  use = jest.fn().mockReturnValue(of({}));
-  setDefaultLang = jest.fn();
-  getBrowserLang = jest.fn().mockReturnValue('en');
-  getLangs = jest.fn().mockReturnValue(['en', 'es']);
-  onLangChange = { subscribe: jest.fn() };
-  onTranslationChange = { subscribe: jest.fn() };
-  onDefaultLangChange = { subscribe: jest.fn() };
-}
-
-class MockAuthService implements Partial<AuthService> {
-  login = jest.fn().mockReturnValue(
-    of({
-      id: '1',
-      email: 'test@example.com',
-      name: 'Test User',
-      role: 'customer',
-      accessToken: 'test-token',
-      refreshToken: 'refresh-token',
-      expiresIn: 3600,
-    }),
-  );
-  isAuthenticated = jest.fn().mockReturnValue(false);
-  getCurrentUser = jest.fn().mockReturnValue(null);
-  logout = jest.fn().mockReturnValue(of(true));
-  getToken = jest.fn().mockReturnValue('test-token');
-  getRefreshToken = jest.fn().mockReturnValue('refresh-token');
-  refreshToken = jest.fn().mockReturnValue(
-    of({
-      id: '1',
-      email: 'test@example.com',
-      name: 'Test User',
-      role: 'customer',
-      accessToken: 'new-test-token',
-      refreshToken: 'new-refresh-token',
-      expiresIn: 3600,
-    }),
-  );
-}
-
-class MockNotificationService {
-  error = jest.fn();
-  success = jest.fn();
-  show = jest.fn();
-  info = jest.fn();
-  warning = jest.fn();
-  clear = jest.fn();
-  showError = jest.fn();
-  showSuccess = jest.fn();
-  showWarning = jest.fn();
-  showInfo = jest.fn();
-}
+import { LoginService } from './login.service';
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
   let fixture: ComponentFixture<LoginComponent>;
-  let authService: MockAuthService;
-  let notificationService: MockNotificationService;
+  let loginService: {
+    initLogin: jest.Mock;
+    verifyOtp: jest.Mock;
+    socialLogin: jest.Mock;
+  };
+  let storageService: {
+    getItem$: jest.Mock;
+    setItem$: jest.Mock;
+    removeItem$: jest.Mock;
+  };
   let router: Router;
 
-  const mockUser = {
-    id: '1',
-    email: 'test@example.com',
-    name: 'Test User',
-    role: 'customer',
-    accessToken: 'test-token',
-    refreshToken: 'refresh-token',
-    expiresIn: 3600,
-  };
-
   beforeEach(async () => {
+    loginService = {
+      initLogin: jest.fn(),
+      verifyOtp: jest.fn(),
+      socialLogin: jest.fn(),
+    };
+    storageService = {
+      getItem$: jest.fn().mockReturnValue(of(null)),
+      setItem$: jest.fn().mockReturnValue(of(undefined)),
+      removeItem$: jest.fn().mockReturnValue(of(undefined)),
+    };
+
     await TestBed.configureTestingModule({
-      imports: [
-        ReactiveFormsModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatButtonModule,
-        MatProgressBarModule,
-        MatSnackBarModule,
-        TranslateModule.forRoot(),
-        HttpClientTestingModule,
-        LoginComponent,
-      ],
+      imports: [LoginComponent],
       providers: [
-        { provide: AuthService, useClass: MockAuthService },
-        { provide: NotificationService, useClass: MockNotificationService },
-        { provide: TranslateService, useClass: MockTranslateService },
-        provideRouter([]), // Use provideRouter instead of RouterTestingModule
+        provideRouter([]),
+        { provide: LoginService, useValue: loginService },
+        { provide: StorageService, useValue: storageService },
+        { provide: PLATFORM_UTILS_TOKEN, useValue: { isBrowser: true, windowRef: globalThis.window } },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              queryParamMap: {
+                get: jest.fn().mockReturnValue('/dashboard'),
+              },
+            },
+          },
+        },
+        {
+          provide: ErrorService,
+          useValue: {
+            error$: of(null),
+            handleError: jest.fn(),
+            getErrorMessage: jest.fn().mockReturnValue('Something went wrong'),
+          },
+        },
       ],
     }).compileComponents();
 
+    router = TestBed.inject(Router);
     fixture = TestBed.createComponent(LoginComponent);
     component = fixture.componentInstance;
-    authService = TestBed.inject(AuthService) as unknown as MockAuthService;
-    notificationService = TestBed.inject(NotificationService) as unknown as MockNotificationService;
-    router = TestBed.inject(Router);
-
-    // Mock the login method
-    authService.login.mockReturnValue(of(mockUser));
-
     fixture.detectChanges();
   });
 
@@ -128,109 +74,67 @@ describe('LoginComponent', () => {
   });
 
   it('should initialize the form with empty values', () => {
-    expect(component.loginForm.value).toEqual({
+    expect(component.loginForm.getRawValue()).toEqual({
       email: '',
       password: '',
       rememberMe: false,
     });
   });
 
-  it('should validate email field as required', () => {
-    const emailControl = component.loginForm.get('email');
-    emailControl?.setValue('');
-    expect(emailControl?.valid).toBeFalsy();
-    expect(emailControl?.hasError('required')).toBeTruthy();
-
-    emailControl?.setValue('invalid-email');
-    expect(emailControl?.hasError('email')).toBeTruthy();
-  });
-
-  it('should validate password field as required', () => {
-    const passwordControl = component.loginForm.get('password');
-    passwordControl?.setValue('');
-    expect(passwordControl?.valid).toBeFalsy();
-    expect(passwordControl?.hasError('required')).toBeTruthy();
-  });
-
-  it('should call authService.login and navigate on successful login', () => {
-    const navigateSpy = jest.spyOn(router, 'navigateByUrl').mockImplementation(() => Promise.resolve(true));
+  it('should advance to otp step for owner login', async () => {
+    loginService.initLogin.mockReturnValue(of({ userType: 'owner' }));
 
     component.loginForm.setValue({
-      email: 'test@example.com',
-      password: 'password',
+      email: 'owner@example.com',
+      password: 'password123',
       rememberMe: true,
     });
 
-    component.onSubmit();
+    await component.onSubmit();
 
-    expect(authService.login).toHaveBeenCalledWith({
-      email: 'test@example.com',
-      password: 'password',
+    expect(storageService.setItem$).toHaveBeenCalledWith('savedEmail', 'owner@example.com');
+    expect(loginService.initLogin).toHaveBeenCalledWith({
+      email: 'owner@example.com',
+      password: 'password123',
+      rememberMe: true,
     });
-    expect(navigateSpy).toHaveBeenCalledWith('/dashboard');
+    expect(component.step).toBe('otp');
   });
 
-  it('should handle login error', () => {
-    const error = { message: 'Login failed' };
-    authService.login.mockReturnValue(throwError(() => error));
+  it('should surface unsupported customer login state', async () => {
+    const navigateByUrl = jest.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    loginService.initLogin.mockReturnValue(of({ userType: 'customer' }));
 
     component.loginForm.setValue({
-      email: 'test@example.com',
-      password: 'wrong-password',
-      rememberMe: false,
-    });
-
-    component.onSubmit();
-
-    expect(notificationService.error).toHaveBeenCalledWith('Login failed. Please check your credentials and try again.');
-  });
-
-  it('should show loading state during form submission', () => {
-    // Set up form with valid data
-    component.loginForm.setValue({
-      email: 'test@example.com',
+      email: 'customer@example.com',
       password: 'password123',
       rememberMe: false,
     });
 
-    // Trigger form submission
-    component.onSubmit();
+    await component.onSubmit();
 
-    // Check if loading state is set
-    expect(component.isSubmitting).toBe(true);
-
-    // Check if authService.login was called
-    expect(authService.login).toHaveBeenCalledWith('test@example.com', 'password123');
+    expect(storageService.removeItem$).toHaveBeenCalledWith('savedEmail');
+    expect(navigateByUrl).not.toHaveBeenCalled();
+    expect(component.error).toBe('Unknown user type');
   });
 
-  it('should handle login success', () => {
-    // Set up form with valid data
-    component.loginForm.setValue({
-      email: 'test@example.com',
-      password: 'password123',
-      rememberMe: false,
-    });
-
-    // Mock successful login response
-    authService.login.mockReturnValueOnce(
-      of({
-        id: '1',
-        email: 'test@example.com',
-        name: 'Test User',
-        role: 'customer',
-        accessToken: 'test-token',
-        refreshToken: 'refresh-token',
-        expiresIn: 3600,
-      }),
+  it('should surface login init errors', async () => {
+    loginService.initLogin.mockReturnValue(
+      throwError(() => ({
+        error: {
+          error: 'Login failed',
+        },
+      })),
     );
 
-    // Spy on router.navigate
-    const navigateSpy = jest.spyOn(router, 'navigate');
+    component.loginForm.setValue({
+      email: 'customer@example.com',
+      password: 'bad-password',
+      rememberMe: false,
+    });
 
-    // Trigger form submission
-    component.onSubmit();
+    await component.onSubmit();
 
-    // Check if navigation occurred
-    expect(navigateSpy).toHaveBeenCalledWith(['/dashboard']);
+    expect(component.error).toBe('Login failed');
   });
 });

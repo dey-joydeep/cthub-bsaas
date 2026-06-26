@@ -1,12 +1,12 @@
 import { ComponentFixture, TestBed, waitForAsync, fakeAsync, tick } from '@angular/core/testing';
 import { SalonSearchComponent } from './salon-search.component';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ActivatedRoute } from '@angular/router';
-import { of } from 'rxjs';
+import { PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
 
 describe('SalonSearchComponent', () => {
   let component: SalonSearchComponent;
@@ -20,10 +20,13 @@ describe('SalonSearchComponent', () => {
         HttpClientTestingModule,
         FormsModule,
         TranslateModule.forRoot(),
-        SafeUrlPipe,
         RouterTestingModule.withRoutes([]),
       ],
-      providers: [SafeUrlPipe, { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => null } } } }],
+      providers: [
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => null } } } },
+        { provide: PLATFORM_ID, useValue: 'browser' },
+        { provide: PLATFORM_UTILS_TOKEN, useValue: { isBrowser: true, windowRef: globalThis.window } },
+      ],
     }).compileComponents();
   }));
 
@@ -151,7 +154,7 @@ describe('SalonSearchComponent', () => {
     // Flush all /api/salons requests
     httpMock.match((r) => r.url.includes('/api/salons')).forEach((req) => req.flush({ salons: [], total: 0 }));
     fixture.detectChanges();
-    expect(component.loading).toBeFalse();
+    expect(component.loading).toBe(false);
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('No salons found. Try adjusting your search or filters.');
   }));

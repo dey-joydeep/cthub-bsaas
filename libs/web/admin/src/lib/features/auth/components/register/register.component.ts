@@ -1,7 +1,11 @@
 import { Component, Inject, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { REGISTER_API, type RegisterApiPort, type RegisterPayload } from '../../tokens/password.tokens';
+import { REGISTER_API, type RegisterPayload } from '../../tokens/password.tokens';
+
+type RegisterApi = {
+  register(payload: RegisterPayload): Promise<void>;
+};
 
 @Component({
   selector: 'app-register',
@@ -18,7 +22,7 @@ export class RegisterComponent {
 
   constructor(
     private fb: FormBuilder,
-    @Optional() @Inject(REGISTER_API) private registerApi: RegisterApiPort | null,
+    @Optional() @Inject(REGISTER_API) private registerApi: RegisterApi | null,
   ) {
     this.registerForm = this.fb.group({
       name: ['', [Validators.required]],

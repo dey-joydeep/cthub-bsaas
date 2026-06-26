@@ -1,16 +1,28 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Faq } from './faq';
+import { MarkdownModule } from 'ngx-markdown';
+import { of } from 'rxjs';
 
-describe('Faq', () => {
-  let component: Faq;
-  let fixture: ComponentFixture<Faq>;
+import { StaticContentService } from './static-content.service';
+import { FaqComponent } from './faq';
+
+describe('FaqComponent', () => {
+  let component: FaqComponent;
+  let fixture: ComponentFixture<FaqComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Faq],
+      imports: [FaqComponent, MarkdownModule.forRoot()],
+      providers: [
+        {
+          provide: StaticContentService,
+          useValue: {
+            getContent: jest.fn().mockReturnValue(of('## FAQ')),
+          },
+        },
+      ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Faq);
+    fixture = TestBed.createComponent(FaqComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
