@@ -31,6 +31,7 @@ interface SettingsComponentHarness {
   selectedBranch(): BranchProfile | null;
   branchSettingsLoaded(): boolean;
   error(): string | null;
+  message(): string | null;
 }
 
 describe('SalonOwnerSettingsComponent', () => {
@@ -259,6 +260,24 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(api.updateBusiness).not.toHaveBeenCalled();
   });
 
+  it('shows a specific message when deactivating a business is blocked by active branches', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      businessForm: { patchValue(value: { status: 'INACTIVE' }): void };
+    };
+    api.updateBusiness.mockReturnValueOnce(
+      throwError(() => ({
+        error: { message: 'error.business.profile.status_conflict' },
+      })),
+    );
+
+    component.businessForm.patchValue({ status: 'INACTIVE' });
+    component.saveBusiness();
+
+    expect(component.error()).toBe(
+      'This business cannot be deactivated while it still has active branches. Archive or deactivate those branches first.',
+    );
+  });
+
   it('preserves the selected branch business id when creating from the branch route', () => {
     const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
       newBranch(): void;
@@ -267,6 +286,42 @@ describe('SalonOwnerSettingsComponent', () => {
     component.newBranch();
 
     expect(component.branchForm.getRawValue().businessId).toBe('business-1');
+  });
+
+  it('keeps branch-route reloads unfiltered after saving a branch', () => {
+    TestBed.resetTestingModule();
+    api.listBranches.mockClear();
+    TestBed.configureTestingModule({
+      imports: [NoopAnimationsModule, SalonOwnerSettingsComponent],
+      providers: [
+        { provide: SalonOwnerSettingsApi, useValue: api },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            parent: {
+              routeConfig: { path: 'owner/branches' },
+            },
+          },
+        },
+        {
+          provide: CURRENT_USER,
+          useValue: {
+            currentUser$: of({ id: 'owner-1', role: 'owner' }),
+            isAuthenticated$: of(true),
+            redirectUrl: null,
+          },
+        },
+      ],
+    });
+
+    const branchFixture = TestBed.createComponent(SalonOwnerSettingsComponent);
+    branchFixture.detectChanges();
+    const component = branchFixture.componentInstance as unknown as SettingsComponentHarness;
+    api.listBranches.mockClear();
+
+    component.saveBranch();
+
+    expect(api.listBranches).toHaveBeenCalledWith(undefined);
   });
 
   it('saves branch policy for the selected branch', () => {
@@ -532,6 +587,26 @@ describe('SalonOwnerSettingsComponent', () => {
         acknowledgeExistingAppointmentsOutsideHours: true,
       }),
     );
+  });
+
+  it('ignores stale hours-save conflicts after switching branches', () => {
+    let hoursErrorHandler: ((error: unknown) => void) | undefined;
+    api.replaceBranchHours.mockReturnValueOnce(
+      new Observable((subscriber) => {
+        hoursErrorHandler = (error) => subscriber.error(error);
+      }),
+    );
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness;
+
+    component.saveHours();
+    component.selectBranch({ ...branch, id: 'branch-2', name: 'Second' });
+    hoursErrorHandler?.({
+      error: { message: 'error.branch.hours.appointments_outside_hours' },
+    });
+
+    expect(component.selectedBranch()).toEqual(expect.objectContaining({ id: 'branch-2' }));
+    expect(component.error()).toBeNull();
+    expect(component.message()).toBeNull();
   });
 
   it('requires holiday start and end times when the branch stays open', () => {

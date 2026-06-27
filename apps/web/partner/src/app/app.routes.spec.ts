@@ -7,6 +7,7 @@ describe('partner app routes', () => {
   it('guards owner settings routes behind authenticated owner access', () => {
     const ownerSettingsRoute = routes.find((route) => route.path === 'owner/settings');
     const ownerBranchesRoute = routes.find((route) => route.path === 'owner/branches');
+    const settingsAliasRoute = routes.find((route) => route.path === 'settings');
 
     expect(ownerSettingsRoute?.canMatch).toEqual([authCanMatch]);
     expect(ownerBranchesRoute?.canMatch).toEqual([authCanMatch]);
@@ -14,5 +15,10 @@ describe('partner app routes', () => {
     expect(ownerBranchesRoute?.canActivate).toEqual([roleGuard]);
     expect(ownerSettingsRoute?.data).toEqual({ roles: [UserRole.OWNER] });
     expect(ownerBranchesRoute?.data).toEqual({ roles: [UserRole.OWNER, UserRole.STAFF] });
+    expect(settingsAliasRoute).toEqual({
+      path: 'settings',
+      redirectTo: 'owner/settings',
+      pathMatch: 'full',
+    });
   });
 });

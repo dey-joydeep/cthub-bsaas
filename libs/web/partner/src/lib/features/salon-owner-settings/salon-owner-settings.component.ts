@@ -193,6 +193,7 @@ export class SalonOwnerSettingsComponent {
   private businessSaveVersion = 0;
   private branchEditorVersion = 0;
   private branchSaveVersion = 0;
+  private hoursSaveVersion = 0;
   private readonly branchRouteMode = this.route?.parent?.routeConfig?.path === 'owner/branches';
   private readonly currentRole = toSignal(this.currentUser?.currentUser$ ?? of(null), {
     initialValue: null,
@@ -291,6 +292,7 @@ export class SalonOwnerSettingsComponent {
 
   protected selectBranch(branch: BranchProfile): void {
     this.branchEditorVersion += 1;
+    this.hoursSaveVersion += 1;
     this.selectedBranch.set(branch);
     this.branchSettingsLoaded.set(false);
     this.branchForm.reset({
@@ -350,16 +352,42 @@ export class SalonOwnerSettingsComponent {
       ? this.api.updateBusiness(selected.id, this.businessForm.getRawValue())
       : this.api.createBusiness(this.businessForm.getRawValue());
 
-    this.persist(request, (business) => {
-      if (
-        (this.selectedBusiness()?.id ?? null) !== startedBusinessId ||
-        requestVersion !== this.businessSaveVersion ||
-        startedEditorVersion !== this.businessEditorVersion
-      ) {
-        return;
-      }
-      this.selectedBusiness.set(business);
-      this.loadBusinesses(business.id);
+    this.saving.set(true);
+    this.error.set(null);
+    this.message.set(null);
+    request.subscribe({
+      next: (business) => {
+        if (
+          (this.selectedBusiness()?.id ?? null) !== startedBusinessId ||
+          requestVersion !== this.businessSaveVersion ||
+          startedEditorVersion !== this.businessEditorVersion
+        ) {
+          this.saving.set(false);
+          return;
+        }
+        this.selectedBusiness.set(business);
+        this.loadBusinesses(business.id);
+        this.message.set('Settings saved.');
+        this.saving.set(false);
+      },
+      error: (error: unknown) => {
+        if (
+          (this.selectedBusiness()?.id ?? null) !== startedBusinessId ||
+          requestVersion !== this.businessSaveVersion ||
+          startedEditorVersion !== this.businessEditorVersion
+        ) {
+          this.saving.set(false);
+          return;
+        }
+        if (this.isBusinessDeactivationConflictError(error)) {
+          this.error.set('This business cannot be deactivated while it still has active branches. Archive or deactivate those branches first.');
+          this.saving.set(false);
+          return;
+        }
+
+        this.error.set('Settings could not be saved.');
+        this.saving.set(false);
+      },
     });
   }
 
@@ -401,11 +429,20 @@ export class SalonOwnerSettingsComponent {
           return;
         }
         this.selectedBranch.set(branch);
-        this.loadBranches(branch.businessId, branch.id);
+        this.loadBranches(this.branchOnlyMode() ? undefined : branch.businessId, branch.id);
         this.message.set('Settings saved.');
         this.saving.set(false);
       },
       error: (error: unknown) => {
+        if (
+          requestVersion !== this.branchSaveVersion ||
+          (this.selectedBusiness()?.id ?? startedBusinessId) !== startedBusinessId ||
+          (this.selectedBranch()?.id ?? null) !== startedBranchId ||
+          startedEditorVersion !== this.branchEditorVersion
+        ) {
+          this.saving.set(false);
+          return;
+        }
         if (this.isBranchArchiveConflictError(error)) {
           this.error.set('This branch cannot be archived while it has future confirmed appointments. Move or cancel those appointments first.');
           this.saving.set(false);
@@ -445,17 +482,27 @@ export class SalonOwnerSettingsComponent {
       return;
     }
 
+    const startedBranchId = branch.id;
+    const requestVersion = ++this.hoursSaveVersion;
     this.saving.set(true);
     this.error.set(null);
     this.message.set(null);
     this.api.replaceBranchHours(branch.id, this.buildWeeklyHoursInput()).subscribe({
       next: () => {
+        if (requestVersion !== this.hoursSaveVersion || this.selectedBranch()?.id !== startedBranchId) {
+          this.saving.set(false);
+          return;
+        }
         this.hoursConflictRequiresAcknowledgement.set(false);
         this.hoursForm.controls.acknowledgeExistingAppointmentsOutsideHours.setValue(false);
         this.message.set('Settings saved.');
         this.saving.set(false);
       },
       error: (error: unknown) => {
+        if (requestVersion !== this.hoursSaveVersion || this.selectedBranch()?.id !== startedBranchId) {
+          this.saving.set(false);
+          return;
+        }
         if (this.isHoursConflictError(error)) {
           this.hoursConflictRequiresAcknowledgement.set(true);
           this.error.set('Confirm the hours change before saving because future appointments fall outside the proposed schedule.');
@@ -721,6 +768,7 @@ export class SalonOwnerSettingsComponent {
   }
 
   private resetBranchEditor(businessId: string): void {
+    this.hoursSaveVersion += 1;
     this.selectedBranch.set(null);
     this.branchSettingsLoaded.set(false);
     this.holidays.set([]);
@@ -810,6 +858,34 @@ export class SalonOwnerSettingsComponent {
           : null;
 
     return errorCode === 'error.branch.profile.status_conflict' || errorMessage === 'error.branch.profile.status_conflict';
+  }
+
+  private isBusinessDeactivationConflictError(error: unknown): boolean {
+    const responseError =
+      error instanceof HttpErrorResponse
+        ? error.error
+        : typeof error === 'object' && error !== null && 'error' in error
+          ? error.error
+          : null;
+
+    const errorCode =
+      typeof responseError === 'object' &&
+      responseError !== null &&
+      'code' in responseError &&
+      typeof responseError.code === 'string'
+        ? responseError.code
+        : null;
+    const errorMessage =
+      typeof responseError === 'object' &&
+      responseError !== null &&
+      'message' in responseError &&
+      typeof responseError.message === 'string'
+        ? responseError.message
+        : typeof responseError === 'string'
+          ? responseError
+          : null;
+
+    return errorCode === 'error.business.profile.status_conflict' || errorMessage === 'error.business.profile.status_conflict';
   }
 
   private persist<T>(request: Observable<T>, onSuccess?: (value: T) => void): void {

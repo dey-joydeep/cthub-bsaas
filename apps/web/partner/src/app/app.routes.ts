@@ -6,6 +6,7 @@ import { UserRole } from '@cthub-bsaas/shared';
 
 export const routes: Routes = [
   { path: 'auth', children: AUTH_ROUTES },
+  { path: 'settings', redirectTo: 'owner/settings', pathMatch: 'full' },
   {
     path: 'owner/settings',
     canMatch: [authCanMatch],
