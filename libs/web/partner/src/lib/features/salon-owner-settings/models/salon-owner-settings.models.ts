@@ -25,7 +25,7 @@ export interface PagedEnvelope<T> {
 
 export interface SalonOwnerAddress {
   readonly line1: string;
-  readonly line2?: string;
+  readonly line2?: string | null;
   readonly city: string;
   readonly state: string;
   readonly postalCode: string;
@@ -48,8 +48,8 @@ export interface SalonBusiness extends SalonBusinessInput {
 export interface BranchProfileInput {
   readonly businessId: string;
   readonly name: string;
-  readonly phone?: string;
-  readonly email?: string;
+  readonly phone?: string | null;
+  readonly email?: string | null;
   readonly timezone: string;
   readonly currency: string;
   readonly status: BranchStatus;

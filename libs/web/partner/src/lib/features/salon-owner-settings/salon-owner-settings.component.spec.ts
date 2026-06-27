@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Observable, of, throwError } from 'rxjs';
 
+import { CURRENT_USER } from '@cthub-bsaas/web-core-auth';
 import { BranchProfile, SalonBusiness } from './models/salon-owner-settings.models';
 import { SalonOwnerSettingsApi } from './salon-owner-settings.api';
 import { SalonOwnerSettingsComponent } from './salon-owner-settings.component';
@@ -15,6 +16,7 @@ interface SettingsComponentHarness {
   saveBusiness(): void;
   newBusiness(): void;
   selectBusiness(business: SalonBusiness): void;
+  selectBranch(branch: BranchProfile): void;
   branchForm: { patchValue(value: Partial<{ email: string }>): void; getRawValue(): { businessId: string } };
   hoursForm: { patchValue(value: Partial<{ timezone: string }>): void };
   holidayForm: {
@@ -24,8 +26,10 @@ interface SettingsComponentHarness {
   policyForm: { controls: { bookingLeadMinutes: { setValue(value: number): void } } };
   businesses(): readonly SalonBusiness[];
   branches(): readonly BranchProfile[];
+  selectedBusiness(): SalonBusiness | null;
   selectedBranch(): BranchProfile | null;
   branchSettingsLoaded(): boolean;
+  error(): string | null;
 }
 
 describe('SalonOwnerSettingsComponent', () => {
@@ -152,6 +156,14 @@ describe('SalonOwnerSettingsComponent', () => {
             },
           },
         },
+        {
+          provide: CURRENT_USER,
+          useValue: {
+            currentUser$: of({ id: 'owner-1', role: 'owner' }),
+            isAuthenticated$: of(true),
+            redirectUrl: null,
+          },
+        },
       ],
     });
 
@@ -161,6 +173,55 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(api.listBusinesses).not.toHaveBeenCalled();
     expect(api.listBranches).toHaveBeenCalledWith(undefined);
     expect(branchFixture.nativeElement.textContent).toContain('Branch settings');
+  });
+
+  it('loads businesses on the branch route when an owner has no branches yet', () => {
+    TestBed.resetTestingModule();
+    api.listBusinesses.mockClear();
+    api.listBranches.mockReset();
+    api.listBranches
+      .mockReturnValueOnce(
+        of({
+          items: [],
+          page: { page: 1, pageSize: 1, total: 0 },
+        }),
+      )
+      .mockReturnValueOnce(
+        of({
+          items: [],
+          page: { page: 1, pageSize: 1, total: 0 },
+        }),
+      );
+
+    TestBed.configureTestingModule({
+      imports: [NoopAnimationsModule, SalonOwnerSettingsComponent],
+      providers: [
+        { provide: SalonOwnerSettingsApi, useValue: api },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            parent: {
+              routeConfig: { path: 'owner/branches' },
+            },
+          },
+        },
+        {
+          provide: CURRENT_USER,
+          useValue: {
+            currentUser$: of({ id: 'owner-1', role: 'owner' }),
+            isAuthenticated$: of(true),
+            redirectUrl: null,
+          },
+        },
+      ],
+    });
+
+    const branchFixture = TestBed.createComponent(SalonOwnerSettingsComponent);
+    branchFixture.detectChanges();
+    const component = branchFixture.componentInstance as unknown as SettingsComponentHarness;
+
+    expect(api.listBusinesses).toHaveBeenCalled();
+    expect(component.branchForm.getRawValue().businessId).toBe('business-1');
   });
 
   it('allows creating another business after one is already selected', () => {
@@ -196,7 +257,7 @@ describe('SalonOwnerSettingsComponent', () => {
     });
   });
 
-  it('omits optional branch email when the field is blank', () => {
+  it('clears optional branch email when the field is blank on update', () => {
     const component = fixture.componentInstance as unknown as SettingsComponentHarness;
     component.branchForm.patchValue({ email: '' });
 
@@ -205,8 +266,25 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(api.updateBranch).toHaveBeenCalledWith(
       'branch-1',
       expect.objectContaining({
-        email: undefined,
+        email: null,
         status: 'ACTIVE',
+      }),
+    );
+  });
+
+  it('sends explicit nulls when clearing optional branch fields on update', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      branchForm: { patchValue(value: { phone: string; email: string }): void };
+    };
+    component.branchForm.patchValue({ phone: '', email: '' });
+
+    component.saveBranch();
+
+    expect(api.updateBranch).toHaveBeenCalledWith(
+      'branch-1',
+      expect.objectContaining({
+        phone: null,
+        email: null,
       }),
     );
   });
@@ -274,6 +352,40 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(api.updateBranchPolicy).not.toHaveBeenCalled();
   });
 
+  it('does not submit decimal or oversized policy values', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      policyForm: {
+        patchValue(value: {
+          bookingLeadMinutes: number;
+          cancellationCutoffMinutes: number;
+          noShowGraceMinutes: number;
+        }): void;
+      };
+    };
+    api.updateBranchPolicy.mockClear();
+    component.policyForm.patchValue({
+      bookingLeadMinutes: 1.5,
+      cancellationCutoffMinutes: 9999999999,
+      noShowGraceMinutes: 10,
+    });
+
+    component.savePolicy();
+
+    expect(api.updateBranchPolicy).not.toHaveBeenCalled();
+  });
+
+  it('does not submit invalid branch timezone or currency values', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      branchForm: { patchValue(value: { timezone: string; currency: string }): void };
+    };
+    api.updateBranch.mockClear();
+    component.branchForm.patchValue({ timezone: 'Asia/Toky', currency: 'ZZZ' });
+
+    component.saveBranch();
+
+    expect(api.updateBranch).not.toHaveBeenCalled();
+  });
+
   it('does not submit invalid holiday or weekly-hours values', () => {
     const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
       holidayForm: { patchValue(value: { date: string }): void };
@@ -305,6 +417,31 @@ describe('SalonOwnerSettingsComponent', () => {
     api.replaceBranchHours.mockClear();
 
     component.dayForms.at(1).get('intervals').at(0).patchValue({ start: '9:00', end: '25:99' });
+    component.saveHours();
+
+    expect(api.replaceBranchHours).not.toHaveBeenCalled();
+  });
+
+  it('does not submit weekly-hours values with reversed or overlapping intervals', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      addInterval(dayIndex: number): void;
+      dayForms: {
+        at(index: number): {
+          get(path: string): {
+            at(index: number): { patchValue(value: { start?: string; end?: string }): void };
+          };
+        };
+      };
+    };
+    api.replaceBranchHours.mockClear();
+
+    component.dayForms.at(1).get('intervals').at(0).patchValue({ start: '17:00', end: '09:00' });
+    component.saveHours();
+    expect(api.replaceBranchHours).not.toHaveBeenCalled();
+
+    component.dayForms.at(1).get('intervals').at(0).patchValue({ start: '09:00', end: '12:00' });
+    component.addInterval(1);
+    component.dayForms.at(1).get('intervals').at(1).patchValue({ start: '11:00', end: '13:00' });
     component.saveHours();
 
     expect(api.replaceBranchHours).not.toHaveBeenCalled();
@@ -407,6 +544,75 @@ describe('SalonOwnerSettingsComponent', () => {
     saveHandler?.(branch);
 
     expect(component.selectedBranch()).toEqual(expect.objectContaining({ id: 'branch-2', businessId: 'business-2' }));
+  });
+
+  it('ignores stale business-save responses after the selected business changes', () => {
+    let saveHandler:
+      | ((savedBusiness: SalonBusiness) => void)
+      | undefined;
+    api.updateBusiness.mockReturnValueOnce(
+      new Observable((subscriber) => {
+        saveHandler = (savedBusiness) => {
+          subscriber.next(savedBusiness);
+          subscriber.complete();
+        };
+      }),
+    );
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      businessForm: { patchValue(value: { displayName: string }): void };
+    };
+
+    component.businessForm.patchValue({ displayName: 'Updated One' });
+    component.saveBusiness();
+    component.selectBusiness({
+      id: 'business-2',
+      tenantId: 'tenant-1',
+      displayName: 'Salon Two',
+      legalName: 'Salon Two Legal',
+      status: 'ACTIVE',
+      createdAt: '2026-05-26T00:00:00.000Z',
+      updatedAt: '2026-05-26T00:00:00.000Z',
+    });
+
+    saveHandler?.({
+      id: 'business-1',
+      tenantId: 'tenant-1',
+      displayName: 'Updated One',
+      legalName: 'Salon One Legal',
+      status: 'ACTIVE',
+      createdAt: '2026-05-26T00:00:00.000Z',
+      updatedAt: '2026-05-26T00:00:00.000Z',
+    });
+
+    expect(component.selectedBusiness()).toEqual(expect.objectContaining({ id: 'business-2' }));
+  });
+
+  it('ignores stale branch-save responses after switching branches in the same business', () => {
+    let saveHandler: ((savedBranch: BranchProfile) => void) | undefined;
+    api.updateBranch.mockReturnValueOnce(
+      new Observable((subscriber) => {
+        saveHandler = (savedBranch) => {
+          subscriber.next(savedBranch);
+          subscriber.complete();
+        };
+      }),
+    );
+    api.listBranches.mockReturnValueOnce(
+      of({
+        items: [
+          branch,
+          { ...branch, id: 'branch-2', name: 'Second' },
+        ],
+        page: { page: 1, pageSize: 2, total: 2 },
+      }),
+    );
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness;
+
+    component.saveBranch();
+    component.selectBranch({ ...branch, id: 'branch-2', name: 'Second' });
+    saveHandler?.(branch);
+
+    expect(component.selectedBranch()).toEqual(expect.objectContaining({ id: 'branch-2' }));
   });
 
   it('ignores stale branch-list responses after the selected business changes', () => {
