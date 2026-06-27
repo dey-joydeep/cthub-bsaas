@@ -83,6 +83,18 @@ export interface BranchHours extends WeeklyHoursInput {
   readonly branchId: string;
 }
 
+export interface BranchHoliday {
+  readonly branchId: string;
+  readonly date: string;
+  readonly closed: boolean;
+  readonly reason?: string;
+  readonly intervals: readonly TimeInterval[];
+}
+
+export interface BranchHolidayList {
+  readonly items: readonly BranchHoliday[];
+}
+
 export interface BranchHolidayInput {
   readonly closed: boolean;
   readonly reason?: string;

@@ -191,6 +191,14 @@ describe('SalonOwnerSettingsApi', () => {
     api.getBranchPolicy('branch-1').subscribe();
     expect(http.expectOne('http://localhost:3000/partner/branches/branch-1/policy').request.method).toBe('GET');
 
+    api.listBranchHolidays('branch-1').subscribe();
+    const holidayListRequest = http.expectOne('http://localhost:3000/partner/branches/branch-1/holidays');
+    expect(holidayListRequest.request.method).toBe('GET');
+    holidayListRequest.flush({
+      success: true,
+      data: { items: [] },
+    });
+
     api
       .replaceBranchHours('branch-1', {
         timezone: 'Asia/Tokyo',

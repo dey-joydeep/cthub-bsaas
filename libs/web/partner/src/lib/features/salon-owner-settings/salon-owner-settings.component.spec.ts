@@ -4,7 +4,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Observable, of, throwError } from 'rxjs';
 
 import { CURRENT_USER } from '@cthub-bsaas/web-core-auth';
-import { BranchProfile, SalonBusiness } from './models/salon-owner-settings.models';
+import { BranchHoliday, BranchProfile, SalonBusiness } from './models/salon-owner-settings.models';
 import { SalonOwnerSettingsApi } from './salon-owner-settings.api';
 import { SalonOwnerSettingsComponent } from './salon-owner-settings.component';
 
@@ -26,6 +26,7 @@ interface SettingsComponentHarness {
   policyForm: { controls: { bookingLeadMinutes: { setValue(value: number): void } } };
   businesses(): readonly SalonBusiness[];
   branches(): readonly BranchProfile[];
+  holidays(): readonly BranchHoliday[];
   selectedBusiness(): SalonBusiness | null;
   selectedBranch(): BranchProfile | null;
   branchSettingsLoaded(): boolean;
@@ -59,6 +60,7 @@ describe('SalonOwnerSettingsComponent', () => {
     createBranch: jest.fn(),
     updateBranch: jest.fn(),
     getBranchHours: jest.fn(),
+    listBranchHolidays: jest.fn(),
     getBranchPolicy: jest.fn(),
     replaceBranchHours: jest.fn(),
     setBranchHoliday: jest.fn(),
@@ -107,6 +109,17 @@ describe('SalonOwnerSettingsComponent', () => {
         cancellationCutoffMinutes: 180,
         noShowGraceMinutes: 15,
       }),
+    );
+    api.listBranchHolidays.mockReturnValue(
+      of([
+        {
+          branchId: 'branch-1',
+          date: '2026-05-26',
+          closed: true,
+          reason: 'Maintenance',
+          intervals: [],
+        },
+      ]),
     );
     api.updateBranch.mockReturnValue(of(branch));
     api.createBusiness.mockReturnValue(
@@ -246,6 +259,16 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(api.updateBusiness).not.toHaveBeenCalled();
   });
 
+  it('preserves the selected branch business id when creating from the branch route', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      newBranch(): void;
+    };
+
+    component.newBranch();
+
+    expect(component.branchForm.getRawValue().businessId).toBe('business-1');
+  });
+
   it('saves branch policy for the selected branch', () => {
     const component = fixture.componentInstance as unknown as { savePolicy: () => void };
     component.savePolicy();
@@ -255,6 +278,22 @@ describe('SalonOwnerSettingsComponent', () => {
       cancellationCutoffMinutes: 180,
       noShowGraceMinutes: 15,
     });
+  });
+
+  it('shows a specific message when archiving a branch is blocked by future appointments', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      branchForm: { patchValue(value: { status: 'INACTIVE' }): void };
+    };
+    api.updateBranch.mockReturnValueOnce(
+      throwError(() => ({
+        error: { message: 'error.branch.profile.status_conflict' },
+      })),
+    );
+
+    component.branchForm.patchValue({ status: 'INACTIVE' });
+    component.saveBranch();
+
+    expect(component.error()).toBe('This branch cannot be archived while it has future confirmed appointments. Move or cancel those appointments first.');
   });
 
   it('clears optional branch email when the field is blank on update', () => {
@@ -511,6 +550,28 @@ describe('SalonOwnerSettingsComponent', () => {
 
     expect(component.holidayForm.controls.start.errors).toEqual(expect.objectContaining({ pattern: expect.any(Object) }));
     expect(component.holidayForm.controls.end.errors).toEqual(expect.objectContaining({ pattern: expect.any(Object) }));
+  });
+
+  it('rejects reversed holiday intervals before saving', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness;
+    api.setBranchHoliday.mockClear();
+
+    component.holidayForm.patchValue({ closed: false, start: '17:00', end: '09:00' });
+    component.saveHoliday();
+
+    expect(api.setBranchHoliday).not.toHaveBeenCalled();
+    expect(component.error()).toBe('Holiday open hours must start before they end.');
+  });
+
+  it('rejects weekly hours timezone changes that do not match the selected branch', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness;
+    api.replaceBranchHours.mockClear();
+
+    component.hoursForm.patchValue({ timezone: 'UTC' });
+    component.saveHours();
+
+    expect(api.replaceBranchHours).not.toHaveBeenCalled();
+    expect(component.error()).toBe('Weekly hours must use the selected branch timezone.');
   });
 
   it('ignores stale branch-save responses after the selected business changes', () => {
@@ -905,6 +966,18 @@ describe('SalonOwnerSettingsComponent', () => {
     await splitFixture.whenStable();
 
     expect(splitFixture.nativeElement.querySelectorAll('.interval-row')).toHaveLength(7);
+  });
+
+  it('loads existing holidays for the selected branch', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness;
+
+    expect(api.listBranchHolidays).toHaveBeenCalledWith('branch-1');
+    expect(component.holidays()).toEqual([
+      expect.objectContaining({
+        date: '2026-05-26',
+        reason: 'Maintenance',
+      }),
+    ]);
   });
 
   it('allows adding and removing hours intervals from the form array', () => {

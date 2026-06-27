@@ -193,7 +193,7 @@
           <form [formGroup]="hoursForm" class="hours-form" (ngSubmit)="saveHours()">
             <mat-form-field appearance="outline">
               <mat-label>Timezone</mat-label>
-              <input matInput formControlName="timezone" />
+              <input matInput formControlName="timezone" readonly />
             </mat-form-field>
             <div formArrayName="days" class="days">
               @for (day of dayForms.controls; track $index; let dayIndex = $index) {
@@ -244,6 +244,21 @@
         </mat-card-header>
         <mat-card-content>
           <form [formGroup]="holidayForm" class="form-grid" (ngSubmit)="saveHoliday()">
+            <div class="list">
+              @for (holiday of holidays(); track holiday.date) {
+                <button type="button" class="list-row" (click)="selectHoliday(holiday)">
+                  <span>{{ holiday.date }}</span>
+                  <small>
+                    {{ holiday.closed ? 'Closed' : 'Open' }}
+                    @if (holiday.reason) {
+                      / {{ holiday.reason }}
+                    }
+                  </small>
+                </button>
+              } @empty {
+                <p class="empty">No special-day overrides are configured for this branch.</p>
+              }
+            </div>
             <mat-form-field appearance="outline">
               <mat-label>Date</mat-label>
               <input matInput type="date" formControlName="date" />

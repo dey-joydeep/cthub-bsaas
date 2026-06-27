@@ -6,6 +6,8 @@ import { PARTNER_API_BASE_URL } from '@cthub-bsaas/web-core-http';
 
 import {
   BranchHours,
+  BranchHoliday,
+  BranchHolidayList,
   BranchHolidayInput,
   BranchPolicy,
   BranchPolicyInput,
@@ -56,6 +58,10 @@ export class SalonOwnerSettingsApi {
 
   replaceBranchHours(branchId: string, input: WeeklyHoursInput): Observable<BranchHours> {
     return this.put(`/branches/${branchId}/hours`, input);
+  }
+
+  listBranchHolidays(branchId: string): Observable<readonly BranchHoliday[]> {
+    return this.get<BranchHolidayList>(`/branches/${branchId}/holidays`).pipe(map((response) => response.items));
   }
 
   setBranchHoliday(branchId: string, date: string, input: BranchHolidayInput): Observable<BranchHolidayInput> {
