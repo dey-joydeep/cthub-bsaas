@@ -25,7 +25,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin, Observable, of } from 'rxjs';
 
-import { CURRENT_USER, type CurrentUserPort } from '@cthub-bsaas/web-core-auth';
+import { CURRENT_USER } from '@cthub-bsaas/web-core-auth';
 import { UserRole } from '@cthub-bsaas/shared';
 
 import { BranchHours, BranchPolicy, BranchProfile, SalonBusiness, WeeklyHoursDay } from './models/salon-owner-settings.models';
@@ -167,7 +167,7 @@ export class SalonOwnerSettingsComponent {
   private readonly api = inject(SalonOwnerSettingsApi);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute, { optional: true });
-  private readonly currentUser = inject<CurrentUserPort | null>(CURRENT_USER, { optional: true });
+  private readonly currentUser = inject(CURRENT_USER, { optional: true });
   private branchLoadVersion = 0;
   private branchSettingsLoadVersion = 0;
   private businessSaveVersion = 0;
