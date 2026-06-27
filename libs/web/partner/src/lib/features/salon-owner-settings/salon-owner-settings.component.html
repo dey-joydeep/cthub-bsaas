@@ -5,18 +5,28 @@
 
   <header class="settings-header">
     <div>
-      <h1>Business settings</h1>
-      <p>Manage business profile, branch profile, hours, holidays, and booking policy.</p>
+      <h1>{{ branchOnlyMode() ? 'Branch settings' : 'Business settings' }}</h1>
+      <p>
+        {{
+          branchOnlyMode()
+            ? 'Manage branch profile, hours, holidays, and booking policy.'
+            : 'Manage business profile, branch profile, hours, holidays, and booking policy.'
+        }}
+      </p>
     </div>
     <div class="header-actions">
-      <button mat-stroked-button type="button" (click)="newBusiness()">
-        <mat-icon>storefront</mat-icon>
-        Business
-      </button>
-      <button mat-stroked-button type="button" (click)="newBranch()">
-        <mat-icon>add_business</mat-icon>
-        Branch
-      </button>
+      @if (canCreateBusiness()) {
+        <button mat-stroked-button type="button" (click)="newBusiness()">
+          <mat-icon>storefront</mat-icon>
+          Business
+        </button>
+      }
+      @if (canCreateBranch()) {
+        <button mat-stroked-button type="button" (click)="newBranch()">
+          <mat-icon>add_business</mat-icon>
+          Branch
+        </button>
+      }
     </div>
   </header>
 
@@ -28,60 +38,62 @@
   }
 
   <mat-tab-group>
-    <mat-tab label="Business">
-      <div class="tab-grid">
-        <mat-card>
-          <mat-card-header>
-            <mat-card-title>Business profile</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <form [formGroup]="businessForm" class="form-grid" (ngSubmit)="saveBusiness()">
-              <mat-form-field appearance="outline">
-                <mat-label>Display name</mat-label>
-                <input matInput formControlName="displayName" />
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Legal name</mat-label>
-                <input matInput formControlName="legalName" />
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Status</mat-label>
-                <mat-select formControlName="status">
-                  <mat-option value="ACTIVE">Active</mat-option>
-                  <mat-option value="INACTIVE">Inactive</mat-option>
-                </mat-select>
-              </mat-form-field>
-              <button mat-flat-button type="submit" [disabled]="saving()">Save business</button>
-            </form>
-          </mat-card-content>
-        </mat-card>
+    @if (!branchOnlyMode()) {
+      <mat-tab label="Business">
+        <div class="tab-grid">
+          <mat-card>
+            <mat-card-header>
+              <mat-card-title>Business profile</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <form [formGroup]="businessForm" class="form-grid" (ngSubmit)="saveBusiness()">
+                <mat-form-field appearance="outline">
+                  <mat-label>Display name</mat-label>
+                  <input matInput formControlName="displayName" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Legal name</mat-label>
+                  <input matInput formControlName="legalName" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Status</mat-label>
+                  <mat-select formControlName="status">
+                    <mat-option value="ACTIVE">Active</mat-option>
+                    <mat-option value="INACTIVE">Inactive</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <button mat-flat-button type="submit" [disabled]="saving()">Save business</button>
+              </form>
+            </mat-card-content>
+          </mat-card>
 
-        <mat-card>
-          <mat-card-header>
-            <mat-card-title>Businesses</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="list">
-              @for (business of businesses(); track business.id) {
-                <button
-                  type="button"
-                  class="list-row"
-                  [class.selected]="selectedBusiness()?.id === business.id"
-                  (click)="selectBusiness(business)"
-                >
-                  <span>{{ business.displayName }}</span>
-                  <small>{{ business.status }}</small>
-                </button>
-              } @empty {
-                <p class="empty">Create the first business profile to start branch setup.</p>
-              }
-            </div>
-          </mat-card-content>
-        </mat-card>
-      </div>
-    </mat-tab>
+          <mat-card>
+            <mat-card-header>
+              <mat-card-title>Businesses</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="list">
+                @for (business of businesses(); track business.id) {
+                  <button
+                    type="button"
+                    class="list-row"
+                    [class.selected]="selectedBusiness()?.id === business.id"
+                    (click)="selectBusiness(business)"
+                  >
+                    <span>{{ business.displayName }}</span>
+                    <small>{{ business.status }}</small>
+                  </button>
+                } @empty {
+                  <p class="empty">Create the first business profile to start branch setup.</p>
+                }
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+    }
 
-    <mat-tab label="Branches" [disabled]="!hasBusiness()">
+    <mat-tab label="Branches" [disabled]="!canAccessBranches()">
       <div class="tab-grid">
         <mat-card>
           <mat-card-header>
@@ -145,7 +157,9 @@
                 </mat-form-field>
               </fieldset>
 
-              <button mat-flat-button type="submit" [disabled]="saving()">Save branch</button>
+              <button mat-flat-button type="submit" [disabled]="saving() || (branchOnlyMode() && !selectedBranch())">
+                Save branch
+              </button>
             </form>
           </mat-card-content>
         </mat-card>
@@ -182,14 +196,14 @@
               <input matInput formControlName="timezone" />
             </mat-form-field>
             <div formArrayName="days" class="days">
-              @for (day of dayForms.controls; track $index) {
-                <div [formGroupName]="$index" class="day-row">
-                  <strong>{{ weekdays[$index] }}</strong>
-                  <mat-slide-toggle formControlName="open">Open</mat-slide-toggle>
+              @for (day of dayForms.controls; track $index; let dayIndex = $index) {
+                <div [formGroupName]="dayIndex" class="day-row">
+                  <strong>{{ weekdays[dayIndex] }}</strong>
+                  <mat-slide-toggle formControlName="open" (change)="onDayOpenToggle(dayIndex)">Open</mat-slide-toggle>
                   @if (day.get('open')?.value) {
                     <div formArrayName="intervals" class="intervals">
-                      @for (_ of day.get('intervals')?.value ?? []; track $index) {
-                        <div [formGroupName]="$index" class="interval-row">
+                      @for (_ of getDayIntervals(dayIndex).controls; track $index; let intervalIndex = $index) {
+                        <div [formGroupName]="intervalIndex" class="interval-row">
                           <mat-form-field appearance="outline">
                             <mat-label>Start</mat-label>
                             <input matInput formControlName="start" />
@@ -198,8 +212,15 @@
                             <mat-label>End</mat-label>
                             <input matInput formControlName="end" />
                           </mat-form-field>
+                          <button mat-icon-button type="button" aria-label="Remove interval" (click)="removeInterval(dayIndex, intervalIndex)">
+                            <mat-icon>remove_circle</mat-icon>
+                          </button>
                         </div>
                       }
+                      <button mat-stroked-button type="button" (click)="addInterval(dayIndex)">
+                        <mat-icon>add</mat-icon>
+                        Interval
+                      </button>
                     </div>
                   }
                 </div>

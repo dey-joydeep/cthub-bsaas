@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Observable, of, throwError } from 'rxjs';
 
@@ -133,6 +134,33 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(api.getBranchHours).toHaveBeenCalledWith('branch-1');
     expect(api.getBranchPolicy).toHaveBeenCalledWith('branch-1');
     expect(fixture.nativeElement.textContent).toContain('Salon One');
+  });
+
+  it('loads branch state directly on the branch route', () => {
+    TestBed.resetTestingModule();
+    api.listBusinesses.mockClear();
+    api.listBranches.mockClear();
+    TestBed.configureTestingModule({
+      imports: [NoopAnimationsModule, SalonOwnerSettingsComponent],
+      providers: [
+        { provide: SalonOwnerSettingsApi, useValue: api },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            parent: {
+              routeConfig: { path: 'owner/branches' },
+            },
+          },
+        },
+      ],
+    });
+
+    const branchFixture = TestBed.createComponent(SalonOwnerSettingsComponent);
+    branchFixture.detectChanges();
+
+    expect(api.listBusinesses).not.toHaveBeenCalled();
+    expect(api.listBranches).toHaveBeenCalledWith(undefined);
+    expect(branchFixture.nativeElement.textContent).toContain('Branch settings');
   });
 
   it('allows creating another business after one is already selected', () => {
@@ -581,5 +609,21 @@ describe('SalonOwnerSettingsComponent', () => {
     await splitFixture.whenStable();
 
     expect(splitFixture.nativeElement.querySelectorAll('.interval-row')).toHaveLength(7);
+  });
+
+  it('allows adding and removing hours intervals from the form array', () => {
+    const component = fixture.componentInstance as unknown as {
+      addInterval(dayIndex: number): void;
+      removeInterval(dayIndex: number, intervalIndex: number): void;
+      getDayIntervals(dayIndex: number): { length: number };
+    };
+
+    expect(component.getDayIntervals(1).length).toBe(1);
+
+    component.addInterval(1);
+    expect(component.getDayIntervals(1).length).toBe(2);
+
+    component.removeInterval(1, 1);
+    expect(component.getDayIntervals(1).length).toBe(1);
   });
 });

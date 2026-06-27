@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -64,8 +65,10 @@ export class SalonOwnerSettingsComponent {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(SalonOwnerSettingsApi);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute, { optional: true });
   private branchLoadVersion = 0;
   private branchSettingsLoadVersion = 0;
+  private readonly branchRouteMode = this.route?.parent?.routeConfig?.path === 'owner/branches';
 
   protected readonly weekdays = weekdays;
   protected readonly loading = signal(false);
@@ -78,8 +81,12 @@ export class SalonOwnerSettingsComponent {
   protected readonly selectedBranch = signal<BranchProfile | null>(null);
   protected readonly branchSettingsLoaded = signal(false);
   protected readonly hoursConflictRequiresAcknowledgement = signal(false);
+  protected readonly branchOnlyMode = computed(() => this.branchRouteMode);
   protected readonly hasBusiness = computed(() => this.businesses().length > 0);
   protected readonly hasBranch = computed(() => this.branches().length > 0);
+  protected readonly canAccessBranches = computed(() => this.branchOnlyMode() || this.hasBusiness());
+  protected readonly canCreateBusiness = computed(() => !this.branchOnlyMode());
+  protected readonly canCreateBranch = computed(() => !this.branchOnlyMode());
 
   protected readonly businessForm = this.fb.nonNullable.group({
     displayName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(120)]],
@@ -130,7 +137,7 @@ export class SalonOwnerSettingsComponent {
       this.updateHolidayTimeValidators(closed);
     });
     this.updateHolidayTimeValidators(this.holidayForm.controls.closed.value);
-    this.loadBusinesses();
+    this.loadInitialState();
   }
 
   protected get dayForms(): FormArray {
@@ -190,27 +197,7 @@ export class SalonOwnerSettingsComponent {
   protected newBranch(): void {
     const businessId = this.selectedBusiness()?.id ?? '';
     this.branchLoadVersion += 1;
-    this.selectedBranch.set(null);
-    this.branchSettingsLoaded.set(false);
-    this.branchForm.reset({
-      businessId,
-      name: '',
-      phone: '',
-      email: '',
-      timezone: 'Asia/Tokyo',
-      currency: 'JPY',
-      status: 'ACTIVE',
-      address: {
-        line1: '',
-        line2: '',
-        city: '',
-        state: '',
-        postalCode: '',
-        country: 'JP',
-      },
-    });
-    this.applyBranchHours(this.defaultHours('Asia/Tokyo'));
-    this.policyForm.reset(defaultPolicy);
+    this.resetBranchEditor(businessId);
   }
 
   protected saveBusiness(): void {
@@ -270,6 +257,10 @@ export class SalonOwnerSettingsComponent {
     }
     if (this.hoursForm.invalid) {
       this.hoursForm.markAllAsTouched();
+      return;
+    }
+    if (this.hasOpenDayWithoutIntervals()) {
+      this.error.set('Add at least one interval for each open day before saving hours.');
       return;
     }
 
@@ -340,19 +331,40 @@ export class SalonOwnerSettingsComponent {
     this.persist(this.api.updateBranchPolicy(branch.id, this.policyForm.getRawValue()));
   }
 
+  protected getDayIntervals(dayIndex: number): FormArray {
+    return this.dayForms.at(dayIndex).get('intervals') as FormArray;
+  }
+
+  protected addInterval(dayIndex: number): void {
+    this.getDayIntervals(dayIndex).push(this.createIntervalGroup());
+  }
+
+  protected removeInterval(dayIndex: number, intervalIndex: number): void {
+    this.getDayIntervals(dayIndex).removeAt(intervalIndex);
+  }
+
+  protected onDayOpenToggle(dayIndex: number): void {
+    const dayGroup = this.dayForms.at(dayIndex);
+    if (dayGroup.get('open')?.value && this.getDayIntervals(dayIndex).length === 0) {
+      this.addInterval(dayIndex);
+    }
+  }
+
   private createDayGroup(dayOfWeek: number, value?: WeeklyHoursDay) {
     const intervals = value?.intervals.length ? value.intervals : [{ start: '09:00', end: '17:00' }];
     return this.fb.nonNullable.group({
       dayOfWeek: [value?.dayOfWeek ?? dayOfWeek],
       open: [value?.open ?? dayOfWeek > 0],
       intervals: this.fb.nonNullable.array([
-        ...intervals.map((interval) =>
-          this.fb.nonNullable.group({
-            start: [interval.start, [Validators.required, Validators.pattern(timePattern)]],
-            end: [interval.end, [Validators.required, Validators.pattern(timePattern)]],
-          }),
-        ),
+        ...intervals.map((interval) => this.createIntervalGroup(interval)),
       ]),
+    });
+  }
+
+  private createIntervalGroup(interval = { start: '09:00', end: '17:00' }) {
+    return this.fb.nonNullable.group({
+      start: [interval.start, [Validators.required, Validators.pattern(timePattern)]],
+      end: [interval.end, [Validators.required, Validators.pattern(timePattern)]],
     });
   }
 
@@ -362,6 +374,15 @@ export class SalonOwnerSettingsComponent {
     this.holidayForm.controls.end.setValidators(validators);
     this.holidayForm.controls.start.updateValueAndValidity({ emitEvent: false });
     this.holidayForm.controls.end.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private loadInitialState(): void {
+    if (this.branchRouteMode) {
+      this.loadBranches();
+      return;
+    }
+
+    this.loadBusinesses();
   }
 
   private loadBusinesses(selectBusinessId?: string): void {
@@ -382,11 +403,14 @@ export class SalonOwnerSettingsComponent {
     });
   }
 
-  private loadBranches(businessId: string, selectBranchId?: string): void {
+  private loadBranches(businessId?: string, selectBranchId?: string): void {
     const requestVersion = ++this.branchLoadVersion;
     this.api.listBranches(businessId).subscribe({
       next: (result) => {
-        if (requestVersion !== this.branchLoadVersion || this.selectedBusiness()?.id !== businessId) {
+        if (
+          requestVersion !== this.branchLoadVersion ||
+          (typeof businessId === 'string' && this.selectedBusiness()?.id !== businessId)
+        ) {
           return;
         }
         this.branches.set(result.items);
@@ -394,16 +418,19 @@ export class SalonOwnerSettingsComponent {
         if (selected) {
           this.selectBranch(selected);
         } else {
-          this.newBranch();
+          this.resetBranchEditor(this.selectedBusiness()?.id ?? '');
         }
       },
       error: () => {
-        if (requestVersion !== this.branchLoadVersion || this.selectedBusiness()?.id !== businessId) {
+        if (
+          requestVersion !== this.branchLoadVersion ||
+          (typeof businessId === 'string' && this.selectedBusiness()?.id !== businessId)
+        ) {
           return;
         }
         this.branches.set([]);
         this.selectedBranch.set(null);
-        this.newBranch();
+        this.resetBranchEditor(this.selectedBusiness()?.id ?? '');
         this.error.set('Branches could not be loaded.');
       },
     });
@@ -470,6 +497,34 @@ export class SalonOwnerSettingsComponent {
         intervals: day.open ? day.intervals : [],
       })),
     };
+  }
+
+  private hasOpenDayWithoutIntervals(): boolean {
+    return (this.hoursForm.controls.days.getRawValue() as WeeklyHoursDay[]).some((day) => day.open && day.intervals.length === 0);
+  }
+
+  private resetBranchEditor(businessId: string): void {
+    this.selectedBranch.set(null);
+    this.branchSettingsLoaded.set(false);
+    this.branchForm.reset({
+      businessId,
+      name: '',
+      phone: '',
+      email: '',
+      timezone: 'Asia/Tokyo',
+      currency: 'JPY',
+      status: 'ACTIVE',
+      address: {
+        line1: '',
+        line2: '',
+        city: '',
+        state: '',
+        postalCode: '',
+        country: 'JP',
+      },
+    });
+    this.applyBranchHours(this.defaultHours('Asia/Tokyo'));
+    this.policyForm.reset(defaultPolicy);
   }
 
   private isHoursConflictError(error: unknown): boolean {
