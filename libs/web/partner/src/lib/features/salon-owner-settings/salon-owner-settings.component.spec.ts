@@ -312,7 +312,7 @@ describe('SalonOwnerSettingsComponent', () => {
     api.replaceBranchHours
       .mockReturnValueOnce(
         throwError(() => ({
-          error: { code: 'error.branch.hours.appointments_outside_hours' },
+          error: { message: 'error.branch.hours.appointments_outside_hours' },
         })),
       )
       .mockReturnValueOnce(of({ branchId: 'branch-1', timezone: 'Asia/Tokyo', days: [] }));

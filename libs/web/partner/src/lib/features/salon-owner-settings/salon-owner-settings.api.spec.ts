@@ -15,7 +15,7 @@ describe('SalonOwnerSettingsApi', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: PARTNER_API_BASE_URL, useValue: '/partner' },
+        { provide: PARTNER_API_BASE_URL, useValue: '/api/partner' },
       ],
     });
     api = TestBed.inject(SalonOwnerSettingsApi);
@@ -34,7 +34,7 @@ describe('SalonOwnerSettingsApi', () => {
 
     const request = http.expectOne(
       (candidate) =>
-        candidate.url === '/partner/businesses' &&
+        candidate.url === '/api/partner/businesses' &&
         candidate.params.get('page') === '1' &&
         candidate.params.get('pageSize') === '100',
     );
@@ -57,7 +57,7 @@ describe('SalonOwnerSettingsApi', () => {
       })
       .subscribe();
 
-    const businessRequest = http.expectOne('/partner/businesses');
+    const businessRequest = http.expectOne('/api/partner/businesses');
     expect(businessRequest.request.method).toBe('POST');
     expect(businessRequest.request.withCredentials).toBe(true);
     expect(businessRequest.request.headers.get('Idempotency-Key')).toEqual(expect.any(String));
@@ -91,7 +91,7 @@ describe('SalonOwnerSettingsApi', () => {
       })
       .subscribe();
 
-    const branchRequest = http.expectOne('/partner/branches');
+    const branchRequest = http.expectOne('/api/partner/branches');
     expect(branchRequest.request.method).toBe('POST');
     expect(branchRequest.request.headers.get('Idempotency-Key')).toEqual(expect.any(String));
     branchRequest.flush({
@@ -124,7 +124,7 @@ describe('SalonOwnerSettingsApi', () => {
 
     const firstRequest = http.expectOne(
       (request) =>
-        request.url === '/partner/businesses' &&
+        request.url === '/api/partner/businesses' &&
         request.params.get('page') === '1' &&
         request.params.get('pageSize') === '100',
     );
@@ -136,7 +136,7 @@ describe('SalonOwnerSettingsApi', () => {
 
     const secondRequest = http.expectOne(
       (request) =>
-        request.url === '/partner/businesses' &&
+        request.url === '/api/partner/businesses' &&
         request.params.get('page') === '2' &&
         request.params.get('pageSize') === '100',
     );
@@ -157,7 +157,7 @@ describe('SalonOwnerSettingsApi', () => {
 
     const firstRequest = http.expectOne(
       (request) =>
-        request.url === '/partner/branches' &&
+        request.url === '/api/partner/branches' &&
         request.params.get('businessId') === 'business-1' &&
         request.params.get('page') === '1' &&
         request.params.get('pageSize') === '100',
@@ -170,7 +170,7 @@ describe('SalonOwnerSettingsApi', () => {
 
     const secondRequest = http.expectOne(
       (request) =>
-        request.url === '/partner/branches' &&
+        request.url === '/api/partner/branches' &&
         request.params.get('businessId') === 'business-1' &&
         request.params.get('page') === '2' &&
         request.params.get('pageSize') === '100',
@@ -186,10 +186,10 @@ describe('SalonOwnerSettingsApi', () => {
 
   it('sends branch settings requests through the configured backend partner route', () => {
     api.getBranchHours('branch-1').subscribe();
-    expect(http.expectOne('/partner/branches/branch-1/hours').request.method).toBe('GET');
+    expect(http.expectOne('/api/partner/branches/branch-1/hours').request.method).toBe('GET');
 
     api.getBranchPolicy('branch-1').subscribe();
-    expect(http.expectOne('/partner/branches/branch-1/policy').request.method).toBe('GET');
+    expect(http.expectOne('/api/partner/branches/branch-1/policy').request.method).toBe('GET');
 
     api
       .replaceBranchHours('branch-1', {
@@ -198,10 +198,10 @@ describe('SalonOwnerSettingsApi', () => {
         days: [],
       })
       .subscribe();
-    expect(http.expectOne('/partner/branches/branch-1/hours').request.method).toBe('PUT');
+    expect(http.expectOne('/api/partner/branches/branch-1/hours').request.method).toBe('PUT');
 
     api.setBranchHoliday('branch-1', '2026-05-26', { closed: true, intervals: [] }).subscribe();
-    expect(http.expectOne('/partner/branches/branch-1/holidays/2026-05-26').request.method).toBe('PUT');
+    expect(http.expectOne('/api/partner/branches/branch-1/holidays/2026-05-26').request.method).toBe('PUT');
 
     api
       .updateBranchPolicy('branch-1', {
@@ -210,6 +210,6 @@ describe('SalonOwnerSettingsApi', () => {
         noShowGraceMinutes: 10,
       })
       .subscribe();
-    expect(http.expectOne('/partner/branches/branch-1/policy').request.method).toBe('PUT');
+    expect(http.expectOne('/api/partner/branches/branch-1/policy').request.method).toBe('PUT');
   });
 });

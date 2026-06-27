@@ -487,8 +487,20 @@ export class SalonOwnerSettingsComponent {
       typeof responseError.code === 'string'
         ? responseError.code
         : null;
+    const errorMessage =
+      typeof responseError === 'object' &&
+      responseError !== null &&
+      'message' in responseError &&
+      typeof responseError.message === 'string'
+        ? responseError.message
+        : typeof responseError === 'string'
+          ? responseError
+          : null;
 
-    return errorCode === 'error.branch.hours.appointments_outside_hours';
+    return (
+      errorCode === 'error.branch.hours.appointments_outside_hours' ||
+      errorMessage === 'error.branch.hours.appointments_outside_hours'
+    );
   }
 
   private persist<T>(request: Observable<T>, onSuccess?: (value: T) => void): void {
