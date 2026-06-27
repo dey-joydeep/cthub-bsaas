@@ -587,6 +587,43 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(component.selectedBusiness()).toEqual(expect.objectContaining({ id: 'business-2' }));
   });
 
+  it('ignores stale business-create responses after restarting a new business draft', () => {
+    let createHandler:
+      | ((savedBusiness: SalonBusiness) => void)
+      | undefined;
+    api.createBusiness.mockReturnValueOnce(
+      new Observable((subscriber) => {
+        createHandler = (savedBusiness) => {
+          subscriber.next(savedBusiness);
+          subscriber.complete();
+        };
+      }),
+    );
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      businessForm: { patchValue(value: { displayName: string; legalName: string }): void };
+    };
+
+    component.newBusiness();
+    component.businessForm.patchValue({
+      displayName: 'Salon Two',
+      legalName: 'Salon Two Legal',
+    });
+    component.saveBusiness();
+    component.newBusiness();
+
+    createHandler?.({
+      id: 'business-2',
+      tenantId: 'tenant-1',
+      displayName: 'Salon Two',
+      legalName: 'Salon Two Legal',
+      status: 'ACTIVE',
+      createdAt: '2026-05-26T00:00:00.000Z',
+      updatedAt: '2026-05-26T00:00:00.000Z',
+    });
+
+    expect(component.selectedBusiness()).toBeNull();
+  });
+
   it('ignores stale branch-save responses after switching branches in the same business', () => {
     let saveHandler: ((savedBranch: BranchProfile) => void) | undefined;
     api.updateBranch.mockReturnValueOnce(
@@ -613,6 +650,59 @@ describe('SalonOwnerSettingsComponent', () => {
     saveHandler?.(branch);
 
     expect(component.selectedBranch()).toEqual(expect.objectContaining({ id: 'branch-2' }));
+  });
+
+  it('ignores stale branch-create responses after restarting a new branch draft', () => {
+    let createHandler: ((savedBranch: BranchProfile) => void) | undefined;
+    api.createBranch.mockReturnValueOnce(
+      new Observable((subscriber) => {
+        createHandler = (savedBranch) => {
+          subscriber.next(savedBranch);
+          subscriber.complete();
+        };
+      }),
+    );
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      newBranch(): void;
+      branchForm: {
+        patchValue(value: {
+          name: string;
+          timezone: string;
+          currency: string;
+          address: {
+            line1: string;
+            city: string;
+            state: string;
+            postalCode: string;
+            country: string;
+          };
+        }): void;
+      };
+    };
+
+    component.newBranch();
+    component.branchForm.patchValue({
+      name: 'Annex',
+      timezone: 'Asia/Tokyo',
+      currency: 'JPY',
+      address: {
+        line1: '2 Main St',
+        city: 'Tokyo',
+        state: 'Tokyo',
+        postalCode: '1000002',
+        country: 'JP',
+      },
+    });
+    component.saveBranch();
+    component.newBranch();
+
+    createHandler?.({
+      ...branch,
+      id: 'branch-2',
+      name: 'Annex',
+    });
+
+    expect(component.selectedBranch()).toBeNull();
   });
 
   it('ignores stale branch-list responses after the selected business changes', () => {

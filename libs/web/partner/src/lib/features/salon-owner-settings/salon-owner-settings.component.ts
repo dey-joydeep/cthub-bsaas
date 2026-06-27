@@ -168,9 +168,11 @@ export class SalonOwnerSettingsComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute, { optional: true });
   private readonly currentUser = inject(CURRENT_USER, { optional: true });
+  private businessEditorVersion = 0;
   private branchLoadVersion = 0;
   private branchSettingsLoadVersion = 0;
   private businessSaveVersion = 0;
+  private branchEditorVersion = 0;
   private branchSaveVersion = 0;
   private readonly branchRouteMode = this.route?.parent?.routeConfig?.path === 'owner/branches';
   private readonly currentRole = toSignal(this.currentUser?.currentUser$ ?? of(null), {
@@ -253,6 +255,8 @@ export class SalonOwnerSettingsComponent {
   }
 
   protected selectBusiness(business: SalonBusiness): void {
+    this.businessEditorVersion += 1;
+    this.branchEditorVersion += 1;
     this.selectedBusiness.set(business);
     this.branchSettingsLoadVersion += 1;
     this.branches.set([]);
@@ -266,6 +270,7 @@ export class SalonOwnerSettingsComponent {
   }
 
   protected selectBranch(branch: BranchProfile): void {
+    this.branchEditorVersion += 1;
     this.selectedBranch.set(branch);
     this.branchSettingsLoaded.set(false);
     this.branchForm.reset({
@@ -289,6 +294,8 @@ export class SalonOwnerSettingsComponent {
   }
 
   protected newBusiness(): void {
+    this.businessEditorVersion += 1;
+    this.branchEditorVersion += 1;
     this.selectedBusiness.set(null);
     this.selectedBranch.set(null);
     this.branches.set([]);
@@ -303,6 +310,7 @@ export class SalonOwnerSettingsComponent {
   }
 
   protected newBranch(): void {
+    this.branchEditorVersion += 1;
     const businessId = this.selectedBusiness()?.id ?? '';
     this.branchLoadVersion += 1;
     this.resetBranchEditor(businessId);
@@ -316,13 +324,18 @@ export class SalonOwnerSettingsComponent {
 
     const selected = this.selectedBusiness();
     const startedBusinessId = selected?.id ?? null;
+    const startedEditorVersion = this.businessEditorVersion;
     const requestVersion = ++this.businessSaveVersion;
     const request = selected
       ? this.api.updateBusiness(selected.id, this.businessForm.getRawValue())
       : this.api.createBusiness(this.businessForm.getRawValue());
 
     this.persist(request, (business) => {
-      if ((this.selectedBusiness()?.id ?? null) !== startedBusinessId || requestVersion !== this.businessSaveVersion) {
+      if (
+        (this.selectedBusiness()?.id ?? null) !== startedBusinessId ||
+        requestVersion !== this.businessSaveVersion ||
+        startedEditorVersion !== this.businessEditorVersion
+      ) {
         return;
       }
       this.selectedBusiness.set(business);
@@ -340,6 +353,7 @@ export class SalonOwnerSettingsComponent {
     const value = this.branchForm.getRawValue();
     const startedBranchId = selected?.id ?? null;
     const startedBusinessId = this.selectedBusiness()?.id ?? value.businessId ?? null;
+    const startedEditorVersion = this.branchEditorVersion;
     const requestVersion = ++this.branchSaveVersion;
     const input = {
       ...value,
@@ -356,7 +370,8 @@ export class SalonOwnerSettingsComponent {
       if (
         requestVersion !== this.branchSaveVersion ||
         (this.selectedBusiness()?.id ?? branch.businessId) !== startedBusinessId ||
-        (this.selectedBranch()?.id ?? null) !== startedBranchId
+        (this.selectedBranch()?.id ?? null) !== startedBranchId ||
+        startedEditorVersion !== this.branchEditorVersion
       ) {
         return;
       }
