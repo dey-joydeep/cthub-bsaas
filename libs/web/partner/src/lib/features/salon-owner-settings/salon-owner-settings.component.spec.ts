@@ -360,6 +360,24 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(component.error()).toBe('This branch cannot be archived while it has future confirmed appointments. Move or cancel those appointments first.');
   });
 
+  it('shows a specific message when branch currency changes are blocked by a lock', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      branchForm: { patchValue(value: { currency: string }): void };
+    };
+    api.updateBranch.mockReturnValueOnce(
+      throwError(() => ({
+        error: { message: 'error.branch.profile.currency_locked' },
+      })),
+    );
+
+    component.branchForm.patchValue({ currency: 'USD' });
+    component.saveBranch();
+
+    expect(component.error()).toBe(
+      'This branch currency is locked because finance history already exists. Keep the current currency for this branch.',
+    );
+  });
+
   it('clears optional branch email when the field is blank on update', () => {
     const component = fixture.componentInstance as unknown as SettingsComponentHarness;
     component.branchForm.patchValue({ email: '' });
@@ -690,6 +708,53 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(component.holidays()).toEqual([
       expect.objectContaining({ date: '2026-05-26' }),
       expect.objectContaining({ date: '2026-12-25', reason: 'Holiday' }),
+    ]);
+  });
+
+  it('ignores stale holiday saves after switching branches', () => {
+    let saveHandler: ((savedHoliday: BranchHoliday) => void) | undefined;
+    api.setBranchHoliday.mockReturnValueOnce(
+      new Observable((subscriber) => {
+        saveHandler = (savedHoliday) => {
+          subscriber.next(savedHoliday);
+          subscriber.complete();
+        };
+      }),
+    );
+    api.listBranchHolidays.mockReturnValueOnce(
+      of([
+        {
+          branchId: 'branch-2',
+          date: '2026-06-01',
+          closed: true,
+          reason: 'Branch Two Holiday',
+          intervals: [],
+        },
+      ]),
+    );
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      selectedHoliday(): BranchHoliday | null;
+    };
+
+    component.holidayForm.patchValue({ date: '2026-12-25', closed: true, reason: 'Branch One Holiday' });
+    component.saveHoliday();
+    component.selectBranch({ ...branch, id: 'branch-2', name: 'Second' });
+    saveHandler?.({
+      branchId: 'branch-1',
+      date: '2026-12-25',
+      closed: true,
+      reason: 'Branch One Holiday',
+      intervals: [],
+    });
+
+    expect(component.selectedBranch()).toEqual(expect.objectContaining({ id: 'branch-2' }));
+    expect(component.selectedHoliday()).toBeNull();
+    expect(component.holidays()).toEqual([
+      expect.objectContaining({
+        branchId: 'branch-2',
+        date: '2026-06-01',
+        reason: 'Branch Two Holiday',
+      }),
     ]);
   });
 

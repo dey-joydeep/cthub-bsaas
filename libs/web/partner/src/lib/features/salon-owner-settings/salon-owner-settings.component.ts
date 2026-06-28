@@ -194,6 +194,7 @@ export class SalonOwnerSettingsComponent {
   private branchEditorVersion = 0;
   private branchSaveVersion = 0;
   private hoursSaveVersion = 0;
+  private holidaySaveVersion = 0;
   private readonly branchRouteMode = this.route?.parent?.routeConfig?.path === 'owner/branches';
   private readonly currentRole = toSignal(this.currentUser?.currentUser$ ?? of(null), {
     initialValue: null,
@@ -300,6 +301,7 @@ export class SalonOwnerSettingsComponent {
   protected selectBranch(branch: BranchProfile): void {
     this.branchEditorVersion += 1;
     this.hoursSaveVersion += 1;
+    this.holidaySaveVersion += 1;
     this.selectedBranch.set(branch);
     this.branchSettingsLoaded.set(false);
     this.branchForm.reset({
@@ -455,6 +457,11 @@ export class SalonOwnerSettingsComponent {
           this.saving.set(false);
           return;
         }
+        if (this.isBranchCurrencyLockedError(error)) {
+          this.error.set('This branch currency is locked because finance history already exists. Keep the current currency for this branch.');
+          this.saving.set(false);
+          return;
+        }
 
         this.error.set('Settings could not be saved.');
         this.saving.set(false);
@@ -546,14 +553,32 @@ export class SalonOwnerSettingsComponent {
     if (!holidayInput) {
       return;
     }
-    this.persist(
-      this.api.setBranchHoliday(branch.id, value.date, holidayInput),
-      (savedHoliday) => {
+    const startedBranchId = branch.id;
+    const requestVersion = ++this.holidaySaveVersion;
+    this.saving.set(true);
+    this.error.set(null);
+    this.message.set(null);
+    this.api.setBranchHoliday(branch.id, value.date, holidayInput).subscribe({
+      next: (savedHoliday) => {
+        if (requestVersion !== this.holidaySaveVersion || this.selectedBranch()?.id !== startedBranchId) {
+          this.saving.set(false);
+          return;
+        }
         this.selectedHoliday.set(savedHoliday);
         this.holidays.update((holidays) => this.upsertHoliday(holidays, savedHoliday));
         this.selectHoliday(savedHoliday);
+        this.message.set('Settings saved.');
+        this.saving.set(false);
       },
-    );
+      error: () => {
+        if (requestVersion !== this.holidaySaveVersion || this.selectedBranch()?.id !== startedBranchId) {
+          this.saving.set(false);
+          return;
+        }
+        this.error.set('Settings could not be saved.');
+        this.saving.set(false);
+      },
+    });
   }
 
   protected savePolicy(): void {
@@ -782,6 +807,7 @@ export class SalonOwnerSettingsComponent {
 
   private resetBranchEditor(businessId: string): void {
     this.hoursSaveVersion += 1;
+    this.holidaySaveVersion += 1;
     this.selectedBranch.set(null);
     this.selectedHoliday.set(null);
     this.branchSettingsLoaded.set(false);
@@ -872,6 +898,34 @@ export class SalonOwnerSettingsComponent {
           : null;
 
     return errorCode === 'error.branch.profile.status_conflict' || errorMessage === 'error.branch.profile.status_conflict';
+  }
+
+  private isBranchCurrencyLockedError(error: unknown): boolean {
+    const responseError =
+      error instanceof HttpErrorResponse
+        ? error.error
+        : typeof error === 'object' && error !== null && 'error' in error
+          ? error.error
+          : null;
+
+    const errorCode =
+      typeof responseError === 'object' &&
+      responseError !== null &&
+      'code' in responseError &&
+      typeof responseError.code === 'string'
+        ? responseError.code
+        : null;
+    const errorMessage =
+      typeof responseError === 'object' &&
+      responseError !== null &&
+      'message' in responseError &&
+      typeof responseError.message === 'string'
+        ? responseError.message
+        : typeof responseError === 'string'
+          ? responseError
+          : null;
+
+    return errorCode === 'error.branch.profile.currency_locked' || errorMessage === 'error.branch.profile.currency_locked';
   }
 
   private isBusinessDeactivationConflictError(error: unknown): boolean {
