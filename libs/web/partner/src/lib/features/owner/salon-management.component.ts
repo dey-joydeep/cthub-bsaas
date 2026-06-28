@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -18,7 +18,6 @@ import { UserRole } from '@cthub-bsaas/shared';
   selector: 'app-salon-management',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
@@ -27,7 +26,8 @@ import { UserRole } from '@cthub-bsaas/shared';
     MatIconModule,
     MatSelectModule,
     MatChipsModule,
-    TranslatePipe, TranslateDirective,
+    TranslatePipe,
+    TranslateDirective,
   ],
   templateUrl: './salon-management.component.html',
   styleUrls: ['./salon-management.component.css'],

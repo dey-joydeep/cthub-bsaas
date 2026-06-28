@@ -15,9 +15,7 @@ export class TranslateServerLoader implements TranslateLoader {
   ) {}
 
   public getTranslation(lang: string): Observable<any> {
-    const key: StateKey<any> = makeStateKey<any>(
-      `transfer-translate-${lang}`,
-    );
+    const key: StateKey<any> = makeStateKey<any>(`transfer-translate-${lang}`);
     const cached = this.transferState.get(key, null);
 
     if (cached) {

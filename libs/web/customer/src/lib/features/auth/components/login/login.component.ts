@@ -42,8 +42,9 @@ import type { CustomerAuthUser } from '../../models/auth.models';
     MatInputModule,
     MatProgressBarModule,
     MatProgressSpinnerModule,
-    TranslatePipe, TranslateDirective
-],
+    TranslatePipe,
+    TranslateDirective,
+  ],
   selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css'],
@@ -410,4 +411,3 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
       );
   }
 }
-

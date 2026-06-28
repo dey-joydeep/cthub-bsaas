@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { CommonModule } from '@angular/common';
+
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
 import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
@@ -17,8 +17,8 @@ import { ErrorService } from '@cthub-bsaas/web-core-common';
   selector: 'app-revenue-chart-widget',
   standalone: true,
   imports: [
-    CommonModule,
-    TranslatePipe, TranslateDirective,
+    TranslatePipe,
+    TranslateDirective,
     MatCardModule,
     MatButtonModule,
     MatIconModule,

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -13,14 +13,14 @@ import { ServiceService } from './service.service';
   selector: 'app-service-management',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatProgressBarModule,
     MatIconModule,
-    TranslatePipe, TranslateDirective,
+    TranslatePipe,
+    TranslateDirective,
   ],
   templateUrl: './service-management.component.html',
   styleUrls: ['./service-management.component.css'],

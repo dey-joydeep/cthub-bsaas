@@ -233,6 +233,3 @@ export class StorageService {
     return this.storageType;
   }
 }
-
-
-

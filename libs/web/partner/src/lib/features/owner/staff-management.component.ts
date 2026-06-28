@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -15,14 +15,14 @@ import { ActivatedRoute } from '@angular/router';
   selector: 'app-staff-management',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatProgressBarModule,
     MatIconModule,
-    TranslatePipe, TranslateDirective,
+    TranslatePipe,
+    TranslateDirective,
   ],
   templateUrl: './staff-management.component.html',
   styleUrls: ['./staff-management.component.css'],

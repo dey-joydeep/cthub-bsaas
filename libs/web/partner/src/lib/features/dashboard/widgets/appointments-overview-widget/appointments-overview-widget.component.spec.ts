@@ -97,7 +97,26 @@ describe('AppointmentsOverviewWidgetComponent', () => {
 
     const snackBarSpy = { open: vi.fn() };
 
-    const translateServiceSpy = { instant: vi.fn(), get: vi.fn(), use: vi.fn(), setTranslation: vi.fn(), setDefaultLang: vi.fn(), addLangs: vi.fn(), getBrowserLang: vi.fn(), getBrowserCultureLang: vi.fn(), getLangs: vi.fn(), getParser: vi.fn(), getTranslation: vi.fn(), reloadLang: vi.fn(), resetLang: vi.fn(), setTranslation: vi.fn(), stream: vi.fn(), onLangChange: vi.fn(), onTranslationChange: vi.fn(), onDefaultLangChange: vi.fn(),  };
+    const translateServiceSpy = {
+      instant: vi.fn(),
+      get: vi.fn(),
+      use: vi.fn(),
+      setTranslation: vi.fn(),
+      setDefaultLang: vi.fn(),
+      addLangs: vi.fn(),
+      getBrowserLang: vi.fn(),
+      getBrowserCultureLang: vi.fn(),
+      getLangs: vi.fn(),
+      getParser: vi.fn(),
+      getTranslation: vi.fn(),
+      reloadLang: vi.fn(),
+      resetLang: vi.fn(),
+      setTranslation: vi.fn(),
+      stream: vi.fn(),
+      onLangChange: vi.fn(),
+      onTranslationChange: vi.fn(),
+      onDefaultLangChange: vi.fn(),
+    };
 
     await TestBed.configureTestingModule({
       declarations: [AppointmentsOverviewWidgetComponent],
@@ -125,7 +144,8 @@ describe('AppointmentsOverviewWidgetComponent', () => {
         MatDividerModule,
         MatListModule,
         MatDialogModule,
-        TranslatePipe, TranslateDirective,
+        TranslatePipe,
+        TranslateDirective,
       ],
       providers: [
         { provide: DashboardService, useValue: dashboardServiceSpy },

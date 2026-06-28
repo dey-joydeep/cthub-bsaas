@@ -14,7 +14,16 @@ import { DashboardStats } from './models/customer-stats-widget.model';
 @Component({
   selector: 'app-customer-stats-widget',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule, MatProgressSpinnerModule, MatButtonModule, MatTooltipModule, TranslatePipe, TranslateDirective],
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatButtonModule,
+    MatTooltipModule,
+    TranslatePipe,
+    TranslateDirective,
+  ],
   templateUrl: './customer-stats-widget.component.html',
   styleUrls: ['./customer-stats-widget.component.css'],
 })

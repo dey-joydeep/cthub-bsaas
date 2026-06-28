@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -16,7 +16,6 @@ import { User } from './model/profile.model';
   selector: 'app-profile',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatCardModule,
     MatFormFieldModule,
@@ -25,7 +24,8 @@ import { User } from './model/profile.model';
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatIconModule,
-    TranslatePipe, TranslateDirective,
+    TranslatePipe,
+    TranslateDirective,
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],
@@ -59,7 +59,7 @@ export class ProfileComponent implements OnInit {
   }
 
   loadUserProfile(): void {
-    this.profileService.getProfile().subscribe(user => {
+    this.profileService.getProfile().subscribe((user) => {
       if (user) {
         this.currentUser = user;
         this.profileForm.patchValue({

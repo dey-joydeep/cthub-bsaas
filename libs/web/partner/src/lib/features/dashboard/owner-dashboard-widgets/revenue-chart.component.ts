@@ -1,5 +1,5 @@
 import { Component, Input, inject, signal, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ChartData, ChartOptions, ChartType } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { MatCardModule } from '@angular/material/card';
@@ -15,7 +15,6 @@ import { MatTooltipModule } from '@angular/material/tooltip';
   selector: 'app-revenue-chart',
   standalone: true,
   imports: [
-    CommonModule,
     BaseChartDirective,
     MatCardModule,
     MatProgressBarModule,

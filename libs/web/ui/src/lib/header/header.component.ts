@@ -121,7 +121,8 @@ class AuthService {
     MatDividerModule,
     MatSnackBarModule,
     FormsModule,
-    TranslatePipe, TranslateDirective,
+    TranslatePipe,
+    TranslateDirective,
   ],
   templateUrl: './header.component.html',
   styleUrls: [], // Using inline styles for now

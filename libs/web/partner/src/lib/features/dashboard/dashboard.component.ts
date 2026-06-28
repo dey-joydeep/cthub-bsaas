@@ -1,5 +1,5 @@
 import { PlatformUtils, PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 import { Component, HostListener, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -22,10 +22,10 @@ import { DashboardService } from './dashboard.service';
   selector: 'app-dashboard',
   standalone: true,
   imports: [
-    CommonModule,
     MatCardModule,
     MatIconModule,
-    TranslatePipe, TranslateDirective,
+    TranslatePipe,
+    TranslateDirective,
     StatsWidgetComponent,
     RevenueChartComponent,
     CustomerStatsWidgetComponent,

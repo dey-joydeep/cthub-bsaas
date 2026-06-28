@@ -1,32 +1,44 @@
 <div class="salon-appointments-container">
   <h2>Customer Appointments</h2>
-  <div *ngIf="loading">Loading...</div>
-  <div *ngIf="error" class="error-message">{{ error }}</div>
-  <table *ngIf="!loading && appointments.length > 0" class="responsive-table">
-    <thead>
-      <tr>
-        <th>User</th>
-        <th>User Name</th>
-        <th>Service</th>
-        <th>Date</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let appointment of appointments">
-        <td>{{ appointment.customerId || 'N/A' }}</td>
-        <td>
-          <a *ngIf="appointment.customerId" [routerLink]="['/user', appointment.customerId || '']">
-            {{ appointment.customerName || appointment.customerId || 'Unknown User' }}
-          </a>
-        </td>
-        <td>{{ appointment.service?.name || 'N/A' }}</td>
-        <td>{{ appointment.startTime ? (appointment.startTime | date: 'medium') : 'N/A' }}</td>
-        <td>{{ appointment.status || 'N/A' }}</td>
-      </tr>
-    </tbody>
-  </table>
-  <div *ngIf="!loading && appointments.length === 0">No appointments found.</div>
+  @if (loading) {
+    <div>Loading...</div>
+  }
+  @if (error) {
+    <div class="error-message">{{ error }}</div>
+  }
+  @if (!loading && appointments.length > 0) {
+    <table class="responsive-table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>User Name</th>
+          <th>Service</th>
+          <th>Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (appointment of appointments; track appointment) {
+          <tr>
+            <td>{{ appointment.customerId || 'N/A' }}</td>
+            <td>
+              @if (appointment.customerId) {
+                <a [routerLink]="['/user', appointment.customerId || '']">
+                  {{ appointment.customerName || appointment.customerId || 'Unknown User' }}
+                </a>
+              }
+            </td>
+            <td>{{ appointment.service?.name || 'N/A' }}</td>
+            <td>{{ appointment.startTime ? (appointment.startTime | date: 'medium') : 'N/A' }}</td>
+            <td>{{ appointment.status || 'N/A' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+  @if (!loading && appointments.length === 0) {
+    <div>No appointments found.</div>
+  }
   <style>
     .responsive-table {
       width: 100%;

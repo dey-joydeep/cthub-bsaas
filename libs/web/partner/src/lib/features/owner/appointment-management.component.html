@@ -6,33 +6,45 @@
     <mat-form-field appearance="outline" class="form-field">
       <mat-label>{{ 'APPOINTMENT.FIELDS.CUSTOMER' | translate }}</mat-label>
       <mat-select formControlName="customerId" required>
-        <mat-option *ngFor="let customer of customers" [value]="customer.id"> {{ customer.name }} ({{ customer.email }}) </mat-option>
+        @for (customer of customers; track customer) {
+          <mat-option [value]="customer.id"> {{ customer.name }} ({{ customer.email }}) </mat-option>
+        }
       </mat-select>
-      <mat-error *ngIf="appointmentForm.get('customerId')?.hasError('required')">
-        {{ 'VALIDATION.REQUIRED' | translate }}
-      </mat-error>
+      @if (appointmentForm.get('customerId')?.hasError('required')) {
+        <mat-error>
+          {{ 'VALIDATION.REQUIRED' | translate }}
+        </mat-error>
+      }
     </mat-form-field>
 
     <!-- Service Selection -->
     <mat-form-field appearance="outline" class="form-field">
       <mat-label>{{ 'APPOINTMENT.FIELDS.SERVICE' | translate }}</mat-label>
       <mat-select formControlName="serviceId" required>
-        <mat-option *ngFor="let service of services" [value]="service.id"> {{ service.name }} ({{ service.duration }} min) </mat-option>
+        @for (service of services; track service) {
+          <mat-option [value]="service.id"> {{ service.name }} ({{ service.duration }} min) </mat-option>
+        }
       </mat-select>
-      <mat-error *ngIf="appointmentForm.get('serviceId')?.hasError('required')">
-        {{ 'VALIDATION.REQUIRED' | translate }}
-      </mat-error>
+      @if (appointmentForm.get('serviceId')?.hasError('required')) {
+        <mat-error>
+          {{ 'VALIDATION.REQUIRED' | translate }}
+        </mat-error>
+      }
     </mat-form-field>
 
     <!-- Staff Selection -->
     <mat-form-field appearance="outline" class="form-field">
       <mat-label>{{ 'APPOINTMENT.FIELDS.STAFF' | translate }}</mat-label>
       <mat-select formControlName="staffId" required>
-        <mat-option *ngFor="let staff of staffMembers" [value]="staff.id"> {{ staff.name }} ({{ staff.role }}) </mat-option>
+        @for (staff of staffMembers; track staff) {
+          <mat-option [value]="staff.id"> {{ staff.name }} ({{ staff.role }}) </mat-option>
+        }
       </mat-select>
-      <mat-error *ngIf="appointmentForm.get('staffId')?.hasError('required')">
-        {{ 'VALIDATION.REQUIRED' | translate }}
-      </mat-error>
+      @if (appointmentForm.get('staffId')?.hasError('required')) {
+        <mat-error>
+          {{ 'VALIDATION.REQUIRED' | translate }}
+        </mat-error>
+      }
     </mat-form-field>
 
     <!-- Start Time -->
@@ -41,9 +53,11 @@
       <input matInput [matDatepicker]="startPicker" formControlName="startTime" required />
       <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
       <mat-datepicker #startPicker></mat-datepicker>
-      <mat-error *ngIf="appointmentForm.get('startTime')?.hasError('required')">
-        {{ 'VALIDATION.REQUIRED' | translate }}
-      </mat-error>
+      @if (appointmentForm.get('startTime')?.hasError('required')) {
+        <mat-error>
+          {{ 'VALIDATION.REQUIRED' | translate }}
+        </mat-error>
+      }
     </mat-form-field>
 
     <!-- End Time (readonly, auto-calculated) -->
@@ -62,8 +76,12 @@
     <div class="form-actions">
       <button mat-raised-button color="primary" type="submit" [disabled]="appointmentForm.invalid || loading" class="submit-button">
         <mat-icon>save</mat-icon>
-        <span *ngIf="!loading">{{ 'COMMON.SAVE' | translate }}</span>
-        <mat-spinner *ngIf="loading" diameter="24"></mat-spinner>
+        @if (!loading) {
+          <span>{{ 'COMMON.SAVE' | translate }}</span>
+        }
+        @if (loading) {
+          <mat-spinner diameter="24"></mat-spinner>
+        }
       </button>
 
       <button mat-button type="button" (click)="appointmentForm.reset()" [disabled]="loading" class="reset-button">
@@ -73,15 +91,19 @@
     </div>
 
     <!-- Error Message -->
-    <div *ngIf="error" class="error-message">
-      <mat-icon>error_outline</mat-icon>
-      <span>{{ error }}</span>
-    </div>
+    @if (error) {
+      <div class="error-message">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ error }}</span>
+      </div>
+    }
 
     <!-- Success Message -->
-    <div *ngIf="success" class="success-message">
-      <mat-icon>check_circle</mat-icon>
-      <span>{{ success }}</span>
-    </div>
+    @if (success) {
+      <div class="success-message">
+        <mat-icon>check_circle</mat-icon>
+        <span>{{ success }}</span>
+      </div>
+    }
   </form>
 </div>

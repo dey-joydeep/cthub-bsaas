@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -29,14 +29,14 @@ export interface Renewal {
   selector: 'app-renewals-list-widget',
   standalone: true,
   imports: [
-    CommonModule,
     MatCardModule,
     MatIconModule,
     MatListModule,
     MatButtonModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
-    TranslatePipe, TranslateDirective,
+    TranslatePipe,
+    TranslateDirective,
   ],
   templateUrl: './renewals-list-widget.component.html',
   styleUrls: ['./renewals-list-widget.component.css'],

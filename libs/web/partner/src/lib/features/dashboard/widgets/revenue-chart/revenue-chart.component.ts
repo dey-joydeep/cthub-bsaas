@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
@@ -9,7 +9,7 @@ import { RevenueData } from './models/revenue-chart.model';
 @Component({
   selector: 'app-revenue-chart',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule, TranslatePipe, TranslateDirective],
+  imports: [MatCardModule, MatIconModule, TranslatePipe, TranslateDirective],
   templateUrl: './revenue-chart.component.html',
   styleUrls: ['./revenue-chart.component.css'],
 })

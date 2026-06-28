@@ -54,7 +54,8 @@ const routes: Routes = [
     MatDatepickerModule,
     MatNativeDateModule,
     ReactiveFormsModule,
-    TranslatePipe, TranslateDirective,
+    TranslatePipe,
+    TranslateDirective,
 
     // Standalone Components
     DashboardComponent,

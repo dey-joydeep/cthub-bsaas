@@ -159,7 +159,7 @@ export class HomeComponent implements OnInit {
    * Gets the primary CTA route based on authentication status
    */
   getPrimaryCtaRoute(): string {
-      return this.isAuthenticated ? ['/appointments'] : ['/us/salons'];
+    return this.isAuthenticated ? ['/appointments'] : ['/us/salons'];
   }
 
   /**

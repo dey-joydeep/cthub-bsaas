@@ -19,10 +19,12 @@ export class TenantService {
   }
 
   isEligibleForReview(userId: string, salonId: string): Observable<{ eligible: boolean }> {
-    return this.http.get<{ eligible: boolean }>(`/api/user/${userId}/salon/${salonId}/eligible-to-review`, { withCredentials: true }).pipe(catchError((err) => this.handleError(err)));
+    return this.http
+      .get<{ eligible: boolean }>(`/api/user/${userId}/salon/${salonId}/eligible-to-review`, { withCredentials: true })
+      .pipe(catchError((err) => this.handleError(err)));
   }
 
-  submitReview(salonId: string, review: { rating: number; comment: string; userId: string; }): Observable<Review> {
+  submitReview(salonId: string, review: { rating: number; comment: string; userId: string }): Observable<Review> {
     return this.http.post<Review>(`/api/salon/${salonId}/reviews`, review).pipe(catchError((err) => this.handleError(err)));
   }
 

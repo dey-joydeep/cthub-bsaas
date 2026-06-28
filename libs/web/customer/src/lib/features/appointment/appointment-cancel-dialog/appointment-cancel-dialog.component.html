@@ -18,12 +18,16 @@
         cdkAutosizeMinRows="3"
         cdkAutosizeMaxRows="6"
       ></textarea>
-      <mat-error *ngIf="reason?.hasError('required')">
-        {{ 'VALIDATION.REASON_REQUIRED' | translate }}
-      </mat-error>
-      <mat-error *ngIf="reason?.hasError('minlength')">
-        {{ 'VALIDATION.REASON_MIN_LENGTH' | translate }}
-      </mat-error>
+      @if (reason?.hasError('required')) {
+        <mat-error>
+          {{ 'VALIDATION.REASON_REQUIRED' | translate }}
+        </mat-error>
+      }
+      @if (reason?.hasError('minlength')) {
+        <mat-error>
+          {{ 'VALIDATION.REASON_MIN_LENGTH' | translate }}
+        </mat-error>
+      }
       <mat-hint>{{ 'APPOINTMENT.REASON_HELP' | translate }}</mat-hint>
     </mat-form-field>
   </form>
@@ -46,14 +50,22 @@
 
 <mat-dialog-actions align="end">
   <button mat-button color="warn" [disabled]="isSubmitting">
-    <span *ngIf="!isSubmitting">{{ 'APPOINTMENT.CANCEL_APPOINTMENT' | translate }}</span>
-    <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
+    @if (!isSubmitting) {
+      <span>{{ 'APPOINTMENT.CANCEL_APPOINTMENT' | translate }}</span>
+    }
+    @if (isSubmitting) {
+      <mat-spinner diameter="20"></mat-spinner>
+    }
   </button>
   <button mat-button (click)="onNoClick()" [disabled]="isSubmitting">
     {{ 'COMMON.CANCEL' | translate }}
   </button>
   <button mat-raised-button color="warn" [disabled]="cancelForm.invalid || isSubmitting" (click)="onSubmit()">
-    <span *ngIf="!isSubmitting">{{ 'APPOINTMENT.CONFIRM_CANCEL' | translate }}</span>
-    <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
+    @if (!isSubmitting) {
+      <span>{{ 'APPOINTMENT.CONFIRM_CANCEL' | translate }}</span>
+    }
+    @if (isSubmitting) {
+      <mat-spinner diameter="20"></mat-spinner>
+    }
   </button>
 </mat-dialog-actions>

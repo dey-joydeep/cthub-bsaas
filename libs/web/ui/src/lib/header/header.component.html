@@ -16,7 +16,7 @@
         [placeholder]="'HEADER.SEARCH_PLACEHOLDER' | translate"
         (keyup.enter)="onSearch(searchInput.value)"
         #searchInput
-        />
+      />
       <button mat-icon-button class="search-button" (click)="onSearch(searchInput.value)">
         <mat-icon>search</mat-icon>
       </button>
@@ -134,7 +134,6 @@
           {{ 'HEADER.SIGNUP' | translate }}
         </a>
       }
-
     </div>
   </mat-toolbar>
 </header>
@@ -147,7 +146,7 @@
     [placeholder]="'HEADER.SEARCH_PLACEHOLDER' | translate"
     (keyup.enter)="onSearch(mobileSearchInput.value)"
     #mobileSearchInput
-    />
+  />
   <button mat-icon-button class="close-search" (click)="isMobileSearchVisible = false">
     <mat-icon>close</mat-icon>
   </button>
@@ -162,7 +161,7 @@
     (click)="showCityPopup = false"
     (keydown.enter)="showCityPopup = false"
     (keydown.space)="showCityPopup = false"
-    >
+  >
     <div class="city-popup" role="dialog" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
       <h2>{{ 'HEADER.SELECT_YOUR_CITY' | translate }}</h2>
       <p>{{ 'HEADER.WE_USE_THIS_TO_SHOW_RELEVANT_CONTENT' | translate }}</p>

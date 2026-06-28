@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, inject, Input, OnInit, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -13,16 +12,7 @@ import { DashboardApiService } from '@cthub-bsaas/features/dashboard/services/da
 @Component({
   selector: 'app-subscription-chart',
   standalone: true,
-  imports: [
-    CommonModule,
-    BaseChartDirective,
-    MatCardModule,
-    MatProgressBarModule,
-    MatError,
-    MatButtonModule,
-    MatIconModule,
-    MatTooltipModule,
-  ],
+  imports: [BaseChartDirective, MatCardModule, MatProgressBarModule, MatError, MatButtonModule, MatIconModule, MatTooltipModule],
   templateUrl: './subscription-chart.component.html',
   styleUrls: ['./subscription-chart.component.css'],
 })

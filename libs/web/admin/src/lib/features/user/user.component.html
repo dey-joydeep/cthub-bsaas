@@ -1,8 +1,12 @@
 <div class="user-stats-container" role="region" aria-labelledby="user-title">
   <h2 id="user-title">{{ 'user.title' | translate }}</h2>
-  <div *ngIf="loading" class="loading" aria-live="polite" aria-atomic="true">{{ 'user.loading' | translate }}</div>
-  <div *ngIf="error" class="error-message" role="alert">{{ error }}</div>
-  <ng-container *ngIf="isAdmin && !loading && !error && stats">
+  @if (loading) {
+    <div class="loading" aria-live="polite" aria-atomic="true">{{ 'user.loading' | translate }}</div>
+  }
+  @if (error) {
+    <div class="error-message" role="alert">{{ error }}</div>
+  }
+  @if (isAdmin && !loading && !error && stats) {
     <div class="stats-row">
       <span class="stat-label">{{ 'user.businessCount' | translate }}</span>
       <span class="stat-value">{{ stats.businessCount }}</span>
@@ -19,5 +23,5 @@
       <span class="stat-label">{{ 'user.activeCustomers' | translate }}</span>
       <span class="stat-value">{{ stats.activeCustomer }}</span>
     </div>
-  </ng-container>
+  }
 </div>

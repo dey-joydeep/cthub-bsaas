@@ -99,7 +99,8 @@ describe('ProductSalesWidgetComponent', () => {
         MatDatepickerModule,
         MatNativeDateModule,
         ReactiveFormsModule,
-        TranslatePipe, TranslateDirective,
+        TranslatePipe,
+        TranslateDirective,
       ],
       providers: [
         { provide: DashboardService, useValue: dashboardService },

@@ -18,7 +18,10 @@ export class AuthService implements AuthStatePort {
   private currentUserSubject = new BehaviorSubject<CustomerAuthUser | null>(null);
   public readonly currentUser$: Observable<CustomerAuthUser | null> = this.currentUserSubject.asObservable();
 
-  constructor(@Inject(PLATFORM_ID) private platformId: object, private storage: StorageService) {
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: object,
+    private storage: StorageService,
+  ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
       this.initializeAuthState();

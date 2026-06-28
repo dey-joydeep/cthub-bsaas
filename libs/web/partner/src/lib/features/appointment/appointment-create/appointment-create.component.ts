@@ -35,7 +35,8 @@ import { Service, Staff } from './models/appointment-create.model';
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    TranslatePipe, TranslateDirective,
+    TranslatePipe,
+    TranslateDirective,
   ],
   templateUrl: './appointment-create.component.html',
   styleUrls: ['./appointment-create.component.css'],
@@ -62,7 +63,7 @@ export class AppointmentCreateComponent implements OnInit {
     private route: ActivatedRoute,
     private snackBar: MatSnackBar,
     private translate: TranslateService,
-    private appointmentCreateService: AppointmentCreateService
+    private appointmentCreateService: AppointmentCreateService,
   ) {
     this.serviceFormGroup = this.fb.group({
       service: ['', Validators.required],
@@ -84,7 +85,7 @@ export class AppointmentCreateComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.appointmentCreateService.getServices().subscribe(services => {
+    this.appointmentCreateService.getServices().subscribe((services) => {
       this.services = services;
       // If a service ID is provided in the route, pre-select it
       const serviceId = this.route.snapshot.queryParamMap.get('serviceId');
@@ -97,7 +98,7 @@ export class AppointmentCreateComponent implements OnInit {
       }
     });
 
-    this.appointmentCreateService.getStaff().subscribe(staff => {
+    this.appointmentCreateService.getStaff().subscribe((staff) => {
       this.staffMembers = staff;
     });
   }

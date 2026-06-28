@@ -6,9 +6,11 @@
     </mat-card-header>
 
     <mat-card-content>
-      <div class="loading-shade" *ngIf="isLoading">
-        <mat-spinner></mat-spinner>
-      </div>
+      @if (isLoading) {
+        <div class="loading-shade">
+          <mat-spinner></mat-spinner>
+        </div>
+      }
 
       <div class="mat-elevation-z8">
         <table mat-table [dataSource]="dataSource" class="full-width">
@@ -20,9 +22,9 @@
                 <mat-icon class="service-icon">spa</mat-icon>
                 <div class="service-details">
                   <div class="service-name">{{ appointment.serviceId | titlecase }}</div>
-                  <div class="salon-name" *ngIf="appointment.salonId">
-                    {{ 'APPOINTMENT.AT_SALON' | translate }} {{ appointment.salonId | titlecase }}
-                  </div>
+                  @if (appointment.salonId) {
+                    <div class="salon-name">{{ 'APPOINTMENT.AT_SALON' | translate }} {{ appointment.salonId | titlecase }}</div>
+                  }
                 </div>
               </div>
             </td>

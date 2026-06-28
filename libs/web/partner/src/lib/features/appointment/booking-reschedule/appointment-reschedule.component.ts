@@ -43,7 +43,8 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    TranslatePipe, TranslateDirective,
+    TranslatePipe,
+    TranslateDirective,
   ],
   templateUrl: './appointment-reschedule.component.html',
   styleUrls: ['./appointment-reschedule.component.css'],
@@ -223,7 +224,9 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: () => {
-          this.snackBar.open(this.translate.instant('APPOINTMENT.RESCHEDULE_SUCCESS'), this.translate.instant('COMMON.CLOSE'), { duration: 5000 });
+          this.snackBar.open(this.translate.instant('APPOINTMENT.RESCHEDULE_SUCCESS'), this.translate.instant('COMMON.CLOSE'), {
+            duration: 5000,
+          });
           this.router.navigate(['/appointments']);
         },
         error: (error: Error) => this.handleError(error),

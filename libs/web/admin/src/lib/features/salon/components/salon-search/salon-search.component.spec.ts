@@ -20,11 +20,16 @@ describe('SalonSearchComponent', () => {
         SalonSearchComponent,
         HttpClientTestingModule,
         FormsModule,
-        TranslatePipe, TranslateDirective,
+        TranslatePipe,
+        TranslateDirective,
         SafeUrlPipe,
         RouterTestingModule.withRoutes([]),
       ],
-      providers: [SafeUrlPipe, { provide: AUTH_STATE_PORT, useValue: { currentUser$: of(null) } }, { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => null } } } }],
+      providers: [
+        SafeUrlPipe,
+        { provide: AUTH_STATE_PORT, useValue: { currentUser$: of(null) } },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => null } } } },
+      ],
     }).compileComponents();
   }));
 

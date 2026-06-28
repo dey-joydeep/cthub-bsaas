@@ -39,7 +39,8 @@ import { Staff } from '../../../models/staff.model';
     MatSelectModule,
 
     // Third-party modules
-    TranslatePipe, TranslateDirective,
+    TranslatePipe,
+    TranslateDirective,
   ],
   templateUrl: './create-appointment.component.html',
   styleUrls: ['./create-appointment.component.css'],

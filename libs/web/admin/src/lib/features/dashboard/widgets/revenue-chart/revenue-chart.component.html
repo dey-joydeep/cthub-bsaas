@@ -6,9 +6,11 @@
   <mat-card-content>
     <div class="chart-container">
       <!-- Chart will be rendered here -->
-      <div class="no-data" *ngIf="!revenueData || revenueData.length === 0">
-        {{ 'DASHBOARD.REVENUE.NO_DATA' | translate }}
-      </div>
+      @if (!revenueData || revenueData.length === 0) {
+        <div class="no-data">
+          {{ 'DASHBOARD.REVENUE.NO_DATA' | translate }}
+        </div>
+      }
     </div>
   </mat-card-content>
 </mat-card>

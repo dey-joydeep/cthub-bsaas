@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray, ReactiveFormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -21,7 +21,6 @@ import { ProductParams, ProductCategoryParams, ProductImageParams } from '../../
   selector: 'app-product-management',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
@@ -33,7 +32,8 @@ import { ProductParams, ProductCategoryParams, ProductImageParams } from '../../
     MatChipsModule,
     MatCardModule,
     MatTabsModule,
-    TranslatePipe, TranslateDirective,
+    TranslatePipe,
+    TranslateDirective,
   ],
   templateUrl: './product-management.component.html',
   styleUrls: ['./product-management.component.css'],

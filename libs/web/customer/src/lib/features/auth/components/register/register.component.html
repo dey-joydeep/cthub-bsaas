@@ -19,9 +19,7 @@
       <label for="password">Password</label>
       <input id="password" formControlName="password" type="password" />
       @if (registerForm.get('password')?.invalid && registerForm.get('password')?.touched) {
-        <div class="error">
-          Password (min 6 chars) is required.
-        </div>
+        <div class="error">Password (min 6 chars) is required.</div>
       }
     </div>
     <!-- Add role select if needed -->

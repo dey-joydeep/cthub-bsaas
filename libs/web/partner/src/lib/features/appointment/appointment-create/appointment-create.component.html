@@ -17,26 +17,29 @@
               <p class="step-description">{{ 'APPOINTMENT.SERVICE_SELECTION_HELP' | translate }}</p>
 
               <div class="service-grid">
-                <mat-card
-                  *ngFor="let service of services"
-                  [class.selected]="serviceFormGroup.get('service')?.value === service.id"
-                  (click)="serviceFormGroup.get('service')?.setValue(service.id)"
-                >
-                  <mat-card-header>
-                    <div mat-card-avatar class="service-avatar">
-                      <mat-icon>spa</mat-icon>
-                    </div>
-                    <mat-card-title>{{ service.name }}</mat-card-title>
-                    <mat-card-subtitle>
-                      {{ service.duration }} {{ 'COMMON.MINUTES' | translate }} • {{ service.price | currency }}
-                    </mat-card-subtitle>
-                  </mat-card-header>
-                </mat-card>
+                @for (service of services; track service) {
+                  <mat-card
+                    [class.selected]="serviceFormGroup.get('service')?.value === service.id"
+                    (click)="serviceFormGroup.get('service')?.setValue(service.id)"
+                  >
+                    <mat-card-header>
+                      <div mat-card-avatar class="service-avatar">
+                        <mat-icon>spa</mat-icon>
+                      </div>
+                      <mat-card-title>{{ service.name }}</mat-card-title>
+                      <mat-card-subtitle>
+                        {{ service.duration }} {{ 'COMMON.MINUTES' | translate }} • {{ service.price | currency }}
+                      </mat-card-subtitle>
+                    </mat-card-header>
+                  </mat-card>
+                }
               </div>
 
-              <mat-error *ngIf="serviceFormGroup.get('service')?.invalid && serviceFormGroup.get('service')?.touched">
-                {{ 'VALIDATION.SERVICE_REQUIRED' | translate }}
-              </mat-error>
+              @if (serviceFormGroup.get('service')?.invalid && serviceFormGroup.get('service')?.touched) {
+                <mat-error>
+                  {{ 'VALIDATION.SERVICE_REQUIRED' | translate }}
+                </mat-error>
+              }
             </div>
 
             <div class="step-actions">
@@ -57,24 +60,27 @@
               <p class="step-description">{{ 'APPOINTMENT.STAFF_SELECTION_HELP' | translate }}</p>
 
               <div class="staff-grid">
-                <mat-card
-                  *ngFor="let staff of staffMembers"
-                  [class.selected]="staffFormGroup.get('staff')?.value === staff.id"
-                  (click)="staffFormGroup.get('staff')?.setValue(staff.id)"
-                >
-                  <mat-card-header>
-                    <div mat-card-avatar class="staff-avatar">
-                      <mat-icon>person</mat-icon>
-                    </div>
-                    <mat-card-title>{{ staff.name }}</mat-card-title>
-                    <mat-card-subtitle>{{ 'APPOINTMENT.AVAILABLE' | translate }}</mat-card-subtitle>
-                  </mat-card-header>
-                </mat-card>
+                @for (staff of staffMembers; track staff) {
+                  <mat-card
+                    [class.selected]="staffFormGroup.get('staff')?.value === staff.id"
+                    (click)="staffFormGroup.get('staff')?.setValue(staff.id)"
+                  >
+                    <mat-card-header>
+                      <div mat-card-avatar class="staff-avatar">
+                        <mat-icon>person</mat-icon>
+                      </div>
+                      <mat-card-title>{{ staff.name }}</mat-card-title>
+                      <mat-card-subtitle>{{ 'APPOINTMENT.AVAILABLE' | translate }}</mat-card-subtitle>
+                    </mat-card-header>
+                  </mat-card>
+                }
               </div>
 
-              <mat-error *ngIf="staffFormGroup.get('staff')?.invalid && staffFormGroup.get('staff')?.touched">
-                {{ 'VALIDATION.STAFF_REQUIRED' | translate }}
-              </mat-error>
+              @if (staffFormGroup.get('staff')?.invalid && staffFormGroup.get('staff')?.touched) {
+                <mat-error>
+                  {{ 'VALIDATION.STAFF_REQUIRED' | translate }}
+                </mat-error>
+              }
             </div>
 
             <div class="step-actions">
@@ -103,28 +109,35 @@
                     <input matInput [matDatepicker]="picker" formControlName="date" (dateChange)="onDateSelect()" />
                     <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
                     <mat-datepicker #picker></mat-datepicker>
-                    <mat-error *ngIf="dateTimeFormGroup.get('date')?.hasError('required')">
-                      {{ 'VALIDATION.DATE_REQUIRED' | translate }}
-                    </mat-error>
+                    @if (dateTimeFormGroup.get('date')?.hasError('required')) {
+                      <mat-error>
+                        {{ 'VALIDATION.DATE_REQUIRED' | translate }}
+                      </mat-error>
+                    }
                   </mat-form-field>
                 </div>
 
-                <div class="time-slots" *ngIf="availableTimeSlots.length > 0">
-                  <h4>{{ 'APPOINTMENT.AVAILABLE_TIMESLOTS' | translate }}</h4>
-                  <div class="time-grid">
-                    <button
-                      *ngFor="let time of availableTimeSlots"
-                      mat-stroked-button
-                      [class.selected]="dateTimeFormGroup.get('time')?.value === time"
-                      (click)="dateTimeFormGroup.get('time')?.setValue(time)"
-                    >
-                      {{ time }}
-                    </button>
+                @if (availableTimeSlots.length > 0) {
+                  <div class="time-slots">
+                    <h4>{{ 'APPOINTMENT.AVAILABLE_TIMESLOTS' | translate }}</h4>
+                    <div class="time-grid">
+                      @for (time of availableTimeSlots; track time) {
+                        <button
+                          mat-stroked-button
+                          [class.selected]="dateTimeFormGroup.get('time')?.value === time"
+                          (click)="dateTimeFormGroup.get('time')?.setValue(time)"
+                        >
+                          {{ time }}
+                        </button>
+                      }
+                    </div>
+                    @if (dateTimeFormGroup.get('time')?.hasError('required') && dateTimeFormGroup.get('time')?.touched) {
+                      <mat-error>
+                        {{ 'VALIDATION.TIME_REQUIRED' | translate }}
+                      </mat-error>
+                    }
                   </div>
-                  <mat-error *ngIf="dateTimeFormGroup.get('time')?.hasError('required') && dateTimeFormGroup.get('time')?.touched">
-                    {{ 'VALIDATION.TIME_REQUIRED' | translate }}
-                  </mat-error>
-                </div>
+                }
               </div>
             </div>
 
@@ -200,9 +213,11 @@
                     <mat-checkbox formControlName="terms">
                       {{ 'APPOINTMENT.TERMS_AGREEMENT' | translate }}
                     </mat-checkbox>
-                    <mat-error *ngIf="detailsFormGroup.get('terms')?.hasError('required')">
-                      {{ 'VALIDATION.TERMS_REQUIRED' | translate }}
-                    </mat-error>
+                    @if (detailsFormGroup.get('terms')?.hasError('required')) {
+                      <mat-error>
+                        {{ 'VALIDATION.TERMS_REQUIRED' | translate }}
+                      </mat-error>
+                    }
                   </mat-card-actions>
                 </mat-card>
               </div>
@@ -211,8 +226,12 @@
             <div class="step-actions">
               <button mat-button matStepperPrevious>{{ 'COMMON.BACK' | translate }}</button>
               <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="detailsFormGroup.invalid || isSubmitting">
-                <span *ngIf="!isSubmitting">{{ 'APPOINTMENT.CONFIRM_APPOINTMENT' | translate }}</span>
-                <mat-spinner *ngIf="isSubmitting" diameter="24"></mat-spinner>
+                @if (!isSubmitting) {
+                  <span>{{ 'APPOINTMENT.CONFIRM_APPOINTMENT' | translate }}</span>
+                }
+                @if (isSubmitting) {
+                  <mat-spinner diameter="24"></mat-spinner>
+                }
               </button>
             </div>
           </form>

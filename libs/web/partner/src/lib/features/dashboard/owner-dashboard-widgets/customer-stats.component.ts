@@ -1,5 +1,5 @@
 import { Component, Input, inject, signal, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatError, MatFormFieldModule } from '@angular/material/form-field';
@@ -8,7 +8,7 @@ import { DashboardApiService } from '@cthub-bsaas/features/dashboard/services/da
 @Component({
   selector: 'app-customer-stats',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatProgressBarModule, MatFormFieldModule, MatError],
+  imports: [MatCardModule, MatProgressBarModule, MatFormFieldModule, MatError],
   templateUrl: './customer-stats.component.html',
   styleUrls: ['./customer-stats.component.css'],
 })

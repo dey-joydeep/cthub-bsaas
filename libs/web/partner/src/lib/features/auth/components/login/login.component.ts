@@ -42,8 +42,9 @@ import type { InitLoginResponse, PartnerAuthUser } from '../../models/auth.model
     MatInputModule,
     MatProgressBarModule,
     MatProgressSpinnerModule,
-    TranslatePipe, TranslateDirective
-],
+    TranslatePipe,
+    TranslateDirective,
+  ],
   selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css'],

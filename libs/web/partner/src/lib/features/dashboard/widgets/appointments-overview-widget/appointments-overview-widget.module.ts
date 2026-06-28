@@ -68,7 +68,8 @@ import { DashboardService } from '../../services/dashboard.service';
     MatTooltipModule,
 
     // Third-party modules
-    TranslatePipe, TranslateDirective,
+    TranslatePipe,
+    TranslateDirective,
     AppointmentsOverviewWidgetComponent, // Import the standalone component
   ],
   providers: [DashboardService],

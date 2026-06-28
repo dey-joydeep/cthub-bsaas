@@ -220,7 +220,10 @@ export class StaffManagementComponent implements OnInit {
 
   dataSource: Staff[] = [];
 
-  constructor(private dialog: MatDialog, private staffManagementService: StaffManagementService) {}
+  constructor(
+    private dialog: MatDialog,
+    private staffManagementService: StaffManagementService,
+  ) {}
 
   ngOnInit(): void {
     this.staffManagementService.getStaff().subscribe((staff) => {

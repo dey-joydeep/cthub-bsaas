@@ -1,6 +1,6 @@
 import { PlatformUtils, PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
 import { Component, inject, PLATFORM_ID, OnInit } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpParams } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -12,7 +12,7 @@ import type { PlatformUtils } from '@cthub-bsaas/web-core-platform';
 @Component({
   selector: 'app-salon-search',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, TranslatePipe, TranslateDirective, SafeUrlPipe],
+  imports: [RouterModule, FormsModule, TranslatePipe, TranslateDirective, SafeUrlPipe],
   templateUrl: './salon-search.component.html',
   styleUrls: ['./salon-search.component.css'],
 })

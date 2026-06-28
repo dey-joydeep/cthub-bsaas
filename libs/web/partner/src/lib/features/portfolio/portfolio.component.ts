@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { PortfolioService } from './portfolio.service';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
@@ -9,7 +9,7 @@ import { PortfolioItem } from './models/portfolio.model';
 @Component({
   selector: 'app-portfolio',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslatePipe, TranslateDirective],
+  imports: [ReactiveFormsModule, TranslatePipe, TranslateDirective],
   templateUrl: './portfolio.component.html',
   styleUrls: ['./portfolio.component.css'],
 })

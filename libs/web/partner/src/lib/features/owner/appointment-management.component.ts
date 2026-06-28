@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -20,7 +19,6 @@ import { AppointmentService } from './appointment.service';
   selector: 'app-appointment-management',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
@@ -31,7 +29,8 @@ import { AppointmentService } from './appointment.service';
     MatDatepickerModule,
     MatProgressSpinnerModule,
     MatNativeDateModule,
-    TranslatePipe, TranslateDirective,
+    TranslatePipe,
+    TranslateDirective,
   ],
   templateUrl: './appointment-management.component.html',
   styleUrls: ['./appointment-management.component.css'],

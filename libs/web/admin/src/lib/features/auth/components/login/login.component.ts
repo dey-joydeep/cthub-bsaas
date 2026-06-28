@@ -39,8 +39,9 @@ import { LoginService } from './login.service';
     MatInputModule,
     MatProgressBarModule,
     MatProgressSpinnerModule,
-    TranslatePipe, TranslateDirective
-],
+    TranslatePipe,
+    TranslateDirective,
+  ],
   selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css'],
@@ -375,4 +376,3 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
       );
   }
 }
-

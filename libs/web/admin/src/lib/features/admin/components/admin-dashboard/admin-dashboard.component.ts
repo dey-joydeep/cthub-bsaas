@@ -64,15 +64,17 @@ import { MatIconModule } from '@angular/material/icon';
         <mat-card>
           <mat-card-content>
             <div class="space-y-4">
-              <div *ngFor="let activity of recentActivities" class="flex items-start">
-                <mat-icon class="mr-3 mt-1" [ngClass]="getActivityIconClass(activity.type)">
-                  {{ getActivityIcon(activity.type) }}
-                </mat-icon>
-                <div>
-                  <p class="font-medium">{{ activity.message }}</p>
-                  <p class="text-sm text-gray-500">{{ activity.timestamp | date: 'medium' }}</p>
+              @for (activity of recentActivities; track activity) {
+                <div class="flex items-start">
+                  <mat-icon class="mr-3 mt-1" [ngClass]="getActivityIconClass(activity.type)">
+                    {{ getActivityIcon(activity.type) }}
+                  </mat-icon>
+                  <div>
+                    <p class="font-medium">{{ activity.message }}</p>
+                    <p class="text-sm text-gray-500">{{ activity.timestamp | date: 'medium' }}</p>
+                  </div>
                 </div>
-              </div>
+              }
             </div>
           </mat-card-content>
         </mat-card>
