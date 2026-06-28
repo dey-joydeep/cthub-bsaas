@@ -18,14 +18,14 @@ import { AppointmentStatus } from '../../../../../../libs/frontend/src/app/share
 describe('AppointmentManagementComponent', () => {
   let component: AppointmentManagementComponent;
   let fixture: ComponentFixture<AppointmentManagementComponent>;
-  let appointmentService: jest.Mocked<AppointmentService>;
+  let appointmentService: vi.Mocked<AppointmentService>;
 
   beforeEach(async () => {
     const appointmentServiceMock = {
-      createAppointment: jest.fn(),
-      getAppointments: jest.fn(),
-      updateAppointmentStatus: jest.fn(),
-    } as unknown as jest.Mocked<AppointmentService>;
+      createAppointment: vi.fn(),
+      getAppointments: vi.fn(),
+      updateAppointmentStatus: vi.fn(),
+    } as unknown as vi.Mocked<AppointmentService>;
 
     await TestBed.configureTestingModule({
       imports: [
@@ -44,7 +44,7 @@ describe('AppointmentManagementComponent', () => {
       providers: [{ provide: AppointmentService, useValue: appointmentServiceMock }, TranslateService],
     }).compileComponents();
 
-    appointmentService = TestBed.inject(AppointmentService) as jest.Mocked<AppointmentService>;
+    appointmentService = TestBed.inject(AppointmentService) as vi.Mocked<AppointmentService>;
 
     fixture = TestBed.createComponent(AppointmentManagementComponent);
     component = fixture.componentInstance;
@@ -121,9 +121,9 @@ describe('AppointmentManagementComponent', () => {
       customerId: 'customer-123',
       serviceId: 'service-456',
       staffId: 'staff-789',
-      salonId: jasmine.any(String), // Add required salonId field
-      startTime: jasmine.any(String),
-      endTime: jasmine.any(String),
+      salonId: expect.any(String), // Add required salonId field
+      startTime: expect.any(String),
+      endTime: expect.any(String),
       notes: 'Test appointment',
     });
 

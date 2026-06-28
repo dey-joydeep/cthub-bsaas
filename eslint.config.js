@@ -40,6 +40,7 @@ export default [
       '**/.nx/**',
       '**/tmp/**',
       '**/eslint.config.*',
+      '**/vitest.config.*.timestamp*',
     ],
   },
 ];

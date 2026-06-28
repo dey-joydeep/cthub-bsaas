@@ -6,7 +6,7 @@ import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 
 // Core services
-import { CurrentUserService } from '../../../../core/auth/services/current-user.service';
+import { CurrentUserService } from '@cthub-bsaas/web-core-auth';
 import { ErrorService } from '@cthub-bsaas/web-core-common';
 
 // Models from salon module

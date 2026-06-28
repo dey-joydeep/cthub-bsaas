@@ -19,19 +19,19 @@ import { AuthService } from '../../services/auth.service';
 
 // Mocks
 class MockTranslateService {
-  get = jest.fn().mockReturnValue(of('translated text'));
-  instant = jest.fn().mockReturnValue('translated text');
-  use = jest.fn().mockReturnValue(of({}));
-  setDefaultLang = jest.fn();
-  getBrowserLang = jest.fn().mockReturnValue('en');
-  getLangs = jest.fn().mockReturnValue(['en', 'es']);
-  onLangChange = { subscribe: jest.fn() };
-  onTranslationChange = { subscribe: jest.fn() };
-  onDefaultLangChange = { subscribe: jest.fn() };
+  get = vi.fn().mockReturnValue(of('translated text'));
+  instant = vi.fn().mockReturnValue('translated text');
+  use = vi.fn().mockReturnValue(of({}));
+  setDefaultLang = vi.fn();
+  getBrowserLang = vi.fn().mockReturnValue('en');
+  getLangs = vi.fn().mockReturnValue(['en', 'es']);
+  onLangChange = { subscribe: vi.fn() };
+  onTranslationChange = { subscribe: vi.fn() };
+  onDefaultLangChange = { subscribe: vi.fn() };
 }
 
 class MockAuthService implements Partial<AuthService> {
-  login = jest.fn().mockReturnValue(
+  login = vi.fn().mockReturnValue(
     of({
       id: '1',
       email: 'test@example.com',
@@ -42,12 +42,12 @@ class MockAuthService implements Partial<AuthService> {
       expiresIn: 3600,
     }),
   );
-  isAuthenticated = jest.fn().mockReturnValue(false);
-  getCurrentUser = jest.fn().mockReturnValue(null);
-  logout = jest.fn().mockReturnValue(of(true));
-  getToken = jest.fn().mockReturnValue('test-token');
-  getRefreshToken = jest.fn().mockReturnValue('refresh-token');
-  refreshToken = jest.fn().mockReturnValue(
+  isAuthenticated = vi.fn().mockReturnValue(false);
+  getCurrentUser = vi.fn().mockReturnValue(null);
+  logout = vi.fn().mockReturnValue(of(true));
+  getToken = vi.fn().mockReturnValue('test-token');
+  getRefreshToken = vi.fn().mockReturnValue('refresh-token');
+  refreshToken = vi.fn().mockReturnValue(
     of({
       id: '1',
       email: 'test@example.com',
@@ -61,16 +61,16 @@ class MockAuthService implements Partial<AuthService> {
 }
 
 class MockNotificationService {
-  error = jest.fn();
-  success = jest.fn();
-  show = jest.fn();
-  info = jest.fn();
-  warning = jest.fn();
-  clear = jest.fn();
-  showError = jest.fn();
-  showSuccess = jest.fn();
-  showWarning = jest.fn();
-  showInfo = jest.fn();
+  error = vi.fn();
+  success = vi.fn();
+  show = vi.fn();
+  info = vi.fn();
+  warning = vi.fn();
+  clear = vi.fn();
+  showError = vi.fn();
+  showSuccess = vi.fn();
+  showWarning = vi.fn();
+  showInfo = vi.fn();
 }
 
 describe('LoginComponent', () => {
@@ -153,7 +153,7 @@ describe('LoginComponent', () => {
   });
 
   it('should call authService.login and navigate on successful login', () => {
-    const navigateSpy = jest.spyOn(router, 'navigateByUrl').mockImplementation(() => Promise.resolve(true));
+    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockImplementation(() => Promise.resolve(true));
 
     component.loginForm.setValue({
       email: 'test@example.com',
@@ -225,7 +225,7 @@ describe('LoginComponent', () => {
     );
 
     // Spy on router.navigate
-    const navigateSpy = jest.spyOn(router, 'navigate');
+    const navigateSpy = vi.spyOn(router, 'navigate');
 
     // Trigger form submission
     component.onSubmit();

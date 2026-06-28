@@ -62,23 +62,23 @@ const mockSummary: ProductSalesSummary = {
 describe('ProductSalesWidgetComponent', () => {
   let component: ProductSalesWidgetComponent;
   let fixture: ComponentFixture<ProductSalesWidgetComponent>;
-  let dashboardService: jest.Mocked<DashboardService>;
-  let productService: jest.Mocked<ProductService>;
-  let translateService: jest.Mocked<TranslateService>;
+  let dashboardService: vi.Mocked<DashboardService>;
+  let productService: vi.Mocked<ProductService>;
+  let translateService: vi.Mocked<TranslateService>;
 
   beforeEach(async () => {
     dashboardService = {
-      getProductSales: jest.fn(),
-      getProductSalesSummary: jest.fn(),
-    } as unknown as jest.Mocked<DashboardService>;
+      getProductSales: vi.fn(),
+      getProductSalesSummary: vi.fn(),
+    } as unknown as vi.Mocked<DashboardService>;
 
     productService = {
-      getProductSales: jest.fn(),
-    } as unknown as jest.Mocked<ProductService>;
+      getProductSales: vi.fn(),
+    } as unknown as vi.Mocked<ProductService>;
 
     translateService = {
-      instant: jest.fn(),
-    } as unknown as jest.Mocked<TranslateService>;
+      instant: vi.fn(),
+    } as unknown as vi.Mocked<TranslateService>;
 
     await TestBed.configureTestingModule({
       declarations: [ProductSalesWidgetComponent],
@@ -245,7 +245,7 @@ describe('ProductSalesWidgetComponent', () => {
 
   it('should refresh data when refresh is called', () => {
     // Reset call count
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     component.refresh();
 

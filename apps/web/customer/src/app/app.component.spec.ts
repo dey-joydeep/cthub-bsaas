@@ -56,8 +56,8 @@ describe('AppComponent', () => {
     fixture.detectChanges();
     const getItemSpy = spyOn(localStorage, 'getItem');
     getItemSpy.and.returnValue('token');
-    // expect(app.isLoggedIn).toBeTrue();
+    // expect(app.isLoggedIn).toBe(true);
     getItemSpy.and.returnValue(null);
-    // expect(app.isLoggedIn).toBeFalse();
+    // expect(app.isLoggedIn).toBe(false);
   });
 });

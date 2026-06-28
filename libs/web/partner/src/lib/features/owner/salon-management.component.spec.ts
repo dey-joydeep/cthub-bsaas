@@ -17,15 +17,15 @@ import { User } from '../../models/user.model';
 describe('SalonManagementComponent', () => {
   let component: SalonManagementComponent;
   let fixture: ComponentFixture<SalonManagementComponent>;
-  let salonService: jest.Mocked<SalonService>;
+  let salonService: vi.Mocked<SalonService>;
 
   beforeEach(async () => {
     salonService = {
-      saveSalon: jest.fn(),
-      getSalons: jest.fn(),
-      getSalon: jest.fn(),
-      deleteSalon: jest.fn(),
-    } as unknown as jest.Mocked<SalonService>;
+      saveSalon: vi.fn(),
+      getSalons: vi.fn(),
+      getSalon: vi.fn(),
+      deleteSalon: vi.fn(),
+    } as unknown as vi.Mocked<SalonService>;
 
     await TestBed.configureTestingModule({
       imports: [
@@ -74,7 +74,7 @@ describe('SalonManagementComponent', () => {
     tick();
 
     expect(component.error).toBe('Failed to save salon.');
-    expect(component.loading).toBeFalse();
+    expect(component.loading).toBe(false);
   }));
 
   it('should display error if required fields are missing', () => {
@@ -139,12 +139,12 @@ describe('SalonManagementComponent', () => {
     );
 
     expect(component.success).toBe('Salon saved successfully!');
-    expect(component.loading).toBeFalse();
+    expect(component.loading).toBe(false);
   }));
 
   it('should add and remove services correctly', () => {
     // Test adding a service
-    const event = { preventDefault: jest.fn() } as unknown as Event;
+    const event = { preventDefault: vi.fn() } as unknown as Event;
     component.onAddService('Haircut', event);
     expect(component.salonForm.get('services')?.value).toContain('Haircut');
     expect(event.preventDefault).toHaveBeenCalled();
@@ -201,7 +201,7 @@ describe('SalonManagementComponent', () => {
     };
 
     // Mock the geolocation API
-    spyOn(navigator.geolocation, 'getCurrentPosition').and.callFake((success) => {
+    spyOn(navigator.geolocation, 'getCurrentPosition').mockImplementation((success) => {
       success(mockPosition as GeolocationPosition);
     });
 
@@ -222,7 +222,7 @@ describe('SalonManagementComponent', () => {
     };
 
     // Mock the geolocation API with error
-    spyOn(navigator.geolocation, 'getCurrentPosition').and.callFake((success, error) => {
+    spyOn(navigator.geolocation, 'getCurrentPosition').mockImplementation((success, error) => {
       error?.(mockError as GeolocationPositionError);
     });
 

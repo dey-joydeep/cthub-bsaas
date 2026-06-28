@@ -13,7 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { Router } from '@angular/router';
 import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
-import { CurrentUserService } from '../../../../../core/auth/services/current-user.service';
+import { CurrentUserService } from '@cthub-bsaas/web-core-auth';
 import { CreateAppointmentParams } from '../../../../../models/appointment-params.model';
 import { Salon } from '../../../models/salon.model';
 import { Service } from '../../../models/service.model';

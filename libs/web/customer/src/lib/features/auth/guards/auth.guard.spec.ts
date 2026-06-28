@@ -5,7 +5,7 @@ import { authGuard } from './auth.guard';
 import { CurrentUserService } from '../services/current-user.service';
 
 class MockRouter {
-  navigate = jasmine.createSpy('navigate');
+  navigate = vi.fn();
   createUrlTree = (commands: any[]) =>
     ({
       toString: () => commands.join('/'),
@@ -28,22 +28,22 @@ describe('AuthGuard', () => {
 
   it('should allow activation if user is authenticated', (done) => {
     // Mock the currentUser$ observable to emit a user
-    spyOn(currentUserService, 'currentUser$').and.returnValue(of({ id: '1', email: 'test@example.com' } as any));
+    spyOn(currentUserService, 'currentUser$').mockReturnValue(of({ id: '1', email: 'test@example.com' } as any));
 
     const result = authGuard(mockRoute, mockState);
 
     if (result === true) {
-      expect(result).toBeTrue();
+      expect(result).toBe(true);
       done();
     } else if (result instanceof Promise) {
       result.then((res) => {
-        expect(res).toBeTrue();
+        expect(res).toBe(true);
         done();
       });
     } else if (result instanceof Observable) {
       (result as Observable<boolean | UrlTree>).subscribe((res) => {
         if (typeof res === 'boolean') {
-          expect(res).toBeTrue();
+          expect(res).toBe(true);
         } else {
           fail('Expected boolean true but got UrlTree');
         }
@@ -57,7 +57,7 @@ describe('AuthGuard', () => {
 
   it('should redirect to /auth/login if user is not authenticated', (done) => {
     // Mock the currentUser$ observable to emit null (not authenticated)
-    spyOn(currentUserService, 'currentUser$').and.returnValue(of(null));
+    spyOn(currentUserService, 'currentUser$').mockReturnValue(of(null));
 
     const result = authGuard(mockRoute, mockState);
 

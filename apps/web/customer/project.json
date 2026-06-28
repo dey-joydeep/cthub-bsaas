@@ -3,18 +3,26 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "sourceRoot": "apps/web/customer/src",
-  "tags": ["platform:web", "scope:web", "type:app"],
+  "tags": [
+    "platform:web",
+    "scope:web",
+    "type:app"
+  ],
   "targets": {
     "build": {
       "executor": "@nx/angular:application",
-      "outputs": ["{options.outputPath.base}"],
+      "outputs": [
+        "{options.outputPath.base}"
+      ],
       "defaultConfiguration": "production",
       "options": {
         "outputPath": {
           "base": "dist/apps/customer"
         },
         "index": "apps/web/customer/src/index.html",
-        "polyfills": ["apps/web/customer/src/polyfills.ts"],
+        "polyfills": [
+          "apps/web/customer/src/polyfills.ts"
+        ],
         "tsConfig": "apps/web/customer/tsconfig.app.json",
         "assets": [
           {
@@ -28,7 +36,10 @@
             "output": "/"
           }
         ],
-        "styles": ["libs/web/config/src/styles/styles.css", "apps/web/customer/src/styles.css"],
+        "styles": [
+          "libs/web/config/src/styles/styles.css",
+          "apps/web/customer/src/styles.css"
+        ],
         "scripts": [],
         "browser": "apps/web/customer/src/main.ts"
       },
@@ -67,19 +78,13 @@
         }
       }
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "jest.config.ts",
-        "passWithNoTests": true,
-        "tsConfig": "apps/web/customer/tsconfig.spec.json"
-      }
-    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": ["{projectRoot}/src/**/*.ts", "{projectRoot}/src/**/*.html"]
+        "lintFilePatterns": [
+          "{projectRoot}/src/**/*.ts",
+          "{projectRoot}/src/**/*.html"
+        ]
       }
     }
   }

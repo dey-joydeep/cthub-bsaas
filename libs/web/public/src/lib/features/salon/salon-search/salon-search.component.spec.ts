@@ -151,7 +151,7 @@ describe('SalonSearchComponent', () => {
     // Flush all /api/salons requests
     httpMock.match((r) => r.url.includes('/api/salons')).forEach((req) => req.flush({ salons: [], total: 0 }));
     fixture.detectChanges();
-    expect(component.loading).toBeFalse();
+    expect(component.loading).toBe(false);
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('No salons found. Try adjusting your search or filters.');
   }));

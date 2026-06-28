@@ -31,7 +31,7 @@ import { DashboardService } from '../../services/dashboard.service';
 import { AppointmentsOverviewWidgetComponent } from './appointments-overview-widget.component';
 
 type Mocked<T> = {
-  [K in keyof T]: T[K] extends (...args: any[]) => any ? jest.Mock<ReturnType<T[K]>, Parameters<T[K]>> : T[K];
+  [K in keyof T]: T[K] extends (...args: any[]) => any ? vi.Mock<ReturnType<T[K]>, Parameters<T[K]>> : T[K];
 };
 
 describe('AppointmentsOverviewWidgetComponent', () => {
@@ -39,7 +39,7 @@ describe('AppointmentsOverviewWidgetComponent', () => {
   let fixture: ComponentFixture<AppointmentsOverviewWidgetComponent>;
   let dashboardService: Mocked<DashboardService>;
   let translateService: Mocked<TranslateService>;
-  let snackBar: jest.Mocked<MatSnackBar>;
+  let snackBar: vi.Mocked<MatSnackBar>;
 
   const mockAppointment: Appointment = {
     id: '1',
@@ -93,30 +93,11 @@ describe('AppointmentsOverviewWidgetComponent', () => {
   };
 
   beforeEach(async () => {
-    const dashboardServiceSpy = jasmine.createSpyObj('DashboardService', ['getAppointmentsOverview', 'updateAppointmentStatus']);
+    const dashboardServiceSpy = { getAppointmentsOverview: vi.fn(), updateAppointmentStatus: vi.fn() };
 
-    const snackBarSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
+    const snackBarSpy = { open: vi.fn() };
 
-    const translateServiceSpy = jasmine.createSpyObj('TranslateService', [
-      'instant',
-      'get',
-      'use',
-      'setTranslation',
-      'setDefaultLang',
-      'addLangs',
-      'getBrowserLang',
-      'getBrowserCultureLang',
-      'getLangs',
-      'getParser',
-      'getTranslation',
-      'reloadLang',
-      'resetLang',
-      'setTranslation',
-      'stream',
-      'onLangChange',
-      'onTranslationChange',
-      'onDefaultLangChange',
-    ]);
+    const translateServiceSpy = { instant: vi.fn(), get: vi.fn(), use: vi.fn(), setTranslation: vi.fn(), setDefaultLang: vi.fn(), addLangs: vi.fn(), getBrowserLang: vi.fn(), getBrowserCultureLang: vi.fn(), getLangs: vi.fn(), getParser: vi.fn(), getTranslation: vi.fn(), reloadLang: vi.fn(), resetLang: vi.fn(), setTranslation: vi.fn(), stream: vi.fn(), onLangChange: vi.fn(), onTranslationChange: vi.fn(), onDefaultLangChange: vi.fn(),  };
 
     await TestBed.configureTestingModule({
       declarations: [AppointmentsOverviewWidgetComponent],
@@ -155,18 +136,18 @@ describe('AppointmentsOverviewWidgetComponent', () => {
 
     // Create mock services with proper typing
     dashboardService = {
-      getAppointmentsOverview: jest.fn().mockReturnValue(of(mockOverview)),
-      updateAppointmentStatus: jest.fn().mockReturnValue(of({ ...mockAppointment, status: AppointmentStatus.COMPLETED })),
+      getAppointmentsOverview: vi.fn().mockReturnValue(of(mockOverview)),
+      updateAppointmentStatus: vi.fn().mockReturnValue(of({ ...mockAppointment, status: AppointmentStatus.COMPLETED })),
     } as unknown as Mocked<DashboardService>;
 
     translateService = {
-      instant: jest.fn((key: string | string[]) => (typeof key === 'string' ? key : key[0])),
-      get: jest.fn().mockReturnValue(of('translated')),
+      instant: vi.fn((key: string | string[]) => (typeof key === 'string' ? key : key[0])),
+      get: vi.fn().mockReturnValue(of('translated')),
     } as unknown as Mocked<TranslateService>;
 
     snackBar = {
-      open: jest.fn(),
-    } as unknown as jest.Mocked<MatSnackBar>;
+      open: vi.fn(),
+    } as unknown as vi.Mocked<MatSnackBar>;
 
     // Provide the mock services
     TestBed.overrideProvider(DashboardService, { useValue: dashboardService });
@@ -188,7 +169,7 @@ describe('AppointmentsOverviewWidgetComponent', () => {
     expect(dashboardService.getAppointmentsOverview).toHaveBeenCalledTimes(1);
     expect(component.overview).toEqual(mockOverview);
     expect(component.dataSource.data).toEqual(mockOverview.upcomingAppointments);
-    expect(component.isLoading).toBeFalse();
+    expect(component.isLoading).toBe(false);
   });
 
   it('should handle error when loading appointments overview', () => {
@@ -199,7 +180,7 @@ describe('AppointmentsOverviewWidgetComponent', () => {
     fixture.detectChanges();
 
     expect(component.error).toBe('DASHBOARD.APPOINTMENTS.ERROR_LOADING');
-    expect(component.isLoading).toBeFalse();
+    expect(component.isLoading).toBe(false);
 
     const errorElement = fixture.nativeElement.querySelector('.error-container');
     expect(errorElement).toBeTruthy();
@@ -263,16 +244,16 @@ describe('AppointmentsOverviewWidgetComponent', () => {
     const today = new Date().toISOString();
     const yesterday = new Date(Date.now() - 86400000).toISOString();
 
-    expect(component.isToday(today)).toBeTrue();
-    expect(component.isToday(yesterday)).toBeFalse();
+    expect(component.isToday(today)).toBe(true);
+    expect(component.isToday(yesterday)).toBe(false);
   });
 
   it('should check if date is in the past', () => {
     const yesterday = new Date(Date.now() - 86400000).toISOString();
     const tomorrow = new Date(Date.now() + 86400000).toISOString();
 
-    expect(component.isPast(yesterday)).toBeTrue();
-    expect(component.isPast(tomorrow)).toBeFalse();
+    expect(component.isPast(yesterday)).toBe(true);
+    expect(component.isPast(tomorrow)).toBe(false);
   });
 
   it('should get correct status badge configuration', () => {
@@ -311,9 +292,9 @@ describe('AppointmentsOverviewWidgetComponent', () => {
   });
 
   it('should refresh data', () => {
-    const initialCalls = jest.mocked(dashboardService.getAppointmentsOverview).mock.calls.length;
+    const initialCalls = vi.mocked(dashboardService.getAppointmentsOverview).mock.calls.length;
     component.refresh();
-    expect(jest.mocked(dashboardService.getAppointmentsOverview).mock.calls.length).toBe(initialCalls + 1);
+    expect(vi.mocked(dashboardService.getAppointmentsOverview).mock.calls.length).toBe(initialCalls + 1);
   });
 
   it('should handle page change', fakeAsync(() => {

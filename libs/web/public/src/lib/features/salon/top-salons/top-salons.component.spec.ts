@@ -11,13 +11,13 @@ const { createBrowserPlatformUtilsMock, createServerPlatformUtilsMock } = requir
 describe('TopSalonsComponent', () => {
   let component: TopSalonsComponent;
   let fixture: ComponentFixture<TopSalonsComponent>;
-  let salonService: jest.Mocked<SalonService>;
+  let salonService: vi.Mocked<SalonService>;
   let platformUtils: PlatformUtils;
 
   beforeEach(waitForAsync(() => {
     salonService = {
-      getTopSalons: jest.fn(),
-    } as unknown as jest.Mocked<SalonService>;
+      getTopSalons: vi.fn(),
+    } as unknown as vi.Mocked<SalonService>;
 
     // Provide the mock service
     // Create a browser environment mock by default
@@ -172,7 +172,7 @@ describe('TopSalonsComponent', () => {
     fixture.detectChanges();
     expect(component.salons.length).toBe(1);
     expect(component.salons[0].name).toBe('Salon A');
-    expect(component.loading).toBeFalse();
+    expect(component.loading).toBe(false);
   }));
 
   it('should handle error on salon load', fakeAsync(() => {
@@ -183,6 +183,6 @@ describe('TopSalonsComponent', () => {
     console.log('component.error:', component.error);
     console.log('component.loading:', component.loading);
     expect(component.error).toBe('Failed to fetch salons');
-    expect(component.loading).toBeFalse();
+    expect(component.loading).toBe(false);
   }));
 });

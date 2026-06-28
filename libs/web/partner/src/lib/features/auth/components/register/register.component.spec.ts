@@ -4,18 +4,19 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth.service';
 import { RegisterComponent } from './register.component';
+import { REGISTER_API } from '../../tokens/password.tokens';
 
 describe('RegisterComponent', () => {
   let component: RegisterComponent;
   let fixture: ComponentFixture<RegisterComponent>;
   // Only spy on the 'register' method, not the whole AuthService
-  let authServiceSpy: { register: jasmine.Spy };
+  let authServiceSpy: { register: any };
 
   beforeEach(async () => {
-    authServiceSpy = jasmine.createSpyObj('AuthService', ['register']);
+    authServiceSpy = { register: vi.fn() };
     await TestBed.configureTestingModule({
       imports: [ReactiveFormsModule, RegisterComponent, HttpClientTestingModule, TranslatePipe, TranslateDirective, FormsModule],
-      providers: [{ provide: AuthService, useValue: authServiceSpy }],
+      providers: [{ provide: REGISTER_API, useValue: authServiceSpy }],
     }).compileComponents();
     fixture = TestBed.createComponent(RegisterComponent);
     component = fixture.componentInstance;
@@ -34,17 +35,17 @@ describe('RegisterComponent', () => {
 
   it('should call AuthService.register on valid submit', async () => {
     component.registerForm.setValue({ name: 'Test', email: 'test@example.com', password: '123456' });
-    authServiceSpy.register.and.returnValue(Promise.resolve());
+    authServiceSpy.register.mockReturnValue(Promise.resolve());
     await component.onSubmit();
     expect(authServiceSpy.register).toHaveBeenCalled();
-    expect(component.success).toBeTrue();
+    expect(component.success).toBe(true);
   });
 
   it('should show error on failed registration', async () => {
     component.registerForm.setValue({ name: 'Test', email: 'fail@example.com', password: '123456' });
-    authServiceSpy.register.and.returnValue(Promise.reject({ error: { message: 'Email exists' } }));
+    authServiceSpy.register.mockReturnValue(Promise.reject({ error: { message: 'Email exists' } }));
     await component.onSubmit();
     expect(component.error).toBe('Email exists');
-    expect(component.success).toBeFalse();
+    expect(component.success).toBe(false);
   });
 });

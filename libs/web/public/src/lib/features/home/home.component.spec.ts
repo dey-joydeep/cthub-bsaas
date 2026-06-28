@@ -92,23 +92,23 @@ const mockHomeData: IHomePageData = {
 describe('HomeComponent', () => {
   let component: HomeComponent;
   let fixture: ComponentFixture<HomeComponent>;
-  let homeService: jest.Mocked<HomeService>;
-  let snackBar: jest.Mocked<MatSnackBar>;
+  let homeService: vi.Mocked<HomeService>;
+  let snackBar: vi.Mocked<MatSnackBar>;
   let router: Router;
 
   beforeEach(waitForAsync(() => {
     homeService = {
-      getHomePageData: jest.fn(),
-      searchSalons: jest.fn(),
-      getFeaturedSalons: jest.fn(),
-      getFeaturedServices: jest.fn(),
-      getTestimonials: jest.fn(),
-      getCities: jest.fn(),
-    } as unknown as jest.Mocked<HomeService>;
+      getHomePageData: vi.fn(),
+      searchSalons: vi.fn(),
+      getFeaturedSalons: vi.fn(),
+      getFeaturedServices: vi.fn(),
+      getTestimonials: vi.fn(),
+      getCities: vi.fn(),
+    } as unknown as vi.Mocked<HomeService>;
 
     snackBar = {
-      open: jest.fn(),
-    } as unknown as jest.Mocked<MatSnackBar>;
+      open: vi.fn(),
+    } as unknown as vi.Mocked<MatSnackBar>;
 
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule, RouterTestingModule.withRoutes([]), HomeComponent],
@@ -119,8 +119,8 @@ describe('HomeComponent', () => {
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
-    homeService = TestBed.inject(HomeService) as jest.Mocked<HomeService>;
-    snackBar = TestBed.inject(MatSnackBar) as jest.Mocked<MatSnackBar>;
+    homeService = TestBed.inject(HomeService) as vi.Mocked<HomeService>;
+    snackBar = TestBed.inject(MatSnackBar) as vi.Mocked<MatSnackBar>;
     router = TestBed.inject(Router);
   }));
 
@@ -145,7 +145,7 @@ describe('HomeComponent', () => {
   it('should load home data on init', () => {
     expect(homeService.getHomePageData).toHaveBeenCalled();
     expect(component.homeData).toEqual(mockHomeData);
-    expect(component.loading).toBeFalse();
+    expect(component.loading).toBe(false);
   });
 
   it('should handle error when loading home data fails', () => {
@@ -157,14 +157,14 @@ describe('HomeComponent', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
 
-    expect(component.loading).toBeFalse();
+    expect(component.loading).toBe(false);
     expect(component.error).toBe('Failed to load data');
     expect(snackBar.open).toHaveBeenCalledWith('Failed to load home data', 'Dismiss', { duration: 3000 });
   });
 
   it('should format price correctly', () => {
     // Mock the formatPrice method since it's not defined in the component
-    spyOn(component as any, 'formatPrice').and.callFake((price: number | null) => {
+    spyOn(component as any, 'formatPrice').mockImplementation((price: number | null) => {
       if (price === null) return 'N/A';
       return `$${price.toFixed(2)}`;
     });
@@ -176,7 +176,7 @@ describe('HomeComponent', () => {
 
   it('should format duration correctly', () => {
     // Mock the formatDuration method since it's not defined in the component
-    spyOn(component as any, 'formatDuration').and.callFake((minutes: number | null) => {
+    spyOn(component as any, 'formatDuration').mockImplementation((minutes: number | null) => {
       if (minutes === null) return 'N/A';
       const hours = Math.floor(minutes / 60);
       const mins = minutes % 60;

@@ -9,13 +9,13 @@ import { Staff } from '../staff/models/staff.model';
 describe('StaffManagementComponent', () => {
   let component: StaffManagementComponent;
   let fixture: ComponentFixture<StaffManagementComponent>;
-  let staffService: jest.Mocked<StaffService>;
+  let staffService: vi.Mocked<StaffService>;
 
   beforeEach(async () => {
     staffService = {
-      addStaff: jest.fn(),
-      getStaffList: jest.fn(),
-    } as unknown as jest.Mocked<StaffService>;
+      addStaff: vi.fn(),
+      getStaffList: vi.fn(),
+    } as unknown as vi.Mocked<StaffService>;
 
     // Provide the mock service
     TestBed.overrideProvider(StaffService, { useValue: staffService });

@@ -60,14 +60,14 @@ Validation:
 - `node scripts/check-versions/node-version.js`
 - baseline Nx graph commands
 
-## Phase 2 - Nx 22 Migration
+## Phase 2 - Nx 23 Migration
 
 Goal: move all Nx packages together and let official migrations update workspace config.
 
 Execution route:
 
 1. Run official migration command:
-   - `nx migrate latest`
+   - `nx migrate latest` (targeting 23.x)
 2. Inspect generated `migrations.json`.
 3. Ensure all `@nx/*` packages resolve to one version line.
 4. Run migrations:
@@ -96,9 +96,9 @@ Post-migration validation:
 - `nx run-many -t lint --all`
 - `nx run-many -t build --all`
 
-## Phase 3 - Angular 21 Migration
+## Phase 3 - Angular 22 Migration
 
-Goal: upgrade web apps/libs to Angular 21.2 with matching Angular build, SSR, Material/CDK, and ng-packagr.
+Goal: upgrade web apps/libs to Angular 22.0.2 with matching Angular build, SSR, Material/CDK, and ng-packagr.
 
 Nx remains the execution path for this monorepo, but the official Angular Update Guide is a required checklist for Angular-specific risk. Before accepting Phase 3, open:
 
@@ -108,7 +108,7 @@ https://angular.dev/update-guide?v=20.0-21.0&l=3
 
 Use these selections:
 
-- From Angular 20.0 to Angular 21.0.
+- From Angular 20.0 to Angular 22.0.
 - Advanced complexity.
 - Angular Material enabled.
 - Windows enabled.
@@ -117,14 +117,14 @@ Record the guide output/checklist in the upgrade PR or implementation notes. If 
 
 Expected target packages:
 
-- `@angular/* ~21.2.0`
-- `@angular/build ~21.2.0`
-- `@angular/ssr ~21.2.0`
-- `@angular/material ~21.2.0`
-- `@angular/cdk ~21.2.0`
-- `ng-packagr ~21.2.0`
+- `@angular/* ~22.0.2`
+- `@angular/build ~22.0.2`
+- `@angular/ssr ~22.0.2`
+- `@angular/material ~22.0.2`
+- `@angular/cdk ~22.0.2`
+- `ng-packagr ~22.0.2`
 - `zone.js ~0.16.0`
-- TypeScript `~5.9.2`
+- TypeScript `~6.0.3`
 
 Required config review:
 
@@ -165,7 +165,7 @@ Current state: `angular-eslint` is already present and `eslint.base.web.js` alre
 
 Actions:
 
-1. Upgrade `angular-eslint` to Angular 21-compatible version.
+1. Upgrade `angular-eslint` to Angular 22-compatible version.
 2. Ensure `@angular-eslint/*` packages are present if required by the resolved `angular-eslint` package.
 3. Consolidate selector rules across all web apps/libs.
 4. Ensure `*.html` templates are linted everywhere.

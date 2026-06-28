@@ -7,14 +7,14 @@ import { ReactiveFormsModule } from '@angular/forms';
 describe('ProductManagementComponent', () => {
   let component: ProductManagementComponent;
   let fixture: ComponentFixture<ProductManagementComponent>;
-  let productService: jest.Mocked<ProductService>;
+  let productService: vi.Mocked<ProductService>;
 
   beforeEach(async () => {
     productService = {
-      saveProduct: jest.fn(),
-      getProducts: jest.fn(),
-      updateProduct: jest.fn(),
-    } as unknown as jest.Mocked<ProductService>;
+      saveProduct: vi.fn(),
+      getProducts: vi.fn(),
+      updateProduct: vi.fn(),
+    } as unknown as vi.Mocked<ProductService>;
     await TestBed.configureTestingModule({
       imports: [ReactiveFormsModule],
       declarations: [ProductManagementComponent],

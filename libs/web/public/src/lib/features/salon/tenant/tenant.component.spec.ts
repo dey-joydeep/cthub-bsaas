@@ -70,6 +70,6 @@ describe('SalonProfileComponent', () => {
     expect(component.salon).toMatchObject({ id: '1', name: 'Salon Test' });
     expect(component.reviews.length).toBe(1);
     // Use type assertion to access protected loading property for testing
-    expect((component as any).loading).toBeFalse();
+    expect((component as any).loading).toBe(false);
   });
 });

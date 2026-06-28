@@ -10,10 +10,10 @@ import { PortfolioComponent } from './portfolio.component';
 import { PortfolioService } from './portfolio.service';
 
 class MockPortfolioService {
-  getPortfolioItems = jest.fn().mockReturnValue(of([]));
-  createPortfolioItem = jest.fn().mockReturnValue(of({}));
-  updatePortfolioItem = jest.fn().mockReturnValue(of({}));
-  deletePortfolioItem = jest.fn().mockReturnValue(of({}));
+  getPortfolioItems = vi.fn().mockReturnValue(of([]));
+  createPortfolioItem = vi.fn().mockReturnValue(of({}));
+  updatePortfolioItem = vi.fn().mockReturnValue(of({}));
+  deletePortfolioItem = vi.fn().mockReturnValue(of({}));
 }
 
 describe('PortfolioComponent', () => {

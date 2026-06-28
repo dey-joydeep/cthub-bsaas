@@ -21,14 +21,6 @@
         "development": {}
       }
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/libs/web/admin"],
-      "options": {
-        "jestConfig": "libs/web/admin/jest.config.ts",
-        "tsConfig": "libs/web/admin/tsconfig.spec.json"
-      }
-    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
@@ -44,6 +36,12 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "npx tsc -p libs/web/admin/tsconfig.lib.json --noEmit"
+      }
+    },
+    "test": {
+      "outputs": ["{projectRoot}/{options.coverage.reportsDirectory}", "{workspaceRoot}/coverage/libs/web/admin"],
+      "options": {
+        "coverage.reportsDirectory": "../../../coverage/libs/web/admin"
       }
     }
   }

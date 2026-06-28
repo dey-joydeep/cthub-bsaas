@@ -7,12 +7,12 @@ import { ReactiveFormsModule } from '@angular/forms';
 describe('PortfolioManagementComponent', () => {
   let component: PortfolioManagementComponent;
   let fixture: ComponentFixture<PortfolioManagementComponent>;
-  let portfolioService: jest.Mocked<PortfolioService>;
+  let portfolioService: vi.Mocked<PortfolioService>;
 
   beforeEach(async () => {
     portfolioService = {
-      savePortfolio: jest.fn(),
-    } as unknown as jest.Mocked<PortfolioService>;
+      savePortfolio: vi.fn(),
+    } as unknown as vi.Mocked<PortfolioService>;
     await TestBed.configureTestingModule({
       imports: [ReactiveFormsModule],
       declarations: [PortfolioManagementComponent],

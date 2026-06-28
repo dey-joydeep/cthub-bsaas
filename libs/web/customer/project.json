@@ -4,11 +4,17 @@
   "projectType": "library",
   "sourceRoot": "libs/web/customer/src",
   "prefix": "lib",
-  "tags": ["platform:web", "scope:web", "type:lib"],
+  "tags": [
+    "platform:web",
+    "scope:web",
+    "type:lib"
+  ],
   "targets": {
     "build": {
       "executor": "@nx/angular:package",
-      "outputs": ["{workspaceRoot}/dist/libs/web/customer"],
+      "outputs": [
+        "{workspaceRoot}/dist/libs/web/customer"
+      ],
       "defaultConfiguration": "production",
       "options": {
         "project": "libs/web/customer/ng-package.json",
@@ -19,14 +25,6 @@
           "tsConfig": "libs/web/customer/tsconfig.lib.prod.json"
         },
         "development": {}
-      }
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/libs/web/customer"],
-      "options": {
-        "jestConfig": "libs/web/customer/jest.config.ts",
-        "tsConfig": "libs/web/customer/tsconfig.spec.json"
       }
     },
     "lint": {
