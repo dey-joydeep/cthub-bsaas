@@ -63,6 +63,10 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.currentUser?.roles?.includes('admin') || false;
   }
 
+  get settingsRoute(): string {
+    return this.hasRole('staff') ? '/owner/branches' : '/settings';
+  }
+
   private authSubscription?: Subscription;
 
   constructor(
@@ -150,5 +154,15 @@ export class AppComponent implements OnInit, OnDestroy {
     if (this.currentUser?.id) {
       this.router.navigate(['/profile', this.currentUser.id]);
     }
+  }
+
+  private hasRole(role: string): boolean {
+    const normalizedRole = role.toLowerCase();
+    const roles = Array.isArray(this.currentUser?.roles)
+      ? this.currentUser.roles.filter((value): value is string => typeof value === 'string')
+      : [];
+    const directRole = typeof this.currentUser?.['role'] === 'string' ? this.currentUser.role : null;
+
+    return roles.some((value) => value.toLowerCase() === normalizedRole) || directRole?.toLowerCase() === normalizedRole;
   }
 }

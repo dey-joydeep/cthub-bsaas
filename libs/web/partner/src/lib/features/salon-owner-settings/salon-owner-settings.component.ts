@@ -209,6 +209,7 @@ export class SalonOwnerSettingsComponent {
   protected readonly holidays = signal<readonly BranchHoliday[]>([]);
   protected readonly selectedBusiness = signal<SalonBusiness | null>(null);
   protected readonly selectedBranch = signal<BranchProfile | null>(null);
+  protected readonly selectedHoliday = signal<BranchHoliday | null>(null);
   protected readonly branchSettingsLoaded = signal(false);
   protected readonly hoursConflictRequiresAcknowledgement = signal(false);
   protected readonly branchOnlyMode = computed(() => this.branchRouteMode);
@@ -266,6 +267,12 @@ export class SalonOwnerSettingsComponent {
   constructor() {
     this.holidayForm.controls.closed.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((closed) => {
       this.updateHolidayTimeValidators(closed);
+    });
+    this.hoursForm.controls.timezone.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.resetHoursConflictAcknowledgement();
+    });
+    this.dayForms.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.resetHoursConflictAcknowledgement();
     });
     this.updateHolidayTimeValidators(this.holidayForm.controls.closed.value);
     this.loadInitialState();
@@ -535,12 +542,17 @@ export class SalonOwnerSettingsComponent {
     }
 
     const value = this.holidayForm.getRawValue();
+    const holidayInput = this.buildHolidayInput(value);
+    if (!holidayInput) {
+      return;
+    }
     this.persist(
-      this.api.setBranchHoliday(branch.id, value.date, {
-        closed: value.closed,
-        reason: value.reason || undefined,
-        intervals: value.closed ? [] : [{ start: value.start, end: value.end }],
-      }),
+      this.api.setBranchHoliday(branch.id, value.date, holidayInput),
+      (savedHoliday) => {
+        this.selectedHoliday.set(savedHoliday);
+        this.holidays.update((holidays) => this.upsertHoliday(holidays, savedHoliday));
+        this.selectHoliday(savedHoliday);
+      },
     );
   }
 
@@ -582,6 +594,7 @@ export class SalonOwnerSettingsComponent {
   }
 
   protected selectHoliday(holiday: BranchHoliday): void {
+    this.selectedHoliday.set(holiday);
     const firstInterval = holiday.intervals[0];
     this.holidayForm.reset({
       date: holiday.date,
@@ -770,6 +783,7 @@ export class SalonOwnerSettingsComponent {
   private resetBranchEditor(businessId: string): void {
     this.hoursSaveVersion += 1;
     this.selectedBranch.set(null);
+    this.selectedHoliday.set(null);
     this.branchSettingsLoaded.set(false);
     this.holidays.set([]);
     this.branchForm.reset({
@@ -886,6 +900,53 @@ export class SalonOwnerSettingsComponent {
           : null;
 
     return errorCode === 'error.business.profile.status_conflict' || errorMessage === 'error.business.profile.status_conflict';
+  }
+
+  private resetHoursConflictAcknowledgement(): void {
+    if (!this.hoursConflictRequiresAcknowledgement()) {
+      return;
+    }
+
+    this.hoursConflictRequiresAcknowledgement.set(false);
+    this.hoursForm.controls.acknowledgeExistingAppointmentsOutsideHours.setValue(false, { emitEvent: false });
+  }
+
+  private buildHolidayInput(value: { date: string; closed: boolean; reason: string; start: string; end: string }) {
+    const selectedHoliday = this.selectedHoliday();
+    const reason = optionalText(value.reason);
+
+    if (value.closed) {
+      return {
+        closed: true,
+        reason,
+        intervals: [],
+      };
+    }
+
+    if (selectedHoliday && !selectedHoliday.closed && selectedHoliday.intervals.length > 1) {
+      const [firstInterval] = selectedHoliday.intervals;
+      if (value.date !== selectedHoliday.date || value.start !== firstInterval?.start || value.end !== firstInterval?.end) {
+        this.error.set('This holiday has multiple open intervals. Change only the reason here, or recreate the holiday to edit its hours.');
+        return null;
+      }
+
+      return {
+        closed: false,
+        reason,
+        intervals: selectedHoliday.intervals,
+      };
+    }
+
+    return {
+      closed: false,
+      reason,
+      intervals: [{ start: value.start, end: value.end }],
+    };
+  }
+
+  private upsertHoliday(holidays: readonly BranchHoliday[], savedHoliday: BranchHoliday): readonly BranchHoliday[] {
+    const next = holidays.filter((holiday) => holiday.date !== savedHoliday.date).concat(savedHoliday);
+    return next.slice().sort((left, right) => left.date.localeCompare(right.date));
   }
 
   private persist<T>(request: Observable<T>, onSuccess?: (value: T) => void): void {

@@ -20,7 +20,7 @@ interface SettingsComponentHarness {
   branchForm: { patchValue(value: Partial<{ email: string }>): void; getRawValue(): { businessId: string } };
   hoursForm: { patchValue(value: Partial<{ timezone: string }>): void };
   holidayForm: {
-    patchValue(value: Partial<{ date: string; closed: boolean; start: string; end: string }>): void;
+    patchValue(value: Partial<{ date: string; closed: boolean; reason: string; start: string; end: string }>): void;
     controls: { start: { errors: Record<string, unknown> | null }; end: { errors: Record<string, unknown> | null } };
   };
   policyForm: { controls: { bookingLeadMinutes: { setValue(value: number): void } } };
@@ -121,6 +121,15 @@ describe('SalonOwnerSettingsComponent', () => {
           intervals: [],
         },
       ]),
+    );
+    api.setBranchHoliday.mockReturnValue(
+      of({
+        branchId: 'branch-1',
+        date: '2026-05-26',
+        closed: true,
+        reason: 'Maintenance',
+        intervals: [],
+      }),
     );
     api.updateBranch.mockReturnValue(of(branch));
     api.createBusiness.mockReturnValue(
@@ -589,6 +598,31 @@ describe('SalonOwnerSettingsComponent', () => {
     );
   });
 
+  it('resets the hours acknowledgement after the schedule changes following a conflict', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      dayForms: {
+        at(index: number): {
+          get(path: string): {
+            at(index: number): { patchValue(value: { start?: string; end?: string }): void };
+          };
+        };
+      };
+      hoursConflictRequiresAcknowledgement(): boolean;
+    };
+    api.replaceBranchHours.mockReturnValueOnce(
+      throwError(() => ({
+        error: { message: 'error.branch.hours.appointments_outside_hours' },
+      })),
+    );
+
+    component.saveHours();
+    expect(component.hoursConflictRequiresAcknowledgement()).toBe(true);
+
+    component.dayForms.at(1).get('intervals').at(0).patchValue({ end: '18:00' });
+
+    expect(component.hoursConflictRequiresAcknowledgement()).toBe(false);
+  });
+
   it('ignores stale hours-save conflicts after switching branches', () => {
     let hoursErrorHandler: ((error: unknown) => void) | undefined;
     api.replaceBranchHours.mockReturnValueOnce(
@@ -636,6 +670,80 @@ describe('SalonOwnerSettingsComponent', () => {
 
     expect(api.setBranchHoliday).not.toHaveBeenCalled();
     expect(component.error()).toBe('Holiday open hours must start before they end.');
+  });
+
+  it('refreshes the holiday list after saving an override', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness;
+    api.setBranchHoliday.mockReturnValueOnce(
+      of({
+        branchId: 'branch-1',
+        date: '2026-12-25',
+        closed: true,
+        reason: 'Holiday',
+        intervals: [],
+      }),
+    );
+
+    component.holidayForm.patchValue({ date: '2026-12-25', closed: true, reason: 'Holiday' });
+    component.saveHoliday();
+
+    expect(component.holidays()).toEqual([
+      expect.objectContaining({ date: '2026-05-26' }),
+      expect.objectContaining({ date: '2026-12-25', reason: 'Holiday' }),
+    ]);
+  });
+
+  it('preserves all existing holiday intervals when re-saving a multi-interval holiday without changing hours', () => {
+    const multiIntervalHoliday: BranchHoliday = {
+      branchId: 'branch-1',
+      date: '2026-08-12',
+      closed: false,
+      reason: 'Festival',
+      intervals: [
+        { start: '09:00', end: '12:00' },
+        { start: '13:00', end: '17:00' },
+      ],
+    };
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      selectHoliday(holiday: BranchHoliday): void;
+    };
+    api.setBranchHoliday.mockClear();
+
+    component.selectHoliday(multiIntervalHoliday);
+    component.holidayForm.patchValue({ reason: 'Updated Festival' });
+    component.saveHoliday();
+
+    expect(api.setBranchHoliday).toHaveBeenCalledWith('branch-1', '2026-08-12', {
+      closed: false,
+      reason: 'Updated Festival',
+      intervals: multiIntervalHoliday.intervals,
+    });
+  });
+
+  it('blocks hour edits for multi-interval holidays until the editor supports them', () => {
+    const multiIntervalHoliday: BranchHoliday = {
+      branchId: 'branch-1',
+      date: '2026-08-12',
+      closed: false,
+      reason: 'Festival',
+      intervals: [
+        { start: '09:00', end: '12:00' },
+        { start: '13:00', end: '17:00' },
+      ],
+    };
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      selectHoliday(holiday: BranchHoliday): void;
+    };
+    api.setBranchHoliday.mockClear();
+
+    component.selectHoliday(multiIntervalHoliday);
+    component.holidayForm.patchValue({ start: '10:00' });
+    component.saveHoliday();
+
+    expect(api.setBranchHoliday).not.toHaveBeenCalled();
+    expect(component.error()).toBe(
+      'This holiday has multiple open intervals. Change only the reason here, or recreate the holiday to edit its hours.',
+    );
   });
 
   it('rejects weekly hours timezone changes that do not match the selected branch', () => {

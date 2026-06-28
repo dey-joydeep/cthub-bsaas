@@ -64,7 +64,7 @@ export class SalonOwnerSettingsApi {
     return this.get<BranchHolidayList>(`/branches/${branchId}/holidays`).pipe(map((response) => response.items));
   }
 
-  setBranchHoliday(branchId: string, date: string, input: BranchHolidayInput): Observable<BranchHolidayInput> {
+  setBranchHoliday(branchId: string, date: string, input: BranchHolidayInput): Observable<BranchHoliday> {
     return this.put(`/branches/${branchId}/holidays/${date}`, input);
   }
 

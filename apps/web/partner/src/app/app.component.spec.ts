@@ -68,4 +68,13 @@ describe('AppComponent', () => {
     const app = fixture.componentInstance;
     expect(app.isLoggedIn).toBe(false);
   });
+
+  it('routes staff settings entry to the branch settings screen', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+
+    app.currentUser = { id: 'staff-1', roles: ['staff'] };
+
+    expect(app.settingsRoute).toBe('/owner/branches');
+  });
 });
