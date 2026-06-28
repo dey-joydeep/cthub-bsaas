@@ -303,14 +303,14 @@ export class AuthService {
         { sub: user.id, email: user.email, sessionId, roles, tenantId },
         {
           secret: this.configService.auth.jwtAccessSecret,
-          expiresIn: this.configService.auth.jwtExpiresIn,
+          expiresIn: this.configService.auth.jwtExpiresIn as import('ms').StringValue,
         },
       ),
       this.jwtService.signAsync(
         { sub: user.id, jti },
         {
           secret: this.configService.auth.jwtRefreshSecret,
-          expiresIn: rtTtl,
+          expiresIn: rtTtl as import('ms').StringValue,
         },
       ),
     ]);

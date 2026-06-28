@@ -94,7 +94,7 @@ const providers = [
       useFactory: (config: ConfigService) => ({
         secret: config.auth.jwtAccessSecret,
         signOptions: {
-          expiresIn: config.auth.jwtExpiresIn,
+          expiresIn: config.auth.jwtExpiresIn as import('ms').StringValue,
         },
       }),
       inject: [ConfigService],

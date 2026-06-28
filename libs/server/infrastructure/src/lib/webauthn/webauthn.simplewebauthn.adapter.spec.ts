@@ -2,7 +2,7 @@ import { WebAuthnSimpleAdapter } from './webauthn.simplewebauthn.adapter';
 import { ConfigService } from '@cthub-bsaas/server-core';
 import { PrismaService } from '@cthub-bsaas/server-data-access';
 import type { ChallengeStore } from './challenge.store';
-import type { RegistrationResponseJSON, AuthenticationResponseJSON } from '@simplewebauthn/types';
+import type { RegistrationResponseJSON, AuthenticationResponseJSON } from '@simplewebauthn/server';
 
 jest.mock('@simplewebauthn/server', () => ({
   generateRegistrationOptions: jest.fn().mockResolvedValue({ challenge: 'reg-chal' }),
