@@ -4,7 +4,7 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
 
 describe('SalonProfileComponent', () => {
@@ -18,7 +18,7 @@ describe('SalonProfileComponent', () => {
         SalonProfileComponent, // Standalone
         HttpClientTestingModule,
         FormsModule,
-        TranslateModule.forRoot(),
+        TranslatePipe, TranslateDirective,
         SafeUrlPipe,
       ],
       providers: [{ provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => '1' } } } }],

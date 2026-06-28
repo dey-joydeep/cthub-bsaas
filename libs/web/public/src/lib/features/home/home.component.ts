@@ -33,7 +33,7 @@ import type { IServiceDto, ITestimonialDto, ICityDto, ISalonDto, IHomePageData }
     MatButtonModule,
   ],
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss'],
+  styleUrls: ['./home.component.css'],
 })
 export class HomeComponent implements OnInit {
   loading = true;

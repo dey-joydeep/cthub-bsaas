@@ -25,7 +25,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { of, throwError } from 'rxjs';
 
 import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.enum';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { Appointment, AppointmentsOverview } from '../../models/appointment.model';
 import { DashboardService } from '../../services/dashboard.service';
 import { AppointmentsOverviewWidgetComponent } from './appointments-overview-widget.component';
@@ -144,7 +144,7 @@ describe('AppointmentsOverviewWidgetComponent', () => {
         MatDividerModule,
         MatListModule,
         MatDialogModule,
-        TranslateModule.forRoot(),
+        TranslatePipe, TranslateDirective,
       ],
       providers: [
         { provide: DashboardService, useValue: dashboardServiceSpy },

@@ -12,7 +12,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { Router } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { CurrentUserService } from '../../../../../core/auth/services/current-user.service';
 import { CreateAppointmentParams } from '../../../../../models/appointment-params.model';
 import { Salon } from '../../../models/salon.model';
@@ -39,10 +39,10 @@ import { Staff } from '../../../models/staff.model';
     MatSelectModule,
 
     // Third-party modules
-    TranslateModule,
+    TranslatePipe, TranslateDirective,
   ],
   templateUrl: './create-appointment.component.html',
-  styleUrls: ['./create-appointment.component.scss'],
+  styleUrls: ['./create-appointment.component.css'],
 })
 export class CreateAppointmentComponent implements OnInit {
   appointmentForm: FormGroup;

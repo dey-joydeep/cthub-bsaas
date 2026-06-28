@@ -10,7 +10,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 
 import { CreateAppointmentParams } from '../../models/appointment-params.model';
 import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.enum';
@@ -31,10 +31,10 @@ import { AppointmentService } from './appointment.service';
     MatDatepickerModule,
     MatProgressSpinnerModule,
     MatNativeDateModule,
-    TranslateModule,
+    TranslatePipe, TranslateDirective,
   ],
   templateUrl: './appointment-management.component.html',
-  styleUrls: ['./appointment-management.component.scss'],
+  styleUrls: ['./appointment-management.component.css'],
 })
 export class AppointmentManagementComponent implements OnInit {
   appointmentForm: FormGroup;

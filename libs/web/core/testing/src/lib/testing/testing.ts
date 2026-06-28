@@ -5,6 +5,6 @@ import { CommonModule } from '@angular/common';
   selector: 'lib-testing',
   imports: [CommonModule],
   templateUrl: './testing.html',
-  styleUrl: './testing.scss',
+  styleUrl: './testing.css',
 })
 export class Testing {}

@@ -1,7 +1,7 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth.service';
 import { RegisterComponent } from './register.component';
 
@@ -14,7 +14,7 @@ describe('RegisterComponent', () => {
   beforeEach(async () => {
     authServiceSpy = jasmine.createSpyObj('AuthService', ['register']);
     await TestBed.configureTestingModule({
-      imports: [ReactiveFormsModule, RegisterComponent, HttpClientTestingModule, TranslateModule.forRoot(), FormsModule],
+      imports: [ReactiveFormsModule, RegisterComponent, HttpClientTestingModule, TranslatePipe, TranslateDirective, FormsModule],
       providers: [{ provide: AuthService, useValue: authServiceSpy }],
     }).compileComponents();
     fixture = TestBed.createComponent(RegisterComponent);

@@ -6,7 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { ServiceService } from './service.service';
 
 @Component({
@@ -20,10 +20,10 @@ import { ServiceService } from './service.service';
     MatButtonModule,
     MatProgressBarModule,
     MatIconModule,
-    TranslateModule,
+    TranslatePipe, TranslateDirective,
   ],
   templateUrl: './service-management.component.html',
-  styleUrls: ['./service-management.component.scss'],
+  styleUrls: ['./service-management.component.css'],
 })
 export class ServiceManagementComponent {
   serviceForm;

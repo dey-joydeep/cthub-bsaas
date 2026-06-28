@@ -11,7 +11,7 @@ import { DashboardApiService, ProductSalesData } from '@cthub-bsaas/features/das
   standalone: true,
   imports: [CommonModule, BaseChartDirective, MatProgressBarModule, MatError],
   templateUrl: './product-sales-chart.component.html',
-  styleUrls: ['./product-sales-chart.component.scss'],
+  styleUrls: ['./product-sales-chart.component.css'],
 })
 export class ProductSalesChartComponent implements OnInit {
   @Input() tenantId = '';

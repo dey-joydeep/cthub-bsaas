@@ -11,7 +11,7 @@ import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
 import { map } from 'rxjs/operators';
-import { TranslateLoader, TranslateModule, TranslateStore } from '@ngx-translate/core';
+import { TranslateLoader, provideTranslateService } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
 // Material Modules
@@ -62,8 +62,6 @@ export const appConfig: ApplicationConfig = {
       useFactory: httpLoaderFactory,
       deps: [HttpClient],
     },
-    TranslateStore,
-
     provideRouter(routes, withPreloading(PreloadAllModules)),
     provideHttpClient(
       withInterceptorsFromDi(),

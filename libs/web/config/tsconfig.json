@@ -1,14 +1,16 @@
 {
-    "extends": "../../../tsconfig.base.json",
-    "compilerOptions": {
-        "composite": true
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "module": "preserve",
+    "moduleResolution": "bundler"
+  },
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
     },
-    "references": [
-        {
-            "path": "./tsconfig.lib.json"
-        },
-        {
-            "path": "./tsconfig.spec.json"
-        }
-    ]
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
 }

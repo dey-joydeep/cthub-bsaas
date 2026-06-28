@@ -3,7 +3,7 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 
 // Core services
 import { CurrentUserService } from '../../../../core/auth/services/current-user.service';
@@ -29,9 +29,9 @@ import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
 @Component({
   selector: 'app-salon-profile',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, TranslateModule, SafeUrlPipe, FormsModule],
+  imports: [CommonModule, HttpClientModule, TranslatePipe, TranslateDirective, SafeUrlPipe, FormsModule],
   templateUrl: './salon-profile.component.html',
-  styleUrls: ['./salon-profile.component.scss'],
+  styleUrls: ['./salon-profile.component.css'],
 })
 export class SalonProfileComponent implements OnInit {
   salon: Salon | null = null;

@@ -1,14 +1,14 @@
 import { Component, Inject, Optional } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { REGISTER_API, type RegisterApiPort, type RegisterPayload } from '../../tokens/password.tokens';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './register.component.html',
-  styleUrls: ['./register.component.scss'],
+  styleUrls: ['./register.component.css'],
 })
 export class RegisterComponent {
   registerForm: FormGroup;

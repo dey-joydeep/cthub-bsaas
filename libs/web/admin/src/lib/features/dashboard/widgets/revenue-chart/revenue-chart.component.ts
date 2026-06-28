@@ -2,16 +2,16 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { RevenueData } from '../../models/dashboard.model';
 
 @Component({
   selector: 'app-revenue-chart',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule, TranslateModule],
+  imports: [CommonModule, MatCardModule, MatIconModule, TranslatePipe, TranslateDirective],
   templateUrl: './revenue-chart.component.html',
-  styleUrls: ['./revenue-chart.component.scss'],
+  styleUrls: ['./revenue-chart.component.css'],
 })
 export class RevenueChartComponent extends AbstractBaseComponent {
   @Input() revenueData!: RevenueData[];

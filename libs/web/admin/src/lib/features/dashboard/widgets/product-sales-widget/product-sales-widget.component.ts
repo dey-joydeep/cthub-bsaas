@@ -15,7 +15,7 @@ import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { takeUntil } from 'rxjs';
 
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
@@ -42,10 +42,10 @@ import { ProductSale } from './models/product-sales-widget.model';
     MatDatepickerModule,
     MatNativeDateModule,
     ReactiveFormsModule,
-    TranslateModule,
+    TranslatePipe, TranslateDirective,
   ],
   templateUrl: './product-sales-widget.component.html',
-  styleUrls: ['./product-sales-widget.component.scss'],
+  styleUrls: ['./product-sales-widget.component.css'],
 })
 export class ProductSalesWidgetComponent extends AbstractBaseComponent implements OnInit {
   // Loading and error states are managed by AbstractBaseComponent

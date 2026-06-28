@@ -1,5 +1,5 @@
 // Core
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 import { Component, Inject, OnDestroy, OnInit, Optional, PLATFORM_ID } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -20,7 +20,7 @@ import { firstValueFrom } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 // Translate
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 
 // Services
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
@@ -31,12 +31,8 @@ import type { CustomerAuthUser } from '../../models/auth.models';
 @Component({
   standalone: true,
   imports: [
-    // Angular Modules
-    CommonModule,
     ReactiveFormsModule,
     RouterModule,
-
-    // Angular Material Modules
     MatButtonModule,
     MatCardModule,
     MatCheckboxModule,
@@ -46,13 +42,11 @@ import type { CustomerAuthUser } from '../../models/auth.models';
     MatInputModule,
     MatProgressBarModule,
     MatProgressSpinnerModule,
-
-    // Third-party Modules
-    TranslateModule,
-  ],
+    TranslatePipe, TranslateDirective
+],
   selector: 'app-login',
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss'],
+  styleUrls: ['./login.component.css'],
 })
 export class LoginComponent extends AbstractBaseComponent implements OnInit, OnDestroy {
   // Component state

@@ -4,6 +4,6 @@ import { Component } from '@angular/core';
   selector: 'product-management',
   imports: [],
   templateUrl: './product-management.html',
-  styleUrl: './product-management.scss',
+  styleUrl: './product-management.css',
 })
 export class ProductManagement {}

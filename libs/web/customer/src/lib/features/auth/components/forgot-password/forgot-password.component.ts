@@ -1,5 +1,5 @@
 import { Component, Inject, Optional } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import {
   FormBuilder,
   FormGroup,
@@ -18,7 +18,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 // Translation
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 
 // Tokens
 import { FORGOT_PASSWORD_API, type ForgotPasswordApiPort } from '../../tokens/password.tokens';
@@ -41,9 +41,9 @@ interface ResetPasswordForm {
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressBarModule, TranslateModule],
+  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressBarModule, TranslatePipe, TranslateDirective],
   templateUrl: './forgot-password.component.html',
-  styleUrls: ['./forgot-password.component.scss'],
+  styleUrls: ['./forgot-password.component.css'],
 })
 export class ForgotPasswordComponent {
   forgotForm: FormGroup<ForgotPasswordForm>;

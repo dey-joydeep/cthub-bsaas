@@ -9,6 +9,7 @@
     "build": {
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/libs/web/customer"],
+      "defaultConfiguration": "production",
       "options": {
         "project": "libs/web/customer/ng-package.json",
         "tsConfig": "libs/web/customer/tsconfig.lib.json"
@@ -18,14 +19,14 @@
           "tsConfig": "libs/web/customer/tsconfig.lib.prod.json"
         },
         "development": {}
-      },
-      "defaultConfiguration": "production"
+      }
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/libs/web/customer"],
       "options": {
-        "jestConfig": "libs/web/customer/jest.config.ts"
+        "jestConfig": "libs/web/customer/jest.config.ts",
+        "tsConfig": "libs/web/customer/tsconfig.spec.json"
       }
     },
     "lint": {

@@ -13,7 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatStepperModule } from '@angular/material/stepper';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { AppointmentCreateService } from './appointment-create.service';
 import { Service, Staff } from './model/appointment-create.model';
 
@@ -35,10 +35,10 @@ import { Service, Staff } from './model/appointment-create.model';
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    TranslateModule,
+    TranslatePipe, TranslateDirective,
   ],
   templateUrl: './appointment-create.component.html',
-  styleUrls: ['./appointment-create.component.scss'],
+  styleUrls: ['./appointment-create.component.css'],
 })
 export class AppointmentCreateComponent implements OnInit {
   isLinear = true;

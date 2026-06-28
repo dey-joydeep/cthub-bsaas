@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { Subscription, finalize } from 'rxjs';
 
 import { AppointmentCancelDialogComponent } from '../appointment-cancel-dialog/appointment-cancel-dialog.component';
@@ -29,10 +29,10 @@ import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.
     MatProgressSpinnerModule,
     MatDialogModule,
     MatSnackBarModule,
-    TranslateModule,
+    TranslatePipe, TranslateDirective,
   ],
   templateUrl: './appointment-detail.component.html',
-  styleUrls: ['./appointment-detail.component.scss'],
+  styleUrls: ['./appointment-detail.component.css'],
 })
 export class AppointmentDetailComponent implements OnInit, OnDestroy {
   // The appointment to display with all details

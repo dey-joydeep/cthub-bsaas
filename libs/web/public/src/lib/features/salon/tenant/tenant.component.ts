@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 
 // Core services
 import { CurrentUserService } from '@cthub-bsaas/web-core/auth';
@@ -20,9 +20,9 @@ import { TenantService } from './tenant.service';
 @Component({
   selector: 'app-tenant',
   standalone: true,
-  imports: [CommonModule, TranslateModule, SafeUrlPipe, FormsModule],
+  imports: [CommonModule, TranslatePipe, TranslateDirective, SafeUrlPipe, FormsModule],
   templateUrl: './tenant.component.html',
-  styleUrls: ['./tenant.component.scss'],
+  styleUrls: ['./tenant.component.css'],
 })
 export class TenantComponent implements OnInit {
   salon: Salon | null = null;

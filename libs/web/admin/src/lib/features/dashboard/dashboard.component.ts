@@ -5,7 +5,7 @@ import { Component, HostListener, Inject, OnInit, PLATFORM_ID } from '@angular/c
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 
 // Widget Components
@@ -26,7 +26,7 @@ import { DashboardService } from './dashboard.service';
     CommonModule,
     MatCardModule,
     MatIconModule,
-    TranslateModule,
+    TranslatePipe, TranslateDirective,
     StatsWidgetComponent,
     RevenueChartComponent,
     CustomerStatsWidgetComponent,
@@ -35,7 +35,7 @@ import { DashboardService } from './dashboard.service';
     RenewalsListWidgetComponent,
   ],
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.scss'],
+  styleUrls: ['./dashboard.component.css'],
 })
 export class DashboardComponent extends AbstractBaseComponent implements OnInit {
   tenantId: string = 'demo-tenant';

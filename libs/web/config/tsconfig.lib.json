@@ -2,7 +2,9 @@
   "extends": "../tsconfig.lib.base.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "../../../dist/out-tsc/libs/web/config"
+    "outDir": "../../../dist/out-tsc/libs/web/config",
+    "module": "preserve",
+    "moduleResolution": "bundler"
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts"],
   "exclude": ["src/test-setup.ts", "**/*.spec.ts", "**/*.test.ts", "jest.config.ts"]

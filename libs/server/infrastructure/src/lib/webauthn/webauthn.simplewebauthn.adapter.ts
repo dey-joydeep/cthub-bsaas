@@ -8,15 +8,12 @@ import {
   verifyRegistrationResponse,
   generateAuthenticationOptions,
   verifyAuthenticationResponse,
+  type RegistrationResponseJSON,
+  type AuthenticationResponseJSON,
+  type AuthenticatorTransportFuture,
 } from '@simplewebauthn/server';
-import type { RegistrationResponseJSON, AuthenticationResponseJSON, AuthenticatorTransportFuture } from '@simplewebauthn/types';
 
-function toBufferFromBase64url(s: string): Uint8Array {
-  return Buffer.from(s, 'base64url');
-}
-function toBase64urlFromBuffer(b: Uint8Array): string {
-  return Buffer.from(b).toString('base64url');
-}
+
 function parseTransports(csv?: string | null): AuthenticatorTransportFuture[] | undefined {
   if (!csv) return undefined;
   const allowed = new Set<AuthenticatorTransportFuture>([
@@ -72,11 +69,11 @@ export class WebAuthnSimpleAdapter implements WebAuthnPort {
       rpID: this.rpID(),
       rpName: this.rpName(),
       userName: username,
-      userID: userId,
+      userID: new TextEncoder().encode(userId),
       attestationType: 'none',
       excludeCredentials: existing.map((c) => ({
         type: 'public-key',
-        id: toBufferFromBase64url(c.credentialId),
+        id: c.credentialId,
         transports: parseTransports(c.transports),
       })),
       authenticatorSelection: { residentKey: 'preferred', userVerification: 'preferred' },
@@ -103,12 +100,12 @@ export class WebAuthnSimpleAdapter implements WebAuthnPort {
       throw new Error('webauthn.registration_failed');
     }
 
-    const { credentialID, credentialPublicKey, counter } = registrationInfo;
-    const credentialId = toBase64urlFromBuffer(credentialID);
+    const { id: credentialID, publicKey: credentialPublicKey, counter } = registrationInfo.credential;
+    const credentialId = credentialID;
     await this.prisma.credentialPasskey.upsert({
       where: { credentialId },
       update: {
-        publicKey: credentialPublicKey,
+        publicKey: new Uint8Array(credentialPublicKey),
         counter,
         transports: undefined,
         lastUsedAt: new Date(),
@@ -116,7 +113,7 @@ export class WebAuthnSimpleAdapter implements WebAuthnPort {
       create: {
         userId,
         credentialId,
-        publicKey: credentialPublicKey,
+        publicKey: new Uint8Array(credentialPublicKey),
         counter,
         transports: undefined,
         lastUsedAt: new Date(),
@@ -131,7 +128,7 @@ export class WebAuthnSimpleAdapter implements WebAuthnPort {
       rpID: this.rpID(),
       allowCredentials: credentials.map((c) => ({
         type: 'public-key',
-        id: toBufferFromBase64url(c.credentialId),
+        id: c.credentialId,
         transports: parseTransports(c.transports),
       })),
       userVerification: 'preferred',
@@ -161,9 +158,9 @@ export class WebAuthnSimpleAdapter implements WebAuthnPort {
       expectedChallenge,
       expectedOrigin: this.allowedOrigins(),
       expectedRPID: this.rpID(),
-      authenticator: {
-        credentialID: toBufferFromBase64url(credential.credentialId),
-        credentialPublicKey: credential.publicKey,
+      credential: {
+        id: credential.credentialId,
+        publicKey: new Uint8Array(credential.publicKey),
         counter: credential.counter,
         transports: parseTransports(credential.transports),
       },

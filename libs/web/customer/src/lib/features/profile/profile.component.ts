@@ -8,7 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { ProfileService } from './profile.service';
 import { User } from './model/profile.model';
 
@@ -25,10 +25,10 @@ import { User } from './model/profile.model';
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatIconModule,
-    TranslateModule,
+    TranslatePipe, TranslateDirective,
   ],
   templateUrl: './profile.component.html',
-  styleUrls: ['./profile.component.scss'],
+  styleUrls: ['./profile.component.css'],
 })
 export class ProfileComponent implements OnInit {
   profileForm: FormGroup;

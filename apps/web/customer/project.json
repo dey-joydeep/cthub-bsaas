@@ -8,6 +8,7 @@
     "build": {
       "executor": "@nx/angular:application",
       "outputs": ["{options.outputPath.base}"],
+      "defaultConfiguration": "production",
       "options": {
         "outputPath": {
           "base": "dist/apps/customer"
@@ -27,7 +28,7 @@
             "output": "/"
           }
         ],
-        "styles": ["libs/web/config/src/styles/styles.css", "apps/web/customer/src/styles.scss"],
+        "styles": ["libs/web/config/src/styles/styles.css", "apps/web/customer/src/styles.css"],
         "scripts": [],
         "browser": "apps/web/customer/src/main.ts"
       },
@@ -47,11 +48,11 @@
           "sourceMap": true,
           "extractLicenses": false
         }
-      },
-      "defaultConfiguration": "production"
+      }
     },
     "serve": {
       "executor": "@nx/angular:dev-server",
+      "defaultConfiguration": "development",
       "options": {
         "buildTarget": "web-app-customer:build:development",
         "port": 4200,
@@ -64,15 +65,15 @@
         "development": {
           "buildTarget": "web-app-customer:build:development"
         }
-      },
-      "defaultConfiguration": "development"
+      }
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "jest.config.ts",
-        "passWithNoTests": true
+        "passWithNoTests": true,
+        "tsConfig": "apps/web/customer/tsconfig.spec.json"
       }
     },
     "lint": {

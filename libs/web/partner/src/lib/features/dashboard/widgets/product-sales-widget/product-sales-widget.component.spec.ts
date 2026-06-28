@@ -15,7 +15,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 
 import { ProductSalesWidgetComponent } from './product-sales-widget.component';
@@ -99,7 +99,7 @@ describe('ProductSalesWidgetComponent', () => {
         MatDatepickerModule,
         MatNativeDateModule,
         ReactiveFormsModule,
-        TranslateModule.forRoot(),
+        TranslatePipe, TranslateDirective,
       ],
       providers: [
         { provide: DashboardService, useValue: dashboardService },

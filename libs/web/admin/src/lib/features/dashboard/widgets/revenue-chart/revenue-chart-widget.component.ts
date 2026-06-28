@@ -3,7 +3,7 @@ import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,7 +18,7 @@ import { ErrorService } from '@cthub-bsaas/web-core-common';
   standalone: true,
   imports: [
     CommonModule,
-    TranslateModule,
+    TranslatePipe, TranslateDirective,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -27,7 +27,7 @@ import { ErrorService } from '@cthub-bsaas/web-core-common';
     BaseChartDirective,
   ],
   templateUrl: './revenue-chart-widget.component.html',
-  styleUrls: ['./revenue-chart-widget.component.scss'],
+  styleUrls: ['./revenue-chart-widget.component.css'],
   host: { class: 'revenue-chart' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

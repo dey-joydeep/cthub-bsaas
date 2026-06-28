@@ -2,13 +2,10 @@
   "extends": "../../tsconfig.lib.base.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "../../../../dist/out-tsc/libs/web/core/auth"
+    "outDir": "../../../../dist/out-tsc/libs/web/core/auth",
+    "module": "preserve",
+    "moduleResolution": "bundler"
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts"],
-  "exclude": [
-    "src/test-setup.ts",
-    "**/*.spec.ts",
-    "**/*.test.ts",
-    "jest.config.ts"
-  ]
+  "exclude": ["src/test-setup.ts", "**/*.spec.ts", "**/*.test.ts", "jest.config.ts"]
 }

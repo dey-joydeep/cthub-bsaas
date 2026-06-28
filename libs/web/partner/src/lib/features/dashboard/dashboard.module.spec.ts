@@ -15,7 +15,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 
 import { DashboardModule } from './dashboard.module';
 import { DashboardComponent } from './dashboard.component';
@@ -42,7 +42,7 @@ describe('DashboardModule', () => {
         MatDatepickerModule,
         MatNativeDateModule,
         ReactiveFormsModule,
-        TranslateModule.forRoot(),
+        TranslatePipe, TranslateDirective,
       ],
       declarations: [DashboardComponent, ProductSalesWidgetComponent],
       providers: [DashboardService, { provide: TranslateService, useValue: { instant: (key: string) => key } }],

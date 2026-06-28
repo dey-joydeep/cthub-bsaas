@@ -6,7 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { UserService } from './user.service';
 import { CurrentUserService } from '../../core/auth/services/current-user.service';
 
@@ -21,10 +21,10 @@ import { CurrentUserService } from '../../core/auth/services/current-user.servic
     MatButtonModule,
     MatProgressBarModule,
     MatIconModule,
-    TranslateModule,
+    TranslatePipe, TranslateDirective,
   ],
   templateUrl: './profile-settings.component.html',
-  styleUrls: ['./profile-settings.component.scss'],
+  styleUrls: ['./profile-settings.component.css'],
 })
 export class ProfileSettingsComponent implements OnInit {
   profileForm;

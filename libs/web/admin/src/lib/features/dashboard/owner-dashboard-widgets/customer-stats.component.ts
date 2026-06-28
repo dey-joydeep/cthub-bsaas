@@ -10,7 +10,7 @@ import { DashboardApiService } from '@cthub-bsaas/features/dashboard/services/da
   standalone: true,
   imports: [CommonModule, MatCardModule, MatProgressBarModule, MatFormFieldModule, MatError],
   templateUrl: './customer-stats.component.html',
-  styleUrls: ['./customer-stats.component.scss'],
+  styleUrls: ['./customer-stats.component.css'],
 })
 export class CustomerStatsComponent implements OnInit {
   @Input() tenantId = '';

@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { CustomerStatsWidgetService } from './customer-stats-widget.service';
 import { DashboardStats } from './models/customer-stats-widget.model';
@@ -14,9 +14,9 @@ import { DashboardStats } from './models/customer-stats-widget.model';
 @Component({
   selector: 'app-customer-stats-widget',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule, MatProgressSpinnerModule, MatButtonModule, MatTooltipModule, TranslateModule],
+  imports: [CommonModule, MatCardModule, MatIconModule, MatProgressSpinnerModule, MatButtonModule, MatTooltipModule, TranslatePipe, TranslateDirective],
   templateUrl: './customer-stats-widget.component.html',
-  styleUrls: ['./customer-stats-widget.component.scss'],
+  styleUrls: ['./customer-stats-widget.component.css'],
 })
 export class CustomerStatsWidgetComponent extends AbstractBaseComponent {
   stats: DashboardStats = {

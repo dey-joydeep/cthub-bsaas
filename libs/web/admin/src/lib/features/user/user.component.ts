@@ -1,16 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { CurrentUserService } from '@cthub-bsaas/web-core/auth';
 import { UserService, UserStats } from './user.service';
 
 @Component({
   selector: 'app-user',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, TranslatePipe, TranslateDirective],
   templateUrl: './user.component.html',
-  styleUrls: ['./user.component.scss'],
+  styleUrls: ['./user.component.css'],
 })
 export class UserComponent extends AbstractBaseComponent implements OnInit {
   stats: UserStats | null = null;

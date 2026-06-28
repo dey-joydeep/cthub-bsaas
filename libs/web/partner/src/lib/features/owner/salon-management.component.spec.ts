@@ -10,7 +10,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { User } from '../../models/user.model';
 
@@ -39,7 +39,7 @@ describe('SalonManagementComponent', () => {
         MatIconModule,
         MatSelectModule,
         MatChipsModule,
-        TranslateModule.forRoot(),
+        TranslatePipe, TranslateDirective,
       ],
       declarations: [SalonManagementComponent],
       providers: [{ provide: SalonService, useValue: salonService }],

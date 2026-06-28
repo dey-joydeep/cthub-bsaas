@@ -43,4 +43,4 @@ coverage/
 .github/instructions/nx.instructions.md
 
 .claude/worktrees
-.claude/settings.local.json
+.claude/settings.local.jsonnode_modules_*

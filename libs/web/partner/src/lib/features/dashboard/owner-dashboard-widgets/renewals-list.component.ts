@@ -11,7 +11,7 @@ import { DashboardApiService, Renewal } from '@cthub-bsaas/features/dashboard/se
   standalone: true,
   imports: [CommonModule, MatCardModule, MatProgressBarModule, MatFormFieldModule, MatError, MatListModule],
   templateUrl: './renewals-list.component.html',
-  styleUrls: ['./renewals-list.component.scss'],
+  styleUrls: ['./renewals-list.component.css'],
 })
 export class RenewalsListComponent implements OnInit {
   @Input() tenantId = '';

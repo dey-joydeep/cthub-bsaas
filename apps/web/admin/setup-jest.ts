@@ -1,4 +1,6 @@
-import 'jest-preset-angular/setup-jest';
+import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
+
+setupZoneTestEnv();
 import { jest } from '@jest/globals';
 
 // Extend the existing MediaQueryList interface to include deprecated methods

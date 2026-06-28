@@ -28,7 +28,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 // Third-party modules
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 
 // Components
 import { AppointmentsOverviewWidgetComponent } from './appointments-overview-widget.component';
@@ -68,7 +68,7 @@ import { DashboardService } from '../../services/dashboard.service';
     MatTooltipModule,
 
     // Third-party modules
-    TranslateModule,
+    TranslatePipe, TranslateDirective,
     AppointmentsOverviewWidgetComponent, // Import the standalone component
   ],
   providers: [DashboardService],

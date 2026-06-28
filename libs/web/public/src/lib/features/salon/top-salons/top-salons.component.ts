@@ -21,9 +21,9 @@ export type Salon = ISalonDto & {
 @Component({
   selector: 'app-top-salons',
   standalone: true,
-  imports: [CommonModule, RouterModule, TranslateModule],
+  imports: [CommonModule, RouterModule, TranslatePipe, TranslateDirective],
   templateUrl: './top-salons.component.html',
-  styleUrls: ['./top-salons.component.scss'],
+  styleUrls: ['./top-salons.component.css'],
   // Removed ChangeDetectionStrategy.OnPush as it requires careful state management
 })
 export class TopSalonsComponent implements OnInit {

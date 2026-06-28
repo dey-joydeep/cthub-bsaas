@@ -3,7 +3,7 @@ import { Component, Input, OnInit, Inject, PLATFORM_ID, Type } from '@angular/co
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { SalonService } from '../../services/salon.service';
 import { RouterModule } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { ISalonDto } from '../../../home/home.models';
 import type { PlatformUtils } from '@cthub-bsaas/web-core-platform';
 
@@ -23,9 +23,9 @@ export type Salon = ISalonDto & {
 @Component({
   selector: 'app-top-salons',
   standalone: true,
-  imports: [CommonModule, RouterModule, TranslateModule],
+  imports: [CommonModule, RouterModule, TranslatePipe, TranslateDirective],
   templateUrl: './top-salons.component.html',
-  styleUrls: ['./top-salons.component.scss'],
+  styleUrls: ['./top-salons.component.css'],
   // Removed ChangeDetectionStrategy.OnPush as it requires careful state management
 })
 export class TopSalonsComponent implements OnInit {

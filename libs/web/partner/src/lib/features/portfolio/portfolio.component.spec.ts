@@ -4,7 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { PortfolioComponent } from './portfolio.component';
 import { PortfolioService } from './portfolio.service';
@@ -23,7 +23,7 @@ describe('PortfolioComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CommonModule, ReactiveFormsModule, PortfolioComponent, TranslateModule.forRoot()],
+      imports: [CommonModule, ReactiveFormsModule, PortfolioComponent, TranslatePipe, TranslateDirective],
       providers: [
         { provide: PortfolioService, useClass: MockPortfolioService },
         provideHttpClient(),

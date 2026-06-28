@@ -24,7 +24,7 @@ import { DashboardApiService } from '@cthub-bsaas/features/dashboard/services/da
     MatTooltipModule,
   ],
   templateUrl: './subscription-chart.component.html',
-  styleUrls: ['./subscription-chart.component.scss'],
+  styleUrls: ['./subscription-chart.component.css'],
 })
 export class SubscriptionChartComponent implements OnInit {
   @Input() tenantId = '';

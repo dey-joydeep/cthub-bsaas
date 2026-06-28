@@ -26,7 +26,7 @@ import { of, Subject } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 
 import { RouterModule } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { Appointment, AppointmentsFilter, AppointmentsOverview, StatusBadgeConfig } from './models/appointments-overview-widget.model';
 import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.enum';
 import { AppointmentsOverviewWidgetService } from './appointments-overview-widget.service';
@@ -59,10 +59,10 @@ import { AppointmentsOverviewWidgetService } from './appointments-overview-widge
     MatDividerModule,
     MatListModule,
     MatDialogModule,
-    TranslateModule,
+    TranslatePipe, TranslateDirective,
   ],
   templateUrl: './appointments-overview-widget.component.html',
-  styleUrls: ['./appointments-overview-widget.component.scss'],
+  styleUrls: ['./appointments-overview-widget.component.css'],
 })
 export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild(MatSort) sort!: MatSort;

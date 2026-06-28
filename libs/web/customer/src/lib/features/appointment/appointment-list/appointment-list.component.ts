@@ -12,7 +12,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ConfirmDialogComponent } from '@cthub-bsaas/shared/components/confirm-dialog/confirm-dialog.component';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { Appointment, DialogResult } from './model/appointment-list.model';
 import { AppointmentListService } from './appointment-list.service';
 import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.enum';
@@ -32,10 +32,10 @@ import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.
     MatPaginatorModule,
     MatChipsModule,
     MatTooltipModule,
-    TranslateModule,
+    TranslatePipe, TranslateDirective,
   ],
   templateUrl: './appointment-list.component.html',
-  styleUrls: ['./appointment-list.component.scss'],
+  styleUrls: ['./appointment-list.component.css'],
 })
 export class AppointmentListComponent implements OnInit {
   displayedColumns: string[] = ['service', 'date', 'status', 'price', 'actions'];

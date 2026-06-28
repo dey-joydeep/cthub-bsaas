@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { Observable, from, of } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
@@ -24,11 +24,11 @@ import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
     MatButtonModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
-    TranslateModule,
+    TranslatePipe, TranslateDirective,
     BaseChartDirective,
   ],
   templateUrl: './subscription-chart-widget.component.html',
-  styleUrls: ['./subscription-chart-widget.component.scss'],
+  styleUrls: ['./subscription-chart-widget.component.css'],
 })
 export class SubscriptionChartWidgetComponent extends AbstractBaseComponent implements OnChanges {
   @Input() subscriptionData: SubscriptionData[] = [];

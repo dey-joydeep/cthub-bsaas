@@ -16,7 +16,7 @@
         [placeholder]="'HEADER.SEARCH_PLACEHOLDER' | translate"
         (keyup.enter)="onSearch(searchInput.value)"
         #searchInput
-      />
+        />
       <button mat-icon-button class="search-button" (click)="onSearch(searchInput.value)">
         <mat-icon>search</mat-icon>
       </button>
@@ -29,111 +29,112 @@
       <!-- Language Selector -->
       <mat-form-field appearance="outline" class="language-selector">
         <mat-select [(ngModel)]="selectedLanguage" (selectionChange)="onLanguageChange($event.value)" panelClass="language-selector-panel">
-          <mat-option *ngFor="let lang of languages" [value]="lang.code">
-            {{ lang.name }}
-          </mat-option>
+          @for (lang of languages; track lang) {
+            <mat-option [value]="lang.code">
+              {{ lang.name }}
+            </mat-option>
+          }
         </mat-select>
       </mat-form-field>
 
       <!-- City Selector -->
       <mat-form-field appearance="outline" class="city-selector">
         <mat-select [(ngModel)]="selectedCity" (selectionChange)="onCityChange($event.value)" panelClass="city-selector-panel">
-          <mat-option *ngFor="let city of cities" [value]="city.id">
-            {{ city.name }}
-          </mat-option>
+          @for (city of cities; track city) {
+            <mat-option [value]="city.id">
+              {{ city.name }}
+            </mat-option>
+          }
         </mat-select>
         <mat-icon matSuffix>location_on</mat-icon>
       </mat-form-field>
 
       <!-- User Menu -->
-      <ng-container *ngIf="isAuthenticated; else notAuthenticated">
+      @if (isAuthenticated) {
         <button mat-icon-button [matMenuTriggerFor]="userMenu" class="user-menu-button">
           <mat-icon>account_circle</mat-icon>
         </button>
-
         <mat-menu #userMenu="matMenu" class="user-menu">
           <div class="user-info">
             <div class="user-name">{{ currentUser?.name || 'User' }}</div>
             <div class="user-email">{{ currentUser?.email || '' }}</div>
           </div>
-
           <mat-divider></mat-divider>
-
           <button mat-menu-item routerLink="/profile">
             <mat-icon>person</mat-icon>
             <span>{{ 'HEADER.MY_PROFILE' | translate }}</span>
           </button>
-
           <button mat-menu-item routerLink="/appointments">
             <mat-icon>event</mat-icon>
             <span>{{ 'HEADER.MY_APPOINTMENTS' | translate }}</span>
           </button>
-
           <button mat-menu-item routerLink="/settings">
             <mat-icon>settings</mat-icon>
             <span>{{ 'HEADER.SETTINGS' | translate }}</span>
           </button>
-
           <mat-divider></mat-divider>
-
           <button mat-menu-item (click)="logout()">
             <mat-icon>logout</mat-icon>
             <span>{{ 'HEADER.LOGOUT' | translate }}</span>
           </button>
         </mat-menu>
-
         <!-- Notifications -->
         <button mat-icon-button class="notification-button" [matMenuTriggerFor]="notificationsMenu">
-          <mat-icon [matBadge]="unreadCount" matBadgeSize="small" matBadgeColor="warn" *ngIf="unreadCount > 0"> notifications </mat-icon>
-          <mat-icon *ngIf="unreadCount === 0">notifications_none</mat-icon>
+          @if (unreadCount > 0) {
+            <mat-icon [matBadge]="unreadCount" matBadgeSize="small" matBadgeColor="warn"> notifications </mat-icon>
+          }
+          @if (unreadCount === 0) {
+            <mat-icon>notifications_none</mat-icon>
+          }
         </button>
-
         <mat-menu #notificationsMenu="matMenu" class="notifications-menu">
           <div class="notifications-header">
             <h3>{{ 'HEADER.NOTIFICATIONS' | translate }}</h3>
-            <button mat-button color="primary" *ngIf="unreadCount > 0">
-              {{ 'HEADER.MARK_ALL_READ' | translate }}
-            </button>
+            @if (unreadCount > 0) {
+              <button mat-button color="primary">
+                {{ 'HEADER.MARK_ALL_READ' | translate }}
+              </button>
+            }
           </div>
-
           <div class="notification-list">
-            <div class="notification-item" *ngFor="let notification of notifications">
-              <div class="notification-icon">
-                <mat-icon [class.unread]="!notification.read">
-                  {{ notification.icon || 'notifications' }}
-                </mat-icon>
-              </div>
-              <div class="notification-content">
-                <div class="notification-title" [class.unread]="!notification.read">
-                  {{ notification.title }}
+            @for (notification of notifications; track notification) {
+              <div class="notification-item">
+                <div class="notification-icon">
+                  <mat-icon [class.unread]="!notification.read">
+                    {{ notification.icon || 'notifications' }}
+                  </mat-icon>
                 </div>
-                <div class="notification-time">
-                  {{ notification.time | date: 'shortTime' }}
+                <div class="notification-content">
+                  <div class="notification-title" [class.unread]="!notification.read">
+                    {{ notification.title }}
+                  </div>
+                  <div class="notification-time">
+                    {{ notification.time | date: 'shortTime' }}
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div class="no-notifications" *ngIf="notifications.length === 0">
-              {{ 'HEADER.NO_NOTIFICATIONS' | translate }}
-            </div>
+            }
+            @if (notifications.length === 0) {
+              <div class="no-notifications">
+                {{ 'HEADER.NO_NOTIFICATIONS' | translate }}
+              </div>
+            }
           </div>
-
           <div class="notifications-footer">
             <a routerLink="/notifications" class="view-all">
               {{ 'HEADER.VIEW_ALL_NOTIFICATIONS' | translate }}
             </a>
           </div>
         </mat-menu>
-      </ng-container>
-
-      <ng-template #notAuthenticated>
+      } @else {
         <a mat-button routerLink="/login" class="login-button">
           {{ 'HEADER.LOGIN' | translate }}
         </a>
         <a mat-flat-button color="primary" routerLink="/register" class="signup-button">
           {{ 'HEADER.SIGNUP' | translate }}
         </a>
-      </ng-template>
+      }
+
     </div>
   </mat-toolbar>
 </header>
@@ -146,37 +147,38 @@
     [placeholder]="'HEADER.SEARCH_PLACEHOLDER' | translate"
     (keyup.enter)="onSearch(mobileSearchInput.value)"
     #mobileSearchInput
-  />
+    />
   <button mat-icon-button class="close-search" (click)="isMobileSearchVisible = false">
     <mat-icon>close</mat-icon>
   </button>
 </div>
 
 <!-- City Selection Popup -->
-<div
-  class="city-popup-overlay"
-  *ngIf="showCityPopup"
-  role="button"
-  tabindex="0"
-  (click)="showCityPopup = false"
-  (keydown.enter)="showCityPopup = false"
-  (keydown.space)="showCityPopup = false"
->
-  <div class="city-popup" role="dialog" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
-    <h2>{{ 'HEADER.SELECT_YOUR_CITY' | translate }}</h2>
-    <p>{{ 'HEADER.WE_USE_THIS_TO_SHOW_RELEVANT_CONTENT' | translate }}</p>
-
-    <mat-form-field appearance="outline" class="city-selector-popup">
-      <mat-label>{{ 'HEADER.SELECT_CITY' | translate }}</mat-label>
-      <mat-select [(ngModel)]="selectedCity" panelClass="city-selector-panel">
-        <mat-option *ngFor="let city of cities" [value]="city.id">
-          {{ city.name }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <button mat-flat-button color="primary" class="confirm-city-button" (click)="confirmCity(selectedCity)">
-      {{ 'COMMON.CONFIRM' | translate }}
-    </button>
+@if (showCityPopup) {
+  <div
+    class="city-popup-overlay"
+    role="button"
+    tabindex="0"
+    (click)="showCityPopup = false"
+    (keydown.enter)="showCityPopup = false"
+    (keydown.space)="showCityPopup = false"
+    >
+    <div class="city-popup" role="dialog" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
+      <h2>{{ 'HEADER.SELECT_YOUR_CITY' | translate }}</h2>
+      <p>{{ 'HEADER.WE_USE_THIS_TO_SHOW_RELEVANT_CONTENT' | translate }}</p>
+      <mat-form-field appearance="outline" class="city-selector-popup">
+        <mat-label>{{ 'HEADER.SELECT_CITY' | translate }}</mat-label>
+        <mat-select [(ngModel)]="selectedCity" panelClass="city-selector-panel">
+          @for (city of cities; track city) {
+            <mat-option [value]="city.id">
+              {{ city.name }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <button mat-flat-button color="primary" class="confirm-city-button" (click)="confirmCity(selectedCity)">
+        {{ 'COMMON.CONFIRM' | translate }}
+      </button>
+    </div>
   </div>
-</div>
+}

@@ -27,7 +27,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatSnackBarModule,
   ],
   templateUrl: './revenue-chart.component.html',
-  styleUrls: ['./revenue-chart.component.scss'],
+  styleUrls: ['./revenue-chart.component.css'],
 })
 export class RevenueChartComponent implements OnInit {
   @Input() tenantId = '';

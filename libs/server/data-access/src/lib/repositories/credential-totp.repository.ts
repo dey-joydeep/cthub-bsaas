@@ -25,7 +25,7 @@ export class CredentialTotpRepository implements ICredentialTotpRepository {
         return this.prisma.credentialTOTP.create({
             data: {
                 userId: data.userId,
-                secretEncrypted: data.secretEncrypted,
+                secretEncrypted: new Uint8Array(data.secretEncrypted),
             },
         });
     }
@@ -34,6 +34,10 @@ export class CredentialTotpRepository implements ICredentialTotpRepository {
      * @inheritdoc
      */
     update(userId: string, data: { secretEncrypted?: Buffer; verified?: boolean }): Promise<CredentialTOTP> {
-        return this.prisma.credentialTOTP.update({ where: { userId }, data });
+        const updateData: any = { ...data };
+        if (data.secretEncrypted) {
+            updateData.secretEncrypted = new Uint8Array(data.secretEncrypted);
+        }
+        return this.prisma.credentialTOTP.update({ where: { userId }, data: updateData });
     }
 }

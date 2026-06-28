@@ -14,7 +14,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule, MAT_SNACK_BAR_DEFAULT_OPTIONS } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 
@@ -45,10 +45,10 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    TranslateModule,
+    TranslatePipe, TranslateDirective,
   ],
   templateUrl: './appointment-reschedule.component.html',
-  styleUrls: ['./appointment-reschedule.component.scss'],
+  styleUrls: ['./appointment-reschedule.component.css'],
   providers: [{ provide: DatePipe, useClass: DatePipe }],
 })
 @Component({
@@ -70,10 +70,10 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    TranslateModule,
+    TranslatePipe, TranslateDirective,
   ],
   templateUrl: './appointment-reschedule.component.html',
-  styleUrls: ['./appointment-reschedule.component.scss'],
+  styleUrls: ['./appointment-reschedule.component.css'],
   providers: [{ provide: DatePipe, useClass: DatePipe }],
 })
 export class AppointmentRescheduleComponent implements OnInit, OnDestroy {

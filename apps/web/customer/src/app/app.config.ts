@@ -10,7 +10,7 @@ import { ApplicationConfig, ErrorHandler, importProvidersFrom } from '@angular/c
 import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
-import { TranslateLoader, TranslateModule, TranslateStore } from '@ngx-translate/core';
+import { TranslateLoader, provideTranslateService } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { of } from 'rxjs';
 
@@ -68,8 +68,6 @@ export const appConfig: ApplicationConfig = {
       useFactory: httpLoaderFactory,
       deps: [HttpClient],
     },
-    TranslateStore,
-
     provideRouter(routes, withPreloading(PreloadAllModules)),
     provideHttpClient(
       withInterceptorsFromDi(),

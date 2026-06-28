@@ -16,7 +16,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 
 import { DashboardComponent } from './dashboard.component';
 import { DashboardService } from './services/dashboard.service';
@@ -54,7 +54,7 @@ const routes: Routes = [
     MatDatepickerModule,
     MatNativeDateModule,
     ReactiveFormsModule,
-    TranslateModule.forChild(),
+    TranslatePipe, TranslateDirective,
 
     // Standalone Components
     DashboardComponent,

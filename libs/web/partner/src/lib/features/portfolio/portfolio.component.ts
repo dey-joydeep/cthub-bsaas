@@ -2,16 +2,16 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PortfolioService } from './portfolio.service';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { PortfolioItem } from './models/portfolio.model';
 
 @Component({
   selector: 'app-portfolio',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe, TranslateDirective],
   templateUrl: './portfolio.component.html',
-  styleUrls: ['./portfolio.component.scss'],
+  styleUrls: ['./portfolio.component.css'],
 })
 export class PortfolioComponent extends AbstractBaseComponent {
   portfolioItems: PortfolioItem[] = [];

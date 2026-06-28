@@ -17,7 +17,8 @@
       "outputs": ["{workspaceRoot}/coverage/libs/web/config"],
       "options": {
         "jestConfig": "libs/web/config/jest.config.ts",
-        "passWithNoTests": true
+        "passWithNoTests": true,
+        "tsConfig": "libs/web/config/tsconfig.spec.json"
       }
     },
     "type-check": {

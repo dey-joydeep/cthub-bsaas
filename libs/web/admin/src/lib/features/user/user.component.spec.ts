@@ -3,7 +3,7 @@ import { UserComponent } from './user.component';
 import { UserService } from './user.service';
 import { of, throwError } from 'rxjs';
 import { CommonModule } from '@angular/common';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -77,7 +77,7 @@ describe('UserComponent', () => {
     } as unknown as jest.Mocked<UserService>;
 
     await TestBed.configureTestingModule({
-      imports: [CommonModule, UserComponent, TranslateModule.forRoot()],
+      imports: [CommonModule, UserComponent, TranslatePipe, TranslateDirective],
       providers: [
         { provide: UserService, useValue: userService },
         { provide: TranslateService, useClass: MockTranslateService },
