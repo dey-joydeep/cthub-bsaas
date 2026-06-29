@@ -303,6 +303,7 @@ export class SalonOwnerSettingsComponent {
     this.hoursSaveVersion += 1;
     this.holidaySaveVersion += 1;
     this.selectedBranch.set(branch);
+    this.selectedHoliday.set(null);
     this.branchSettingsLoaded.set(false);
     this.branchForm.reset({
       businessId: branch.businessId,
@@ -321,6 +322,14 @@ export class SalonOwnerSettingsComponent {
         country: branch.address.country,
       },
     });
+    this.holidayForm.reset({
+      date: localDateInputValue(),
+      closed: true,
+      reason: '',
+      start: '09:00',
+      end: '17:00',
+    });
+    this.updateHolidayTimeValidators(this.holidayForm.controls.closed.value);
     this.loadBranchSettings(branch);
   }
 

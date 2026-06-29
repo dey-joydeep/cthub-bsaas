@@ -1228,6 +1228,56 @@ describe('SalonOwnerSettingsComponent', () => {
     ]);
   });
 
+  it('clears the selected holiday draft when switching branches', () => {
+    api.listBranchHolidays.mockReturnValueOnce(
+      of([
+        {
+          branchId: 'branch-2',
+          date: '2026-06-02',
+          closed: true,
+          reason: 'Branch Two Holiday',
+          intervals: [],
+        },
+      ]),
+    );
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      selectHoliday(holiday: BranchHoliday): void;
+      selectedHoliday(): BranchHoliday | null;
+      holidayForm: {
+        getRawValue(): { date: string; closed: boolean; reason: string; start: string; end: string };
+      };
+    };
+    const holiday: BranchHoliday = {
+      branchId: 'branch-1',
+      date: '2026-08-12',
+      closed: false,
+      reason: 'Festival',
+      intervals: [
+        { start: '09:00', end: '12:00' },
+        { start: '13:00', end: '17:00' },
+      ],
+    };
+
+    component.selectHoliday(holiday);
+    component.selectBranch({ ...branch, id: 'branch-2', name: 'Second' });
+
+    expect(component.selectedHoliday()).toBeNull();
+    expect(component.holidayForm.getRawValue()).toEqual({
+      date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      closed: true,
+      reason: '',
+      start: '09:00',
+      end: '17:00',
+    });
+    expect(component.holidays()).toEqual([
+      expect.objectContaining({
+        branchId: 'branch-2',
+        date: '2026-06-02',
+        reason: 'Branch Two Holiday',
+      }),
+    ]);
+  });
+
   it('allows adding and removing hours intervals from the form array', () => {
     const component = fixture.componentInstance as unknown as {
       addInterval(dayIndex: number): void;

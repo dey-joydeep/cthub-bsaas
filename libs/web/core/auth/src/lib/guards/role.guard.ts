@@ -17,11 +17,11 @@ export const roleGuard: CanActivateFn = (route, state) => {
       // If no user is logged in, redirect to login
       if (!user) {
         currentUserService.redirectUrl = state.url;
-        return router.createUrlTree(['/auth/login']);
+        return router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: state.url } });
       }
 
       // Get required roles from route data
-      const requiredRoles = route.data?.['roles'] as string[];
+      const requiredRoles = ((route.data?.['roles'] as string[] | undefined) ?? []).map((role) => role.toLowerCase());
 
       // If no roles are required, allow access
       if (!requiredRoles || requiredRoles.length === 0) {
@@ -29,7 +29,8 @@ export const roleGuard: CanActivateFn = (route, state) => {
       }
 
       // Check if user has any of the required roles
-      const hasRequiredRole = requiredRoles.includes(user.role);
+      const userRole = user.role.toLowerCase();
+      const hasRequiredRole = requiredRoles.includes(userRole);
 
       if (hasRequiredRole) {
         return true;
