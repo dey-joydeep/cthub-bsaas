@@ -822,6 +822,43 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(component.error()).toBe('Weekly hours must use the selected branch timezone.');
   });
 
+  it('allows saving after closing a day with invalid hidden intervals', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      getDayIntervals(dayIndex: number): {
+        at(index: number): { patchValue(value: { start: string; end: string }): void };
+        disabled: boolean;
+      };
+      onDayOpenToggle(dayIndex: number): void;
+      hoursForm: {
+        controls: {
+          days: {
+            at(index: number): { get(path: 'open'): { setValue(value: boolean): void } | null };
+          };
+        };
+      };
+    };
+    api.replaceBranchHours.mockClear();
+
+    component.getDayIntervals(1).at(0).patchValue({ start: '18:00', end: '09:00' });
+    component.hoursForm.controls.days.at(1).get('open')?.setValue(false);
+    component.onDayOpenToggle(1);
+    component.saveHours();
+
+    expect(component.getDayIntervals(1).disabled).toBe(true);
+    expect(api.replaceBranchHours).toHaveBeenCalledWith(
+      'branch-1',
+      expect.objectContaining({
+        days: expect.arrayContaining([
+          expect.objectContaining({
+            dayOfWeek: 1,
+            open: false,
+            intervals: [],
+          }),
+        ]),
+      }),
+    );
+  });
+
   it('ignores stale branch-save responses after the selected business changes', () => {
     let saveHandler: ((savedBranch: BranchProfile) => void) | undefined;
     api.updateBranch.mockReturnValueOnce(

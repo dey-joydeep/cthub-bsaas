@@ -64,6 +64,16 @@ describe('roleGuard', () => {
     expect(result.toString()).toContain('auth/login');
     expect(result.toString()).toContain('returnUrl=%2Fowner%2Fsettings');
   });
+
+  it('redirects to unauthorized when the current user is missing a role', async () => {
+    currentUserPort.currentUser$ = of({ id: 'owner-1' } as CurrentUserMin);
+    const route = { data: { roles: ['owner'] } } as ActivatedRouteSnapshot;
+    const state = { url: '/owner/settings' } as RouterStateSnapshot;
+
+    const result = await resolveGuardResult(runInInjectionContext(injector, () => roleGuard(route, state)));
+
+    expect(result.toString()).toContain('/unauthorized');
+  });
 });
 
 function resolveGuardResult(result: MaybeAsync<GuardResult>): Promise<GuardResult> {

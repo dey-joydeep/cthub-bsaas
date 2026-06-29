@@ -625,6 +625,7 @@ export class SalonOwnerSettingsComponent {
     if (dayGroup.get('open')?.value && this.getDayIntervals(dayIndex).length === 0) {
       this.addInterval(dayIndex);
     }
+    this.syncDayIntervalsState(dayGroup);
   }
 
   protected selectHoliday(holiday: BranchHoliday): void {
@@ -642,13 +643,15 @@ export class SalonOwnerSettingsComponent {
 
   private createDayGroup(dayOfWeek: number, value?: WeeklyHoursDay) {
     const intervals = value?.intervals.length ? value.intervals : [{ start: '09:00', end: '17:00' }];
-    return this.fb.nonNullable.group({
+    const dayGroup = this.fb.nonNullable.group({
       dayOfWeek: [value?.dayOfWeek ?? dayOfWeek],
       open: [value?.open ?? dayOfWeek > 0],
       intervals: this.fb.nonNullable.array([
         ...intervals.map((interval) => this.createIntervalGroup(interval)),
       ], { validators: [intervalsValidator()] }),
     });
+    this.syncDayIntervalsState(dayGroup);
+    return dayGroup;
   }
 
   private createIntervalGroup(interval = { start: '09:00', end: '17:00' }) {
@@ -812,6 +815,23 @@ export class SalonOwnerSettingsComponent {
       return null;
     }
     return control.value === branchTimezone ? null : { branchTimezone: true };
+  }
+
+  private syncDayIntervalsState(dayGroup: AbstractControl): void {
+    const intervals = dayGroup.get('intervals') as FormArray | null;
+    const isOpen = dayGroup.get('open')?.value === true;
+
+    if (!intervals) {
+      return;
+    }
+
+    if (isOpen) {
+      intervals.enable({ emitEvent: false });
+    } else {
+      intervals.disable({ emitEvent: false });
+    }
+
+    intervals.updateValueAndValidity({ emitEvent: false });
   }
 
   private resetBranchEditor(businessId: string): void {

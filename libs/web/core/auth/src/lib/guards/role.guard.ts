@@ -29,7 +29,10 @@ export const roleGuard: CanActivateFn = (route, state) => {
       }
 
       // Check if user has any of the required roles
-      const userRole = user.role.toLowerCase();
+      const userRole = typeof user.role === 'string' ? user.role.toLowerCase() : null;
+      if (!userRole) {
+        return router.createUrlTree(['/unauthorized']);
+      }
       const hasRequiredRole = requiredRoles.includes(userRole);
 
       if (hasRequiredRole) {
