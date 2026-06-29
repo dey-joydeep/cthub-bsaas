@@ -22,12 +22,13 @@ jest.mock('@simplewebauthn/server', () => ({
 
 describe('WebAuthnSimpleAdapter', () => {
   const cfg = {
-    get: (k: string) => ({
-      AUTH_COOKIE_DOMAIN: 'localhost',
-      CORS_ORIGINS: 'http://localhost:4200',
-      APP_NAME: 'TestApp',
-      WEB_AUTHN_CHALLENGE_TTL: '300',
-    }[k]),
+    get: (k: string) =>
+      ({
+        AUTH_COOKIE_DOMAIN: 'localhost',
+        CORS_ORIGINS: 'http://localhost:4200',
+        APP_NAME: 'TestApp',
+        WEB_AUTHN_CHALLENGE_TTL: '300',
+      })[k],
     auth: { jwtAccessSecret: 'secret', jwtExpiresIn: '1h' },
     cors: { origins: ['http://localhost:4200'] },
   } as unknown as ConfigService;

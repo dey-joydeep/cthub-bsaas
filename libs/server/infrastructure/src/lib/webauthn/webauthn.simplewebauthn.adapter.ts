@@ -13,17 +13,9 @@ import {
   type AuthenticatorTransportFuture,
 } from '@simplewebauthn/server';
 
-
 function parseTransports(csv?: string | null): AuthenticatorTransportFuture[] | undefined {
   if (!csv) return undefined;
-  const allowed = new Set<AuthenticatorTransportFuture>([
-    'usb',
-    'nfc',
-    'ble',
-    'hybrid',
-    'internal',
-    'smart-card',
-  ] as const);
+  const allowed = new Set<AuthenticatorTransportFuture>(['usb', 'nfc', 'ble', 'hybrid', 'internal', 'smart-card'] as const);
   const parts = csv.split(',').map((s) => s.trim());
   const filtered: AuthenticatorTransportFuture[] = [];
   for (const p of parts) {
@@ -83,14 +75,11 @@ export class WebAuthnSimpleAdapter implements WebAuthnPort {
     return options as unknown as CreationOptionsJSON;
   }
 
-  async finishRegistration(
-    userId: string,
-    response: Record<string, unknown>,
-  ): Promise<{ credentialId: string; counter: number }> {
+  async finishRegistration(userId: string, response: Record<string, unknown>): Promise<{ credentialId: string; counter: number }> {
     const expectedChallenge = await this.store.consume(`${userId}:reg`);
     if (!expectedChallenge) throw new Error('webauthn.challenge_missing');
     const { verified, registrationInfo } = await verifyRegistrationResponse({
-      response: (response as unknown) as RegistrationResponseJSON,
+      response: response as unknown as RegistrationResponseJSON,
       expectedChallenge,
       expectedOrigin: this.allowedOrigins(),
       expectedRPID: this.rpID(),
@@ -138,14 +127,11 @@ export class WebAuthnSimpleAdapter implements WebAuthnPort {
     return options as unknown as RequestOptionsJSON;
   }
 
-  async finishAuthentication(
-    userId: string,
-    response: Record<string, unknown>,
-  ): Promise<{ credentialId: string; counter: number }> {
+  async finishAuthentication(userId: string, response: Record<string, unknown>): Promise<{ credentialId: string; counter: number }> {
     const expectedChallenge = await this.store.consume(`${userId}:auth`);
     if (!expectedChallenge) throw new Error('webauthn.challenge_missing');
 
-    const credId: string | undefined = ((response as unknown) as AuthenticationResponseJSON).id;
+    const credId: string | undefined = (response as unknown as AuthenticationResponseJSON).id;
     if (!credId) throw new Error('webauthn.assertion_missing_id');
 
     const credential = await this.prisma.credentialPasskey.findUnique({ where: { credentialId: credId } });
@@ -154,7 +140,7 @@ export class WebAuthnSimpleAdapter implements WebAuthnPort {
     }
 
     const { verified, authenticationInfo } = await verifyAuthenticationResponse({
-      response: (response as unknown) as AuthenticationResponseJSON,
+      response: response as unknown as AuthenticationResponseJSON,
       expectedChallenge,
       expectedOrigin: this.allowedOrigins(),
       expectedRPID: this.rpID(),

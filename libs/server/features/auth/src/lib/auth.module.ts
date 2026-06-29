@@ -1,4 +1,13 @@
-import { CredentialTotpRepository, RefreshTokenRepository, SessionRepository, UserRepository, PrismaModule, PasswordResetRepository, SocialAccountRepository, CredentialPasskeyRepository } from '@cthub-bsaas/server-data-access';
+import {
+  CredentialTotpRepository,
+  RefreshTokenRepository,
+  SessionRepository,
+  UserRepository,
+  PrismaModule,
+  PasswordResetRepository,
+  SocialAccountRepository,
+  CredentialPasskeyRepository,
+} from '@cthub-bsaas/server-data-access';
 import { Module } from '@nestjs/common';
 import { ConfigService, CookieRegistry, CookiesInterceptor, EncryptionModule, LoggerModule } from '@cthub-bsaas/server-core';
 import { JwtModule } from '@nestjs/jwt';
@@ -28,7 +37,15 @@ import { EmailVerificationRepository } from '@cthub-bsaas/server-data-access';
 import { AuthService } from './services/auth.service';
 import { AuditService } from './services/audit.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { EmailModule, TotpModule, WebAuthnModule, RecoveryModule, OAuthModule, InviteModule, PrismaLastAdminAdapter } from '@cthub-bsaas/server-infrastructure';
+import {
+  EmailModule,
+  TotpModule,
+  WebAuthnModule,
+  RecoveryModule,
+  OAuthModule,
+  InviteModule,
+  PrismaLastAdminAdapter,
+} from '@cthub-bsaas/server-infrastructure';
 import { RateLimitModule } from '@cthub-bsaas/server-infrastructure';
 import { LAST_ADMIN_VALIDATOR_PORT } from '@cthub-bsaas/server-contracts-auth';
 import { AuthCookiesService } from './services/auth-cookies.service';
@@ -112,7 +129,16 @@ const providers = [
     RegistrationController,
     PasskeysController,
   ],
-  providers: [AuthService, PasskeysService, JwtStrategy, AuditService, AuthCookiesService, CookieRegistry, CookiesInterceptor, ...providers],
+  providers: [
+    AuthService,
+    PasskeysService,
+    JwtStrategy,
+    AuditService,
+    AuthCookiesService,
+    CookieRegistry,
+    CookiesInterceptor,
+    ...providers,
+  ],
   exports: [AuthService, PasskeysService, AuditService, AuthCookiesService, CookieRegistry, CookiesInterceptor, ...providers],
 })
 export class AuthModule {}

@@ -45,7 +45,14 @@ import { routes } from './app.routes';
 import { ErrorHandlerService, ERROR_INTERCEPTOR_PROVIDER, loadingInterceptor } from '@cthub-bsaas/web-core-common';
 import { ssrInterceptor, ssrTranslateInterceptor } from '@cthub-bsaas/web-core-platform';
 import { AUTH_STATE_PORT, CURRENT_USER, CurrentUserService } from '@cthub-bsaas/web-core/auth';
-import { LOGIN_API, AUTH_STATE_SETTER, FORGOT_PASSWORD_API, REGISTER_API, type ForgotPasswordApiPort, type RegisterApiPort } from '@cthub-bsaas/web-admin/auth';
+import {
+  LOGIN_API,
+  AUTH_STATE_SETTER,
+  FORGOT_PASSWORD_API,
+  REGISTER_API,
+  type ForgotPasswordApiPort,
+  type RegisterApiPort,
+} from '@cthub-bsaas/web-admin/auth';
 import { AuthService } from '@cthub-bsaas/web-admin/auth';
 import { AuthApiService } from './core/auth/services/auth-api.service';
 

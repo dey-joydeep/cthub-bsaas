@@ -98,7 +98,11 @@ const bootstrap = async (context: BootstrapContext) => {
     console.log('🚀 Bootstrapping Angular application...');
     let appRef;
     try {
-      appRef = await bootstrapApplication(AppComponent, {...ssrConfig, providers: [provideZoneChangeDetection(), ...ssrConfig.providers]}, context);
+      appRef = await bootstrapApplication(
+        AppComponent,
+        { ...ssrConfig, providers: [provideZoneChangeDetection(), ...ssrConfig.providers] },
+        context,
+      );
       console.log('✅ Angular application bootstrapped successfully');
     } catch (error) {
       logError(error, 'Bootstrapping application');

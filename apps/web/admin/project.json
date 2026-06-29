@@ -3,26 +3,18 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "sourceRoot": "apps/web/admin/src",
-  "tags": [
-    "platform:web",
-    "scope:web",
-    "type:app"
-  ],
+  "tags": ["platform:web", "scope:web", "type:app"],
   "targets": {
     "build": {
       "executor": "@nx/angular:application",
-      "outputs": [
-        "{options.outputPath.base}"
-      ],
+      "outputs": ["{options.outputPath.base}"],
       "defaultConfiguration": "production",
       "options": {
         "outputPath": {
           "base": "dist/apps/admin"
         },
         "index": "apps/web/admin/src/index.html",
-        "polyfills": [
-          "apps/web/admin/src/polyfills.ts"
-        ],
+        "polyfills": ["apps/web/admin/src/polyfills.ts"],
         "tsConfig": "apps/web/admin/tsconfig.app.json",
         "assets": [
           {
@@ -36,10 +28,7 @@
             "output": "/"
           }
         ],
-        "styles": [
-          "libs/web/config/src/styles/styles.css",
-          "apps/web/admin/src/styles.css"
-        ],
+        "styles": ["libs/web/config/src/styles/styles.css", "apps/web/admin/src/styles.css"],
         "scripts": [],
         "browser": "apps/web/admin/src/main.ts"
       },
@@ -81,10 +70,7 @@
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": [
-          "{projectRoot}/src/**/*.ts",
-          "{projectRoot}/src/**/*.html"
-        ]
+        "lintFilePatterns": ["{projectRoot}/src/**/*.ts", "{projectRoot}/src/**/*.html"]
       }
     }
   }

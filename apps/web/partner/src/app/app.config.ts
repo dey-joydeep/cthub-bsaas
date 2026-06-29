@@ -47,12 +47,7 @@ import { ssrInterceptor, ssrTranslateInterceptor } from '@cthub-bsaas/web-core-p
 import { routes } from './app.routes';
 import { LOGIN_API, AUTH_STATE_SETTER } from '@cthub-bsaas/web-partner/auth';
 import { LoginApiService } from '@cthub-bsaas/web-partner/auth';
-import {
-  FORGOT_PASSWORD_API,
-  REGISTER_API,
-  type ForgotPasswordApiPort,
-  type RegisterApiPort,
-} from '@cthub-bsaas/web-partner/auth';
+import { FORGOT_PASSWORD_API, REGISTER_API, type ForgotPasswordApiPort, type RegisterApiPort } from '@cthub-bsaas/web-partner/auth';
 import { AuthService } from '@cthub-bsaas/web-partner/auth';
 
 // AoT requires an exported function for factories

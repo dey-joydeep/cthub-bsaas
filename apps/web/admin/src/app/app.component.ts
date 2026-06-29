@@ -1,4 +1,3 @@
-
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
@@ -41,8 +40,8 @@ type AdminAppUser = CurrentUserMin & {
     MatTooltipModule,
     MatSidenavModule,
     MatListModule,
-    MatSnackBarModule
-],
+    MatSnackBarModule,
+  ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
 })

@@ -38,12 +38,12 @@ interaction is required. The skill is device-independent and works on Windows
 
 Collect the following before running any script:
 
-| Input | Description | Example |
-|---|---|---|
-| `EPIC_TITLE` | Short title for the Epic | `[EPIC] Auth Redesign` |
-| `EPIC_BODY` | Markdown body with Objective, Scope, Rollback, and Epic Tracker checklist | See template below |
-| `SUB_ISSUES` | Array of sub-issue objects (title, body, domain, priority, size, estimate, start, end) | See schema below |
-| `REPO` | `owner/repo` slug | `dey-joydeep/cthub-bsaas` |
+| Input        | Description                                                                            | Example                   |
+| ------------ | -------------------------------------------------------------------------------------- | ------------------------- |
+| `EPIC_TITLE` | Short title for the Epic                                                               | `[EPIC] Auth Redesign`    |
+| `EPIC_BODY`  | Markdown body with Objective, Scope, Rollback, and Epic Tracker checklist              | See template below        |
+| `SUB_ISSUES` | Array of sub-issue objects (title, body, domain, priority, size, estimate, start, end) | See schema below          |
+| `REPO`       | `owner/repo` slug                                                                      | `dey-joydeep/cthub-bsaas` |
 
 **Epic body template:**
 
@@ -52,6 +52,7 @@ Collect the following before running any script:
 [Why this work matters]
 
 **Scope & Non-Goals:**
+
 - Included: [what is in scope]
 - Excluded: [what is explicitly out of scope]
 
@@ -59,6 +60,7 @@ Collect the following before running any script:
 [How to revert if something goes critical]
 
 ### Epic Tracker
+
 - [ ] #PLACEHOLDER — will be updated after sub-issues are created
 ```
 
