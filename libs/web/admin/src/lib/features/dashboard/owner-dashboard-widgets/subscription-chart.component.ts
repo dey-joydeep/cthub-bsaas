@@ -1,4 +1,4 @@
-import { Component, inject, Input, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatError } from '@angular/material/form-field';
@@ -17,7 +17,7 @@ import { DashboardApiService } from '@cthub-bsaas/features/dashboard/services/da
   styleUrls: ['./subscription-chart.component.css'],
 })
 export class SubscriptionChartComponent implements OnInit {
-  @Input() tenantId = '';
+  tenantId = input('');
   chartType = 'bar' as const;
   data = signal<ChartData<typeof this.chartType, number[], string>>({
     labels: [],
@@ -26,7 +26,7 @@ export class SubscriptionChartComponent implements OnInit {
 
   // Method to load subscription data
   loadData(): void {
-    if (!this.tenantId) {
+    if (!this.tenantId()) {
       this.error.set('No tenant ID provided');
       return;
     }

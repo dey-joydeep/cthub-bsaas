@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Output, input } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { StaffRequestService, CreateLeaveRequestPayload } from '../../services/staff-request.service';
 
@@ -12,7 +12,7 @@ import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
   templateUrl: './staff-request-form.component.html',
 })
 export class StaffRequestFormComponent extends AbstractBaseComponent {
-  @Input() staffId: string = '';
+  staffId = input<string>('');
   @Output() requestCreated = new EventEmitter<void>();
 
   form: FormGroup;
@@ -38,7 +38,7 @@ export class StaffRequestFormComponent extends AbstractBaseComponent {
       this.errorService.clearError();
     }
     const payload: CreateLeaveRequestPayload = {
-      staffId: this.staffId,
+      staffId: this.staffId(),
       leaveFrom: this.form.value.leaveFrom,
       leaveTo: this.form.value.leaveTo,
       reason: this.form.value.reason,

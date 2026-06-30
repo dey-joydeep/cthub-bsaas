@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, OnInit, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
@@ -12,7 +12,7 @@ import { RouterModule } from '@angular/router';
   styleUrls: ['./salon-appointments.component.css'],
 })
 export class SalonAppointmentsComponent implements OnInit {
-  @Input() salonId?: string;
+  salonId = input<string>();
   appointments: any[] = [];
   loading = true;
   error: string | null = null;
@@ -20,12 +20,12 @@ export class SalonAppointmentsComponent implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
-    if (!this.salonId) {
+    if (!this.salonId()) {
       this.error = 'Salon ID is required.';
       this.loading = false;
       return;
     }
-    this.http.get(`/api/salon/${this.salonId}/appointments`).subscribe({
+    this.http.get(`/api/salon/${this.salonId()}/appointments`).subscribe({
       next: (data: any) => {
         this.appointments = data;
         this.loading = false;

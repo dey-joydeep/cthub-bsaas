@@ -1,4 +1,4 @@
-import { Component, Input, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -14,7 +14,7 @@ import { DashboardApiService, Renewal } from '@cthub-bsaas/features/dashboard/se
   styleUrls: ['./renewals-list.component.css'],
 })
 export class RenewalsListComponent implements OnInit {
-  @Input() tenantId = '';
+  tenantId = input('');
   renewals = signal<Renewal[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
@@ -22,7 +22,7 @@ export class RenewalsListComponent implements OnInit {
   private api = inject(DashboardApiService);
 
   ngOnInit() {
-    if (!this.tenantId) return;
+    if (!this.tenantId()) return;
     this.loading.set(true);
     this.api.getRenewals(this.tenantId).subscribe({
       next: (res: Renewal[]) => {

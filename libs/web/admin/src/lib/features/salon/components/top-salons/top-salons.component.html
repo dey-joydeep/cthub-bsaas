@@ -1,20 +1,20 @@
 <div class="top-salons-container">
   <h2>Top Salons Near You</h2>
   @if (loading) {
-    <div>Loading top salons...</div>
+    <div>Loading top salons()...</div>
   }
   @if (error) {
     <div class="error-message">{{ error }}</div>
   }
   @if (locationDenied) {
-    <div class="info-message">Location permission denied or unavailable. Showing top salons globally.</div>
+    <div class="info-message">Location permission denied or unavailable. Showing top salons() globally.</div>
   }
-  @if (!loading && salons.length === 0 && !error) {
-    <div>No salons found.</div>
+  @if (!loading && salons().length === 0 && !error) {
+    <div>No salons() found.</div>
   }
   @if (salons.length > 0) {
     <div class="salon-list">
-      @for (salon of salons; track salon) {
+      @for (salon of salons(); track salon) {
         <div class="salon-card">
           <div class="salon-header">{{ getSalonProperty(salon, 'name') || 'Salon' }}</div>
           <div class="salon-rating">

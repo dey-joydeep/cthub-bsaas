@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,7 +14,7 @@ import { RevenueData } from './models/revenue-chart.model';
   styleUrls: ['./revenue-chart.component.css'],
 })
 export class RevenueChartComponent extends AbstractBaseComponent {
-  @Input() revenueData!: RevenueData[];
+  revenueData = input.required<RevenueData[]>();
 
   override ngOnInit(): void {
     // No additional initialization needed

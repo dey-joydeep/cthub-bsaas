@@ -1,5 +1,5 @@
-﻿import { PlatformUtils, PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
-import { Component, Input, OnInit, Inject, PLATFORM_ID, Type } from '@angular/core';
+import { PlatformUtils, PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
+import { Component, OnInit, Inject, PLATFORM_ID, Type, input, model } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { SalonService } from '../../services/salon.service';
 import { RouterModule } from '@angular/router';
@@ -29,9 +29,9 @@ export type Salon = ISalonDto & {
   // Removed ChangeDetectionStrategy.OnPush as it requires careful state management
 })
 export class TopSalonsComponent implements OnInit {
-  @Input() salons: Salon[] = [];
-  @Input() title = 'Top Salons';
-  @Input() showViewAll = false;
+  salons = model<Salon[]>([]);
+  title = input('Top Salons');
+  showViewAll = input(false);
 
   loading = true;
   error: string | null = null;
@@ -57,7 +57,7 @@ export class TopSalonsComponent implements OnInit {
 
   ngOnInit(): void {
     // Only fetch salons if none were provided via input
-    if (this.salons.length === 0) {
+    if (this.salons().length === 0) {
       if (this.isBrowser && this.platformUtils.windowRef?.navigator?.geolocation) {
         this.platformUtils.windowRef.navigator.geolocation.getCurrentPosition(
           (pos: GeolocationPosition) => {
@@ -84,7 +84,7 @@ export class TopSalonsComponent implements OnInit {
 
     this.salonService.getTopSalons(lat, lng).subscribe({
       next: (salons: Salon[]) => {
-        this.salons = salons;
+        this.salons.set(salons);
         this.loading = false;
       },
       error: (err: any) => {

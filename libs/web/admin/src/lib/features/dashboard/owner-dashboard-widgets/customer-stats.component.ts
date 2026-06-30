@@ -1,4 +1,4 @@
-import { Component, Input, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, input } from '@angular/core';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -13,7 +13,7 @@ import { DashboardApiService } from '@cthub-bsaas/features/dashboard/services/da
   styleUrls: ['./customer-stats.component.css'],
 })
 export class CustomerStatsComponent implements OnInit {
-  @Input() tenantId = '';
+  tenantId = input('');
   active = signal(0);
   passive = signal(0);
   loading = signal(true);
@@ -22,7 +22,7 @@ export class CustomerStatsComponent implements OnInit {
   private api = inject(DashboardApiService);
 
   ngOnInit() {
-    if (!this.tenantId) return;
+    if (!this.tenantId()) return;
     this.loading.set(true);
     this.api.getUserStats(this.tenantId).subscribe({
       next: (res) => {

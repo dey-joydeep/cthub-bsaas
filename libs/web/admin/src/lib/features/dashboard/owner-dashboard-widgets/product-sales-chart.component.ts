@@ -1,4 +1,4 @@
-import { Component, Input, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, input } from '@angular/core';
 
 import { ChartData, ChartOptions } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
@@ -14,7 +14,7 @@ import { DashboardApiService, ProductSalesData } from '@cthub-bsaas/features/das
   styleUrls: ['./product-sales-chart.component.css'],
 })
 export class ProductSalesChartComponent implements OnInit {
-  @Input() tenantId = '';
+  tenantId = input('');
   data = signal<ChartData<'bar'>>({ labels: [], datasets: [] });
   options: ChartOptions<'bar'> = { responsive: true };
   loading = signal(true);
@@ -23,7 +23,7 @@ export class ProductSalesChartComponent implements OnInit {
   private api = inject(DashboardApiService);
 
   ngOnInit() {
-    if (!this.tenantId) return;
+    if (!this.tenantId()) return;
     this.loading.set(true);
     this.api.getProductSales(this.tenantId).subscribe({
       next: (res: ProductSalesData) => {

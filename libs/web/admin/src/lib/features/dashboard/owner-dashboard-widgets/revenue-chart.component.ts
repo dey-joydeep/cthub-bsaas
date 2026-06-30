@@ -1,4 +1,4 @@
-import { Component, Input, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, input } from '@angular/core';
 
 import { ChartData, ChartOptions, ChartType } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
@@ -29,7 +29,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
   styleUrls: ['./revenue-chart.component.css'],
 })
 export class RevenueChartComponent implements OnInit {
-  @Input() tenantId = '';
+  tenantId = input('');
   private snackBar = inject(MatSnackBar);
   private dashboardService = inject(DashboardApiService);
 
@@ -108,7 +108,7 @@ export class RevenueChartComponent implements OnInit {
 
   // Load revenue data from API
   loadRevenueData(): void {
-    if (!this.tenantId) {
+    if (!this.tenantId()) {
       this.chartError.set('Tenant ID is required');
       return;
     }

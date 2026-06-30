@@ -9,12 +9,12 @@
   @if (locationDenied) {
     <div class="info-message">Location permission denied or unavailable. Showing top salons globally.</div>
   }
-  @if (!loading && salons.length === 0 && !error) {
+  @if (!loading && salons().length === 0 && !error) {
     <div>No salons found.</div>
   }
-  @if (salons.length > 0) {
+  @if (salons().length > 0) {
     <div class="salon-list">
-      @for (salon of salons; track salon) {
+      @for (salon of salons(); track salon) {
         <div class="salon-card">
           <div class="salon-header">{{ getSalonProperty(salon, 'name') || 'Salon' }}</div>
           <div class="salon-rating">

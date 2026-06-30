@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,7 +14,7 @@ import type { DashboardStats } from '../../models/dashboard.model';
   styleUrls: ['./stats-widget.component.css'],
 })
 export class StatsWidgetComponent extends AbstractBaseComponent {
-  @Input() stats!: DashboardStats;
+  stats = input.required<DashboardStats>();
 
   public override ngOnInit(): void {
     // No additional initialization needed

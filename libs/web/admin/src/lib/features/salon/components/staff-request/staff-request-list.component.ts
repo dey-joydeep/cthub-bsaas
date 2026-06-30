@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, OnInit, input } from '@angular/core';
 import { StaffRequestService, StaffRequest } from '../../services/staff-request.service';
 import { CommonModule } from '@angular/common';
 
@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
   templateUrl: './staff-request-list.component.html',
 })
 export class StaffRequestListComponent implements OnInit {
-  @Input() staffId: string = '';
+  staffId = input<string>('');
   requests: StaffRequest[] = [];
   loading = false;
   error: string | null = null;
@@ -21,7 +21,7 @@ export class StaffRequestListComponent implements OnInit {
   }
 
   fetchRequests() {
-    if (!this.staffId) return;
+    if (!this.staffId()) return;
     this.loading = true;
     this.error = null;
     this.staffRequestService.getRequestsForStaff(this.staffId).subscribe({

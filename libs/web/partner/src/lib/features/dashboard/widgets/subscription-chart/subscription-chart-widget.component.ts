@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges, ViewChild, inject } from '@angular/core';
+import { Component, OnChanges, SimpleChanges, ViewChild, inject, input, model } from '@angular/core';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -31,7 +31,7 @@ import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
   styleUrls: ['./subscription-chart-widget.component.css'],
 })
 export class SubscriptionChartWidgetComponent extends AbstractBaseComponent implements OnChanges {
-  @Input() subscriptionData: SubscriptionData[] = [];
+  subscriptionData = model<SubscriptionData[]>([]);
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
 
   // Chart configuration
@@ -108,15 +108,15 @@ export class SubscriptionChartWidgetComponent extends AbstractBaseComponent impl
   private subscriptionChartWidgetService = inject(SubscriptionChartWidgetService);
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['subscriptionData'] && this.subscriptionData?.length) {
+    if (changes['subscriptionData'] && this.subscriptionData()?.length) {
       this.updateChartData();
     }
   }
 
   private updateChartData(): void {
-    if (!this.subscriptionData?.length) return;
+    if (!this.subscriptionData()?.length) return;
 
-    const chartData = this.subscriptionData.map((data) => ({
+    const chartData = this.subscriptionData().map((data) => ({
       month: new Date(data.month).toLocaleDateString('en-US', { month: 'short' }),
       retentionRate: data.retentionRate,
     }));
@@ -152,7 +152,7 @@ export class SubscriptionChartWidgetComponent extends AbstractBaseComponent impl
 
     return data$.pipe(
       tap((data: SubscriptionData[]) => {
-        this.subscriptionData = data;
+        this.subscriptionData.set(data);
         this.updateChartData();
         this.error = null;
         this.loading = false;

@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -29,9 +29,9 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./renewals-list-widget.component.css'],
 })
 export class RenewalsListWidgetComponent extends AbstractBaseComponent {
-  @Input() tenantId!: string;
-  @Input() title = 'Upcoming Renewals';
-  @Input() subtitle = 'View all upcoming subscription renewals';
+  tenantId = input.required<string>();
+  title = input('Upcoming Renewals');
+  subtitle = input('View all upcoming subscription renewals');
 
   renewals: Renewal[] = [];
   private subscriptions = new Subscription();
@@ -46,7 +46,7 @@ export class RenewalsListWidgetComponent extends AbstractBaseComponent {
   }
 
   private loadRenewals() {
-    if (!this.tenantId) {
+    if (!this.tenantId()) {
       this.error = 'Tenant ID is required';
       return;
     }

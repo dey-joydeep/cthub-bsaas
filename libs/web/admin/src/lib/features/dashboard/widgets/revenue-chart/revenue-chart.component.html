@@ -6,7 +6,7 @@
   <mat-card-content>
     <div class="chart-container">
       <!-- Chart will be rendered here -->
-      @if (!revenueData || revenueData.length === 0) {
+      @if (!revenueData() || revenueData().length === 0) {
         <div class="no-data">
           {{ 'DASHBOARD.REVENUE.NO_DATA' | translate }}
         </div>

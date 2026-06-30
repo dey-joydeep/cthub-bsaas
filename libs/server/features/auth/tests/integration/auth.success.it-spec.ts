@@ -834,6 +834,7 @@ describe('AuthController (Integration) - success flows', () => {
       let controllerContext: ContextId;
 
       const buildJwtUser = (overrides: Partial<JwtUserContext> = {}): JwtUserContext => ({
+        id: 'user-1',
         userId: 'user-1',
         email: 'user@example.com',
         roles: [UserRole.CUSTOMER],
