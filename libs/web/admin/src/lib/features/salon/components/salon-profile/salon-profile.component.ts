@@ -3,8 +3,6 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
-
 // Core services
 import { CurrentUserService } from '@cthub-bsaas/web-core-auth';
 import { ErrorService } from '@cthub-bsaas/web-core-common';
@@ -29,7 +27,7 @@ import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
 @Component({
   selector: 'app-salon-profile',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, TranslatePipe, TranslateDirective, SafeUrlPipe, FormsModule],
+  imports: [CommonModule, HttpClientModule, SafeUrlPipe, FormsModule],
   templateUrl: './salon-profile.component.html',
   styleUrls: ['./salon-profile.component.css'],
 })

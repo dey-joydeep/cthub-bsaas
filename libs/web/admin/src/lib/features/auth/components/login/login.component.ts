@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, Inject, OnDestroy, OnInit, Optional, PLATFORM_ID } from '@angular/core';
+import { Component, OnDestroy, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -17,8 +17,6 @@ import { firstValueFrom } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 // Translate
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
-
 // Services
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { PLATFORM_UTILS_TOKEN, type PlatformUtils, StorageService } from '@cthub-bsaas/web-core-platform';
@@ -38,15 +36,22 @@ import { LoginService } from './login.service';
     MatIconModule,
     MatInputModule,
     MatProgressBarModule,
-    MatProgressSpinnerModule,
-    TranslatePipe,
-    TranslateDirective,
+    MatProgressSpinnerModule
   ],
   selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css'],
 })
 export class LoginComponent extends AbstractBaseComponent implements OnInit, OnDestroy {
+  protected platformUtils = inject<PlatformUtils>(PLATFORM_UTILS_TOKEN);
+  private fb = inject<FormBuilder>(FormBuilder);
+  private router = inject<Router>(Router);
+  private route = inject<ActivatedRoute>(ActivatedRoute);
+  private storageService = inject<StorageService>(StorageService);
+  private loginService = inject<LoginService>(LoginService);
+  private platformId = inject(PLATFORM_ID);
+  private ssrDebug = inject<any>('SSR_DEBUG' as any, { optional: true });
+
   // Component state
   private isBrowser: boolean;
 
@@ -94,17 +99,10 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
     }
   }
 
-  constructor(
-    @Inject(PLATFORM_UTILS_TOKEN) protected platformUtils: PlatformUtils,
-    @Inject(FormBuilder) private fb: FormBuilder,
-    @Inject(Router) private router: Router,
-    @Inject(ActivatedRoute) private route: ActivatedRoute,
-    @Inject(StorageService) private storageService: StorageService,
-    @Inject(LoginService) private loginService: LoginService,
-    @Inject(PLATFORM_ID) private platformId: object,
-    @Optional() @Inject('SSR_DEBUG') private ssrDebug: any,
-  ) {
+  constructor() {
     super();
+    const platformId = this.platformId;
+
     this.isBrowser = isPlatformBrowser(this.platformId);
 
     // Log constructor execution for debugging

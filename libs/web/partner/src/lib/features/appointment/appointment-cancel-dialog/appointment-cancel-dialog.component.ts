@@ -8,7 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Appointment } from './models/appointment-cancel-dialog.model';
 
 export interface DialogData {
@@ -27,9 +27,7 @@ export interface DialogData {
     MatInputModule,
     MatProgressSpinnerModule,
     ReactiveFormsModule,
-    MatSnackBarModule,
-    TranslatePipe,
-    TranslateDirective,
+    MatSnackBarModule
   ],
   templateUrl: './appointment-cancel-dialog.component.html',
   styleUrls: ['./appointment-cancel-dialog.component.css'],

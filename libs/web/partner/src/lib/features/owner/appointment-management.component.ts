@@ -9,8 +9,6 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
-
 import { CreateAppointmentParams } from '../../models/appointment-params.model';
 import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.enum';
 import { AppointmentService } from './appointment.service';
@@ -28,9 +26,7 @@ import { AppointmentService } from './appointment.service';
     MatSelectModule,
     MatDatepickerModule,
     MatProgressSpinnerModule,
-    MatNativeDateModule,
-    TranslatePipe,
-    TranslateDirective,
+    MatNativeDateModule
   ],
   templateUrl: './appointment-management.component.html',
   styleUrls: ['./appointment-management.component.css'],

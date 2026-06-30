@@ -13,7 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatStepperModule } from '@angular/material/stepper';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { AppointmentCreateService } from './appointment-create.service';
 import { Service, Staff } from './models/appointment-create.model';
 
@@ -34,9 +34,7 @@ import { Service, Staff } from './models/appointment-create.model';
     MatCardModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule,
-    TranslatePipe,
-    TranslateDirective,
+    MatSnackBarModule
   ],
   templateUrl: './appointment-create.component.html',
   styleUrls: ['./appointment-create.component.css'],

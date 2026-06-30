@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
@@ -46,6 +46,11 @@ export interface User {
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit, OnDestroy {
+  private router = inject(Router);
+  private authService = inject(AuthService);
+  private currentUserService = inject(CurrentUserService);
+  private snackBar = inject(MatSnackBar);
+
   title = 'BeautySaaS';
   error: string | null = null;
   // Public properties for template binding
@@ -61,13 +66,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private authSubscription?: Subscription;
-
-  constructor(
-    private router: Router,
-    private authService: AuthService,
-    private currentUserService: CurrentUserService,
-    private snackBar: MatSnackBar,
-  ) {}
 
   ngOnInit(): void {
     this.initializeAuthSubscription();

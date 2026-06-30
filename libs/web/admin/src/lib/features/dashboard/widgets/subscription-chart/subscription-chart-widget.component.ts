@@ -5,7 +5,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { Observable, from, of } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
@@ -23,8 +22,6 @@ import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
     MatButtonModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
-    TranslatePipe,
-    TranslateDirective,
     BaseChartDirective,
   ],
   templateUrl: './subscription-chart-widget.component.html',

@@ -17,7 +17,7 @@
         "lintFilePatterns": [
           "libs/web/ui/src/**/*.ts",
           "libs/web/ui/src/**/*.html",
-          "libs/web/ui/src/**/*.scss"
+          "libs/web/ui/src/**/*.css"
         ]
       }
     },

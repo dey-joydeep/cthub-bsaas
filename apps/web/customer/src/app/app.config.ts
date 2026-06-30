@@ -10,8 +10,8 @@ import { ApplicationConfig, ErrorHandler, importProvidersFrom } from '@angular/c
 import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { provideRouter, withPreloading, PreloadAllModules, withComponentInputBinding } from '@angular/router';
-import { TranslateLoader, provideTranslateService } from '@ngx-translate/core';
-import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { provideTranslateService } from '@ngx-translate/core';
+import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { of } from 'rxjs';
 
 // Material Modules
@@ -51,18 +51,18 @@ import { AUTH_STATE_PORT } from '@cthub-bsaas/web-core-auth';
 import { AuthService } from '@cthub-bsaas/web-customer/auth';
 
 // AoT requires an exported function for factories
-export function httpLoaderFactory(http: HttpClient) {
-  return new TranslateHttpLoader(http, './assets/i18n/', '.json');
-}
+
 
 export const appConfig: ApplicationConfig = {
   providers: [
     // Configure TranslateModule for client-side
-    {
-      provide: TranslateLoader,
-      useFactory: httpLoaderFactory,
-      deps: [HttpClient],
-    },
+    provideTranslateService({
+      lang: 'en'
+    }),
+    provideTranslateHttpLoader({
+      prefix: './assets/i18n/',
+      suffix: '.json'
+    }),
     provideRouter(routes, withPreloading(PreloadAllModules), withComponentInputBinding()),
     provideHttpClient(
       withInterceptorsFromDi(),
@@ -103,14 +103,7 @@ export const appConfig: ApplicationConfig = {
       MatTooltipModule,
       MatNativeDateModule,
       // Setup the TranslateModule for the application
-      TranslateModule.forRoot({
-        defaultLanguage: 'en',
-        loader: {
-          provide: TranslateLoader,
-          useFactory: httpLoaderFactory,
-          deps: [HttpClient],
-        },
-      }),
+      
     ]),
     { provide: MAT_DATE_LOCALE, useValue: 'en-US' },
     { provide: ErrorHandler, useClass: ErrorHandlerService },

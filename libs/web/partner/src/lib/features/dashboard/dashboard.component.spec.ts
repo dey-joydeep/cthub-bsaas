@@ -2,7 +2,6 @@ import { TestBed } from '@angular/core/testing';
 import { DashboardComponent } from './dashboard.component';
 import { CommonModule } from '@angular/common';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { sharedTestProviders } from '../../shared/test-setup';
 import { Component } from '@angular/core';

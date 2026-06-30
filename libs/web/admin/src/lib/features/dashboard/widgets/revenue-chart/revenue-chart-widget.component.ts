@@ -3,7 +3,6 @@ import { Subscription } from 'rxjs';
 
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -17,8 +16,6 @@ import { ErrorService } from '@cthub-bsaas/web-core-common';
   selector: 'app-revenue-chart-widget',
   standalone: true,
   imports: [
-    TranslatePipe,
-    TranslateDirective,
     MatCardModule,
     MatButtonModule,
     MatIconModule,

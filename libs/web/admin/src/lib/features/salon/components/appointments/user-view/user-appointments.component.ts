@@ -2,7 +2,6 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { CurrentUserService } from '../../../../../core/auth/services/current-user.service';
 import { Appointment } from '../../../models/appointment.model';
 
@@ -30,7 +29,7 @@ interface AppointmentWithDetails extends Omit<Appointment, 'startTime' | 'endTim
 @Component({
   selector: 'app-user-appointments',
   standalone: true,
-  imports: [CommonModule, RouterModule, DatePipe, TranslatePipe, TranslateDirective],
+  imports: [CommonModule, RouterModule, DatePipe],
   templateUrl: './user-appointments.component.html',
   styleUrls: ['./user-appointments.component.css'],
 })

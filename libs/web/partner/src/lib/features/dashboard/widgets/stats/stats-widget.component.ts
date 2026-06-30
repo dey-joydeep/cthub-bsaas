@@ -2,14 +2,13 @@ import { Component, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import type { DashboardStats } from './models/stats-widget.model';
 
 @Component({
   selector: 'app-stats-widget',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule, TranslatePipe, TranslateDirective],
+  imports: [CommonModule, MatCardModule, MatIconModule],
   templateUrl: './stats-widget.component.html',
   styleUrls: ['./stats-widget.component.css'],
 })

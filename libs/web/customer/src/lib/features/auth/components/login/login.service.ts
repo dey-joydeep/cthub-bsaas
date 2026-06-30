@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -14,10 +14,9 @@ import type {
 
 @Injectable({ providedIn: 'root' })
 export class LoginService {
-  constructor(
-    @Inject(LOGIN_API) private readonly api: LoginApiPort,
-    @Inject(AUTH_STATE_SETTER) private readonly authState: AuthStateSetter,
-  ) {}
+  private readonly api = inject<LoginApiPort>(LOGIN_API);
+  private readonly authState = inject<AuthStateSetter>(AUTH_STATE_SETTER);
+
 
   initLogin(credentials: LoginCredentials): Observable<InitLoginResponse> {
     return this.api.initLogin(credentials).pipe(map((res) => res.data));

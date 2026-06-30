@@ -2,14 +2,13 @@ import { Component } from '@angular/core';
 
 import { PortfolioService } from './portfolio.service';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { PortfolioItem } from './models/portfolio.model';
 
 @Component({
   selector: 'app-portfolio',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslatePipe, TranslateDirective],
+  imports: [ReactiveFormsModule],
   templateUrl: './portfolio.component.html',
   styleUrls: ['./portfolio.component.css'],
 })

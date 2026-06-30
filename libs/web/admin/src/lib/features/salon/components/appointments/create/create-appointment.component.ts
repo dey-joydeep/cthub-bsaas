@@ -12,7 +12,6 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { Router } from '@angular/router';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { CurrentUserService } from '@cthub-bsaas/web-core-auth';
 import { CreateAppointmentParams } from '../../../../../models/appointment-params.model';
 import { Salon } from '../../../models/salon.model';
@@ -36,11 +35,7 @@ import { Staff } from '../../../models/staff.model';
     MatNativeDateModule,
     MatProgressBarModule,
     MatProgressSpinnerModule,
-    MatSelectModule,
-
-    // Third-party modules
-    TranslatePipe,
-    TranslateDirective,
+    MatSelectModule
   ],
   templateUrl: './create-appointment.component.html',
   styleUrls: ['./create-appointment.component.css'],

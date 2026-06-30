@@ -6,7 +6,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { ServiceService } from './service.service';
 
 @Component({
@@ -18,9 +17,7 @@ import { ServiceService } from './service.service';
     MatInputModule,
     MatButtonModule,
     MatProgressBarModule,
-    MatIconModule,
-    TranslatePipe,
-    TranslateDirective,
+    MatIconModule
   ],
   templateUrl: './service-management.component.html',
   styleUrls: ['./service-management.component.css'],

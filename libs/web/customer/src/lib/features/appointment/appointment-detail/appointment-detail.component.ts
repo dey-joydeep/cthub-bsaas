@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Subscription, finalize } from 'rxjs';
 
 import { AppointmentCancelDialogComponent } from '../appointment-cancel-dialog/appointment-cancel-dialog.component';
@@ -28,9 +28,7 @@ import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.
     MatDividerModule,
     MatProgressSpinnerModule,
     MatDialogModule,
-    MatSnackBarModule,
-    TranslatePipe,
-    TranslateDirective,
+    MatSnackBarModule
   ],
   templateUrl: './appointment-detail.component.html',
   styleUrls: ['./appointment-detail.component.css'],

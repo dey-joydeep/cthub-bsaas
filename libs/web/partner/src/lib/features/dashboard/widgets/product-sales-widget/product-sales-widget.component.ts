@@ -15,7 +15,7 @@ import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
-import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { takeUntil } from 'rxjs';
 
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
@@ -42,9 +42,7 @@ import { ProductSale } from './models/product-sales-widget.model';
     MatInputModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    ReactiveFormsModule,
-    TranslatePipe,
-    TranslateDirective,
+    ReactiveFormsModule
   ],
   templateUrl: './product-sales-widget.component.html',
   styleUrls: ['./product-sales-widget.component.css'],

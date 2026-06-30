@@ -40,7 +40,7 @@
                 <span class="badge">{{ pendingApprovalsCount }}</span>
               }
             </button>
-            <mat-divider></mat-divider>
+            <mat-divider />
             <button mat-menu-item routerLink="/admin/settings">
               <mat-icon>settings</mat-icon>
               <span>System Settings</span>
@@ -75,7 +75,7 @@
               </div>
             </div>
           }
-          <mat-divider></mat-divider>
+          <mat-divider />
           <button mat-menu-item routerLink="/profile" routerLinkActive="active">
             <mat-icon>person</mat-icon>
             <span>Profile</span>
@@ -84,7 +84,7 @@
             <mat-icon>settings</mat-icon>
             <span>Settings</span>
           </button>
-          <mat-divider></mat-divider>
+          <mat-divider />
           <button mat-menu-item (click)="onLogout()">
             <mat-icon>logout</mat-icon>
             <span>Logout</span>
@@ -106,5 +106,5 @@
       {{ error }}
     </div>
   }
-  <router-outlet></router-outlet>
+  <router-outlet />
 </main>

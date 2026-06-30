@@ -1,13 +1,12 @@
 import { Component, OnInit, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-salon-appointments',
   standalone: true,
-  imports: [CommonModule, TranslatePipe, TranslateDirective, RouterModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './salon-appointments.component.html',
   styleUrls: ['./salon-appointments.component.css'],
 })

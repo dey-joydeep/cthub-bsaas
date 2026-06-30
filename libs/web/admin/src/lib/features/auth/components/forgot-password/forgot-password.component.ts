@@ -1,4 +1,4 @@
-import { Component, Inject, Optional } from '@angular/core';
+import { Component, inject } from '@angular/core';
 
 import {
   FormBuilder,
@@ -18,8 +18,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 // Translation
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
-
 // Tokens
 import { FORGOT_PASSWORD_API, type ForgotPasswordApiPort } from '../../tokens/password.tokens';
 
@@ -46,14 +44,15 @@ interface ResetPasswordForm {
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatProgressBarModule,
-    TranslatePipe,
-    TranslateDirective,
+    MatProgressBarModule
   ],
   templateUrl: './forgot-password.component.html',
   styleUrls: ['./forgot-password.component.css'],
 })
 export class ForgotPasswordComponent {
+  private fb = inject(FormBuilder);
+  private forgotApi = inject<ForgotPasswordApiPort | null>(FORGOT_PASSWORD_API, { optional: true });
+
   forgotForm: FormGroup<ForgotPasswordForm>;
   otpForm: FormGroup<OtpForm>;
   resetForm: FormGroup<ResetPasswordForm>;
@@ -63,10 +62,7 @@ export class ForgotPasswordComponent {
   step: 'email' | 'otp' | 'reset' | 'success' = 'email';
   email = '';
 
-  constructor(
-    private fb: FormBuilder,
-    @Optional() @Inject(FORGOT_PASSWORD_API) private forgotApi: ForgotPasswordApiPort | null,
-  ) {
+  constructor() {
     // Initialize Forgot Password Form
     this.forgotForm = this.fb.group<ForgotPasswordForm>({
       email: new FormControl('', [Validators.required, Validators.email]),

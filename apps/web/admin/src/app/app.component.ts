@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
@@ -12,7 +12,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '@cthub-bsaas/web-admin/auth';
-import { Inject } from '@angular/core';
+
 import { CURRENT_USER } from '@cthub-bsaas/web-core/auth';
 import type { CurrentUserPort, CurrentUserMin } from '@cthub-bsaas/web-core/auth';
 
@@ -46,6 +46,11 @@ type AdminAppUser = CurrentUserMin & {
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit, OnDestroy {
+  private router = inject(Router);
+  private authService = inject(AuthService);
+  private currentUserService = inject<CurrentUserPort>(CURRENT_USER);
+  private snackBar = inject(MatSnackBar);
+
   title = 'BeautySaaS';
   error: string | null = null;
   // Public properties for template binding
@@ -61,13 +66,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private authSubscription?: Subscription;
-
-  constructor(
-    private router: Router,
-    private authService: AuthService,
-    @Inject(CURRENT_USER) private currentUserService: CurrentUserPort,
-    private snackBar: MatSnackBar,
-  ) {}
 
   ngOnInit(): void {
     this.initializeAuthSubscription();

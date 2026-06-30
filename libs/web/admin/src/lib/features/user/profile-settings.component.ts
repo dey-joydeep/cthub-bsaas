@@ -6,7 +6,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { UserService } from './user.service';
 import { CurrentUserService } from '@cthub-bsaas/web-core-auth';
 
@@ -19,9 +18,7 @@ import { CurrentUserService } from '@cthub-bsaas/web-core-auth';
     MatInputModule,
     MatButtonModule,
     MatProgressBarModule,
-    MatIconModule,
-    TranslatePipe,
-    TranslateDirective,
+    MatIconModule
   ],
   templateUrl: './profile-settings.component.html',
   styleUrls: ['./profile-settings.component.css'],

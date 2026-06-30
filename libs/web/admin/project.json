@@ -28,7 +28,7 @@
           "libs/web/admin/src/index.ts",
           "libs/web/admin/src/lib/features/auth/**/*.ts",
           "libs/web/admin/src/lib/features/auth/**/*.html",
-          "libs/web/admin/src/lib/features/auth/**/*.scss"
+          "libs/web/admin/src/lib/features/auth/**/*.css"
         ]
       }
     },

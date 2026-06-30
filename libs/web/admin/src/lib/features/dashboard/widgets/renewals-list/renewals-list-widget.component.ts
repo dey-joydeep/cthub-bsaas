@@ -6,7 +6,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { DashboardService } from '../../services/dashboard.service';
 import { Subscription } from 'rxjs';
@@ -34,9 +33,7 @@ export interface Renewal {
     MatListModule,
     MatButtonModule,
     MatProgressSpinnerModule,
-    MatTooltipModule,
-    TranslatePipe,
-    TranslateDirective,
+    MatTooltipModule
   ],
   templateUrl: './renewals-list-widget.component.html',
   styleUrls: ['./renewals-list-widget.component.css'],

@@ -12,8 +12,6 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatCardModule } from '@angular/material/card';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
-
 import { ProductService } from './product.service';
 import { ProductParams, ProductCategoryParams, ProductImageParams } from '../../models/product-params.model';
 
@@ -31,9 +29,7 @@ import { ProductParams, ProductCategoryParams, ProductImageParams } from '../../
     MatCheckboxModule,
     MatChipsModule,
     MatCardModule,
-    MatTabsModule,
-    TranslatePipe,
-    TranslateDirective,
+    MatTabsModule
   ],
   templateUrl: './product-management.component.html',
   styleUrls: ['./product-management.component.css'],

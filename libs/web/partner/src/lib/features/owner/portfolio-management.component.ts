@@ -6,7 +6,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { PortfolioService } from './portfolio.service';
 
 @Component({
@@ -18,9 +17,7 @@ import { PortfolioService } from './portfolio.service';
     MatInputModule,
     MatButtonModule,
     MatProgressBarModule,
-    MatIconModule,
-    TranslatePipe,
-    TranslateDirective,
+    MatIconModule
   ],
   templateUrl: './portfolio-management.component.html',
   styleUrls: ['./portfolio-management.component.css'],

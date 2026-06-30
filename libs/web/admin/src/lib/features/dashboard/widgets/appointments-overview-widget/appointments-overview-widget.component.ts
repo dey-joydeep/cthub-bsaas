@@ -26,7 +26,7 @@ import { of, Subject } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 
 import { RouterModule } from '@angular/router';
-import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Appointment, AppointmentsFilter, AppointmentsOverview, StatusBadgeConfig } from './models/appointments-overview-widget.model';
 import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.enum';
 import { AppointmentsOverviewWidgetService } from './appointments-overview-widget.service';
@@ -58,9 +58,7 @@ import { AppointmentsOverviewWidgetService } from './appointments-overview-widge
     MatChipsModule,
     MatDividerModule,
     MatListModule,
-    MatDialogModule,
-    TranslatePipe,
-    TranslateDirective,
+    MatDialogModule
   ],
   templateUrl: './appointments-overview-widget.component.html',
   styleUrls: ['./appointments-overview-widget.component.css'],

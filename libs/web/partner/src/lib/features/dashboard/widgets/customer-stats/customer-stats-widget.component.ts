@@ -6,7 +6,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { CustomerStatsWidgetService } from './customer-stats-widget.service';
 import { DashboardStats } from './models/customer-stats-widget.model';
@@ -20,9 +19,7 @@ import { DashboardStats } from './models/customer-stats-widget.model';
     MatIconModule,
     MatProgressSpinnerModule,
     MatButtonModule,
-    MatTooltipModule,
-    TranslatePipe,
-    TranslateDirective,
+    MatTooltipModule
   ],
   templateUrl: './customer-stats-widget.component.html',
   styleUrls: ['./customer-stats-widget.component.css'],

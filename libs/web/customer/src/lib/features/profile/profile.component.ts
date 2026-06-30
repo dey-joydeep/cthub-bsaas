@@ -8,7 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { ProfileService } from './profile.service';
 import { User } from './model/profile.model';
 
@@ -23,9 +23,7 @@ import { User } from './model/profile.model';
     MatButtonModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    MatIconModule,
-    TranslatePipe,
-    TranslateDirective,
+    MatIconModule
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],

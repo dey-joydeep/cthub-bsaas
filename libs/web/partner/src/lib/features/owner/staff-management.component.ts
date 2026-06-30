@@ -6,7 +6,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { StaffService } from './staff.service';
 import { Staff } from '../staff/models/staff.model';
 import { ActivatedRoute } from '@angular/router';
@@ -20,9 +19,7 @@ import { ActivatedRoute } from '@angular/router';
     MatInputModule,
     MatButtonModule,
     MatProgressBarModule,
-    MatIconModule,
-    TranslatePipe,
-    TranslateDirective,
+    MatIconModule
   ],
   templateUrl: './staff-management.component.html',
   styleUrls: ['./staff-management.component.css'],

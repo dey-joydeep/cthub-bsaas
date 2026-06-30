@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -13,9 +13,9 @@ import { type LoginApiPort } from '../tokens/login.tokens';
 
 @Injectable({ providedIn: 'root' })
 export class LoginApiService implements LoginApiPort {
-  private readonly apiUrl = '/api/auth';
+  private readonly http = inject<HttpClient>(HttpClient);
 
-  constructor(@Inject(HttpClient) private readonly http: HttpClient) {}
+  private readonly apiUrl = '/api/auth';
 
   login(credentials: LoginCredentials): Observable<ApiResponse<AuthResponse>> {
     return this.http.post<ApiResponse<AuthResponse>>(`${this.apiUrl}/login`, credentials);

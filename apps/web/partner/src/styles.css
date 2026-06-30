@@ -1,4 +1,5 @@
 /* You can add global styles to this file, and also import other style files */
+
 /* Import Google Fonts */
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600&display=swap');
@@ -53,22 +54,15 @@ body {
 }
 /* Custom Material theme for Angular Material v19 */
 /* 1. Define the theme */
-$theme: mat.define-theme(
-  (
-    color: (theme-type: light, primary: mat.$azure-palette, tertiary: mat.$blue-palette),
-    typography: (brand-family: 'Roboto', bold-weight: 600),
-    density: (scale: 0)
-  )
-);
 /* 2. Apply the theme to Angular Material components within a selector */
 :root {
-  @include mat.elevation-classes();
-  @include mat.app-background();
-  @include mat.all-component-themes($theme);
+  
+  
+  
 }
 /* 3. Include core styles */
-@include mat.elevation-classes();
-@include mat.app-background();
+
+
 /* Define global variables using M3 design tokens */
 :root {
   /* Color tokens from M3 theme */

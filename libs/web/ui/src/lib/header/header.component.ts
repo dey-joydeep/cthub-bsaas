@@ -14,7 +14,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { Router, RouterModule } from '@angular/router';
 import { PLATFORM_UTILS_TOKEN, type PlatformUtils, StorageService } from '@cthub-bsaas/web-core-platform';
-import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Subject, Subscription, firstValueFrom, of, timer } from 'rxjs';
 import { catchError, switchMap, takeUntil, tap } from 'rxjs/operators';
 
@@ -120,9 +120,7 @@ class AuthService {
     MatCardModule,
     MatDividerModule,
     MatSnackBarModule,
-    FormsModule,
-    TranslatePipe,
-    TranslateDirective,
+    FormsModule
   ],
   templateUrl: './header.component.html',
   styleUrls: [], // Using inline styles for now

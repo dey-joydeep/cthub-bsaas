@@ -2,14 +2,13 @@ import { Component, input } from '@angular/core';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { RevenueData } from './models/revenue-chart.model';
 
 @Component({
   selector: 'app-revenue-chart',
   standalone: true,
-  imports: [MatCardModule, MatIconModule, TranslatePipe, TranslateDirective],
+  imports: [MatCardModule, MatIconModule],
   templateUrl: './revenue-chart.component.html',
   styleUrls: ['./revenue-chart.component.css'],
 })

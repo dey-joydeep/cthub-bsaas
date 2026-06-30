@@ -8,7 +8,6 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { SalonService } from './salon.service';
 import { CreateSalonParams } from '../../models/salon-params.model';
 import { User } from '../../models/user.model';
@@ -25,9 +24,7 @@ import { UserRole } from '@cthub-bsaas/shared';
     MatProgressBarModule,
     MatIconModule,
     MatSelectModule,
-    MatChipsModule,
-    TranslatePipe,
-    TranslateDirective,
+    MatChipsModule
   ],
   templateUrl: './salon-management.component.html',
   styleUrls: ['./salon-management.component.css'],

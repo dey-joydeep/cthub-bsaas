@@ -8,7 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { CURRENT_USER } from '@cthub-bsaas/web-core/auth';
 import type { CurrentUserPort } from '@cthub-bsaas/web-core/auth';
 import { Subscription } from 'rxjs';
@@ -33,9 +33,7 @@ type MaybeUser = {
     MatButtonModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    MatIconModule,
-    TranslatePipe,
-    TranslateDirective,
+    MatIconModule
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],

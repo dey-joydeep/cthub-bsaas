@@ -4,7 +4,6 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpParams } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { Salon, SalonServiceItem } from './model/salon-search.model';
 import { SafeUrlPipe } from '@cthub-bsaas/web-ui';
 import type { PlatformUtils } from '@cthub-bsaas/web-core-platform';
@@ -12,7 +11,7 @@ import type { PlatformUtils } from '@cthub-bsaas/web-core-platform';
 @Component({
   selector: 'app-salon-search',
   standalone: true,
-  imports: [RouterModule, FormsModule, TranslatePipe, TranslateDirective, SafeUrlPipe],
+  imports: [RouterModule, FormsModule, SafeUrlPipe],
   templateUrl: './salon-search.component.html',
   styleUrls: ['./salon-search.component.css'],
 })
