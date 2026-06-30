@@ -1,4 +1,4 @@
-import { Component, OnChanges, SimpleChanges, ViewChild, inject, input, model } from '@angular/core';
+import { Component, OnChanges, SimpleChanges,  inject, input, model } from '@angular/core';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -32,7 +32,7 @@ import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 })
 export class SubscriptionChartWidgetComponent extends AbstractBaseComponent implements OnChanges {
   subscriptionData = model<SubscriptionData[]>([]);
-  @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
+  chart = viewChild<BaseChartDirective>(BaseChartDirective);
 
   // Chart configuration
   public lineChartType: ChartType = 'line';
@@ -134,7 +134,7 @@ export class SubscriptionChartWidgetComponent extends AbstractBaseComponent impl
 
     // Force update the chart
     if (this.chart) {
-      this.chart.update();
+      this.chart().update();
     }
   }
 

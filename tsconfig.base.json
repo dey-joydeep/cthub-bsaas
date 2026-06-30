@@ -13,6 +13,7 @@
     "allowJs": false,
     "moduleDetection": "force",
     "strict": true,
+    "skipLibCheck": true,
     "moduleResolution": "node",
     "paths": {
       "@app/*": ["apps/api/src/*"],

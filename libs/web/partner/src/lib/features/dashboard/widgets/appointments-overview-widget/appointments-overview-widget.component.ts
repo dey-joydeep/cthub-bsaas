@@ -1,5 +1,5 @@
 import { CommonModule, formatDate } from '@angular/common';
-import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, OnInit,  } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -66,7 +66,7 @@ import { AppointmentsOverviewWidgetService } from './appointments-overview-widge
   styleUrls: ['./appointments-overview-widget.component.css'],
 })
 export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild(MatSort) sort!: MatSort;
+  sort = viewChild<MatSort>(MatSort);
 
   // Data
   overview: AppointmentsOverview | null = null;

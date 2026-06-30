@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, input } from '@angular/core';
+import { Component, output, input } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { StaffRequestService, CreateLeaveRequestPayload } from '../../services/staff-request.service';
 
@@ -13,7 +13,7 @@ import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 })
 export class StaffRequestFormComponent extends AbstractBaseComponent {
   staffId = input<string>('');
-  @Output() requestCreated = new EventEmitter<void>();
+  requestCreated = output<void>();
 
   form: FormGroup;
   submitting = false;

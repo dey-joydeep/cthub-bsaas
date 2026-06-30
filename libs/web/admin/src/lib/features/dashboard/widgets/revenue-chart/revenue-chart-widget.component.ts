@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy,  ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { Subscription } from 'rxjs';
 
 import { BaseChartDirective } from 'ng2-charts';
@@ -33,7 +33,7 @@ import { ErrorService } from '@cthub-bsaas/web-core-common';
 })
 export class RevenueChartWidgetComponent implements OnInit, OnDestroy {
   private dataSubscription?: Subscription;
-  @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
+  chart = viewChild<BaseChartDirective>(BaseChartDirective);
 
   // Chart configuration
   public chartType = 'line' as const;
@@ -177,7 +177,7 @@ export class RevenueChartWidgetComponent implements OnInit, OnDestroy {
       };
 
       this.error = null;
-      this.chart?.update();
+      this.chart()?.update();
     } catch (error) {
       console.error('Error updating chart data:', error);
       this.error = 'Failed to update chart data';
