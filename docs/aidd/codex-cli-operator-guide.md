@@ -6,8 +6,22 @@ Use this guide when operating Codex from the local repository.
 
 ## Start session
 
-```powershell
-cd E:\workspace\cthub-bsaas
+From the repository root:
+
+```text
+codex
+```
+
+From a parent directory or another workspace:
+
+```text
+codex --cd ./cthub-bsaas
+```
+
+Linux or WSL example:
+
+```bash
+cd ~/workspace/cthub-bsaas
 codex
 ```
 
@@ -21,14 +35,14 @@ Do not edit yet. First classify the task, identify source-of-truth docs, impacte
 
 ## Useful slash commands
 
-| Command | Use |
-| --- | --- |
-| `/status` | Check current session and workspace status. |
-| `/diff` | Review local changes before continuing. |
-| `/review` | Ask Codex to review current changes. |
+| Command   | Use                                                                        |
+| --------- | -------------------------------------------------------------------------- |
+| `/status` | Check current session and workspace status.                                |
+| `/diff`   | Review local changes before continuing.                                    |
+| `/review` | Ask Codex to review current changes.                                       |
 | `/skills` | Inspect available skills and confirm whether a task-specific skill exists. |
-| `/agent` | Work with configured reviewer agents when the task benefits from parallel review. |
-| `/hooks` | Inspect project and user hooks. |
+| `/agent`  | Inspect or switch the active agent thread.                                 |
+| `/hooks`  | Inspect project and user hooks.                                            |
 
 ## Recommended operator prompts
 
