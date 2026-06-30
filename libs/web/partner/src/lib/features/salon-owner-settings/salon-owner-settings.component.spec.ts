@@ -198,6 +198,49 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(branchFixture.nativeElement.textContent).toContain('Branch settings');
   });
 
+  it('shows a manager-access message when branch-route staff users are forbidden', async () => {
+    TestBed.resetTestingModule();
+    api.listBusinesses.mockClear();
+    api.listBranches.mockReset();
+    api.listBranches.mockReturnValueOnce(
+      throwError(() => ({
+        status: 403,
+        error: { message: 'error.forbidden_scope' },
+      })),
+    );
+    TestBed.configureTestingModule({
+      imports: [NoopAnimationsModule, SalonOwnerSettingsComponent],
+      providers: [
+        { provide: SalonOwnerSettingsApi, useValue: api },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            parent: {
+              routeConfig: { path: 'owner/branches' },
+            },
+          },
+        },
+        {
+          provide: CURRENT_USER,
+          useValue: {
+            currentUser$: of({ id: 'staff-1', role: 'staff' }),
+            isAuthenticated$: of(true),
+            redirectUrl: null,
+          },
+        },
+      ],
+    });
+
+    const branchFixture = TestBed.createComponent(SalonOwnerSettingsComponent);
+    branchFixture.detectChanges();
+    await branchFixture.whenStable();
+    branchFixture.detectChanges();
+    const component = branchFixture.componentInstance as unknown as SettingsComponentHarness;
+
+    expect(api.listBusinesses).not.toHaveBeenCalled();
+    expect(component.error()).toBe('You need branch-manager access to manage branch settings for this business.');
+  });
+
   it('loads businesses on the branch route when an owner has no branches yet', () => {
     TestBed.resetTestingModule();
     api.listBusinesses.mockClear();
@@ -344,6 +387,46 @@ describe('SalonOwnerSettingsComponent', () => {
     });
   });
 
+  it('ignores stale policy-save responses after switching branches', () => {
+    let saveHandler: (() => void) | undefined;
+    api.updateBranchPolicy.mockReturnValueOnce(
+      new Observable((subscriber) => {
+        saveHandler = () => {
+          subscriber.next({});
+          subscriber.complete();
+        };
+      }),
+    );
+    api.getBranchHours.mockReturnValueOnce(
+      of({
+        branchId: 'branch-2',
+        timezone: 'Asia/Tokyo',
+        days: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+          dayOfWeek,
+          open: dayOfWeek > 0,
+          intervals: dayOfWeek > 0 ? [{ start: '10:00', end: '18:00' }] : [],
+        })),
+      }),
+    );
+    api.getBranchPolicy.mockReturnValueOnce(
+      of({
+        branchId: 'branch-2',
+        bookingLeadMinutes: 60,
+        cancellationCutoffMinutes: 180,
+        noShowGraceMinutes: 15,
+      }),
+    );
+    api.listBranchHolidays.mockReturnValueOnce(of([]));
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness;
+
+    component.savePolicy();
+    component.selectBranch({ ...branch, id: 'branch-2', name: 'Second' });
+    saveHandler?.();
+
+    expect(component.selectedBranch()).toEqual(expect.objectContaining({ id: 'branch-2' }));
+    expect(component.message()).toBeNull();
+  });
+
   it('shows a specific message when archiving a branch is blocked by future appointments', () => {
     const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
       branchForm: { patchValue(value: { status: 'INACTIVE' }): void };
@@ -375,6 +458,21 @@ describe('SalonOwnerSettingsComponent', () => {
 
     expect(component.error()).toBe(
       'This branch currency is locked because finance history already exists. Keep the current currency for this branch.',
+    );
+  });
+
+  it('shows a specific message when branch saves are blocked by an inactive business', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness;
+    api.updateBranch.mockReturnValueOnce(
+      throwError(() => ({
+        error: { message: 'error.branch.profile.business_inactive' },
+      })),
+    );
+
+    component.saveBranch();
+
+    expect(component.error()).toBe(
+      'This business is inactive. Reactivate the business before creating a branch or reactivating one.',
     );
   });
 
@@ -933,6 +1031,72 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(component.selectedBusiness()).toEqual(expect.objectContaining({ id: 'business-2' }));
   });
 
+  it('ignores stale business-list reloads after the selected business changes', () => {
+    let reloadHandler:
+      | ((result: { items: SalonBusiness[]; page: { page: number; pageSize: number; total: number } }) => void)
+      | undefined;
+    api.updateBusiness.mockReturnValueOnce(
+      of({
+        id: 'business-1',
+        tenantId: 'tenant-1',
+        displayName: 'Updated One',
+        legalName: 'Salon One Legal',
+        status: 'ACTIVE',
+        createdAt: '2026-05-26T00:00:00.000Z',
+        updatedAt: '2026-05-26T00:00:00.000Z',
+      }),
+    );
+    api.listBusinesses.mockReturnValueOnce(
+      new Observable((subscriber) => {
+        reloadHandler = (result) => {
+          subscriber.next(result);
+          subscriber.complete();
+        };
+      }),
+    );
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      businessForm: { patchValue(value: { displayName: string }): void };
+    };
+
+    component.businessForm.patchValue({ displayName: 'Updated One' });
+    component.saveBusiness();
+    component.selectBusiness({
+      id: 'business-2',
+      tenantId: 'tenant-1',
+      displayName: 'Salon Two',
+      legalName: 'Salon Two Legal',
+      status: 'ACTIVE',
+      createdAt: '2026-05-26T00:00:00.000Z',
+      updatedAt: '2026-05-26T00:00:00.000Z',
+    });
+
+    reloadHandler?.({
+      items: [
+        {
+          id: 'business-1',
+          tenantId: 'tenant-1',
+          displayName: 'Updated One',
+          legalName: 'Salon One Legal',
+          status: 'ACTIVE',
+          createdAt: '2026-05-26T00:00:00.000Z',
+          updatedAt: '2026-05-26T00:00:00.000Z',
+        },
+        {
+          id: 'business-2',
+          tenantId: 'tenant-1',
+          displayName: 'Salon Two',
+          legalName: 'Salon Two Legal',
+          status: 'ACTIVE',
+          createdAt: '2026-05-26T00:00:00.000Z',
+          updatedAt: '2026-05-26T00:00:00.000Z',
+        },
+      ],
+      page: { page: 1, pageSize: 2, total: 2 },
+    });
+
+    expect(component.selectedBusiness()).toEqual(expect.objectContaining({ id: 'business-2' }));
+  });
+
   it('ignores stale business-create responses after restarting a new business draft', () => {
     let createHandler:
       | ((savedBusiness: SalonBusiness) => void)
@@ -994,6 +1158,34 @@ describe('SalonOwnerSettingsComponent', () => {
     component.saveBranch();
     component.selectBranch({ ...branch, id: 'branch-2', name: 'Second' });
     saveHandler?.(branch);
+
+    expect(component.selectedBranch()).toEqual(expect.objectContaining({ id: 'branch-2' }));
+  });
+
+  it('ignores stale branch-list reloads after switching branches', () => {
+    let reloadHandler:
+      | ((result: { items: BranchProfile[]; page: { page: number; pageSize: number; total: number } }) => void)
+      | undefined;
+    api.updateBranch.mockReturnValueOnce(of(branch));
+    api.listBranches.mockReturnValueOnce(
+      new Observable((subscriber) => {
+        reloadHandler = (result) => {
+          subscriber.next(result);
+          subscriber.complete();
+        };
+      }),
+    );
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness;
+
+    component.saveBranch();
+    component.selectBranch({ ...branch, id: 'branch-2', name: 'Second' });
+    reloadHandler?.({
+      items: [
+        branch,
+        { ...branch, id: 'branch-2', name: 'Second' },
+      ],
+      page: { page: 1, pageSize: 2, total: 2 },
+    });
 
     expect(component.selectedBranch()).toEqual(expect.objectContaining({ id: 'branch-2' }));
   });

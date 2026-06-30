@@ -46,7 +46,7 @@ describe('authCanMatch', () => {
 
   it('stores the attempted URL and passes it to login when matching protected routes', async () => {
     const route = { path: 'owner/settings' } as Route;
-    const segments = [] as UrlSegment[];
+    const segments = [{ path: 'owner' }, { path: 'settings' }] as UrlSegment[];
 
     const result = await resolveGuardResult(runInInjectionContext(injector, () => authCanMatch(route, segments)));
 
@@ -56,8 +56,8 @@ describe('authCanMatch', () => {
   });
 
   it('preserves additional path segments in the attempted URL', async () => {
-    const route = { path: 'owner' } as Route;
-    const segments = [{ path: 'settings' }, { path: 'advanced' }] as UrlSegment[];
+    const route = { path: 'owner/settings' } as Route;
+    const segments = [{ path: 'owner' }, { path: 'settings' }, { path: 'advanced' }] as UrlSegment[];
 
     const result = await resolveGuardResult(runInInjectionContext(injector, () => authCanMatch(route, segments)));
 

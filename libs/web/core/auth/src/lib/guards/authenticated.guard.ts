@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, CanMatchFn, Route, Router, UrlSegment } from '@angular/router';
+import { CanActivateFn, CanMatchFn, Router, UrlSegment } from '@angular/router';
 import { map, take } from 'rxjs/operators';
 import { CURRENT_USER } from '../interfaces/current-user.port';
 
@@ -27,16 +27,9 @@ export const authenticatedGuard: CanActivateFn = (_route, state) => {
   );
 };
 
-function buildAttemptedUrl(route: Route, segments: UrlSegment[]): string {
+function buildAttemptedUrl(segments: UrlSegment[]): string {
   const segmentPath = segments.map((segment) => segment.path).join('/');
-
-  if (route.path === '**') {
-    return segmentPath.length > 0 ? `/${segmentPath}` : '/';
-  }
-
-  const routePath = route.path?.replace(/^\//, '') ?? '';
-  const combinedPath = [routePath, segmentPath].filter((value) => value.length > 0).join('/');
-  return combinedPath.length > 0 ? `/${combinedPath}` : '/';
+  return segmentPath.length > 0 ? `/${segmentPath}` : '/';
 }
 
 export const authCanMatch: CanMatchFn = (route, segments) => {
@@ -50,7 +43,7 @@ export const authCanMatch: CanMatchFn = (route, segments) => {
         return true;
       }
 
-      const attemptedUrl = buildAttemptedUrl(route, segments);
+      const attemptedUrl = buildAttemptedUrl(segments);
       currentUserService.redirectUrl = attemptedUrl;
       return router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: attemptedUrl } });
     }),

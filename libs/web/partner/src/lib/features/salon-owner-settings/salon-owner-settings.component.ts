@@ -23,7 +23,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTabsModule } from '@angular/material/tabs';
 import { HttpErrorResponse } from '@angular/common/http';
-import { forkJoin, Observable, of } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 
 import { CURRENT_USER } from '@cthub-bsaas/web-core-auth';
 import { UserRole } from '@cthub-bsaas/shared';
@@ -187,6 +187,7 @@ export class SalonOwnerSettingsComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute, { optional: true });
   private readonly currentUser = inject(CURRENT_USER, { optional: true });
+  private businessLoadVersion = 0;
   private businessEditorVersion = 0;
   private branchLoadVersion = 0;
   private branchSettingsLoadVersion = 0;
@@ -195,6 +196,7 @@ export class SalonOwnerSettingsComponent {
   private branchSaveVersion = 0;
   private hoursSaveVersion = 0;
   private holidaySaveVersion = 0;
+  private policySaveVersion = 0;
   private readonly branchRouteMode = this.route?.parent?.routeConfig?.path === 'owner/branches';
   private readonly currentRole = toSignal(this.currentUser?.currentUser$ ?? of(null), {
     initialValue: null,
@@ -284,6 +286,7 @@ export class SalonOwnerSettingsComponent {
   }
 
   protected selectBusiness(business: SalonBusiness): void {
+    this.businessLoadVersion += 1;
     this.businessEditorVersion += 1;
     this.branchEditorVersion += 1;
     this.selectedBusiness.set(business);
@@ -299,9 +302,11 @@ export class SalonOwnerSettingsComponent {
   }
 
   protected selectBranch(branch: BranchProfile): void {
+    this.branchLoadVersion += 1;
     this.branchEditorVersion += 1;
     this.hoursSaveVersion += 1;
     this.holidaySaveVersion += 1;
+    this.policySaveVersion += 1;
     this.selectedBranch.set(branch);
     this.selectedHoliday.set(null);
     this.branchSettingsLoaded.set(false);
@@ -334,6 +339,7 @@ export class SalonOwnerSettingsComponent {
   }
 
   protected newBusiness(): void {
+    this.businessLoadVersion += 1;
     this.businessEditorVersion += 1;
     this.branchEditorVersion += 1;
     this.selectedBusiness.set(null);
@@ -351,6 +357,7 @@ export class SalonOwnerSettingsComponent {
 
   protected newBranch(): void {
     this.branchEditorVersion += 1;
+    this.policySaveVersion += 1;
     const businessId = this.selectedBusiness()?.id ?? this.selectedBranch()?.businessId ?? '';
     this.branchLoadVersion += 1;
     this.resetBranchEditor(businessId);
@@ -468,6 +475,11 @@ export class SalonOwnerSettingsComponent {
         }
         if (this.isBranchCurrencyLockedError(error)) {
           this.error.set('This branch currency is locked because finance history already exists. Keep the current currency for this branch.');
+          this.saving.set(false);
+          return;
+        }
+        if (this.isBranchBusinessInactiveError(error)) {
+          this.error.set('This business is inactive. Reactivate the business before creating a branch or reactivating one.');
           this.saving.set(false);
           return;
         }
@@ -605,7 +617,30 @@ export class SalonOwnerSettingsComponent {
       return;
     }
 
-    this.persist(this.api.updateBranchPolicy(branch.id, this.policyForm.getRawValue()));
+    const startedBranchId = branch.id;
+    const requestVersion = ++this.policySaveVersion;
+
+    this.saving.set(true);
+    this.error.set(null);
+    this.message.set(null);
+    this.api.updateBranchPolicy(branch.id, this.policyForm.getRawValue()).subscribe({
+      next: () => {
+        if (requestVersion !== this.policySaveVersion || this.selectedBranch()?.id !== startedBranchId) {
+          this.saving.set(false);
+          return;
+        }
+        this.message.set('Settings saved.');
+        this.saving.set(false);
+      },
+      error: () => {
+        if (requestVersion !== this.policySaveVersion || this.selectedBranch()?.id !== startedBranchId) {
+          this.saving.set(false);
+          return;
+        }
+        this.error.set('Settings could not be saved.');
+        this.saving.set(false);
+      },
+    });
   }
 
   protected getDayIntervals(dayIndex: number): FormArray {
@@ -679,9 +714,20 @@ export class SalonOwnerSettingsComponent {
   }
 
   private loadBusinesses(selectBusinessId?: string): void {
+    const requestVersion = ++this.businessLoadVersion;
+    const startedBusinessId = this.selectedBusiness()?.id ?? null;
+    const startedEditorVersion = this.businessEditorVersion;
     this.loading.set(true);
     this.api.listBusinesses().subscribe({
       next: (result) => {
+        if (
+          requestVersion !== this.businessLoadVersion ||
+          startedEditorVersion !== this.businessEditorVersion ||
+          (this.selectedBusiness()?.id ?? null) !== startedBusinessId
+        ) {
+          this.loading.set(false);
+          return;
+        }
         this.businesses.set(result.items);
         const selected = result.items.find((business) => business.id === selectBusinessId) ?? result.items[0] ?? null;
         if (selected) {
@@ -692,6 +738,14 @@ export class SalonOwnerSettingsComponent {
         this.loading.set(false);
       },
       error: () => {
+        if (
+          requestVersion !== this.businessLoadVersion ||
+          startedEditorVersion !== this.businessEditorVersion ||
+          (this.selectedBusiness()?.id ?? null) !== startedBusinessId
+        ) {
+          this.loading.set(false);
+          return;
+        }
         this.error.set('Business settings could not be loaded.');
         this.loading.set(false);
       },
@@ -720,7 +774,7 @@ export class SalonOwnerSettingsComponent {
           this.resetBranchEditor(this.selectedBusiness()?.id ?? '');
         }
       },
-      error: () => {
+      error: (error: unknown) => {
         if (
           requestVersion !== this.branchLoadVersion ||
           (typeof businessId === 'string' && this.selectedBusiness()?.id !== businessId)
@@ -730,6 +784,10 @@ export class SalonOwnerSettingsComponent {
         this.branches.set([]);
         this.selectedBranch.set(null);
         this.resetBranchEditor(this.selectedBusiness()?.id ?? '');
+        if (this.branchOnlyMode() && this.isStaffUser() && this.isForbiddenError(error)) {
+          this.error.set('You need branch-manager access to manage branch settings for this business.');
+          return;
+        }
         this.error.set('Branches could not be loaded.');
       },
     });
@@ -957,6 +1015,34 @@ export class SalonOwnerSettingsComponent {
     return errorCode === 'error.branch.profile.currency_locked' || errorMessage === 'error.branch.profile.currency_locked';
   }
 
+  private isBranchBusinessInactiveError(error: unknown): boolean {
+    const responseError =
+      error instanceof HttpErrorResponse
+        ? error.error
+        : typeof error === 'object' && error !== null && 'error' in error
+          ? error.error
+          : null;
+
+    const errorCode =
+      typeof responseError === 'object' &&
+      responseError !== null &&
+      'code' in responseError &&
+      typeof responseError.code === 'string'
+        ? responseError.code
+        : null;
+    const errorMessage =
+      typeof responseError === 'object' &&
+      responseError !== null &&
+      'message' in responseError &&
+      typeof responseError.message === 'string'
+        ? responseError.message
+        : typeof responseError === 'string'
+          ? responseError
+          : null;
+
+    return errorCode === 'error.branch.profile.business_inactive' || errorMessage === 'error.branch.profile.business_inactive';
+  }
+
   private isBusinessDeactivationConflictError(error: unknown): boolean {
     const responseError =
       error instanceof HttpErrorResponse
@@ -983,6 +1069,39 @@ export class SalonOwnerSettingsComponent {
           : null;
 
     return errorCode === 'error.business.profile.status_conflict' || errorMessage === 'error.business.profile.status_conflict';
+  }
+
+  private isForbiddenError(error?: unknown): boolean {
+    const status =
+      error instanceof HttpErrorResponse
+        ? error.status
+        : typeof error === 'object' && error !== null && 'status' in error && typeof error.status === 'number'
+          ? error.status
+          : null;
+    const responseError =
+      error instanceof HttpErrorResponse
+        ? error.error
+        : typeof error === 'object' && error !== null && 'error' in error
+          ? error.error
+          : null;
+    const errorCode =
+      typeof responseError === 'object' &&
+      responseError !== null &&
+      'code' in responseError &&
+      typeof responseError.code === 'string'
+        ? responseError.code
+        : null;
+    const errorMessage =
+      typeof responseError === 'object' &&
+      responseError !== null &&
+      'message' in responseError &&
+      typeof responseError.message === 'string'
+        ? responseError.message
+        : typeof responseError === 'string'
+          ? responseError
+          : null;
+
+    return status === 403 || errorCode === 'error.forbidden_scope' || errorMessage === 'error.forbidden_scope';
   }
 
   private resetHoursConflictAcknowledgement(): void {
@@ -1032,20 +1151,4 @@ export class SalonOwnerSettingsComponent {
     return next.slice().sort((left, right) => left.date.localeCompare(right.date));
   }
 
-  private persist<T>(request: Observable<T>, onSuccess?: (value: T) => void): void {
-    this.saving.set(true);
-    this.error.set(null);
-    this.message.set(null);
-    request.subscribe({
-      next: (value) => {
-        onSuccess?.(value);
-        this.message.set('Settings saved.');
-        this.saving.set(false);
-      },
-      error: () => {
-        this.error.set('Settings could not be saved.');
-        this.saving.set(false);
-      },
-    });
-  }
 }
