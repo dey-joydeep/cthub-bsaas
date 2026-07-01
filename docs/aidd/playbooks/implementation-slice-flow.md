@@ -5,7 +5,7 @@ Use this playbook when implementing from an approved planning slice, LLD, or API
 ## Operator prompt
 
 ```text
-Use AIDD mode. This is an implementation slice.
+Follow the repository AIDD workflow. This is an implementation slice.
 
 Source slice/spec:
 <path to implementation-slicing, LLD, API contract, or user story>
@@ -32,4 +32,5 @@ Do not edit yet. First produce:
 - Preserve existing architecture and Nx boundaries.
 - Add or update tests when behavior changes.
 - Update docs when implementation changes behavior, contracts, setup, or validation.
+- Use named DTOs/types for object-shaped public APIs and avoid ad hoc contract drift.
 - Report any mismatch between implementation and specs before changing broad areas.

@@ -5,7 +5,7 @@ Use this playbook for every new Codex task, including a fresh error-fix request.
 ## Operator prompt
 
 ```text
-Use AIDD mode. This is a new task.
+Follow the repository AIDD workflow. This is a new task.
 
 Goal:
 <describe the requested work>
@@ -30,6 +30,7 @@ Do not edit yet. First produce:
 - Treat short requests such as `fix this error` as new tasks unless they are continuation fixes inside an already-running task.
 - Inspect before editing.
 - Prefer the smallest safe change.
+- Use Nx commands for project tasks instead of direct tool invocations when Nx targets exist.
 - Keep FRD/FNRD/HLD/LLD/API/VALIDATION/WEB/TEST alignment when behavior or contracts change.
 - Report validation honestly.
 

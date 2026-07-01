@@ -5,7 +5,7 @@ Use this playbook when asking Codex to review a pull request or branch.
 ## Operator prompt
 
 ```text
-Use AIDD mode. Review this PR:
+Follow the repository AIDD workflow. Review this PR:
 <PR URL or branch name>
 
 Read:
@@ -31,12 +31,18 @@ Do not edit. First produce a review with:
 Spawn relevant project reviewers for architecture, API contract, security, testing, frontend SSR, backend NestJS/Prisma, and docs traceability. Wait for all results, deduplicate findings, and provide a consolidated review.
 ```
 
+## Review notes
+
+- For docs-only PRs, focus on instruction accuracy, source-of-truth alignment, broken paths, and runnable validation guidance instead of defaulting to build or test findings.
+- For API or contract PRs, verify OpenAPI, DTO, mapper, and validation alignment explicitly.
+- For Nx project changes, call out the narrowest meaningful `nx` validation targets that should back the review.
+
 ## Review severity
 
-| Severity | Meaning |
-| --- | --- |
-| Blocker | Must fix before merge. |
-| High | Strongly recommended before merge. |
-| Medium | Should fix or track. |
-| Low | Optional improvement. |
-| Note | Context only. |
+| Severity | Meaning                            |
+| -------- | ---------------------------------- |
+| Blocker  | Must fix before merge.             |
+| High     | Strongly recommended before merge. |
+| Medium   | Should fix or track.               |
+| Low      | Optional improvement.              |
+| Note     | Context only.                      |

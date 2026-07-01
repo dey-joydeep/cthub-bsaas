@@ -5,7 +5,7 @@ Use this playbook before merging a Codex-created or Codex-reviewed pull request.
 ## Operator prompt
 
 ```text
-Use AIDD mode. Check merge readiness for:
+Follow the repository AIDD workflow. Check merge readiness for:
 <PR URL or branch>
 
 Read:
@@ -37,6 +37,15 @@ Do not edit. First produce:
 - The branch is up to date or merge conflicts are understood.
 
 ## Local commands before merging
+
+For docs-only PRs, start with document validation and diff hygiene:
+
+```powershell
+npx prettier --check "docs/aidd/**/*.md" ".codex/prompts/**/*.md"
+git diff --check
+```
+
+Only run code build, lint, or test commands when the PR scope actually touches runnable projects.
 
 Run the AIDD checks when the verification scripts are present in the checked-out branch:
 

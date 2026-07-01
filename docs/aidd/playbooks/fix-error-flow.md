@@ -4,15 +4,15 @@ Use this playbook when asking Codex to correct a failing command or defect.
 
 ## Classify the request first
 
-| Case | Required flow |
-| --- | --- |
-| Separate correction request | Full AIDD new-task flow. |
-| Validation failure from the same active task | Continuation path. |
+| Case                                         | Required flow            |
+| -------------------------------------------- | ------------------------ |
+| Separate correction request                  | Full AIDD new-task flow. |
+| Validation failure from the same active task | Continuation path.       |
 
 ## Operator prompt for a separate correction request
 
 ```text
-Use AIDD mode. This is a new correction task.
+Follow the repository AIDD workflow. This is a new correction task.
 
 Failure input:
 <paste the failing command and relevant output>
@@ -36,4 +36,5 @@ Stay inside the original scope. Patch only the immediate cause, do not broaden t
 - Do not weaken tests, lint rules, type safety, coverage thresholds, guards, validation, or contracts.
 - Prefer a regression test for real defects.
 - If code contradicts docs, stop and ask whether to correct code or docs.
+- Use the narrowest Nx or repo validation command that proves the fix.
 - Report the exact command that failed and the exact command rerun.

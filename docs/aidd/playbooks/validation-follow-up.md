@@ -5,7 +5,7 @@ Use this playbook when a branch or pull request needs follow-up after a local co
 ## Operator prompt
 
 ```text
-Use AIDD mode. This is a validation follow-up task.
+Follow the repository AIDD workflow. This is a validation follow-up task.
 
 Input:
 <paste the command, branch, or relevant output>
