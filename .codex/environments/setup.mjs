@@ -32,7 +32,8 @@ log(`Repository root: ${root}`);
 log(`Node version: ${process.version}`);
 
 if (!existsSync(join(root, 'node_modules'))) {
-  const install = run(npmCommand, ['install']);
+  const installArgs = existsSync(join(root, 'package-lock.json')) ? ['ci'] : ['install'];
+  const install = run(npmCommand, installArgs);
   if (install.status !== 0) {
     process.exit(install.status ?? 1);
   }
