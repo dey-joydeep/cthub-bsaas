@@ -137,6 +137,11 @@ Financial and appointment historical records must snapshot mutable reference dat
 - Query filters must enforce tenant/business/branch scope server-side.
 - Unique constraints must be scoped appropriately, for example service name unique per salon business/category where required.
 
+## Transitional Implementation Note
+
+- Current operational flows still reference the legacy `Salon` aggregate by `salonId`.
+- During the branch-settings rollout, each `Branch` persists a matching operational `Salon` record with the same UUID so existing appointment, invite, staff, and auth flows stay branch-addressable while the model converges.
+
 ## Indexing Guidance
 
 Required indexes:

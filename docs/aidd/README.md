@@ -25,6 +25,14 @@ When instructions overlap, use this order:
 | [Codex Task Policy](codex-task-policy.md)                 | Depth, stop conditions, and completion expectations by task type.                             |
 | [Codex Review Checklist](codex-review-checklist.md)       | Checklist for PR reviews and self-review before handoff.                                      |
 | [Codex Validation Commands](codex-validation-commands.md) | Current validation commands and reporting rules.                                              |
+| [MCP Configuration Policy](mcp-configuration-policy.md)   | Repository-vs-global MCP configuration split and safety policy.                               |
+| [Codex CLI Operator Guide](codex-cli-operator-guide.md)   | Practical local Codex commands and operator prompts.                                          |
+
+## Repo Codex Assets
+
+- `.codex/agents/*.toml` contains shipped reviewer and implementation helper agents.
+- `.codex/environments/environment.toml` points at the repo bootstrap command for fresh Codex worktrees.
+- `.codex/prompts/*.md` contains reusable planning, implementation, review, CI-fix, and test prompts.
 
 ## Prompt Templates
 
@@ -38,4 +46,4 @@ When instructions overlap, use this order:
 
 ## Maintenance Rule
 
-Keep these docs aligned with package scripts, Nx project names, OpenAPI locations, and current documentation standards. If a command or source-of-truth path changes, update this folder in the same PR.
+Keep these docs aligned with package scripts, Nx project names, OpenAPI locations, current documentation standards, and safe Codex/MCP configuration. If a command or source-of-truth path changes, update this folder in the same PR.

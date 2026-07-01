@@ -5,10 +5,16 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { CoreModule, JwtAuthGuard, RolesGuard, CsrfGuard, GlobalExceptionFilter } from '@cthub-bsaas/server-core';
+import {
+  CoreModule,
+  JwtAuthGuard,
+  RolesGuard,
+  CsrfGuard,
+  GlobalExceptionFilter,
+} from '@cthub-bsaas/server-core';
 import { AuthModule } from '@cthub-bsaas/server-feature-auth';
+import { ServerFeatureSalonOwnerModule } from '@cthub-bsaas/server-feature-salon-owner';
 import { TotpModule } from '@cthub-bsaas/server-infrastructure';
-
 
 import { ThrottlerRetryAfterFilter } from './http/filters/throttler-retry-after.filter';
 import { ThrottlerRetryAfterGuard } from './http/guards/throttler-retry-after.guard';
@@ -39,6 +45,7 @@ import { ThrottlerRetryAfterGuard } from './http/guards/throttler-retry-after.gu
     }),
     // Feature modules
     AuthModule,
+    ServerFeatureSalonOwnerModule,
     TotpModule,
   ],
   controllers: [AppController],
