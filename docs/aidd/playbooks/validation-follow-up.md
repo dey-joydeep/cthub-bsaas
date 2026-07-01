@@ -10,7 +10,7 @@ Follow the repository AIDD workflow. This is a validation follow-up task.
 Input:
 <paste the command, branch, or relevant output>
 
-Read AGENTS.md, the nearest scoped AGENTS.md, docs/aidd/README.md, and relevant source/spec/test files.
+Read AGENTS.md, every scoped AGENTS.md file required for the affected area, docs/aidd/README.md, and relevant source/spec/test files.
 Do not edit yet. First summarize the command, likely cause, impacted scope, validation plan, and risks.
 ```
 
@@ -19,6 +19,7 @@ Do not edit yet. First summarize the command, likely cause, impacted scope, vali
 - Prefer the smallest correction that addresses the real cause.
 - Keep tests, lint rules, type safety, and coverage thresholds intact.
 - If the issue is environment-only, document the evidence and avoid code changes.
+- Load all layered scoped instructions when the affected area requires more than one file.
 - Rerun the relevant command locally when possible.
 
 ## Completion format

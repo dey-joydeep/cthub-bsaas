@@ -12,7 +12,7 @@ Source slice/spec:
 
 Read first:
 - AGENTS.md
-- nearest scoped AGENTS.md
+- every scoped AGENTS.md file required for the touched areas
 - docs/aidd/README.md
 - docs/specs/project-wide/IMPLEMENTATION/implementation-slicing.md when relevant
 - related FRD, FNRD, HLD, LLD, API, VALIDATION, WEB, and TEST docs
@@ -32,5 +32,6 @@ Do not edit yet. First produce:
 - Preserve existing architecture and Nx boundaries.
 - Add or update tests when behavior changes.
 - Update docs when implementation changes behavior, contracts, setup, or validation.
+- Load all layered scoped instructions when an area requires more than one file.
 - Use named DTOs/types for object-shaped public APIs and avoid ad hoc contract drift.
 - Report any mismatch between implementation and specs before changing broad areas.

@@ -17,7 +17,7 @@ Follow the repository AIDD workflow. This is a new correction task.
 Failure input:
 <paste the failing command and relevant output>
 
-Read AGENTS.md, the nearest scoped AGENTS.md, docs/aidd/README.md, and relevant source/spec/test files.
+Read AGENTS.md, every scoped AGENTS.md file required for the affected area, docs/aidd/README.md, and relevant source/spec/test files.
 Do not edit yet. First identify root cause, affected scope, source-of-truth docs, minimal fix plan, validation commands, and risks.
 ```
 
@@ -36,5 +36,6 @@ Stay inside the original scope. Patch only the immediate cause, do not broaden t
 - Do not weaken tests, lint rules, type safety, coverage thresholds, guards, validation, or contracts.
 - Prefer a regression test for real defects.
 - If code contradicts docs, stop and ask whether to correct code or docs.
+- Load every scoped `AGENTS.md` file required for the affected area, including layered cases such as `libs/server/AGENTS.md` plus `libs/server/features/auth/AGENTS.md`.
 - Use the narrowest Nx or repo validation command that proves the fix.
 - Report the exact command that failed and the exact command rerun.

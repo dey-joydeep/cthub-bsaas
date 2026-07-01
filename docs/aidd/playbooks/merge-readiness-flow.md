@@ -45,6 +45,8 @@ npx prettier --check <changed-doc-paths>
 git diff --check origin/main...HEAD
 ```
 
+If the current checkout does not have `origin/main` available yet, fetch the base branch ref first or diff against the fetched base commit or merge-base instead.
+
 For AIDD/process docs that touch `docs/aidd/**` or `.codex/prompts/**`, the changed-doc validation normally includes:
 
 ```powershell
