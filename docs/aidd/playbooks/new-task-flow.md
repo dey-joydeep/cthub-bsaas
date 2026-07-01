@@ -12,7 +12,7 @@ Goal:
 
 Read first:
 - AGENTS.md
-- nearest scoped AGENTS.md
+- every scoped AGENTS.md required for the touched areas
 - docs/aidd/README.md
 - relevant docs/us, docs/specs, docs/quality-standards, and existing implementation files
 
@@ -30,6 +30,7 @@ Do not edit yet. First produce:
 - Treat short requests such as `fix this error` as new tasks unless they are continuation fixes inside an already-running task.
 - Inspect before editing.
 - Prefer the smallest safe change.
+- Load all required scoped instruction files when an area has layered guidance, such as `libs/server/**` plus `libs/server/features/auth/**`.
 - Use Nx commands for project tasks instead of direct tool invocations when Nx targets exist.
 - Keep FRD/FNRD/HLD/LLD/API/VALIDATION/WEB/TEST alignment when behavior or contracts change.
 - Report validation honestly.

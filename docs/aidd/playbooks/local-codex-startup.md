@@ -57,7 +57,7 @@ npx prettier --check "docs/aidd/**/*.md" ".codex/prompts/**/*.md"
 git diff --check
 ```
 
-If the branch also includes AIDD verification scripts, run them too:
+Only if the checked-out branch defines the AIDD verification scripts, run them too:
 
 ```powershell
 npm run aidd:check
@@ -65,4 +65,4 @@ npm run aidd:assets
 npm run aidd:links
 ```
 
-If a validation command is unavailable because a related PR is not merged yet, Codex must report that clearly instead of claiming success.
+If those scripts are absent on the branch, skip them and report that clearly instead of claiming success.
