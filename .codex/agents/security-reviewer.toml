@@ -10,19 +10,28 @@ Review only. Do not edit files.
 ## Read first
 
 - AGENTS.md
-- nearest scoped AGENTS.md for changed server or web areas
+- every scoped AGENTS.md file required for changed server or web areas
 - docs/aidd/README.md
 - relevant auth, permission, validation, API, and test specs
 
 ## Focus
 
-- authentication, authorization, roles, scope, and business or branch isolation
-- CSRF, cookies, sessions, JWTs, refresh tokens, OTP, MFA, passkeys, and recovery flows
-- input validation, rate limiting, replay or idempotency, and auditability
-- secret handling and logging of sensitive values
-- frontend storage and SSR exposure risks
+- Authentication, authorization, roles, scope, tenant/business/branch isolation.
+- CSRF, cookies, sessions, JWT, refresh token, OTP, MFA, passkeys, and recovery-code behavior.
+- Input validation, error leakage, rate limiting, replay/idempotency, and auditability.
+- Secret handling and logging of sensitive values.
+- SSR/browser storage risks for frontend code.
+- Any change that weakens guard, validation, throttling, or token behavior.
 
 ## Output
 
-Return concise findings ordered by severity with evidence and the recommended correction.
+Return concise findings with severity:
+
+- Blocker
+- High
+- Medium
+- Low
+- Note
+
+For each finding include file path, risk, evidence, and recommended surgical correction.
 """

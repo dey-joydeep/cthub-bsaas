@@ -6,31 +6,31 @@ description = "CI helper for /monitor-ci. Fetches CI status, retrieves fix detai
 config_file = "agents/ci-monitor-subagent.toml"
 
 [agents.architect-reviewer]
-description = "Architecture reviewer for Nx boundaries, layering, slice discipline, and broad refactor risk."
+description = "Architecture reviewer for Nx boundaries, backend/frontend layering, implementation slicing, and broad refactor risk. Use for AIDD planning, PR review, and merge-readiness checks."
 config_file = "agents/architect-reviewer.toml"
 
 [agents.api-contract-reviewer]
-description = "API contract reviewer for OpenAPI, DTO/schema alignment, auth, validation, and response contracts."
+description = "API contract reviewer for OpenAPI, endpoint maps, DTO/schema alignment, response envelopes, auth, validation, and error contracts."
 config_file = "agents/api-contract-reviewer.toml"
 
 [agents.security-reviewer]
-description = "Security reviewer for auth, authorization, tokens, cookies, logging, validation, and isolation risks."
+description = "Security reviewer for auth, authorization, scope isolation, CSRF, cookies, sessions, tokens, validation, sensitive logging, and frontend storage risks."
 config_file = "agents/security-reviewer.toml"
 
 [agents.test-reviewer]
-description = "Test reviewer for unit, integration, contract, regression, and validation coverage gaps."
+description = "Test reviewer for unit, integration, contract, e2e, regression, permission, validation, conflict, and edge-case coverage."
 config_file = "agents/test-reviewer.toml"
 
 [agents.angular-ssr-reviewer]
-description = "Frontend reviewer for Angular 20, SSR safety, state handling, accessibility, and web tests."
+description = "Frontend reviewer for Angular 20, SSR safety, Material v3, Tailwind v4 twc- prefix usage, accessibility, web state handling, and web tests."
 config_file = "agents/angular-ssr-reviewer.toml"
 
 [agents.nestjs-prisma-reviewer]
-description = "Backend reviewer for NestJS, Prisma, repositories, DTOs, error contracts, and server tests."
+description = "Backend reviewer for NestJS 11, Prisma, repository boundaries, DTO validation, response envelopes, i18n/error codes, and server tests."
 config_file = "agents/nestjs-prisma-reviewer.toml"
 
 [agents.docs-traceability-reviewer]
-description = "Documentation reviewer for story-to-spec-to-test traceability and source-of-truth alignment."
+description = "Documentation traceability reviewer for user story to FRD/FNRD/HLD/LLD/API/VALIDATION/WEB/TEST alignment and visual artifact source-of-truth rules."
 config_file = "agents/docs-traceability-reviewer.toml"
 
 [agents.implementation-planner]
