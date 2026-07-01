@@ -25,6 +25,14 @@ When instructions overlap, use this order:
 | [Codex Task Policy](codex-task-policy.md)                 | Depth, stop conditions, and completion expectations by task type.                             |
 | [Codex Review Checklist](codex-review-checklist.md)       | Checklist for PR reviews and self-review before handoff.                                      |
 | [Codex Validation Commands](codex-validation-commands.md) | Current validation commands and reporting rules.                                              |
+| [MCP Configuration Policy](mcp-configuration-policy.md)   | Repository-vs-global MCP configuration split and safety policy.                               |
+| [Codex CLI Operator Guide](codex-cli-operator-guide.md)   | Practical local Codex commands and operator prompts.                                          |
+
+## Repo Codex Assets
+
+- `.codex/agents/*.toml` contains shipped reviewer and implementation helper agents.
+- `.codex/environments/environment.toml` points at the repo bootstrap command for fresh Codex worktrees.
+- `.codex/prompts/*.md` contains reusable planning, implementation, review, CI-fix, and test prompts.
 
 ## Prompt Templates
 
@@ -36,6 +44,18 @@ When instructions overlap, use this order:
 | `.codex/prompts/fix-ci.md`             | Fixing failing local validation or CI.                          |
 | `.codex/prompts/create-tests.md`       | Adding or improving tests.                                      |
 
+## Playbooks
+
+| Playbook                                                            | Use                                                         |
+| ------------------------------------------------------------------- | ----------------------------------------------------------- |
+| [Local Codex Startup](playbooks/local-codex-startup.md)             | Starting a local Codex session from the repository root.    |
+| [New Task Flow](playbooks/new-task-flow.md)                         | Kicking off a new implementation, docs, or correction task. |
+| [Fix Error Flow](playbooks/fix-error-flow.md)                       | Handling a failing command or defect safely.                |
+| [Implementation Slice Flow](playbooks/implementation-slice-flow.md) | Implementing an approved slice or contract change.          |
+| [Review PR Flow](playbooks/review-pr-flow.md)                       | Reviewing a PR or branch with AIDD traceability.            |
+| [Validation Follow-up](playbooks/validation-follow-up.md)           | Working through local or CI validation failures.            |
+| [Merge Readiness Flow](playbooks/merge-readiness-flow.md)           | Checking whether a branch is ready to merge.                |
+
 ## Maintenance Rule
 
-Keep these docs aligned with package scripts, Nx project names, OpenAPI locations, and current documentation standards. If a command or source-of-truth path changes, update this folder in the same PR.
+Keep these docs aligned with package scripts, Nx project names, OpenAPI locations, current documentation standards, and safe Codex/MCP configuration. If a command or source-of-truth path changes, update this folder in the same PR.
