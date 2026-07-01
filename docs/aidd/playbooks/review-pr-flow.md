@@ -10,7 +10,7 @@ Follow the repository AIDD workflow. Review this PR:
 
 Read:
 - AGENTS.md
-- nearest scoped AGENTS.md for changed areas
+- every scoped AGENTS.md required for the changed areas
 - docs/aidd/README.md
 - docs/aidd/codex-review-checklist.md
 - relevant FRD/FNRD/HLD/LLD/API/VALIDATION/WEB/TEST docs
@@ -36,6 +36,9 @@ Spawn relevant project reviewers for architecture, API contract, security, testi
 - For docs-only PRs, focus on instruction accuracy, source-of-truth alignment, broken paths, and runnable validation guidance instead of defaulting to build or test findings.
 - For API or contract PRs, verify OpenAPI, DTO, mapper, and validation alignment explicitly.
 - For Nx project changes, call out the narrowest meaningful `nx` validation targets that should back the review.
+- When changed areas have layered scoped instructions, load all of them, such as `libs/server/AGENTS.md` plus `libs/server/features/auth/AGENTS.md`.
+- After pushing a fix for a review thread, reply in that same thread with the fix summary and mention `@codex` so the reviewer is explicitly asked to verify it.
+- Use a top-level `@codex review` comment only when you want a whole-PR re-review rather than a thread-specific follow-up.
 
 ## Review severity
 

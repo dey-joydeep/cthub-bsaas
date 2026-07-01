@@ -10,7 +10,7 @@ Follow the repository AIDD workflow. Check merge readiness for:
 
 Read:
 - AGENTS.md
-- nearest scoped AGENTS.md files for the changed areas
+- every scoped AGENTS.md file required for the changed areas
 - docs/aidd/README.md
 - docs/aidd/codex-review-checklist.md
 - changed files
@@ -38,11 +38,17 @@ Do not edit. First produce:
 
 ## Local commands before merging
 
-For docs-only PRs, start with document validation and diff hygiene:
+For docs-only PRs, validate the docs that the PR actually changes and check the committed PR diff for whitespace:
+
+```powershell
+npx prettier --check <changed-doc-paths>
+git diff --check origin/main...HEAD
+```
+
+For AIDD/process docs that touch `docs/aidd/**` or `.codex/prompts/**`, the changed-doc validation normally includes:
 
 ```powershell
 npx prettier --check "docs/aidd/**/*.md" ".codex/prompts/**/*.md"
-git diff --check
 ```
 
 Only run code build, lint, or test commands when the PR scope actually touches runnable projects.
