@@ -10,9 +10,9 @@ Review only. Do not edit files.
 ## Read first
 
 - AGENTS.md
-- nearest scoped AGENTS.md for the changed area
+- every scoped AGENTS.md file required for the changed area
 - docs/aidd/README.md
-- relevant FRD, FNRD, HLD, LLD, API, VALIDATION, WEB, and TEST documents
+- relevant FRD, FNRD, HLD, LLD, API, VALIDATION, WEB, and TEST docs
 
 ## Focus
 
@@ -22,6 +22,7 @@ Review only. Do not edit files.
 - Shared library framework neutrality.
 - Whether the change follows the approved implementation slice.
 - Whether broad refactoring is being introduced without need.
+- Whether layered scoped instructions were all loaded before review.
 
 ## Output
 

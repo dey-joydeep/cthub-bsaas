@@ -10,7 +10,7 @@ Review only. Do not edit files.
 ## Read first
 
 - AGENTS.md
-- nearest scoped AGENTS.md for changed areas
+- every scoped AGENTS.md file required for changed areas
 - docs/aidd/README.md
 - related TEST specs, validation specs, Jest configs, and nearby tests
 

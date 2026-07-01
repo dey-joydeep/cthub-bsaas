@@ -19,30 +19,32 @@ This spec pack converts the Salon Owner user stories into implementation-ready f
 
 ## Documents
 
-| Area       | Document                                                           | Purpose                                                            |
-| ---------- | ------------------------------------------------------------------ | ------------------------------------------------------------------ |
-| FRD        | [FRD Index](FRD/README.md)                                         | Authoritative functional requirements and rule index.              |
-| FRD        | [Business Operating Model](FRD/business-operating-model.md)        | Tenant, salon business, legal registration, branch model.          |
-| FRD        | [Business Rules](FRD/business-rules.md)                            | Binding cross-feature business behavior.                           |
-| FRD        | [Permissions Matrix](FRD/permissions-matrix.md)                    | Role, scope, and operation permission rules.                       |
-| FNRD       | [Non-Functional Requirements](FNRD/non-functional-requirements.md) | Security, data integrity, reliability, observability.              |
-| HLD        | [HLD Index](HLD/README.md)                                         | Cross-cutting and feature-specific architecture documents.         |
-| HLD        | [Overview](HLD/overview.md)                                        | System context, MVP scope, architecture decisions.                 |
-| HLD        | [Domain Architecture](HLD/domain-architecture.md)                  | Bounded contexts, module boundaries, dependencies.                 |
-| HLD        | [Data Model](HLD/data-model.md)                                    | Entity model, relationships, lifecycle states.                     |
-| HLD        | [API HLD](HLD/api-hld.md)                                          | API resource model and endpoint groups.                            |
-| HLD        | [Web HLD](HLD/web-hld.md)                                          | Screen architecture and state/data boundaries.                     |
-| LLD        | [LLD Index](LLD/README.md)                                         | Cross-cutting and feature-specific implementation documents.       |
-| LLD        | [MVP LLD](LLD/mvp-lld.md)                                          | Detailed implementation design for MVP modules.                    |
-| LLD        | [Service Contracts](LLD/service-contracts.md)                      | Ports, services, commands, read models.                            |
-| API        | [OpenAPI Contract](API/openapi.yaml)                               | Target REST contract for implementation.                           |
-| API        | [Endpoint Map](API/endpoint-map.md)                                | Feature-to-operation mapping for the OpenAPI contract.             |
-| WIREFRAMES | [Wireframe Index](WIREFRAMES/README.md)                            | Penpot wireframe references and screen transition support.         |
-| WEB        | [Web Index](WEB/README.md)                                         | Cross-cutting and screen-specific web specifications.              |
-| WEB        | [Web LLD](WEB/web-lld.md)                                          | Partner web routes, components, API services, UI rules.            |
-| VALIDATION | [Validation Index](VALIDATION/README.md)                           | Shared and feature-specific backend/frontend validation contracts. |
-| TEST       | [Test Index](TEST/README.md)                                       | Cross-cutting and feature-specific verification documents.         |
-| TEST       | [Test Strategy](TEST/test-strategy.md)                             | Unit, integration, e2e, contract, and NFR tests.                   |
+| Area       | Document                                                                                                      | Purpose                                                            |
+| ---------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| FRD        | [FRD Index](FRD/README.md)                                                                                    | Authoritative functional requirements and rule index.              |
+| FRD        | [Business Operating Model](FRD/business-operating-model.md)                                                   | Tenant, salon business, legal registration, branch model.          |
+| FRD        | [Business Rules](FRD/business-rules.md)                                                                       | Binding cross-feature business behavior.                           |
+| FRD        | [Permissions Matrix](FRD/permissions-matrix.md)                                                               | Role, scope, and operation permission rules.                       |
+| FNRD       | [Non-Functional Requirements](FNRD/non-functional-requirements.md)                                            | Security, data integrity, reliability, observability.              |
+| HLD        | [HLD Index](HLD/README.md)                                                                                    | Cross-cutting and feature-specific architecture documents.         |
+| HLD        | [Overview](HLD/overview.md)                                                                                   | System context, MVP scope, architecture decisions.                 |
+| HLD        | [Domain Architecture](HLD/domain-architecture.md)                                                             | Bounded contexts, module boundaries, dependencies.                 |
+| HLD        | [Data Model](HLD/data-model.md)                                                                               | Entity model, relationships, lifecycle states.                     |
+| HLD        | [API HLD](HLD/api-hld.md)                                                                                     | API resource model and endpoint groups.                            |
+| HLD        | [Web HLD](HLD/web-hld.md)                                                                                     | Screen architecture and state/data boundaries.                     |
+| LLD        | [LLD Index](LLD/README.md)                                                                                    | Cross-cutting and feature-specific implementation documents.       |
+| LLD        | [MVP LLD](LLD/mvp-lld.md)                                                                                     | Detailed implementation design for MVP modules.                    |
+| LLD        | [Service Contracts](LLD/service-contracts.md)                                                                 | Ports, services, commands, read models.                            |
+| API        | [OpenAPI Contract](API/openapi.yaml)                                                                          | Target REST contract for implementation.                           |
+| API        | [Endpoint Map](API/endpoint-map.md)                                                                           | Feature-to-operation mapping for the OpenAPI contract.             |
+| WIREFRAMES | [Wireframe Index](WIREFRAMES/README.md)                                                                       | Penpot wireframe references and screen transition support.         |
+| WEB        | [Web Index](WEB/README.md)                                                                                    | Cross-cutting and screen-specific web specifications.              |
+| WEB        | [Web LLD](WEB/web-lld.md)                                                                                     | Partner web routes, components, API services, UI rules.            |
+| VALIDATION | [Validation Index](VALIDATION/README.md)                                                                      | Shared and feature-specific backend/frontend validation contracts. |
+| TEST       | [Test Index](TEST/README.md)                                                                                  | Cross-cutting and feature-specific verification documents.         |
+| TEST       | [Test Strategy](TEST/test-strategy.md)                                                                        | Unit, integration, e2e, contract, and NFR tests.                   |
+| PLAN       | [Branch-Native Operational Model Migration](IMPLEMENTATION/branch-native-operational-model-migration-plan.md) | Staged plan for retiring the legacy `Salon` aggregate.             |
+| PLAN       | [Legacy Salon Dependency Inventory](IMPLEMENTATION/legacy-salon-dependency-inventory.md)                      | Classified schema, runtime, contract, web, and test dependencies.  |
 
 ## Implementation Rule
 

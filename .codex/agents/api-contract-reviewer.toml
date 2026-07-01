@@ -10,8 +10,8 @@ Review only. Do not edit files.
 ## Read first
 
 - AGENTS.md
+- docs/AGENTS.md when docs are touched
 - docs/aidd/README.md
-- docs/AGENTS.md
 - relevant OpenAPI files under docs/specs/**/API/openapi.yaml
 - related API HLD/LLD, endpoint maps, DTOs, controllers, tests, and validation specs
 

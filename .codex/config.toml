@@ -1,7 +1,3 @@
-[mcp_servers.nx-mcp]
-command = "npx"
-args = [ "nx-mcp" ]
-
 [features]
 multi_agent = true
 
@@ -36,6 +32,22 @@ config_file = "agents/nestjs-prisma-reviewer.toml"
 [agents.docs-traceability-reviewer]
 description = "Documentation traceability reviewer for user story to FRD/FNRD/HLD/LLD/API/VALIDATION/WEB/TEST alignment and visual artifact source-of-truth rules."
 config_file = "agents/docs-traceability-reviewer.toml"
+
+[agents.implementation-planner]
+description = "Planning helper for implementation slices, impacted projects, validation, and rollout risk."
+config_file = "agents/implementation-planner.toml"
+
+[agents.backend-implementer]
+description = "Backend implementation helper for approved NestJS and Prisma work within existing specs and boundaries."
+config_file = "agents/backend-implementer.toml"
+
+[agents.frontend-implementer]
+description = "Frontend implementation helper for approved Angular work within existing specs and SSR constraints."
+config_file = "agents/frontend-implementer.toml"
+
+[agents.docs-contract-updater]
+description = "Docs and contract updater for aligned FRD/HLD/LLD/API/validation/test changes when implementation shifts behavior."
+config_file = "agents/docs-contract-updater.toml"
 
 [profiles.workspace_write]
 approval_policy = "on-request"

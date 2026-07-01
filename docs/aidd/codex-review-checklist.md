@@ -61,3 +61,8 @@ Use this checklist when Codex reviews its own changes, reviews a pull request, o
 - [ ] Commands run and results are listed.
 - [ ] Commands not run and reasons are listed.
 - [ ] Risks and follow-ups are listed.
+
+## Review thread follow-up
+
+- [ ] After pushing a fix for a review thread, reply in the same thread with the fix summary and mention `@codex` so the reviewer is explicitly notified to verify it.
+- [ ] Use a top-level `@codex review` comment only when requesting a whole-PR re-review instead of thread-specific verification.

@@ -10,7 +10,7 @@ Review only. Do not edit files.
 ## Read first
 
 - AGENTS.md
-- nearest scoped AGENTS.md for changed server or web areas
+- every scoped AGENTS.md file required for changed server or web areas
 - docs/aidd/README.md
 - relevant auth, permission, validation, API, and test specs
 
