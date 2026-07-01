@@ -23,7 +23,7 @@ codex --cd ~/workspace/cthub-bsaas
 ```text
 Follow the repository AIDD workflow for this session.
 Before doing work, summarize the active repository instructions you loaded.
-Read AGENTS.md, the nearest scoped AGENTS.md for the requested area, and docs/aidd/README.md.
+Read AGENTS.md, every scoped AGENTS.md file required for the requested area, and docs/aidd/README.md.
 Do not edit yet. Confirm the task classification, source-of-truth docs, impacted areas, validation commands, and risks.
 ```
 
@@ -32,7 +32,7 @@ Do not edit yet. Confirm the task classification, source-of-truth docs, impacted
 Codex should mention:
 
 - root `AGENTS.md`;
-- nearest scoped `AGENTS.md` when a scoped area is involved;
+- every scoped `AGENTS.md` required when a layered scoped area is involved;
 - `docs/aidd/README.md`;
 - relevant production documentation standards for docs/spec work;
 - affected apps, libs, docs, tests, and commands.
