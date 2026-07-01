@@ -10,6 +10,8 @@ Codex is the primary AIDD agent for this project. New AIDD process changes shoul
 
 - `AGENTS.md` and nested `AGENTS.md` files
 - `docs/aidd/*`
+- `.codex/agents/*`
+- `.codex/environments/*`
 - `.codex/prompts/*`
 - `.codex/config.toml` only when project-level Codex configuration is required
 
@@ -97,6 +99,14 @@ Codex responses and PR descriptions should include:
 - Commands not run and reason.
 - Design/spec impact.
 - Risks and follow-ups.
+
+## Repo-shipped agent roles
+
+This repository currently ships:
+
+- reviewer agents for architecture, API contracts, security, tests, Angular SSR, NestJS or Prisma, and docs traceability
+- implementation helpers for planning, backend implementation, frontend implementation, and docs or contract alignment
+- an environment bootstrap command for fresh Codex worktrees
 
 ## Local workspace caution
 

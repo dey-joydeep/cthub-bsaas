@@ -5,6 +5,50 @@ multi_agent = true
 description = "CI helper for /monitor-ci. Fetches CI status, retrieves fix details, or updates self-healing fixes. Executes one MCP tool call and returns the result."
 config_file = "agents/ci-monitor-subagent.toml"
 
+[agents.architect-reviewer]
+description = "Architecture reviewer for Nx boundaries, layering, slice discipline, and broad refactor risk."
+config_file = "agents/architect-reviewer.toml"
+
+[agents.api-contract-reviewer]
+description = "API contract reviewer for OpenAPI, DTO/schema alignment, auth, validation, and response contracts."
+config_file = "agents/api-contract-reviewer.toml"
+
+[agents.security-reviewer]
+description = "Security reviewer for auth, authorization, tokens, cookies, logging, validation, and isolation risks."
+config_file = "agents/security-reviewer.toml"
+
+[agents.test-reviewer]
+description = "Test reviewer for unit, integration, contract, regression, and validation coverage gaps."
+config_file = "agents/test-reviewer.toml"
+
+[agents.angular-ssr-reviewer]
+description = "Frontend reviewer for Angular 20, SSR safety, state handling, accessibility, and web tests."
+config_file = "agents/angular-ssr-reviewer.toml"
+
+[agents.nestjs-prisma-reviewer]
+description = "Backend reviewer for NestJS, Prisma, repositories, DTOs, error contracts, and server tests."
+config_file = "agents/nestjs-prisma-reviewer.toml"
+
+[agents.docs-traceability-reviewer]
+description = "Documentation reviewer for story-to-spec-to-test traceability and source-of-truth alignment."
+config_file = "agents/docs-traceability-reviewer.toml"
+
+[agents.implementation-planner]
+description = "Planning helper for implementation slices, impacted projects, validation, and rollout risk."
+config_file = "agents/implementation-planner.toml"
+
+[agents.backend-implementer]
+description = "Backend implementation helper for approved NestJS and Prisma work within existing specs and boundaries."
+config_file = "agents/backend-implementer.toml"
+
+[agents.frontend-implementer]
+description = "Frontend implementation helper for approved Angular work within existing specs and SSR constraints."
+config_file = "agents/frontend-implementer.toml"
+
+[agents.docs-contract-updater]
+description = "Docs and contract updater for aligned FRD/HLD/LLD/API/validation/test changes when implementation shifts behavior."
+config_file = "agents/docs-contract-updater.toml"
+
 [profiles.workspace_write]
 approval_policy = "on-request"
 sandbox_mode    = "workspace-write"

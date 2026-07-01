@@ -44,6 +44,16 @@ Do not edit yet. First classify the task, identify source-of-truth docs, impacte
 | `/agent`  | Inspect or switch the active agent thread.                                 |
 | `/hooks`  | Inspect project and user hooks.                                            |
 
+## Repo-shipped agents
+
+This branch ships these repo agents:
+
+- reviewer agents: architecture, API contract, security, tests, Angular SSR, NestJS or Prisma, and docs traceability
+- implementation helpers: implementation planner, backend implementer, frontend implementer, and docs or contract updater
+- CI helper: `ci-monitor-subagent`
+
+Use explicit prompts to invoke them for planning, implementation, or review tasks.
+
 ## Recommended operator prompts
 
 ### Plan only
@@ -80,6 +90,22 @@ For large PRs or multi-area features, use explicit reviewer-agent instruction:
 
 ```text
 Use relevant reviewer agents for architecture, API contract, security, tests, frontend SSR, backend NestJS/Prisma, and docs traceability. Wait for all results and consolidate findings.
+```
+
+## Fresh worktree bootstrap
+
+Fresh Codex environments use the repo bootstrap command from `.codex/environments/environment.toml`.
+
+The bootstrap currently:
+
+- verifies the repository root
+- reports the Node version
+- runs `npm install` only when `node_modules` is missing
+
+Dry-run validation:
+
+```text
+node .codex/environments/setup.mjs --dry-run
 ```
 
 ## Local validation after AIDD/tooling changes

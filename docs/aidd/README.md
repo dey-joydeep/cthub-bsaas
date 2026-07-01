@@ -28,6 +28,12 @@ When instructions overlap, use this order:
 | [MCP Configuration Policy](mcp-configuration-policy.md)   | Repository-vs-global MCP configuration split and safety policy.                               |
 | [Codex CLI Operator Guide](codex-cli-operator-guide.md)   | Practical local Codex commands and operator prompts.                                          |
 
+## Repo Codex Assets
+
+- `.codex/agents/*.toml` contains shipped reviewer and implementation helper agents.
+- `.codex/environments/environment.toml` points at the repo bootstrap command for fresh Codex worktrees.
+- `.codex/prompts/*.md` contains reusable planning, implementation, review, CI-fix, and test prompts.
+
 ## Prompt Templates
 
 | Prompt                                 | Use                                                             |
