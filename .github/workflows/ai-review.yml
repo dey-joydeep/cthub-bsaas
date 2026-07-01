@@ -15,6 +15,20 @@ jobs:
   ai-review:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: root
+          POSTGRES_DB: bsaas_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d bsaas_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       NX_DAEMON: 'false'
       NX_NO_CLOUD: 'true'
@@ -34,6 +48,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate --schema libs/server/data-access/prisma/schema.prisma
 
       - name: Get changed files
         id: changed

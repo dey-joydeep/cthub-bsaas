@@ -65,7 +65,7 @@ jobs:
       - name: Run quality checks
         shell: bash
         run: |
-          SOURCE_IMPACTING_CHANGES="$(git diff --name-only "$NX_BASE" "$NX_HEAD" | grep -E '^(apps/web/.*/src/|libs/web/.*/src/|libs/shared/src/|package.json$|package-lock.json$|nx.json$|tsconfig.base.json$)' || true)"
+          SOURCE_IMPACTING_CHANGES="$(git diff --name-only "$NX_BASE" "$NX_HEAD" | grep -E '^(apps/web/.*/(src/|eslint\.config\.js$|project\.json$|jest\.config\.(js|ts)$|tsconfig(\.[^/]+)?\.json$)|libs/web/.*/(src/|eslint\.config\.js$|project\.json$|jest\.config\.(js|ts)$|tsconfig(\.[^/]+)?\.json$)|libs/shared/(src/|project\.json$|jest\.config\.(js|ts)$|tsconfig(\.[^/]+)?\.json$)|package.json$|package-lock.json$|nx.json$|tsconfig.base.json$)' || true)"
 
           if [ -z "$SOURCE_IMPACTING_CHANGES" ]; then
             echo "No source-impacting frontend changes detected. Skipping frontend lint/test."
