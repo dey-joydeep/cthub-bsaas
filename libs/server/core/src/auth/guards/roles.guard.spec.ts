@@ -97,6 +97,11 @@ describe('RolesGuard', () => {
       expect(guard.canActivate(context)).toBe(true);
     });
 
+    it('accepts uppercase role names issued in JWT payloads', () => {
+      const context = createMockExecutionContext({ roles: ['OWNER'] as unknown as AuthenticatedUser['roles'] }, reflector, [UserRole.OWNER]);
+      expect(guard.canActivate(context)).toBe(true);
+    });
+
     it('should ignore invalid roles in user object and still grant access if one valid role exists', () => {
       const user = {
         // Intentionally mix invalid strings with one valid role
@@ -169,6 +174,13 @@ describe('RolesGuard', () => {
   describe('helper exports', () => {
     it('normalizeUserRoles handles undefined inputs', () => {
       expect(normalizeUserRoles(undefined)).toEqual([]);
+    });
+
+    it('normalizeUserRoles canonicalizes uppercase role strings', () => {
+      expect(normalizeUserRoles(['ADMIN', 'OWNER'] as unknown as AuthenticatedUser['roles'])).toEqual([
+        UserRole.ADMIN,
+        UserRole.OWNER,
+      ]);
     });
 
     it('expandUserRolesDownward falls back to original role when hierarchy lacks mapping', () => {

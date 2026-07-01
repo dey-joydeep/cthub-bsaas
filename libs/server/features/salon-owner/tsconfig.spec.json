@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../../dist/out-tsc",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "types": ["jest", "node"],
+    "esModuleInterop": true,
+    "target": "es2022",
+    "isolatedModules": true,
+    "useDefineForClassFields": false,
+    "importHelpers": true
+  },
+  "include": [
+    "jest.config.ts",
+    "jest.unit.config.ts",
+    "jest.int.config.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.d.ts",
+    "tests/**/*.it-spec.ts"
+  ]
+}
