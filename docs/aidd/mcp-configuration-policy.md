@@ -14,7 +14,7 @@ The repository may contain only configuration that is safe to commit and useful 
 
 Allowed in the repository:
 
-- Nx MCP configuration that uses local project dependencies and no secrets.
+- Nx MCP configuration that uses pinned local project dependencies and no secrets.
 - Project-scoped Codex agents under `.codex/agents/`.
 - Project-scoped Codex prompts under `.codex/prompts/`.
 - Project-scoped Codex hook definitions in `.codex/hooks.json` or `[hooks]` tables in `.codex/config.toml`, with any called scripts under `.codex/hooks/`.
@@ -45,17 +45,17 @@ Keep the following in the developer's user-level Codex configuration unless ther
 
 ## Recommended split for this project
 
-| Capability              | Repository config        | Global/user config                                     |
-| ----------------------- | ------------------------ | ------------------------------------------------------ |
-| Nx workspace assistance | Yes, safe `nx-mcp` entry | Optional overrides                                     |
-| Filesystem access       | No                       | Yes, workspace allowlist only                          |
-| Git operations          | No                       | Yes                                                    |
-| ESLint                  | No                       | Yes                                                    |
-| Prisma                  | No                       | Yes, with local env                                    |
-| Postgres                | No                       | Yes, with DB credentials                               |
-| GitHub                  | No                       | Yes, with account/token handled outside repo           |
-| draw.io                 | No                       | Yes                                                    |
-| Penpot                  | No                       | Yes, especially when using local/self-hosted instances |
+| Capability              | Repository config                                       | Global/user config                                     |
+| ----------------------- | ------------------------------------------------------- | ------------------------------------------------------ |
+| Nx workspace assistance | Yes, but only when `nx-mcp` is pinned in workspace deps | Yes, or use this until the repo pins the dependency    |
+| Filesystem access       | No                                                      | Yes, workspace allowlist only                          |
+| Git operations          | No                                                      | Yes                                                    |
+| ESLint                  | No                                                      | Yes                                                    |
+| Prisma                  | No                                                      | Yes, with local env                                    |
+| Postgres                | No                                                      | Yes, with DB credentials                               |
+| GitHub                  | No                                                      | Yes, with account/token handled outside repo           |
+| draw.io                 | No                                                      | Yes                                                    |
+| Penpot                  | No                                                      | Yes, especially when using local/self-hosted instances |
 
 ## Change policy
 
