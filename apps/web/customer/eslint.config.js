@@ -14,7 +14,6 @@ export default [
         },
       ],
       '@angular-eslint/prefer-inject': 'off',
-      '@nx/enforce-module-boundaries': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'off',
       '@typescript-eslint/no-implied-eval': 'off',
@@ -24,6 +23,19 @@ export default [
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
+  },
+  {
+    files: [
+      'src/app/app.component.ts',
+      'src/app/app.config.ts',
+      'src/app/app.config.server.ts',
+      'apps/web/customer/src/app/app.component.ts',
+      'apps/web/customer/src/app/app.config.ts',
+      'apps/web/customer/src/app/app.config.server.ts',
+    ],
+    rules: {
+      '@nx/enforce-module-boundaries': 'off',
     },
   },
 ];

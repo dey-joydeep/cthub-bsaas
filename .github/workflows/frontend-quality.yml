@@ -57,6 +57,9 @@ jobs:
             echo "NX_HEAD=HEAD" >> "$GITHUB_ENV"
             echo "NX_DAEMON=false" >> "$GITHUB_ENV"
             echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
+          elif [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "NX_BASE=" >> "$GITHUB_ENV"
+            echo "NX_HEAD=" >> "$GITHUB_ENV"
           else
             echo "NX_BASE=${{ github.event.before }}" >> "$GITHUB_ENV"
             echo "NX_HEAD=HEAD" >> "$GITHUB_ENV"
@@ -65,16 +68,6 @@ jobs:
       - name: Run quality checks
         shell: bash
         run: |
-          SOURCE_IMPACTING_CHANGES="$(git diff --name-only "$NX_BASE" "$NX_HEAD" | grep -E '^(apps/web/.*/(src/|eslint\.config\.js$|project\.json$|jest\.config\.(js|ts)$|tsconfig(\.[^/]+)?\.json$)|libs/web/.*/(src/|eslint\.config\.js$|project\.json$|jest\.config\.(js|ts)$|tsconfig(\.[^/]+)?\.json$)|libs/shared/(src/|project\.json$|jest\.config\.(js|ts)$|tsconfig(\.[^/]+)?\.json$)|package.json$|package-lock.json$|nx.json$|tsconfig.base.json$)' || true)"
-
-          if [ -z "$SOURCE_IMPACTING_CHANGES" ]; then
-            echo "No source-impacting frontend changes detected. Skipping frontend lint/test."
-            exit 0
-          fi
-
-          echo "Source-impacting frontend changes:"
-          echo "$SOURCE_IMPACTING_CHANGES"
-
           filter_frontend_projects() {
             # Keep this workflow scoped to web apps/libs/shared. E2E projects are
             # validated by E2E-specific checks and should not be pulled in by
@@ -82,8 +75,23 @@ jobs:
             grep -E '^(web-.*|shared)$' | grep -Ev -- '-e2e$' || true
           }
 
-          FRONTEND_LINT_PROJECTS="$(npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=lint | filter_frontend_projects | paste -sd, -)"
-          FRONTEND_TEST_PROJECTS="$(npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=test | filter_frontend_projects | paste -sd, -)"
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            FRONTEND_LINT_PROJECTS="$(npx nx show projects --withTarget=lint | filter_frontend_projects | paste -sd, -)"
+            FRONTEND_TEST_PROJECTS="$(npx nx show projects --withTarget=test | filter_frontend_projects | paste -sd, -)"
+          else
+            SOURCE_IMPACTING_CHANGES="$(git diff --name-only "$NX_BASE" "$NX_HEAD" | grep -E '^(apps/web(/.*)?/(src/|eslint\.config\.js$|project\.json$|jest\.config\.(js|ts)$|tsconfig(\.[^/]+)?\.json$|ng-package\.json$|package\.json$|tailwind\.config\.(js|cjs|mjs|ts)$|postcss\.config\.(js|cjs|mjs|ts)$)|libs/web(/.*)?/(src/|eslint\.config\.js$|project\.json$|jest\.config\.(js|ts)$|tsconfig(\.[^/]+)?\.json$|ng-package\.json$|package\.json$|tailwind\.config\.(js|cjs|mjs|ts)$|postcss\.config\.(js|cjs|mjs|ts)$)|libs/shared(/.*)?/(src/|eslint\.config\.js$|project\.json$|jest\.config\.(js|ts)$|tsconfig(\.[^/]+)?\.json$|ng-package\.json$|package\.json$)|package.json$|package-lock.json$|nx.json$|tsconfig.base.json$)' || true)"
+
+            if [ -z "$SOURCE_IMPACTING_CHANGES" ]; then
+              echo "No source-impacting frontend changes detected. Skipping frontend lint/test."
+              exit 0
+            fi
+
+            echo "Source-impacting frontend changes:"
+            echo "$SOURCE_IMPACTING_CHANGES"
+
+            FRONTEND_LINT_PROJECTS="$(npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=lint | filter_frontend_projects | paste -sd, -)"
+            FRONTEND_TEST_PROJECTS="$(npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=test | filter_frontend_projects | paste -sd, -)"
+          fi
 
           if [ -n "$FRONTEND_LINT_PROJECTS" ]; then
             npx nx run-many --target=lint --projects="$FRONTEND_LINT_PROJECTS" --parallel=3
@@ -92,7 +100,7 @@ jobs:
           fi
 
           if [ -n "$FRONTEND_TEST_PROJECTS" ]; then
-            npx nx run-many --target=test --projects="$FRONTEND_TEST_PROJECTS" --parallel=3
+            npx nx run-many --target=test --projects="$FRONTEND_TEST_PROJECTS" --parallel=3 --configuration=ci
           else
             echo "No affected frontend projects with test target."
           fi
