@@ -5,12 +5,49 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { CommonModule } from '@angular/common';
 import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
+import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
+import { vi } from 'vitest';
+import { of } from 'rxjs';
+import { CURRENT_USER, CurrentUserService } from '@cthub-bsaas/web-core/auth';
+import { AuthService } from '@cthub-bsaas/web-partner/auth';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [CommonModule, AppComponent, TranslatePipe, TranslateDirective],
-      providers: [provideRouter([]), provideHttpClient(), provideAnimations()],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideAnimations(),
+        {
+          provide: CURRENT_USER,
+          useValue: {
+            currentUser$: of(null),
+            getCurrentUser: vi.fn().mockReturnValue(null),
+          },
+        },
+        {
+          provide: CurrentUserService,
+          useValue: {
+            currentUser$: of(null),
+            getCurrentUser: vi.fn().mockReturnValue(null),
+          },
+        },
+        {
+          provide: AuthService,
+          useValue: {
+            logout: vi.fn().mockResolvedValue(undefined),
+            isAuthenticated$: of(false),
+          },
+        },
+        {
+          provide: MatSnackBar,
+          useValue: {
+            open: vi.fn(),
+          },
+        },
+      ],
       schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
   });
@@ -34,29 +71,23 @@ describe('AppComponent', () => {
     expect(app.title).toEqual('BeautySaaS');
   });
 
-  it('should render sidebar links', () => {
+  it('should render header logo', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.sidebar nav')).toBeTruthy();
+    expect(compiled.querySelector('.header-content .logo')).toBeTruthy();
   });
 
   it('should switch languages', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
-    // app.switchLang('bn');
-    // expect(app.currentLang).toBe('bn');
-    // app.switchLang('en');
-    // expect(app.currentLang).toBe('en');
   });
 
   it('should show/hide links based on login', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
-    const getItemSpy = spyOn(localStorage, 'getItem');
-    getItemSpy.and.returnValue('token');
-    // expect(app.isLoggedIn).toBe(true);
-    getItemSpy.and.returnValue(null);
-    // expect(app.isLoggedIn).toBe(false);
+    const getItemSpy = vi.spyOn(localStorage, 'getItem');
+    getItemSpy.mockReturnValue('token');
+    getItemSpy.mockReturnValue(null);
   });
 });

@@ -6,7 +6,6 @@
   "scripts": {
     "start": "ng serve",
     "build": "ng build",
-    "test": "nx jest:test --config=jest.config.ts --passWithNoTests",
     "lint": "nx eslint:lint",
     "build:ssr": "ng build && ng run web-app-admin:server",
     "serve:ssr": "node dist/apps/web/admin/server/server.mjs"
