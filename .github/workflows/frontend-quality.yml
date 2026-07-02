@@ -65,6 +65,37 @@ jobs:
             echo "NX_HEAD=HEAD" >> "$GITHUB_ENV"
           fi
 
+      - name: Build frontend dependency declarations
+        shell: bash
+        run: |
+          filter_frontend_projects() {
+            grep -E '^(web-.*|shared)$' | grep -Ev -- '-e2e$' || true
+          }
+
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            FRONTEND_PROJECTS="$(
+              {
+                npx nx show projects --withTarget=lint
+                npx nx show projects --withTarget=test
+              } | filter_frontend_projects | sort -u
+            )"
+          else
+            FRONTEND_PROJECTS="$(
+              {
+                npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=lint
+                npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=test
+              } | filter_frontend_projects | sort -u
+            )"
+          fi
+
+          if echo "$FRONTEND_PROJECTS" | grep -Eq '^(web-lib-admin|web-lib-customer|web-lib-partner)$'; then
+            npx nx run-many -t build --projects="shared,web-config,web-core-auth,web-core-common,web-core-platform,web-ui" --parallel=3
+          else
+            echo "No frontend declaration build required."
+          fi
+        env:
+          CI: true
+
       - name: Run quality checks
         shell: bash
         run: |

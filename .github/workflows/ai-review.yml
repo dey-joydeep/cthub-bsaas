@@ -88,7 +88,7 @@ jobs:
         run: |
           TYPECHECK_PROJECTS="$(npx nx show projects --affected --base=origin/${{ github.base_ref }} --head=HEAD --withTarget=type-check | grep -Ev '^(cthub-bsaas)$' || true)"
           if echo "$TYPECHECK_PROJECTS" | grep -Eq '^(web-lib-admin|web-lib-customer|web-lib-partner)$'; then
-            npx nx run-many -t build -p shared,web-config,web-core-auth,web-core-common,web-core-platform,web-ui --parallel=3
+            npx nx run-many -t build --projects="shared,web-config,web-core-auth,web-core-common,web-core-platform,web-ui" --parallel=3
           else
             echo "No frontend declaration build required."
           fi
