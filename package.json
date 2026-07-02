@@ -12,6 +12,8 @@
     "libs/server/data-access",
     "libs/server/contracts-auth",
     "libs/server/contracts-platform",
+    "libs/server/features/auth",
+    "libs/server/infrastructure",
     "libs/shared",
     "libs/web/admin",
     "libs/web/config",

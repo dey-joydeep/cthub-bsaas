@@ -90,7 +90,9 @@
   "tags": [
     "type:lib",
     "platform:server",
-    "scope:server-feature"
+    "scope:server-feature",
+    "scope:server",
+    "type:feature"
   ],
   "implicitDependencies": [
     "server-core"
