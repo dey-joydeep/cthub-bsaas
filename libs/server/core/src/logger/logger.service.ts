@@ -2,20 +2,20 @@ import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { configure, getLogger, Logger } from 'log4js';
+import pino, { Logger as PinoLogger } from 'pino';
 
 import { ConfigService } from '../config/config.service';
 import { CorrelationId } from '../http/correlation-id.middleware';
 
 /**
  * @public
- * Centralized logger facade that configures log4js once and exposes
- * structured logging helpers for the application and access logs.
+ * Centralized logger facade that configures Pino structured logging once and exposes
+ * helper methods for application and access logs.
  */
 @Injectable()
 export class LoggerService implements OnModuleInit {
-  private accessLogger!: Logger;
-  private appLogger!: Logger;
+  private accessLogger!: PinoLogger;
+  private appLogger!: PinoLogger;
   private readonly configService: ConfigService;
 
   constructor(configService: ConfigService) {
@@ -24,41 +24,63 @@ export class LoggerService implements OnModuleInit {
 
   /**
    * @public
-   * @returns {void} Sets up log4js appenders based on application configuration.
+   * @returns {void} Sets up Pino transports and appenders based on application configuration.
    */
   onModuleInit(): void {
     const { dir, access, app } = this.configService.log;
-
     this.ensureLogDirectory(dir);
 
-    configure({
-      appenders: {
-        console: { type: 'console' },
-        access: {
-          type: 'dateFile',
-          filename: join(dir, access.file),
-          pattern: '-yyyy-MM-dd',
-          maxLogSize: 209_715_200,
-          backups: 3,
-          compress: true,
-        },
-        app: {
-          type: 'dateFile',
-          filename: join(dir, app.file),
-          pattern: '-yyyy-MM-dd',
-          maxLogSize: 209_715_200,
-          backups: 3,
-          compress: true,
-        },
-      },
-      categories: {
-        default: { appenders: ['console', 'app'], level: app.level },
-        access: { appenders: ['console', 'access'], level: access.level },
-      },
+    const isTest = process.env.NODE_ENV === 'test';
+
+    this.appLogger = pino({
+      level: app.level,
+      transport: isTest
+        ? undefined
+        : {
+            targets: [
+              {
+                target: 'pino/file',
+                options: { destination: 1 },
+                level: app.level,
+              },
+              {
+                target: 'pino-roll',
+                options: {
+                  file: join(dir, app.file),
+                  frequency: 'daily',
+                  mkdir: true,
+                  size: '200m',
+                },
+                level: app.level,
+              },
+            ],
+          },
     });
 
-    this.appLogger = getLogger();
-    this.accessLogger = getLogger('access');
+    this.accessLogger = pino({
+      level: access.level,
+      transport: isTest
+        ? undefined
+        : {
+            targets: [
+              {
+                target: 'pino/file',
+                options: { destination: 1 },
+                level: access.level,
+              },
+              {
+                target: 'pino-roll',
+                options: {
+                  file: join(dir, access.file),
+                  frequency: 'daily',
+                  mkdir: true,
+                  size: '200m',
+                },
+                level: access.level,
+              },
+            ],
+          },
+    });
   }
 
   /**
@@ -89,14 +111,12 @@ export class LoggerService implements OnModuleInit {
    * @returns {void}
    */
   error(message: string, trace?: string, context?: string): void {
-    const formattedMessage = this.formatMessage(message, context);
-
+    const formatted = this.formatMessage(message, context);
     if (trace) {
-      this.appLogger.error(formattedMessage, trace);
+      this.appLogger.error({ trace }, formatted);
       return;
     }
-
-    this.appLogger.error(formattedMessage);
+    this.appLogger.error(formatted);
   }
 
   /**
