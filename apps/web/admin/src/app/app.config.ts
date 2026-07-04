@@ -7,7 +7,7 @@ import {
 } from '@angular/common/http';
 import { ApplicationConfig, ErrorHandler, importProvidersFrom } from '@angular/core';
 import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter, withPreloading, PreloadAllModules, withComponentInputBinding } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { provideTranslateService } from '@ngx-translate/core';
@@ -55,8 +55,8 @@ export const appConfig: ApplicationConfig = {
     ),
     // Register global HTTP interceptors
     ERROR_INTERCEPTOR_PROVIDER,
+    provideAnimationsAsync(),
     importProvidersFrom([
-      BrowserAnimationsModule,
       MatNativeDateModule,
     ]),
     { provide: MAT_DATE_LOCALE, useValue: 'en-US' },
