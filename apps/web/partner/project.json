@@ -20,9 +20,7 @@
           "base": "dist/apps/partner"
         },
         "index": "apps/web/partner/src/index.html",
-        "polyfills": [
-          "apps/web/partner/src/polyfills.ts"
-        ],
+        "polyfills": [],
         "tsConfig": "apps/web/partner/tsconfig.app.json",
         "assets": [
           {

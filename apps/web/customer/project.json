@@ -20,9 +20,7 @@
           "base": "dist/apps/customer"
         },
         "index": "apps/web/customer/src/index.html",
-        "polyfills": [
-          "apps/web/customer/src/polyfills.ts"
-        ],
+        "polyfills": [],
         "tsConfig": "apps/web/customer/tsconfig.app.json",
         "assets": [
           {
