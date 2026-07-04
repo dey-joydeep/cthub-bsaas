@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { ConfigService, CorrelationIdMiddleware } from '@cthub-bsaas/server-core';
+import { ConfigService, CorrelationIdMiddleware, LoggerService } from '@cthub-bsaas/server-core';
 import { ClassSerializerInterceptor, Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -7,7 +7,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { json, urlencoded } from 'express';
 import helmet from 'helmet';
-import morgan from 'morgan';
 import { AppModule } from './app.module';
 import { ConfigModule } from '@cthub-bsaas/server-core';
 
@@ -70,9 +69,17 @@ async function bootstrap(): Promise<void> {
   app.use(helmet.xssFilter());
   app.use(helmet.frameguard({ action: 'deny' }));
 
-  // Request logging
-  if (nodeEnv !== 'test' && nodeEnv !== 'production') {
-    app.use(morgan('dev'));
+  // Request logging using centralized Pino LoggerService
+  const loggerService = app.get(LoggerService);
+  if (nodeEnv !== 'test') {
+    app.use((req: any, res: any, next: any) => {
+      const start = Date.now();
+      res.on('finish', () => {
+        const duration = Date.now() - start;
+        loggerService.access(`${req.method} ${req.originalUrl || req.url} ${res.statusCode} ${duration}ms`, 'HTTP');
+      });
+      next();
+    });
   }
 
   // Cookie parser
