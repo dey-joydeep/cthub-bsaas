@@ -9,9 +9,12 @@ jest.mock('@simplewebauthn/server', () => ({
   verifyRegistrationResponse: jest.fn().mockResolvedValue({
     verified: true,
     registrationInfo: {
-      credentialID: Buffer.from('cred-1'),
-      credentialPublicKey: Buffer.from('pk'),
-      counter: 0,
+      credential: {
+        id: 'Y3JlZC0x',
+        publicKey: Buffer.from('pk'),
+        counter: 0,
+        transports: undefined,
+      },
       credentialDeviceType: 'singleDevice',
       credentialBackedUp: false,
     },

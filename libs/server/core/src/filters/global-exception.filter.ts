@@ -26,7 +26,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     });
 
     const body = this.buildCanonicalEnvelope(normalized, isProduction, correlationId);
-    response.status(normalized.status).json(body as Record<string, unknown>);
+    response.status(normalized.status).json(body);
   }
 
   /**

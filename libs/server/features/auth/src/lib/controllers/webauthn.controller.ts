@@ -39,7 +39,7 @@ export class WebauthnController {
   @HttpCode(HttpStatus.OK)
   webauthnRegisterFinish(@Body() response: WebauthnAttestationDto, @Request() req: { user: { userId: string } }) {
     return this.webAuthn
-      .finishRegistration(req.user.userId, response.response as unknown as Record<string, unknown>)
+      .finishRegistration(req.user.userId, response.response)
       .then(() => ({ success: true as const }));
   }
 
@@ -74,7 +74,7 @@ export class WebauthnController {
       throw new UnauthorizedException();
     }
     return this.webAuthn
-      .finishAuthentication(userId, response.response as unknown as Record<string, unknown>)
+      .finishAuthentication(userId, response.response)
       .then(() => this.authService.issueTokensForUser(userId))
       .then((result) => {
         const isCustomer = isCustomerFromAccessToken(this.jwtService, result.accessToken);

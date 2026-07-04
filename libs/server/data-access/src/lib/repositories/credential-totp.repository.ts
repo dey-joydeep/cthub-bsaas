@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import type { ICredentialTotpRepository } from '@cthub-bsaas/server-contracts-auth';
-import type { CredentialTOTP } from '@prisma/client';
+import type { CredentialTOTP, Prisma } from '@prisma/client';
 
 /**
  * @public
@@ -34,10 +34,16 @@ export class CredentialTotpRepository implements ICredentialTotpRepository {
    * @inheritdoc
    */
   update(userId: string, data: { secretEncrypted?: Buffer; verified?: boolean }): Promise<CredentialTOTP> {
-    const updateData: any = { ...data };
-    if (data.secretEncrypted) {
+    const updateData: Prisma.CredentialTOTPUpdateInput = {};
+    if (data.verified !== undefined) {
+      updateData.verified = data.verified;
+    }
+    if (data.secretEncrypted !== undefined) {
       updateData.secretEncrypted = new Uint8Array(data.secretEncrypted);
     }
-    return this.prisma.credentialTOTP.update({ where: { userId }, data: updateData });
+    return this.prisma.credentialTOTP.update({
+      where: { userId },
+      data: updateData,
+    });
   }
 }

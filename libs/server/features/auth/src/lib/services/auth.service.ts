@@ -157,7 +157,7 @@ export class AuthService {
         this.audit.log('email_change_failure', { result: 'failure', reason: 'user_not_found' });
         throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.USER_NOT_FOUND);
       }
-      await this.userRepository.update(user.id, { email, emailVerifiedAt: new Date() } as Partial<User>);
+      await this.userRepository.update(user.id, { email, emailVerifiedAt: new Date() });
       this.audit.log('email_change_success', { userId: user.id });
     } catch {
       this.audit.log('email_change_failure', { result: 'failure', reason: 'invalid_or_expired_token' });
@@ -428,7 +428,7 @@ export class AuthService {
       throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_OR_EXPIRED_RESET_TOKEN);
     }
     const passwordHash = await bcrypt.hash(newPassword, 10);
-    await this.userRepository.update(rec.userId, { passwordHash } as Partial<User>);
+    await this.userRepository.update(rec.userId, { passwordHash });
     await this.pwdResetRepo.markUsed(rec.id);
     const sessions = (await this.sessionRepository.findByUserId(rec.userId)) as { id: string }[];
     for (const s of sessions) {
@@ -460,7 +460,7 @@ export class AuthService {
         this.audit.log('email_verify_failure', { result: 'failure', reason: 'invalid_audience', userId: sub });
         throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_VERIFY_TOKEN);
       }
-      await this.userRepository.update(sub, { emailVerifiedAt: new Date() } as Partial<User>);
+      await this.userRepository.update(sub, { emailVerifiedAt: new Date() });
       this.audit.log('email_verified', { userId: sub });
     } catch {
       this.audit.log('email_verify_failure', { result: 'failure', reason: 'invalid_or_expired_token' });
@@ -489,7 +489,7 @@ export class AuthService {
       this.audit.log('email_verify_otp_failure', { result: 'failure', reason: 'user_not_found' });
       throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.USER_NOT_FOUND);
     }
-    await this.userRepository.update(user.id, { emailVerifiedAt: new Date() } as Partial<User>);
+    await this.userRepository.update(user.id, { emailVerifiedAt: new Date() });
     this.audit.log('email_verified', { userId: user.id });
   }
 }

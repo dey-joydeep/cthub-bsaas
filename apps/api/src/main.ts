@@ -28,7 +28,7 @@ async function bootstrap(): Promise<void> {
 
   // Enable CORS with configuration
   app.enableCors({
-    origin: (origin: string, callback: (error: Error | null, allow?: boolean) => void) => {
+    origin: (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) => {
       try {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) {
