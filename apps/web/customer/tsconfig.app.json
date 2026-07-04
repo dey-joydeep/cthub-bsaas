@@ -14,7 +14,6 @@
   "files": ["src/main.ts"],
   "include": ["src/**/*.ts", "src/**/*.d.ts"],
   "exclude": [
-    "**/setup-jest.ts",
     "**/*.spec.ts",
     "**/*.spec.tsx",
     "**/*.test.ts",
