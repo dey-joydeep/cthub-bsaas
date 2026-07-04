@@ -1,5 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PartialType } from '@nestjs/mapped-types';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsString, IsOptional, IsBoolean, MinLength, MaxLength, ValidateNested } from 'class-validator';
 import { CreateThemeDto, ThemeStylesDto } from './create-theme.dto';
