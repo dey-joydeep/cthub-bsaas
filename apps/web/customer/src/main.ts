@@ -1,4 +1,4 @@
-import { provideZoneChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
@@ -40,6 +40,7 @@ Chart.register(
   PieController,
 );
 
-bootstrapApplication(AppComponent, { ...appConfig, providers: [provideZoneChangeDetection(), ...appConfig.providers] }).catch((err) =>
+bootstrapApplication(AppComponent, { ...appConfig, providers: [provideZonelessChangeDetection(), ...appConfig.providers] }).catch((err) =>
   console.error('Bootstrap error:', err),
 );
+

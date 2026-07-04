@@ -2,7 +2,7 @@ import { APP_BASE_HREF } from '@angular/common';
 import express, { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import 'zone.js/node';
+// Zone.js is removed for zoneless SSR
 import bootstrap from './main.server';
 
 // Static ESM import for CommonEngine

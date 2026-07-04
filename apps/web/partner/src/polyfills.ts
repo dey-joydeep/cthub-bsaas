@@ -3,7 +3,7 @@
  * You can add your own extra polyfills to this file.
  */
 
-import 'zone.js'; // Included with Angular CLI.
+// Zone.js is removed for zoneless change detection
 
 /***************************************************************************************************
  * APPLICATION IMPORTS

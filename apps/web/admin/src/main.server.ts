@@ -1,4 +1,4 @@
-import { provideZoneChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection } from '@angular/core';
 import { bootstrapApplication, BootstrapContext } from '@angular/platform-browser';
 import { AppComponent } from './app/app.component';
 import { config as serverConfig } from './app/app.config.server';
@@ -93,7 +93,7 @@ const bootstrap = async (context: BootstrapContext) => {
     try {
       appRef = await bootstrapApplication(
         AppComponent,
-        { ...ssrConfig, providers: [provideZoneChangeDetection(), ...ssrConfig.providers] },
+        { ...ssrConfig, providers: [provideZonelessChangeDetection(), ...ssrConfig.providers] },
         context,
       );
       console.log('✅ Angular application bootstrapped successfully');

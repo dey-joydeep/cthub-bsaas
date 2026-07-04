@@ -3,7 +3,7 @@ import { AppComponent } from './app/app.component';
 import { config as serverConfig } from './app/app.config.server';
 import { MaterialSsrHandler, materialSsrHandlerFactory } from '@cthub-bsaas/web-core-platform';
 import { provideServerRendering } from '@angular/platform-server';
-import { PLATFORM_ID, provideZoneChangeDetection } from '@angular/core';
+import { PLATFORM_ID, provideZonelessChangeDetection } from '@angular/core';
 
 const bootstrap = async (context: BootstrapContext) => {
   console.log('🚀 Starting server-side rendering bootstrap...');
@@ -100,7 +100,7 @@ const bootstrap = async (context: BootstrapContext) => {
     try {
       appRef = await bootstrapApplication(
         AppComponent,
-        { ...ssrConfig, providers: [provideZoneChangeDetection(), ...ssrConfig.providers] },
+        { ...ssrConfig, providers: [provideZonelessChangeDetection(), ...ssrConfig.providers] },
         context,
       );
       console.log('✅ Angular application bootstrapped successfully');
