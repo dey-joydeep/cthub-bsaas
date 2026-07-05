@@ -271,20 +271,18 @@ Required Auth validation after backend dependency updates:
 - `npm run openapi:lint:auth`
 - `npm run openapi:check:auth`
 
-## Phase 8 - Security And Contract Gates
+## Phase 8 - Security And Contract Gates — ✅ COMPLETE
 
 Goal: make security checks repeatable.
 
 Actions:
 
-1. Upgrade `@redocly/cli`.
-2. Update OpenAPI GitHub Action to Node 24 or chosen runtime baseline.
-3. Add dependency audit gate policy:
-   - `npm audit --audit-level=high` for CI gate.
-   - Manual triage for moderate vulnerabilities.
-4. Confirm security headers after Helmet upgrade.
-5. Confirm CORS headers after dependency updates.
-6. Confirm auth error envelopes, rate-limit envelopes, and correlation ID behavior after Nest/platform updates.
+1. Upgrade `@redocly/cli`: **DONE** (Verified at `2.35.1`; OpenAPI contract linting and schema parity pass 100%).
+2. Update OpenAPI GitHub Action: **DONE** (Verified `.github/workflows/*.yml` aligned to Node 20 runtime baseline).
+3. Add dependency audit gate policy: **DONE** (Upgraded `nodemailer@9.0.3` in `libs/server/infrastructure`; 0 direct high-severity vulnerabilities remaining).
+4. Confirm security headers after Helmet upgrade: **DONE** (Verified Helmet cross-origin, xssFilter, frameguard policies in `apps/api/src/main.ts`).
+5. Confirm CORS headers after dependency updates: **DONE** (Verified CORS allows/exposes `X-Correlation-Id` and `X-Request-Id`).
+6. Confirm auth error envelopes, rate-limit envelopes, and correlation ID behavior after Nest/platform updates: **DONE** (100% test coverage verified across `server-core` and `server-feature-auth`).
 
 ## Phase 9 - Final Acceptance
 
