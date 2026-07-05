@@ -134,7 +134,7 @@ export class RevenueChartComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err: Error) => {
-        const errorMessage = err?.message || 'Failed to load revenue data';
+        const errorMessage = err?.message || $localize`:@@DASHBOARD.REVENUE.ERROR_LOADING:Failed to load revenue data`;
         this.chartError.set(errorMessage);
         this.loading.set(false);
         this.showError(errorMessage);

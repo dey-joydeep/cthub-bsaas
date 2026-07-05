@@ -2,7 +2,7 @@
   <div class="back-button">
     <button mat-button [routerLink]="['/appointments', appointment?.id]" [disabled]="!appointment || isSubmitting">
       <mat-icon>arrow_back</mat-icon>
-      {{ 'COMMON.BACK' | translate }}
+      <ng-container i18n="@@COMMON.BACK">Back</ng-container>
     </button>
   </div>
 
@@ -19,8 +19,8 @@
           <div mat-card-avatar class="reschedule-avatar">
             <mat-icon>event_available</mat-icon>
           </div>
-          <mat-card-title>{{ 'APPOINTMENT.RESCHEDULE_APPOINTMENT' | translate }}</mat-card-title>
-          <mat-card-subtitle>{{ 'APPOINTMENT.SELECT_NEW_TIME' | translate }}</mat-card-subtitle>
+          <mat-card-title><ng-container i18n="@@APPOINTMENT.RESCHEDULE_APPOINTMENT">Reschedule Appointment</ng-container></mat-card-title>
+          <mat-card-subtitle><ng-container i18n="@@APPOINTMENT.SELECT_NEW_TIME">Select New Time</ng-container></mat-card-subtitle>
         </mat-card-header>
         <mat-divider></mat-divider>
         <mat-card-content>
@@ -28,50 +28,50 @@
             <!-- Step 1: Select New Date & Time -->
             <mat-step [stepControl]="dateTimeFormGroup" [editable]="!isSubmitting">
               <form [formGroup]="dateTimeFormGroup">
-                <ng-template matStepLabel>{{ 'APPOINTMENT.SELECT_DATETIME' | translate }}</ng-template>
+                <ng-template matStepLabel><ng-container i18n="@@APPOINTMENT.SELECT_DATETIME">Select Date & Time</ng-container></ng-template>
                 <div class="step-content">
-                  <h3>{{ 'APPOINTMENT.CURRENT_APPOINTMENT' | translate }}</h3>
+                  <h3><ng-container i18n="@@APPOINTMENT.CURRENT_APPOINTMENT">Current Appointment</ng-container></h3>
                   <div class="current-appointment">
                     <div class="appointment-detail">
                       <mat-icon>event</mat-icon>
                       <div>
-                        <div class="detail-label">{{ 'APPOINTMENT.DATE' | translate }}:</div>
+                        <div class="detail-label"><ng-container i18n="@@APPOINTMENT.DATE">Date</ng-container>:</div>
                         <div class="detail-value">{{ appointment.startTime | date: 'mediumDate' }}</div>
                       </div>
                     </div>
                     <div class="appointment-detail">
                       <mat-icon>spa</mat-icon>
                       <div>
-                        <div class="detail-label">{{ 'APPOINTMENT.SERVICE' | translate }}</div>
+                        <div class="detail-label"><ng-container i18n="@@APPOINTMENT.SERVICE">Service</ng-container></div>
                         <div class="detail-value">{{ getServiceName(appointment.serviceId) }}</div>
                       </div>
                     </div>
                     <div class="appointment-detail">
                       <mat-icon>person</mat-icon>
                       <div>
-                        <div class="detail-label">{{ 'APPOINTMENT.STAFF' | translate }}</div>
+                        <div class="detail-label"><ng-container i18n="@@APPOINTMENT.STAFF">Staff</ng-container></div>
                         <div class="detail-value">{{ getStaffName(appointment.staffId) }}</div>
                       </div>
                     </div>
                   </div>
-                  <h3 class="new-time-header">{{ 'APPOINTMENT.SELECT_NEW_TIME' | translate }}</h3>
+                  <h3 class="new-time-header"><ng-container i18n="@@APPOINTMENT.SELECT_NEW_TIME">Select New Time</ng-container></h3>
                   <div class="datetime-selection">
                     <div class="date-picker">
                       <mat-form-field appearance="outline" class="w-full">
-                        <mat-label>{{ 'COMMON.DATE' | translate }}</mat-label>
+                        <mat-label><ng-container i18n="@@COMMON.DATE">Date</ng-container></mat-label>
                         <input matInput [matDatepicker]="picker" [min]="minDateString" [formControl]="dateControl" />
                         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
                         <mat-datepicker #picker></mat-datepicker>
                         @if (dateTimeFormGroup.get('date')?.hasError('required')) {
                           <mat-error>
-                            {{ 'VALIDATION.DATE_REQUIRED' | translate }}
+                            <ng-container i18n="@@VALIDATION.DATE_REQUIRED">Date is required.</ng-container>
                           </mat-error>
                         }
                       </mat-form-field>
                     </div>
                     @if (availableTimeSlots.length > 0) {
                       <div class="time-slots">
-                        <h4>{{ 'APPOINTMENT.AVAILABLE_TIMESLOTS' | translate }}</h4>
+                        <h4><ng-container i18n="@@APPOINTMENT.AVAILABLE_TIMESLOTS">Available Time Slots</ng-container></h4>
                         <div class="time-grid">
                           @for (time of availableTimeSlots; track time) {
                             <button
@@ -86,7 +86,7 @@
                         </div>
                         @if (dateTimeFormGroup.get('time')?.hasError('required') && dateTimeFormGroup.get('time')?.touched) {
                           <mat-error>
-                            {{ 'VALIDATION.TIME_REQUIRED' | translate }}
+                            <ng-container i18n="@@VALIDATION.TIME_REQUIRED">Time slot is required.</ng-container>
                           </mat-error>
                         }
                       </div>
@@ -95,10 +95,10 @@
                 </div>
                 <div class="step-actions">
                   <button mat-button type="button" [routerLink]="['/appointments', appointment.id]" [disabled]="isSubmitting">
-                    {{ 'COMMON.CANCEL' | translate }}
+                    <ng-container i18n="@@COMMON.CANCEL">Cancel</ng-container>
                   </button>
                   <button mat-button color="primary" matStepperNext [disabled]="dateTimeFormGroup.invalid || isSubmitting">
-                    {{ 'COMMON.NEXT' | translate }}
+                    <ng-container i18n="@@COMMON.NEXT">Next</ng-container>
                   </button>
                 </div>
               </form>
@@ -106,13 +106,13 @@
             <!-- Step 2: Review Changes -->
             <mat-step [stepControl]="reviewFormGroup">
               <form [formGroup]="reviewFormGroup">
-                <ng-template matStepLabel>{{ 'APPOINTMENT.REVIEW_CHANGES' | translate }}</ng-template>
+                <ng-template matStepLabel><ng-container i18n="@@APPOINTMENT.REVIEW_CHANGES">Review Changes</ng-container></ng-template>
                 <div class="step-content">
-                  <h3>{{ 'APPOINTMENT.REVIEW_CHANGES' | translate }}</h3>
-                  <p class="step-description">{{ 'APPOINTMENT.CONFIRM_RESCHEDULE' | translate }}</p>
+                  <h3><ng-container i18n="@@APPOINTMENT.REVIEW_CHANGES">Review Changes</ng-container></h3>
+                  <p class="step-description"><ng-container i18n="@@APPOINTMENT.CONFIRM_RESCHEDULE">Confirm Reschedule</ng-container></p>
                   <div class="changes-summary">
                     <div class="change-item">
-                      <div class="change-label">{{ 'APPOINTMENT.CURRENT' | translate }}:</div>
+                      <div class="change-label"><ng-container i18n="@@APPOINTMENT.CURRENT">Current</ng-container>:</div>
                       <div class="change-detail">
                         <div class="date-time">
                           <mat-icon>event</mat-icon>
@@ -124,7 +124,7 @@
                       <mat-icon>arrow_forward</mat-icon>
                     </div>
                     <div class="change-item">
-                      <div class="change-label">{{ 'APPOINTMENT.NEW' | translate }}:</div>
+                      <div class="change-label"><ng-container i18n="@@APPOINTMENT.NEW">New</ng-container>:</div>
                       <div class="change-detail">
                         @if (dateTimeFormGroup.get('date')?.value) {
                           <div class="date-time">
@@ -137,33 +137,33 @@
                         }
                         @if (!dateTimeFormGroup.get('date')?.value) {
                           <div class="no-selection">
-                            {{ 'APPOINTMENT.NO_DATE_SELECTED' | translate }}
+                            <ng-container i18n="@@APPOINTMENT.NO_DATE_SELECTED">No date selected</ng-container>
                           </div>
                         }
                       </div>
                     </div>
                   </div>
                   <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>{{ 'APPOINTMENT.ADDITIONAL_NOTES' | translate }} ({{ 'COMMON.OPTIONAL' | translate }})</mat-label>
+                    <mat-label><ng-container i18n="@@APPOINTMENT.ADDITIONAL_NOTES">Additional Notes</ng-container> (<ng-container i18n="@@COMMON.OPTIONAL">Optional</ng-container>)</mat-label>
                     <textarea
                       matInput
                       formControlName="notes"
                       rows="3"
-                      [placeholder]="'APPOINTMENT.RESCHEDULE_NOTES_PLACEHOLDER' | translate"
+                      i18n-placeholder="@@APPOINTMENT.RESCHEDULE_NOTES_PLACEHOLDER" placeholder="Enter any notes for rescheduling..."
                     ></textarea>
                   </mat-form-field>
                   <mat-checkbox formControlName="confirm" class="confirmation-checkbox">
-                    {{ 'APPOINTMENT.CONFIRM_RESCHEDULE_CHECKBOX' | translate }}
+                    <ng-container i18n="@@APPOINTMENT.CONFIRM_RESCHEDULE_CHECKBOX">I confirm that I want to reschedule</ng-container>
                   </mat-checkbox>
                   @if (reviewFormGroup.get('confirm')?.hasError('required') && reviewFormGroup.get('confirm')?.touched) {
                     <mat-error>
-                      {{ 'VALIDATION.CONFIRMATION_REQUIRED' | translate }}
+                      <ng-container i18n="@@VALIDATION.CONFIRMATION_REQUIRED">Confirmation is required.</ng-container>
                     </mat-error>
                   }
                 </div>
                 <div class="step-actions">
                   <button mat-button matStepperPrevious [disabled]="isSubmitting">
-                    {{ 'COMMON.BACK' | translate }}
+                    <ng-container i18n="@@COMMON.BACK">Back</ng-container>
                   </button>
                   <button
                     mat-raised-button
@@ -173,7 +173,7 @@
                     [disabled]="reviewFormGroup.invalid || isSubmitting"
                   >
                     @if (!isSubmitting) {
-                      <span>{{ 'APPOINTMENT.CONFIRM_RESCHEDULE' | translate }}</span>
+                      <span><ng-container i18n="@@APPOINTMENT.CONFIRM_RESCHEDULE">Confirm Reschedule</ng-container></span>
                     }
                     @if (isSubmitting) {
                       <mat-spinner diameter="20"></mat-spinner>

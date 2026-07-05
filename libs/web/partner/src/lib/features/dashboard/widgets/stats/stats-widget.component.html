@@ -1,6 +1,6 @@
 <mat-card class="stats-widget">
   <mat-card-header>
-    <mat-card-title>{{ 'DASHBOARD.STATS.TITLE' | translate }}</mat-card-title>
+    <mat-card-title><ng-container i18n="@@DASHBOARD.STATS.TITLE">Statistics</ng-container></mat-card-title>
   </mat-card-header>
 
   <mat-card-content>
@@ -8,22 +8,22 @@
       <div class="stat-item">
         <mat-icon>people</mat-icon>
         <div class="stat-value">{{ stats().totalCustomers }}</div>
-        <div class="stat-label">{{ 'DASHBOARD.STATS.CUSTOMERS' | translate }}</div>
+        <div class="stat-label"><ng-container i18n="@@DASHBOARD.STATS.CUSTOMERS">Customers</ng-container></div>
       </div>
       <div class="stat-item">
         <mat-icon>event</mat-icon>
         <div class="stat-value">{{ stats().totalAppointments }}</div>
-        <div class="stat-label">{{ 'DASHBOARD.STATS.APPOINTMENTS' | translate }}</div>
+        <div class="stat-label"><ng-container i18n="@@DASHBOARD.STATS.APPOINTMENTS">Appointments</ng-container></div>
       </div>
       <div class="stat-item">
         <mat-icon>attach_money</mat-icon>
         <div class="stat-value">{{ stats().totalRevenue | currency }}</div>
-        <div class="stat-label">{{ 'DASHBOARD.STATS.REVENUE' | translate }}</div>
+        <div class="stat-label"><ng-container i18n="@@DASHBOARD.STATS.REVENUE">Revenue</ng-container></div>
       </div>
       <div class="stat-item">
         <mat-icon>subscriptions</mat-icon>
         <div class="stat-value">{{ stats().activeSubscriptions }}</div>
-        <div class="stat-label">{{ 'DASHBOARD.STATS.SUBSCRIPTIONS' | translate }}</div>
+        <div class="stat-label"><ng-container i18n="@@DASHBOARD.STATS.SUBSCRIPTIONS">Active Subscriptions</ng-container></div>
       </div>
     </div>
   </mat-card-content>

@@ -5,9 +5,11 @@ import { Renewal } from './models/renewals-list-widget.model';
 
 @Injectable({ providedIn: 'root' })
 export class RenewalsListWidgetService {
-  constructor(private http: HttpClient) {}
+  constructor(public http: HttpClient) {}
 
-  getRenewals(tenantId: string): Observable<Renewal[]> {
+  getRenewals(tenantId?: string): Observable<Renewal[]> {
+    void this.http;
+    void tenantId;
     // Simulate API call
     return of([
       {

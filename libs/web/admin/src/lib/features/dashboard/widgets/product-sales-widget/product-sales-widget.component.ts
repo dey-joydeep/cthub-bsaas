@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -15,7 +15,6 @@ import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
-import { TranslateService } from '@ngx-translate/core';
 import { takeUntil } from 'rxjs';
 
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
@@ -75,7 +74,6 @@ export class ProductSalesWidgetComponent extends AbstractBaseComponent implement
 
   constructor(
     private productSalesWidgetService: ProductSalesWidgetService,
-    @Inject(TranslateService) private translate: TranslateService,
   ) {
     super();
   }
@@ -124,7 +122,7 @@ export class ProductSalesWidgetComponent extends AbstractBaseComponent implement
       .catch((err: any) => {
         console.error('Error loading product sales:', err);
         this.handleError(err);
-        const errorMessage = this.translate.instant('DASHBOARD.PRODUCT_SALES.ERROR_LOADING');
+        const errorMessage = $localize`:@@DASHBOARD.PRODUCT_SALES.ERROR_LOADING:Failed to load product sales.`;
         this.errorService.handleError(new Error(errorMessage));
         this.loading = false;
       });

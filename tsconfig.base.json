@@ -33,7 +33,7 @@
       "@cthub-bsaas/server-testing-utils/*": ["dist/libs/server/server-testing-utils/*", "libs/server/server-testing-utils/src/*"],
       "@cthub-bsaas/shared": ["libs/shared/src/index.ts"],
       "@cthub-bsaas/shared/models/*": ["libs/shared/src/lib/models/*"],
-      "@cthub-bsaas/shared/*": ["dist/libs/shared/*", "libs/shared/src/*"],
+      "@cthub-bsaas/shared/*": ["libs/shared/src/lib/*", "libs/shared/src/*", "dist/libs/shared/*"],
       "@cthub-bsaas/web-admin": ["libs/web/admin/src/index.ts"],
       "@cthub-bsaas/web-admin/*": ["libs/web/admin/src/*"],
       "@cthub-bsaas/web-admin/auth": ["libs/web/admin/src/lib/features/auth/index.ts"],
@@ -63,7 +63,7 @@
       "@cthub-bsaas/web-core-common/*": ["libs/web/core/common/src/*", "dist/libs/web/core/common/*"],
       "chart.js/dist/types/utils": ["node_modules/chart.js/dist/types/utils.d.ts"]
     },
-    "types": ["node"],
+    "types": ["node", "@angular/localize"],
     "experimentalDecorators": true,
     "sourceMap": true,
     "noUnusedParameters": true,

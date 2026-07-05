@@ -13,5 +13,5 @@ import { RevenueData } from '../../models/dashboard.model';
   styleUrls: ['./revenue-chart.component.css'],
 })
 export class RevenueChartComponent extends AbstractBaseComponent {
-  revenueData = input.required<RevenueData[]>();
+  revenueData = input<RevenueData[]>([]);
 }

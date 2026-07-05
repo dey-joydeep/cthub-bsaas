@@ -26,7 +26,6 @@ import { of, Subject } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 
 import { RouterModule } from '@angular/router';
-import { TranslateService } from '@ngx-translate/core';
 import { Appointment, AppointmentsFilter, AppointmentsOverview, StatusBadgeConfig } from './models/appointments-overview-widget.model';
 import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.enum';
 import { AppointmentsOverviewWidgetService } from './appointments-overview-widget.service';
@@ -108,7 +107,6 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
     private appointmentsOverviewWidgetService: AppointmentsOverviewWidgetService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
-    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -154,7 +152,7 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
         takeUntil(this.destroy$),
         catchError((error) => {
           console.error('Error loading appointments overview:', error);
-          this.error = this.translate.instant('DASHBOARD.APPOINTMENTS.ERROR_LOADING');
+          this.error = $localize`:@@DASHBOARD.APPOINTMENTS.ERROR_LOADING:Failed to load appointments.`;
           return of(null);
         }),
         finalize(() => (this.isLoading = false)),
@@ -264,32 +262,32 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
 
     const badges: Record<AppointmentStatus, StatusBadgeConfig> = {
       [AppointmentStatus.PENDING]: {
-        text: this.translate.instant('DASHBOARD.APPOINTMENTS.STATUS.PENDING'),
+        text: $localize`:@@DASHBOARD.APPOINTMENTS.STATUS.PENDING:Pending`,
         class: 'status-pending',
         icon: 'schedule',
       },
       [AppointmentStatus.CONFIRMED]: {
-        text: this.translate.instant('DASHBOARD.APPOINTMENTS.STATUS.CONFIRMED'),
+        text: $localize`:@@DASHBOARD.APPOINTMENTS.STATUS.CONFIRMED:Confirmed`,
         class: 'status-confirmed',
         icon: 'check_circle',
       },
       [AppointmentStatus.COMPLETED]: {
-        text: this.translate.instant('DASHBOARD.APPOINTMENTS.STATUS.COMPLETED'),
+        text: $localize`:@@DASHBOARD.APPOINTMENTS.STATUS.COMPLETED:Completed`,
         class: 'status-completed',
         icon: 'done_all',
       },
       [AppointmentStatus.CANCELLED]: {
-        text: this.translate.instant('DASHBOARD.APPOINTMENTS.STATUS.CANCELLED'),
+        text: $localize`:@@DASHBOARD.APPOINTMENTS.STATUS.CANCELLED:Cancelled`,
         class: 'status-cancelled',
         icon: 'cancel',
       },
       [AppointmentStatus.NOSHOW]: {
-        text: this.translate.instant('DASHBOARD.APPOINTMENTS.STATUS.NOSHOW'),
+        text: $localize`:@@DASHBOARD.APPOINTMENTS.STATUS.NOSHOW:No-show`,
         class: 'status-noshow',
         icon: 'no_accounts',
       },
       [AppointmentStatus.RESCHEDULED]: {
-        text: this.translate.instant('DASHBOARD.APPOINTMENTS.STATUS.RESCHEDULED'),
+        text: $localize`:@@DASHBOARD.APPOINTMENTS.STATUS.RESCHEDULED:Rescheduled`,
         class: 'status-rescheduled',
         icon: 'reschedule',
       },
@@ -334,14 +332,14 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.snackBar.open(this.translate.instant('DASHBOARD.APPOINTMENTS.STATUS_UPDATED'), this.translate.instant('COMMON.CLOSE'), {
+          this.snackBar.open($localize`:@@DASHBOARD.APPOINTMENTS.STATUS_UPDATED:Appointment status updated.`, $localize`:@@COMMON.CLOSE:Close`, {
             duration: 3000,
           });
           this.loadData();
         },
         error: (error) => {
           console.error('Error updating appointment status:', error);
-          this.snackBar.open(this.translate.instant('DASHBOARD.APPOINTMENTS.STATUS_UPDATE_ERROR'), this.translate.instant('COMMON.CLOSE'), {
+          this.snackBar.open($localize`:@@DASHBOARD.APPOINTMENTS.STATUS_UPDATE_ERROR:Failed to update status.`, $localize`:@@COMMON.CLOSE:Close`, {
             duration: 5000,
             panelClass: ['error-snackbar'],
           });

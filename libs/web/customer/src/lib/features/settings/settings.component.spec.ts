@@ -11,7 +11,7 @@ describe('SettingsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CommonModule, SettingsComponent, TranslatePipe, TranslateDirective],
+      imports: [CommonModule, SettingsComponent],
       providers: [...sharedTestProviders, provideRouter([]), provideAnimations()],
     }).compileComponents();
     fixture = TestBed.createComponent(SettingsComponent);

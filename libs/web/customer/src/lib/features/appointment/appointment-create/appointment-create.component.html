@@ -1,8 +1,8 @@
 <div class="appointment-create-container">
   <mat-card>
     <mat-card-header>
-      <mat-card-title>{{ 'APPOINTMENT.NEW_APPOINTMENT' | translate }}</mat-card-title>
-      <mat-card-subtitle>{{ 'APPOINTMENT.APPOINTMENT_SUBTITLE' | translate }}</mat-card-subtitle>
+      <mat-card-title><ng-container i18n="@@APPOINTMENT.NEW_APPOINTMENT">New Appointment</ng-container></mat-card-title>
+      <mat-card-subtitle><ng-container i18n="@@APPOINTMENT.APPOINTMENT_SUBTITLE">Manage your appointments</ng-container></mat-card-subtitle>
     </mat-card-header>
 
     <mat-card-content>
@@ -10,11 +10,11 @@
         <!-- Step 1: Select Service -->
         <mat-step [stepControl]="serviceFormGroup" [editable]="!isSubmitting">
           <form [formGroup]="serviceFormGroup">
-            <ng-template matStepLabel>{{ 'APPOINTMENT.SELECT_SERVICE' | translate }}</ng-template>
+            <ng-template matStepLabel><ng-container i18n="@@APPOINTMENT.SELECT_SERVICE">Select Service</ng-container></ng-template>
 
             <div class="step-content">
-              <h3>{{ 'APPOINTMENT.CHOOSE_SERVICE' | translate }}</h3>
-              <p class="step-description">{{ 'APPOINTMENT.SERVICE_SELECTION_HELP' | translate }}</p>
+              <h3><ng-container i18n="@@APPOINTMENT.CHOOSE_SERVICE">Choose Service</ng-container></h3>
+              <p class="step-description"><ng-container i18n="@@APPOINTMENT.SERVICE_SELECTION_HELP">Choose the service you would like to book</ng-container></p>
 
               <div class="service-grid">
                 @for (service of services; track service) {
@@ -28,7 +28,7 @@
                       </div>
                       <mat-card-title>{{ service.name }}</mat-card-title>
                       <mat-card-subtitle>
-                        {{ service.duration }} {{ 'COMMON.MINUTES' | translate }} • {{ service.price | currency }}
+                        {{ service.duration }} <ng-container i18n="@@COMMON.MINUTES">minutes</ng-container> • {{ service.price | currency }}
                       </mat-card-subtitle>
                     </mat-card-header>
                   </mat-card>
@@ -37,14 +37,14 @@
 
               @if (serviceFormGroup.get('service')?.invalid && serviceFormGroup.get('service')?.touched) {
                 <mat-error>
-                  {{ 'VALIDATION.SERVICE_REQUIRED' | translate }}
+                  <ng-container i18n="@@VALIDATION.SERVICE_REQUIRED">Please select a service.</ng-container>
                 </mat-error>
               }
             </div>
 
             <div class="step-actions">
               <button mat-button matStepperNext [disabled]="serviceFormGroup.invalid" (click)="onServiceSelect()">
-                {{ 'COMMON.NEXT' | translate }}
+                <ng-container i18n="@@COMMON.NEXT">Next</ng-container>
               </button>
             </div>
           </form>
@@ -53,11 +53,11 @@
         <!-- Step 2: Select Staff -->
         <mat-step [stepControl]="staffFormGroup" [editable]="!isSubmitting">
           <form [formGroup]="staffFormGroup">
-            <ng-template matStepLabel>{{ 'APPOINTMENT.SELECT_STAFF' | translate }}</ng-template>
+            <ng-template matStepLabel><ng-container i18n="@@APPOINTMENT.SELECT_STAFF">Select Staff</ng-container></ng-template>
 
             <div class="step-content">
-              <h3>{{ 'APPOINTMENT.CHOOSE_STAFF' | translate }}</h3>
-              <p class="step-description">{{ 'APPOINTMENT.STAFF_SELECTION_HELP' | translate }}</p>
+              <h3><ng-container i18n="@@APPOINTMENT.CHOOSE_STAFF">Choose Staff</ng-container></h3>
+              <p class="step-description"><ng-container i18n="@@APPOINTMENT.STAFF_SELECTION_HELP">Choose your preferred staff member</ng-container></p>
 
               <div class="staff-grid">
                 @for (staff of staffMembers; track staff) {
@@ -70,7 +70,7 @@
                         <mat-icon>person</mat-icon>
                       </div>
                       <mat-card-title>{{ staff.name }}</mat-card-title>
-                      <mat-card-subtitle>{{ 'APPOINTMENT.AVAILABLE' | translate }}</mat-card-subtitle>
+                      <mat-card-subtitle><ng-container i18n="@@APPOINTMENT.AVAILABLE">Available</ng-container></mat-card-subtitle>
                     </mat-card-header>
                   </mat-card>
                 }
@@ -78,15 +78,15 @@
 
               @if (staffFormGroup.get('staff')?.invalid && staffFormGroup.get('staff')?.touched) {
                 <mat-error>
-                  {{ 'VALIDATION.STAFF_REQUIRED' | translate }}
+                  <ng-container i18n="@@VALIDATION.STAFF_REQUIRED">Please select a staff member.</ng-container>
                 </mat-error>
               }
             </div>
 
             <div class="step-actions">
-              <button mat-button matStepperPrevious>{{ 'COMMON.BACK' | translate }}</button>
+              <button mat-button matStepperPrevious><ng-container i18n="@@COMMON.BACK">Back</ng-container></button>
               <button mat-button matStepperNext [disabled]="staffFormGroup.invalid">
-                {{ 'COMMON.NEXT' | translate }}
+                <ng-container i18n="@@COMMON.NEXT">Next</ng-container>
               </button>
             </div>
           </form>
@@ -95,23 +95,23 @@
         <!-- Step 3: Select Date & Time -->
         <mat-step [stepControl]="dateTimeFormGroup" [editable]="!isSubmitting">
           <form [formGroup]="dateTimeFormGroup">
-            <ng-template matStepLabel>{{ 'APPOINTMENT.SELECT_DATETIME' | translate }}</ng-template>
+            <ng-template matStepLabel><ng-container i18n="@@APPOINTMENT.SELECT_DATETIME">Select Date & Time</ng-container></ng-template>
 
             <div class="step-content">
-              <h3>{{ 'APPOINTMENT.CHOOSE_DATETIME' | translate }}</h3>
-              <p class="step-description">{{ 'APPOINTMENT.DATETIME_SELECTION_HELP' | translate }}</p>
+              <h3><ng-container i18n="@@APPOINTMENT.CHOOSE_DATETIME">Choose Date & Time</ng-container></h3>
+              <p class="step-description"><ng-container i18n="@@APPOINTMENT.DATETIME_SELECTION_HELP">Select a convenient date and time</ng-container></p>
 
               <div class="datetime-selection">
                 <div class="date-picker">
-                  <h4>{{ 'APPOINTMENT.SELECT_DATE' | translate }}</h4>
+                  <h4><ng-container i18n="@@APPOINTMENT.SELECT_DATE">Select Date</ng-container></h4>
                   <mat-form-field appearance="outline">
-                    <mat-label>{{ 'APPOINTMENT.CHOOSE_DATE' | translate }}</mat-label>
+                    <mat-label><ng-container i18n="@@APPOINTMENT.CHOOSE_DATE">Choose Date</ng-container></mat-label>
                     <input matInput [matDatepicker]="picker" formControlName="date" (dateChange)="onDateSelect()" />
                     <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
                     <mat-datepicker #picker></mat-datepicker>
                     @if (dateTimeFormGroup.get('date')?.hasError('required')) {
                       <mat-error>
-                        {{ 'VALIDATION.DATE_REQUIRED' | translate }}
+                        <ng-container i18n="@@VALIDATION.DATE_REQUIRED">Date is required.</ng-container>
                       </mat-error>
                     }
                   </mat-form-field>
@@ -119,7 +119,7 @@
 
                 @if (availableTimeSlots.length > 0) {
                   <div class="time-slots">
-                    <h4>{{ 'APPOINTMENT.AVAILABLE_TIMESLOTS' | translate }}</h4>
+                    <h4><ng-container i18n="@@APPOINTMENT.AVAILABLE_TIMESLOTS">Available Time Slots</ng-container></h4>
                     <div class="time-grid">
                       @for (time of availableTimeSlots; track time) {
                         <button
@@ -133,7 +133,7 @@
                     </div>
                     @if (dateTimeFormGroup.get('time')?.hasError('required') && dateTimeFormGroup.get('time')?.touched) {
                       <mat-error>
-                        {{ 'VALIDATION.TIME_REQUIRED' | translate }}
+                        <ng-container i18n="@@VALIDATION.TIME_REQUIRED">Time slot is required.</ng-container>
                       </mat-error>
                     }
                   </div>
@@ -142,9 +142,9 @@
             </div>
 
             <div class="step-actions">
-              <button mat-button matStepperPrevious>{{ 'COMMON.BACK' | translate }}</button>
+              <button mat-button matStepperPrevious><ng-container i18n="@@COMMON.BACK">Back</ng-container></button>
               <button mat-button matStepperNext [disabled]="dateTimeFormGroup.invalid">
-                {{ 'COMMON.NEXT' | translate }}
+                <ng-container i18n="@@COMMON.NEXT">Next</ng-container>
               </button>
             </div>
           </form>
@@ -153,18 +153,18 @@
         <!-- Step 4: Review & Confirm -->
         <mat-step [stepControl]="detailsFormGroup">
           <form [formGroup]="detailsFormGroup">
-            <ng-template matStepLabel>{{ 'APPOINTMENT.REVIEW_CONFIRM' | translate }}</ng-template>
+            <ng-template matStepLabel><ng-container i18n="@@APPOINTMENT.REVIEW_CONFIRM">Confirm Details</ng-container></ng-template>
 
             <div class="step-content">
-              <h3>{{ 'APPOINTMENT.REVIEW_DETAILS' | translate }}</h3>
-              <p class="step-description">{{ 'APPOINTMENT.REVIEW_DETAILS_HELP' | translate }}</p>
+              <h3><ng-container i18n="@@APPOINTMENT.REVIEW_DETAILS">Review Details</ng-container></h3>
+              <p class="step-description"><ng-container i18n="@@APPOINTMENT.REVIEW_DETAILS_HELP">Please review your appointment details before confirming</ng-container></p>
 
               <div class="appointment-summary">
                 <mat-card>
                   <mat-card-header>
                     <mat-card-title>{{ getSelectedService()?.name }}</mat-card-title>
                     <mat-card-subtitle>
-                      {{ getSelectedService()?.duration }} {{ 'COMMON.MINUTES' | translate }} •
+                      {{ getSelectedService()?.duration }} <ng-container i18n="@@COMMON.MINUTES">minutes</ng-container> •
                       {{ getSelectedService()?.price | currency }}
                     </mat-card-subtitle>
                   </mat-card-header>
@@ -173,7 +173,7 @@
                     <div class="summary-detail">
                       <mat-icon>person</mat-icon>
                       <div>
-                        <div class="detail-label">{{ 'APPOINTMENT.STAFF' | translate }}</div>
+                        <div class="detail-label"><ng-container i18n="@@APPOINTMENT.STAFF">Staff</ng-container></div>
                         <div class="detail-value">{{ getSelectedStaff()?.name || 'N/A' }}</div>
                       </div>
                     </div>
@@ -181,7 +181,7 @@
                     <div class="summary-detail">
                       <mat-icon>event</mat-icon>
                       <div>
-                        <div class="detail-label">{{ 'APPOINTMENT.DATE' | translate }}</div>
+                        <div class="detail-label"><ng-container i18n="@@APPOINTMENT.DATE">Date</ng-container></div>
                         <div class="detail-value">
                           {{ dateTimeFormGroup.get('date')?.value | date: 'fullDate' }}
                         </div>
@@ -191,7 +191,7 @@
                     <div class="summary-detail">
                       <mat-icon>schedule</mat-icon>
                       <div>
-                        <div class="detail-label">{{ 'APPOINTMENT.TIME' | translate }}</div>
+                        <div class="detail-label"><ng-container i18n="@@APPOINTMENT.TIME">Time</ng-container></div>
                         <div class="detail-value">
                           {{ dateTimeFormGroup.get('time')?.value || 'N/A' }}
                         </div>
@@ -199,23 +199,23 @@
                     </div>
 
                     <mat-form-field appearance="outline" class="full-width">
-                      <mat-label>{{ 'APPOINTMENT.NOTES' | translate }} ({{ 'COMMON.OPTIONAL' | translate }})</mat-label>
+                      <mat-label><ng-container i18n="@@APPOINTMENT.NOTES">Notes</ng-container> (<ng-container i18n="@@COMMON.OPTIONAL">Optional</ng-container>)</mat-label>
                       <textarea
                         matInput
                         formControlName="notes"
                         rows="3"
-                        [placeholder]="'APPOINTMENT.NOTES_PLACEHOLDER' | translate"
+                        i18n-placeholder="@@APPOINTMENT.NOTES_PLACEHOLDER" placeholder="Enter any special requests or notes..."
                       ></textarea>
                     </mat-form-field>
                   </mat-card-content>
 
                   <mat-card-actions>
                     <mat-checkbox formControlName="terms">
-                      {{ 'APPOINTMENT.TERMS_AGREEMENT' | translate }}
+                      <ng-container i18n="@@APPOINTMENT.TERMS_AGREEMENT">I agree to the cancellation policy</ng-container>
                     </mat-checkbox>
                     @if (detailsFormGroup.get('terms')?.hasError('required')) {
                       <mat-error>
-                        {{ 'VALIDATION.TERMS_REQUIRED' | translate }}
+                        <ng-container i18n="@@VALIDATION.TERMS_REQUIRED">You must agree to the terms.</ng-container>
                       </mat-error>
                     }
                   </mat-card-actions>
@@ -224,10 +224,10 @@
             </div>
 
             <div class="step-actions">
-              <button mat-button matStepperPrevious>{{ 'COMMON.BACK' | translate }}</button>
+              <button mat-button matStepperPrevious><ng-container i18n="@@COMMON.BACK">Back</ng-container></button>
               <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="detailsFormGroup.invalid || isSubmitting">
                 @if (!isSubmitting) {
-                  <span>{{ 'APPOINTMENT.CONFIRM_APPOINTMENT' | translate }}</span>
+                  <span><ng-container i18n="@@APPOINTMENT.CONFIRM_APPOINTMENT">Confirm Appointment</ng-container></span>
                 }
                 @if (isSubmitting) {
                   <mat-spinner diameter="24"></mat-spinner>

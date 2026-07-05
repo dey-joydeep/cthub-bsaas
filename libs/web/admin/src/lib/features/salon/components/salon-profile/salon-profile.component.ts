@@ -10,12 +10,11 @@ import { ErrorService } from '@cthub-bsaas/web-core-common';
 // Models from salon module
 import { Appointment } from '../../models/appointment.model';
 import { SalonServiceItem } from '../../models/salon-service-item.model';
-import { Salon } from '../../models/salon.model';
+import { Salon, Review } from '../../models/salon.model';
 import { Staff } from '../../models/staff.model';
 
 // Models from other modules
 import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.enum';
-import { Review } from '../../../reviews/models/review.model';
 
 // Pipes
 import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
@@ -52,7 +51,7 @@ export class SalonProfileComponent implements OnInit {
     private route: ActivatedRoute,
     private http: HttpClient,
     @Inject(CurrentUserService) public currentUserService: CurrentUserService,
-    @Inject(ErrorService) private errorService: ErrorService,
+    @Inject(ErrorService) public errorService: ErrorService,
   ) {
     // Get the current user ID
     const user = this.currentUserService.currentUser;
@@ -71,6 +70,7 @@ export class SalonProfileComponent implements OnInit {
         },
         error: (err) => {
           this.error = err.error?.userMessage || err.error?.error || 'Failed to load salon';
+          this.errorService.handleError(err);
           this.loading = false;
         },
       });
@@ -79,7 +79,7 @@ export class SalonProfileComponent implements OnInit {
           .get<{ eligible: boolean }>(`/api/user/${this.userId}/salon/${salonId}/eligible-to-review`, { withCredentials: true })
           .subscribe({
             next: (res) => (this.eligibleToReview = res.eligible),
-            error: (err) => {
+            error: (_err) => {
               this.eligibleToReview = null;
               // Optionally show user-friendly error if needed
             },
@@ -150,8 +150,8 @@ export class SalonProfileComponent implements OnInit {
       customerId: this.userId,
       staffId: this.appointment.staffId,
       serviceId: this.appointment.serviceId,
-      // startTime,
-      // endTime,
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
       status: AppointmentStatus.PENDING,
       notes: this.appointment.notes || '',
     };

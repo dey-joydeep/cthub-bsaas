@@ -44,7 +44,7 @@ import { Appointment } from './models/appointment-management.model';
             <ng-container matColumnDef="service">
               <th mat-header-cell *matHeaderCellDef>Service</th>
               <td mat-cell *matCellDef="let element">{{ element.serviceName }}</td>
-            </ng
+            </ng-container>
             <!-- Staff Column -->
             <ng-container matColumnDef="staff">
               <th mat-header-cell *matHeaderCellDef>Staff</th>

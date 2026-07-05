@@ -104,11 +104,11 @@ describe('HomeComponent', () => {
       getFeaturedServices: vi.fn(),
       getTestimonials: vi.fn(),
       getCities: vi.fn(),
-    } as unknown as vi.Mocked<HomeService>;
+    } ;
 
     snackBar = {
       open: vi.fn(),
-    } as unknown as vi.Mocked<MatSnackBar>;
+    } ;
 
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule, RouterTestingModule.withRoutes([]), HomeComponent],

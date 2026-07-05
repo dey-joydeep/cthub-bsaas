@@ -1,4 +1,4 @@
-﻿import { PlatformUtils, PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
+import { PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
 import { Component, inject, PLATFORM_ID, OnInit } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -138,11 +138,10 @@ export class SalonSearchComponent implements OnInit {
     if (!this.salons || !this.salons.length) return '';
     // Center the map on the first salon or average location
     const center = this.salons[0];
-    // Markers: up to 10 salons for URL length
-    const markers = this.salons
-      .slice(0, 10)
-      .map((salon) => `${salon.latitude},${salon.longitude}`)
-      .join('|');
+    // const markers = this.salons
+    //   .slice(0, 10)
+    //   .map((salon) => `${salon.latitude},${salon.longitude}`)
+    //   .join('|');
     // Google Maps embed with multiple markers (static map for privacy)
     return `https://www.google.com/maps/embed/v1/view?key=YOUR_GOOGLE_MAPS_API_KEY&center=${center.latitude},${center.longitude}&zoom=12&maptype=roadmap`;
     // For production, consider using a proper map component or backend-generated map with markers

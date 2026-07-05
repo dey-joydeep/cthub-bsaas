@@ -20,7 +20,9 @@
           "base": "dist/apps/admin"
         },
         "index": "apps/web/admin/src/index.html",
-        "polyfills": [],
+        "polyfills": [
+          "@angular/localize/init"
+        ],
         "tsConfig": "apps/web/admin/tsconfig.app.json",
         "assets": [
           {
@@ -84,6 +86,26 @@
           "{projectRoot}/src/**/*.ts",
           "{projectRoot}/src/**/*.html"
         ]
+      }
+    },
+    "extract-i18n": {
+      "executor": "@nx/angular:extract-i18n",
+      "options": {
+        "buildTarget": "web-app-admin:build",
+        "format": "xlf2",
+        "outputPath": "apps/web/admin/src/locale",
+        "outFile": "messages.xlf"
+      }
+    }
+  },
+  "i18n": {
+    "sourceLocale": "en-US",
+    "locales": {
+      "bn": {
+        "translation": "apps/web/admin/src/locale/messages.bn.xlf"
+      },
+      "ja": {
+        "translation": "apps/web/admin/src/locale/messages.ja.xlf"
       }
     }
   }

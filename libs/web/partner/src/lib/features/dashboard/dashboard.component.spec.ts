@@ -28,7 +28,7 @@ describe('DashboardComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CommonModule, DashboardComponent, TranslatePipe, TranslateDirective, ReactiveFormsModule],
+      imports: [CommonModule, DashboardComponent, ReactiveFormsModule],
       providers: [provideAnimations(), ...sharedTestProviders],
     })
       .overrideComponent(DashboardComponent, {

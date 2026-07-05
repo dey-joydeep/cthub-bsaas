@@ -1,4 +1,4 @@
-import { Component, OnChanges, SimpleChanges,  inject, input, model } from '@angular/core';
+import { Component, OnChanges, SimpleChanges, inject, viewChild, model } from '@angular/core';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -130,9 +130,7 @@ export class SubscriptionChartWidgetComponent extends AbstractBaseComponent impl
     };
 
     // Force update the chart
-    if (this.chart) {
-      this.chart().update();
-    }
+    this.chart()?.update();
   }
 
   /**
@@ -155,7 +153,7 @@ export class SubscriptionChartWidgetComponent extends AbstractBaseComponent impl
         this.loading = false;
       }),
       catchError((error: Error) => {
-        this.error = 'Failed to load subscription data';
+        this.error = $localize`:@@DASHBOARD.SUBSCRIPTION.ERROR_LOADING:Failed to load subscription data.`;
         this.loading = false;
         console.error('Error loading subscription data:', error);
         return of([]); // Return empty array on error

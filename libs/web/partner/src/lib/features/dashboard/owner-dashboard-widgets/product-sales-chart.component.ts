@@ -32,7 +32,7 @@ export class ProductSalesChartComponent implements OnInit {
         this.error.set(null);
       },
       error: (err: Error) => {
-        this.error.set(err.message || 'Failed to load product sales');
+        this.error.set(err.message || $localize`:@@DASHBOARD.PRODUCT_SALES.ERROR_LOADING:Failed to load product sales`);
         this.loading.set(false);
       },
     });

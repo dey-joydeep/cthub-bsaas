@@ -17,7 +17,7 @@ describe('TopSalonsComponent', () => {
   beforeEach(waitForAsync(() => {
     salonService = {
       getTopSalons: vi.fn(),
-    } as unknown as vi.Mocked<SalonService>;
+    } ;
 
     // Provide the mock service
     // Create a browser environment mock by default

@@ -136,8 +136,8 @@ These are not fully managed by Nx and must be upgraded deliberately.
 
 | Package | Current | Target | Notes |
 |---|---:|---:|---|
-| `@ngx-translate/core` | `16.0.4` | `18.0.0` | Major; validate i18n behavior |
-| `@ngx-translate/http-loader` | `16.0.1` | `18.0.0` | Major |
+| `@ngx-translate/core` | `16.0.4` | `N/A (Removed)` | Migrated to native `@angular/localize` |
+| `@ngx-translate/http-loader` | `16.0.1` | `N/A (Removed)` | Migrated to native `@angular/localize` |
 | `chart.js` | `4.5.0` | `4.5.1` | Patch |
 | `ng2-charts` | `8.0.0` | `10.0.0` | Major; migrate chart components |
 | `tailwindcss` | `4.1.12` | `4.3.1` | Same major |

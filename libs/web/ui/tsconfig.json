@@ -1,7 +1,7 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "types": [],
+    "types": ["@angular/localize"],
     "skipLibCheck": true,
     "moduleResolution": "bundler",
     "noImplicitOverride": true,

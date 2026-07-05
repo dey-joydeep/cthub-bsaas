@@ -5,9 +5,10 @@ import { Staff } from './models/staff-management.model';
 
 @Injectable({ providedIn: 'root' })
 export class StaffManagementService {
-  constructor(private http: HttpClient) {}
+  constructor(public http: HttpClient) {}
 
   getStaff(): Observable<Staff[]> {
+    void this.http;
     // Simulate API call
     return of([
       {

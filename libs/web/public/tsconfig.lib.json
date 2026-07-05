@@ -3,6 +3,13 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "../../../dist/out-tsc/libs/web/public",
+    "paths": {
+      "@cthub-bsaas/shared": ["dist/libs/shared"],
+      "@cthub-bsaas/web-config": ["dist/libs/web/config"],
+      "@cthub-bsaas/web-core-common": ["dist/libs/web/core/common"],
+      "@cthub-bsaas/web-core-platform": ["dist/libs/web/core/platform"],
+      "@cthub-bsaas/web-ui": ["dist/libs/web/ui"]
+    },
     "module": "preserve",
     "moduleResolution": "bundler"
   },

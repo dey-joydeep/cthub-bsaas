@@ -14,11 +14,10 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule, MAT_SNACK_BAR_DEFAULT_OPTIONS } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { TranslateService } from '@ngx-translate/core';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 
-import { Appointment, TimeSlot } from '../models/appointment.model';
+import { Appointment, TimeSlot } from '../appointment-list/model/appointment-list.model';
 import { LoadingService } from '@cthub-bsaas/web-core-common';
 import { AppointmentService } from '../services/appointment.service';
 import { AppointmentStatus } from '@cthub-bsaas/shared';
@@ -69,8 +68,6 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    TranslatePipe,
-    TranslateDirective,
   ],
   templateUrl: './appointment-reschedule.component.html',
   styleUrls: ['./appointment-reschedule.component.css'],
@@ -143,7 +140,6 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
     @Inject(LoadingService) private loadingService: LoadingService,
     private cdr: ChangeDetectorRef,
     private snackBar: MatSnackBar,
-    private translate: TranslateService,
     @Inject(MAT_SNACK_BAR_DEFAULT_OPTIONS) private snackBarConfig: any,
     private datePipe: DatePipe,
     private fb: FormBuilder,
@@ -204,7 +200,7 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
 
   private handleError(error: Error): void {
     console.error('Appointment error:', error);
-    this.snackBar.open(this.translate.instant('ERRORS.GENERAL'), this.translate.instant('COMMON.CLOSE'), { duration: 5000 });
+    this.snackBar.open($localize`:@@ERRORS.GENERAL:An error occurred. Please try again.`, $localize`:@@COMMON.CLOSE:Close`, { duration: 5000 });
   }
 
   // Handle form submission
@@ -244,7 +240,7 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error loading time slots:', error);
-          this.snackBar.open(this.translate.instant('APPOINTMENT.RESCHEDULE.TIME_SLOTS_ERROR'), this.translate.instant('COMMON.CLOSE'), {
+          this.snackBar.open($localize`:@@APPOINTMENT.RESCHEDULE.TIME_SLOTS_ERROR:Failed to load available time slots.`, $localize`:@@COMMON.CLOSE:Close`, {
             duration: 3000,
           });
           this.isLoading = false;
@@ -262,7 +258,7 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: () => {
-          this.snackBar.open(this.translate.instant('APPOINTMENT.RESCHEDULE_SUCCESS'), this.translate.instant('COMMON.CLOSE'), {
+          this.snackBar.open($localize`:@@APPOINTMENT.RESCHEDULE_SUCCESS:Appointment rescheduled successfully.`, $localize`:@@COMMON.CLOSE:Close`, {
             duration: 5000,
           });
           this.router.navigate(['/appointments']);

@@ -5,9 +5,10 @@ import { SubscriptionData } from './models/subscription-chart-widget.model';
 
 @Injectable({ providedIn: 'root' })
 export class SubscriptionChartWidgetService {
-  constructor(private http: HttpClient) {}
+  constructor(public http: HttpClient) {}
 
   getSubscriptionData(): Observable<SubscriptionData[]> {
+    void this.http;
     // Simulate API call
     return of([
       { month: 'Jan', retentionRate: 85 },

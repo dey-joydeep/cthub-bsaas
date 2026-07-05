@@ -13,7 +13,12 @@ import type { DashboardStats } from './models/stats-widget.model';
   styleUrls: ['./stats-widget.component.css'],
 })
 export class StatsWidgetComponent extends AbstractBaseComponent {
-  stats = input.required<DashboardStats>();
+  stats = input<DashboardStats>({
+    totalCustomers: 0,
+    totalAppointments: 0,
+    totalRevenue: 0,
+    activeSubscriptions: 0,
+  });
 
   // No extra constructor logic required; base class handles error service injection.
 }

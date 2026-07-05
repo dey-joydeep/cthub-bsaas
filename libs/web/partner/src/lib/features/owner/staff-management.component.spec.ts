@@ -15,7 +15,7 @@ describe('StaffManagementComponent', () => {
     staffService = {
       addStaff: vi.fn(),
       getStaffList: vi.fn(),
-    } as unknown as vi.Mocked<StaffService>;
+    } ;
 
     // Provide the mock service
     TestBed.overrideProvider(StaffService, { useValue: staffService });

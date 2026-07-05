@@ -24,14 +24,14 @@ export class RenewalsListComponent implements OnInit {
   ngOnInit() {
     if (!this.tenantId()) return;
     this.loading.set(true);
-    this.api.getRenewals(this.tenantId).subscribe({
+    this.api.getRenewals(this.tenantId()).subscribe({
       next: (res: Renewal[]) => {
         this.renewals.set(res);
         this.loading.set(false);
         this.error.set(null);
       },
       error: (err: Error) => {
-        this.error.set(err.message || 'Failed to load renewals');
+        this.error.set(err.message || $localize`:@@DASHBOARD.RENEWALS.ERROR_LOADING:Failed to load renewals`);
         this.loading.set(false);
       },
     });

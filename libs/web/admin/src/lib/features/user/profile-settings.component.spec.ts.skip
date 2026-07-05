@@ -12,7 +12,7 @@ describe('ProfileSettingsComponent', () => {
   beforeEach(async () => {
     userService = {
       updateProfile: vi.fn(),
-    } as unknown as vi.Mocked<UserService>;
+    } ;
 
     // Provide the mock service
     TestBed.overrideProvider(UserService, { useValue: userService });

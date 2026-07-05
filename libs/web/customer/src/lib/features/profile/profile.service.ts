@@ -1,13 +1,14 @@
 import { Injectable } from '@angular/core';
-import { CurrentUserService, User } from '@cthub-bsaas/web-core/auth';
+import { CurrentUserService } from '@cthub-bsaas/web-core/auth';
 import { Observable, of } from 'rxjs';
+import { User } from './model/profile.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
   constructor(private currentUserService: CurrentUserService) {}
 
   getProfile(): Observable<User | null> {
-    return of(this.currentUserService.currentUser);
+    return of(this.currentUserService.currentUser as unknown as User | null);
   }
 
   updateProfile(formData: FormData): Observable<any> {
@@ -19,6 +20,7 @@ export class ProfileService {
       email: formData.get('email') as string,
       phone: formData.get('contact') as string,
     };
+    void updatedUser;
     // this.currentUserService.updateUser(updatedUser);
     return of({ success: true });
   }

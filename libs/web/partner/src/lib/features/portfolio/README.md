@@ -12,7 +12,7 @@
 - It imports the following modules in its `@Component.imports` array:
   - `CommonModule`
   - `ReactiveFormsModule`
-  - `TranslateModule` (for i18n)
+- It uses native Angular `@angular/localize` for all internationalization (i18n).
 - If you add new features or forms, ensure to import `CommonModule` and `ReactiveFormsModule` for template directives like `*ngIf` and `formGroup`.
 
 ## Security & Naming Conventions

@@ -20,7 +20,9 @@
           "base": "dist/apps/partner"
         },
         "index": "apps/web/partner/src/index.html",
-        "polyfills": [],
+        "polyfills": [
+          "@angular/localize/init"
+        ],
         "tsConfig": "apps/web/partner/tsconfig.app.json",
         "assets": [
           {
@@ -84,6 +86,26 @@
           "{projectRoot}/src/**/*.ts",
           "{projectRoot}/src/**/*.html"
         ]
+      }
+    },
+    "extract-i18n": {
+      "executor": "@nx/angular:extract-i18n",
+      "options": {
+        "buildTarget": "web-app-partner:build",
+        "format": "xlf2",
+        "outputPath": "apps/web/partner/src/locale",
+        "outFile": "messages.xlf"
+      }
+    }
+  },
+  "i18n": {
+    "sourceLocale": "en-US",
+    "locales": {
+      "bn": {
+        "translation": "apps/web/partner/src/locale/messages.bn.xlf"
+      },
+      "ja": {
+        "translation": "apps/web/partner/src/locale/messages.ja.xlf"
       }
     }
   }

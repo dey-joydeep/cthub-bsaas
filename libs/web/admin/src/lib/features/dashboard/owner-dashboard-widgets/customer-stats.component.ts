@@ -32,7 +32,7 @@ export class CustomerStatsComponent implements OnInit {
         this.error.set(null);
       },
       error: (err) => {
-        this.error.set(err.message || 'Failed to load customer stats');
+        this.error.set(err.message || $localize`:@@DASHBOARD.CUSTOMER_STATS.ERROR_LOADING:Failed to load customer stats`);
         this.loading.set(false);
       },
     });

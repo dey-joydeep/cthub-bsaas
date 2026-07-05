@@ -117,12 +117,12 @@ export class ForgotPasswordComponent {
           this.email = email;
           this.step = 'otp';
         } else {
-          this.error = 'Failed to send reset instructions.';
+          this.error = $localize`:@@AUTH.FORGOT_PASSWORD.FAILED_TO_SEND:Failed to send reset instructions.`;
         }
       },
       error: (err: unknown) => {
         this.loading = false;
-        const msg = (err as any)?.message || 'An error occurred. Please try again.';
+        const msg = (err as any)?.message || $localize`:@@COMMON.ERRORS.GENERIC:An error occurred. Please try again.`;
         this.error = msg;
       },
     });

@@ -1,6 +1,6 @@
 <mat-card class="revenue-chart">
   <mat-card-header>
-    <mat-card-title>{{ 'DASHBOARD.REVENUE.TITLE' | translate }}</mat-card-title>
+    <mat-card-title><ng-container i18n="@@DASHBOARD.REVENUE.TITLE">Revenue Analytics</ng-container></mat-card-title>
   </mat-card-header>
 
   <mat-card-content>
@@ -8,7 +8,7 @@
       <!-- Chart will be rendered here -->
       @if (!revenueData() || revenueData().length === 0) {
         <div class="no-data">
-          {{ 'DASHBOARD.REVENUE.NO_DATA' | translate }}
+          <ng-container i18n="@@DASHBOARD.REVENUE.NO_DATA">No revenue data available.</ng-container>
         </div>
       }
     </div>

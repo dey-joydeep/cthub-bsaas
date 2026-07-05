@@ -15,7 +15,7 @@ describe('ServiceManagementComponent', () => {
       getServices: vi.fn(),
       updateService: vi.fn(),
       deleteService: vi.fn(),
-    } as unknown as vi.Mocked<ServiceService>;
+    } ;
 
     await TestBed.configureTestingModule({
       imports: [ReactiveFormsModule],

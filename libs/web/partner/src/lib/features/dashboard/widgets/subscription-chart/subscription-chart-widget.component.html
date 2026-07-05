@@ -1,10 +1,10 @@
 <div class="chart-container">
   <mat-card>
     <mat-card-header>
-      <mat-card-title>{{ 'DASHBOARD.SUBSCRIPTIONS.TITLE' | translate }}</mat-card-title>
+      <mat-card-title><ng-container i18n="@@DASHBOARD.SUBSCRIPTIONS.TITLE">Subscriptions Overview</ng-container></mat-card-title>
 
       <div class="chart-actions" mat-card-actions>
-        <button mat-icon-button (click)="refreshChart()" matTooltip="{{ 'COMMON.REFRESH' | translate }}">
+        <button mat-icon-button (click)="refreshChart()" matTooltip="Refresh" i18n-matTooltip="@@COMMON.REFRESH">
           <mat-icon>refresh</mat-icon>
         </button>
       </div>
@@ -15,7 +15,7 @@
       @if (loading) {
         <div class="loading-state">
           <mat-spinner diameter="40"></mat-spinner>
-          <span>{{ 'DASHBOARD.LOADING' | translate }}</span>
+          <span><ng-container i18n="@@DASHBOARD.LOADING">Loading dashboard...</ng-container></span>
         </div>
       }
 
@@ -26,7 +26,7 @@
           <span>{{ error }}</span>
           <button mat-button color="primary" (click)="refreshChart()" class="retry-button">
             <mat-icon>refresh</mat-icon>
-            {{ 'COMMON.RETRY' | translate }}
+            <ng-container i18n="@@COMMON.RETRY">Retry</ng-container>
           </button>
         </div>
       }
@@ -41,7 +41,7 @@
           @if (!subscriptionData()?.length) {
             <div class="no-data">
               <mat-icon>info</mat-icon>
-              <span>{{ 'DASHBOARD.SUBSCRIPTIONS.NO_DATA' | translate }}</span>
+              <span><ng-container i18n="@@DASHBOARD.SUBSCRIPTIONS.NO_DATA">No subscription data available.</ng-container></span>
             </div>
           }
         </div>

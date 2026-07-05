@@ -5,14 +5,18 @@ import { AppointmentWithDetails } from './model/appointment-detail.model';
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentDetailService {
-  constructor(private http: HttpClient) {}
+  constructor(public http: HttpClient) {}
 
   getAppointment(id: string): Observable<AppointmentWithDetails> {
+    void this.http;
+    void id;
     // Replace with actual API call
     return of({} as AppointmentWithDetails);
   }
 
   cancelAppointment(id: string, reason: string): Observable<void> {
+    void id;
+    void reason;
     // Replace with actual API call
     return of(undefined);
   }

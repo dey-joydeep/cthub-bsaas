@@ -1,26 +1,26 @@
 <div class="user-stats-container" role="region" aria-labelledby="user-title">
-  <h2 id="user-title">{{ 'user.title' | translate }}</h2>
+  <h2 id="user-title" i18n="@@USER.TITLE">User Statistics</h2>
   @if (loading) {
-    <div class="loading" aria-live="polite" aria-atomic="true">{{ 'user.loading' | translate }}</div>
+    <div class="loading" aria-live="polite" aria-atomic="true" i18n="@@USER.LOADING">Loading statistics...</div>
   }
   @if (error) {
     <div class="error-message" role="alert">{{ error }}</div>
   }
   @if (isAdmin && !loading && !error && stats) {
     <div class="stats-row">
-      <span class="stat-label">{{ 'user.businessCount' | translate }}</span>
+      <span class="stat-label" i18n="@@USER.BUSINESS_COUNT">Business Count</span>
       <span class="stat-value">{{ stats.businessCount }}</span>
     </div>
     <div class="stats-row">
-      <span class="stat-label">{{ 'user.customerCount' | translate }}</span>
+      <span class="stat-label" i18n="@@USER.CUSTOMER_COUNT">Customer Count</span>
       <span class="stat-value">{{ stats.customerCount }}</span>
     </div>
     <div class="stats-row">
-      <span class="stat-label">{{ 'user.activeBusiness' | translate }}</span>
+      <span class="stat-label" i18n="@@USER.ACTIVE_BUSINESSES">Active Businesses</span>
       <span class="stat-value">{{ stats.activeBusiness }}</span>
     </div>
     <div class="stats-row">
-      <span class="stat-label">{{ 'user.activeCustomers' | translate }}</span>
+      <span class="stat-label" i18n="@@USER.ACTIVE_CUSTOMERS">Active Customers</span>
       <span class="stat-value">{{ stats.activeCustomer }}</span>
     </div>
   }

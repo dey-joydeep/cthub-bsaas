@@ -19,8 +19,6 @@ describe('SalonSearchComponent', () => {
         SalonSearchComponent,
         HttpClientTestingModule,
         FormsModule,
-        TranslatePipe,
-        TranslateDirective,
         SafeUrlPipe,
         RouterTestingModule.withRoutes([]),
       ],

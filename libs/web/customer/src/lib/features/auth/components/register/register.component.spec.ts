@@ -14,7 +14,7 @@ describe('RegisterComponent', () => {
   beforeEach(async () => {
     authServiceSpy = { register: vi.fn() };
     await TestBed.configureTestingModule({
-      imports: [ReactiveFormsModule, RegisterComponent, HttpClientTestingModule, TranslatePipe, TranslateDirective, FormsModule],
+      imports: [ReactiveFormsModule, RegisterComponent, HttpClientTestingModule, FormsModule],
       providers: [{ provide: REGISTER_API, useValue: authServiceSpy }],
     }).compileComponents();
     fixture = TestBed.createComponent(RegisterComponent);

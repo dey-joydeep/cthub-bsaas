@@ -27,7 +27,7 @@ export class SubscriptionChartComponent implements OnInit {
   // Method to load subscription data
   loadData(): void {
     if (!this.tenantId()) {
-      this.error.set('No tenant ID provided');
+      this.error.set($localize`:@@DASHBOARD.SUBSCRIPTION.NO_TENANT:No tenant ID provided`);
       return;
     }
 
@@ -40,7 +40,7 @@ export class SubscriptionChartComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(err.message || 'Failed to load subscription data');
+        this.error.set(err.message || $localize`:@@DASHBOARD.SUBSCRIPTION.ERROR_LOADING:Failed to load subscription data`);
         this.loading.set(false);
       },
     });

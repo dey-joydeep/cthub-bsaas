@@ -13,7 +13,12 @@ import type { DashboardStats } from '../../models/dashboard.model';
   styleUrls: ['./stats-widget.component.css'],
 })
 export class StatsWidgetComponent extends AbstractBaseComponent {
-  stats = input.required<DashboardStats>();
+  stats = input<DashboardStats>({
+    totalCustomers: 0,
+    totalAppointments: 0,
+    totalRevenue: 0,
+    activeSubscriptions: 0,
+  });
 
   public override ngOnInit(): void {
     // No additional initialization needed

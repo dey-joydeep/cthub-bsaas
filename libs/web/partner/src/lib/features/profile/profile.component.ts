@@ -8,7 +8,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslateService } from '@ngx-translate/core';
 import { CURRENT_USER } from '@cthub-bsaas/web-core/auth';
 import type { CurrentUserPort } from '@cthub-bsaas/web-core/auth';
 import { Subscription } from 'rxjs';
@@ -49,7 +48,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     @Inject(CURRENT_USER) private currentUserPort: CurrentUserPort,
     private snackBar: MatSnackBar,
-    private translate: TranslateService,
   ) {
     this.profileForm = this.fb.group({
       firstName: ['', [Validators.required]],
@@ -111,6 +109,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       ...this.currentUser,
       ...this.profileForm.value,
     };
+    void updatedUser;
 
     // Simulate API call
     setTimeout(() => {
@@ -119,7 +118,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       this.isEditing = false;
       this.profileForm.disable();
 
-      this.snackBar.open(this.translate.instant('PROFILE.UPDATE_SUCCESS'), this.translate.instant('COMMON.CLOSE'), { duration: 3000 });
+      this.snackBar.open($localize`:@@PROFILE.UPDATE_SUCCESS:Profile updated successfully.`, $localize`:@@COMMON.CLOSE:Close`, { duration: 3000 });
     }, 1000);
   }
 

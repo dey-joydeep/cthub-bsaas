@@ -13,7 +13,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatStepperModule } from '@angular/material/stepper';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { TranslateService } from '@ngx-translate/core';
 import { AppointmentCreateService } from './appointment-create.service';
 import { Service, Staff } from './model/appointment-create.model';
 
@@ -60,7 +59,6 @@ export class AppointmentCreateComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private snackBar: MatSnackBar,
-    private translate: TranslateService,
     private appointmentCreateService: AppointmentCreateService,
   ) {
     this.serviceFormGroup = this.fb.group({
@@ -145,7 +143,7 @@ export class AppointmentCreateComponent implements OnInit {
 
     this.appointmentCreateService.createAppointment(appointment).subscribe(() => {
       this.isSubmitting = false;
-      this.snackBar.open(this.translate.instant('APPOINTMENT.CREATE_SUCCESS'), this.translate.instant('COMMON.CLOSE'), { duration: 5000 });
+      this.snackBar.open($localize`:@@APPOINTMENT.CREATE_SUCCESS:Appointment created successfully.`, $localize`:@@COMMON.CLOSE:Close`, { duration: 5000 });
 
       // Navigate to appointment list or confirmation page
       this.router.navigate(['/appointments']);

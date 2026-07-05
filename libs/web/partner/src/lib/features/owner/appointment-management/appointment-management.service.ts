@@ -5,9 +5,10 @@ import { Appointment } from './models/appointment-management.model';
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentManagementService {
-  constructor(private http: HttpClient) {}
+  constructor(public http: HttpClient) {}
 
   getAppointments(): Observable<Appointment[]> {
+    void this.http;
     // Simulate API call
     return of([
       {

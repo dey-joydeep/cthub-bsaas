@@ -24,7 +24,7 @@ describe('SalonManagementComponent', () => {
       getSalons: vi.fn(),
       getSalon: vi.fn(),
       deleteSalon: vi.fn(),
-    } as unknown as vi.Mocked<SalonService>;
+    } ;
 
     await TestBed.configureTestingModule({
       imports: [
@@ -38,8 +38,6 @@ describe('SalonManagementComponent', () => {
         MatIconModule,
         MatSelectModule,
         MatChipsModule,
-        TranslatePipe,
-        TranslateDirective,
       ],
       declarations: [SalonManagementComponent],
       providers: [{ provide: SalonService, useValue: salonService }],

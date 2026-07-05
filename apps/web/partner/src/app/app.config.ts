@@ -10,15 +10,13 @@ import { ApplicationConfig, ErrorHandler, importProvidersFrom } from '@angular/c
 import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { PreloadAllModules, provideRouter, withPreloading, withComponentInputBinding } from '@angular/router';
-import { provideTranslateService } from '@ngx-translate/core';
-import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { of } from 'rxjs';
 
 
 // App imports
 import { AUTH_STATE_PORT, CURRENT_USER, CurrentUserService } from '@cthub-bsaas/web-core-auth';
 import { ERROR_INTERCEPTOR_PROVIDER, ErrorHandlerService, loadingInterceptor } from '@cthub-bsaas/web-core-common';
-import { ssrInterceptor, ssrTranslateInterceptor } from '@cthub-bsaas/web-core-platform';
+import { ssrInterceptor } from '@cthub-bsaas/web-core-platform';
 import { routes } from './app.routes';
 import { LOGIN_API, AUTH_STATE_SETTER } from '@cthub-bsaas/web-partner/auth';
 import { LoginApiService } from '@cthub-bsaas/web-partner/auth';
@@ -32,14 +30,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     // PLATFORM_UTILS_TOKEN is provided in web-config at root; no extra providers needed here.
 
-    // Configure TranslateModule for client-side
-    provideTranslateService({
-      lang: 'en'
-    }),
-    provideTranslateHttpLoader({
-      prefix: './assets/i18n/',
-      suffix: '.json'
-    }),
     provideRouter(routes, withPreloading(PreloadAllModules), withComponentInputBinding()),
     provideHttpClient(
       withInterceptorsFromDi(),
@@ -47,7 +37,7 @@ export const appConfig: ApplicationConfig = {
         cookieName: 'XSRF-TOKEN',
         headerName: 'X-XSRF-TOKEN',
       }),
-      withInterceptors([loadingInterceptor, ssrInterceptor, ssrTranslateInterceptor]),
+      withInterceptors([loadingInterceptor, ssrInterceptor]),
       withFetch(),
     ),
     // Register global HTTP interceptors

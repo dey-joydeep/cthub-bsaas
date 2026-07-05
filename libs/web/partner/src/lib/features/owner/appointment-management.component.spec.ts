@@ -7,7 +7,6 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { TranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 
 import { AppointmentManagementComponent } from './appointment-management.component';
@@ -25,7 +24,7 @@ describe('AppointmentManagementComponent', () => {
       createAppointment: vi.fn(),
       getAppointments: vi.fn(),
       updateAppointmentStatus: vi.fn(),
-    } as unknown as vi.Mocked<AppointmentService>;
+    } ;
 
     await TestBed.configureTestingModule({
       imports: [
@@ -38,11 +37,9 @@ describe('AppointmentManagementComponent', () => {
         MatIconModule,
         MatSelectModule,
         NoopAnimationsModule,
-        TranslatePipe,
-        TranslateDirective,
       ],
       declarations: [AppointmentManagementComponent],
-      providers: [{ provide: AppointmentService, useValue: appointmentServiceMock }, TranslateService],
+      providers: [{ provide: AppointmentService, useValue: appointmentServiceMock }],
     }).compileComponents();
 
     appointmentService = TestBed.inject(AppointmentService) as vi.Mocked<AppointmentService>;

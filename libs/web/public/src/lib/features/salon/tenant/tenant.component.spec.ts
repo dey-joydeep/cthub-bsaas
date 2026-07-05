@@ -17,8 +17,6 @@ describe('SalonProfileComponent', () => {
         SalonProfileComponent, // Standalone
         HttpClientTestingModule,
         FormsModule,
-        TranslatePipe,
-        TranslateDirective,
         SafeUrlPipe,
       ],
       providers: [{ provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => '1' } } } }],

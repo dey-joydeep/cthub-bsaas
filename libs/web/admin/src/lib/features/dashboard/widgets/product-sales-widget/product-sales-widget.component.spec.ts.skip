@@ -15,7 +15,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 
 import { ProductSalesWidgetComponent } from './product-sales-widget.component';
@@ -64,21 +63,20 @@ describe.skip('ProductSalesWidgetComponent', () => {
   let fixture: ComponentFixture<ProductSalesWidgetComponent>;
   let dashboardService: vi.Mocked<DashboardService>;
   let productService: vi.Mocked<ProductService>;
-  let translateService: vi.Mocked<TranslateService>;
 
   beforeEach(async () => {
     dashboardService = {
       getProductSales: vi.fn(),
       getProductSalesSummary: vi.fn(),
-    } as unknown as vi.Mocked<DashboardService>;
+    } ;
 
     productService = {
       getProductSales: vi.fn(),
-    } as unknown as vi.Mocked<ProductService>;
+    } ;
 
     translateService = {
       instant: vi.fn(),
-    } as unknown as vi.Mocked<TranslateService>;
+    } ;
 
     await TestBed.configureTestingModule({
       declarations: [ProductSalesWidgetComponent],
@@ -99,13 +97,11 @@ describe.skip('ProductSalesWidgetComponent', () => {
         MatDatepickerModule,
         MatNativeDateModule,
         ReactiveFormsModule,
-        TranslatePipe, TranslateDirective,
       ],
       providers: [
         { provide: DashboardService, useValue: dashboardService },
         { provide: ProductService, useValue: productService },
-        { provide: TranslateService, useValue: translateService },
-      ],
+              ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ProductSalesWidgetComponent);

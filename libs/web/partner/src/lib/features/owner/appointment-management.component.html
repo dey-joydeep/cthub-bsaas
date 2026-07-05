@@ -1,10 +1,10 @@
 <div class="appointment-management-container">
-  <h2>{{ 'APPOINTMENT.MANAGEMENT.TITLE' | translate }}</h2>
+  <h2><ng-container i18n="@@APPOINTMENT.MANAGEMENT.TITLE">Appointment Management</ng-container></h2>
 
   <form [formGroup]="appointmentForm" (ngSubmit)="onSubmit()" class="appointment-form">
     <!-- Customer Selection -->
     <mat-form-field appearance="outline" class="form-field">
-      <mat-label>{{ 'APPOINTMENT.FIELDS.CUSTOMER' | translate }}</mat-label>
+      <mat-label><ng-container i18n="@@APPOINTMENT.FIELDS.CUSTOMER">Customer</ng-container></mat-label>
       <mat-select formControlName="customerId" required>
         @for (customer of customers; track customer) {
           <mat-option [value]="customer.id"> {{ customer.name }} ({{ customer.email }}) </mat-option>
@@ -12,14 +12,14 @@
       </mat-select>
       @if (appointmentForm.get('customerId')?.hasError('required')) {
         <mat-error>
-          {{ 'VALIDATION.REQUIRED' | translate }}
+          <ng-container i18n="@@VALIDATION.REQUIRED">This field is required.</ng-container>
         </mat-error>
       }
     </mat-form-field>
 
     <!-- Service Selection -->
     <mat-form-field appearance="outline" class="form-field">
-      <mat-label>{{ 'APPOINTMENT.FIELDS.SERVICE' | translate }}</mat-label>
+      <mat-label><ng-container i18n="@@APPOINTMENT.FIELDS.SERVICE">Service</ng-container></mat-label>
       <mat-select formControlName="serviceId" required>
         @for (service of services; track service) {
           <mat-option [value]="service.id"> {{ service.name }} ({{ service.duration }} min) </mat-option>
@@ -27,14 +27,14 @@
       </mat-select>
       @if (appointmentForm.get('serviceId')?.hasError('required')) {
         <mat-error>
-          {{ 'VALIDATION.REQUIRED' | translate }}
+          <ng-container i18n="@@VALIDATION.REQUIRED">This field is required.</ng-container>
         </mat-error>
       }
     </mat-form-field>
 
     <!-- Staff Selection -->
     <mat-form-field appearance="outline" class="form-field">
-      <mat-label>{{ 'APPOINTMENT.FIELDS.STAFF' | translate }}</mat-label>
+      <mat-label><ng-container i18n="@@APPOINTMENT.FIELDS.STAFF">Staff</ng-container></mat-label>
       <mat-select formControlName="staffId" required>
         @for (staff of staffMembers; track staff) {
           <mat-option [value]="staff.id"> {{ staff.name }} ({{ staff.role }}) </mat-option>
@@ -42,33 +42,33 @@
       </mat-select>
       @if (appointmentForm.get('staffId')?.hasError('required')) {
         <mat-error>
-          {{ 'VALIDATION.REQUIRED' | translate }}
+          <ng-container i18n="@@VALIDATION.REQUIRED">This field is required.</ng-container>
         </mat-error>
       }
     </mat-form-field>
 
     <!-- Start Time -->
     <mat-form-field appearance="outline" class="form-field">
-      <mat-label>{{ 'APPOINTMENT.FIELDS.START_TIME' | translate }}</mat-label>
+      <mat-label><ng-container i18n="@@APPOINTMENT.FIELDS.START_TIME">Start Time</ng-container></mat-label>
       <input matInput [matDatepicker]="startPicker" formControlName="startTime" required />
       <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
       <mat-datepicker #startPicker></mat-datepicker>
       @if (appointmentForm.get('startTime')?.hasError('required')) {
         <mat-error>
-          {{ 'VALIDATION.REQUIRED' | translate }}
+          <ng-container i18n="@@VALIDATION.REQUIRED">This field is required.</ng-container>
         </mat-error>
       }
     </mat-form-field>
 
     <!-- End Time (readonly, auto-calculated) -->
     <mat-form-field appearance="outline" class="form-field">
-      <mat-label>{{ 'APPOINTMENT.FIELDS.END_TIME' | translate }}</mat-label>
+      <mat-label><ng-container i18n="@@APPOINTMENT.FIELDS.END_TIME">End Time</ng-container></mat-label>
       <input matInput formControlName="endTime" readonly />
     </mat-form-field>
 
     <!-- Notes -->
     <mat-form-field appearance="outline" class="form-field">
-      <mat-label>{{ 'APPOINTMENT.FIELDS.NOTES' | translate }}</mat-label>
+      <mat-label><ng-container i18n="@@APPOINTMENT.FIELDS.NOTES">Notes</ng-container></mat-label>
       <textarea matInput formControlName="notes" rows="3" placeholder="Any special requests or notes..."></textarea>
     </mat-form-field>
 
@@ -77,7 +77,7 @@
       <button mat-raised-button color="primary" type="submit" [disabled]="appointmentForm.invalid || loading" class="submit-button">
         <mat-icon>save</mat-icon>
         @if (!loading) {
-          <span>{{ 'COMMON.SAVE' | translate }}</span>
+          <span><ng-container i18n="@@COMMON.SAVE">Save</ng-container></span>
         }
         @if (loading) {
           <mat-spinner diameter="24"></mat-spinner>
@@ -86,7 +86,7 @@
 
       <button mat-button type="button" (click)="appointmentForm.reset()" [disabled]="loading" class="reset-button">
         <mat-icon>clear</mat-icon>
-        {{ 'COMMON.RESET' | translate }}
+        <ng-container i18n="@@COMMON.RESET">Reset</ng-container>
       </button>
     </div>
 

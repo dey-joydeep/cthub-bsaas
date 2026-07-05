@@ -13,7 +13,7 @@ import { RevenueData } from './models/revenue-chart.model';
   styleUrls: ['./revenue-chart.component.css'],
 })
 export class RevenueChartComponent extends AbstractBaseComponent {
-  revenueData = input.required<RevenueData[]>();
+  revenueData = input<RevenueData[]>([]);
 
   override ngOnInit(): void {
     // No additional initialization needed

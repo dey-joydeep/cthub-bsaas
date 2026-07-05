@@ -25,7 +25,6 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { of, throwError } from 'rxjs';
 
 import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.enum';
-import { TranslateService } from '@ngx-translate/core';
 import { Appointment, AppointmentsOverview } from '../../models/appointment.model';
 import { DashboardService } from '../../services/dashboard.service';
 import { AppointmentsOverviewWidgetComponent } from './appointments-overview-widget.component';
@@ -38,7 +37,6 @@ describe('AppointmentsOverviewWidgetComponent', () => {
   let component: AppointmentsOverviewWidgetComponent;
   let fixture: ComponentFixture<AppointmentsOverviewWidgetComponent>;
   let dashboardService: Mocked<DashboardService>;
-  let translateService: Mocked<TranslateService>;
   let snackBar: vi.Mocked<MatSnackBar>;
 
   const mockAppointment: Appointment = {
@@ -144,13 +142,10 @@ describe('AppointmentsOverviewWidgetComponent', () => {
         MatDividerModule,
         MatListModule,
         MatDialogModule,
-        TranslatePipe,
-        TranslateDirective,
       ],
       providers: [
         { provide: DashboardService, useValue: dashboardServiceSpy },
-        { provide: TranslateService, useValue: translateServiceSpy },
-        { provide: MatSnackBar, useValue: snackBarSpy },
+                { provide: MatSnackBar, useValue: snackBarSpy },
       ],
     }).compileComponents();
 
@@ -158,21 +153,20 @@ describe('AppointmentsOverviewWidgetComponent', () => {
     dashboardService = {
       getAppointmentsOverview: vi.fn().mockReturnValue(of(mockOverview)),
       updateAppointmentStatus: vi.fn().mockReturnValue(of({ ...mockAppointment, status: AppointmentStatus.COMPLETED })),
-    } as unknown as Mocked<DashboardService>;
+    } ;
 
     translateService = {
       instant: vi.fn((key: string | string[]) => (typeof key === 'string' ? key : key[0])),
       get: vi.fn().mockReturnValue(of('translated')),
-    } as unknown as Mocked<TranslateService>;
+    } ;
 
     snackBar = {
       open: vi.fn(),
-    } as unknown as vi.Mocked<MatSnackBar>;
+    } ;
 
     // Provide the mock services
     TestBed.overrideProvider(DashboardService, { useValue: dashboardService });
-    TestBed.overrideProvider(TranslateService, { useValue: translateService });
-    TestBed.overrideProvider(MatSnackBar, { useValue: snackBar });
+        TestBed.overrideProvider(MatSnackBar, { useValue: snackBar });
   });
 
   beforeEach(() => {

@@ -127,7 +127,7 @@ export class RevenueChartWidgetComponent implements OnInit, OnDestroy {
 
   private handleDataError(error: unknown): void {
     console.error('Error in revenue chart:', error);
-    this.error = error instanceof Error ? error.message : 'Failed to load revenue data';
+    this.error = $localize`:@@DASHBOARD.REVENUE.ERROR_LOADING:Failed to load revenue data.`;
     this.isLoading = false;
     this.changeDetectorRef.detectChanges();
   }
@@ -154,7 +154,7 @@ export class RevenueChartWidgetComponent implements OnInit, OnDestroy {
 
   private updateChartData(revenueData: RevenueData[]): void {
     if (!revenueData?.length) {
-      this.error = 'No revenue data available';
+      this.error = $localize`:@@DASHBOARD.REVENUE.NO_DATA:No revenue data available.`;
       this.isLoading = false;
       this.changeDetectorRef.detectChanges();
       return;
@@ -175,7 +175,7 @@ export class RevenueChartWidgetComponent implements OnInit, OnDestroy {
       this.chart()?.update();
     } catch (error) {
       console.error('Error updating chart data:', error);
-      this.error = 'Failed to update chart data';
+      this.error = $localize`:@@DASHBOARD.REVENUE.ERROR_UPDATING:Failed to update chart data.`;
       this.changeDetectorRef.detectChanges();
     }
   }

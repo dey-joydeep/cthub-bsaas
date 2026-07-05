@@ -19,3 +19,8 @@ export interface DialogResult {
   action: 'confirm' | 'cancel';
   reason?: string;
 }
+
+export interface TimeSlot {
+  time: string;
+  available?: boolean;
+}

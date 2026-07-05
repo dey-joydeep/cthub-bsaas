@@ -6,9 +6,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslateService } from '@ngx-translate/core';
 import { ProfileService } from './profile.service';
 import { User } from './model/profile.model';
 
@@ -22,6 +22,7 @@ import { User } from './model/profile.model';
     MatInputModule,
     MatButtonModule,
     MatProgressSpinnerModule,
+    MatProgressBarModule,
     MatSnackBarModule,
     MatIconModule
   ],
@@ -41,7 +42,6 @@ export class ProfileComponent implements OnInit {
     private fb: FormBuilder,
     private profileService: ProfileService,
     private snackBar: MatSnackBar,
-    private translate: TranslateService,
   ) {
     this.profileForm = this.fb.group({
       name: ['', Validators.required],
@@ -110,7 +110,7 @@ export class ProfileComponent implements OnInit {
         this.isSubmitting = false;
         if (res.success) {
           this.success = 'Profile updated!';
-          this.snackBar.open(this.translate.instant('PROFILE.UPDATE_SUCCESS'), this.translate.instant('COMMON.CLOSE'), { duration: 3000 });
+          this.snackBar.open($localize`:@@PROFILE.UPDATE_SUCCESS:Profile updated successfully.`, $localize`:@@COMMON.CLOSE:Close`, { duration: 3000 });
         } else {
           this.error = 'Failed to update profile.';
         }

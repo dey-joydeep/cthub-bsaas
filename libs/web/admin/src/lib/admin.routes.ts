@@ -6,7 +6,7 @@ export const ADMIN_ROUTES: Routes = [
   { path: 'admin', loadChildren: () => import('./features/admin/admin.routes').then((m) => m.ADMIN_ROUTES) },
   { path: 'settings', loadComponent: () => import('./features/settings/settings.component').then((m) => m.SettingsComponent) },
   { path: 'user', loadChildren: () => import('./features/user/user.routes').then((m) => m.USER_ROUTES) },
-  { path: 'salon', loadChildren: () => import('./features/salon/salon.module').then((m) => m.SalonModule) },
+  { path: 'salon', loadChildren: () => import('./features/salon/salon.routes').then((m) => m.SALON_ROUTES) },
   {
     path: 'global-products',
     loadComponent: () => import('./features/global-products/product-management.component').then((m) => m.ProductManagementComponent),

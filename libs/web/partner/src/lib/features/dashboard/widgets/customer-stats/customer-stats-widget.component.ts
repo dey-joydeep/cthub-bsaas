@@ -62,7 +62,7 @@ export class CustomerStatsWidgetComponent extends AbstractBaseComponent {
         this.loading = false;
       })
       .catch((error) => {
-        this.error = 'Failed to load customer statistics. Please try again later.';
+        this.error = $localize`:@@DASHBOARD.CUSTOMER_STATS.ERROR_LOADING:Failed to load customer statistics. Please try again later.`;
         this.loading = false;
         console.error('Error loading customer stats:', error);
       });

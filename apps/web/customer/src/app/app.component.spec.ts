@@ -5,7 +5,6 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { CommonModule } from '@angular/common';
 import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { vi } from 'vitest';
 import { of } from 'rxjs';
 import { CURRENT_USER, CurrentUserService } from '@cthub-bsaas/web-core/auth';
@@ -15,7 +14,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CommonModule, AppComponent, TranslatePipe, TranslateDirective],
+      imports: [CommonModule, AppComponent],
       providers: [
         provideRouter([]),
         provideHttpClient(),

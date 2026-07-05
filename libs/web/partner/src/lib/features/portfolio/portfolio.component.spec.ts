@@ -22,7 +22,7 @@ describe('PortfolioComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CommonModule, ReactiveFormsModule, PortfolioComponent, TranslatePipe, TranslateDirective],
+      imports: [CommonModule, ReactiveFormsModule, PortfolioComponent],
       providers: [
         { provide: PortfolioService, useClass: MockPortfolioService },
         provideHttpClient(),

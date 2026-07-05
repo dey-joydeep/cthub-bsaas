@@ -8,8 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { TranslateService } from '@ngx-translate/core';
-import { Appointment } from '../../../models/appointment.model';
+import { Appointment } from '../appointment-list/model/appointment-list.model';
 
 export interface DialogData {
   appointment: Appointment;
@@ -41,7 +40,6 @@ export class AppointmentCancelDialogComponent {
     @Inject(MAT_DIALOG_DATA) public data: DialogData,
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
-    private translate: TranslateService,
   ) {
     this.cancelForm = this.fb.group({
       reason: ['', [Validators.required, Validators.minLength(10)]],
@@ -63,7 +61,7 @@ export class AppointmentCancelDialogComponent {
     // Simulate API call
     setTimeout(() => {
       this.isSubmitting = false;
-      this.snackBar.open(this.translate.instant('APPOINTMENT.CANCELLATION_SUCCESS'), this.translate.instant('COMMON.CLOSE'), {
+      this.snackBar.open($localize`:@@APPOINTMENT.CANCELLATION_SUCCESS:Appointment cancelled successfully.`, $localize`:@@COMMON.CLOSE:Close`, {
         duration: 3000,
       });
       this.dialogRef.close({

@@ -7,7 +7,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router, provideRouter } from '@angular/router';
-import { TranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 
 // Components
@@ -18,10 +17,7 @@ import { NotificationService } from '@cthub-bsaas/web-core-common';
 import { AuthService } from '../../services/auth.service';
 
 // Mocks
-class MockTranslateService {
-  get = vi.fn().mockReturnValue(of('translated text'));
-  instant = vi.fn().mockReturnValue('translated text');
-  use = vi.fn().mockReturnValue(of({}));
+));
   setDefaultLang = vi.fn();
   getBrowserLang = vi.fn().mockReturnValue('en');
   getLangs = vi.fn().mockReturnValue(['en', 'es']);
@@ -99,16 +95,13 @@ describe('LoginComponent', () => {
         MatButtonModule,
         MatProgressBarModule,
         MatSnackBarModule,
-        TranslatePipe,
-        TranslateDirective,
         HttpClientTestingModule,
         LoginComponent,
       ],
       providers: [
         { provide: AuthService, useClass: MockAuthService },
         { provide: NotificationService, useClass: MockNotificationService },
-        { provide: TranslateService, useClass: MockTranslateService },
-        provideRouter([]), // Use provideRouter instead of RouterTestingModule
+                provideRouter([]), // Use provideRouter instead of RouterTestingModule
       ],
     }).compileComponents();
 

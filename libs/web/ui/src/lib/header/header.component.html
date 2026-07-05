@@ -13,7 +13,7 @@
       <input
         type="text"
         class="search-input"
-        [placeholder]="'HEADER.SEARCH_PLACEHOLDER' | translate"
+        i18n-placeholder="@@HEADER.SEARCH_PLACEHOLDER" placeholder="Search..."
         (keyup.enter)="onSearch(searchInput.value)"
         #searchInput
       />
@@ -62,20 +62,20 @@
           <mat-divider></mat-divider>
           <button mat-menu-item routerLink="/profile">
             <mat-icon>person</mat-icon>
-            <span>{{ 'HEADER.MY_PROFILE' | translate }}</span>
+            <span><ng-container i18n="@@HEADER.MY_PROFILE">My Profile</ng-container></span>
           </button>
           <button mat-menu-item routerLink="/appointments">
             <mat-icon>event</mat-icon>
-            <span>{{ 'HEADER.MY_APPOINTMENTS' | translate }}</span>
+            <span><ng-container i18n="@@HEADER.MY_APPOINTMENTS">My Appointments</ng-container></span>
           </button>
           <button mat-menu-item routerLink="/settings">
             <mat-icon>settings</mat-icon>
-            <span>{{ 'HEADER.SETTINGS' | translate }}</span>
+            <span><ng-container i18n="@@HEADER.SETTINGS">Settings</ng-container></span>
           </button>
           <mat-divider></mat-divider>
           <button mat-menu-item (click)="logout()">
             <mat-icon>logout</mat-icon>
-            <span>{{ 'HEADER.LOGOUT' | translate }}</span>
+            <span><ng-container i18n="@@HEADER.LOGOUT">Logout</ng-container></span>
           </button>
         </mat-menu>
         <!-- Notifications -->
@@ -89,10 +89,10 @@
         </button>
         <mat-menu #notificationsMenu="matMenu" class="notifications-menu">
           <div class="notifications-header">
-            <h3>{{ 'HEADER.NOTIFICATIONS' | translate }}</h3>
+            <h3><ng-container i18n="@@HEADER.NOTIFICATIONS">Notifications</ng-container></h3>
             @if (unreadCount > 0) {
               <button mat-button color="primary">
-                {{ 'HEADER.MARK_ALL_READ' | translate }}
+                <ng-container i18n="@@HEADER.MARK_ALL_READ">Mark all as read</ng-container>
               </button>
             }
           </div>
@@ -116,22 +116,22 @@
             }
             @if (notifications.length === 0) {
               <div class="no-notifications">
-                {{ 'HEADER.NO_NOTIFICATIONS' | translate }}
+                <ng-container i18n="@@HEADER.NO_NOTIFICATIONS">No new notifications</ng-container>
               </div>
             }
           </div>
           <div class="notifications-footer">
             <a routerLink="/notifications" class="view-all">
-              {{ 'HEADER.VIEW_ALL_NOTIFICATIONS' | translate }}
+              <ng-container i18n="@@HEADER.VIEW_ALL_NOTIFICATIONS">View All Notifications</ng-container>
             </a>
           </div>
         </mat-menu>
       } @else {
         <a mat-button routerLink="/login" class="login-button">
-          {{ 'HEADER.LOGIN' | translate }}
+          <ng-container i18n="@@HEADER.LOGIN">Login</ng-container>
         </a>
         <a mat-flat-button color="primary" routerLink="/register" class="signup-button">
-          {{ 'HEADER.SIGNUP' | translate }}
+          <ng-container i18n="@@HEADER.SIGNUP">Sign Up</ng-container>
         </a>
       }
     </div>
@@ -143,7 +143,7 @@
   <input
     type="text"
     class="mobile-search-input"
-    [placeholder]="'HEADER.SEARCH_PLACEHOLDER' | translate"
+    i18n-placeholder="@@HEADER.SEARCH_PLACEHOLDER" placeholder="Search..."
     (keyup.enter)="onSearch(mobileSearchInput.value)"
     #mobileSearchInput
   />
@@ -163,10 +163,10 @@
     (keydown.space)="showCityPopup = false"
   >
     <div class="city-popup" role="dialog" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
-      <h2>{{ 'HEADER.SELECT_YOUR_CITY' | translate }}</h2>
-      <p>{{ 'HEADER.WE_USE_THIS_TO_SHOW_RELEVANT_CONTENT' | translate }}</p>
+      <h2><ng-container i18n="@@HEADER.SELECT_YOUR_CITY">Select Your City</ng-container></h2>
+      <p><ng-container i18n="@@HEADER.WE_USE_THIS_TO_SHOW_RELEVANT_CONTENT">We use this to show you relevant services and appointments in your area.</ng-container></p>
       <mat-form-field appearance="outline" class="city-selector-popup">
-        <mat-label>{{ 'HEADER.SELECT_CITY' | translate }}</mat-label>
+        <mat-label><ng-container i18n="@@HEADER.SELECT_CITY">Select City</ng-container></mat-label>
         <mat-select [(ngModel)]="selectedCity" panelClass="city-selector-panel">
           @for (city of cities; track city) {
             <mat-option [value]="city.id">
@@ -176,7 +176,7 @@
         </mat-select>
       </mat-form-field>
       <button mat-flat-button color="primary" class="confirm-city-button" (click)="confirmCity(selectedCity)">
-        {{ 'COMMON.CONFIRM' | translate }}
+        <ng-container i18n="@@COMMON.CONFIRM">Confirm</ng-container>
       </button>
     </div>
   </div>
