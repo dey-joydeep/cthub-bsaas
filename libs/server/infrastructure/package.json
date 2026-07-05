@@ -12,12 +12,12 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@cthub-bsaas/shared": "0.0.1",
     "@cthub-bsaas/server-core": "0.0.1",
     "@cthub-bsaas/server-data-access": "0.0.1",
+    "@cthub-bsaas/shared": "0.0.1",
     "@simplewebauthn/server": "13.3.2",
-    "ioredis": "^5.4.1",
     "google-auth-library": "^9.14.1",
-    "nodemailer": "^6.9.13"
+    "ioredis": "^5.4.1",
+    "nodemailer": "9.0.3"
   }
 }
