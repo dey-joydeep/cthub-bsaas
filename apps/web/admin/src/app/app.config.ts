@@ -1,16 +1,9 @@
-import {
-  provideHttpClient,
-  withFetch,
-  withInterceptors,
-  withInterceptorsFromDi,
-  withXsrfConfiguration,
-} from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors, withInterceptorsFromDi, withXsrfConfiguration } from '@angular/common/http';
 import { ApplicationConfig, ErrorHandler, importProvidersFrom } from '@angular/core';
 import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter, withPreloading, PreloadAllModules, withComponentInputBinding } from '@angular/router';
 import { map } from 'rxjs/operators';
-
 
 // App imports
 import { routes } from './app.routes';
@@ -30,7 +23,6 @@ import { AuthApiService } from './core/auth/services/auth-api.service';
 
 // AoT requires an exported function for factories
 
-
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes, withPreloading(PreloadAllModules), withComponentInputBinding()),
@@ -46,9 +38,7 @@ export const appConfig: ApplicationConfig = {
     // Register global HTTP interceptors
     ERROR_INTERCEPTOR_PROVIDER,
     provideAnimationsAsync(),
-    importProvidersFrom([
-      MatNativeDateModule,
-    ]),
+    importProvidersFrom([MatNativeDateModule]),
     { provide: MAT_DATE_LOCALE, useValue: 'en-US' },
     { provide: ErrorHandler, useClass: ErrorHandlerService },
     { provide: AUTH_STATE_PORT, useExisting: AuthService },

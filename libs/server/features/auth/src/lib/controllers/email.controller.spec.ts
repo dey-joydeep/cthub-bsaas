@@ -7,10 +7,7 @@ import { BadRequestException } from '@nestjs/common';
 describe('EmailController (unit)', () => {
   let controller: EmailController;
   let service: jest.Mocked<
-    Pick<
-      AuthService,
-      'requestEmailChange' | 'confirmEmailChange' | 'requestEmailVerification' | 'verifyEmail' | 'verifyEmailOtp'
-    >
+    Pick<AuthService, 'requestEmailChange' | 'confirmEmailChange' | 'requestEmailVerification' | 'verifyEmail' | 'verifyEmailOtp'>
   >;
 
   beforeEach(() => {
@@ -25,10 +22,7 @@ describe('EmailController (unit)', () => {
   });
 
   it('requestEmailChange delegates to service and returns success', async () => {
-    const out = await controller.requestEmailChange(
-      { newEmail: 'new@example.com' } as EmailChangeRequestDto,
-      { user: { userId: 'u1' } },
-    );
+    const out = await controller.requestEmailChange({ newEmail: 'new@example.com' } as EmailChangeRequestDto, { user: { userId: 'u1' } });
     expect(service.requestEmailChange).toHaveBeenCalledWith('u1', 'new@example.com');
     expect(out).toEqual({ success: true });
   });
@@ -58,8 +52,6 @@ describe('EmailController (unit)', () => {
   });
 
   it('emailVerifyConfirm throws on invalid payload', () => {
-    expect(() => controller.emailVerifyConfirm({} as { token?: string; email?: string; otp?: string })).toThrow(
-      BadRequestException,
-    );
+    expect(() => controller.emailVerifyConfirm({} as { token?: string; email?: string; otp?: string })).toThrow(BadRequestException);
   });
 });

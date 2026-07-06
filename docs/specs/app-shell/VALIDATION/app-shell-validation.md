@@ -5,21 +5,21 @@
 
 ## Forms And Controls
 
-| Form/control ID | Fields | Submit/action |
-| --- | --- | --- |
-| `shell.locale-selector` | `locale` | Update locale preference. |
-| `shell.branch-selector` | `businessId`, `branchId` | Switch active branch context. |
-| `shell.logout-confirm` | confirmation only | Logout. |
-| `shell.unsaved-context-switch-dialog` | confirmation only | Discard page state and switch context. |
+| Form/control ID                       | Fields                   | Submit/action                          |
+| ------------------------------------- | ------------------------ | -------------------------------------- |
+| `shell.locale-selector`               | `locale`                 | Update locale preference.              |
+| `shell.branch-selector`               | `businessId`, `branchId` | Switch active branch context.          |
+| `shell.logout-confirm`                | confirmation only        | Logout.                                |
+| `shell.unsaved-context-switch-dialog` | confirmation only        | Discard page state and switch context. |
 
 ## Validation Rules
 
-| Rule ID | Control | Rule | Error key |
-| --- | --- | --- | --- |
-| SHELL-VAL-001 | Locale selector | Locale must be one of configured supported locales. | `shell.validation.locale_unsupported` |
-| SHELL-VAL-002 | Branch selector | Branch must belong to selected business and actor scope. | `shell.validation.branch_forbidden` |
-| SHELL-VAL-003 | Branch selector | Branch switch is blocked while page has unsaved changes unless user confirms. | `shell.validation.unsaved_changes` |
-| SHELL-VAL-004 | Logout | Logout action must be disabled while logout request is in progress. | `shell.validation.logout_in_progress` |
+| Rule ID       | Control         | Rule                                                                          | Error key                             |
+| ------------- | --------------- | ----------------------------------------------------------------------------- | ------------------------------------- |
+| SHELL-VAL-001 | Locale selector | Locale must be one of configured supported locales.                           | `shell.validation.locale_unsupported` |
+| SHELL-VAL-002 | Branch selector | Branch must belong to selected business and actor scope.                      | `shell.validation.branch_forbidden`   |
+| SHELL-VAL-003 | Branch selector | Branch switch is blocked while page has unsaved changes unless user confirms. | `shell.validation.unsaved_changes`    |
+| SHELL-VAL-004 | Logout          | Logout action must be disabled while logout request is in progress.           | `shell.validation.logout_in_progress` |
 
 ## Backend Enforcement
 

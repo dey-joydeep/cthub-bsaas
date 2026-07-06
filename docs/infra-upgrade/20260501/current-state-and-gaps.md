@@ -25,21 +25,21 @@ The root package is ESM-enabled:
 
 Current root-level notable versions:
 
-| Area | Current |
-|---|---:|
-| Node engine | `>=18.0.0` |
-| `.nvmrc` | `20.19.1` |
-| npm package manager | `npm@10.8.2` |
-| Nx | `21.3.11` / mixed `21.4.1` plugins |
-| Angular | `20.1.x` runtime, `20.2.x` build/SSR |
-| TypeScript | `5.8.3` |
-| Jest | `30.x` |
-| Angular test runner | Jest via `jest-preset-angular` |
-| Backend test runner | Jest |
-| ESLint | `9.32.0` |
-| angular-eslint | present as `angular-eslint ^20.0.0` |
-| Prisma | `6.x` |
-| NestJS | `11.x` |
+| Area                |                              Current |
+| ------------------- | -----------------------------------: |
+| Node engine         |                           `>=18.0.0` |
+| `.nvmrc`            |                            `20.19.1` |
+| npm package manager |                         `npm@10.8.2` |
+| Nx                  |   `21.3.11` / mixed `21.4.1` plugins |
+| Angular             | `20.1.x` runtime, `20.2.x` build/SSR |
+| TypeScript          |                              `5.8.3` |
+| Jest                |                               `30.x` |
+| Angular test runner |       Jest via `jest-preset-angular` |
+| Backend test runner |                                 Jest |
+| ESLint              |                             `9.32.0` |
+| angular-eslint      |  present as `angular-eslint ^20.0.0` |
+| Prisma              |                                `6.x` |
+| NestJS              |                               `11.x` |
 
 ## Nx Discovery Problem
 
@@ -59,18 +59,18 @@ Parsed `project.json` files show 33 projects.
 
 Notable gaps:
 
-| Finding | Impact | Required action |
-|---|---|---|
-| `libs/server/features/auth` has `package.json` but is missing from root `workspaces` | npm workspace metadata is incomplete | Add or intentionally remove package boundary; prefer adding if it is a buildable package |
-| `libs/server/infrastructure` has `package.json` but is missing from root `workspaces` | npm workspace metadata is incomplete | Add or intentionally remove package boundary; prefer adding if it is a buildable package |
-| `server-contracts-auth` has no explicit `lint` target | Boundary and style checks may not run via project target | Add lint target or rely on inferred lint only after Nx inference is validated |
-| `server` project has no tags | Boundary rules cannot classify it | Decide whether `libs/server` aggregator remains; tag or remove if obsolete |
-| Several web apps use `sourceRoot: "src"` | Non-standard for Nx workspace-root project metadata | Align to `apps/web/<app>/src` unless current executor requires project-root-relative paths |
-| Web app build output paths use `dist/apps/admin` while tsconfig uses `dist/apps/web/admin` | Output conventions are inconsistent | Standardize to `dist/apps/web/<app>` |
-| Mixed project tags do not consistently match `eslint.base.js` boundary constraints | Some constraints are ineffective or overly broad | Normalize tags before relying on boundary enforcement |
-| `.eslintrc.json` still exists beside flat config | Legacy config can confuse editors/tooling | Remove or quarantine after confirming flat config fully covers the workspace |
-| Root Jest preset forces CommonJS transform through `@swc/jest` | Not aligned with TS+ESM testing objective | Keep for backend initially; remove from frontend once Vitest is introduced |
-| `jest-openapi ^6.0.0` is in `package.json` but absent from `package-lock.json` | Manifest/lockfile drift | Remove or replace with a valid installed package during dependency cleanup |
+| Finding                                                                                    | Impact                                                   | Required action                                                                            |
+| ------------------------------------------------------------------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `libs/server/features/auth` has `package.json` but is missing from root `workspaces`       | npm workspace metadata is incomplete                     | Add or intentionally remove package boundary; prefer adding if it is a buildable package   |
+| `libs/server/infrastructure` has `package.json` but is missing from root `workspaces`      | npm workspace metadata is incomplete                     | Add or intentionally remove package boundary; prefer adding if it is a buildable package   |
+| `server-contracts-auth` has no explicit `lint` target                                      | Boundary and style checks may not run via project target | Add lint target or rely on inferred lint only after Nx inference is validated              |
+| `server` project has no tags                                                               | Boundary rules cannot classify it                        | Decide whether `libs/server` aggregator remains; tag or remove if obsolete                 |
+| Several web apps use `sourceRoot: "src"`                                                   | Non-standard for Nx workspace-root project metadata      | Align to `apps/web/<app>/src` unless current executor requires project-root-relative paths |
+| Web app build output paths use `dist/apps/admin` while tsconfig uses `dist/apps/web/admin` | Output conventions are inconsistent                      | Standardize to `dist/apps/web/<app>`                                                       |
+| Mixed project tags do not consistently match `eslint.base.js` boundary constraints         | Some constraints are ineffective or overly broad         | Normalize tags before relying on boundary enforcement                                      |
+| `.eslintrc.json` still exists beside flat config                                           | Legacy config can confuse editors/tooling                | Remove or quarantine after confirming flat config fully covers the workspace               |
+| Root Jest preset forces CommonJS transform through `@swc/jest`                             | Not aligned with TS+ESM testing objective                | Keep for backend initially; remove from frontend once Vitest is introduced                 |
+| `jest-openapi ^6.0.0` is in `package.json` but absent from `package-lock.json`             | Manifest/lockfile drift                                  | Remove or replace with a valid installed package during dependency cleanup                 |
 
 ## Boundary And Tag Drift
 
@@ -138,4 +138,3 @@ Security-relevant upgrade targets exist:
 - CI workflow currently uses Node 18 in `.github/workflows/openapi-contract.yml`; this must be raised.
 - `helmet`, `jsonwebtoken`, `bcryptjs`, `@simplewebauthn/server`, `google-auth-library`, `ioredis`, Prisma, and NestJS all have available updates.
 - Express 5 is available but should be handled as a compatibility spike because NestJS platform behavior and middleware typings can be affected.
-

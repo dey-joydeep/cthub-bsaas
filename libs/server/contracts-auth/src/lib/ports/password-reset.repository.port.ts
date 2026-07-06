@@ -26,4 +26,3 @@ export interface IPasswordResetRepository {
   findById(id: string): Promise<PasswordResetRecord | null>;
   markUsed(id: string): Promise<void>;
 }
-

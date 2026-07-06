@@ -4,12 +4,13 @@ import type { OAuthStateStore } from './state.store';
 
 describe('MetaOAuthAdapter', () => {
   const cfg = {
-    get: (k: string) => ({
-      META_CLIENT_ID: 'mid',
-      META_CLIENT_SECRET: 'msecret',
-      META_REDIRECT_URI: 'http://localhost/callback',
-      OAUTH_STATE_TTL: '600',
-    }[k]),
+    get: (k: string) =>
+      ({
+        META_CLIENT_ID: 'mid',
+        META_CLIENT_SECRET: 'msecret',
+        META_REDIRECT_URI: 'http://localhost/callback',
+        OAUTH_STATE_TTL: '600',
+      })[k],
   } as unknown as ConfigService;
 
   const stateStore: OAuthStateStore = {
@@ -37,7 +38,7 @@ describe('MetaOAuthAdapter', () => {
   });
 
   it('throws when misconfigured (missing clientId)', async () => {
-    const badCfg = { get: (_: string) => (undefined) } as unknown as ConfigService;
+    const badCfg = { get: (_: string) => undefined } as unknown as ConfigService;
     const adapter = new MetaOAuthAdapter(badCfg, stateStore);
     await expect(adapter.start('meta')).rejects.toThrow('oauth.meta.misconfigured');
   });
@@ -51,13 +52,11 @@ describe('MetaOAuthAdapter', () => {
 
   it('throws unsupported provider on exchange', async () => {
     const adapter = new MetaOAuthAdapter(cfg, stateStore);
-    await expect(adapter.exchangeCode('google' as unknown as 'meta', 'code', 'state')).rejects.toThrow(
-      'oauth.unsupported_provider',
-    );
+    await expect(adapter.exchangeCode('google' as unknown as 'meta', 'code', 'state')).rejects.toThrow('oauth.unsupported_provider');
   });
 
   it('throws misconfigured during exchange (missing clientSecret)', async () => {
-    const badCfg = { get: (_: string) => (undefined) } as unknown as ConfigService;
+    const badCfg = { get: (_: string) => undefined } as unknown as ConfigService;
     const adapter = new MetaOAuthAdapter(badCfg, stateStore);
     await expect(adapter.exchangeCode('meta', 'code', 'state')).rejects.toThrow('oauth.meta.misconfigured');
   });
@@ -75,7 +74,8 @@ describe('MetaOAuthAdapter', () => {
 
   it('exchanges code and returns profile', async () => {
     const adapter = new MetaOAuthAdapter(cfg, stateStore);
-    const fetchMock = jest.fn()
+    const fetchMock = jest
+      .fn()
       // token response
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ access_token: 'AT' }) })
       // debug_token response
@@ -100,13 +100,15 @@ describe('MetaOAuthAdapter', () => {
     const adapter = new MetaOAuthAdapter(cfg, stateStore);
     const orig = globalThis.fetch;
     // failure path
-    globalThis.fetch = jest.fn()
+    globalThis.fetch = jest
+      .fn()
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ access_token: 'AT' }) })
       .mockResolvedValueOnce({ ok: false, json: () => Promise.resolve({}) }) as unknown as typeof globalThis.fetch;
     await expect(adapter.exchangeCode('meta', 'code', 'state')).rejects.toThrow('oauth.meta.debug_token_failed');
 
     // missing user id
-    globalThis.fetch = jest.fn()
+    globalThis.fetch = jest
+      .fn()
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ access_token: 'AT' }) })
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ data: {} }) }) as unknown as typeof globalThis.fetch;
     await expect(adapter.exchangeCode('meta', 'code', 'state')).rejects.toThrow('oauth.meta.user_id_missing');

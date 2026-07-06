@@ -24,7 +24,7 @@ describe('AppointmentManagementComponent', () => {
       createAppointment: vi.fn(),
       getAppointments: vi.fn(),
       updateAppointmentStatus: vi.fn(),
-    } ;
+    };
 
     await TestBed.configureTestingModule({
       imports: [

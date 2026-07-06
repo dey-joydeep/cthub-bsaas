@@ -41,7 +41,7 @@ import { ProductSale } from './models/product-sales-widget.model';
     MatInputModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
   ],
   templateUrl: './product-sales-widget.component.html',
   styleUrls: ['./product-sales-widget.component.css'],
@@ -73,9 +73,7 @@ export class ProductSalesWidgetComponent extends AbstractBaseComponent implement
     topSellingProducts: Array<{ name: string; quantity: number }>;
   } | null = null;
 
-  constructor(
-    private productSalesWidgetService: ProductSalesWidgetService,
-  ) {
+  constructor(private productSalesWidgetService: ProductSalesWidgetService) {
     super();
   }
 

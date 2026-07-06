@@ -46,9 +46,7 @@ describe('Decorator compatibility', () => {
   beforeAll(() => {
     const baseReflect = originalReflect ?? ({} as typeof Reflect);
     const decorateImpl =
-      typeof baseReflect?.decorate === 'function'
-        ? baseReflect.decorate.bind(baseReflect)
-        : (fallbackDecorate as typeof Reflect.decorate);
+      typeof baseReflect?.decorate === 'function' ? baseReflect.decorate.bind(baseReflect) : (fallbackDecorate as typeof Reflect.decorate);
 
     (global as typeof globalThis).Reflect = {
       ...baseReflect,

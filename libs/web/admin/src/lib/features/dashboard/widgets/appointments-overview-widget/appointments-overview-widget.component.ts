@@ -1,5 +1,5 @@
 import { CommonModule, formatDate } from '@angular/common';
-import { AfterViewInit, Component, OnDestroy, OnInit,  } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -57,7 +57,7 @@ import { AppointmentsOverviewWidgetService } from './appointments-overview-widge
     MatChipsModule,
     MatDividerModule,
     MatListModule,
-    MatDialogModule
+    MatDialogModule,
   ],
   templateUrl: './appointments-overview-widget.component.html',
   styleUrls: ['./appointments-overview-widget.component.css'],
@@ -332,17 +332,25 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.snackBar.open($localize`:@@DASHBOARD.APPOINTMENTS.STATUS_UPDATED:Appointment status updated.`, $localize`:@@COMMON.CLOSE:Close`, {
-            duration: 3000,
-          });
+          this.snackBar.open(
+            $localize`:@@DASHBOARD.APPOINTMENTS.STATUS_UPDATED:Appointment status updated.`,
+            $localize`:@@COMMON.CLOSE:Close`,
+            {
+              duration: 3000,
+            },
+          );
           this.loadData();
         },
         error: (error) => {
           console.error('Error updating appointment status:', error);
-          this.snackBar.open($localize`:@@DASHBOARD.APPOINTMENTS.STATUS_UPDATE_ERROR:Failed to update status.`, $localize`:@@COMMON.CLOSE:Close`, {
-            duration: 5000,
-            panelClass: ['error-snackbar'],
-          });
+          this.snackBar.open(
+            $localize`:@@DASHBOARD.APPOINTMENTS.STATUS_UPDATE_ERROR:Failed to update status.`,
+            $localize`:@@COMMON.CLOSE:Close`,
+            {
+              duration: 5000,
+              panelClass: ['error-snackbar'],
+            },
+          );
         },
       });
   }

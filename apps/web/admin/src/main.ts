@@ -43,4 +43,3 @@ Chart.register(
 bootstrapApplication(AppComponent, { ...appConfig, providers: [provideZonelessChangeDetection(), ...appConfig.providers] }).catch((err) =>
   console.error('Bootstrap error:', err),
 );
-

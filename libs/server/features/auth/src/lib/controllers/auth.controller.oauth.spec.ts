@@ -5,10 +5,11 @@ import { AuthService } from '../services/auth.service';
 import { AuthCookiesService } from '../services/auth-cookies.service';
 import type { JwtService } from '@nestjs/jwt';
 
-
 describe('OauthController (unit)', () => {
   let controller: OauthController;
-  let authSvc: jest.Mocked<Pick<AuthService, 'linkSocialAccount' | 'unlinkSocialAccount' | 'signInWithSocial' | 'logout' | 'revokeSession' | 'listSessions'>>;
+  let authSvc: jest.Mocked<
+    Pick<AuthService, 'linkSocialAccount' | 'unlinkSocialAccount' | 'signInWithSocial' | 'logout' | 'revokeSession' | 'listSessions'>
+  >;
   let oauth: jest.Mocked<Pick<OAuthPort, 'start' | 'exchangeCode'>>;
 
   let cookies: jest.Mocked<Pick<AuthCookiesService, 'issue' | 'rotateOnRefresh' | 'clear'>>;
@@ -28,7 +29,9 @@ describe('OauthController (unit)', () => {
       start: jest.fn(() => Promise.resolve({ redirectUrl: 'https://example.com/oauth' })),
       exchangeCode: jest.fn(() => Promise.resolve({ provider: 'google', providerUserId: 'pid' })),
     } as unknown as typeof oauth;
-    cookies = { issue: jest.fn(), rotateOnRefresh: jest.fn(), clear: jest.fn() } as unknown as jest.Mocked<Pick<AuthCookiesService, 'issue' | 'rotateOnRefresh' | 'clear'>>;
+    cookies = { issue: jest.fn(), rotateOnRefresh: jest.fn(), clear: jest.fn() } as unknown as jest.Mocked<
+      Pick<AuthCookiesService, 'issue' | 'rotateOnRefresh' | 'clear'>
+    >;
     decodeMock = jest.fn(() => ({ roles: ['CUSTOMER'] }));
     jwt = { decode: decodeMock as unknown as JwtService['decode'] };
     controller = new OauthController(
@@ -61,10 +64,7 @@ describe('OauthController (unit)', () => {
     const out = await controller.oauthCallback('google', undefined, 'code123', 'state');
     expect(out).toEqual({});
     expect(authSvc.signInWithSocial).toHaveBeenCalled();
-    expect(cookies.issue).toHaveBeenCalledWith(
-      expect.objectContaining({ accessToken: 'AT', refreshToken: 'RT' }),
-      expect.any(Object),
-    );
+    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'AT', refreshToken: 'RT' }), expect.any(Object));
   });
 
   it('oauthCallback uses default TTL when roles are absent', async () => {
@@ -117,6 +117,4 @@ describe('OauthController (unit)', () => {
     expect(authSvc.unlinkSocialAccount).toHaveBeenCalledWith('u1', 'google');
     expect(ok).toEqual({ success: true });
   });
-
-
 });

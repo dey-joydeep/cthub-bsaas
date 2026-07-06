@@ -5,13 +5,13 @@
 
 ## Commands And Queries
 
-| Operation | Type | Notes |
-| --- | --- | --- |
-| `listIntegrationProviders` | Query | Providers available by environment and scope. |
-| `configureIntegrationProvider` | Command | Stores config through secret-safe path. |
-| `testIntegrationProvider` | Command | Sends safe test call. |
-| `handleProviderWebhook` | Command | Validates signature and dispatches event. |
-| `getIntegrationHealth` | Query | Provider status and recent failures. |
+| Operation                      | Type    | Notes                                         |
+| ------------------------------ | ------- | --------------------------------------------- |
+| `listIntegrationProviders`     | Query   | Providers available by environment and scope. |
+| `configureIntegrationProvider` | Command | Stores config through secret-safe path.       |
+| `testIntegrationProvider`      | Command | Sends safe test call.                         |
+| `handleProviderWebhook`        | Command | Validates signature and dispatches event.     |
+| `getIntegrationHealth`         | Query   | Provider status and recent failures.          |
 
 ## Webhook Rules
 

@@ -47,7 +47,10 @@ describe('NodemailerEmailAdapter', () => {
     } as unknown as NodemailerModule;
 
     class TestAdapter extends NodemailerEmailAdapter {
-      constructor(config: ConfigService, private readonly moduleStub: NodemailerModule) {
+      constructor(
+        config: ConfigService,
+        private readonly moduleStub: NodemailerModule,
+      ) {
         super(config);
       }
 

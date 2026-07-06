@@ -437,9 +437,7 @@ test('rejects disallowed file types', async ({ page }) => {
     buffer: Buffer.from('exe-content'),
   });
 
-  await expect(page.getByRole('alert')).toContainText(
-    /not allowed|unsupported file type|only .pdf, .doc/i
-  );
+  await expect(page.getByRole('alert')).toContainText(/not allowed|unsupported file type|only .pdf, .doc/i);
   await expect(page.getByText('malware.exe')).not.toBeVisible();
 });
 ```
@@ -491,10 +489,7 @@ test('rejects image below minimum dimensions', async ({ page }) => {
 
   const fileInput = page.locator('input[type="file"]');
   // Minimal 1x1 PNG
-  const tinyPng = Buffer.from(
-    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-    'base64'
-  );
+  const tinyPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
 
   await fileInput.setInputFiles({
     name: 'tiny.png',

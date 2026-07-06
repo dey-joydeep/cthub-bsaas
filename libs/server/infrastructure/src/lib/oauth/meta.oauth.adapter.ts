@@ -8,7 +8,10 @@ import type { OAuthStateStore } from './state.store';
 export class MetaOAuthAdapter implements OAuthPort {
   private readonly ttlSec: number;
 
-  constructor(private readonly config: ConfigService, private readonly stateStore: OAuthStateStore) {
+  constructor(
+    private readonly config: ConfigService,
+    private readonly stateStore: OAuthStateStore,
+  ) {
     this.ttlSec = parseInt(this.config.get<string>('OAUTH_STATE_TTL') ?? '600', 10);
   }
 

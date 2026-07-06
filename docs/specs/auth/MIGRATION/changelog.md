@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2025-09-01
+
 - Consolidated scattered specs into a single structure.
 - Unified auth model to cookies (AT/RT) + rotation; removed Bearer for web flows.
 - Added strong auth: **Passkeys (WebAuthn)** and **TOTP**; **Email OTP** fallback; **no SMS**.

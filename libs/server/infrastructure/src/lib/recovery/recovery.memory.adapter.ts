@@ -32,4 +32,3 @@ export class RecoveryCodesMemoryAdapter implements RecoveryCodesPort {
     return Promise.resolve(true);
   }
 }
-

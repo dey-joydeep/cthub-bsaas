@@ -67,7 +67,10 @@
             <div class="stat-value">{{ stats.activeSubscriptions | number }}</div>
             <div class="stat-label"><ng-container i18n="@@DASHBOARD.CUSTOMERS.SUBSCRIPTIONS">Active Subscriptions</ng-container></div>
             @if (stats.returningCustomers !== undefined) {
-              <div class="stat-subtext">{{ stats.returningCustomers | number }} <ng-container i18n="@@DASHBOARD.CUSTOMERS.RETURNING">Returning Customers</ng-container></div>
+              <div class="stat-subtext">
+                {{ stats.returningCustomers | number }}
+                <ng-container i18n="@@DASHBOARD.CUSTOMERS.RETURNING">Returning Customers</ng-container>
+              </div>
             }
           </div>
         </div>

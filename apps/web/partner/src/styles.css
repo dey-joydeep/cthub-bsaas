@@ -56,12 +56,8 @@ body {
 /* 1. Define the theme */
 /* 2. Apply the theme to Angular Material components within a selector */
 :root {
-  
-  
-  
 }
 /* 3. Include core styles */
-
 
 /* Define global variables using M3 design tokens */
 :root {

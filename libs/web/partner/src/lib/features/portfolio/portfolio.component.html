@@ -7,45 +7,35 @@
       Tenantid
       <input formControlName="tenantId" type="text" />
       @if (addForm.get('tenantId')?.invalid && addForm.get('tenantId')?.touched) {
-        <div class="error-message">
-          Error loading portfolio.
-        </div>
+        <div class="error-message">Error loading portfolio.</div>
       }
     </label>
     <label>
       Userid
       <input formControlName="userId" type="text" />
       @if (addForm.get('userId')?.invalid && addForm.get('userId')?.touched) {
-        <div class="error-message">
-          Error loading portfolio.
-        </div>
+        <div class="error-message">Error loading portfolio.</div>
       }
     </label>
     <label>
       Image
       <input type="file" (change)="onImageChange($event)" accept="image/*" />
       @if (!selectedImage && addForm.touched) {
-        <div class="error-message">
-          Image Required
-        </div>
+        <div class="error-message">Image Required</div>
       }
     </label>
     <label>
       Imagepath
       <input formControlName="imagePath" type="text" />
       @if (addForm.get('imagePath')?.invalid && addForm.get('imagePath')?.touched) {
-        <div class="error-message">
-          Error loading portfolio.
-        </div>
+        <div class="error-message">Error loading portfolio.</div>
       }
     </label>
     <label>
       Description
       <input formControlName="description" type="text" />
       @if (addForm.get('description')?.invalid && addForm.get('description')?.touched) {
-        <div class="error-message">
-          Error loading portfolio.
-        </div>
+        <div class="error-message">Error loading portfolio.</div>
       }
     </label>
     <button type="submit" [disabled]="addForm.invalid">Add Item</button>
@@ -83,18 +73,14 @@
                 Imagepath
                 <input formControlName="imagePath" type="text" />
                 @if (editForm.get('imagePath')?.invalid && editForm.get('imagePath')?.touched) {
-                  <div class="error-message">
-                    Error loading portfolio.
-                  </div>
+                  <div class="error-message">Error loading portfolio.</div>
                 }
               </label>
               <label>
                 Description
                 <input formControlName="description" type="text" />
                 @if (editForm.get('description')?.invalid && editForm.get('description')?.touched) {
-                  <div class="error-message">
-                    Error loading portfolio.
-                  </div>
+                  <div class="error-message">Error loading portfolio.</div>
                 }
               </label>
               <button type="submit" [disabled]="editForm.invalid">Save</button>

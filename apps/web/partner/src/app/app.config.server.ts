@@ -1,20 +1,5 @@
-import {
-  HttpHandlerFn,
-  HttpInterceptorFn,
-  HttpRequest,
-  provideHttpClient,
-  withFetch,
-  withInterceptors,
-} from '@angular/common/http';
-import {
-  APP_ID,
-  ApplicationConfig,
-  EnvironmentProviders,
-  isDevMode,
-  mergeApplicationConfig,
-  PLATFORM_ID,
-  Provider,
-} from '@angular/core';
+import { HttpHandlerFn, HttpInterceptorFn, HttpRequest, provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { APP_ID, ApplicationConfig, EnvironmentProviders, isDevMode, mergeApplicationConfig, PLATFORM_ID, Provider } from '@angular/core';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { provideServerRendering, ɵSERVER_CONTEXT as SERVER_CONTEXT } from '@angular/platform-server';
 import { ErrorService, loadingInterceptor } from '@cthub-bsaas/web-core-common';

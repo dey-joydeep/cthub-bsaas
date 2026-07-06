@@ -116,10 +116,13 @@ describe('AuthService (integration edge cases)', () => {
       await harness.prisma.refreshToken.create({
         data: { jti: revokedJti, userId: user.id, sessionId: session.id, revokedAt: new Date() },
       });
-      const revokedToken = await jwt.signAsync({ sub: user.id, jti: revokedJti }, {
-        secret: config.auth.jwtRefreshSecret,
-        expiresIn: '5m',
-      });
+      const revokedToken = await jwt.signAsync(
+        { sub: user.id, jti: revokedJti },
+        {
+          secret: config.auth.jwtRefreshSecret,
+          expiresIn: '5m',
+        },
+      );
       await expect(service.refreshToken(revokedToken)).rejects.toThrow(UnauthorizedException);
 
       // Our implementation revokes the session on revoked RT reuse. Create a fresh session for subsequent checks.
@@ -130,16 +133,19 @@ describe('AuthService (integration edge cases)', () => {
         data: { jti: activeJti, userId: user.id, sessionId: newSession.id },
       });
       const missingUserId = randomUUID();
-      const mismatchedToken = await jwt.signAsync({ sub: missingUserId, jti: activeJti }, {
-        secret: config.auth.jwtRefreshSecret,
-        expiresIn: '5m',
-      });
+      const mismatchedToken = await jwt.signAsync(
+        { sub: missingUserId, jti: activeJti },
+        {
+          secret: config.auth.jwtRefreshSecret,
+          expiresIn: '5m',
+        },
+      );
       await expect(service.refreshToken(mismatchedToken)).rejects.toThrow(UnauthorizedException);
     });
   });
 
   describe('session and token helpers', () => {
-    it('throws when attempting to revoke another user\'s session', async () => {
+    it("throws when attempting to revoke another user's session", async () => {
       const owner = await harness.registerUser();
       const stranger = await harness.registerUser({ email: `stranger-${randomUUID()}@example.com` });
       const session = await harness.prisma.session.create({ data: { userId: stranger.id } });

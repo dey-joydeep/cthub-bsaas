@@ -27,7 +27,10 @@ async function bootstrap(): Promise<void> {
 
   // Enable CORS with configuration
   app.enableCors({
-    origin: (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) => {
+    origin: (
+      origin: string | undefined,
+      callback: (error: Error | null, allow?: boolean) => void,
+    ) => {
       try {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) {
@@ -76,7 +79,10 @@ async function bootstrap(): Promise<void> {
       const start = Date.now();
       res.on('finish', () => {
         const duration = Date.now() - start;
-        loggerService.access(`${req.method} ${req.originalUrl || req.url} ${res.statusCode} ${duration}ms`, 'HTTP');
+        loggerService.access(
+          `${req.method} ${req.originalUrl || req.url} ${res.statusCode} ${duration}ms`,
+          'HTTP',
+        );
       });
       next();
     });

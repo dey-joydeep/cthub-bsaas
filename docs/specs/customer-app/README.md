@@ -16,13 +16,13 @@ Define the customer-facing authenticated experience for profile, booking, appoin
 
 ## Documents
 
-| Area | Document |
-| --- | --- |
-| FRD | [Functional Requirements](FRD/customer-app.md) |
-| HLD | [Architecture](HLD/customer-app.md) |
-| LLD | [Implementation Design](LLD/customer-app.md) |
-| API | [Endpoint Map](API/endpoint-map.md) |
-| Web | [Web Specification](WEB/customer-app.md) |
+| Area       | Document                                                         |
+| ---------- | ---------------------------------------------------------------- |
+| FRD        | [Functional Requirements](FRD/customer-app.md)                   |
+| HLD        | [Architecture](HLD/customer-app.md)                              |
+| LLD        | [Implementation Design](LLD/customer-app.md)                     |
+| API        | [Endpoint Map](API/endpoint-map.md)                              |
+| Web        | [Web Specification](WEB/customer-app.md)                         |
 | Validation | [Validation And Controls](VALIDATION/customer-app-validation.md) |
-| Test | [Test Specification](TEST/customer-app.md) |
-| Wireframes | [Wireframe Notes](WIREFRAMES/customer-app.md) |
+| Test       | [Test Specification](TEST/customer-app.md)                       |
+| Wireframes | [Wireframe Notes](WIREFRAMES/customer-app.md)                    |

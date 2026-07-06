@@ -29,9 +29,7 @@
                   <div class="renewal-date">
                     <mat-icon>calendar_today</mat-icon>
                     {{ formatRenewalDate(renewal.renewalDate) }}
-                    <span class="days-until"
-                      >({{ getDaysUntilRenewal(renewal.renewalDate) }} <ng-container i18n="@@DASHBOARD.RENEWALS.DAYS_UNTIL">Days Until Renewal</ng-container>)</span
-                    >
+                    <span class="days-until">({{ getDaysUntilRenewal(renewal.renewalDate) }} <ng-container i18n="@@DASHBOARD.RENEWALS.DAYS_UNTIL">Days Until Renewal</ng-container>)</span>
                   </div>
                   <div class="renewal-details">
                     <div class="customer-name">

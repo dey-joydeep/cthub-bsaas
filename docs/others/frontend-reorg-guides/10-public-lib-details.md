@@ -18,13 +18,16 @@ libs/web/public/
 
 ```ts
 export const PUBLIC_ROUTES: Routes = [
-  { path: '', loadComponent: () => import('./pages/home/home.page').then(m => m.HomePage) },
-  { path: ':city/salons', loadComponent: () => import('./pages/city-salons/city-salons.page').then(m => m.CitySalonListPage) },
-  { path: ':city/:tenantSlug', loadComponent: () => import('./pages/tenant/tenant.page').then(m => m.TenantPage) },
-  { path: ':city/:tenantSlug/reviews', loadComponent: () => import('./pages/tenant-reviews/tenant-reviews.page').then(m => m.TenantReviewsPage) },
-  { path: 'info/terms', loadComponent: () => import('./static/terms/terms.page').then(m => m.TermsPage) },
-  { path: 'info/privacy', loadComponent: () => import('./static/privacy/privacy.page').then(m => m.PrivacyPage) },
-  { path: 'info/faq', loadComponent: () => import('./static/faq/faq.page').then(m => m.FaqPage) },
+  { path: '', loadComponent: () => import('./pages/home/home.page').then((m) => m.HomePage) },
+  { path: ':city/salons', loadComponent: () => import('./pages/city-salons/city-salons.page').then((m) => m.CitySalonListPage) },
+  { path: ':city/:tenantSlug', loadComponent: () => import('./pages/tenant/tenant.page').then((m) => m.TenantPage) },
+  {
+    path: ':city/:tenantSlug/reviews',
+    loadComponent: () => import('./pages/tenant-reviews/tenant-reviews.page').then((m) => m.TenantReviewsPage),
+  },
+  { path: 'info/terms', loadComponent: () => import('./static/terms/terms.page').then((m) => m.TermsPage) },
+  { path: 'info/privacy', loadComponent: () => import('./static/privacy/privacy.page').then((m) => m.PrivacyPage) },
+  { path: 'info/faq', loadComponent: () => import('./static/faq/faq.page').then((m) => m.FaqPage) },
 ];
 ```
 

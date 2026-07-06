@@ -1,29 +1,18 @@
 {
   "name": "server-infrastructure",
   "sourceRoot": "libs/server/infrastructure/src",
-  "tags": [
-    "type:lib",
-    "platform:server",
-    "scope:server",
-    "type:infra"
-  ],
+  "tags": ["type:lib", "platform:server", "scope:server", "type:infra"],
   "targets": {
     "lint": {
-      "outputs": [
-        "{options.outputFile}"
-      ],
+      "outputs": ["{options.outputFile}"],
       "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": [
-          "libs/server/infrastructure/**/*.ts"
-        ]
+        "lintFilePatterns": ["libs/server/infrastructure/**/*.ts"]
       }
     },
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/server/infrastructure",
         "main": "libs/server/infrastructure/src/index.ts",
@@ -34,29 +23,19 @@
     },
     "type-check": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        "shared:build",
-        "server-contracts-auth:build",
-        "server-core:build",
-        "server-data-access:build"
-      ],
+      "dependsOn": ["shared:build", "server-contracts-auth:build", "server-core:build", "server-data-access:build"],
       "options": {
         "command": "tsc -b libs/server/infrastructure/tsconfig.json --pretty false"
       }
     },
     "test": {
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}"
-      ],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "executor": "@nx/jest:jest",
       "options": {
         "passWithNoTests": true,
         "jestConfig": "libs/server/infrastructure/jest.config.ts",
         "codeCoverage": true,
-        "coverageReporters": [
-          "text",
-          "lcov"
-        ]
+        "coverageReporters": ["text", "lcov"]
       }
     }
   },

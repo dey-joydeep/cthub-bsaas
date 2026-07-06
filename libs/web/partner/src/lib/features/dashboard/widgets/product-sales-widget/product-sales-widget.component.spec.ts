@@ -68,15 +68,15 @@ describe('ProductSalesWidgetComponent', () => {
     dashboardService = {
       getProductSales: vi.fn(),
       getProductSalesSummary: vi.fn(),
-    } ;
+    };
 
     productService = {
       getProductSales: vi.fn(),
-    } ;
+    };
 
     translateService = {
       instant: vi.fn(),
-    } ;
+    };
 
     await TestBed.configureTestingModule({
       declarations: [ProductSalesWidgetComponent],
@@ -101,7 +101,7 @@ describe('ProductSalesWidgetComponent', () => {
       providers: [
         { provide: DashboardService, useValue: dashboardService },
         { provide: ProductService, useValue: productService },
-              ],
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ProductSalesWidgetComponent);

@@ -26,16 +26,7 @@
         <p class="form-subtitle">Sign in to your account to continue</p>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Email</mat-label>
-          <input
-            matInput
-            formControlName="email"
-            type="email"
-            placeholder="Enter your email"
-            required
-            autocomplete="username"
-            [readonly]="loading"
-            [disabled]="loading"
-          />
+          <input matInput formControlName="email" type="email" placeholder="Enter your email" required autocomplete="username" [readonly]="loading" [disabled]="loading" />
           <mat-icon matSuffix>email</mat-icon>
           @if (loginForm.get('email')?.hasError('required')) {
             <mat-error> Email is required </mat-error>
@@ -46,16 +37,7 @@
         </mat-form-field>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Password</mat-label>
-          <input
-            matInput
-            formControlName="password"
-            [type]="hidePassword ? 'password' : 'text'"
-            placeholder="Enter your password"
-            required
-            autocomplete="current-password"
-            [readonly]="loading"
-            [disabled]="loading"
-          />
+          <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'" placeholder="Enter your password" required autocomplete="current-password" [readonly]="loading" [disabled]="loading" />
           <button type="button" mat-icon-button matSuffix (click)="hidePassword = !hidePassword" [disabled]="loading">
             <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
           </button>
@@ -67,14 +49,7 @@
           <mat-checkbox formControlName="rememberMe" color="primary" [disabled]="loading"> Remember me </mat-checkbox>
           <a routerLink="/auth/forgot-password" class="forgot-password" [class.disabled]="loading"> Forgot password? </a>
         </div>
-        <button
-          mat-raised-button
-          color="primary"
-          class="auth-button"
-          type="submit"
-          [disabled]="loginForm.invalid || loading"
-          [class.mat-elevation-z0]="loading"
-        >
+        <button mat-raised-button color="primary" class="auth-button" type="submit" [disabled]="loginForm.invalid || loading" [class.mat-elevation-z0]="loading">
           @if (!loading) {
             <span>SIGN IN</span>
           }
@@ -122,8 +97,7 @@
               autocomplete="one-time-code"
               [readonly]="loading"
               [disabled]="loading"
-              (keyup.enter)="onOtpSubmit()"
-            />
+              (keyup.enter)="onOtpSubmit()" />
             @if (otpForm.get('otp')?.hasError('required')) {
               <mat-error> Verification code is required </mat-error>
             }
@@ -132,14 +106,7 @@
             }
           </mat-form-field>
         </div>
-        <button
-          mat-raised-button
-          color="primary"
-          class="auth-button"
-          type="submit"
-          [disabled]="otpForm.invalid || loading"
-          [class.mat-elevation-z0]="loading"
-        >
+        <button mat-raised-button color="primary" class="auth-button" type="submit" [disabled]="otpForm.invalid || loading" [class.mat-elevation-z0]="loading">
           @if (!loading) {
             <span>VERIFY</span>
           }
@@ -149,12 +116,7 @@
         </button>
         <div class="resend-code">
           <span>Didn't receive a code? </span>
-          <a
-            href="#"
-            (click)="$event.preventDefault(); resendOtp()"
-            [class.disabled]="resendDisabled || loading"
-            [class.resend-countdown]="resendCountdown > 0"
-          >
+          <a href="#" (click)="$event.preventDefault(); resendOtp()" [class.disabled]="resendDisabled || loading" [class.resend-countdown]="resendCountdown > 0">
             {{ resendCountdown > 0 ? 'Resend in ' + resendCountdown + 's' : 'Resend Code' }}
           </a>
         </div>

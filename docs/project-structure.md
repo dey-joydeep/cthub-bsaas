@@ -1,6 +1,7 @@
 # Beauty SaaS Project Structure
 
 ## Overview
+
 This document outlines the structure of the Beauty SaaS monorepo, following the separation of concerns and modular architecture principles. The project uses NX workspaces for efficient code sharing and dependency management.
 
 ## Root Directory Structure
@@ -53,6 +54,7 @@ cthub-bsaas/
 ## Applications
 
 ### Backend API (`apps/api`)
+
 - Built with NestJS
 - Follows modular architecture
 - RESTful API endpoints
@@ -63,6 +65,7 @@ cthub-bsaas/
 ### Frontend Applications (`apps/web`)
 
 #### Admin Dashboard (`apps/web/admin`)
+
 - Built with Angular
 - For system administrators
 - User management
@@ -70,6 +73,7 @@ cthub-bsaas/
 - Analytics and reporting
 
 #### Partner Portal (`apps/web/partner`)
+
 - Built with Angular
 - For salon owners/partners
 - Appointment management
@@ -77,6 +81,7 @@ cthub-bsaas/
 - Business analytics
 
 #### Customer Application (`apps/web/customer`)
+
 - Built with Angular
 - For end customers
 - Service discovery
@@ -86,16 +91,19 @@ cthub-bsaas/
 ## Shared Libraries (`libs/`)
 
 ### Core Libraries (`libs/core/`)
+
 - **auth**: Authentication flows, guards, and JWT utilities
 - **config**: Application configuration management
 - **utils**: Shared utility functions and helpers
 
 ### Feature Libraries (`libs/features/`)
+
 - **appointments**: Appointment scheduling and management
 - **salons**: Salon and service management
 - **users**: User profiles and authentication
 
 ### Shared Domain (`libs/shared/`)
+
 - **dto**: Data transfer objects
 - **interfaces**: Shared TypeScript interfaces
 - **types**: Common type definitions
@@ -104,17 +112,20 @@ cthub-bsaas/
 ## Development Workflow
 
 ### Prerequisites
+
 - Node.js 18+
 - npm 9+
 - Docker (for local database)
 
 ### Getting Started
+
 1. Clone the repository
 2. Run `npm install` to install dependencies
 3. Set up environment variables (see `.env.example`)
 4. Start the development server: `npm run dev`
 
 ### Building for Production
+
 ```bash
 # Build all applications
 npm run build:prod
@@ -127,6 +138,7 @@ npm run build:customer
 ```
 
 ### Testing
+
 ```bash
 # Run all tests
 npm test
@@ -144,11 +156,13 @@ npm run test:coverage
 ## Deployment
 
 ### Backend
+
 - Containerized with Docker
 - Deployed to cloud provider (e.g., AWS ECS, Google Cloud Run)
 - Environment-specific configurations
 
 ### Frontend
+
 - Static files served via CDN
 - Server-side rendering (SSR) for better SEO
 - Environment-specific builds
@@ -162,6 +176,7 @@ npm run test:coverage
 5. **Testing**: Write unit and integration tests for all features
 
 ## Version Control
+
 - Follow Conventional Commits specification
 - Create feature branches from `main`
 - Open pull requests for code review

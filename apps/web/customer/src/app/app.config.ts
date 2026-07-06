@@ -12,7 +12,6 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { provideRouter, withPreloading, PreloadAllModules, withComponentInputBinding } from '@angular/router';
 import { of } from 'rxjs';
 
-
 // App imports
 import { routes } from './app.routes';
 import { LOGIN_API, AUTH_STATE_SETTER } from '@cthub-bsaas/web-customer/auth';
@@ -24,7 +23,6 @@ import { AUTH_STATE_PORT } from '@cthub-bsaas/web-core-auth';
 import { AuthService } from '@cthub-bsaas/web-customer/auth';
 
 // AoT requires an exported function for factories
-
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -41,9 +39,7 @@ export const appConfig: ApplicationConfig = {
     // Register global HTTP interceptors
     ERROR_INTERCEPTOR_PROVIDER,
     provideAnimationsAsync(),
-    importProvidersFrom([
-      MatNativeDateModule,
-    ]),
+    importProvidersFrom([MatNativeDateModule]),
     { provide: MAT_DATE_LOCALE, useValue: 'en-US' },
     { provide: ErrorHandler, useClass: ErrorHandlerService },
     { provide: AUTH_STATE_PORT, useExisting: AuthService },

@@ -11,9 +11,23 @@ $font-size-base: 1rem;
 $line-height-base: 1.5;
 /* Spacing */
 $spacer: 1rem;
-$spacers: (0: 0, 1: $spacer * 0.25, 2: $spacer * 0.5, 3: $spacer, 4: $spacer * 1.5, 5: $spacer * 3);
+$spacers: (
+  0: 0,
+  1: $spacer * 0.25,
+  2: $spacer * 0.5,
+  3: $spacer,
+  4: $spacer * 1.5,
+  5: $spacer * 3,
+);
 /* Breakpoints */
-$breakpoints: ('xs': 0, 'sm': 576px, 'md': 768px, 'lg': 992px, 'xl': 1200px, 'xxl': 1400px);
+$breakpoints: (
+  'xs': 0,
+  'sm': 576px,
+  'md': 768px,
+  'lg': 992px,
+  'xl': 1200px,
+  'xxl': 1400px,
+);
 /* Z-index */
 $zindex-dropdown: 1000;
 $zindex-sticky: 1020;

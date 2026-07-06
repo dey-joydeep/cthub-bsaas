@@ -30,7 +30,7 @@ import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.
     MatSnackBarModule,
     MatPaginatorModule,
     MatChipsModule,
-    MatTooltipModule
+    MatTooltipModule,
   ],
   templateUrl: './appointment-list.component.html',
   styleUrls: ['./appointment-list.component.css'],
@@ -101,9 +101,13 @@ export class AppointmentListComponent implements OnInit {
         const reason = result.reason || '';
         this.appointmentListService.cancelAppointment(appointment.id, reason).subscribe({
           next: () => {
-            this.snackBar.open($localize`:@@APPOINTMENT.CANCEL_SUCCESS:Appointment cancelled successfully.`, $localize`:@@COMMON.CLOSE:Close`, {
-              duration: 5000,
-            });
+            this.snackBar.open(
+              $localize`:@@APPOINTMENT.CANCEL_SUCCESS:Appointment cancelled successfully.`,
+              $localize`:@@COMMON.CLOSE:Close`,
+              {
+                duration: 5000,
+              },
+            );
             this.loadAppointments();
           },
           error: (error) => {

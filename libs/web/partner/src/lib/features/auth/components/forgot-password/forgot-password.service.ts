@@ -6,7 +6,6 @@ import { map, Observable } from 'rxjs';
 export class ForgotPasswordService {
   private readonly http = inject(HttpClient);
 
-
   requestPasswordReset(email: string): Observable<boolean> {
     return this.http.post<unknown>('/api/auth/password/forgot', { email }).pipe(map(() => true));
   }

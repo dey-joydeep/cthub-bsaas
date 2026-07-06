@@ -59,9 +59,7 @@ describe('AuthController (Integration) - error responses', () => {
   describe('partner', () => {
     describe('owner', () => {
       it('rejects owner invite validation for unknown token', async () => {
-        await request(harness.app.getHttpServer())
-          .get('/auth/owner/registration/not-a-token')
-          .expect(400);
+        await request(harness.app.getHttpServer()).get('/auth/owner/registration/not-a-token').expect(400);
       });
 
       it('returns not implemented when owner invite port is unavailable', async () => {
@@ -70,9 +68,7 @@ describe('AuthController (Integration) - error responses', () => {
         Reflect.set(authService as object, 'invitePort', undefined);
 
         try {
-          await request(harness.app.getHttpServer())
-            .get('/auth/owner/registration/test-token')
-            .expect(400);
+          await request(harness.app.getHttpServer()).get('/auth/owner/registration/test-token').expect(400);
 
           await request(harness.app.getHttpServer())
             .post('/auth/owner/registration/complete')
@@ -86,9 +82,7 @@ describe('AuthController (Integration) - error responses', () => {
 
     describe('staff', () => {
       it('rejects staff invite validation for unknown token', async () => {
-        await request(harness.app.getHttpServer())
-          .get('/auth/staff/registration/not-a-token')
-          .expect(400);
+        await request(harness.app.getHttpServer()).get('/auth/staff/registration/not-a-token').expect(400);
       });
 
       it('returns not implemented when staff invite port is unavailable', async () => {
@@ -97,9 +91,7 @@ describe('AuthController (Integration) - error responses', () => {
         Reflect.set(authService as object, 'invitePort', undefined);
 
         try {
-          await request(harness.app.getHttpServer())
-            .get('/auth/staff/registration/test-token')
-            .expect(400);
+          await request(harness.app.getHttpServer()).get('/auth/staff/registration/test-token').expect(400);
 
           await request(harness.app.getHttpServer())
             .post('/auth/staff/registration/complete')
@@ -127,9 +119,7 @@ describe('AuthController (Integration) - error responses', () => {
         throw new Error('Expected access token cookie to be present in CSRF test.');
       }
 
-      const sessionsRes = await harness
-        .withAuth(request(harness.app.getHttpServer()).get('/auth/sessions'), cookies)
-        .expect(200);
+      const sessionsRes = await harness.withAuth(request(harness.app.getHttpServer()).get('/auth/sessions'), cookies).expect(200);
       const sessionId: string = sessionsRes.body.data[0].id;
 
       await request(harness.app.getHttpServer())
@@ -202,10 +192,7 @@ describe('AuthController (Integration) - error responses', () => {
     it('rejects invalid credentials during login', async () => {
       const user = await harness.registerUser();
 
-      await request(harness.app.getHttpServer())
-        .post('/auth/login')
-        .send({ email: user.email, password: 'wrong-password' })
-        .expect(401);
+      await request(harness.app.getHttpServer()).post('/auth/login').send({ email: user.email, password: 'wrong-password' }).expect(401);
     });
 
     it('rejects login when account does not exist', async () => {
@@ -251,10 +238,7 @@ describe('AuthController (Integration) - error responses', () => {
     });
 
     it('requires refresh token when rotating', async () => {
-      await request(harness.app.getHttpServer())
-        .post('/auth/refresh')
-        .send({})
-        .expect(400);
+      await request(harness.app.getHttpServer()).post('/auth/refresh').send({}).expect(400);
     });
 
     it('rejects email change when target email is already in use', async () => {
@@ -288,22 +272,15 @@ describe('AuthController (Integration) - error responses', () => {
       const cookies = harness.expectCookies(harness.toCookiesArray(loginRes.headers['set-cookie']));
       await harness.prisma.user.update({ where: { id: user.id }, data: { passwordHash: '' } });
 
-      await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/oauth/google/unlink'), cookies)
-        .expect(401);
+      await harness.withAuth(request(harness.app.getHttpServer()).post('/auth/oauth/google/unlink'), cookies).expect(401);
     });
 
     it('returns bad request when OAuth callback code is missing', async () => {
-      await request(harness.app.getHttpServer())
-        .get('/auth/oauth/google/callback')
-        .expect(400);
+      await request(harness.app.getHttpServer()).get('/auth/oauth/google/callback').expect(400);
     });
 
     it('rejects WebAuthn login finish when no authenticated user is present', async () => {
-      await request(harness.app.getHttpServer())
-        .post('/auth/webauthn/login/finish')
-        .send({ response: {} })
-        .expect(401);
+      await request(harness.app.getHttpServer()).post('/auth/webauthn/login/finish').send({ response: {} }).expect(401);
     });
 
     it('rejects TOTP verification with invalid code', async () => {
@@ -376,9 +353,7 @@ describe('AuthController (Integration) - error responses', () => {
         .expect(200);
       const cookies = harness.expectCookies(harness.toCookiesArray(loginRes.headers['set-cookie']), { requireAuth: true });
 
-      await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/totp/enroll/start'), cookies)
-        .expect(200);
+      await harness.withAuth(request(harness.app.getHttpServer()).post('/auth/totp/enroll/start'), cookies).expect(200);
 
       await harness
         .withAuth(request(harness.app.getHttpServer()).post('/auth/totp/enroll/finish'), cookies)
@@ -435,10 +410,7 @@ describe('AuthController (Integration) - error responses', () => {
         { secret: config.auth.jwtVerifyEmailSecret },
       );
 
-      await request(harness.app.getHttpServer())
-        .post('/auth/email/verify/confirm')
-        .send({ token })
-        .expect(401);
+      await request(harness.app.getHttpServer()).post('/auth/email/verify/confirm').send({ token }).expect(401);
     });
 
     it('logs audit events through the audit service', () => {

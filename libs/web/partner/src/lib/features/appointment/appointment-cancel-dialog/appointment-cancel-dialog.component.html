@@ -13,11 +13,11 @@
         matInput
         formControlName="reason"
         rows="4"
-        i18n-placeholder="@@APPOINTMENT.REASON_PLACEHOLDER" placeholder="Enter reason for cancellation..."
+        i18n-placeholder="@@APPOINTMENT.REASON_PLACEHOLDER"
+        placeholder="Enter reason for cancellation..."
         cdkTextareaAutosize
         cdkAutosizeMinRows="3"
-        cdkAutosizeMaxRows="6"
-      ></textarea>
+        cdkAutosizeMaxRows="6"></textarea>
       @if (reason?.hasError('required')) {
         <mat-error>
           <ng-container i18n="@@VALIDATION.REASON_REQUIRED">Please provide a reason.</ng-container>

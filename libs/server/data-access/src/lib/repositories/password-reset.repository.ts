@@ -20,7 +20,7 @@ export class PasswordResetRepository implements IPasswordResetRepository {
 
   async findById(id: string): Promise<PasswordResetRecord | null> {
     const rec = await this.prisma.passwordReset.findUnique({ where: { id } });
-    return (rec) ?? null;
+    return rec ?? null;
   }
 
   async markUsed(id: string): Promise<void> {

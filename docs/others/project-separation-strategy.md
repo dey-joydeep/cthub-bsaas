@@ -1,11 +1,13 @@
 # Project Separation Strategy
 
 ## Overview
+
 This document outlines the strategy for separating the Beauty SaaS application based on user roles (Admin, Partner/Salon Owner, and Customer) to optimize load times and reduce unnecessary payloads. The separation will focus on creating dedicated frontends for each user type while maintaining an efficient backend architecture.
 
 ## Current Architecture Assessment
 
 ### New Project Structure
+
 ```
 cthub-bsaas/         # Root project
 ├── docs/            # Project documentation
@@ -26,6 +28,7 @@ cthub-bsaas/         # Root project
 ```
 
 ### Identified Issues
+
 1. All user roles share the same frontend bundle
 2. Unnecessary code is loaded for all users
 3. Shared components are not optimized for specific user roles
@@ -37,6 +40,7 @@ cthub-bsaas/         # Root project
 ## 1. Applications Structure
 
 ### 1.1 Backend (`/apps/api`)
+
 - **Purpose**: Single backend API serving all frontend applications
 - **Structure**:
   ```
@@ -53,6 +57,7 @@ cthub-bsaas/         # Root project
   ```
 
 ### 1.2 Frontend Applications (`/apps/web`)
+
 - **Admin Dashboard** (`/web/admin`)
   - User management
   - System configuration
@@ -83,15 +88,16 @@ cthub-bsaas/         # Root project
 
 #### Current to New Structure Mapping
 
-**Current Location** | **New Location** | **Notes**
----------------------|------------------|-----------
-`apps/bsaas-back/src/common/*` | `libs/shared/src/common/*` | Move common utilities and decorators
-`apps/bsaas-back/src/core/types/*` | `libs/shared/src/types/*` | Move shared types and interfaces
-`apps/bsaas-back/src/core/validation/*` | `libs/shared/src/validation/*` | Move validation logic
-`apps/bsaas-back/src/modules/*/dto/*` | `libs/shared/src/dto/*` | Consolidate DTOs by domain
-`apps/bsaas-back/src/modules/*/interfaces/*` | `libs/shared/src/interfaces/*` | Move shared interfaces
+| **Current Location**                         | **New Location**               | **Notes**                            |
+| -------------------------------------------- | ------------------------------ | ------------------------------------ |
+| `apps/bsaas-back/src/common/*`               | `libs/shared/src/common/*`     | Move common utilities and decorators |
+| `apps/bsaas-back/src/core/types/*`           | `libs/shared/src/types/*`      | Move shared types and interfaces     |
+| `apps/bsaas-back/src/core/validation/*`      | `libs/shared/src/validation/*` | Move validation logic                |
+| `apps/bsaas-back/src/modules/*/dto/*`        | `libs/shared/src/dto/*`        | Consolidate DTOs by domain           |
+| `apps/bsaas-back/src/modules/*/interfaces/*` | `libs/shared/src/interfaces/*` | Move shared interfaces               |
 
 #### Key Files to Move:
+
 1. **Authentication**
    - `apps/bsaas-back/src/core/auth/types/*` → `libs/shared/src/types/auth/*`
    - `apps/bsaas-back/src/core/auth/guards/*` → `libs/auth/src/guards/*`
@@ -103,6 +109,7 @@ cthub-bsaas/         # Root project
 3. **Common Utilities**
    - `apps/bsaas-back/src/core/utils/*` → `libs/shared/src/utils/*`
    - `apps/bsaas-back/src/core/constants/*` → `libs/shared/src/constants/*`
+
 - **Types & Interfaces** (`/types`)
   - User types
   - API request/response DTOs
@@ -121,13 +128,14 @@ cthub-bsaas/         # Root project
 
 #### Current to New Structure Mapping
 
-**Current Location** | **New Location** | **Notes**
----------------------|------------------|-----------
-`apps/bsaas-front/src/app/shared/*` | `libs/ui/src/lib/*` | Move shared UI components
-`apps/bsaas-front/src/assets/styles/*` | `libs/ui/src/styles/*` | Move global styles
-`apps/bsaas-front/src/app/core/layout/*` | `libs/ui/src/layout/*` | Move layout components
+| **Current Location**                     | **New Location**       | **Notes**                 |
+| ---------------------------------------- | ---------------------- | ------------------------- |
+| `apps/bsaas-front/src/app/shared/*`      | `libs/ui/src/lib/*`    | Move shared UI components |
+| `apps/bsaas-front/src/assets/styles/*`   | `libs/ui/src/styles/*` | Move global styles        |
+| `apps/bsaas-front/src/app/core/layout/*` | `libs/ui/src/layout/*` | Move layout components    |
 
 #### Key Components to Move:
+
 1. **Base Components**
    - `apps/bsaas-front/src/app/shared/components/buttons/*` → `libs/ui/src/lib/buttons/*`
    - `apps/bsaas-front/src/app/shared/components/forms/*` → `libs/ui/src/lib/forms/*`
@@ -137,6 +145,7 @@ cthub-bsaas/         # Root project
    - `apps/bsaas-front/src/app/core/layout/header/*` → `libs/ui/src/layout/header/*`
    - `apps/bsaas-front/src/app/core/layout/footer/*` → `libs/ui/src/layout/footer/*`
    - `apps/bsaas-front/src/app/core/layout/sidebar/*` → `libs/ui/src/layout/sidebar/*`
+
 - **Base Components** (`/components/base`)
   - Buttons, inputs, modals
   - Form controls
@@ -151,12 +160,12 @@ cthub-bsaas/         # Root project
 
 #### Current to New Structure Mapping
 
-**Current Location** | **New Location** | **Notes**
----------------------|------------------|-----------
-`apps/bsaas-back/src/modules/appointment/*` | `libs/appointments/src/*` | Move appointment logic
-`apps/bsaas-back/src/modules/salon/*` | `libs/salon/src/*` | Move salon management
-`apps/bsaas-back/src/modules/review/*` | `libs/reviews/src/*` | Move review functionality
-`apps/bsaas-front/src/app/modules/*` | `libs/feature-*/src/*` | Move frontend features
+| **Current Location**                        | **New Location**          | **Notes**                 |
+| ------------------------------------------- | ------------------------- | ------------------------- |
+| `apps/bsaas-back/src/modules/appointment/*` | `libs/appointments/src/*` | Move appointment logic    |
+| `apps/bsaas-back/src/modules/salon/*`       | `libs/salon/src/*`        | Move salon management     |
+| `apps/bsaas-back/src/modules/review/*`      | `libs/reviews/src/*`      | Move review functionality |
+| `apps/bsaas-front/src/app/modules/*`        | `libs/feature-*/src/*`    | Move frontend features    |
 
 #### Feature Module Breakdown:
 
@@ -174,6 +183,7 @@ cthub-bsaas/         # Root project
    - Backend: `apps/bsaas-back/src/modules/review/*` → `libs/reviews/src/*`
    - Frontend: `apps/bsaas-front/src/app/modules/review/*` → `libs/reviews/src/lib/*`
    - Shared Types: Move to `libs/shared/src/types/reviews/*`
+
 - **Auth** (`/auth`)
   - Authentication flows
   - Guards and interceptors
@@ -197,7 +207,9 @@ cthub-bsaas/         # Root project
 ## 3. Migration Strategy
 
 ### Phase 1: Setup (Week 1)
+
 1. **Create New Structure**
+
    ```bash
    # Create new libraries
    nx generate @nx/js:library shared --directory=libs/shared
@@ -212,6 +224,7 @@ cthub-bsaas/         # Root project
    - Update all imports
 
 ### Phase 2: Feature Migration (Weeks 2-3)
+
 1. **Migrate One Feature at a Time**
    - Start with a small, self-contained feature
    - Update both backend and frontend
@@ -223,6 +236,7 @@ cthub-bsaas/         # Root project
    - Update test configurations
 
 ### Phase 3: Testing & Optimization (Week 4)
+
 1. **Testing**
    - Unit tests for all moved code
    - Integration tests for features
@@ -236,6 +250,7 @@ cthub-bsaas/         # Root project
 ## 4. Configuration
 
 ### 3.1 NX Configuration
+
 - **Project Boundaries**:
   ```json
   {
@@ -259,6 +274,7 @@ cthub-bsaas/         # Root project
   ```
 
 ### 3.2 Environment Configuration
+
 - Development
 - Staging
 - Production
@@ -266,6 +282,7 @@ cthub-bsaas/         # Root project
 ## Implementation Phases
 
 ### Phase 1: Frontend Separation (Weeks 1-3)
+
 1. Set up new frontend applications
    - Configure build system for shared code
    - Implement shared authentication flow
@@ -277,6 +294,7 @@ cthub-bsaas/         # Root project
    - Update imports and tests
 
 ### Phase 2: Backend Optimization (Weeks 4-6)
+
 1. Implement role-based API endpoints
    - Optimize queries for each role
    - Add granular permissions
@@ -288,6 +306,7 @@ cthub-bsaas/         # Root project
    - Optimize database queries
 
 ### Phase 3: Integration & Testing (Weeks 7-8)
+
 1. End-to-end testing
    - Role-specific test suites
    - Performance benchmarking
@@ -301,18 +320,21 @@ cthub-bsaas/         # Root project
 ## Technical Considerations
 
 ### Frontend Optimization
+
 - **Lazy Loading**: Route-level code splitting
 - **Preloading**: Critical assets preloading
 - **Caching**: Service worker for static assets
 - **Tree Shaking**: Remove unused code
 
 ### Backend Optimization
+
 - **Caching**: Redis for frequent queries
 - **Compression**: Enable response compression
 - **Pagination**: Implement cursor-based pagination
 - **Selective Fields**: Allow clients to request only needed fields
 
 ### Authentication & Authorization
+
 1. **Unified Auth Service**
    - Single sign-on (SSO) for all applications
    - JWT with role claims
@@ -324,6 +346,7 @@ cthub-bsaas/         # Root project
    - Audit logging
 
 ## Migration Strategy
+
 1. **Incremental Rollout**
    - Start with read-only features
    - Gradually move to write operations
@@ -333,5 +356,3 @@ cthub-bsaas/         # Root project
    - Shared database during transition
    - Event-driven architecture for data synchronization
    - Monitoring for data consistency issues
-
-

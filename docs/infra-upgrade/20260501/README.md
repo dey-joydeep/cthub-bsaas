@@ -51,6 +51,7 @@ Angular migration remains governed by the official Angular Update Guide even tho
 ---
 
 ## Next Upgrade Cycle Guidance
-For architectural decisions, deferred migrations (Angular 22), and housekeeping items (Nx v24 deprecations, NestJS v12 Vitest roadmap, Prisma ORM strategy) for future cycles, reference:
-- [Next Upgrade Cycle Memo](../next-cycle-memo.md)
 
+For architectural decisions, deferred migrations (Angular 22), and housekeeping items (Nx v24 deprecations, NestJS v12 Vitest roadmap, Prisma ORM strategy) for future cycles, reference:
+
+- [Next Upgrade Cycle Memo](../next-cycle-memo.md)

@@ -6,25 +6,12 @@
         <img src="assets/logo.png" alt="Beauty SaaS Logo" class="hero-logo" />
         <h1 class="hero-title">Welcome to Beauty SaaS</h1>
         <p class="hero-subtitle">
-          {{
-            isAuthenticated
-              ? 'Manage your beauty experience with our comprehensive platform.'
-              : 'Discover top-rated salons, book appointments, and transform your beauty routine.'
-          }}
+          {{ isAuthenticated ? 'Manage your beauty experience with our comprehensive platform.' : 'Discover top-rated salons, book appointments, and transform your beauty routine.' }}
         </p>
         <!-- Search Bar -->
         <div class="search">
-          <input
-            type="text"
-            [(ngModel)]="searchQuery"
-            (keyup.enter)="onSearch()"
-            placeholder="Search for salons, services, or locations..."
-            class="search-input"
-            aria-label="Search for salons, services, or locations"
-          />
-          <button mat-flat-button color="primary" (click)="onSearch()" class="search-button" aria-label="Search">
-            <mat-icon>search</mat-icon> Search
-          </button>
+          <input type="text" [(ngModel)]="searchQuery" (keyup.enter)="onSearch()" placeholder="Search for salons, services, or locations..." class="search-input" aria-label="Search for salons, services, or locations" />
+          <button mat-flat-button color="primary" (click)="onSearch()" class="search-button" aria-label="Search"><mat-icon>search</mat-icon> Search</button>
         </div>
         <!-- Primary CTA -->
         <div class="hero-cta">

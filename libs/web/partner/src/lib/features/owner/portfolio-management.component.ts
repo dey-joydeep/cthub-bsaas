@@ -11,14 +11,7 @@ import { PortfolioService } from './portfolio.service';
 @Component({
   selector: 'app-portfolio-management',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatProgressBarModule,
-    MatIconModule
-  ],
+  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressBarModule, MatIconModule],
   templateUrl: './portfolio-management.component.html',
   styleUrls: ['./portfolio-management.component.css'],
 })

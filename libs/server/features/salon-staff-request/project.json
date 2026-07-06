@@ -7,9 +7,7 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/server/features/salon-staff-request",
         "tsConfig": "libs/server/features/salon-staff-request/tsconfig.lib.json",
@@ -43,28 +41,19 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
+      "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": [
-          "libs/server/features/salon-staff-request/**/*.ts"
-        ]
+        "lintFilePatterns": ["libs/server/features/salon-staff-request/**/*.ts"]
       }
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}"
-      ],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "libs/server/features/salon-staff-request/jest.config.ts",
         "passWithNoTests": true,
         "codeCoverage": true,
-        "coverageReporters": [
-          "text",
-          "lcov"
-        ],
+        "coverageReporters": ["text", "lcov"],
         "coverageDirectory": "coverage/libs/server/features/salon-staff-request"
       },
       "configurations": {
@@ -82,21 +71,11 @@
         "command": "npm publish {projectRoot}/dist --access public",
         "parallel": true
       },
-      "dependsOn": [
-        "build"
-      ]
+      "dependsOn": ["build"]
     }
   },
-  "tags": [
-    "type:lib",
-    "platform:server",
-    "scope:server-feature",
-    "scope:server",
-    "type:feature"
-  ],
-  "implicitDependencies": [
-    "server-core"
-  ],
+  "tags": ["type:lib", "platform:server", "scope:server-feature", "scope:server", "type:feature"],
+  "implicitDependencies": ["server-core"],
   "dependencies": [
     {
       "target": "server-data-access",

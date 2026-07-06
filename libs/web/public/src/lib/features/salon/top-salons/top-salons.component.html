@@ -18,9 +18,7 @@
         <div class="salon-card">
           <div class="salon-header">{{ getSalonProperty(salon, 'name') || 'Salon' }}</div>
           <div class="salon-rating">
-            Rating: {{ getSalonProperty(salon, 'averageRating') !== undefined ? getSalonProperty(salon, 'averageRating') : 'N/A' }} ({{
-              getSalonProperty(salon, 'reviewCount') || 0
-            }}
+            Rating: {{ getSalonProperty(salon, 'averageRating') !== undefined ? getSalonProperty(salon, 'averageRating') : 'N/A' }} ({{ getSalonProperty(salon, 'reviewCount') || 0 }}
             reviews)
           </div>
           <div class="salon-address">

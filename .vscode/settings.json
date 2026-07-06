@@ -40,7 +40,5 @@
   },
 
   "eslint.useFlatConfig": true,
-  "eslint.workingDirectories": [
-    { "mode": "auto" }
-  ]
+  "eslint.workingDirectories": [{ "mode": "auto" }]
 }

@@ -16,14 +16,7 @@ import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 @Component({
   selector: 'app-subscription-chart-widget',
   standalone: true,
-  imports: [
-    MatCardModule,
-    MatIconModule,
-    MatButtonModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule,
-    BaseChartDirective,
-  ],
+  imports: [MatCardModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule, BaseChartDirective],
   templateUrl: './subscription-chart-widget.component.html',
   styleUrls: ['./subscription-chart-widget.component.css'],
 })

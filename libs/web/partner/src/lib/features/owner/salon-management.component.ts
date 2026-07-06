@@ -24,7 +24,7 @@ import { UserRole } from '@cthub-bsaas/shared';
     MatProgressBarModule,
     MatIconModule,
     MatSelectModule,
-    MatChipsModule
+    MatChipsModule,
   ],
   templateUrl: './salon-management.component.html',
   styleUrls: ['./salon-management.component.css'],

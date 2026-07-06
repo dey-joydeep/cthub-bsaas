@@ -3,33 +3,22 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/server/contracts-platform/src",
   "projectType": "library",
-  "tags": [
-    "type:lib",
-    "platform:server",
-    "scope:server",
-    "layer:contracts"
-  ],
+  "tags": ["type:lib", "platform:server", "scope:server", "layer:contracts"],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/server/contracts-platform",
         "main": "libs/server/contracts-platform/src/index.ts",
         "tsConfig": "libs/server/contracts-platform/tsconfig.lib.json",
-        "assets": [
-          "libs/server/contracts-platform/*.md"
-        ],
+        "assets": ["libs/server/contracts-platform/*.md"],
         "rootDir": "libs/server/contracts-platform/src"
       }
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}"
-      ],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "libs/server/contracts-platform/jest.config.ts"
       }

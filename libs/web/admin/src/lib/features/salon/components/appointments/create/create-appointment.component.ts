@@ -35,7 +35,7 @@ import { Staff } from '../../../models/staff.model';
     MatNativeDateModule,
     MatProgressBarModule,
     MatProgressSpinnerModule,
-    MatSelectModule
+    MatSelectModule,
   ],
   templateUrl: './create-appointment.component.html',
   styleUrls: ['./create-appointment.component.css'],

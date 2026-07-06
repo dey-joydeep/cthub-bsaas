@@ -10,13 +10,7 @@
 
     <!-- Search Bar (Visible on desktop) -->
     <div class="search-container">
-      <input
-        type="text"
-        class="search-input"
-        i18n-placeholder="@@HEADER.SEARCH_PLACEHOLDER" placeholder="Search..."
-        (keyup.enter)="onSearch(searchInput.value)"
-        #searchInput
-      />
+      <input type="text" class="search-input" i18n-placeholder="@@HEADER.SEARCH_PLACEHOLDER" placeholder="Search..." (keyup.enter)="onSearch(searchInput.value)" #searchInput />
       <button mat-icon-button class="search-button" (click)="onSearch(searchInput.value)">
         <mat-icon>search</mat-icon>
       </button>
@@ -140,13 +134,7 @@
 
 <!-- Mobile Search Bar (Hidden on desktop) -->
 <div class="mobile-search-container" [class.hidden]="!isMobileSearchVisible">
-  <input
-    type="text"
-    class="mobile-search-input"
-    i18n-placeholder="@@HEADER.SEARCH_PLACEHOLDER" placeholder="Search..."
-    (keyup.enter)="onSearch(mobileSearchInput.value)"
-    #mobileSearchInput
-  />
+  <input type="text" class="mobile-search-input" i18n-placeholder="@@HEADER.SEARCH_PLACEHOLDER" placeholder="Search..." (keyup.enter)="onSearch(mobileSearchInput.value)" #mobileSearchInput />
   <button mat-icon-button class="close-search" (click)="isMobileSearchVisible = false">
     <mat-icon>close</mat-icon>
   </button>
@@ -154,17 +142,12 @@
 
 <!-- City Selection Popup -->
 @if (showCityPopup) {
-  <div
-    class="city-popup-overlay"
-    role="button"
-    tabindex="0"
-    (click)="showCityPopup = false"
-    (keydown.enter)="showCityPopup = false"
-    (keydown.space)="showCityPopup = false"
-  >
+  <div class="city-popup-overlay" role="button" tabindex="0" (click)="showCityPopup = false" (keydown.enter)="showCityPopup = false" (keydown.space)="showCityPopup = false">
     <div class="city-popup" role="dialog" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
       <h2><ng-container i18n="@@HEADER.SELECT_YOUR_CITY">Select Your City</ng-container></h2>
-      <p><ng-container i18n="@@HEADER.WE_USE_THIS_TO_SHOW_RELEVANT_CONTENT">We use this to show you relevant services and appointments in your area.</ng-container></p>
+      <p>
+        <ng-container i18n="@@HEADER.WE_USE_THIS_TO_SHOW_RELEVANT_CONTENT">We use this to show you relevant services and appointments in your area.</ng-container>
+      </p>
       <mat-form-field appearance="outline" class="city-selector-popup">
         <mat-label><ng-container i18n="@@HEADER.SELECT_CITY">Select City</ng-container></mat-label>
         <mat-select [(ngModel)]="selectedCity" panelClass="city-selector-panel">

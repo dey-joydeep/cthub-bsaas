@@ -18,13 +18,7 @@
           <mat-date-range-picker #picker></mat-date-range-picker>
 
           @if (dateRange.value.start || dateRange.value.end) {
-            <button
-              mat-icon-button
-              matSuffix
-              (click)="dateRange.reset(); loadData()"
-              i18n-matTooltip="@@COMMON.CLEAR" matTooltip="Clear"
-              class="clear-date"
-            >
+            <button mat-icon-button matSuffix (click)="dateRange.reset(); loadData()" i18n-matTooltip="@@COMMON.CLEAR" matTooltip="Clear" class="clear-date">
               <mat-icon>close</mat-icon>
             </button>
           }
@@ -193,31 +187,21 @@
                         </div>
                       </div>
                       <div class="appointment-actions">
-                        <button
-                          mat-icon-button
-                          [matMenuTriggerFor]="statusMenu"
-                          i18n-matTooltip="@@DASHBOARD.APPOINTMENTS.CHANGE_STATUS" matTooltip="Change Status"
-                        >
+                        <button mat-icon-button [matMenuTriggerFor]="statusMenu" i18n-matTooltip="@@DASHBOARD.APPOINTMENTS.CHANGE_STATUS" matTooltip="Change Status">
                           <mat-icon>swap_vert</mat-icon>
                         </button>
-                        <button
-                          mat-icon-button
-                          i18n-matTooltip="@@DASHBOARD.APPOINTMENTS.VIEW_DETAILS" matTooltip="View Details"
-                          [routerLink]="['/appointments', appointment.id]"
-                        >
+                        <button mat-icon-button i18n-matTooltip="@@DASHBOARD.APPOINTMENTS.VIEW_DETAILS" matTooltip="View Details" [routerLink]="['/appointments', appointment.id]">
                           <mat-icon>visibility</mat-icon>
                         </button>
                         <mat-menu #statusMenu="matMenu">
                           @for (status of statusOptions; track status) {
-                            <button
-                              mat-menu-item
-                              [disabled]="status.value === appointment.status || status.value === 'ALL'"
-                              (click)="onStatusChange(appointment, status.value)"
-                            >
+                            <button mat-menu-item [disabled]="status.value === appointment.status || status.value === 'ALL'" (click)="onStatusChange(appointment, status.value)">
                               <mat-icon [ngClass]="'status-' + status.value.toLowerCase()">
                                 {{ getStatusIcon(status.value) }}
                               </mat-icon>
-                              <span><ng-container i18n="@@DASHBOARD.APPOINTMENTS.SET_AS">Set as {{ status.label }}</ng-container></span>
+                              <span
+                                ><ng-container i18n="@@DASHBOARD.APPOINTMENTS.SET_AS">Set as {{ status.label }}</ng-container></span
+                              >
                             </button>
                           }
                         </mat-menu>
@@ -280,11 +264,7 @@
                         </span>
                       </div>
                     </div>
-                    <button
-                      mat-icon-button
-                      i18n-matTooltip="@@DASHBOARD.APPOINTMENTS.VIEW_DETAILS" matTooltip="View Details"
-                      [routerLink]="['/appointments', appointment.id]"
-                    >
+                    <button mat-icon-button i18n-matTooltip="@@DASHBOARD.APPOINTMENTS.VIEW_DETAILS" matTooltip="View Details" [routerLink]="['/appointments', appointment.id]">
                       <mat-icon>chevron_right</mat-icon>
                     </button>
                   </div>
@@ -311,9 +291,7 @@
                         <div class="legend-color" [style.background]="getStatusColor(status.value)"></div>
                         <span class="legend-label">{{ status.label }}</span>
                         <span class="legend-value">{{ overview.statusDistribution[status.value] || 0 }}</span>
-                        <span class="legend-percentage">
-                          ({{ ((overview.statusDistribution[status.value] / overview.totalAppointments) * 100).toFixed(1) }}%)
-                        </span>
+                        <span class="legend-percentage"> ({{ ((overview.statusDistribution[status.value] / overview.totalAppointments) * 100).toFixed(1) }}%) </span>
                       </div>
                     }
                   }
@@ -326,15 +304,7 @@
                           class="chart-bar"
                           [style.height.%]="(overview.statusDistribution[status.value] / overview.totalAppointments) * 100"
                           [style.background]="getStatusColor(status.value)"
-                          [matTooltip]="
-                            status.label +
-                            ': ' +
-                            overview.statusDistribution[status.value] +
-                            ' (' +
-                            ((overview.statusDistribution[status.value] / overview.totalAppointments) * 100).toFixed(1) +
-                            '%)'
-                          "
-                        ></div>
+                          [matTooltip]="status.label + ': ' + overview.statusDistribution[status.value] + ' (' + ((overview.statusDistribution[status.value] / overview.totalAppointments) * 100).toFixed(1) + '%)'"></div>
                       }
                     }
                   </div>
@@ -342,7 +312,7 @@
                     @for (status of statusOptions; track status) {
                       @if (status.value !== 'ALL' && overview.statusDistribution[status.value]) {
                         <div class="chart-label">
-                          {{ status.label | slice: 0 : 1  }}
+                          {{ status.label | slice: 0 : 1 }}
                         </div>
                       }
                     }
@@ -359,13 +329,7 @@
                         <div
                           class="daily-bar"
                           [style.height.px]="(overview.dailyAppointments[day.date.toISOString()] || 0) * 5"
-                          [matTooltip]="
-                            (day.date | date: 'mediumDate') +
-                            ': ' +
-                            (overview.dailyAppointments[day.date.toISOString()] || 0) +
-                            ' appointments'
-                          "
-                        ></div>
+                          [matTooltip]="(day.date | date: 'mediumDate') + ': ' + (overview.dailyAppointments[day.date.toISOString()] || 0) + ' appointments'"></div>
                       }
                     }
                   </div>

@@ -15,7 +15,7 @@ describe('ServiceManagementComponent', () => {
       getServices: vi.fn(),
       updateService: vi.fn(),
       deleteService: vi.fn(),
-    } ;
+    };
 
     await TestBed.configureTestingModule({
       imports: [ReactiveFormsModule],

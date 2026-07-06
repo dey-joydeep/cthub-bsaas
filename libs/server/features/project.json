@@ -4,19 +4,11 @@
   "projectType": "library",
   "sourceRoot": "libs/server/features/src",
   "prefix": "app",
-  "tags": [
-    "type:lib",
-    "platform:server",
-    "scope:server-feature",
-    "scope:server",
-    "type:feature"
-  ],
+  "tags": ["type:lib", "platform:server", "scope:server-feature", "scope:server", "type:feature"],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/server/features",
         "tsConfig": "libs/server/features/tsconfig.lib.json",
@@ -33,13 +25,9 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
+      "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": [
-          "libs/server/features/**/*.ts"
-        ]
+        "lintFilePatterns": ["libs/server/features/**/*.ts"]
       }
     },
     "type-check": {
@@ -50,9 +38,7 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}"
-      ],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "libs/server/features/jest.config.ts",
         "passWithNoTests": true

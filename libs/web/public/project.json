@@ -4,17 +4,11 @@
   "projectType": "library",
   "sourceRoot": "libs/web/public/src",
   "prefix": "lib",
-  "tags": [
-    "platform:web",
-    "scope:web",
-    "type:lib"
-  ],
+  "tags": ["platform:web", "scope:web", "type:lib"],
   "targets": {
     "build": {
       "executor": "@nx/angular:package",
-      "outputs": [
-        "{workspaceRoot}/dist/libs/web/public"
-      ],
+      "outputs": ["{workspaceRoot}/dist/libs/web/public"],
       "defaultConfiguration": "production",
       "options": {
         "project": "libs/web/public/ng-package.json",
@@ -30,10 +24,7 @@
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": [
-          "libs/web/public/src/index.ts",
-          "libs/web/public/src/lib/public.routes.ts"
-        ]
+        "lintFilePatterns": ["libs/web/public/src/index.ts", "libs/web/public/src/lib/public.routes.ts"]
       }
     },
     "type-check": {

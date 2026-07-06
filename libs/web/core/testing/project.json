@@ -4,18 +4,12 @@
   "sourceRoot": "libs/web/core/testing/src",
   "prefix": "lib",
   "projectType": "library",
-  "tags": [
-    "platform:web",
-    "scope:web-core",
-    "type:lib"
-  ],
+  "tags": ["platform:web", "scope:web-core", "type:lib"],
   "targets": {
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": [
-          "libs/web/core/testing/src/**/*.ts"
-        ]
+        "lintFilePatterns": ["libs/web/core/testing/src/**/*.ts"]
       }
     },
     "type-check": {

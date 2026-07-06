@@ -4,21 +4,12 @@
   "sourceRoot": "libs/web/ui/src",
   "projectType": "library",
   "prefix": "lib",
-  "tags": [
-    "platform:web",
-    "scope:web",
-    "type:lib",
-    "type:ui"
-  ],
+  "tags": ["platform:web", "scope:web", "type:lib", "type:ui"],
   "targets": {
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": [
-          "libs/web/ui/src/**/*.ts",
-          "libs/web/ui/src/**/*.html",
-          "libs/web/ui/src/**/*.css"
-        ]
+        "lintFilePatterns": ["libs/web/ui/src/**/*.ts", "libs/web/ui/src/**/*.html", "libs/web/ui/src/**/*.css"]
       }
     },
     "type-check": {
@@ -29,9 +20,7 @@
     },
     "build": {
       "executor": "@nx/angular:package",
-      "outputs": [
-        "{workspaceRoot}/dist/libs/web/ui"
-      ],
+      "outputs": ["{workspaceRoot}/dist/libs/web/ui"],
       "options": {
         "tsConfig": "libs/web/ui/tsconfig.lib.json",
         "project": "libs/web/ui/ng-package.json"

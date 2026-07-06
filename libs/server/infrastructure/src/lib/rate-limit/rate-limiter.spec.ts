@@ -6,4 +6,3 @@ describe('RATE_LIMITER InjectionToken', () => {
     expect(String(RATE_LIMITER)).toContain('RATE_LIMITER');
   });
 });
-

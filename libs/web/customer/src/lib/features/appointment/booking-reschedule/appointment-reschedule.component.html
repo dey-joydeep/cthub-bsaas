@@ -74,12 +74,7 @@
                         <h4><ng-container i18n="@@APPOINTMENT.AVAILABLE_TIMESLOTS">Available Time Slots</ng-container></h4>
                         <div class="time-grid">
                           @for (time of availableTimeSlots; track time) {
-                            <button
-                              mat-stroked-button
-                              type="button"
-                              [class.selected]="dateTimeFormGroup.get('time')?.value === time"
-                              (click)="dateTimeFormGroup.get('time')?.setValue(time)"
-                            >
+                            <button mat-stroked-button type="button" [class.selected]="dateTimeFormGroup.get('time')?.value === time" (click)="dateTimeFormGroup.get('time')?.setValue(time)">
                               {{ time }}
                             </button>
                           }
@@ -145,12 +140,7 @@
                   </div>
                   <mat-form-field appearance="outline" class="full-width">
                     <mat-label><ng-container i18n="@@APPOINTMENT.ADDITIONAL_NOTES">Additional Notes</ng-container> (<ng-container i18n="@@COMMON.OPTIONAL">Optional</ng-container>)</mat-label>
-                    <textarea
-                      matInput
-                      formControlName="notes"
-                      rows="3"
-                      i18n-placeholder="@@APPOINTMENT.RESCHEDULE_NOTES_PLACEHOLDER" placeholder="Enter any notes for rescheduling..."
-                    ></textarea>
+                    <textarea matInput formControlName="notes" rows="3" i18n-placeholder="@@APPOINTMENT.RESCHEDULE_NOTES_PLACEHOLDER" placeholder="Enter any notes for rescheduling..."></textarea>
                   </mat-form-field>
                   <mat-checkbox formControlName="confirm" class="confirmation-checkbox">
                     <ng-container i18n="@@APPOINTMENT.CONFIRM_RESCHEDULE_CHECKBOX">I confirm that I want to reschedule</ng-container>
@@ -165,13 +155,7 @@
                   <button mat-button matStepperPrevious [disabled]="isSubmitting">
                     <ng-container i18n="@@COMMON.BACK">Back</ng-container>
                   </button>
-                  <button
-                    mat-raised-button
-                    color="primary"
-                    type="button"
-                    (click)="onSubmit()"
-                    [disabled]="reviewFormGroup.invalid || isSubmitting"
-                  >
+                  <button mat-raised-button color="primary" type="button" (click)="onSubmit()" [disabled]="reviewFormGroup.invalid || isSubmitting">
                     @if (!isSubmitting) {
                       <span><ng-container i18n="@@APPOINTMENT.CONFIRM_RESCHEDULE">Confirm Reschedule</ng-container></span>
                     }

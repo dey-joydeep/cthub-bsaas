@@ -203,19 +203,19 @@ The generated HTML report includes:
 
 #### Dependencies
 
-| Package | Current Version | Latest Version | Update Type |
-|---------|----------------|----------------|-------------|
-| @angular/core | ^12.0.0 | 15.2.0 | Major |
-| rxjs | ~7.8.0 | 7.8.1 | Minor |
+| Package       | Current Version | Latest Version | Update Type |
+| ------------- | --------------- | -------------- | ----------- |
+| @angular/core | ^12.0.0         | 15.2.0         | Major       |
+| rxjs          | ~7.8.0          | 7.8.1          | Minor       |
 
 #### Dev Dependencies
 
-| Package | Current Version | Latest Version | Update Type |
-|---------|----------------|----------------|-------------|
-| @types/jest | ^29.5.1 | 29.5.1 | - |
-| typescript | ~5.1.3 | 5.1.6 | Minor |
+| Package     | Current Version | Latest Version | Update Type |
+| ----------- | --------------- | -------------- | ----------- |
+| @types/jest | ^29.5.1         | 29.5.1         | -           |
+| typescript  | ~5.1.3          | 5.1.6          | Minor       |
 
-*Note: The actual report is an HTML file with color-coded status indicators and interactive elements.*
+_Note: The actual report is an HTML file with color-coded status indicators and interactive elements._
 
 ## Best Practices
 

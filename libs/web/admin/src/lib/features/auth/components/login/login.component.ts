@@ -36,7 +36,7 @@ import { LoginService } from './login.service';
     MatIconModule,
     MatInputModule,
     MatProgressBarModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
   ],
   selector: 'app-login',
   templateUrl: './login.component.html',

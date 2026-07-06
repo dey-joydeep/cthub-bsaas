@@ -15,13 +15,7 @@ describe('SalonSearchComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [
-        SalonSearchComponent,
-        HttpClientTestingModule,
-        FormsModule,
-        SafeUrlPipe,
-        RouterTestingModule.withRoutes([]),
-      ],
+      imports: [SalonSearchComponent, HttpClientTestingModule, FormsModule, SafeUrlPipe, RouterTestingModule.withRoutes([])],
       providers: [
         SafeUrlPipe,
         { provide: AUTH_STATE_PORT, useValue: { currentUser$: of(null) } },

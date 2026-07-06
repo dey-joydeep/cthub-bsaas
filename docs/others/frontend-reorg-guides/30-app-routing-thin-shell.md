@@ -11,14 +11,12 @@ import { authCanMatch } from '@beauty-saas/web/core/auth'; // adjust alias if di
 export const routes: Routes = [
   {
     path: '',
-    loadChildren: () =>
-      import('@beauty-saas/web/public').then(m => m.PUBLIC_ROUTES),
+    loadChildren: () => import('@beauty-saas/web/public').then((m) => m.PUBLIC_ROUTES),
   },
   {
     path: '',
     canMatch: [authCanMatch],
-    loadChildren: () =>
-      import('@beauty-saas/web/customer').then(m => m.CUSTOMER_ROUTES),
+    loadChildren: () => import('@beauty-saas/web/customer').then((m) => m.CUSTOMER_ROUTES),
   },
   { path: '**', redirectTo: '' },
 ];

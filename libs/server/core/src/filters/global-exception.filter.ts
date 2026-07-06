@@ -54,10 +54,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     } = {
       success: false as const,
       code: normalized.code,
-      message:
-        isProduction && shouldMaskDetails
-          ? 'An internal server error occurred'
-          : normalized.message,
+      message: isProduction && shouldMaskDetails ? 'An internal server error occurred' : normalized.message,
     };
 
     if (!shouldMaskDetails && normalized.details) {

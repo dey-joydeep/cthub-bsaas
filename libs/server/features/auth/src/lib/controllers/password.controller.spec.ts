@@ -5,10 +5,7 @@ import type { ResetPasswordDto } from '../dto/reset-password.dto';
 import type { PasswordChangeDto } from '../dto/password-change.dto';
 
 describe('PasswordController', () => {
-  let service: jest.Mocked<Pick<
-    AuthService,
-    'requestPasswordReset' | 'resetPassword' | 'changePassword'
-  >>;
+  let service: jest.Mocked<Pick<AuthService, 'requestPasswordReset' | 'resetPassword' | 'changePassword'>>;
   let controller: PasswordController;
 
   beforeEach(() => {
@@ -52,9 +49,7 @@ describe('PasswordController', () => {
 
     it('resetPassword propagates errors', async () => {
       (service.resetPassword as unknown as jest.Mock).mockRejectedValueOnce(forced);
-      await expect(
-        controller.resetPassword({ token: 't', newPassword: 'p' } as ResetPasswordDto),
-      ).rejects.toBe(forced);
+      await expect(controller.resetPassword({ token: 't', newPassword: 'p' } as ResetPasswordDto)).rejects.toBe(forced);
     });
 
     it('changePassword propagates errors', async () => {
@@ -68,4 +63,3 @@ describe('PasswordController', () => {
     });
   });
 });
-

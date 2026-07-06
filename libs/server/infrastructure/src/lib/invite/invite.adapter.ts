@@ -1,6 +1,11 @@
 import { BadRequestException, GoneException, Injectable } from '@nestjs/common';
 import { PrismaService } from '@cthub-bsaas/server-data-access';
-import { InvitePort, InviteValidationResult, RegistrationCompleteInput, RegistrationCompleteResult } from '@cthub-bsaas/server-contracts-auth';
+import {
+  InvitePort,
+  InviteValidationResult,
+  RegistrationCompleteInput,
+  RegistrationCompleteResult,
+} from '@cthub-bsaas/server-contracts-auth';
 import * as bcrypt from 'bcryptjs';
 import { createHash } from 'crypto';
 
@@ -43,7 +48,14 @@ export class InvitePrismaAdapter implements InvitePort {
     const user = await this.prisma.user.upsert({
       where: { email: rec.email },
       update: { passwordHash, isVerified: true, emailVerifiedAt: new Date(), registrationStatus: 'COMPLETED' },
-      create: { email: rec.email, passwordHash, isVerified: true, emailVerifiedAt: new Date(), registrationStatus: 'COMPLETED', isActive: true },
+      create: {
+        email: rec.email,
+        passwordHash,
+        isVerified: true,
+        emailVerifiedAt: new Date(),
+        registrationStatus: 'COMPLETED',
+        isActive: true,
+      },
     });
     // Assign OWNER role if not present
     const role = await this.prisma.role.findUnique({ where: { name: 'OWNER' } });
@@ -69,7 +81,14 @@ export class InvitePrismaAdapter implements InvitePort {
     const user = await this.prisma.user.upsert({
       where: { email: rec.email },
       update: { passwordHash, isVerified: true, emailVerifiedAt: new Date(), registrationStatus: 'COMPLETED' },
-      create: { email: rec.email, passwordHash, isVerified: true, emailVerifiedAt: new Date(), registrationStatus: 'COMPLETED', isActive: true },
+      create: {
+        email: rec.email,
+        passwordHash,
+        isVerified: true,
+        emailVerifiedAt: new Date(),
+        registrationStatus: 'COMPLETED',
+        isActive: true,
+      },
     });
     // Assign STAFF role
     const role = await this.prisma.role.findUnique({ where: { name: 'STAFF' } });
@@ -84,4 +103,3 @@ export class InvitePrismaAdapter implements InvitePort {
     return { userId: user.id, requireMfa: user.isMFAEnrollRequired };
   }
 }
-

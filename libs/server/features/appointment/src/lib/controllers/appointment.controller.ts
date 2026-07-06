@@ -34,9 +34,7 @@ export class AppointmentController {
   constructor(private readonly appointmentService: AppointmentService) {}
 
   private hasRole(user: AuthenticatedUser, role: AppUserRole): boolean {
-    return user.roles.some((entry) =>
-      typeof entry === 'string' ? entry === role : entry.name === role,
-    );
+    return user.roles.some((entry) => (typeof entry === 'string' ? entry === role : entry.name === role));
   }
 
   @Post()
@@ -125,7 +123,10 @@ export class AppointmentController {
     required: false,
     description: 'Filter criteria for appointments',
   })
-  async getAppointmentsOverview(@Query() filter: Partial<FilterAppointmentsDto>, @CurrentUser() user: AuthenticatedUser): Promise<AppointmentStatsDto> {
+  async getAppointmentsOverview(
+    @Query() filter: Partial<FilterAppointmentsDto>,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<AppointmentStatsDto> {
     // Create a new filter instance with default values
     const filterDto = new FilterAppointmentsDto();
     Object.assign(filterDto, filter);

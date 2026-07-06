@@ -3,9 +3,11 @@ import { ConfigService } from './config.service';
 import { ConfigModule } from './config.module';
 
 const coverBranchesForConfigService = () => {
-  const coverage = (globalThis as Record<string, unknown> & {
-    __coverage__?: Record<string, { b?: Record<string, number[]> }>;
-  }).__coverage__;
+  const coverage = (
+    globalThis as Record<string, unknown> & {
+      __coverage__?: Record<string, { b?: Record<string, number[]> }>;
+    }
+  ).__coverage__;
   if (!coverage) {
     return;
   }
@@ -102,9 +104,7 @@ describe('ConfigService', () => {
   });
 
   it('should throw an error for a non-existent key with getRequired', () => {
-    expect(() => service.getRequired('non.existent.key')).toThrow(
-      "Configuration key 'non.existent.key' is required but was not found",
-    );
+    expect(() => service.getRequired('non.existent.key')).toThrow("Configuration key 'non.existent.key' is required but was not found");
   });
 
   afterAll(coverBranchesForConfigService);

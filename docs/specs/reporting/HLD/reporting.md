@@ -9,14 +9,14 @@ Reporting owns read models, metric definitions, filters, exports, and scheduled 
 
 ## Read Model Strategy
 
-| Source | Reporting use |
-| --- | --- |
-| Appointments | Volume, status, no-show, cancellation, utilization. |
+| Source                | Reporting use                                          |
+| --------------------- | ------------------------------------------------------ |
+| Appointments          | Volume, status, no-show, cancellation, utilization.    |
 | POS/Invoices/Payments | Revenue, tax, discounts, refunds, dues, payment modes. |
-| Staff | Utilization, commission, service mix. |
-| Customers | Retention, inactive, high-value, package expiry. |
-| Inventory | Movement, low stock, transfer, wastage. |
-| Platform | Tenant, usage, error, subscription signals. |
+| Staff                 | Utilization, commission, service mix.                  |
+| Customers             | Retention, inactive, high-value, package expiry.       |
+| Inventory             | Movement, low stock, transfer, wastage.                |
+| Platform              | Tenant, usage, error, subscription signals.            |
 
 ## Diagram
 

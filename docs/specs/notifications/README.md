@@ -15,13 +15,13 @@ Define transactional, reminder, marketing, in-app, email, SMS, and WhatsApp noti
 
 ## Documents
 
-| Area | Document |
-| --- | --- |
-| FRD | [Functional Requirements](FRD/notifications.md) |
-| HLD | [Architecture](HLD/notifications.md) |
-| LLD | [Implementation Design](LLD/notifications.md) |
-| API | [Endpoint Map](API/endpoint-map.md) |
-| Web | [Web Specification](WEB/notifications.md) |
+| Area       | Document                                                          |
+| ---------- | ----------------------------------------------------------------- |
+| FRD        | [Functional Requirements](FRD/notifications.md)                   |
+| HLD        | [Architecture](HLD/notifications.md)                              |
+| LLD        | [Implementation Design](LLD/notifications.md)                     |
+| API        | [Endpoint Map](API/endpoint-map.md)                               |
+| Web        | [Web Specification](WEB/notifications.md)                         |
 | Validation | [Validation And Controls](VALIDATION/notifications-validation.md) |
-| Test | [Test Specification](TEST/notifications.md) |
-| Wireframes | [Wireframe Notes](WIREFRAMES/notifications.md) |
+| Test       | [Test Specification](TEST/notifications.md)                       |
+| Wireframes | [Wireframe Notes](WIREFRAMES/notifications.md)                    |

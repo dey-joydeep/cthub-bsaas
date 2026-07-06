@@ -11,14 +11,7 @@ import { ServiceService } from './service.service';
 @Component({
   selector: 'app-service-management',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatProgressBarModule,
-    MatIconModule
-  ],
+  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressBarModule, MatIconModule],
   templateUrl: './service-management.component.html',
   styleUrls: ['./service-management.component.css'],
 })

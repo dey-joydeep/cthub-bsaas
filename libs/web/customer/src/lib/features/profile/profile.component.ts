@@ -24,7 +24,7 @@ import { User } from './model/profile.model';
     MatProgressSpinnerModule,
     MatProgressBarModule,
     MatSnackBarModule,
-    MatIconModule
+    MatIconModule,
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],
@@ -110,7 +110,9 @@ export class ProfileComponent implements OnInit {
         this.isSubmitting = false;
         if (res.success) {
           this.success = 'Profile updated!';
-          this.snackBar.open($localize`:@@PROFILE.UPDATE_SUCCESS:Profile updated successfully.`, $localize`:@@COMMON.CLOSE:Close`, { duration: 3000 });
+          this.snackBar.open($localize`:@@PROFILE.UPDATE_SUCCESS:Profile updated successfully.`, $localize`:@@COMMON.CLOSE:Close`, {
+            duration: 3000,
+          });
         } else {
           this.error = 'Failed to update profile.';
         }

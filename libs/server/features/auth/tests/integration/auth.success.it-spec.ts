@@ -821,8 +821,7 @@ describe('AuthController (Integration) - success flows', () => {
 
     it('extractUserId handles fallback id and missing user branches', async () => {
       const controller = await harness.app.resolve(WebauthnController);
-      const extractor = (controller as unknown as { extractUserId: (u?: AuthenticatedUser) => string | undefined })
-        .extractUserId;
+      const extractor = (controller as unknown as { extractUserId: (u?: AuthenticatedUser) => string | undefined }).extractUserId;
       expect(extractor(undefined)).toBeUndefined();
       expect(extractor({ id: 'fallback-id' } as unknown as AuthenticatedUser)).toBe('fallback-id');
       expect(extractor({ id: '' } as unknown as AuthenticatedUser)).toBeUndefined();

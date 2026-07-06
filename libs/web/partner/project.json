@@ -4,17 +4,11 @@
   "projectType": "library",
   "sourceRoot": "libs/web/partner/src",
   "prefix": "lib",
-  "tags": [
-    "platform:web",
-    "scope:web",
-    "type:lib"
-  ],
+  "tags": ["platform:web", "scope:web", "type:lib"],
   "targets": {
     "build": {
       "executor": "@nx/angular:package",
-      "outputs": [
-        "{workspaceRoot}/dist/libs/web/partner"
-      ],
+      "outputs": ["{workspaceRoot}/dist/libs/web/partner"],
       "defaultConfiguration": "production",
       "options": {
         "project": "libs/web/partner/ng-package.json",

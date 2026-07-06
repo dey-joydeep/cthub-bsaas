@@ -24,7 +24,7 @@ describe('SalonManagementComponent', () => {
       getSalons: vi.fn(),
       getSalon: vi.fn(),
       deleteSalon: vi.fn(),
-    } ;
+    };
 
     await TestBed.configureTestingModule({
       imports: [

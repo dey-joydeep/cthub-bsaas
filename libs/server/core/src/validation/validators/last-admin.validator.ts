@@ -5,7 +5,10 @@ import { ILastAdminValidatorDb, LAST_ADMIN_VALIDATOR_PORT } from '@cthub-bsaas/s
 
 // Local error classes can be removed if a shared error strategy is implemented
 export class LastAdminValidationError extends Error {
-  constructor(message: string, public details?: unknown) {
+  constructor(
+    message: string,
+    public details?: unknown,
+  ) {
     super(message);
     this.name = 'LastAdminValidationError';
   }

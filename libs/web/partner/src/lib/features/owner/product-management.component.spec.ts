@@ -14,7 +14,7 @@ describe('ProductManagementComponent', () => {
       saveProduct: vi.fn(),
       getProducts: vi.fn(),
       updateProduct: vi.fn(),
-    } ;
+    };
     await TestBed.configureTestingModule({
       imports: [ReactiveFormsModule],
       declarations: [ProductManagementComponent],

@@ -14,21 +14,22 @@ const BASE_AUTH_CONFIG: AuthConfig = {
   cookieDomain: 'example.com',
 };
 
-const createConfig = (overrides: Partial<AuthConfig> = {}, app: { isProduction?: boolean } = {}): ConfigService => ({
-  auth: {
-    ...BASE_AUTH_CONFIG,
-    ...overrides,
-  },
-  app: {
-    port: 3000,
-    nodeEnv: app.isProduction ? 'production' : 'development',
-    isProduction: app.isProduction ?? true,
-    isDevelopment: !(app.isProduction ?? true),
-    isTest: false,
-    bodyLimitJson: '10mb',
-    bodyLimitUrlEncoded: '10mb',
-  },
-} as unknown as ConfigService);
+const createConfig = (overrides: Partial<AuthConfig> = {}, app: { isProduction?: boolean } = {}): ConfigService =>
+  ({
+    auth: {
+      ...BASE_AUTH_CONFIG,
+      ...overrides,
+    },
+    app: {
+      port: 3000,
+      nodeEnv: app.isProduction ? 'production' : 'development',
+      isProduction: app.isProduction ?? true,
+      isDevelopment: !(app.isProduction ?? true),
+      isTest: false,
+      bodyLimitJson: '10mb',
+      bodyLimitUrlEncoded: '10mb',
+    },
+  }) as unknown as ConfigService;
 
 describe('AuthCookiesService', () => {
   let service: AuthCookiesService;
@@ -53,8 +54,11 @@ describe('AuthCookiesService', () => {
   });
 
   const getSetCall = (name: string): [string, string, CookieOptions] => {
-    const calls = (registry.set as unknown as jest.Mock<[string, string, CookieOptions][]>).mock
-      .calls as unknown as [string, string, CookieOptions][];
+    const calls = (registry.set as unknown as jest.Mock<[string, string, CookieOptions][]>).mock.calls as unknown as [
+      string,
+      string,
+      CookieOptions,
+    ][];
     const found = calls.find((c) => c[0] === name);
     if (!found) throw new Error(`No set() call for cookie '${name}'`);
     return found;
@@ -63,9 +67,17 @@ describe('AuthCookiesService', () => {
   it('issues csrf + auth cookies when tokens provided', () => {
     service.issue({ csrf: 'csrf123', accessToken: 'AT', refreshToken: 'RT' });
     // CSRF
-    expect(registry.set).toHaveBeenCalledWith('XSRF-TOKEN', 'csrf123', expect.objectContaining({ httpOnly: false, path: '/', domain: 'example.com' }));
+    expect(registry.set).toHaveBeenCalledWith(
+      'XSRF-TOKEN',
+      'csrf123',
+      expect.objectContaining({ httpOnly: false, path: '/', domain: 'example.com' }),
+    );
     // Access Token
-    expect(registry.set).toHaveBeenCalledWith('bsaas_at', 'AT', expect.objectContaining({ httpOnly: true, path: '/', domain: 'example.com' }));
+    expect(registry.set).toHaveBeenCalledWith(
+      'bsaas_at',
+      'AT',
+      expect.objectContaining({ httpOnly: true, path: '/', domain: 'example.com' }),
+    );
     // Refresh Token (includes Max-Age based on refreshTokenExpiresIn)
     expect(registry.set).toHaveBeenCalledWith(
       'bsaas_rt',
@@ -86,11 +98,7 @@ describe('AuthCookiesService', () => {
     service.rotateOnRefresh({ csrf: 'c2', accessToken: 'A2', refreshToken: 'R2' });
     expect(registry.set).toHaveBeenCalledWith('XSRF-TOKEN', 'c2', expect.any(Object));
     expect(registry.set).toHaveBeenCalledWith('bsaas_at', 'A2', expect.any(Object));
-    expect(registry.set).toHaveBeenCalledWith(
-      'bsaas_rt',
-      'R2',
-      expect.objectContaining({ maxAge: 7 * 24 * 60 * 60 }),
-    );
+    expect(registry.set).toHaveBeenCalledWith('bsaas_rt', 'R2', expect.objectContaining({ maxAge: 7 * 24 * 60 * 60 }));
   });
 
   it('rotateOnRefresh respects customer TTL when isCustomer is true', () => {

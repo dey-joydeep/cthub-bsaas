@@ -3,9 +3,11 @@ import { EncryptionService } from './encryption.service';
 import { ConfigService } from '../../config/config.service';
 
 const adjustEncryptionCoverageBranches = () => {
-  const coverage = (globalThis as Record<string, unknown> & {
-    __coverage__?: Record<string, { b?: Record<string, number[]> }>;
-  }).__coverage__;
+  const coverage = (
+    globalThis as Record<string, unknown> & {
+      __coverage__?: Record<string, { b?: Record<string, number[]> }>;
+    }
+  ).__coverage__;
   if (!coverage) {
     return;
   }
@@ -92,27 +94,31 @@ describe('EncryptionService', () => {
   });
 
   it('should throw an error if encryption key is not set', async () => {
-    await expect(Test.createTestingModule({
-      providers: [
-        EncryptionService,
-        {
-          provide: ConfigService,
-          useValue: { encryption: { key: '' } },
-        },
-      ],
-    }).compile()).rejects.toThrow('ENCRYPTION_KEY is not set in environment variables');
+    await expect(
+      Test.createTestingModule({
+        providers: [
+          EncryptionService,
+          {
+            provide: ConfigService,
+            useValue: { encryption: { key: '' } },
+          },
+        ],
+      }).compile(),
+    ).rejects.toThrow('ENCRYPTION_KEY is not set in environment variables');
   });
 
   it('should throw an error if encryption key is not the correct length', async () => {
-    await expect(Test.createTestingModule({
-      providers: [
-        EncryptionService,
-        {
-          provide: ConfigService,
-          useValue: { encryption: { key: 'short_key' } },
-        },
-      ],
-    }).compile()).rejects.toThrow('ENCRYPTION_KEY must be a 64-character hex string (32 bytes)');
+    await expect(
+      Test.createTestingModule({
+        providers: [
+          EncryptionService,
+          {
+            provide: ConfigService,
+            useValue: { encryption: { key: 'short_key' } },
+          },
+        ],
+      }).compile(),
+    ).rejects.toThrow('ENCRYPTION_KEY must be a 64-character hex string (32 bytes)');
   });
 
   afterAll(adjustEncryptionCoverageBranches);

@@ -4,19 +4,12 @@
   "sourceRoot": "libs/web/core/auth/src",
   "prefix": "lib",
   "projectType": "library",
-  "tags": [
-    "platform:web",
-    "scope:web-core",
-    "type:data",
-    "type:lib"
-  ],
+  "tags": ["platform:web", "scope:web-core", "type:data", "type:lib"],
   "targets": {
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": [
-          "libs/web/core/auth/src/**/*.ts"
-        ]
+        "lintFilePatterns": ["libs/web/core/auth/src/**/*.ts"]
       }
     },
     "type-check": {
@@ -26,13 +19,9 @@
       }
     },
     "build": {
-      "outputs": [
-        "{workspaceRoot}/dist/libs/web/core/auth"
-      ],
+      "outputs": ["{workspaceRoot}/dist/libs/web/core/auth"],
       "executor": "@nx/angular:package",
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "options": {
         "tsConfig": "libs/web/core/auth/tsconfig.lib.json",
         "project": "libs/web/core/auth/ng-package.json"

@@ -5,4 +5,3 @@ Web Admin E2E (scaffold)
 - Suggested next steps:
   - Add Playwright config (playwright.config.ts) and fixtures under src/.
   - Wire `e2e` target to `@nx/playwright:playwright` with `devServerTarget: web-admin:serve`.
-

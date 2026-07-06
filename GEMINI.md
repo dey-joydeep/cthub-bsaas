@@ -163,6 +163,7 @@ This pattern ensures that tests are independent and the database does not accumu
 
 - TypeScript strict; ES modules.
 - ESLint + Prettier; 2‑space indent; single quotes.
+- Mandatory post-edit check: whenever an agent finishes modifying or creating files, it MUST run Prettier (`npx prettier --write <files>`) and ESLint (`npx eslint --fix <files>`) directly on the touched files. While staged-level checks allow warnings to pass, the AI agent MUST explicitly report any warnings or non-fatal lint issues to the user in its summary. Never silently ignore warnings.
 - Names: files `kebab-case.ts`; types/classes `PascalCase`; values `camelCase`.
 
 ## Server-Side Function Signatures

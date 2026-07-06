@@ -119,7 +119,7 @@ class AuthService {
     MatCardModule,
     MatDividerModule,
     MatSnackBarModule,
-    FormsModule
+    FormsModule,
   ],
   templateUrl: './header.component.html',
   styleUrls: [], // Using inline styles for now
@@ -517,10 +517,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Failed to mark all notifications as read', error);
-        this.snackBar.open($localize`:@@NOTIFICATIONS.MARK_READ_ERROR:Failed to mark notifications as read`, $localize`:@@COMMON.CLOSE:Close`, {
-          duration: 5000,
-          panelClass: ['error-snackbar'],
-        });
+        this.snackBar.open(
+          $localize`:@@NOTIFICATIONS.MARK_READ_ERROR:Failed to mark notifications as read`,
+          $localize`:@@COMMON.CLOSE:Close`,
+          {
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+          },
+        );
       },
     });
   }

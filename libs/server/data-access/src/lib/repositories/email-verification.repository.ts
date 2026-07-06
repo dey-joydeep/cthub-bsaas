@@ -27,7 +27,7 @@ export class EmailVerificationRepository implements IEmailVerificationRepository
     const rec = await this.prisma.emailVerification.findFirst({
       where: { email, usedAt: null, expiresAt: { gt: now } },
     });
-    return (rec) ?? null;
+    return rec ?? null;
   }
 
   async markUsed(id: string): Promise<void> {

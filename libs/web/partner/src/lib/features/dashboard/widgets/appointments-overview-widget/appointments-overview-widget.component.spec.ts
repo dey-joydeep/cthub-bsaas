@@ -145,7 +145,7 @@ describe('AppointmentsOverviewWidgetComponent', () => {
       ],
       providers: [
         { provide: DashboardService, useValue: dashboardServiceSpy },
-                { provide: MatSnackBar, useValue: snackBarSpy },
+        { provide: MatSnackBar, useValue: snackBarSpy },
       ],
     }).compileComponents();
 
@@ -153,20 +153,20 @@ describe('AppointmentsOverviewWidgetComponent', () => {
     dashboardService = {
       getAppointmentsOverview: vi.fn().mockReturnValue(of(mockOverview)),
       updateAppointmentStatus: vi.fn().mockReturnValue(of({ ...mockAppointment, status: AppointmentStatus.COMPLETED })),
-    } ;
+    };
 
     translateService = {
       instant: vi.fn((key: string | string[]) => (typeof key === 'string' ? key : key[0])),
       get: vi.fn().mockReturnValue(of('translated')),
-    } ;
+    };
 
     snackBar = {
       open: vi.fn(),
-    } ;
+    };
 
     // Provide the mock services
     TestBed.overrideProvider(DashboardService, { useValue: dashboardService });
-        TestBed.overrideProvider(MatSnackBar, { useValue: snackBar });
+    TestBed.overrideProvider(MatSnackBar, { useValue: snackBar });
   });
 
   beforeEach(() => {

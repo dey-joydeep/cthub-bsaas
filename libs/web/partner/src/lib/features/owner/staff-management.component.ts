@@ -13,14 +13,7 @@ import { ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'app-staff-management',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatProgressBarModule,
-    MatIconModule
-  ],
+  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressBarModule, MatIconModule],
   templateUrl: './staff-management.component.html',
   styleUrls: ['./staff-management.component.css'],
 })

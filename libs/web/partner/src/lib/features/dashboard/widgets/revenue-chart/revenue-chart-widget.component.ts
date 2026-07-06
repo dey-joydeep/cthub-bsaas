@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy,  ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { Subscription } from 'rxjs';
 
 import { BaseChartDirective } from 'ng2-charts';
@@ -15,14 +15,7 @@ import { ErrorService } from '@cthub-bsaas/web-core-common';
 @Component({
   selector: 'app-revenue-chart-widget',
   standalone: true,
-  imports: [
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTooltipModule,
-    MatProgressSpinnerModule,
-    BaseChartDirective,
-  ],
+  imports: [MatCardModule, MatButtonModule, MatIconModule, MatTooltipModule, MatProgressSpinnerModule, BaseChartDirective],
   templateUrl: './revenue-chart-widget.component.html',
   styleUrls: ['./revenue-chart-widget.component.css'],
   host: { class: 'revenue-chart' },

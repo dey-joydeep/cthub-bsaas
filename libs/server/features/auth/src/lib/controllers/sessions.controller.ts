@@ -21,4 +21,3 @@ export class SessionsController {
     return this.authService.revokeSession(req.user.userId, id);
   }
 }
-

@@ -17,7 +17,7 @@ import { NotificationService } from '@cthub-bsaas/web-core-common';
 import { AuthService } from '../../services/auth.service';
 
 // Mocks
-));
+class MockTranslateService {
   setDefaultLang = vi.fn();
   getBrowserLang = vi.fn().mockReturnValue('en');
   getLangs = vi.fn().mockReturnValue(['en', 'es']);
@@ -101,7 +101,7 @@ describe('LoginComponent', () => {
       providers: [
         { provide: AuthService, useClass: MockAuthService },
         { provide: NotificationService, useClass: MockNotificationService },
-                provideRouter([]), // Use provideRouter instead of RouterTestingModule
+        provideRouter([]), // Use provideRouter instead of RouterTestingModule
       ],
     }).compileComponents();
 

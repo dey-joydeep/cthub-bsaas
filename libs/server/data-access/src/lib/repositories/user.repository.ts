@@ -9,56 +9,56 @@ import { IUserRepository } from '@cthub-bsaas/server-contracts-auth';
  */
 @Injectable()
 export class UserRepository implements IUserRepository {
-    constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-    /**
-     * @inheritdoc
-     */
-    findById(id: string): Promise<(User & { roles: { role: { name: string } }[] }) | null> {
-        return this.prisma.user.findUnique({
-            where: { id },
-            include: {
-                roles: {
-                    include: {
-                        role: { select: { name: true } },
-                    },
-                },
+  /**
+   * @inheritdoc
+   */
+  findById(id: string): Promise<(User & { roles: { role: { name: string } }[] }) | null> {
+    return this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        roles: {
+          include: {
+            role: { select: { name: true } },
+          },
+        },
+      },
+    });
+  }
+
+  /**
+   * @inheritdoc
+   */
+  findByEmail(email: string): Promise<(User & { roles: { role: { name: string } }[] }) | null> {
+    return this.prisma.user.findUnique({
+      where: { email },
+      include: {
+        roles: {
+          include: {
+            role: {
+              select: { name: true },
             },
-        });
-    }
+          },
+        },
+      },
+    });
+  }
 
-    /**
-     * @inheritdoc
-     */
-    findByEmail(email: string): Promise<(User & { roles: { role: { name: string } }[] }) | null> {
-        return this.prisma.user.findUnique({
-            where: { email },
-            include: {
-                roles: {
-                    include: {
-                        role: {
-                            select: { name: true },
-                        },
-                    },
-                },
-            },
-        });
-    }
+  /**
+   * @inheritdoc
+   */
+  create(data: Prisma.UserCreateInput): Promise<User> {
+    return this.prisma.user.create({ data });
+  }
 
-    /**
-     * @inheritdoc
-     */
-    create(data: Prisma.UserCreateInput): Promise<User> {
-        return this.prisma.user.create({ data });
-    }
-
-    /**
-     * @inheritdoc
-     */
-    update(id: string, data: Prisma.UserUpdateInput): Promise<User> {
-        return this.prisma.user.update({
-            where: { id },
-            data,
-        });
-    }
+  /**
+   * @inheritdoc
+   */
+  update(id: string, data: Prisma.UserUpdateInput): Promise<User> {
+    return this.prisma.user.update({
+      where: { id },
+      data,
+    });
+  }
 }

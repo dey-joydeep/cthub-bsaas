@@ -10,26 +10,8 @@
         <option [value]="s.name">{{ s.name }}</option>
       }
     </select>
-    <input
-      type="number"
-      min="0"
-      max="5"
-      step="0.1"
-      [(ngModel)]="minRating"
-      name="minRating"
-      placeholder="Min rating"
-      (input)="onFilterChange()"
-    />
-    <input
-      type="number"
-      min="0"
-      max="5"
-      step="0.1"
-      [(ngModel)]="maxRating"
-      name="maxRating"
-      placeholder="Max rating"
-      (input)="onFilterChange()"
-    />
+    <input type="number" min="0" max="5" step="0.1" [(ngModel)]="minRating" name="minRating" placeholder="Min rating" (input)="onFilterChange()" />
+    <input type="number" min="0" max="5" step="0.1" [(ngModel)]="maxRating" name="maxRating" placeholder="Max rating" (input)="onFilterChange()" />
     <button type="submit" [disabled]="loading">Search</button>
   </form>
   <div class="filters">
@@ -83,8 +65,7 @@
         allowfullscreen
         loading="lazy"
         referrerpolicy="no-referrer-when-downgrade"
-        style="border: 0; border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); margin-bottom: 18px"
-      ></iframe>
+        style="border: 0; border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); margin-bottom: 18px"></iframe>
     </div>
   }
   @if (!showMap) {
@@ -98,22 +79,9 @@
                 (error)="onImageError(salon)"
                 alt="Salon image for {{ salon.name }}"
                 class="salon-img"
-                style="max-width: 100px; max-height: 100px; object-fit: cover; margin-bottom: 8px"
-              />
+                style="max-width: 100px; max-height: 100px; object-fit: cover; margin-bottom: 8px" />
             } @else {
-              <div
-                style="
-                  width: 100px;
-                  height: 100px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  background: #f3f3f3;
-                  color: #888;
-                  border-radius: 8px;
-                  margin-bottom: 8px;
-                "
-              >
+              <div style="width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; background: #f3f3f3; color: #888; border-radius: 8px; margin-bottom: 8px">
                 No image for {{ salon.name }}
               </div>
             }

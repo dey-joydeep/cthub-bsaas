@@ -14,14 +14,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-renewals-list-widget',
   standalone: true,
-  imports: [
-    MatCardModule,
-    MatIconModule,
-    MatListModule,
-    MatButtonModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule
-  ],
+  imports: [MatCardModule, MatIconModule, MatListModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule],
   templateUrl: './renewals-list-widget.component.html',
   styleUrls: ['./renewals-list-widget.component.css'],
 })

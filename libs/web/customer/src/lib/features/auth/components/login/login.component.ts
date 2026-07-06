@@ -39,7 +39,7 @@ import type { CustomerAuthUser } from '../../models/auth.models';
     MatIconModule,
     MatInputModule,
     MatProgressBarModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
   ],
   selector: 'app-login',
   templateUrl: './login.component.html',

@@ -12,7 +12,7 @@ describe('PortfolioManagementComponent', () => {
   beforeEach(async () => {
     portfolioService = {
       savePortfolio: vi.fn(),
-    } ;
+    };
     await TestBed.configureTestingModule({
       imports: [ReactiveFormsModule],
       declarations: [PortfolioManagementComponent],

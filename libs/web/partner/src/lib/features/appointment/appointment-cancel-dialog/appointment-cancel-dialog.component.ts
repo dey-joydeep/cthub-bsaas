@@ -26,7 +26,7 @@ export interface DialogData {
     MatInputModule,
     MatProgressSpinnerModule,
     ReactiveFormsModule,
-    MatSnackBarModule
+    MatSnackBarModule,
   ],
   templateUrl: './appointment-cancel-dialog.component.html',
   styleUrls: ['./appointment-cancel-dialog.component.css'],
@@ -61,9 +61,13 @@ export class AppointmentCancelDialogComponent {
     // Simulate API call
     setTimeout(() => {
       this.isSubmitting = false;
-      this.snackBar.open($localize`:@@APPOINTMENT.CANCELLATION_SUCCESS:Appointment cancelled successfully.`, $localize`:@@COMMON.CLOSE:Close`, {
-        duration: 3000,
-      });
+      this.snackBar.open(
+        $localize`:@@APPOINTMENT.CANCELLATION_SUCCESS:Appointment cancelled successfully.`,
+        $localize`:@@COMMON.CLOSE:Close`,
+        {
+          duration: 3000,
+        },
+      );
       this.dialogRef.close({
         action: 'confirmed',
         reason: reason,

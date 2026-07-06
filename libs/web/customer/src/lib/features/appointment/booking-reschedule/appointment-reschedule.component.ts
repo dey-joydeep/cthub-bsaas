@@ -43,7 +43,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
     MatDividerModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule
+    MatSnackBarModule,
   ],
   templateUrl: './appointment-reschedule.component.html',
   styleUrls: ['./appointment-reschedule.component.css'],
@@ -200,7 +200,9 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
 
   private handleError(error: Error): void {
     console.error('Appointment error:', error);
-    this.snackBar.open($localize`:@@ERRORS.GENERAL:An error occurred. Please try again.`, $localize`:@@COMMON.CLOSE:Close`, { duration: 5000 });
+    this.snackBar.open($localize`:@@ERRORS.GENERAL:An error occurred. Please try again.`, $localize`:@@COMMON.CLOSE:Close`, {
+      duration: 5000,
+    });
   }
 
   // Handle form submission
@@ -240,9 +242,13 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error loading time slots:', error);
-          this.snackBar.open($localize`:@@APPOINTMENT.RESCHEDULE.TIME_SLOTS_ERROR:Failed to load available time slots.`, $localize`:@@COMMON.CLOSE:Close`, {
-            duration: 3000,
-          });
+          this.snackBar.open(
+            $localize`:@@APPOINTMENT.RESCHEDULE.TIME_SLOTS_ERROR:Failed to load available time slots.`,
+            $localize`:@@COMMON.CLOSE:Close`,
+            {
+              duration: 3000,
+            },
+          );
           this.isLoading = false;
         },
       });
@@ -258,9 +264,13 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: () => {
-          this.snackBar.open($localize`:@@APPOINTMENT.RESCHEDULE_SUCCESS:Appointment rescheduled successfully.`, $localize`:@@COMMON.CLOSE:Close`, {
-            duration: 5000,
-          });
+          this.snackBar.open(
+            $localize`:@@APPOINTMENT.RESCHEDULE_SUCCESS:Appointment rescheduled successfully.`,
+            $localize`:@@COMMON.CLOSE:Close`,
+            {
+              duration: 5000,
+            },
+          );
           this.router.navigate(['/appointments']);
         },
         error: (error: Error) => this.handleError(error),

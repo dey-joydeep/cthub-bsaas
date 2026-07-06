@@ -26,7 +26,7 @@ import { AppointmentService } from './appointment.service';
     MatSelectModule,
     MatDatepickerModule,
     MatProgressSpinnerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
   ],
   templateUrl: './appointment-management.component.html',
   styleUrls: ['./appointment-management.component.css'],

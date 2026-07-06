@@ -12,14 +12,7 @@ import { CurrentUserService } from '@cthub-bsaas/web-core-auth';
 @Component({
   selector: 'app-profile-settings',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatProgressBarModule,
-    MatIconModule
-  ],
+  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressBarModule, MatIconModule],
   templateUrl: './profile-settings.component.html',
   styleUrls: ['./profile-settings.component.css'],
 })

@@ -64,12 +64,7 @@
                   <mat-icon>event_available</mat-icon>
                   <span><ng-container i18n="@@APPOINTMENT.RESCHEDULE">Reschedule</ng-container></span>
                 </button>
-                <button
-                  mat-menu-item
-                  (click)="onCancelAppointment(appointment)"
-                  [disabled]="appointment.status !== 'BOOKED'"
-                  class="cancel-button"
-                >
+                <button mat-menu-item (click)="onCancelAppointment(appointment)" [disabled]="appointment.status !== 'BOOKED'" class="cancel-button">
                   <mat-icon>cancel</mat-icon>
                   <span><ng-container i18n="@@APPOINTMENT.CANCEL">Cancel Appointment</ng-container></span>
                 </button>
@@ -81,15 +76,7 @@
           <tr mat-row *matRowDef="let row; columns: displayedColumns" [class.cancelled]="row.status === 'CANCELLED'"></tr>
         </table>
 
-        <mat-paginator
-          [length]="totalItems"
-          [pageSize]="pageSize"
-          [pageIndex]="pageIndex"
-          [pageSizeOptions]="[5, 10, 25, 100]"
-          (page)="onPageChange($event)"
-          showFirstLastButtons
-          aria-label="Select page of appointments"
-        >
+        <mat-paginator [length]="totalItems" [pageSize]="pageSize" [pageIndex]="pageIndex" [pageSizeOptions]="[5, 10, 25, 100]" (page)="onPageChange($event)" showFirstLastButtons aria-label="Select page of appointments">
         </mat-paginator>
       </div>
     </mat-card-content>

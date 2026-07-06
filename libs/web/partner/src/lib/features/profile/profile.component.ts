@@ -32,7 +32,7 @@ type MaybeUser = {
     MatButtonModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    MatIconModule
+    MatIconModule,
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],
@@ -118,7 +118,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
       this.isEditing = false;
       this.profileForm.disable();
 
-      this.snackBar.open($localize`:@@PROFILE.UPDATE_SUCCESS:Profile updated successfully.`, $localize`:@@COMMON.CLOSE:Close`, { duration: 3000 });
+      this.snackBar.open($localize`:@@PROFILE.UPDATE_SUCCESS:Profile updated successfully.`, $localize`:@@COMMON.CLOSE:Close`, {
+        duration: 3000,
+      });
     }, 1000);
   }
 

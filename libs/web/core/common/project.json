@@ -4,19 +4,12 @@
   "sourceRoot": "libs/web/core/common/src",
   "prefix": "lib",
   "projectType": "library",
-  "tags": [
-    "platform:web",
-    "scope:web-core",
-    "type:core",
-    "type:lib"
-  ],
+  "tags": ["platform:web", "scope:web-core", "type:core", "type:lib"],
   "targets": {
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": [
-          "libs/web/core/common/src/**/*.ts"
-        ]
+        "lintFilePatterns": ["libs/web/core/common/src/**/*.ts"]
       }
     },
     "type-check": {
@@ -27,12 +20,8 @@
     },
     "build": {
       "executor": "@nx/angular:package",
-      "outputs": [
-        "{workspaceRoot}/dist/libs/web/core/common"
-      ],
-      "dependsOn": [
-        "^build"
-      ],
+      "outputs": ["{workspaceRoot}/dist/libs/web/core/common"],
+      "dependsOn": ["^build"],
       "options": {
         "project": "libs/web/core/common/ng-package.json",
         "tsConfig": "libs/web/core/common/tsconfig.lib.json"

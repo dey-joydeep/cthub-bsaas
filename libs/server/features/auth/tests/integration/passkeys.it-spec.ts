@@ -1,7 +1,6 @@
 import request from 'supertest';
 import { setupAuthIntegrationHarness, AuthIntegrationHarness } from './utils/auth-integration.harness';
 
-
 import 'reflect-metadata';
 
 describe('Passkeys (Integration)', () => {
@@ -40,21 +39,15 @@ describe('Passkeys (Integration)', () => {
       .expect(200);
     const cookies = harness.expectCookies(harness.toCookiesArray(loginRes.headers['set-cookie']), { requireAuth: true });
 
-    const listRes = await harness
-      .withAuth(request(harness.app.getHttpServer()).get('/auth/webauthn/devices'), cookies)
-      .expect(200);
+    const listRes = await harness.withAuth(request(harness.app.getHttpServer()).get('/auth/webauthn/devices'), cookies).expect(200);
     expect(Array.isArray(listRes.body.data)).toBe(true);
     const records = listRes.body.data as Array<{ credentialId: string; transports?: string[] }>;
     expect(records.length).toBeGreaterThan(0);
     const id = records[0].credentialId;
 
-    await harness
-      .withAuth(request(harness.app.getHttpServer()).delete(`/auth/webauthn/devices/${id}`), cookies)
-      .expect(200);
+    await harness.withAuth(request(harness.app.getHttpServer()).delete(`/auth/webauthn/devices/${id}`), cookies).expect(200);
 
-    const listAfter = await harness
-      .withAuth(request(harness.app.getHttpServer()).get('/auth/webauthn/devices'), cookies)
-      .expect(200);
+    const listAfter = await harness.withAuth(request(harness.app.getHttpServer()).get('/auth/webauthn/devices'), cookies).expect(200);
     const after = listAfter.body.data as Array<{ credentialId: string }>;
     expect(after.find((r) => r.credentialId === id)).toBeUndefined();
   });
@@ -77,9 +70,7 @@ describe('Passkeys (Integration)', () => {
     await harness.prisma.user.update({ where: { id: user.id }, data: { passwordHash: '' } });
     await harness.prisma.socialAccount.deleteMany({ where: { userId: user.id } });
 
-    await harness
-      .withAuth(request(harness.app.getHttpServer()).delete(`/auth/webauthn/devices/${credId}`), cookies)
-      .expect(401);
+    await harness.withAuth(request(harness.app.getHttpServer()).delete(`/auth/webauthn/devices/${credId}`), cookies).expect(401);
   });
 
   it('returns 401 when deleting a non-existent credential (not found)', async () => {
@@ -90,8 +81,6 @@ describe('Passkeys (Integration)', () => {
       .expect(200);
     const cookies = harness.expectCookies(harness.toCookiesArray(loginRes.headers['set-cookie']), { requireAuth: true });
 
-    await harness
-      .withAuth(request(harness.app.getHttpServer()).delete(`/auth/webauthn/devices/does-not-exist`), cookies)
-      .expect(401);
+    await harness.withAuth(request(harness.app.getHttpServer()).delete(`/auth/webauthn/devices/does-not-exist`), cookies).expect(401);
   });
 });

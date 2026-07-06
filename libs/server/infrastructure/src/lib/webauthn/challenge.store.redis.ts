@@ -9,7 +9,10 @@ export class RedisChallengeStore implements ChallengeStore, OnModuleInit, OnModu
   private client: Redis;
   private readonly url: string;
 
-  constructor(private readonly config: ConfigService, @Optional() private readonly logger?: LoggerService) {
+  constructor(
+    private readonly config: ConfigService,
+    @Optional() private readonly logger?: LoggerService,
+  ) {
     this.url = (this.config.get<string>('REDIS_URL') ?? 'redis://localhost:6379/0').toString();
     this.client = new Redis(this.url, {
       maxRetriesPerRequest: 2,
@@ -27,9 +30,10 @@ export class RedisChallengeStore implements ChallengeStore, OnModuleInit, OnModu
       ]);
       if (ping !== 'PONG') throw new Error('unexpected ping response');
     } catch (err) {
-      const msg = err && typeof err === 'object' && 'message' in (err as Record<string, unknown>)
-        ? String((err as { message?: unknown }).message)
-        : String(err);
+      const msg =
+        err && typeof err === 'object' && 'message' in (err as Record<string, unknown>)
+          ? String((err as { message?: unknown }).message)
+          : String(err);
       this.logger?.warn(
         `Redis not reachable at ${this.url}. WebAuthn challenge store may fail until Redis is available. Error: ${msg}`,
         'RedisChallengeStore',

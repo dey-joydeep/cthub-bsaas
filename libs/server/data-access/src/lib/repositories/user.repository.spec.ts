@@ -23,7 +23,7 @@ describe('UserRepository', () => {
     updatedAt: overrides.updatedAt ?? now(),
     salonTenantId: overrides.salonTenantId ?? null,
     emailVerifiedAt: overrides.emailVerifiedAt ?? null,
-    registrationStatus: overrides.registrationStatus ?? ("COMPLETED" as RegistrationStatus),
+    registrationStatus: overrides.registrationStatus ?? ('COMPLETED' as RegistrationStatus),
     isMFAEnrollRequired: overrides.isMFAEnrollRequired ?? false,
     mfaReminderFirstAt: overrides.mfaReminderFirstAt ?? null,
     mfaReminderLastAt: overrides.mfaReminderLastAt ?? null,

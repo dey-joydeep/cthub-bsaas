@@ -104,11 +104,11 @@ describe('HomeComponent', () => {
       getFeaturedServices: vi.fn(),
       getTestimonials: vi.fn(),
       getCities: vi.fn(),
-    } ;
+    };
 
     snackBar = {
       open: vi.fn(),
-    } ;
+    };
 
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule, RouterTestingModule.withRoutes([]), HomeComponent],

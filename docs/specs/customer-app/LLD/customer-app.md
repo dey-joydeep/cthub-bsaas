@@ -5,23 +5,23 @@
 
 ## Suggested Modules
 
-| Module | Responsibility |
-| --- | --- |
-| `web-customer-shell` | Customer app route composition and shell. |
-| `web-customer-booking` | Booking flow state, API services, forms. |
-| `web-customer-profile` | Customer dashboard/profile/rewards/receipts UI. |
+| Module                        | Responsibility                                                                    |
+| ----------------------------- | --------------------------------------------------------------------------------- |
+| `web-customer-shell`          | Customer app route composition and shell.                                         |
+| `web-customer-booking`        | Booking flow state, API services, forms.                                          |
+| `web-customer-profile`        | Customer dashboard/profile/rewards/receipts UI.                                   |
 | `server-feature-customer-app` | Customer-safe orchestration endpoints where direct feature APIs are not suitable. |
 
 ## Commands And Queries
 
-| Operation | Type | Notes |
-| --- | --- | --- |
-| `getCustomerDashboard` | Query | Upcoming appointment, recent visits, rewards, notification highlights. |
-| `createCustomerBooking` | Command | Uses appointment availability and policy checks. |
-| `rescheduleCustomerAppointment` | Command | Enforces cancellation/reschedule policy. |
-| `cancelCustomerAppointment` | Command | Shows penalty/deposit impact before confirmation. |
-| `listCustomerReceipts` | Query | Customer-visible invoice/payment records. |
-| `submitCustomerReview` | Command | Delegates eligibility and moderation state. |
+| Operation                       | Type    | Notes                                                                  |
+| ------------------------------- | ------- | ---------------------------------------------------------------------- |
+| `getCustomerDashboard`          | Query   | Upcoming appointment, recent visits, rewards, notification highlights. |
+| `createCustomerBooking`         | Command | Uses appointment availability and policy checks.                       |
+| `rescheduleCustomerAppointment` | Command | Enforces cancellation/reschedule policy.                               |
+| `cancelCustomerAppointment`     | Command | Shows penalty/deposit impact before confirmation.                      |
+| `listCustomerReceipts`          | Query   | Customer-visible invoice/payment records.                              |
+| `submitCustomerReview`          | Command | Delegates eligibility and moderation state.                            |
 
 ## Transaction Rules
 

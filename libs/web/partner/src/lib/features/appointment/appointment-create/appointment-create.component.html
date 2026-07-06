@@ -14,22 +14,19 @@
 
             <div class="step-content">
               <h3><ng-container i18n="@@APPOINTMENT.CHOOSE_SERVICE">Choose Service</ng-container></h3>
-              <p class="step-description"><ng-container i18n="@@APPOINTMENT.SERVICE_SELECTION_HELP">Choose the service you would like to book</ng-container></p>
+              <p class="step-description">
+                <ng-container i18n="@@APPOINTMENT.SERVICE_SELECTION_HELP">Choose the service you would like to book</ng-container>
+              </p>
 
               <div class="service-grid">
                 @for (service of services; track service) {
-                  <mat-card
-                    [class.selected]="serviceFormGroup.get('service')?.value === service.id"
-                    (click)="serviceFormGroup.get('service')?.setValue(service.id)"
-                  >
+                  <mat-card [class.selected]="serviceFormGroup.get('service')?.value === service.id" (click)="serviceFormGroup.get('service')?.setValue(service.id)">
                     <mat-card-header>
                       <div mat-card-avatar class="service-avatar">
                         <mat-icon>spa</mat-icon>
                       </div>
                       <mat-card-title>{{ service.name }}</mat-card-title>
-                      <mat-card-subtitle>
-                        {{ service.duration }} <ng-container i18n="@@COMMON.MINUTES">minutes</ng-container> • {{ service.price | currency }}
-                      </mat-card-subtitle>
+                      <mat-card-subtitle> {{ service.duration }} <ng-container i18n="@@COMMON.MINUTES">minutes</ng-container> • {{ service.price | currency }} </mat-card-subtitle>
                     </mat-card-header>
                   </mat-card>
                 }
@@ -57,14 +54,13 @@
 
             <div class="step-content">
               <h3><ng-container i18n="@@APPOINTMENT.CHOOSE_STAFF">Choose Staff</ng-container></h3>
-              <p class="step-description"><ng-container i18n="@@APPOINTMENT.STAFF_SELECTION_HELP">Choose your preferred staff member</ng-container></p>
+              <p class="step-description">
+                <ng-container i18n="@@APPOINTMENT.STAFF_SELECTION_HELP">Choose your preferred staff member</ng-container>
+              </p>
 
               <div class="staff-grid">
                 @for (staff of staffMembers; track staff) {
-                  <mat-card
-                    [class.selected]="staffFormGroup.get('staff')?.value === staff.id"
-                    (click)="staffFormGroup.get('staff')?.setValue(staff.id)"
-                  >
+                  <mat-card [class.selected]="staffFormGroup.get('staff')?.value === staff.id" (click)="staffFormGroup.get('staff')?.setValue(staff.id)">
                     <mat-card-header>
                       <div mat-card-avatar class="staff-avatar">
                         <mat-icon>person</mat-icon>
@@ -99,7 +95,9 @@
 
             <div class="step-content">
               <h3><ng-container i18n="@@APPOINTMENT.CHOOSE_DATETIME">Choose Date & Time</ng-container></h3>
-              <p class="step-description"><ng-container i18n="@@APPOINTMENT.DATETIME_SELECTION_HELP">Select a convenient date and time</ng-container></p>
+              <p class="step-description">
+                <ng-container i18n="@@APPOINTMENT.DATETIME_SELECTION_HELP">Select a convenient date and time</ng-container>
+              </p>
 
               <div class="datetime-selection">
                 <div class="date-picker">
@@ -122,11 +120,7 @@
                     <h4><ng-container i18n="@@APPOINTMENT.AVAILABLE_TIMESLOTS">Available Time Slots</ng-container></h4>
                     <div class="time-grid">
                       @for (time of availableTimeSlots; track time) {
-                        <button
-                          mat-stroked-button
-                          [class.selected]="dateTimeFormGroup.get('time')?.value === time"
-                          (click)="dateTimeFormGroup.get('time')?.setValue(time)"
-                        >
+                        <button mat-stroked-button [class.selected]="dateTimeFormGroup.get('time')?.value === time" (click)="dateTimeFormGroup.get('time')?.setValue(time)">
                           {{ time }}
                         </button>
                       }
@@ -157,7 +151,9 @@
 
             <div class="step-content">
               <h3><ng-container i18n="@@APPOINTMENT.REVIEW_DETAILS">Review Details</ng-container></h3>
-              <p class="step-description"><ng-container i18n="@@APPOINTMENT.REVIEW_DETAILS_HELP">Please review your appointment details before confirming</ng-container></p>
+              <p class="step-description">
+                <ng-container i18n="@@APPOINTMENT.REVIEW_DETAILS_HELP">Please review your appointment details before confirming</ng-container>
+              </p>
 
               <div class="appointment-summary">
                 <mat-card>
@@ -200,12 +196,7 @@
 
                     <mat-form-field appearance="outline" class="full-width">
                       <mat-label><ng-container i18n="@@APPOINTMENT.NOTES">Notes</ng-container> (<ng-container i18n="@@COMMON.OPTIONAL">Optional</ng-container>)</mat-label>
-                      <textarea
-                        matInput
-                        formControlName="notes"
-                        rows="3"
-                        i18n-placeholder="@@APPOINTMENT.NOTES_PLACEHOLDER" placeholder="Enter any special requests or notes..."
-                      ></textarea>
+                      <textarea matInput formControlName="notes" rows="3" i18n-placeholder="@@APPOINTMENT.NOTES_PLACEHOLDER" placeholder="Enter any special requests or notes..."></textarea>
                     </mat-form-field>
                   </mat-card-content>
 

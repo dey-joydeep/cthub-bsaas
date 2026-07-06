@@ -19,7 +19,6 @@ export class LoginService {
   private readonly api = inject<LoginApiPort>(LOGIN_API);
   private readonly authState = inject<AuthStateSetter>(AUTH_STATE_SETTER);
 
-
   initLogin(credentials: LoginCredentials): Observable<InitLoginResponse> {
     return this.api.initLogin(credentials).pipe(
       map((res) => {

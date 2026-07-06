@@ -1,5 +1,27 @@
-import { BadRequestException, Controller, Get, HttpCode, HttpStatus, Param, Post, Query, Redirect, Request, UseGuards, UseInterceptors } from '@nestjs/common';
-import { CsrfGuard, JwtAuthGuard, JwtOptionalAuthGuard, OptionalUser, Public, ResponseEnvelopeInterceptor, SkipCsrf, CookiesInterceptor } from '@cthub-bsaas/server-core';
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+  Redirect,
+  Request,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import {
+  CsrfGuard,
+  JwtAuthGuard,
+  JwtOptionalAuthGuard,
+  OptionalUser,
+  Public,
+  ResponseEnvelopeInterceptor,
+  SkipCsrf,
+  CookiesInterceptor,
+} from '@cthub-bsaas/server-core';
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 import { OAUTH_PORT, OAuthPort } from '@cthub-bsaas/server-contracts-auth';
 import { Inject } from '@nestjs/common';

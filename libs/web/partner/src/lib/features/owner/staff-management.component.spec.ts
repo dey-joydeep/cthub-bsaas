@@ -15,7 +15,7 @@ describe('StaffManagementComponent', () => {
     staffService = {
       addStaff: vi.fn(),
       getStaffList: vi.fn(),
-    } ;
+    };
 
     // Provide the mock service
     TestBed.overrideProvider(StaffService, { useValue: staffService });

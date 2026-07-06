@@ -12,7 +12,6 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { PreloadAllModules, provideRouter, withPreloading, withComponentInputBinding } from '@angular/router';
 import { of } from 'rxjs';
 
-
 // App imports
 import { AUTH_STATE_PORT, CURRENT_USER, CurrentUserService } from '@cthub-bsaas/web-core-auth';
 import { ERROR_INTERCEPTOR_PROVIDER, ErrorHandlerService, loadingInterceptor } from '@cthub-bsaas/web-core-common';
@@ -24,7 +23,6 @@ import { FORGOT_PASSWORD_API, REGISTER_API, type ForgotPasswordApiPort, type Reg
 import { AuthService } from '@cthub-bsaas/web-partner/auth';
 
 // AoT requires an exported function for factories
-
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -43,9 +41,7 @@ export const appConfig: ApplicationConfig = {
     // Register global HTTP interceptors
     ERROR_INTERCEPTOR_PROVIDER,
     provideAnimationsAsync(),
-    importProvidersFrom([
-      MatNativeDateModule,
-    ]),
+    importProvidersFrom([MatNativeDateModule]),
     { provide: MAT_DATE_LOCALE, useValue: 'en-US' },
     { provide: ErrorHandler, useClass: ErrorHandlerService },
     { provide: AUTH_STATE_PORT, useExisting: AuthService },

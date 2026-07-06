@@ -2,7 +2,7 @@ name: Frontend Quality Checks
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
       - 'apps/web/**'
       - 'libs/web/**'
@@ -12,7 +12,7 @@ on:
       - 'nx.json'
       - 'tsconfig.base.json'
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
       - 'apps/web/**'
       - 'libs/web/**'
@@ -22,7 +22,7 @@ on:
       - 'nx.json'
       - 'tsconfig.base.json'
   schedule:
-    - cron: '0 0 * * 1'  # Weekly on Monday
+    - cron: '0 0 * * 1' # Weekly on Monday
 
 env:
   NODE_VERSION: '24'
@@ -33,66 +33,66 @@ jobs:
     name: Frontend Quality
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Set Nx affected refs
-      shell: bash
-      run: |
-        if [ "${{ github.event_name }}" = "pull_request" ]; then
-          echo "NX_BASE=origin/${{ github.base_ref }}" >> "$GITHUB_ENV"
-          echo "NX_HEAD=HEAD" >> "$GITHUB_ENV"
-          echo "NX_DAEMON=false" >> "$GITHUB_ENV"
-          echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
-        else
-          echo "NX_BASE=${{ github.event.before }}" >> "$GITHUB_ENV"
-          echo "NX_HEAD=HEAD" >> "$GITHUB_ENV"
-        fi
-
-    - name: Run quality checks
-      run: |
-        npx nx affected --target=lint --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=ci
-        npx nx affected --target=test --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=ci
-      env:
-        CI: true
-
-    - name: Generate quality report
-      run: echo "Quality report generation is not configured yet."
-
-    - name: Upload coverage report
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report
-        path: |
-          coverage/
-          reports/quality/
-        retention-days: 7
-
-    - name: Check coverage threshold
-      if: always()
-      run: |
-        if [ -f "coverage/coverage-summary.json" ]; then
-          COVERAGE=$(grep -oP '(?<="total":{"lines":{"pct":)[0-9.]+' coverage/coverage-summary.json)
-          if (( $(echo "$COVERAGE < ${{ env.COVERAGE_THRESHOLD }}" | bc -l) )); then
-            echo "❌ Coverage ($COVERAGE%) is below threshold (${{ env.COVERAGE_THRESHOLD }}%)"
-            exit 1
+      - name: Set Nx affected refs
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "NX_BASE=origin/${{ github.base_ref }}" >> "$GITHUB_ENV"
+            echo "NX_HEAD=HEAD" >> "$GITHUB_ENV"
+            echo "NX_DAEMON=false" >> "$GITHUB_ENV"
+            echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
           else
-            echo "✅ Coverage ($COVERAGE%) meets threshold (${{ env.COVERAGE_THRESHOLD }}%)"
+            echo "NX_BASE=${{ github.event.before }}" >> "$GITHUB_ENV"
+            echo "NX_HEAD=HEAD" >> "$GITHUB_ENV"
           fi
-        else
-          echo "⚠️ No coverage report found"
-        fi
+
+      - name: Run quality checks
+        run: |
+          npx nx affected --target=lint --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=ci
+          npx nx affected --target=test --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=ci
+        env:
+          CI: true
+
+      - name: Generate quality report
+        run: echo "Quality report generation is not configured yet."
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage/
+            reports/quality/
+          retention-days: 7
+
+      - name: Check coverage threshold
+        if: always()
+        run: |
+          if [ -f "coverage/coverage-summary.json" ]; then
+            COVERAGE=$(grep -oP '(?<="total":{"lines":{"pct":)[0-9.]+' coverage/coverage-summary.json)
+            if (( $(echo "$COVERAGE < ${{ env.COVERAGE_THRESHOLD }}" | bc -l) )); then
+              echo "❌ Coverage ($COVERAGE%) is below threshold (${{ env.COVERAGE_THRESHOLD }}%)"
+              exit 1
+            else
+              echo "✅ Coverage ($COVERAGE%) meets threshold (${{ env.COVERAGE_THRESHOLD }}%)"
+            fi
+          else
+            echo "⚠️ No coverage report found"
+          fi

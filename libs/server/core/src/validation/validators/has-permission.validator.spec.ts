@@ -65,7 +65,10 @@ describe('HasPermissionToAssignRoleConstraint', () => {
 
   it('should filter out undefined roles', () => {
     const args = createMockArgs({
-      roles: [undefined as unknown as AuthenticatedUser['roles'][number], roleInfo(4, UserRole.STAFF)] as unknown as AuthenticatedUser['roles'],
+      roles: [
+        undefined as unknown as AuthenticatedUser['roles'][number],
+        roleInfo(4, UserRole.STAFF),
+      ] as unknown as AuthenticatedUser['roles'],
     });
     expect(constraint.validate(UserRole.CUSTOMER, args)).toBeTruthy();
   });

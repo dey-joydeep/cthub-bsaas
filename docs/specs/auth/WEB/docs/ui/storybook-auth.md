@@ -1,7 +1,9 @@
 # Storybook Scenarios for Auth
+
 **Updated:** 2025-09-11
 
 ## Screens & States
+
 - Login: empty, typing, invalid email, invalid creds (toast), rate‑limited (cooldown), passkey available
 - Forgot: empty, submitted (generic success), rate‑limited
 - Reset: weak password (meter), mismatch, success

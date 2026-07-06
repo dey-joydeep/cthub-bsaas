@@ -33,7 +33,7 @@ import { Service, Staff } from './models/appointment-create.model';
     MatCardModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule
+    MatSnackBarModule,
   ],
   templateUrl: './appointment-create.component.html',
   styleUrls: ['./appointment-create.component.css'],
@@ -143,7 +143,9 @@ export class AppointmentCreateComponent implements OnInit {
 
     this.appointmentCreateService.createAppointment(appointment).subscribe(() => {
       this.isSubmitting = false;
-      this.snackBar.open($localize`:@@APPOINTMENT.CREATE_SUCCESS:Appointment created successfully.`, $localize`:@@COMMON.CLOSE:Close`, { duration: 5000 });
+      this.snackBar.open($localize`:@@APPOINTMENT.CREATE_SUCCESS:Appointment created successfully.`, $localize`:@@COMMON.CLOSE:Close`, {
+        duration: 5000,
+      });
 
       // Navigate to appointment list or confirmation page
       this.router.navigate(['/appointments']);

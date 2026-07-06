@@ -29,7 +29,7 @@ import { ProductParams, ProductCategoryParams, ProductImageParams } from '../../
     MatCheckboxModule,
     MatChipsModule,
     MatCardModule,
-    MatTabsModule
+    MatTabsModule,
   ],
   templateUrl: './product-management.component.html',
   styleUrls: ['./product-management.component.css'],

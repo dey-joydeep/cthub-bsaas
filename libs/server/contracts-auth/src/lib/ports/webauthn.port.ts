@@ -52,4 +52,3 @@ export interface WebAuthnPort {
    */
   finishAuthentication(userId: string, response: Record<string, unknown>): Promise<{ credentialId: string; counter: number }>;
 }
-

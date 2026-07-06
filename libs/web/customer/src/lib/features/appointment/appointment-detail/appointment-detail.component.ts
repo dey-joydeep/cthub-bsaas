@@ -27,7 +27,7 @@ import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.
     MatDividerModule,
     MatProgressSpinnerModule,
     MatDialogModule,
-    MatSnackBarModule
+    MatSnackBarModule,
   ],
   templateUrl: './appointment-detail.component.html',
   styleUrls: ['./appointment-detail.component.css'],
@@ -79,16 +79,24 @@ export class AppointmentDetailComponent implements OnInit, OnDestroy {
           .pipe(finalize(() => (this.isUpdating = false)))
           .subscribe({
             next: () => {
-              this.snackBar.open($localize`:@@APPOINTMENT.CANCELLATION_SUCCESS:Appointment cancelled successfully.`, $localize`:@@COMMON.CLOSE:Close`, {
-                duration: 5000,
-              });
+              this.snackBar.open(
+                $localize`:@@APPOINTMENT.CANCELLATION_SUCCESS:Appointment cancelled successfully.`,
+                $localize`:@@COMMON.CLOSE:Close`,
+                {
+                  duration: 5000,
+                },
+              );
               this.loadAppointment();
             },
             error: (error: any) => {
               console.error('Error cancelling appointment:', error);
-              this.snackBar.open($localize`:@@APPOINTMENT.CANCELLATION_ERROR:Failed to cancel appointment.`, $localize`:@@COMMON.CLOSE:Close`, {
-                duration: 5000,
-              });
+              this.snackBar.open(
+                $localize`:@@APPOINTMENT.CANCELLATION_ERROR:Failed to cancel appointment.`,
+                $localize`:@@COMMON.CLOSE:Close`,
+                {
+                  duration: 5000,
+                },
+              );
             },
           });
 
@@ -111,7 +119,9 @@ export class AppointmentDetailComponent implements OnInit, OnDestroy {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) {
       this.isLoading = false;
-      this.snackBar.open($localize`:@@APPOINTMENT.INVALID_ID:Invalid appointment ID.`, $localize`:@@COMMON.CLOSE:Close`, { duration: 5000 });
+      this.snackBar.open($localize`:@@APPOINTMENT.INVALID_ID:Invalid appointment ID.`, $localize`:@@COMMON.CLOSE:Close`, {
+        duration: 5000,
+      });
       this.router.navigate(['/appointments']);
       return;
     }
@@ -127,7 +137,9 @@ export class AppointmentDetailComponent implements OnInit, OnDestroy {
         },
         error: (error: any) => {
           console.error('Error loading appointment:', error);
-          this.snackBar.open($localize`:@@APPOINTMENT.LOAD_ERROR:Failed to load appointment details.`, $localize`:@@COMMON.CLOSE:Close`, { duration: 5000 });
+          this.snackBar.open($localize`:@@APPOINTMENT.LOAD_ERROR:Failed to load appointment details.`, $localize`:@@COMMON.CLOSE:Close`, {
+            duration: 5000,
+          });
           this.router.navigate(['/appointments']);
         },
       });
