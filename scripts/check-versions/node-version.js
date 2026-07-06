@@ -3,7 +3,7 @@ import { fileURLToPath } from 'url';
 
 function checkNodeVersion() {
   try {
-    const requiredNodeVersion = '>=18.0.0';
+    const requiredNodeVersion = '>=24.0.0';
     const currentNodeVersion = process.version;
 
     // Simple version check without semver to avoid extra dependency
