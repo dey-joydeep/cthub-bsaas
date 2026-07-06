@@ -19,7 +19,7 @@ const encryptionKeySchema = z.string().regex(/^[0-9a-fA-F]{64}$/, 'encryption.ke
 function validateConfig(env: Record<string, any>): Record<string, any> {
   const envResult = envValidationSchema.safeParse(env);
   if (!envResult.success) {
-    const errorMessages = envResult.error.errors.map((e) => e.message).join(', ');
+    const errorMessages = envResult.error.issues.map((e) => e.message).join(', ');
     throw new Error(`Configuration validation error: ${errorMessages}`);
   }
 
