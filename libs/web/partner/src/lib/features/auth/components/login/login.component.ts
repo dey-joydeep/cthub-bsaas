@@ -300,7 +300,7 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
           this.error = null;
         },
         error: (err: unknown) => {
-          this.error = this.errorService.getErrorMessage(err as any);
+          this.error = this.errorService.getErrorMessage(err);
         },
       });
   }
@@ -332,7 +332,7 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
         error: (err: unknown) => {
           this.loading = false;
           this.error = 'An error occurred while resending OTP. Please try again.';
-          this.errorService.handleError(err as any);
+          this.errorService.handleError(err);
         },
       });
   }

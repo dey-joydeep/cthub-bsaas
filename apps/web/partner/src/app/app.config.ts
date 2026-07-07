@@ -60,7 +60,7 @@ export const appConfig: ApplicationConfig = {
           resetPassword: () => {
             return of(true);
           },
-        } as ForgotPasswordApiPort;
+        };
       },
       deps: [HttpClient],
     },
@@ -70,7 +70,7 @@ export const appConfig: ApplicationConfig = {
         // TODO: Replace with real registration API integration
         return {
           register: async () => Promise.resolve(),
-        } as RegisterApiPort;
+        };
       },
     },
   ],

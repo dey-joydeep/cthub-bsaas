@@ -74,7 +74,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private initializeAuthSubscription(): void {
     this.authSubscription = this.currentUserService.currentUser$.subscribe({
       next: (user: BaseAuthUser | null) => {
-        this.currentUser = user as User | null;
+        this.currentUser = user;
         this.isLoggedIn = !!user;
 
         if (this.isAdmin) {

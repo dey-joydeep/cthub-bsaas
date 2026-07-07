@@ -2,6 +2,10 @@
   "name": "@cthub-bsaas/web-customer",
   "version": "0.0.1",
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./auth": "./src/lib/features/auth/index.ts"
+  },
   "peerDependencies": {
     "@angular/common": "^21.0.0",
     "@angular/core": "^21.0.0"
