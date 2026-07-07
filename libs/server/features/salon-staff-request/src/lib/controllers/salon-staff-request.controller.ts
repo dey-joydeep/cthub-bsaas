@@ -100,6 +100,6 @@ export class SalonStaffRequestController {
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Insufficient permissions' })
   async findPending(): Promise<SalonStaffRequestResponseDto[]> {
-    return this.salonStaffRequestService.getRequests({ status: SalonStaffRequestStatus.pending } as SalonStaffRequestQueryDto);
+    return this.salonStaffRequestService.getRequests({ status: SalonStaffRequestStatus.pending });
   }
 }

@@ -172,7 +172,7 @@ export class AppointmentController {
   async getUserAppointments(
     @CurrentUser() user: AuthenticatedUser,
     @Query('userId') targetUserId?: string,
-    @Query() filters: Partial<FilterAppointmentsDto> = {} as Partial<FilterAppointmentsDto>,
+    @Query() filters: Partial<FilterAppointmentsDto> = {},
   ): Promise<AppointmentResponseDto[]> {
     // If no targetUserId is provided, default to the current user's ID
     const userId = targetUserId || user.id;
