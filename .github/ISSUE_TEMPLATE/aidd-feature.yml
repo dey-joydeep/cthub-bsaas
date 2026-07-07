@@ -1,0 +1,33 @@
+name: AIDD Feature
+description: Plan a new feature through the AIDD workflow
+title: "feat: "
+labels: ["aidd", "feature"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should be built and why?
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Source docs
+      description: Link user stories, FRD/FNRD/HLD/LLD/API/VALIDATION/WEB/TEST docs if available.
+    validations:
+      required: false
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: In-scope and out-of-scope boundaries.
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Expected validation
+      description: Nx, OpenAPI, AIDD, or other commands expected before completion.
+    validations:
+      required: false

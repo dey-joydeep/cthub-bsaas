@@ -13,6 +13,7 @@ import {
   GlobalExceptionFilter,
 } from '@cthub-bsaas/server-core';
 import { AuthModule } from '@cthub-bsaas/server-feature-auth';
+import { ServerFeatureSalonOwnerModule } from '@cthub-bsaas/server-feature-salon-owner';
 import { TotpModule } from '@cthub-bsaas/server-infrastructure';
 
 import { ThrottlerRetryAfterFilter } from './http/filters/throttler-retry-after.filter';
@@ -44,6 +45,7 @@ import { ThrottlerRetryAfterGuard } from './http/guards/throttler-retry-after.gu
     }),
     // Feature modules
     AuthModule,
+    ServerFeatureSalonOwnerModule,
     TotpModule,
   ],
   controllers: [AppController],

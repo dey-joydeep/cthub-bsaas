@@ -58,6 +58,9 @@ async function bootstrap(): Promise<void> {
       'X-XSRF-TOKEN',
       'X-Request-Id',
       'X-Correlation-Id',
+      'Idempotency-Key',
+      'X-Support-Reference',
+      'X-Support-Reason',
     ],
     exposedHeaders: exposedHeaders || ['X-Request-Id', 'X-Correlation-Id'],
     maxAge: maxAge || 600, // 10 minutes

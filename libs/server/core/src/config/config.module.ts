@@ -16,7 +16,7 @@ const envValidationSchema = z
 
 const encryptionKeySchema = z.string().regex(/^[0-9a-fA-F]{64}$/, 'encryption.key must be a 64-character hex string');
 
-function validateConfig(env: Record<string, any>): Record<string, any> {
+function validateConfig(env: Record<string, unknown>): Record<string, unknown> {
   const envResult = envValidationSchema.safeParse(env);
   if (!envResult.success) {
     const errorMessages = envResult.error.issues.map((e) => e.message).join(', ');
@@ -36,7 +36,7 @@ function validateConfig(env: Record<string, any>): Record<string, any> {
   imports: [
     NestConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env', `.env.${process.env.NODE_ENV || 'development'}`],
+      envFilePath: ['.env', `.env.${process.env['NODE_ENV'] || 'development'}`],
       load: [configuration],
       validate: validateConfig,
     }),

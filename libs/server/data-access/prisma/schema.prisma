@@ -23,6 +23,11 @@ enum RegistrationStatus {
   COMPLETED
 }
 
+enum SalonOwnerStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model BusinessAddress {
   id           String       @id @default(uuid()) @db.Uuid
   countryId    String       @map("country_id") @db.Uuid
@@ -69,6 +74,7 @@ model SalonTenant {
   salons               Salon[]
   productSales         ProductSale[]
   appointments         Appointment[]
+  salonBusinesses      SalonBusiness[]
   preferredByCustomers Customer[]           @relation("PreferredSalonTenant")
   createdAt            DateTime             @default(now()) @map("created_at")
   updatedAt            DateTime             @updatedAt @map("updated_at")
@@ -76,23 +82,107 @@ model SalonTenant {
   @@map("salon_tenant")
 }
 
+model SalonBusiness {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String           @map("tenant_id") @db.Uuid
+  tenant      SalonTenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  displayName String           @map("display_name")
+  legalName   String           @map("legal_name")
+  status      SalonOwnerStatus @default(ACTIVE)
+  branches    SalonBranch[]
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  @@unique([tenantId, displayName])
+  @@index([tenantId, status])
+  @@map("salon_business")
+}
+
+model SalonBranch {
+  id         String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId String               @map("business_id") @db.Uuid
+  business   SalonBusiness        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name       String
+  phone      String?
+  email      String?
+  timezone   String
+  currency   String
+  currencyLockedAt DateTime?      @map("currency_locked_at")
+  status     SalonOwnerStatus     @default(ACTIVE)
+  address    Json                 @db.JsonB
+  hours      SalonBranchHours[]
+  holidays   SalonBranchHoliday[]
+  policy     SalonBranchPolicy?
+  createdAt  DateTime             @default(now()) @map("created_at")
+  updatedAt  DateTime             @updatedAt @map("updated_at")
+
+  @@unique([businessId, name])
+  @@index([businessId])
+  @@index([businessId, status])
+  @@map("salon_branch")
+}
+
+model SalonBranchHours {
+  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  branchId  String      @map("branch_id") @db.Uuid
+  branch    SalonBranch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  timezone  String
+  dayOfWeek Int         @map("day_of_week")
+  open      Boolean
+  intervals Json        @db.JsonB
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  @@unique([branchId, dayOfWeek])
+  @@index([branchId])
+  @@map("salon_branch_hours")
+}
+
+model SalonBranchHoliday {
+  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  branchId  String      @map("branch_id") @db.Uuid
+  branch    SalonBranch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  date      DateTime    @db.Date
+  closed    Boolean
+  reason    String?
+  intervals Json        @db.JsonB
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  @@unique([branchId, date])
+  @@index([branchId])
+  @@map("salon_branch_holiday")
+}
+
+model SalonBranchPolicy {
+  branchId                  String      @id @map("branch_id") @db.Uuid
+  branch                    SalonBranch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  bookingLeadMinutes        Int         @map("booking_lead_minutes")
+  cancellationCutoffMinutes Int         @map("cancellation_cutoff_minutes")
+  noShowGraceMinutes        Int         @map("no_show_grace_minutes")
+  createdAt                 DateTime    @default(now()) @map("created_at")
+  updatedAt                 DateTime    @updatedAt @map("updated_at")
+
+  @@map("salon_branch_policy")
+}
+
 model User {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email        String    @unique
-  passwordHash String    @map("password_hash")
-  phone        String?
-  isVerified   Boolean   @default(false) @map("is_verified")
+  id                  String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email               String             @unique
+  passwordHash        String             @map("password_hash")
+  phone               String?
+  isVerified          Boolean            @default(false) @map("is_verified")
   // Registration & MFA enrollment tracking
-  registrationStatus     RegistrationStatus @default(PENDING) @map("registration_status")
-  isMFAEnrollRequired    Boolean            @default(false) @map("is_mfa_enroll_required")
-  mfaReminderFirstAt     DateTime?          @map("mfa_reminder_first_at")
-  mfaReminderLastAt      DateTime?          @map("mfa_reminder_last_at")
-  isActive     Boolean   @default(true) @map("is_active")
-  name         String?
-  avatarUrl    String?   @map("avatar_url")
-  lastLoginAt  DateTime? @map("last_login_at")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  registrationStatus  RegistrationStatus @default(PENDING) @map("registration_status")
+  isMFAEnrollRequired Boolean            @default(false) @map("is_mfa_enroll_required")
+  mfaReminderFirstAt  DateTime?          @map("mfa_reminder_first_at")
+  mfaReminderLastAt   DateTime?          @map("mfa_reminder_last_at")
+  isActive            Boolean            @default(true) @map("is_active")
+  name                String?
+  avatarUrl           String?            @map("avatar_url")
+  lastLoginAt         DateTime?          @map("last_login_at")
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
 
   // Relations
   salonTenantId String?      @map("salon_tenant_id") @db.Uuid
@@ -112,7 +202,7 @@ model User {
   portfolios Portfolio[] @relation("UserPortfolios")
 
   // Business Relations
-  ownedSalon Salon? @relation("SalonOwner")
+  ownedSalons Salon[] @relation("SalonOwner")
 
   // Social & Commerce
   social            Social[]            @relation("UserSocials")
@@ -321,7 +411,7 @@ model Salon {
   name              String
   slug              String          @unique
   description       String?
-  phone             String
+  phone             String?
   email             String?
   website           String?
   logoUrl           String?         @map("logo_url")
@@ -335,20 +425,21 @@ model Salon {
   updatedAt         DateTime        @updatedAt @map("updated_at")
 
   // Relations
-  owner            User               @relation("SalonOwner", fields: [ownerId], references: [id])
-  ownerId          String             @unique @map("owner_id") @db.Uuid
-  metadata         Json?              @db.JsonB
-  tenant           SalonTenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  portfolios       Portfolio[]        @relation("SalonPortfolios")
-  salonTenantStaff SalonTenantStaff[]
-  translations     SalonTranslation[]
-  salonServices    SalonService[]     @relation("SalonServices")
+  owner             User               @relation("SalonOwner", fields: [ownerId], references: [id])
+  ownerId           String             @map("owner_id") @db.Uuid
+  metadata          Json?              @db.JsonB
+  tenant            SalonTenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  portfolios        Portfolio[]        @relation("SalonPortfolios")
+  salonTenantStaff  SalonTenantStaff[]
+  translations      SalonTranslation[]
+  salonServices     SalonService[]     @relation("SalonServices")
   // Partner registration relations
   registrationLinks RegistrationLink[]
   staffInvites      StaffInvite[]
 
   // Indexes for better query performance
   @@index([tenantId])
+  @@index([ownerId])
   @@index([isActive])
   @@index([isVerified])
   @@index([averageRating])
@@ -608,6 +699,7 @@ model City {
 
   @@index([stateId])
   @@index([countryId])
+  @@unique([countryId, stateId, name])
   @@map("city")
 }
 
@@ -967,15 +1059,15 @@ enum VerificationPurpose {
 }
 
 model EmailVerification {
-  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id        String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email     String
-  codeHash  String    @map("code_hash")
-  expiresAt DateTime  @map("expires_at")
-  attempts  Int       @default(0)
-  usedAt    DateTime? @map("used_at")
-  createdAt DateTime  @default(now()) @map("created_at")
+  codeHash  String              @map("code_hash")
+  expiresAt DateTime            @map("expires_at")
+  attempts  Int                 @default(0)
+  usedAt    DateTime?           @map("used_at")
+  createdAt DateTime            @default(now()) @map("created_at")
   purpose   VerificationPurpose @default(REGISTRATION)
-  sessionId String?  @map("session_id")
+  sessionId String?             @map("session_id")
   meta      Json?
 
   @@index([email, purpose, expiresAt])
@@ -1000,15 +1092,15 @@ model PasswordReset {
 
 // Owner registration link (invite-based) tied to a salon
 model RegistrationLink {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tokenHash String   @unique @map("token_hash")
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tokenHash String    @unique @map("token_hash")
   email     String
-  salonId   String   @map("salon_id") @db.Uuid
-  issuedAt  DateTime @default(now()) @map("issued_at")
-  expiresAt DateTime @map("expires_at")
+  salonId   String    @map("salon_id") @db.Uuid
+  issuedAt  DateTime  @default(now()) @map("issued_at")
+  expiresAt DateTime  @map("expires_at")
   usedAt    DateTime? @map("used_at")
-  invitedBy String?  @map("invited_by") @db.Uuid
-  salon     Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  invitedBy String?   @map("invited_by") @db.Uuid
+  salon     Salon     @relation(fields: [salonId], references: [id], onDelete: Cascade)
 
   @@index([email])
   @@index([salonId])
@@ -1041,6 +1133,7 @@ model AuditEvent {
   userId        String?  @map("user_id") @db.Uuid
   tenantId      String?  @map("tenant_id") @db.Uuid
   action        String
+  targetId      String?  @map("target_id") @db.Uuid
   result        String?
   reason        String?
   ip            String?

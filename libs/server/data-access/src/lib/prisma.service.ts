@@ -70,19 +70,19 @@ export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'que
    * Helper method to handle database operations with error handling
    */
   // Overload for array of Prisma promises
-  async $transaction<P extends PrismaPromise<unknown>[]>(
+  override async $transaction<P extends PrismaPromise<unknown>[]>(
     arg: [...P],
     options?: { isolationLevel?: Prisma.TransactionIsolationLevel },
   ): Promise<UnwrapTuple<P>>;
 
   // Overload for transaction callback
-  async $transaction<P>(
+  override async $transaction<P>(
     fn: (prisma: Omit<PrismaClient, '$transaction' | '$on' | '$connect' | '$disconnect' | '$use' | '$extends'>) => Promise<P>,
-    options?: { maxWait?: number; timeout?: number },
+    options?: { maxWait?: number; timeout?: number; isolationLevel?: Prisma.TransactionIsolationLevel },
   ): Promise<P>;
 
   // Implementation
-  async $transaction(
+  override async $transaction(
     arg: unknown,
     options?: {
       maxWait?: number;
@@ -112,17 +112,14 @@ export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'que
    */
   private handlePrismaError(error: unknown): never {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      // Handle known request errors
       this.logger.error(`Prisma Known Request Error (${error.code}): ${error.message}`, error.meta);
-
-      // Add custom error handling for specific error codes
-      switch (error.code) {
-        case 'P2002':
-          throw new Error('A unique constraint was violated');
-        case 'P2025':
-          throw new Error('Record not found');
-        // Add more specific error codes as needed
+      if (error.code === 'P2002') {
+        throw new Error('A unique constraint was violated');
       }
+      if (error.code === 'P2025') {
+        throw new Error('Record not found');
+      }
+      throw error;
     } else if (error instanceof Prisma.PrismaClientUnknownRequestError) {
       this.logger.error('Prisma Unknown Request Error:', error);
       throw new Error('An unknown database error occurred');

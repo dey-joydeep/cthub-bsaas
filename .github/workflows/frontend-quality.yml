@@ -25,7 +25,7 @@ on:
     - cron: '0 0 * * 1' # Weekly on Monday
 
 env:
-  NODE_VERSION: '24'
+  NODE_VERSION: '20'
   COVERAGE_THRESHOLD: 80
 
 jobs:
@@ -63,9 +63,26 @@ jobs:
           fi
 
       - name: Run quality checks
+        shell: bash
         run: |
-          npx nx affected --target=lint --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=ci
-          npx nx affected --target=test --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=ci
+          filter_frontend_projects() {
+            grep -E '^(web-.*|shared)$' || true
+          }
+
+          FRONTEND_LINT_PROJECTS="$(npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=lint | filter_frontend_projects | paste -sd, -)"
+          FRONTEND_TEST_PROJECTS="$(npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=test | filter_frontend_projects | paste -sd, -)"
+
+          if [ -n "$FRONTEND_LINT_PROJECTS" ]; then
+            npx nx run-many --target=lint --projects="$FRONTEND_LINT_PROJECTS" --parallel=3 --configuration=ci
+          else
+            echo "No affected frontend projects with lint target."
+          fi
+
+          if [ -n "$FRONTEND_TEST_PROJECTS" ]; then
+            npx nx run-many --target=test --projects="$FRONTEND_TEST_PROJECTS" --parallel=3 --configuration=ci
+          else
+            echo "No affected frontend projects with test target."
+          fi
         env:
           CI: true
 

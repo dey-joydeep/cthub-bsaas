@@ -8,15 +8,36 @@ function isPlainObject(val: unknown): val is Record<string, unknown> {
   return !!val && typeof val === 'object' && !Array.isArray(val);
 }
 
-function buildSuccessEnvelope<T>(data: T): { success: true; data: T; meta?: { correlationId: string } } {
+interface SuccessMeta {
+  readonly correlationId?: string;
+  readonly page?: number;
+  readonly pageSize?: number;
+  readonly total?: number;
+}
+
+interface SuccessEnvelope<T> {
+  readonly success: true;
+  readonly data: T;
+  readonly meta?: SuccessMeta;
+}
+
+function isPagedResult(value: Record<string, unknown>): value is {
+  items: unknown[];
+  page: { limit: number; pageNumber?: number; totalItems?: number };
+} {
+  return Array.isArray(value['items']) && isPlainObject(value['page']) && typeof value['page']['limit'] === 'number';
+}
+
+function buildSuccessEnvelope<T>(data: T, meta: Omit<SuccessMeta, 'correlationId'> = {}): SuccessEnvelope<T> {
   const correlationId = CorrelationId.get();
-  const base: { success: true; data: T; meta?: { correlationId: string } } = {
+  const responseMeta = { ...(correlationId ? { correlationId } : {}), ...meta };
+  const base: SuccessEnvelope<T> = {
     success: true,
     data,
   };
 
-  if (correlationId) {
-    base.meta = { correlationId };
+  if (Object.keys(responseMeta).length > 0) {
+    return { ...base, meta: responseMeta };
   }
 
   return base;
@@ -45,6 +66,17 @@ export class ResponseEnvelopeInterceptor implements NestInterceptor {
           // Treat empty object as empty data
           if (keys.length === 0) {
             return buildSuccessEnvelope({});
+          }
+
+          if (isPagedResult(value)) {
+            return buildSuccessEnvelope(
+              { items: value.items },
+              {
+                page: value.page.pageNumber ?? 1,
+                pageSize: value.page.limit,
+                total: value.page.totalItems ?? value.items.length,
+              },
+            );
           }
         }
         return buildSuccessEnvelope(value);

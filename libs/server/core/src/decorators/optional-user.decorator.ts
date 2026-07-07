@@ -13,7 +13,7 @@ export const OptionalUser = createParamDecorator((_data: unknown, context: Execu
   }
 
   const reqRecord = request as Record<string, unknown>;
-  const userCandidate = reqRecord.user;
+  const userCandidate = reqRecord['user'];
 
   return userCandidate && typeof userCandidate === 'object' ? (userCandidate as AuthenticatedUser) : undefined;
 });
