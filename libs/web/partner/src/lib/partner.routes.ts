@@ -1,7 +1,12 @@
 import { Routes } from '@angular/router';
+import { authGuard } from '@cthub-bsaas/web-core/auth';
 
 export const PARTNER_ROUTES: Routes = [
-  { path: '', loadComponent: () => import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent) },
+  {
+    path: '',
+    loadComponent: () => import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+    canActivate: [authGuard],
+  },
   { path: 'auth', loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES) },
   // { path: 'appointments', loadChildren: () => import('./features/appointment/appointment.routes').then((m) => m.APPOINTMENT_ROUTES) },
   { path: 'owner', loadChildren: () => import('./features/owner/owner.routes').then((m) => m.OWNER_ROUTES) },
