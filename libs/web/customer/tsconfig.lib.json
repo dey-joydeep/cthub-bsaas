@@ -4,13 +4,13 @@
     "rootDir": "src",
     "outDir": "../../../dist/out-tsc/libs/web/customer",
     "paths": {
-      "@cthub-bsaas/shared": ["dist/libs/shared"],
-      "@cthub-bsaas/web-config": ["dist/libs/web/config"],
-      "@cthub-bsaas/web-core-auth": ["dist/libs/web/core/auth"],
-      "@cthub-bsaas/web-core/auth": ["dist/libs/web/core/auth"],
-      "@cthub-bsaas/web-core-common": ["dist/libs/web/core/common"],
-      "@cthub-bsaas/web-core-platform": ["dist/libs/web/core/platform"],
-      "@cthub-bsaas/web-ui": ["dist/libs/web/ui"]
+      "@cthub-bsaas/shared": ["dist/libs/shared", "libs/shared/src/index.ts"],
+      "@cthub-bsaas/web-config": ["dist/libs/web/config", "libs/web/config/src/index.ts"],
+      "@cthub-bsaas/web-core-auth": ["dist/libs/web/core/auth", "libs/web/core/auth/src/index.ts"],
+      "@cthub-bsaas/web-core/auth": ["dist/libs/web/core/auth", "libs/web/core/auth/src/index.ts"],
+      "@cthub-bsaas/web-core-common": ["dist/libs/web/core/common", "libs/web/core/common/src/index.ts"],
+      "@cthub-bsaas/web-core-platform": ["dist/libs/web/core/platform", "libs/web/core/platform/src/index.ts"],
+      "@cthub-bsaas/web-ui": ["dist/libs/web/ui", "libs/web/ui/src/index.ts"]
     },
     "module": "preserve",
     "moduleResolution": "bundler"

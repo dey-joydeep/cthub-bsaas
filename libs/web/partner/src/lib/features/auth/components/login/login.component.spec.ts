@@ -17,15 +17,6 @@ import { NotificationService } from '@cthub-bsaas/web-core-common';
 import { AuthService } from '../../services/auth.service';
 
 // Mocks
-class MockTranslateService {
-  setDefaultLang = vi.fn();
-  getBrowserLang = vi.fn().mockReturnValue('en');
-  getLangs = vi.fn().mockReturnValue(['en', 'es']);
-  onLangChange = { subscribe: vi.fn() };
-  onTranslationChange = { subscribe: vi.fn() };
-  onDefaultLangChange = { subscribe: vi.fn() };
-}
-
 class MockAuthService implements Partial<AuthService> {
   login = vi.fn().mockReturnValue(
     of({
