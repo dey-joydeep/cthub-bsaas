@@ -33,6 +33,7 @@
     "dev:web-customer": "nx serve web-app-customer",
     "dev:web-partner": "nx serve web-app-partner",
     "dev:api": "nx serve api",
+    "build": "nx run-many --target=build --all",
     "build:all": "nx run-many --target=build --all",
     "build:client-libs": "nx run-many -t build -p web-config,web-core-common,web-core-http,web-core-platform,web-core-auth,web-core-testing,web-lib-admin,web-lib-customer,web-lib-partner,web-lib-public,web-ui --skip-nx-cache",
     "build:server-libs": "nx run-many -t build -p server-core,server-data-access,server-features,server-feature-appointment,server-feature-dashboard,server-feature-portfolio,server-feature-review,server-feature-salon,server-feature-salon-staff-request,server-feature-social,server-feature-theme,server-feature-user --skip-nx-cache",
