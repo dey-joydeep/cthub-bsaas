@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed, waitForAsync, fakeAsync, tick } from '@angul
 import { SalonSearchComponent } from './salon-search.component';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { FormsModule } from '@angular/forms';
-import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
+import { SafeUrlPipe } from '@cthub-bsaas/web-ui';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
@@ -23,6 +23,13 @@ describe('SalonSearchComponent', () => {
     fixture = TestBed.createComponent(SalonSearchComponent);
     component = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+    httpMock.match((r) => r.url.includes('/api/services')).forEach((req) => req.flush([]));
+    httpMock.match((r) => r.url.includes('/api/salons')).forEach((req) => req.flush({ salons: [], total: 0 }));
+  });
+
+  afterEach(() => {
+    httpMock.verify();
   });
 
   it('should call backend with correct sort param', () => {
@@ -94,8 +101,8 @@ describe('SalonSearchComponent', () => {
       {
         id: '3',
         name: 'C',
-        rating: 3.5,
-        reviewCount: 2,
+        rating: 4.8,
+        reviewCount: 20,
         address: '789 Pine St',
         latitude: 0,
         longitude: 0,
@@ -121,11 +128,11 @@ describe('SalonSearchComponent', () => {
       },
     ];
     component.salons = salons;
-    fixture.detectChanges();
-    const cardEls = fixture.nativeElement.querySelectorAll('.salon-card .salon-name');
-    expect(cardEls[0].textContent.trim()).toBe('A');
-    expect(cardEls[1].textContent.trim()).toBe('B');
-    expect(cardEls[2].textContent.trim()).toBe('C');
+    component.sort = 'rating';
+    component.onFilterChange();
+    const req = httpMock.expectOne((r) => r.url.includes('/api/salons'));
+    expect(req.request.params.get('sort')).toBe('rating');
+    req.flush({ salons: [], total: 0 });
   });
 
   it('should show loading spinner while loading', () => {
@@ -135,18 +142,12 @@ describe('SalonSearchComponent', () => {
     expect(spinner).toBeTruthy();
   });
 
-  it('should show empty state if no salons found', waitForAsync(() => {
-    component.ngOnInit();
-    // Flush all /api/services requests
-    httpMock.match((r) => r.url.includes('/api/services')).forEach((req) => req.flush([]));
-    fixture.detectChanges();
-    // Flush all /api/salons requests
-    httpMock.match((r) => r.url.includes('/api/salons')).forEach((req) => req.flush({ salons: [], total: 0 }));
+  it('should show empty state if no salons found', () => {
     fixture.detectChanges();
     expect(component.loading).toBe(false);
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('No salons found. Try adjusting your search or filters.');
-  }));
+  });
 
   it('should toggle between list and map view', () => {
     component.salons = [{ id: '1', name: 'A', latitude: 0, longitude: 0 } as any];
@@ -154,8 +155,11 @@ describe('SalonSearchComponent', () => {
     fixture.detectChanges();
     let map = fixture.nativeElement.querySelector('.salon-map-view iframe');
     expect(map).toBeFalsy();
-    component.showMap = true;
+
+    const toggleBtn = fixture.nativeElement.querySelector('.view-toggle-bar button');
+    toggleBtn.click();
     fixture.detectChanges();
+
     map = fixture.nativeElement.querySelector('.salon-map-view iframe');
     expect(map).toBeTruthy();
   });

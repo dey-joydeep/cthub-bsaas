@@ -5,6 +5,7 @@ import { HttpParams } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Salon, SalonServiceItem } from './model/salon-search.model';
+import { SalonSearchService as SalonService } from './salon-search.service';
 import { SafeUrlPipe } from '@cthub-bsaas/web-ui';
 import type { PlatformUtils } from '@cthub-bsaas/web-core-platform';
 

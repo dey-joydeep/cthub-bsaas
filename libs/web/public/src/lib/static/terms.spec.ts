@@ -1,16 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Terms } from './terms';
+import { TermsComponent } from './terms';
+import { MarkdownModule } from 'ngx-markdown';
 
-describe('Terms', () => {
-  let component: Terms;
-  let fixture: ComponentFixture<Terms>;
+describe('TermsComponent', () => {
+  let component: TermsComponent;
+  let fixture: ComponentFixture<TermsComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Terms],
+      imports: [TermsComponent, MarkdownModule.forRoot()],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Terms);
+    fixture = TestBed.createComponent(TermsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

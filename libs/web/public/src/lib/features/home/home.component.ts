@@ -120,6 +120,7 @@ export class HomeComponent implements OnInit {
 
     this.homeService.getHomePageData().subscribe({
       next: (data: IHomePageData) => {
+        this.homeData = data;
         this.featuredSalons = data.featuredSalons || [];
         this.newSalons = data.newSalons || [];
         this.featuredServices = data.featuredServices || [];

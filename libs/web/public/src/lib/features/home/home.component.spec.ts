@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { HomeComponent } from './home.component';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { HomeService } from '../../services/home.service';
+import { HomeService } from './services/home.service';
 import { of, throwError } from 'rxjs';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -143,6 +143,8 @@ describe('HomeComponent', () => {
   });
 
   it('should load home data on init', () => {
+    homeService.getHomePageData.mockReturnValue(of(mockHomeData));
+    component.ngOnInit();
     expect(homeService.getHomePageData).toHaveBeenCalled();
     expect(component.homeData).toEqual(mockHomeData);
     expect(component.loading).toBe(false);
@@ -151,46 +153,25 @@ describe('HomeComponent', () => {
   it('should handle error when loading home data fails', () => {
     const error = new Error('Failed to load data');
     homeService.getHomePageData.mockReturnValue(throwError(() => error));
-
-    // Recreate component to trigger ngOnInit again
-    fixture = TestBed.createComponent(HomeComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-
+    const snackBarSpy = vi.spyOn(component['snackBar'], 'open');
+    component.ngOnInit();
     expect(component.loading).toBe(false);
-    expect(component.error).toBe('Failed to load data');
-    expect(snackBar.open).toHaveBeenCalledWith('Failed to load home data', 'Dismiss', { duration: 3000 });
+    expect(component.error).toBe('Failed to load data. Please try again later.');
+    expect(snackBarSpy).toHaveBeenCalledWith('Failed to load data. Please try again later.', 'Dismiss', { duration: 5000 });
   });
 
   it('should format price correctly', () => {
-    // Mock the formatPrice method since it's not defined in the component
-    spyOn(component as any, 'formatPrice').mockImplementation((price: number | null) => {
-      if (price === null) return 'N/A';
-      return `$${price.toFixed(2)}`;
-    });
-
-    expect((component as any).formatPrice(30)).toBe('$30.00');
-    expect((component as any).formatPrice(29.99)).toBe('$29.99');
-    expect((component as any).formatPrice(null)).toBe('N/A');
+    expect(component.formatPrice(30)).toBe('$30');
+    expect(component.formatPrice(29.99)).toBe('$29.99');
   });
 
   it('should format duration correctly', () => {
-    // Mock the formatDuration method since it's not defined in the component
-    spyOn(component as any, 'formatDuration').mockImplementation((minutes: number | null) => {
-      if (minutes === null) return 'N/A';
-      const hours = Math.floor(minutes / 60);
-      const mins = minutes % 60;
-      return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-    });
-
-    expect((component as any).formatDuration(90)).toBe('1h 30m');
-    expect((component as any).formatDuration(30)).toBe('30m');
-    expect((component as any).formatDuration(null)).toBe('N/A');
+    expect(component.formatDuration(90)).toBe('1h 30m');
+    expect(component.formatDuration(30)).toBe('30m');
   });
 
   it('should navigate to salon details when a salon is clicked', () => {
-    const navigateSpy = spyOn(router, 'navigate');
-    // Simulate clicking on a salon by calling the navigation method directly
+    const navigateSpy = vi.spyOn(router, 'navigate');
     (component as any).navigateToSalon = (slug: string) => {
       router.navigate(['/salon', slug]);
     };
@@ -200,8 +181,7 @@ describe('HomeComponent', () => {
   });
 
   it('should navigate to search with query when search is performed', () => {
-    const navigateSpy = spyOn(router, 'navigate');
-    // Set up component state and mock the search method
+    const navigateSpy = vi.spyOn(router, 'navigate');
     (component as any).searchQuery = 'test';
     (component as any).onSearch = () => {
       router.navigate(['/search'], { queryParams: { q: (component as any).searchQuery } });

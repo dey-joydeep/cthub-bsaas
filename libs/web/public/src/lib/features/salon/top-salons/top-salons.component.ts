@@ -2,7 +2,7 @@ import { PlatformUtils, PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platf
 import { Component, OnInit, Inject, PLATFORM_ID, Type, input, model } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { SalonService } from '../services/salon.service';
+import { TopSalonsService as SalonService } from './top-salons.service';
 import { ISalonDto } from './model/top-salons.model';
 import type { PlatformUtils } from '@cthub-bsaas/web-core-platform';
 
