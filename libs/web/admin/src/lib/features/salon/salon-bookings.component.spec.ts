@@ -21,13 +21,13 @@ describe('SalonAppointmentsComponent', () => {
   });
 
   it('should display error if salonId missing', () => {
-    component.salonId = undefined;
-    component.ngOnInit();
+    fixture.componentRef.setInput('salonId', undefined);
+    fixture.detectChanges();
     expect(component.error).toBe('Salon ID is required.');
   });
 
   it('should display error on failed appointments fetch', fakeAsync(() => {
-    component.salonId = 'salon1';
+    fixture.componentRef.setInput('salonId', 'salon1');
     fixture.detectChanges();
     const req = httpMock.expectOne('/api/salon/salon1/appointments');
     req.flush({ userMessage: 'Failed to load appointments.' }, { status: 500, statusText: 'Server Error' });
@@ -36,12 +36,13 @@ describe('SalonAppointmentsComponent', () => {
   }));
 
   it('should fetch appointments successfully', fakeAsync(() => {
-    component.salonId = 'salon1';
+    fixture.componentRef.setInput('salonId', 'salon1');
     fixture.detectChanges();
     const req = httpMock.expectOne('/api/salon/salon1/appointments');
-    req.flush([{ id: 1 }]);
+    const mockAppointments = [{ id: '1', time: '10:00 AM' }];
+    req.flush(mockAppointments);
     tick();
-    expect(component.appointments.length).toBe(1);
-    expect(component.error).toBeNull();
+    expect(component.appointments).toEqual(mockAppointments);
+    expect(component.loading).toBe(false);
   }));
 });
