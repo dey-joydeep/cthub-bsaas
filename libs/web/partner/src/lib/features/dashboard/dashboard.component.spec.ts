@@ -2,24 +2,27 @@ import { TestBed } from '@angular/core/testing';
 import { DashboardComponent } from './dashboard.component';
 import { CommonModule } from '@angular/common';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { ReactiveFormsModule } from '@angular/forms';
-import { sharedTestProviders } from '../../shared/test-setup';
 import { Component } from '@angular/core';
+import { DashboardService } from './dashboard.service';
+import { of } from 'rxjs';
+import { PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
 
-// Stub for the missing chart components
-@Component({ selector: 'app-subscription-chart', template: '', standalone: true })
+@Component({ selector: 'app-stats-widget', template: '' })
+class StatsWidgetStub {}
+
+@Component({ selector: 'app-subscription-chart', template: '' })
 class BsaasSubscriptionChartStub {}
 
-@Component({ selector: 'app-revenue-chart', template: '', standalone: true })
+@Component({ selector: 'app-revenue-chart', template: '' })
 class BsaasRevenueChartStub {}
 
-@Component({ selector: 'app-customer-stats', template: '', standalone: true })
+@Component({ selector: 'app-customer-stats', template: '' })
 class BsaasCustomerStatsStub {}
 
-@Component({ selector: 'app-renewals-list', template: '', standalone: true })
+@Component({ selector: 'app-renewals-list', template: '' })
 class BsaasRenewalsListStub {}
 
-@Component({ selector: 'app-product-sales-chart', template: '', standalone: true })
+@Component({ selector: 'app-product-sales-chart', template: '' })
 class BsaasProductSalesChartStub {}
 
 describe('DashboardComponent', () => {
@@ -27,14 +30,29 @@ describe('DashboardComponent', () => {
   let fixture: any;
 
   beforeEach(async () => {
+    const mockDashboardService = {
+      getTenantId: vi.fn().mockReturnValue(of('demo-tenant')),
+    };
+
+    const mockPlatformUtils = {
+      windowRef: {
+        innerWidth: 1024,
+      },
+    };
+
     await TestBed.configureTestingModule({
-      imports: [CommonModule, DashboardComponent, ReactiveFormsModule],
-      providers: [provideAnimations(), ...sharedTestProviders],
+      imports: [DashboardComponent],
+      providers: [
+        provideAnimations(),
+        { provide: DashboardService, useValue: mockDashboardService },
+        { provide: PLATFORM_UTILS_TOKEN, useValue: mockPlatformUtils },
+      ],
     })
       .overrideComponent(DashboardComponent, {
         set: {
           imports: [
             CommonModule,
+            StatsWidgetStub,
             BsaasSubscriptionChartStub,
             BsaasRevenueChartStub,
             BsaasCustomerStatsStub,
@@ -44,6 +62,7 @@ describe('DashboardComponent', () => {
         },
       })
       .compileComponents();
+
     fixture = TestBed.createComponent(DashboardComponent);
     component = fixture.componentInstance;
   });

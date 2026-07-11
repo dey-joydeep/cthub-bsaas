@@ -10,7 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { CreateAppointmentParams } from '../../models/appointment-params.model';
-import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.enum';
+import { AppointmentStatus } from '@cthub-bsaas/shared';
 import { AppointmentService } from './appointment.service';
 
 @Component({

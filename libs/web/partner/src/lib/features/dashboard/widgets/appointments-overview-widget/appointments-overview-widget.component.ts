@@ -1,5 +1,5 @@
 import { CommonModule, formatDate } from '@angular/common';
-import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, OnInit, viewChild } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -27,7 +27,7 @@ import { catchError, finalize, takeUntil } from 'rxjs/operators';
 
 import { RouterModule } from '@angular/router';
 import { Appointment, AppointmentsFilter, AppointmentsOverview, StatusBadgeConfig } from './models/appointments-overview-widget.model';
-import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.enum';
+import { AppointmentStatus } from '@cthub-bsaas/shared';
 import { AppointmentsOverviewWidgetService } from './appointments-overview-widget.service';
 
 @Component({
@@ -91,11 +91,11 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
   statusFilter = new FormControl<AppointmentStatus | 'ALL'>('ALL');
   statusOptions = [
     { value: 'ALL' as const, label: 'All Statuses' },
-    { value: AppointmentStatus.PENDING, label: 'Pending' },
-    { value: AppointmentStatus.CONFIRMED, label: 'Confirmed' },
-    { value: AppointmentStatus.COMPLETED, label: 'Completed' },
-    { value: AppointmentStatus.CANCELLED, label: 'Cancelled' },
-    { value: AppointmentStatus.NOSHOW, label: 'No Show' },
+    { value: 'PENDING' as AppointmentStatus, label: 'Pending' },
+    { value: 'CONFIRMED' as AppointmentStatus, label: 'Confirmed' },
+    { value: 'COMPLETED' as AppointmentStatus, label: 'Completed' },
+    { value: 'CANCELLED' as AppointmentStatus, label: 'Cancelled' },
+    { value: 'NOSHOW' as AppointmentStatus, label: 'No Show' },
   ] as const;
 
   // Tabs
@@ -130,7 +130,10 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
   }
 
   ngAfterViewInit(): void {
-    this.dataSource.sort = this.sort;
+    const sortInstance = this.sort();
+    if (sortInstance) {
+      this.dataSource.sort = sortInstance;
+    }
   }
 
   ngOnDestroy(): void {
@@ -241,52 +244,49 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
    * @returns The icon name
    */
   getStatusIcon(status: AppointmentStatus | 'ALL'): string {
-    const icons: Record<AppointmentStatus | 'ALL', string> = {
+    const icons: Record<string, string> = {
       ALL: 'schedule',
-      [AppointmentStatus.PENDING]: 'schedule',
-      [AppointmentStatus.CONFIRMED]: 'check_circle',
-      [AppointmentStatus.COMPLETED]: 'done_all',
-      [AppointmentStatus.CANCELLED]: 'cancel',
-      [AppointmentStatus.NOSHOW]: 'no_accounts',
-      [AppointmentStatus.RESCHEDULED]: 'reschedule',
+      PENDING: 'schedule',
+      CONFIRMED: 'check_circle',
+      COMPLETED: 'done_all',
+      CANCELLED: 'cancel',
+      NOSHOW: 'no_accounts',
+      RESCHEDULED: 'reschedule',
     };
-    return icons[status as AppointmentStatus] || 'help';
+    return icons[status] || 'help';
   }
 
   /**
    * Get the status badge configuration
    */
   getStatusBadge(status: AppointmentStatus): StatusBadgeConfig {
-    // Convert string 'PENDING' to AppointmentStatus.PENDING if needed
-    const statusValue = status === 'PENDING' ? AppointmentStatus.PENDING : status;
-
-    const badges: Record<AppointmentStatus, StatusBadgeConfig> = {
-      [AppointmentStatus.PENDING]: {
+    const badges: Record<string, StatusBadgeConfig> = {
+      PENDING: {
         text: $localize`:@@DASHBOARD.APPOINTMENTS.STATUS.PENDING:Pending`,
         class: 'status-pending',
         icon: 'schedule',
       },
-      [AppointmentStatus.CONFIRMED]: {
+      CONFIRMED: {
         text: $localize`:@@DASHBOARD.APPOINTMENTS.STATUS.CONFIRMED:Confirmed`,
         class: 'status-confirmed',
         icon: 'check_circle',
       },
-      [AppointmentStatus.COMPLETED]: {
+      COMPLETED: {
         text: $localize`:@@DASHBOARD.APPOINTMENTS.STATUS.COMPLETED:Completed`,
         class: 'status-completed',
         icon: 'done_all',
       },
-      [AppointmentStatus.CANCELLED]: {
+      CANCELLED: {
         text: $localize`:@@DASHBOARD.APPOINTMENTS.STATUS.CANCELLED:Cancelled`,
         class: 'status-cancelled',
         icon: 'cancel',
       },
-      [AppointmentStatus.NOSHOW]: {
+      NOSHOW: {
         text: $localize`:@@DASHBOARD.APPOINTMENTS.STATUS.NOSHOW:No-show`,
         class: 'status-noshow',
         icon: 'no_accounts',
       },
-      [AppointmentStatus.RESCHEDULED]: {
+      RESCHEDULED: {
         text: $localize`:@@DASHBOARD.APPOINTMENTS.STATUS.RESCHEDULED:Rescheduled`,
         class: 'status-rescheduled',
         icon: 'reschedule',
@@ -294,8 +294,8 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
     };
 
     return (
-      badges[statusValue as AppointmentStatus] || {
-        text: statusValue,
+      badges[status] || {
+        text: status,
         class: 'status-unknown',
         icon: 'help',
       }

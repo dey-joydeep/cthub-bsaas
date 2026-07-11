@@ -96,7 +96,7 @@ export class ProductManagementComponent implements OnInit {
   addNewImage(image: Partial<ProductImageParams> = {}) {
     this.images.push(
       this.fb.group({
-        url: [image.url || '', Validators.required],
+        url: [image.url || ''],
         altText: [image.altText || ''],
         isDefault: [image.isDefault || false],
       }),

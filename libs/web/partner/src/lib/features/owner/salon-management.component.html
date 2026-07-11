@@ -17,8 +17,8 @@
     </mat-form-field>
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Contact Number</mat-label>
-      <input matInput formControlName="contact" required />
-      @if (salonForm.get('contact')?.invalid) {
+      <input matInput formControlName="phone" required />
+      @if (salonForm.get('phone')?.invalid) {
         <mat-error>Contact number required</mat-error>
       }
     </mat-form-field>

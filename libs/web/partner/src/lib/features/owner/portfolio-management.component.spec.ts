@@ -14,8 +14,7 @@ describe('PortfolioManagementComponent', () => {
       savePortfolio: vi.fn(),
     };
     await TestBed.configureTestingModule({
-      imports: [ReactiveFormsModule],
-      declarations: [PortfolioManagementComponent],
+      imports: [ReactiveFormsModule, PortfolioManagementComponent],
       providers: [{ provide: PortfolioService, useValue: portfolioService }],
     }).compileComponents();
     fixture = TestBed.createComponent(PortfolioManagementComponent);

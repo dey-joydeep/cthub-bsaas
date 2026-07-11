@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -73,7 +73,10 @@ export class ProductSalesWidgetComponent extends AbstractBaseComponent implement
     topSellingProducts: Array<{ name: string; quantity: number }>;
   } | null = null;
 
-  constructor(private productSalesWidgetService: ProductSalesWidgetService) {
+  constructor(
+    private productSalesWidgetService: ProductSalesWidgetService,
+    private cdr: ChangeDetectorRef,
+  ) {
     super();
   }
 
@@ -117,6 +120,7 @@ export class ProductSalesWidgetComponent extends AbstractBaseComponent implement
         this.dataSource = Array.isArray(data) ? data : [];
         this.totalItems = Array.isArray(data) ? data.length : 0;
         this.loading = false;
+        this.cdr.detectChanges();
       })
       .catch((err: any) => {
         console.error('Error loading product sales:', err);
@@ -124,6 +128,7 @@ export class ProductSalesWidgetComponent extends AbstractBaseComponent implement
         const errorMessage = $localize`:@@DASHBOARD.PRODUCT_SALES.ERROR_LOADING:Failed to load product sales.`;
         this.errorService.handleError(new Error(errorMessage));
         this.loading = false;
+        this.cdr.detectChanges();
       });
   }
 
@@ -158,6 +163,7 @@ export class ProductSalesWidgetComponent extends AbstractBaseComponent implement
             quantity: item.quantity || 0,
           })),
         };
+        this.cdr.detectChanges();
       })
       .catch((err: any) => {
         console.error('Error loading product sales summary:', err);

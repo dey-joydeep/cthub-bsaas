@@ -1,34 +1,30 @@
 import { TestBed } from '@angular/core/testing';
 import { DashboardService } from './dashboard.service';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { environment } from '../../../environments/environment';
+import { StorageService } from '@cthub-bsaas/web-core-platform';
+import { firstValueFrom, of } from 'rxjs';
 
 describe('DashboardService', () => {
   let service: DashboardService;
-  let httpMock: HttpTestingController;
+  let mockStorageService: { getItem$: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
+    mockStorageService = {
+      getItem$: vi.fn().mockReturnValue(of('demo-tenant')),
+    };
+
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [DashboardService],
+      providers: [DashboardService, { provide: StorageService, useValue: mockStorageService }],
     });
     service = TestBed.inject(DashboardService);
-    httpMock = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => {
-    httpMock.verify();
+  it('should be created', () => {
+    expect(service).toBeTruthy();
   });
 
-  it('should handle error responses gracefully', (done) => {
-    service.getStats().then(
-      () => fail('should have errored'),
-      (err) => {
-        expect(err).toBeDefined();
-        done();
-      },
-    );
-    const req = httpMock.expectOne(`${environment.apiUrl}/dashboard/stats`);
-    req.flush({ message: 'Failed to fetch stats.' }, { status: 500, statusText: 'Server Error' });
+  it('should get tenant id from storage service', async () => {
+    const tenantId = await firstValueFrom(service.getTenantId());
+    expect(tenantId).toBe('demo-tenant');
+    expect(mockStorageService.getItem$).toHaveBeenCalledWith('tenantId');
   });
 });

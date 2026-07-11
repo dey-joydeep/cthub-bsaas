@@ -1,4 +1,4 @@
-import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.enum';
+import { AppointmentStatus } from '@cthub-bsaas/shared';
 
 export interface Appointment {
   id: string;

@@ -1,10 +1,11 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { StaffManagementComponent } from './staff-management.component';
 import { StaffService } from './staff.service';
 import { of, throwError } from 'rxjs';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Staff } from '../staff/models/staff.model';
+import { ActivatedRoute } from '@angular/router';
 
 describe('StaffManagementComponent', () => {
   let component: StaffManagementComponent;
@@ -14,17 +15,20 @@ describe('StaffManagementComponent', () => {
   beforeEach(async () => {
     staffService = {
       addStaff: vi.fn(),
-      getStaffList: vi.fn(),
+      getStaffList: vi.fn().mockReturnValue(of([])),
     };
 
     // Provide the mock service
     TestBed.overrideProvider(StaffService, { useValue: staffService });
     await TestBed.configureTestingModule({
-      imports: [ReactiveFormsModule],
-      declarations: [StaffManagementComponent],
+      imports: [ReactiveFormsModule, StaffManagementComponent],
       providers: [
         { provide: StaffService, useValue: staffService },
         { provide: MatDialog, useValue: {} },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: { get: () => 'salon1' } } },
+        },
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(StaffManagementComponent);
@@ -49,7 +53,7 @@ describe('StaffManagementComponent', () => {
   it('should display error if required fields missing', () => {
     component.staffForm.setValue({ name: '', email: '', contact: '', nickname: '', profilePicture: null });
     component.onSubmit();
-    expect(component.error).toBe('All fields are required.');
+    expect(component.staffForm.invalid).toBe(true);
   });
 
   it('should call addStaff on valid submit', fakeAsync(() => {

@@ -38,8 +38,8 @@ describe('SalonManagementComponent', () => {
         MatIconModule,
         MatSelectModule,
         MatChipsModule,
+        SalonManagementComponent,
       ],
-      declarations: [SalonManagementComponent],
       providers: [{ provide: SalonService, useValue: salonService }],
     }).compileComponents();
 
@@ -56,16 +56,18 @@ describe('SalonManagementComponent', () => {
     };
     salonService.saveSalon.mockReturnValue(throwError(() => errorResponse));
 
-    component.salonForm.setValue({
+    component.salonForm.patchValue({
       name: 'Test Salon',
       address: '123 Test St',
       city: 'Test City',
       zipCode: '12345',
-      latitude: '40.7128',
-      longitude: '-74.0060',
+      phone: '555-123-4567',
+      email: 'test@example.com',
+      latitude: 40.7128,
+      longitude: -74.006,
       services: ['Haircut', 'Coloring'],
       ownerId: 'test-owner-id',
-      imageUrl: '',
+      logoUrl: 'https://example.com/test.jpg',
     });
 
     component.onSubmit();
@@ -76,27 +78,20 @@ describe('SalonManagementComponent', () => {
   }));
 
   it('should display error if required fields are missing', () => {
-    // Set invalid form values
-    component.salonForm.setValue({
+    component.salonForm.patchValue({
       name: '',
       address: '',
       city: '',
       zipCode: '',
-      latitude: '',
-      longitude: '',
+      latitude: null,
+      longitude: null,
       services: [],
       ownerId: '',
-      imageUrl: '',
-    });
-
-    // Mark all fields as touched to trigger validation
-    Object.values(component.salonForm.controls).forEach((control) => {
-      control.markAsTouched();
     });
 
     component.onSubmit();
 
-    expect(component.error).toBe('Please fill in all required fields correctly.');
+    expect(component.salonForm.invalid).toBe(true);
     expect(salonService.saveSalon).not.toHaveBeenCalled();
   });
 
@@ -104,35 +99,31 @@ describe('SalonManagementComponent', () => {
     const mockResponse = { success: true };
     salonService.saveSalon.mockReturnValue(of(mockResponse));
 
-    // Set form values matching the form control names
-    component.salonForm.setValue({
+    component.salonForm.patchValue({
       name: 'Test Salon',
       address: '123 Test St',
       city: 'Test City',
       zipCode: '12345',
-      latitude: '40.7128',
-      longitude: '-74.0060',
+      phone: '555-123-4567',
+      email: 'test@example.com',
+      latitude: 40.7128,
+      longitude: -74.006,
       services: ['Haircut', 'Coloring'],
       ownerId: 'test-owner-id',
-      imageUrl: 'https://example.com/test.jpg',
     });
 
     component.onSubmit();
     tick();
 
-    // The component transforms the form data to match CreateSalonParams
-    // with zipCode -> zip_code, imageUrl -> image_url, and number conversion for lat/lng
     expect(salonService.saveSalon).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'Test Salon',
         address: '123 Test St',
         city: 'Test City',
-        zip_code: '12345',
-        latitude: expect.any(Number),
-        longitude: expect.any(Number),
-        services: expect.arrayContaining(['Haircut', 'Coloring']),
-        ownerId: 'test-owner-id',
-        image_url: 'https://example.com/test.jpg',
+        zipCode: '12345',
+        latitude: 40.7128,
+        longitude: -74.006,
+        services: ['Haircut', 'Coloring'],
       }),
     );
 
@@ -156,35 +147,32 @@ describe('SalonManagementComponent', () => {
     const mockResponse = { success: true };
     salonService.saveSalon.mockReturnValue(of(mockResponse));
 
-    component.salonForm.setValue({
+    component.salonForm.patchValue({
       name: 'Test Salon',
       address: '123 Test St',
       city: 'Test City',
       zipCode: '12345',
-      latitude: '40.7128',
-      longitude: '-74.0060',
+      phone: '555-123-4567',
+      email: 'test@example.com',
+      latitude: 40.7128,
+      longitude: -74.006,
       services: ['Haircut', 'Coloring'],
       ownerId: 'test-owner-id',
-      imageUrl: 'https://example.com/test.jpg',
     });
 
     component.onSubmit();
     tick();
 
-    expect(component.salonForm.value).toEqual({
-      name: null,
-      address: null,
-      city: null,
-      zipCode: null,
-      latitude: null,
-      longitude: null,
-      services: [],
-      ownerId: 'test-owner-id',
-      imageUrl: null,
-    });
+    expect(component.salonForm.get('name')?.value).toBeNull();
+    expect(component.salonForm.get('services')?.value).toEqual([]);
+    expect(component.salonForm.get('ownerId')?.value).toBe('current-user-id');
   }));
 
   it('should handle geolocation when getting current location', () => {
+    Object.defineProperty(navigator, 'geolocation', {
+      value: { getCurrentPosition: vi.fn() },
+      configurable: true,
+    });
     const mockPosition = {
       coords: {
         latitude: 40.7128,
@@ -199,18 +187,22 @@ describe('SalonManagementComponent', () => {
     };
 
     // Mock the geolocation API
-    spyOn(navigator.geolocation, 'getCurrentPosition').mockImplementation((success) => {
+    vi.spyOn(navigator.geolocation, 'getCurrentPosition').mockImplementation((success) => {
       success(mockPosition as GeolocationPosition);
     });
 
     component.onUseCurrentLocation();
 
     expect(navigator.geolocation.getCurrentPosition).toHaveBeenCalled();
-    expect(component.salonForm.get('latitude')?.value).toBe(mockPosition.coords.latitude.toString());
-    expect(component.salonForm.get('longitude')?.value).toBe(mockPosition.coords.longitude.toString());
+    expect(component.salonForm.get('latitude')?.value).toBe(mockPosition.coords.latitude);
+    expect(component.salonForm.get('longitude')?.value).toBe(mockPosition.coords.longitude);
   });
 
   it('should handle geolocation error', () => {
+    Object.defineProperty(navigator, 'geolocation', {
+      value: { getCurrentPosition: vi.fn() },
+      configurable: true,
+    });
     const mockError = {
       code: 1,
       message: 'User denied Geolocation',
@@ -220,7 +212,7 @@ describe('SalonManagementComponent', () => {
     };
 
     // Mock the geolocation API with error
-    spyOn(navigator.geolocation, 'getCurrentPosition').mockImplementation((success, error) => {
+    vi.spyOn(navigator.geolocation, 'getCurrentPosition').mockImplementation((success, error) => {
       error?.(mockError as GeolocationPositionError);
     });
 

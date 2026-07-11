@@ -29,7 +29,7 @@ export class PortfolioManagementComponent {
     this.portfolioForm = this.fb.group({
       title: ['', Validators.required],
       description: ['', Validators.required],
-      image: [null as File | null, [Validators.required]],
+      image: [null as File | null],
     });
   }
 
@@ -50,7 +50,10 @@ export class PortfolioManagementComponent {
   }
 
   onSubmit() {
-    if (this.portfolioForm.invalid) return;
+    if (this.portfolioForm.invalid) {
+      this.error = 'Title and description are required.';
+      return;
+    }
     this.loading = true;
     this.error = null;
     // Ensure all required fields are present and not null
