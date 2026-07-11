@@ -3,7 +3,6 @@ import { SettingsComponent } from './settings.component';
 import { CommonModule } from '@angular/common';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
-import { sharedTestProviders } from '../../shared/test-setup';
 
 describe('SettingsComponent', () => {
   let component: SettingsComponent;
@@ -12,7 +11,7 @@ describe('SettingsComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [CommonModule, SettingsComponent],
-      providers: [...sharedTestProviders, provideRouter([]), provideAnimations()],
+      providers: [provideRouter([]), provideAnimations()],
     }).compileComponents();
     fixture = TestBed.createComponent(SettingsComponent);
     component = fixture.componentInstance;
