@@ -194,7 +194,14 @@ app.use(
     maxAge: '1y',
     index: 'index.html',
     setHeaders: (res, path) => {
-      if (path.endsWith('.scss') || path.endsWith('.js') || path.endsWith('.woff2') || path.endsWith('.woff') || path.endsWith('.ttf')) {
+      if (
+        path.endsWith('.css') ||
+        path.endsWith('.scss') ||
+        path.endsWith('.js') ||
+        path.endsWith('.woff2') ||
+        path.endsWith('.woff') ||
+        path.endsWith('.ttf')
+      ) {
         res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
       } else if (path.endsWith('.html')) {
         res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
