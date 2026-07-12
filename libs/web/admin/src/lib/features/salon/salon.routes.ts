@@ -6,8 +6,8 @@ import { TopSalonsComponent } from './components/top-salons/top-salons.component
 
 export const SALON_ROUTES: Routes = [
   { path: '', component: SalonListComponent },
-  { path: 'profile/:id', component: SalonProfileComponent },
-  { path: ':id', component: SalonProfileComponent },
   { path: 'search', component: SalonSearchComponent },
   { path: 'top', component: TopSalonsComponent },
+  { path: 'profile/:id', component: SalonProfileComponent },
+  { path: ':id', component: SalonProfileComponent },
 ];
