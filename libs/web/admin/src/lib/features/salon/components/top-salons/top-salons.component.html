@@ -12,7 +12,7 @@
   @if (!loading && salons().length === 0 && !error) {
     <div>No salons() found.</div>
   }
-  @if (salons.length > 0) {
+  @if (salons().length > 0) {
     <div class="salon-list">
       @for (salon of salons(); track salon) {
         <div class="salon-card">
