@@ -1,5 +1,6 @@
 import '@angular/localize/init';
 import '@analogjs/vite-plugin-angular/setup-vitest';
+import { afterEach } from 'vitest';
 import { getTestBed } from '@angular/core/testing';
 import {
   BrowserDynamicTestingModule,
@@ -11,3 +12,7 @@ getTestBed().initTestEnvironment(
   BrowserDynamicTestingModule,
   platformBrowserDynamicTesting(),
 );
+
+afterEach(() => {
+  getTestBed().resetTestingModule();
+});
