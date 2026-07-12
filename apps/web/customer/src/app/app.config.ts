@@ -19,7 +19,7 @@ import { LoginApiService } from '@cthub-bsaas/web-customer/auth';
 import { FORGOT_PASSWORD_API, REGISTER_API, type ForgotPasswordApiPort, type RegisterApiPort } from '@cthub-bsaas/web-customer/auth';
 import { ErrorHandlerService, ERROR_INTERCEPTOR_PROVIDER, loadingInterceptor } from '@cthub-bsaas/web-core-common';
 import { ssrInterceptor } from '@cthub-bsaas/web-core-platform';
-import { AUTH_STATE_PORT } from '@cthub-bsaas/web-core-auth';
+import { AUTH_STATE_PORT, CURRENT_USER, CurrentUserService } from '@cthub-bsaas/web-core-auth';
 import { AuthService } from '@cthub-bsaas/web-customer/auth';
 
 // AoT requires an exported function for factories
@@ -45,6 +45,7 @@ export const appConfig: ApplicationConfig = {
     { provide: AUTH_STATE_PORT, useExisting: AuthService },
     { provide: LOGIN_API, useClass: LoginApiService },
     { provide: AUTH_STATE_SETTER, useExisting: AuthService },
+    { provide: CURRENT_USER, useExisting: CurrentUserService },
     // Token-based auth APIs (temporary placeholder implementations)
     {
       provide: FORGOT_PASSWORD_API,

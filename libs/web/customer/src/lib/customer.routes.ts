@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from '@cthub-bsaas/web-core/auth';
 
 export const CUSTOMER_ROUTES: Routes = [
+  { path: '', redirectTo: 'appointments', pathMatch: 'full' },
   {
     path: 'me',
     loadComponent: () => import('./features/profile/profile.component').then((m) => m.ProfileComponent),
