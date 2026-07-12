@@ -9,9 +9,10 @@ const envValidationSchema = z
     DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
     JWT_SECRET: z.string().min(1).optional(),
     JWT_ACCESS_SECRET: z.string().min(1).optional(),
+    JWT_REFRESH_SECRET: z.string().min(1).optional(),
   })
-  .refine((data) => data.JWT_SECRET || data.JWT_ACCESS_SECRET, {
-    message: 'JWT_SECRET is required',
+  .refine((data) => data.JWT_SECRET || (data.JWT_ACCESS_SECRET && data.JWT_REFRESH_SECRET), {
+    message: 'Either JWT_SECRET or both JWT_ACCESS_SECRET and JWT_REFRESH_SECRET are required',
   });
 
 const encryptionKeySchema = z.string().regex(/^[0-9a-fA-F]{64}$/, 'encryption.key must be a 64-character hex string');
