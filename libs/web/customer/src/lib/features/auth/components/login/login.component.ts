@@ -1,6 +1,6 @@
 // Core
 import { isPlatformBrowser } from '@angular/common';
-import { Component, OnDestroy, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
@@ -53,6 +53,7 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
   private storageService = inject<StorageService>(StorageService);
   private loginService = inject<LoginService>(LoginService);
   private platformId = inject(PLATFORM_ID);
+  private cdr = inject(ChangeDetectorRef);
   private ssrDebug = inject<any>('SSR_DEBUG' as any, { optional: true });
 
   // Component state
@@ -150,6 +151,7 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
         clearInterval(timer);
         this.resendDisabled = false;
       }
+      this.cdr.markForCheck();
     }, 1000);
   }
 
@@ -228,11 +230,13 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
             this.loading = false;
             this.error = 'Unknown user type';
           }
+          this.cdr.markForCheck();
         },
         error: (error: any) => {
           this.loading = false;
           this.error = error.error?.error || 'Login failed';
           this.errorService.handleError(error);
+          this.cdr.markForCheck();
         },
       });
   }
@@ -268,12 +272,14 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
           }
 
           this.loading = false;
+          this.cdr.markForCheck();
           this.router.navigateByUrl(this.returnUrl);
         },
         error: (error: any) => {
           this.loading = false;
           this.error = error.message || 'Invalid OTP';
           this.errorService.handleError(error);
+          this.cdr.markForCheck();
         },
       });
   }
@@ -297,6 +303,7 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
         clearInterval(this.resendTimer);
         this.resendDisabled = false;
       }
+      this.cdr.markForCheck();
     }, 1000);
   }
 
