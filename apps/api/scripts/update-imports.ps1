@@ -1,5 +1,5 @@
 # Update import paths in all TypeScript files
-$baseDir = "e:\workspace\cthub-bsaas\bsaas-back\src"
+$baseDir = Join-Path $PSScriptRoot "..\src"
 
 # Define the path mappings
 $pathMappings = @{

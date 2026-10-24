@@ -1,25 +1,18 @@
-// Frontend application Jest configuration
 export default {
-  preset: 'jest-preset-angular/presets/defaults',
+  displayName: 'web-app-partner',
+  preset: '../../../jest.preset.cjs',
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/src/setup-jest.ts'],
-  testMatch: ['**/+(*.)+(spec|test).+(ts|js)'],
-  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
-  moduleNameMapper: {
-    '^@app/(.*)$': '<rootDir>/src/app/$1',
-    '^@env/(.*)$': '<rootDir>/src/environments/$1',
-    '^@shared/(.*)$': '<rootDir>/../../libs/shared/src/$1',
-    '^@frontend/(.*)$': '<rootDir>/../../libs/frontend/src/$1',
-    '^@cthub-bsaas/(.*)$': '<rootDir>/../../libs/frontend/src/app/$1',
-    '^@cthub-bsaas/shared/(.*)$': '<rootDir>/../../libs/frontend/src/app/shared/$1',
+  transform: {
+    '^.+\\.(ts|mjs|js|html)$': [
+      'jest-preset-angular',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+        stringifyContentPathRegex: '\\.(html|svg)$',
+      },
+    ],
   },
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.spec.json',
-      stringifyContentPathRegex: '\\.(html|svg)$',
-      isolatedModules: true,
-    },
-  },
+  transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
   snapshotSerializers: [
     'jest-preset-angular/build/serializers/no-ng-attributes',
     'jest-preset-angular/build/serializers/ng-snapshot',

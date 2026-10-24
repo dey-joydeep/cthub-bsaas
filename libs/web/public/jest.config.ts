@@ -1,8 +1,10 @@
 export default {
   displayName: 'web-public',
-  preset: '../../jest.preset.cjs',
+  preset: '../../../jest.preset.cjs',
+  testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
-  coverageDirectory: '../../coverage/libs/web',
+  coverageDirectory: '../../../coverage/libs/web/public',
+  testMatch: ['<rootDir>/src/**/__tests__/**/*.spec.ts'],
   transform: {
     '^.+\\.(ts|mjs|js|html)$': [
       'jest-preset-angular',

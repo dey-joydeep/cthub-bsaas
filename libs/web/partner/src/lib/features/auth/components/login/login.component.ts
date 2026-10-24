@@ -1,6 +1,6 @@
 // Core
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, Inject, OnDestroy, OnInit, Optional, PLATFORM_ID } from '@angular/core';
+import { Component, Inject, inject, OnDestroy, OnInit, Optional, PLATFORM_ID } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
@@ -76,6 +76,7 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
   // Private state
   private resendTimer: any;
   private returnUrl = '';
+  protected platformUtils = inject<PlatformUtils>(PLATFORM_UTILS_TOKEN);
 
   // Debug logging helper methods
   private logDebug(message: string, data?: any) {
@@ -94,7 +95,6 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
   // Removed unused logError() to satisfy noUnusedLocals
 
   constructor(
-    @Inject(PLATFORM_UTILS_TOKEN) protected platformUtils: PlatformUtils,
     @Inject(FormBuilder) private fb: FormBuilder,
     @Inject(Router) private router: Router,
     @Inject(ActivatedRoute) private route: ActivatedRoute,
