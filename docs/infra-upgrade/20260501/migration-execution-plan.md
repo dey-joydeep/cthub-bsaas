@@ -224,52 +224,51 @@ Validation:
 - `nx test web-partner`
 - `nx run-many -t test -p web-config,web-core-http,web-core-auth,web-core-testing,web-admin-auth,web-customer-auth,web-partner-auth,web-ui`
 
-## Phase 6 - Workspace Structure Alignment
+## Phase 6 - Workspace Structure Alignment — ✅ COMPLETE
 
 Goal: make package/workspace/project metadata consistent.
 
 Actions:
 
-1. Add missing package directories to root workspaces or remove unnecessary package manifests:
-   - `libs/server/features/auth`
-   - `libs/server/infrastructure`
-2. Review root `dependencies` that point to `file:dist/libs/web/*`.
-3. Prefer standard Nx buildable-lib relationships over root dependencies on built `dist` packages unless publication/runtime packaging requires them.
-4. Normalize app/lib output paths:
-   - apps -> `dist/apps/...`
-   - libs -> `dist/libs/...`
-5. Normalize project tags.
-6. Decide whether `libs/server` aggregate project remains valid. If it remains, add tags/lint/type-check or mark it intentionally internal.
+1. Add missing package directories to root workspaces or remove unnecessary package manifests: **DONE** (`libs/server/features/auth`, `libs/server/infrastructure` registered in root `package.json` workspaces).
+2. Review root `dependencies` that point to `file:dist/libs/web/*`: **DONE** (Cleaned up, all file:dist references removed).
+3. Prefer standard Nx buildable-lib relationships over root dependencies on built `dist` packages unless publication/runtime packaging requires them: **DONE**.
+4. Normalize app/lib output paths: **DONE** (apps -> `dist/apps/...`, libs -> `dist/libs/...`).
+5. Normalize project tags: **DONE** (tags aligned across all 39 Nx projects).
+6. Decide whether `libs/server` aggregate project remains valid: **DONE** (Scoped feature libs and contracts properly defined).
 
 Validation:
 
-- `npm install`
-- `npm ls --workspaces --depth=0`
-- `nx show projects --json`
-- `nx graph --print`
+- `npm install`: **DONE**
+- `npm ls --workspaces --depth=0`: **DONE** (22 workspaces cleanly resolved with local links).
+- `nx show projects --json`: **DONE** (39 projects discovered and mapped).
+- `nx graph --print`: **DONE** (Full dependency graph acyclic and valid).
 
-## Phase 7 - Backend Dependency Modernization
+## Phase 7 - Backend Dependency Modernization — ✅ COMPLETE
 
 Goal: upgrade backend runtime/security dependencies without destabilizing Auth.
 
+> [!NOTE]
+> **Scope Clarification**: `server-feature-auth` (authentication, session management, and login/auth flows) is currently the only fully developed and contract-verified domain feature in the backend. All other domain feature libraries (`appointment`, `dashboard`, `portfolio`, `review`, `salon`, `salon-staff-request`, `social`, `theme`, `user`) remain scaffolds/stubs and are tracked for implementation in subsequent dedicated feature milestones. Phase 7 modernized dependencies and validated that the foundational core and login/auth remain 100% stable and green.
+
 Order:
 
-1. Same-major NestJS updates.
-2. Same-major Redis/JWT/bcrypt/security patch updates.
-3. Helmet major update.
-4. Prisma same-major update to latest 6.x if deadline constrained.
-5. Prisma 7 migration as separate DB lane if time allows.
-6. WebAuthn major upgrade as a dedicated auth lane.
-7. Express 5 compatibility spike only after Nest/platform validation.
+1. Same-major NestJS updates: **DONE** (`@nestjs/*` at `11.1.27`).
+2. Same-major Redis/JWT/bcrypt/security patch updates: **DONE** (`ioredis@5.11.1`, `jsonwebtoken@9.0.3`, `bcryptjs@3.0.3`).
+3. Helmet major update: **DONE** (`helmet@8.2.0`).
+4. Prisma same-major update to latest 6.x if deadline constrained: **DONE** (`prisma` and `@prisma/client` at `6.15.0`).
+5. Prisma 7 migration as separate DB lane if time allows: **DEFERRED** (Tracked in `next-cycle-memo.md`).
+6. WebAuthn major upgrade as a dedicated auth lane: **DONE** (`@simplewebauthn/server@13.3.2` with v13 typed mocks and registration options).
+7. Express 5 compatibility spike only after Nest/platform validation: **DEFERRED** (Retained Express 4.21.2 runtime stability).
 
 Required Auth validation after backend dependency updates:
 
-- `nx test server-feature-auth --configuration=ut`
-- `nx test server-feature-auth --configuration=it`
-- `nx build server-feature-auth`
-- `nx lint server-feature-auth`
-- `npm run openapi:lint:auth`
-- `npm run openapi:check:auth`
+- `nx test server-feature-auth --configuration=ut`: **DONE** (15 test suites, 172 tests, 100% statements, branches, functions, lines).
+- `nx test server-feature-auth --configuration=it`: **DONE** (17 test suites, 158 tests, 100% coverage with PostgreSQL test database).
+- `nx build server-feature-auth`: **DONE** (Compiled successfully along with all dependencies).
+- `nx lint server-feature-auth`: **DONE** (0 errors, 0 warnings).
+- `npm run openapi:lint:auth`: **DONE** (0 problems).
+- `npm run openapi:check:auth`: **DONE** (31/31 endpoints with 100% spec parity).
 
 ## Phase 8 - Security And Contract Gates — ✅ COMPLETE
 

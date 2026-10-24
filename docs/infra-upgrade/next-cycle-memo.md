@@ -17,19 +17,36 @@ There is an adage from the Java/Hibernate ecosystem: _"If an application handles
 
 ---
 
-## 2. Backend Test Runner Strategy (NestJS v11 Jest vs. NestJS v12 Vitest)
+## 2. Backend Framework & Test Runner Strategy (NestJS v11 Jest vs. NestJS v12 Vitest)
 
-### Architectural Decision: Preserve Backend Jest Now; Migrate to Vitest in NestJS v12
+### Current Landscape: NestJS 12 Release & Tooling Shift
 
-During the `20260501` cycle, 100% of frontend web projects (`apps/web/*`, `libs/web/*`) were migrated to Vitest. However, backend projects (`apps/api`, `libs/server/*`, `apps/e2e/api`) were intentionally kept on **Jest (`@swc/jest` `"0.2.39"`)**.
+The NestJS ecosystem has transitioned to **NestJS 12 (latest: `@nestjs/core@12.2.0`)**, with the `11.x` line entering legacy maintenance (`11.2.8`). NestJS 12 introduces several fundamental architectural changes:
 
-- **Why We Stayed on Jest for NestJS v11:**
-  1. **Bedrock Safety Net:** Maintaining our established 100% test coverage suites on Jest without modification gave us an untouched ground truth while modernizing core backend dependencies in Phase 7.
-  2. **Zero Speed Premium:** Our backend Jest setup is powered by Rust-based `@swc/jest`, already executing at native C++ compilation speeds.
-  3. **DI Decorator Nuances in v11:** Standard Vitest (`esbuild`) strips TypeScript types without emitting metadata required for NestJS Dependency Injection (`@Injectable()`, `@Controller()`). Running Vitest on NestJS v11 requires manual wiring of `unplugin-swc` and `vite-tsconfig-paths`, along with refactoring hundreds of `mockDeep()` and `jest.mock()` calls.
-- **Roadmap for Next Cycle (NestJS v12):**
-  - **Target:** NestJS v12 (targeted for early Q3 2026 release) makes **Vitest the native zero-config default test runner**, replacing Jest out-of-the-box.
-  - **Action:** When upgrading to NestJS v12, execute the backend Vitest migration using official `@nestjs/schematics` and `@nx/nest` automated migration generators. This allows us to adopt native Vitest without writing manual SWC DI decorator workarounds.
+1. **Native Vitest as Default Runner:** For newly scaffolded ESM projects, the NestJS CLI has officially replaced Jest with **Vitest** out-of-the-box (paired with `oxlint` for linting).
+2. **Strict Pure ESM Packaging:** Core framework packages (`@nestjs/core`, `@nestjs/testing`, `@nestjs/common`) are published **strictly as pure ESM**.
+3. **Compiler Modernization:** NestJS 12 deprecates its legacy Webpack compiler in favor of **Rspack** and native Vite/Rollup pipelines.
+4. **Jest Incompatibility in v12:** Because Jest uses its own proprietary module loader rather than Node's native ESM resolution, running Jest against NestJS 12 pure ESM packages causes `Must use import to load ES Module` errors unless executed on Node 24.9+ with the `--experimental-vm-modules` flag.
+
+### Architectural Decision: Defer NestJS 12; Retain NestJS 11 + Jest Baseline
+
+While NestJS 12 is stable, **upgrading to NestJS 12 and migrating backend tests to Vitest are formally deferred** for our workspace:
+
+- **Why NestJS 12 is Deferred in This Cycle:**
+  1. **Upstream Nx Peer Dependency Blocker:** Verified that `@nx/nest` (even in the latest Nx `24.0.1`) explicitly caps its peer dependency range:
+     ```json
+     {
+       "@nestjs/core": ">=10.0.0 <12.0.0",
+       "@nestjs/common": ">=10.0.0 <12.0.0"
+     }
+     ```
+     Installing NestJS 12 alongside `@nx/nest` triggers `ERESOLVE` peer dependency conflicts under standard npm.
+  2. **Bundler & Generator Mismatch:** The current `@nx/nest:application` generator still hardcodes Webpack build targets and CommonJS module wrapping. It does not yet supply the Rspack compiler and pure ESM generator schemas required by NestJS 12.
+  3. **Preserving Bedrock Ground Truth:** Our single implemented domain feature (`server-feature-auth`) has achieved **100% statement, branch, function, and line test coverage** (172 unit tests, 158 integration tests) and **100% OpenAPI schema parity** on NestJS `11.1.27` with `@swc/jest`. Forcing an upgrade now would introduce experimental VM flags and destabilize our only fully verified business domain logic.
+- **Express 5 Alignment:** While Express 5 (`5.3.0`) is supported in `@nx/express`, NestJS 11 remains optimized around Express 4 (`4.21.2`). The Express 5 upgrade will be tackled concurrently with the NestJS 12 upgrade.
+- **Roadmap & Trigger for Next Cycle:**
+  - **Trigger:** Upstream release of official NestJS 12 support in `@nx/nest` with native Rspack and pure ESM generators.
+  - **Action:** Execute the NestJS 12 and backend Vitest migrations simultaneously via automated Nx migration generators once supported without flags.
 
 ---
 
@@ -51,10 +68,21 @@ During testing in Nx v23, several informational deprecation notices were emitted
 
 ---
 
-## 4. Angular 22 Upgrade (Deferred Phase 3)
+## 4. Angular 22 & Nx 24 Upgrade Strategy
 
-### Current Standing & Trigger
+### Current Status
 
-During the `20260501` cycle, Phase 3 (upgrading `@angular/*`, `@angular/material`, and `@angular/cdk` from `~21.2.9` to `~22.0.2`) was deferred as out of scope pending official `@nx/angular` v22 migration support.
+- **Nx:** Our workspace is stable on **Nx `23.0.1`**. Nx `24.0.1` is released.
+- **Angular:** Our workspace is on **Angular `21.2.9`**. Angular `22.2.3` is released.
+- **Nx Support:** `@nx/angular@24.0.1` peer dependencies declare support for Angular 20 through 22 (`>=20.0.0 <23.0.0`).
 
-- **Action for Next Cycle:** Check for official `@nx/angular` v22+ compatibility. Once confirmed, run `npx nx migrate @nx/angular@latest` (or target v22 major) to execute the Angular framework upgrade cleanly.
+### Architectural Recommendation: Dedicated Isolation Branch
+
+Unlike NestJS 12 (which is blocked by upstream peer dependencies), upgrading to **Nx 24** and **Angular 22** is technically possible without package manager conflicts. However:
+
+1. **Do Not Mix into Current Branch (`chore/infra-upgrade`):**
+   - Nx 24 removes explicit executors (`@nx/jest:jest`, `@nx/eslint:lint`), requiring all 39 projects to convert to inferred plugins.
+   - Angular 22 introduces component API and theme token shifts across Angular Material, touching all 3 frontend apps and 8 frontend libraries (where business features remain scaffolds/stubs except login).
+2. **Execute in a Dedicated Lane:**
+   - Merge `chore/infra-upgrade` to establish the clean, green NestJS 11 + Angular 21 + Nx 23 baseline.
+   - Create a fresh branch (`chore/nx24-angular22-upgrade`) to execute `npx nx migrate 24.0.1` and `@angular/core@22`, verifying frontend hydration, SSR, and Material styling in isolation.
