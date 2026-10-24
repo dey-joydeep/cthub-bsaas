@@ -110,7 +110,8 @@ jobs:
             FRONTEND_LINT_PROJECTS="$(npx nx show projects --withTarget=lint | filter_frontend_projects | paste -sd, -)"
             FRONTEND_TEST_PROJECTS="$(npx nx show projects --withTarget=test | filter_frontend_projects | paste -sd, -)"
           else
-            SOURCE_IMPACTING_CHANGES="$(git diff --name-only "$NX_BASE" "$NX_HEAD" | grep -E '^(apps/web(/.*)?/(src/|eslint\.config\.js$|project\.json$|jest\.config\.(js|ts)$|tsconfig(\.[^/]+)?\.json$|ng-package\.json$|package\.json$|tailwind\.config\.(js|cjs|mjs|ts)$|postcss\.config\.(js|cjs|mjs|ts)$)|libs/web(/.*)?/(src/|eslint\.config\.js$|project\.json$|jest\.config\.(js|ts)$|tsconfig(\.[^/]+)?\.json$|ng-package\.json$|package\.json$|tailwind\.config\.(js|cjs|mjs|ts)$|postcss\.config\.(js|cjs|mjs|ts)$)|libs/shared(/.*)?/(src/|eslint\.config\.js$|project\.json$|jest\.config\.(js|ts)$|tsconfig(\.[^/]+)?\.json$|ng-package\.json$|package\.json$)|package.json$|package-lock.json$|nx.json$|tsconfig.base.json$)' || true)"
+            DIFF_FILES="$(git diff --name-only "$NX_BASE" "$NX_HEAD")"
+            SOURCE_IMPACTING_CHANGES="$(echo "$DIFF_FILES" | grep -E '^(apps/web(/.*)?/(src/|eslint\.config\.js$|project\.json$|jest\.config\.(js|ts)$|tsconfig(\.[^/]+)?\.json$|ng-package\.json$|package\.json$|tailwind\.config\.(js|cjs|mjs|ts)$|postcss\.config\.(js|cjs|mjs|ts)$)|libs/web(/.*)?/(src/|eslint\.config\.js$|project\.json$|jest\.config\.(js|ts)$|tsconfig(\.[^/]+)?\.json$|ng-package\.json$|package\.json$|tailwind\.config\.(js|cjs|mjs|ts)$|postcss\.config\.(js|cjs|mjs|ts)$)|libs/shared(/.*)?/(src/|eslint\.config\.js$|project\.json$|jest\.config\.(js|ts)$|tsconfig(\.[^/]+)?\.json$|ng-package\.json$|package\.json$)|package.json$|package-lock.json$|nx.json$|tsconfig.base.json$)' || true)"
 
             if [ -z "$SOURCE_IMPACTING_CHANGES" ]; then
               echo "No source-impacting frontend changes detected. Skipping frontend lint/test."

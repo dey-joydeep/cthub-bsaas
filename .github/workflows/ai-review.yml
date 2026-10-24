@@ -64,6 +64,18 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Build frontend dependency declarations
+        id: webdeps
+        if: always()
+        continue-on-error: true
+        run: |
+          TYPECHECK_PROJECTS="$(npx nx show projects --affected --base=origin/${{ github.base_ref }} --head=HEAD --withTarget=type-check | grep -Ev '^(cthub-bsaas)$' || true)"
+          if echo "$TYPECHECK_PROJECTS" | grep -Eq '^(web-lib-admin|web-lib-customer|web-lib-partner)$'; then
+            npx nx run-many -t build --projects="shared,web-config,web-core-auth,web-core-common,web-core-platform,web-ui" --parallel=3
+          else
+            echo "No frontend declaration build required."
+          fi
+
       - name: Run affected lint
         id: lint
         continue-on-error: true
@@ -80,18 +92,6 @@ jobs:
           echo "count=${LINT_ERRORS:-0}" >> $GITHUB_OUTPUT
           echo "exit_code=$NX_EXIT" >> $GITHUB_OUTPUT
           exit 0
-
-      - name: Build frontend dependency declarations
-        id: webdeps
-        if: always()
-        continue-on-error: true
-        run: |
-          TYPECHECK_PROJECTS="$(npx nx show projects --affected --base=origin/${{ github.base_ref }} --head=HEAD --withTarget=type-check | grep -Ev '^(cthub-bsaas)$' || true)"
-          if echo "$TYPECHECK_PROJECTS" | grep -Eq '^(web-lib-admin|web-lib-customer|web-lib-partner)$'; then
-            npx nx run-many -t build --projects="shared,web-config,web-core-auth,web-core-common,web-core-platform,web-ui" --parallel=3
-          else
-            echo "No frontend declaration build required."
-          fi
 
       - name: Run affected type check
         id: typecheck
@@ -133,7 +133,7 @@ jobs:
         if: always()
         run: |
           SETUP_FAILURE=0
-          if [ "${{ steps.install.outcome }}" != "success" ] || [ "${{ steps.prisma.outcome }}" != "success" ] || [ "${{ steps.changed.outcome }}" != "success" ] || [ "${{ steps.webdeps.outcome }}" = "failure" ]; then
+          if [ "${{ steps.install.outcome }}" != "success" ] || [ "${{ steps.prisma.outcome }}" != "success" ] || [ "${{ steps.changed.outcome }}" != "success" ] || [ "${{ steps.webdeps.outcome }}" = "failure" ] || [ "${{ steps.lint.outcome }}" = "failure" ] || [ "${{ steps.lint.outcome }}" = "cancelled" ] || [ "${{ steps.typecheck.outcome }}" = "failure" ] || [ "${{ steps.typecheck.outcome }}" = "cancelled" ] || [ "${{ steps.tests.outcome }}" = "failure" ] || [ "${{ steps.tests.outcome }}" = "cancelled" ]; then
             SETUP_FAILURE=1
           fi
 
@@ -186,7 +186,7 @@ jobs:
           TEST_FAILURES="${{ steps.tests.outputs.failed || '0' }}"
           TEST_EXIT="${{ steps.tests.outputs.exit_code || '0' }}"
           SETUP_FAILURE=0
-          if [ "${{ steps.install.outcome }}" != "success" ] || [ "${{ steps.prisma.outcome }}" != "success" ] || [ "${{ steps.changed.outcome }}" != "success" ] || [ "${{ steps.webdeps.outcome }}" = "failure" ]; then
+          if [ "${{ steps.install.outcome }}" != "success" ] || [ "${{ steps.prisma.outcome }}" != "success" ] || [ "${{ steps.changed.outcome }}" != "success" ] || [ "${{ steps.webdeps.outcome }}" = "failure" ] || [ "${{ steps.lint.outcome }}" = "failure" ] || [ "${{ steps.lint.outcome }}" = "cancelled" ] || [ "${{ steps.typecheck.outcome }}" = "failure" ] || [ "${{ steps.typecheck.outcome }}" = "cancelled" ] || [ "${{ steps.tests.outcome }}" = "failure" ] || [ "${{ steps.tests.outcome }}" = "cancelled" ]; then
             SETUP_FAILURE=1
           fi
           HAS_FAILURE=false
