@@ -1,6 +1,6 @@
 import { ConflictException, ForbiddenException, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { Prisma, SalonOwnerStatus as PrismaSalonOwnerStatus } from '@prisma/client';
-import { AppointmentStatus, COMMON_MESSAGE_KEYS, UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
+import { AppointmentStatus, COMMON_MESSAGE_KEYS, UserRole, isBranchManagerPosition, type AuthenticatedUser } from '@cthub-bsaas/shared';
 import { PrismaService } from '@cthub-bsaas/server-data-access';
 import { CorrelationId } from '@cthub-bsaas/server-core';
 import { createHash, randomUUID } from 'crypto';
@@ -43,7 +43,6 @@ const schedulableAppointmentStatuses = [
   AppointmentStatus.CONFIRMED.toLowerCase(),
   AppointmentStatus.CONFIRMED,
 ] as const;
-const branchManagerPositions = new Set(['branch manager', 'manager']);
 const weekdayByShortName: Readonly<Record<string, number>> = {
   Sun: 0,
   Mon: 1,
@@ -150,16 +149,6 @@ function readManagedTenantIds(user: AuthenticatedUser): string[] {
   }
 
   return readStringArray((saasOwner as Record<string, unknown>)['managedTenants']);
-}
-
-function normalizePosition(value: string | null | undefined): string | null {
-  const normalized = value?.trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
-  return normalized && normalized.length > 0 ? normalized : null;
-}
-
-function isBranchManagerPosition(value: string | null | undefined): boolean {
-  const normalized = normalizePosition(value);
-  return normalized !== null && branchManagerPositions.has(normalized);
 }
 
 function parseMinutes(value: string): number {

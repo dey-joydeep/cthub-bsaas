@@ -24,6 +24,10 @@ export interface AuthenticatedUser {
   // Tenant information
   tenantId?: string;
 
+  // Branch manager authorization
+  managedBranchIds?: string[];
+  canManageBranches?: boolean;
+
   // Allow additional properties for flexibility
   [key: string]: unknown;
 }

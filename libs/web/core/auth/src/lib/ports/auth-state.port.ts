@@ -5,6 +5,10 @@ import type { Observable } from 'rxjs';
 export type BaseAuthUser = {
   readonly [key: string]: unknown;
   readonly id: string;
+  readonly role?: string;
+  readonly roles?: readonly string[];
+  readonly managedBranchIds?: readonly string[];
+  readonly canManageBranches?: boolean;
 };
 
 export interface AuthStatePort {

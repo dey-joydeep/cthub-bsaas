@@ -15,14 +15,18 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { Subscription } from 'rxjs';
 import { AuthService } from '@cthub-bsaas/web-partner/auth';
 import { CURRENT_USER, CurrentUserService, type BaseAuthUser } from '@cthub-bsaas/web-core/auth';
+import { hasManagerCapability } from '@cthub-bsaas/shared';
 
-// Define a User interface with roles
+// Define a User interface with roles and manager capabilities
 export interface User {
   id: string;
   email?: string;
   firstName?: string;
   lastName?: string;
+  role?: string;
   roles?: string[];
+  managedBranchIds?: string[];
+  canManageBranches?: boolean;
   [key: string]: unknown;
 }
 
@@ -63,8 +67,24 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.currentUser?.roles?.includes('admin') || false;
   }
 
-  get settingsRoute(): string {
-    return this.hasRole('staff') ? '/owner/branches' : '/settings';
+  /**
+   * Check if the current user has branch manager capability
+   */
+  get canManageBranches(): boolean {
+    return hasManagerCapability(this.currentUser);
+  }
+
+  /**
+   * Determine settings route or null if user does not have permission
+   */
+  get settingsRoute(): string | null {
+    if (this.hasRole('owner') || this.isAdmin) {
+      return '/settings';
+    }
+    if (this.hasRole('staff') && this.canManageBranches) {
+      return '/owner/branches';
+    }
+    return null;
   }
 
   private authSubscription?: Subscription;

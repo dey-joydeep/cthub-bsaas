@@ -53,15 +53,6 @@ describe('AppComponent', () => {
     expect(compiled.querySelector('.app-header .logo a')?.textContent).toContain('BeautySaaS');
   });
 
-  it('should switch languages', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    // app.switchLang('bn');
-    // expect(app.currentLang).toBe('bn');
-    // app.switchLang('en');
-    // expect(app.currentLang).toBe('en');
-  });
-
   it('should show/hide links based on login', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
@@ -69,12 +60,44 @@ describe('AppComponent', () => {
     expect(app.isLoggedIn).toBe(false);
   });
 
-  it('routes staff settings entry to the branch settings screen', () => {
+  it('routes manager-capable staff settings entry to the branch settings screen', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
 
-    app.currentUser = { id: 'staff-1', roles: ['staff'] };
+    app.currentUser = {
+      id: 'staff-1',
+      roles: ['staff'],
+      managedBranchIds: ['branch-1'],
+    };
 
+    expect(app.canManageBranches).toBe(true);
     expect(app.settingsRoute).toBe('/owner/branches');
+  });
+
+  it('suppresses settings route for non-manager staff', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+
+    app.currentUser = {
+      id: 'staff-2',
+      roles: ['staff'],
+      managedBranchIds: [],
+    };
+
+    expect(app.canManageBranches).toBe(false);
+    expect(app.settingsRoute).toBeNull();
+  });
+
+  it('routes owner settings entry to the settings screen', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+
+    app.currentUser = {
+      id: 'owner-1',
+      roles: ['owner'],
+    };
+
+    expect(app.canManageBranches).toBe(true);
+    expect(app.settingsRoute).toBe('/settings');
   });
 });

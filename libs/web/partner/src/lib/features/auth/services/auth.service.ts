@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable, firstValueFrom, forkJoin, of } from 'rxjs'
 
 import { StorageService } from '@cthub-bsaas/web-core-platform';
 import type { AuthStatePort } from '@cthub-bsaas/web-core/auth';
+import { hasManagerCapability } from '@cthub-bsaas/shared';
 import type { PartnerAuthUser } from '../models/auth.models';
 
 @Injectable({ providedIn: 'root' })
@@ -24,9 +25,9 @@ export class AuthService implements AuthStatePort {
     }
   }
 
-  getCurrentUser(): { readonly id: string } | null {
+  getCurrentUser(): PartnerAuthUser | null {
     const user = this.currentUserSubject.value;
-    return user ? { id: user.id } : null;
+    return user ? { ...user } : null;
   }
 
   async isAuthenticated(): Promise<boolean> {
@@ -41,8 +42,12 @@ export class AuthService implements AuthStatePort {
 
   public setLoggedInUser(user: PartnerAuthUser): void {
     if (!this.isBrowser) return;
-    this.currentUserSubject.next(user);
-    this.storage.setItem$(this.USER_KEY, user).subscribe();
+    const enrichedUser: PartnerAuthUser = {
+      ...user,
+      canManageBranches: user.canManageBranches ?? hasManagerCapability(user),
+    };
+    this.currentUserSubject.next(enrichedUser);
+    this.storage.setItem$(this.USER_KEY, enrichedUser).subscribe();
   }
 
   public clearAuthData(): void {
@@ -63,7 +68,11 @@ export class AuthService implements AuthStatePort {
     this.storage.getItem$<PartnerAuthUser>(this.USER_KEY).subscribe({
       next: (user: PartnerAuthUser | null) => {
         if (user) {
-          this.currentUserSubject.next(user);
+          const enrichedUser: PartnerAuthUser = {
+            ...user,
+            canManageBranches: user.canManageBranches ?? hasManagerCapability(user),
+          };
+          this.currentUserSubject.next(enrichedUser);
         }
       },
       error: () => this.clearAuthData(),

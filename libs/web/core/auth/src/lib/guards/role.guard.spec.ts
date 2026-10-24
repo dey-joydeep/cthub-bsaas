@@ -3,7 +3,7 @@ import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree, type Guar
 import { Observable, firstValueFrom, of } from 'rxjs';
 
 import { CURRENT_USER, type CurrentUserMin, type CurrentUserPort } from '../interfaces/current-user.port';
-import { roleGuard } from './role.guard';
+import { managerCapabilityGuard, roleGuard } from './role.guard';
 
 type MutableCurrentUserPort = {
   currentUser$: Observable<CurrentUserMin | null>;
@@ -73,6 +73,116 @@ describe('roleGuard', () => {
     const result = await resolveGuardResult(runInInjectionContext(injector, () => roleGuard(route, state)));
 
     expect(result.toString()).toContain('/unauthorized');
+  });
+
+  it('allows manager-capable staff access when requireManagerCapability is true', async () => {
+    currentUserPort.currentUser$ = of({
+      id: 'staff-1',
+      role: 'staff',
+      managedBranchIds: ['branch-1'],
+    });
+    const route = {
+      data: { roles: ['owner', 'staff'], requireManagerCapability: true },
+    } as ActivatedRouteSnapshot;
+    const state = { url: '/owner/branches' } as RouterStateSnapshot;
+
+    const result = await resolveGuardResult(runInInjectionContext(injector, () => roleGuard(route, state)));
+
+    expect(result).toBe(true);
+  });
+
+  it('blocks non-manager staff when requireManagerCapability is true', async () => {
+    currentUserPort.currentUser$ = of({
+      id: 'staff-2',
+      role: 'staff',
+      managedBranchIds: [],
+    });
+    const route = {
+      data: { roles: ['owner', 'staff'], requireManagerCapability: true },
+    } as ActivatedRouteSnapshot;
+    const state = { url: '/owner/branches' } as RouterStateSnapshot;
+
+    const result = await resolveGuardResult(runInInjectionContext(injector, () => roleGuard(route, state)));
+
+    expect(result.toString()).toContain('/unauthorized');
+  });
+
+  it('allows owner access when requireManagerCapability is true', async () => {
+    currentUserPort.currentUser$ = of({
+      id: 'owner-1',
+      role: 'owner',
+    });
+    const route = {
+      data: { roles: ['owner', 'staff'], requireManagerCapability: true },
+    } as ActivatedRouteSnapshot;
+    const state = { url: '/owner/branches' } as RouterStateSnapshot;
+
+    const result = await resolveGuardResult(runInInjectionContext(injector, () => roleGuard(route, state)));
+
+    expect(result).toBe(true);
+  });
+
+  it('handles route with no required roles but with requireManagerCapability', async () => {
+    currentUserPort.currentUser$ = of({
+      id: 'staff-2',
+      role: 'staff',
+      managedBranchIds: [],
+    });
+    const route = {
+      data: { requireManagerCapability: true },
+    } as ActivatedRouteSnapshot;
+    const state = { url: '/owner/branches' } as RouterStateSnapshot;
+
+    const result = await resolveGuardResult(runInInjectionContext(injector, () => roleGuard(route, state)));
+
+    expect(result.toString()).toContain('/unauthorized');
+  });
+
+  describe('managerCapabilityGuard', () => {
+    it('redirects unauthenticated users to login', async () => {
+      currentUserPort.currentUser$ = of(null);
+      const route = {} as ActivatedRouteSnapshot;
+      const state = { url: '/owner/branches' } as RouterStateSnapshot;
+
+      const result = await resolveGuardResult(
+        runInInjectionContext(injector, () => managerCapabilityGuard(route, state)),
+      );
+
+      expect(currentUserPort.redirectUrl).toBe('/owner/branches');
+      expect(result.toString()).toContain('auth/login');
+    });
+
+    it('allows manager-capable staff', async () => {
+      currentUserPort.currentUser$ = of({
+        id: 'staff-1',
+        role: 'staff',
+        canManageBranches: true,
+      });
+      const route = {} as ActivatedRouteSnapshot;
+      const state = { url: '/owner/branches' } as RouterStateSnapshot;
+
+      const result = await resolveGuardResult(
+        runInInjectionContext(injector, () => managerCapabilityGuard(route, state)),
+      );
+
+      expect(result).toBe(true);
+    });
+
+    it('redirects non-manager staff to unauthorized', async () => {
+      currentUserPort.currentUser$ = of({
+        id: 'staff-2',
+        role: 'staff',
+        managedBranchIds: [],
+      });
+      const route = {} as ActivatedRouteSnapshot;
+      const state = { url: '/owner/branches' } as RouterStateSnapshot;
+
+      const result = await resolveGuardResult(
+        runInInjectionContext(injector, () => managerCapabilityGuard(route, state)),
+      );
+
+      expect(result.toString()).toContain('/unauthorized');
+    });
   });
 });
 

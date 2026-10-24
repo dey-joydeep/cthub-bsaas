@@ -14,7 +14,10 @@ describe('partner app routes', () => {
     expect(ownerSettingsRoute?.canActivate).toEqual([roleGuard]);
     expect(ownerBranchesRoute?.canActivate).toEqual([roleGuard]);
     expect(ownerSettingsRoute?.data).toEqual({ roles: [UserRole.OWNER] });
-    expect(ownerBranchesRoute?.data).toEqual({ roles: [UserRole.OWNER, UserRole.STAFF] });
+    expect(ownerBranchesRoute?.data).toEqual({
+      roles: [UserRole.OWNER, UserRole.STAFF],
+      requireManagerCapability: true,
+    });
     expect(settingsAliasRoute).toEqual({
       path: 'settings',
       redirectTo: 'owner/settings',
