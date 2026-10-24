@@ -1,4 +1,4 @@
-import { Component, Inject, Optional } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -54,10 +54,10 @@ export class ForgotPasswordComponent {
   success: string | null = null;
   step: 'email' | 'otp' | 'reset' | 'success' = 'email';
   email = '';
+  private forgotApi = inject<ForgotPasswordApiPort | null>(FORGOT_PASSWORD_API, { optional: true });
 
   constructor(
     private fb: FormBuilder,
-    @Optional() @Inject(FORGOT_PASSWORD_API) private forgotApi: ForgotPasswordApiPort | null,
   ) {
     // Initialize Forgot Password Form
     this.forgotForm = this.fb.group<ForgotPasswordForm>({

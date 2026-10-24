@@ -6,12 +6,6 @@
       "options": {
         "targetName": "lint"
       }
-    },
-    {
-      "plugin": "@nx/jest/plugin",
-      "options": {
-        "targetName": "jest:test"
-      }
     }
   ],
   "targetDefaults": {

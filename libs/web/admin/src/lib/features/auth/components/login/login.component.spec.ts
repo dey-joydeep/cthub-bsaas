@@ -1,125 +1,69 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { Router, provideRouter } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { provideRouter, Router } from '@angular/router';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
-
-// Components
+import { PLATFORM_UTILS_TOKEN, StorageService } from '@cthub-bsaas/web-core-platform';
+import { ErrorService } from '@cthub-bsaas/web-core-common';
 import { LoginComponent } from './login.component';
+import { LoginService } from './login.service';
 
-// Services
-import { NotificationService } from '@cthub-bsaas/web-core-common';
-import { AuthService } from '../../services/auth.service';
-
-// Mocks
-class MockTranslateService {
-  get = jest.fn().mockReturnValue(of('translated text'));
-  instant = jest.fn().mockReturnValue('translated text');
-  use = jest.fn().mockReturnValue(of({}));
-  setDefaultLang = jest.fn();
-  getBrowserLang = jest.fn().mockReturnValue('en');
-  getLangs = jest.fn().mockReturnValue(['en', 'es']);
-  onLangChange = { subscribe: jest.fn() };
-  onTranslationChange = { subscribe: jest.fn() };
-  onDefaultLangChange = { subscribe: jest.fn() };
+class MockErrorService {
+  error$ = of(null);
+  handleError = jest.fn();
+  getErrorMessage = jest.fn().mockReturnValue('Error');
 }
 
-class MockAuthService implements Partial<AuthService> {
-  login = jest.fn().mockReturnValue(
+class MockStorageService {
+  getItem$ = jest.fn().mockReturnValue(of(null));
+  setItem$ = jest.fn().mockReturnValue(of(true));
+  removeItem$ = jest.fn().mockReturnValue(of(true));
+}
+
+class MockLoginService {
+  initLogin = jest.fn().mockReturnValue(of({ userType: 'owner' }));
+  verifyOtp = jest.fn().mockReturnValue(
     of({
       id: '1',
-      email: 'test@example.com',
-      name: 'Test User',
-      role: 'customer',
-      accessToken: 'test-token',
-      refreshToken: 'refresh-token',
-      expiresIn: 3600,
-    }),
-  );
-  isAuthenticated = jest.fn().mockReturnValue(false);
-  getCurrentUser = jest.fn().mockReturnValue(null);
-  logout = jest.fn().mockReturnValue(of(true));
-  getToken = jest.fn().mockReturnValue('test-token');
-  getRefreshToken = jest.fn().mockReturnValue('refresh-token');
-  refreshToken = jest.fn().mockReturnValue(
-    of({
-      id: '1',
-      email: 'test@example.com',
-      name: 'Test User',
-      role: 'customer',
-      accessToken: 'new-test-token',
-      refreshToken: 'new-refresh-token',
-      expiresIn: 3600,
+      email: 'admin@example.com',
+      accessToken: 'token-123',
     }),
   );
 }
 
-class MockNotificationService {
-  error = jest.fn();
-  success = jest.fn();
-  show = jest.fn();
-  info = jest.fn();
-  warning = jest.fn();
-  clear = jest.fn();
-  showError = jest.fn();
-  showSuccess = jest.fn();
-  showWarning = jest.fn();
-  showInfo = jest.fn();
-}
+const mockPlatformUtils = {
+  isBrowser: () => true,
+  isServer: () => false,
+};
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
   let fixture: ComponentFixture<LoginComponent>;
-  let authService: MockAuthService;
-  let notificationService: MockNotificationService;
+  let loginService: MockLoginService;
   let router: Router;
-
-  const mockUser = {
-    id: '1',
-    email: 'test@example.com',
-    name: 'Test User',
-    role: 'customer',
-    accessToken: 'test-token',
-    refreshToken: 'refresh-token',
-    expiresIn: 3600,
-  };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        ReactiveFormsModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatButtonModule,
-        MatProgressBarModule,
-        MatSnackBarModule,
-        TranslateModule.forRoot(),
-        HttpClientTestingModule,
-        LoginComponent,
-      ],
+      imports: [ReactiveFormsModule, TranslateModule.forRoot(), LoginComponent],
       providers: [
-        { provide: AuthService, useClass: MockAuthService },
-        { provide: NotificationService, useClass: MockNotificationService },
-        { provide: TranslateService, useClass: MockTranslateService },
-        provideRouter([]), // Use provideRouter instead of RouterTestingModule
+        { provide: LoginService, useClass: MockLoginService },
+        { provide: StorageService, useClass: MockStorageService },
+        { provide: ErrorService, useClass: MockErrorService },
+        { provide: PLATFORM_UTILS_TOKEN, useValue: mockPlatformUtils },
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        provideAnimations(),
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(LoginComponent);
     component = fixture.componentInstance;
-    authService = TestBed.inject(AuthService) as unknown as MockAuthService;
-    notificationService = TestBed.inject(NotificationService) as unknown as MockNotificationService;
+    loginService = TestBed.inject(LoginService) as unknown as MockLoginService;
     router = TestBed.inject(Router);
-
-    // Mock the login method
-    authService.login.mockReturnValue(of(mockUser));
-
     fixture.detectChanges();
   });
 
@@ -127,7 +71,7 @@ describe('LoginComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should initialize the form with empty values', () => {
+  it('should initialize the form with default values', () => {
     expect(component.loginForm.value).toEqual({
       email: '',
       password: '',
@@ -135,7 +79,7 @@ describe('LoginComponent', () => {
     });
   });
 
-  it('should validate email field as required', () => {
+  it('should validate email field as required and valid email format', () => {
     const emailControl = component.loginForm.get('email');
     emailControl?.setValue('');
     expect(emailControl?.valid).toBeFalsy();
@@ -145,92 +89,56 @@ describe('LoginComponent', () => {
     expect(emailControl?.hasError('email')).toBeTruthy();
   });
 
-  it('should validate password field as required', () => {
-    const passwordControl = component.loginForm.get('password');
-    passwordControl?.setValue('');
-    expect(passwordControl?.valid).toBeFalsy();
-    expect(passwordControl?.hasError('required')).toBeTruthy();
-  });
-
-  it('should call authService.login and navigate on successful login', () => {
-    const navigateSpy = jest.spyOn(router, 'navigateByUrl').mockImplementation(() => Promise.resolve(true));
-
+  it('should call loginService.initLogin on submit with valid credentials', async () => {
     component.loginForm.setValue({
-      email: 'test@example.com',
-      password: 'password',
+      email: 'admin@example.com',
+      password: 'password123',
       rememberMe: true,
     });
 
-    component.onSubmit();
+    await component.onSubmit();
 
-    expect(authService.login).toHaveBeenCalledWith({
-      email: 'test@example.com',
-      password: 'password',
+    expect(loginService.initLogin).toHaveBeenCalledWith({
+      email: 'admin@example.com',
+      password: 'password123',
+      rememberMe: true,
     });
-    expect(navigateSpy).toHaveBeenCalledWith('/dashboard');
+    expect(component.step).toBe('otp');
   });
 
-  it('should handle login error', () => {
-    const error = { message: 'Login failed' };
-    authService.login.mockReturnValue(throwError(() => error));
+  it('should handle initLogin error', async () => {
+    loginService.initLogin.mockReturnValueOnce(throwError(() => ({ error: { error: 'Invalid credentials' } })));
 
     component.loginForm.setValue({
-      email: 'test@example.com',
-      password: 'wrong-password',
+      email: 'admin@example.com',
+      password: 'wrongpassword',
       rememberMe: false,
     });
 
-    component.onSubmit();
+    await component.onSubmit();
 
-    expect(notificationService.error).toHaveBeenCalledWith('Login failed. Please check your credentials and try again.');
+    expect(component.loading).toBe(false);
+    expect(component.error).toBe('Invalid credentials');
   });
 
-  it('should show loading state during form submission', () => {
-    // Set up form with valid data
+  it('should verify OTP and navigate on success', async () => {
+    const navigateSpy = jest.spyOn(router, 'navigateByUrl').mockImplementation(() => Promise.resolve(true));
+
     component.loginForm.setValue({
-      email: 'test@example.com',
+      email: 'admin@example.com',
       password: 'password123',
       rememberMe: false,
     });
+    component.otpForm.setValue({ otp: '123456' });
 
-    // Trigger form submission
-    component.onSubmit();
+    await component.onOtpSubmit();
+    await new Promise(process.nextTick);
 
-    // Check if loading state is set
-    expect(component.isSubmitting).toBe(true);
-
-    // Check if authService.login was called
-    expect(authService.login).toHaveBeenCalledWith('test@example.com', 'password123');
-  });
-
-  it('should handle login success', () => {
-    // Set up form with valid data
-    component.loginForm.setValue({
-      email: 'test@example.com',
-      password: 'password123',
-      rememberMe: false,
+    expect(loginService.verifyOtp).toHaveBeenCalledWith({
+      email: 'admin@example.com',
+      otp: '123456',
+      type: 'login',
     });
-
-    // Mock successful login response
-    authService.login.mockReturnValueOnce(
-      of({
-        id: '1',
-        email: 'test@example.com',
-        name: 'Test User',
-        role: 'customer',
-        accessToken: 'test-token',
-        refreshToken: 'refresh-token',
-        expiresIn: 3600,
-      }),
-    );
-
-    // Spy on router.navigate
-    const navigateSpy = jest.spyOn(router, 'navigate');
-
-    // Trigger form submission
-    component.onSubmit();
-
-    // Check if navigation occurred
-    expect(navigateSpy).toHaveBeenCalledWith(['/dashboard']);
+    expect(navigateSpy).toHaveBeenCalled();
   });
 });
