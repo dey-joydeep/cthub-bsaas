@@ -37,7 +37,7 @@ Outcomes:
 
 ## 3) Session Flow
 
-Access-token validation attaches the authenticated request context used by protected routes. The request user context includes the user ID, email, roles, session ID, and `tenantId` when the user belongs to a salon tenant. Shared tenant/business/branch guards use this tenant handoff for tenant-scoped APIs.
+Access-token validation attaches the authenticated request context used by protected routes. The request user context includes the user ID, email, roles, session ID, and `tenantId` when the user belongs to a salon tenant. For staff accounts with active manager positions, access tokens and request user contexts also include manager capability claims (`managedBranchIds: string[]`, `canManageBranches: true`). Shared tenant/business/branch guards and partner route guards use this handoff for tenant- and branch-scoped authorization without auxiliary database lookups.
 
 ### Refresh
 

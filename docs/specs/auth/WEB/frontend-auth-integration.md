@@ -18,6 +18,12 @@ Backend issues:
 
 "Stay signed in" is backend policy expressed through refresh-token lifetime. Do not send a frontend-only `rememberMe` flag unless OpenAPI later defines one.
 
+## Authorization And Capability Hydration
+
+- In addition to user identity and tenant scoping, access tokens signed for staff with active manager positions include `managedBranchIds: string[]` and `canManageBranches: boolean`.
+- The partner client auth state (`AuthService`) decodes these claims from the access token into the client user context upon sign-in and session initialization.
+- Route guards (`roleGuard`) and navigation components use these hydrated capabilities to gate access to branch management features (such as `/owner/branches`) and redirect unauthorized users to `/unauthorized`.
+
 ## CSRF/XSRF
 
 - Angular sends `X-XSRF-TOKEN` from the `XSRF-TOKEN` cookie.
