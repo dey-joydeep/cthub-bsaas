@@ -8,8 +8,11 @@ export const PARTNER_ROUTES: Routes = [
     canActivate: [authGuard],
   },
   { path: 'auth', loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES) },
-  { path: 'appointments', redirectTo: '', pathMatch: 'full' },
-  { path: 'appointments/:id', redirectTo: '' },
+  {
+    path: 'appointments',
+    canActivate: [authGuard],
+    loadChildren: () => import('./features/appointment/appointment.routes').then((m) => m.APPOINTMENT_ROUTES),
+  },
   {
     path: 'owner',
     canActivate: [authGuard],

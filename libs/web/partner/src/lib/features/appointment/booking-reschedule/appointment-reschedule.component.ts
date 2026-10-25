@@ -1,18 +1,18 @@
-import { Component, OnDestroy, OnInit, ChangeDetectorRef, inject } from '@angular/core';
-import { DatePipe, DatePipe } from '@angular/common';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, FormControl, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatDatepickerModule, MatDatepicker } from '@angular/material/datepicker';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule, MAT_SNACK_BAR_DEFAULT_OPTIONS } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
@@ -21,7 +21,7 @@ import { Appointment, TimeSlot } from './models/appointment-reschedule.model';
 import { LoadingService } from '@cthub-bsaas/web-core-common';
 import { AppointmentRescheduleService } from './appointment-reschedule.service';
 import { AppointmentStatus } from '@cthub-bsaas/shared';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-appointment-reschedule',
@@ -80,11 +80,8 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
 
   private readonly appointmentRescheduleService = inject(AppointmentRescheduleService);
   public readonly data = inject<{ appointment: Appointment }>(MAT_DIALOG_DATA);
-  private readonly dialogRef = inject(MatDialogRef<AppointmentRescheduleComponent>);
   private readonly loadingService = inject(LoadingService);
-  private readonly cdr = inject(ChangeDetectorRef);
   private readonly snackBar = inject(MatSnackBar);
-  private readonly snackBarConfig = inject(MAT_SNACK_BAR_DEFAULT_OPTIONS);
   private readonly datePipe = inject(DatePipe);
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
@@ -93,24 +90,6 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
   get minDateString(): string {
     return this.minDate.toISOString();
   }
-
-  private services: { [key: string]: string } = {
-    '1': 'SERVICE.HAIR_CUT',
-    '2': 'SERVICE.COLORING',
-    '3': 'SERVICE.STYLING',
-  };
-
-  private staffMembers: { [key: string]: string } = {
-    '1': 'STAFF.JOHN_DOE',
-    '2': 'STAFF.JANE_SMITH',
-    '3': 'STAFF.BOB_JOHNSON',
-  };
-
-  private salons: { [key: string]: string } = {
-    '1': 'SALON.MAIN',
-    '2': 'SALON.DOWNTOWN',
-    '3': 'SALON.UPTON',
-  };
 
   constructor() {
     this.dateTimeFormGroup = this.fb.group({
@@ -151,12 +130,12 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
     return this.datePipe.transform(date, 'shortTime') || '';
   }
 
-  getServiceName(serviceId: string): string {
+  getServiceName(_serviceId: string): string {
     // TODO: Implement service lookup from service
     return 'Service';
   }
 
-  getStaffName(staffId: string): string {
+  getStaffName(_staffId: string): string {
     // TODO: Implement staff lookup from service
     return 'Staff Member';
   }
@@ -176,7 +155,7 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
     this.isSubmitting = true;
     this.loadingService.show();
 
-    const { date, time } = this.dateTimeFormGroup.value;
+    const { date, time: _time } = this.dateTimeFormGroup.value;
     const notes = this.reviewFormGroup.get('notes')?.value || '';
 
     const dateValue = this.dateControl.value;

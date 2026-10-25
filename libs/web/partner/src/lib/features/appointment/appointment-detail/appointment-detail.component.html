@@ -64,7 +64,7 @@
           }
         </mat-card-content>
         <mat-divider></mat-divider>
-        @if (appointment.status === AppointmentStatus.BOOKED) {
+        @if (appointment.status === AppointmentStatus.CONFIRMED || appointment.status === AppointmentStatus.PENDING) {
           <mat-card-actions>
             <button mat-raised-button color="primary" (click)="onReschedule()" [disabled]="isUpdating">
               <ng-container i18n="@@APPOINTMENT.RESCHEDULE">Reschedule</ng-container>

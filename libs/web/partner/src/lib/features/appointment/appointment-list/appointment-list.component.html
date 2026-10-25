@@ -60,11 +60,11 @@
               </button>
 
               <mat-menu #menu="matMenu">
-                <button mat-menu-item (click)="onReschedule(appointment)" [disabled]="appointment.status !== 'BOOKED'">
+                <button mat-menu-item (click)="onReschedule(appointment)" [disabled]="appointment.status !== 'CONFIRMED' && appointment.status !== 'PENDING'">
                   <mat-icon>event_available</mat-icon>
                   <span><ng-container i18n="@@APPOINTMENT.RESCHEDULE">Reschedule</ng-container></span>
                 </button>
-                <button mat-menu-item (click)="onCancelAppointment(appointment)" [disabled]="appointment.status !== 'BOOKED'" class="cancel-button">
+                <button mat-menu-item (click)="onCancelAppointment(appointment)" [disabled]="appointment.status !== 'CONFIRMED' && appointment.status !== 'PENDING'" class="cancel-button">
                   <mat-icon>cancel</mat-icon>
                   <span><ng-container i18n="@@APPOINTMENT.CANCEL">Cancel Appointment</ng-container></span>
                 </button>

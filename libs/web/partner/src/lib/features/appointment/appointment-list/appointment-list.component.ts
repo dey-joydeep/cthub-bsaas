@@ -121,7 +121,7 @@ export class AppointmentListComponent implements OnInit {
     });
   }
 
-  onReschedule(appointment: Appointment): void {
+  onReschedule(_appointment: Appointment): void {
     // Implementation for reschedule
     this.snackBar.open($localize`:@@APPOINTMENT.RESCHEDULE_MESSAGE:Please select a new time slot.`, $localize`:@@COMMON.CLOSE:Close`, {
       duration: 3000,
