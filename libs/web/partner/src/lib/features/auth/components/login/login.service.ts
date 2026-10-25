@@ -49,24 +49,26 @@ export class LoginService {
     );
   }
 
-  resendOtp(email: string) {
+  resendOtp(email: string): Observable<{ success: boolean; message?: string }> {
     return this.api.resendOtp(email).pipe(
       map((res) => {
         if (!res.success) throw new Error(res.error || 'Failed to resend OTP');
-        return res.data;
+        return { success: true, message: res.message };
       }),
+      catchError((err) => this.forwardError(err)),
     );
   }
 
   private handleAuthResponse(res: ApiResponse<AuthResponse>): PartnerAuthUser {
-    if (!res.success) throw new Error(res.error || 'Authentication failed');
-    const user = { ...res.data } as PartnerAuthUser;
+    if (!res.success || !res.data) {
+      throw new Error(res.error || 'Authentication failed');
+    }
+    const user = res.data.user as PartnerAuthUser;
     this.authState.setLoggedInUser(user);
     return user;
   }
 
-  private forwardError(err: any) {
-    const message = err?.error?.message || err?.message || 'Authentication error';
-    return throwError(() => new Error(message));
+  private forwardError(err: unknown): Observable<never> {
+    return throwError(() => err);
   }
 }

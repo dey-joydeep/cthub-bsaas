@@ -4,10 +4,10 @@ import { Observable, catchError, map, throwError } from 'rxjs';
 import {
   AUTH_STATE_SETTER,
   LOGIN_API,
+  type AdminAuthUser,
   type ApiResponse,
   type AuthResponse,
   type AuthStateSetter,
-  type AdminAuthUser,
   type InitLoginResponse,
   type LoginApiPort,
   type LoginCredentials,
@@ -50,14 +50,15 @@ export class LoginService {
   }
 
   private handleAuthResponse(res: ApiResponse<AuthResponse>): AdminAuthUser {
-    if (!res.success) throw new Error(res.error || 'Authentication failed');
-    const user = { ...res.data } as AdminAuthUser;
+    if (!res.success || !res.data) {
+      throw new Error(res.error || 'Authentication failed');
+    }
+    const user = res.data.user as AdminAuthUser;
     this.authState.setLoggedInUser(user);
     return user;
   }
 
-  private forwardError(err: any) {
-    const message = err?.error?.message || err?.message || 'Authentication error';
-    return throwError(() => new Error(message));
+  private forwardError(err: unknown): Observable<never> {
+    return throwError(() => err);
   }
 }

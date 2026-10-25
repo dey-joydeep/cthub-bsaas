@@ -42,7 +42,7 @@ When running with the root project:
 No project name found in package.json, using parent directory name: cthub-bsaas
 Analyzing project 'cthub-bsaas' packages...
 ...
-Report generated at: E:\workspace\cthub-bsaas\bsaas-docs\pvm\report\cthub-bsaas\20250727_report_cthub-bsaas.html
+Report generated at: <repository-root>\bsaas-docs\pvm\report\cthub-bsaas\20250727_report_cthub-bsaas.html
 ```
 
 ## Running Tests
@@ -203,19 +203,19 @@ The generated HTML report includes:
 
 #### Dependencies
 
-| Package       | Current Version | Latest Version | Update Type |
-| ------------- | --------------- | -------------- | ----------- |
-| @angular/core | ^12.0.0         | 15.2.0         | Major       |
-| rxjs          | ~7.8.0          | 7.8.1          | Minor       |
+| Package | Current Version | Latest Version | Update Type |
+|---------|----------------|----------------|-------------|
+| @angular/core | ^12.0.0 | 15.2.0 | Major |
+| rxjs | ~7.8.0 | 7.8.1 | Minor |
 
 #### Dev Dependencies
 
-| Package     | Current Version | Latest Version | Update Type |
-| ----------- | --------------- | -------------- | ----------- |
-| @types/jest | ^29.5.1         | 29.5.1         | -           |
-| typescript  | ~5.1.3          | 5.1.6          | Minor       |
+| Package | Current Version | Latest Version | Update Type |
+|---------|----------------|----------------|-------------|
+| @types/jest | ^29.5.1 | 29.5.1 | - |
+| typescript | ~5.1.3 | 5.1.6 | Minor |
 
-_Note: The actual report is an HTML file with color-coded status indicators and interactive elements._
+*Note: The actual report is an HTML file with color-coded status indicators and interactive elements.*
 
 ## Best Practices
 

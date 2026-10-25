@@ -1,8 +1,8 @@
 # Save this as Export-GitArchiveWithHash.ps1
 
 param (
-    [string]$RepoPath = "E:\workspace\cthub-bsaas",
-    [string]$OutputDir = "E:\workspace"
+    [string]$RepoPath = "$PSScriptRoot\..",
+    [string]$OutputDir = "$PSScriptRoot\..\..\exports"
 )
 
 # Ensure output directory exists

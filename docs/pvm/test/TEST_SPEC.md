@@ -2,25 +2,25 @@
 
 ## Test Environment
 
-| Component            | Details                                      |
-| -------------------- | -------------------------------------------- |
-| **Main Script**      | `package-version-checker.ps1`                |
-| **Test Runner**      | `test/run-all-tests.ps1`                     |
-| **Test Cases**       | `test/run-test-case-*.ps1`                   |
-| **Common Script**    | `test/common-script-run-test.ps1`            |
-| **Test Directory**   | `bsaas-docs/pvm/test/`                       |
-| **Test Reports**     | Generated in `bsaas-docs/pvm/report/`        |
-| **Test Logs**        | Stored in `bsaas-docs/pvm/test/logs/`        |
-| **Test Screenshots** | Stored in `bsaas-docs/pvm/test/screenshots/` |
+| Component           | Details                                    |
+|---------------------|--------------------------------------------|
+| **Main Script**     | `package-version-checker.ps1`              |
+| **Test Runner**     | `test/run-all-tests.ps1`                   |
+| **Test Cases**      | `test/run-test-case-*.ps1`                 |
+| **Common Script**   | `test/common-script-run-test.ps1`          |
+| **Test Directory**  | `bsaas-docs/pvm/test/`                     |
+| **Test Reports**    | Generated in `bsaas-docs/pvm/report/`      |
+| **Test Logs**       | Stored in `bsaas-docs/pvm/test/logs/`      |
+| **Test Screenshots**| Stored in `bsaas-docs/pvm/test/screenshots/` |
 
 ## Test Case Status Legend
 
-| Status     | Description                              |
-| ---------- | ---------------------------------------- |
-| ✅ PASS    | Test passed all validations              |
-| ❌ FAIL    | Test failed one or more validations      |
-| ⚠️ WARN    | Test passed but with non-critical issues |
-| ⏳ PENDING | Test not yet executed                    |
+| Status | Description |
+|--------|-------------|
+| ✅ PASS | Test passed all validations |
+| ❌ FAIL | Test failed one or more validations |
+| ⚠️ WARN | Test passed but with non-critical issues |
+| ⏳ PENDING | Test not yet executed |
 
 ## Test Execution Instructions
 
@@ -99,16 +99,13 @@ The following validations apply to all test cases where the script is expected t
 ### Test Case 1: Initial Report Generation (Root Project)
 
 ### Description
-
 Verifies that the script can generate an initial HTML report for the root project, handling the case where the project name is extracted from the parent directory name when not specified in package.json.
 
 ### Preconditions
-
 - The root project has a package.json file
 - No existing report directory exists for the project
 
 ### Test Steps
-
 1. Run the script with the 'root' parameter
 2. Verify the script completes successfully (exit code 0)
 3. Verify the report directory is created with the correct project name
@@ -121,7 +118,6 @@ Verifies that the script can generate an initial HTML report for the root projec
 10. Verify the index contains a link to the generated report
 
 ### Expected Results
-
 - Script exits with code 0
 - Output includes "Analyzing project '<name>' packages..." where <name> is either from package.json or the parent directory name
 - Report directory is created as report/<project-name>/
@@ -132,7 +128,6 @@ Verifies that the script can generate an initial HTML report for the root projec
 - index.html exists in the report root directory and contains a link to the generated report
 
 ### Notes
-
 - When the root project's package.json doesn't have a name, the parent directory name should be used
 - The analysis message should show "Analyzing project '<name>' packages..." with the project name properly quoted
 
@@ -198,13 +193,11 @@ Verifies that the script can generate an initial HTML report for the root projec
 **Objective**: Verify that when 5 reports exist (4 historical + 1 today's), running the script again will overwrite today's report without deleting historical reports, and that the index.html maintains the correct order of reports (newest first).
 
 **Preconditions**:
-
 - Test Case 3 has already run, creating an index file and today's report
 - Project directory exists with a valid package.json
 - Historical reports are created with dates in ascending order (oldest to newest)
 
 **Test Steps**:
-
 1. Create 4 historical report files with different dates
 2. Run the script to generate today's report
 3. Verify that today's report exists and is the most recent
@@ -220,33 +213,32 @@ Verifies that the script can generate an initial HTML report for the root projec
    - Record the initial content and timestamps of all files
    - Verify there are exactly 5 reports in the directory
 
-10. **Execution**:
-    - Run the script with project name 'bsaas-front'
-    - Capture the script output and exit code
+2. **Execution**:
+   - Run the script with project name 'bsaas-front'
+   - Capture the script output and exit code
 
-11. **Verification**:
-    - Verify the script exits with code 0 (success)
-    - Verify there are still exactly 5 reports in the directory
-    - Verify today's report file has been updated (new timestamp, content changed)
-    - Verify the 4 historical reports are unchanged (same content and timestamps)
-    - Verify the report index is updated with the new report timestamp
-    - Verify the stylesheet is not modified
-    - Verify the report content reflects the current state of package.json
+3. **Verification**:
+   - Verify the script exits with code 0 (success)
+   - Verify there are still exactly 5 reports in the directory
+   - Verify today's report file has been updated (new timestamp, content changed)
+   - Verify the 4 historical reports are unchanged (same content and timestamps)
+   - Verify the report index is updated with the new report timestamp
+   - Verify the stylesheet is not modified
+   - Verify the report content reflects the current state of package.json
 
 **Expected Results**:
 
-| Check              | Expected Result                         |
-| ------------------ | --------------------------------------- |
-| Exit Code          | 0 (Success)                             |
-| Report Count       | 5 (unchanged)                           |
-| Today's Report     | Updated with new timestamp              |
-| Historical Reports | Unchanged (4 files)                     |
-| Index File         | Contains updated link to today's report |
-| Stylesheet         | Not modified                            |
-| Report Content     | Reflects current package.json           |
+| Check | Expected Result |
+|-------|-----------------|
+| Exit Code | 0 (Success) |
+| Report Count | 5 (unchanged) |
+| Today's Report | Updated with new timestamp |
+| Historical Reports | Unchanged (4 files) |
+| Index File | Contains updated link to today's report |
+| Stylesheet | Not modified |
+| Report Content | Reflects current package.json |
 
 **Error Conditions**:
-
 - If more or fewer than 5 reports exist after execution, the test should fail
 - If any historical report is modified, the test should fail
 - If the script exits with a non-zero code, the test should fail
@@ -259,20 +251,17 @@ Verifies that the script can generate an initial HTML report for the root projec
 **Objective**: Verify the script enforces the maximum report retention policy by cleaning up old reports when the limit is reached.
 
 **Preconditions**:
-
 - Test directory structure exists: `pvm/test/`
 - Report directory exists: `pvm/report/`
 - Project directory exists with a valid `package.json`
 - No existing reports for the test project
 
 **Test Setup**:
-
 1. Clean up any existing report files
 2. Create 5 test report files with dates from 5 days ago to yesterday
 3. Update index.html with the test reports
 
 **Test Steps**:
-
 1. **Setup Phase**:
    - Verify and create required directory structure
    - Remove any existing report files
@@ -292,7 +281,6 @@ Verifies that the script can generate an initial HTML report for the root projec
    - Verify no temporary files were left behind
 
 **Expected Results**:
-
 - ✅ Script exits with code 0 (success)
 - ✅ Oldest report is deleted (5 days old)
 - ✅ New report is created with today's date
@@ -302,14 +290,12 @@ Verifies that the script can generate an initial HTML report for the root projec
 - ⚠️ Log files may not exist (expected if logging is disabled)
 
 **Error Conditions**:
-
 - ❌ If more or fewer than 5 reports exist after execution
 - ❌ If any report other than the oldest is deleted
 - ❌ If the script exits with a non-zero code
 - ❌ If index.html is not updated correctly
 
 **Notes**:
-
 - The test focuses on core functionality (report creation, deletion, index update)
 - HTML structure validation is minimal to avoid test brittleness
 - Log file validation is non-critical
@@ -357,18 +343,18 @@ Verifies that the script can generate an initial HTML report for the root projec
 
 ### Prerequisites
 
-| Requirement     | Verification Command                     | Expected Result |
-| --------------- | ---------------------------------------- | --------------- |
-| PowerShell 5.1+ | `$PSVersionTable.PSVersion`              | ≥ 5.1           |
-| Node.js         | `node --version`                         | ≥ 14.0          |
-| npm             | `npm --version`                          | ≥ 6.0           |
-| Internet        | `Test-NetConnection npmjs.com -Port 443` | Success         |
+| Requirement | Verification Command | Expected Result |
+|-------------|----------------------|------------------|
+| PowerShell 5.1+ | `$PSVersionTable.PSVersion` | ≥ 5.1 |
+| Node.js | `node --version` | ≥ 14.0 |
+| npm | `npm --version` | ≥ 6.0 |
+| Internet | `Test-NetConnection npmjs.com -Port 443` | Success |
 
 ### Running Tests
 
 ```powershell
 # Navigate to project root
-cd e:\workspace\cthub-bsaas
+cd <repository-root>
 
 # Run all tests
 .\bsaas-docs\pvm\test\run-tests.ps1
@@ -382,15 +368,15 @@ cd e:\workspace\cthub-bsaas
 
 ## Test Results Dashboard
 
-| Test Case                    | Status     | Executed At | Details      |
-| ---------------------------- | ---------- | ----------- | ------------ |
-| 1. Initial Report Generation | ⏳ Pending | -           | View details |
-| 2. Report Overwrite          | ⏳ Pending | -           | View details |
-| 3. Multi-Project Support     | ⏳ Pending | -           | View details |
-| 4. Report Retention          | ⏳ Pending | -           | View details |
-| 5. Report Cleanup            | ⏳ Pending | -           | View details |
-| 6. Error Handling            | ⏳ Pending | -           | View details |
-| 7. Content Validation        | ⏳ Pending | -           | View details |
+| Test Case | Status | Executed At | Details |
+|-----------|--------|-------------|---------|
+| 1. Initial Report Generation | ⏳ Pending | - | View details |
+| 2. Report Overwrite | ⏳ Pending | - | View details |
+| 3. Multi-Project Support | ⏳ Pending | - | View details |
+| 4. Report Retention | ⏳ Pending | - | View details |
+| 5. Report Cleanup | ⏳ Pending | - | View details |
+| 6. Error Handling | ⏳ Pending | - | View details |
+| 7. Content Validation | ⏳ Pending | - | View details |
 
 ## Test Artifacts
 
@@ -419,15 +405,15 @@ bsaas-docs/pvm/
 
 ### Version History
 
-| Date       | Version | Changes                    |
-| ---------- | ------- | -------------------------- |
+| Date       | Version | Changes |
+|------------|---------|---------|
 | 2025-07-26 | 1.0.0   | Initial test specification |
 
 ### Known Issues
 
-| ID  | Description | Status | Workaround |
-| --- | ----------- | ------ | ---------- |
-| -   | None        | -      | -          |
+| ID | Description | Status | Workaround |
+|----|-------------|--------|------------|
+| -  | None        | -      | -          |
 
 ### Future Enhancements
 

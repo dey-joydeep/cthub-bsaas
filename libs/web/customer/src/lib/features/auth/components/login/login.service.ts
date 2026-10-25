@@ -38,7 +38,7 @@ export class LoginService {
   }
 
   private handleAuth(res: ApiResponse<AuthResponse>): CustomerAuthUser {
-    const user: CustomerAuthUser = res.data;
+    const user = res.data.user as CustomerAuthUser;
     this.authState.setLoggedInUser(user);
     return user;
   }

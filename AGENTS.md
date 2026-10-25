@@ -19,7 +19,7 @@ Root instructions define global safety, workflow, and repository conventions. Sc
 
 ## Startup Checklist
 
-1. Use the project root: `E:\workspace\cthub-bsaas` on Windows or `~/workspace/cthub-bsaas` on Linux.
+1. Use the actual local checkout directory as your project root.
 2. Prefer MCP tools over raw shell when they exist.
 3. Keep approvals `on-request` unless the user changes it.
 4. Confirm runtime environment before commands that depend on OS, shell, Node, npm, database, or network state.
