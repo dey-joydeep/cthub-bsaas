@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { DatePipe, TitleCasePipe, NgClass } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -24,7 +24,18 @@ interface Salon {
 @Component({
   selector: 'app-salon-approval',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatTableModule, MatChipsModule, MatMenuModule, MatChipListbox],
+  imports: [
+    DatePipe,
+    TitleCasePipe,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTableModule,
+    MatChipsModule,
+    MatMenuModule,
+    MatChipListbox,
+    NgClass,
+  ],
   template: `
     <div class="p-6">
       <h2 class="text-2xl font-bold mb-6">Salon Approvals</h2>

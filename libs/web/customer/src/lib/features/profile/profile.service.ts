@@ -1,11 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { CurrentUserService } from '@cthub-bsaas/web-core/auth';
 import { Observable, of } from 'rxjs';
 import { User } from './model/profile.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
-  constructor(private currentUserService: CurrentUserService) {}
+    private readonly currentUserService = inject(CurrentUserService);
 
   getProfile(): Observable<User | null> {
     return of(this.currentUserService.currentUser as unknown as User | null);

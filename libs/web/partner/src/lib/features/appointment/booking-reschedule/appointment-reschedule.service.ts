@@ -1,11 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { Appointment, TimeSlot } from './models/appointment-reschedule.model';
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentRescheduleService {
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   getAppointment(id: string): Observable<Appointment> {
     // Replace with actual API call

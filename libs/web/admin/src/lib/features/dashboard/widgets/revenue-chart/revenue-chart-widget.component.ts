@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
 import { Subscription } from 'rxjs';
 
 import { BaseChartDirective } from 'ng2-charts';
@@ -32,6 +32,9 @@ export class RevenueChartWidgetComponent implements OnInit, OnDestroy {
   public error: string | null = null;
 
   // Chart data with proper typing
+  private readonly dashboardService = inject(DashboardService);
+  protected readonly errorService = inject(ErrorService);
+  private readonly changeDetectorRef = inject(ChangeDetectorRef);
   public chartData: ChartData<'line', number[], string> = {
     labels: [],
     datasets: [
@@ -101,12 +104,6 @@ export class RevenueChartWidgetComponent implements OnInit, OnDestroy {
       },
     },
   };
-
-  constructor(
-    private dashboardService: DashboardService,
-    protected errorService: ErrorService,
-    private changeDetectorRef: ChangeDetectorRef,
-  ) {}
 
   public ngOnInit(): void {
     this.loadData();

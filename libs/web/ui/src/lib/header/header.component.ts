@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatBadgeModule } from '@angular/material/badge';
@@ -106,7 +106,7 @@ class AuthService {
   selector: 'lib-header',
   standalone: true,
   imports: [
-    CommonModule,
+    DatePipe,
     RouterModule,
     MatToolbarModule,
     MatButtonModule,

@@ -43,7 +43,8 @@ coverage/
 .github/instructions/nx.instructions.md
 
 .claude/worktrees
-.claude/settings.local.jsonnode_modules_*
+.claude/settings.local.json
+node_modules_*
 
 vitest.config.*.timestamp* 
 scratch/

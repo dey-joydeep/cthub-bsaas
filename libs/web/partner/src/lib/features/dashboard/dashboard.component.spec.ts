@@ -1,6 +1,5 @@
 import { TestBed } from '@angular/core/testing';
 import { DashboardComponent } from './dashboard.component';
-import { CommonModule } from '@angular/common';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { Component } from '@angular/core';
 import { DashboardService } from './dashboard.service';
@@ -51,7 +50,6 @@ describe('DashboardComponent', () => {
       .overrideComponent(DashboardComponent, {
         set: {
           imports: [
-            CommonModule,
             StatsWidgetStub,
             BsaasSubscriptionChartStub,
             BsaasRevenueChartStub,

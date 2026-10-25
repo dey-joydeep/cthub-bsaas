@@ -1,10 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { DashboardStats } from './models/customer-stats-widget.model';
 
 @Injectable({ providedIn: 'root' })
 export class CustomerStatsWidgetService {
-  constructor(public http: HttpClient) {}
+  public readonly http = inject(HttpClient);
 
   getStats(): Promise<DashboardStats> {
     void this.http;

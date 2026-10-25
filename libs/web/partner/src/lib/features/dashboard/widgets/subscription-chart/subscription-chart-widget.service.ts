@@ -1,11 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { SubscriptionData } from './models/subscription-chart-widget.model';
 
 @Injectable({ providedIn: 'root' })
 export class SubscriptionChartWidgetService {
-  constructor(public http: HttpClient) {}
+  public readonly http = inject(HttpClient);
 
   getSubscriptionData(): Observable<SubscriptionData[]> {
     void this.http;

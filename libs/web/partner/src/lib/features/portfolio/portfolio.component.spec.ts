@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { provideHttpClient } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -22,7 +21,7 @@ describe('PortfolioComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CommonModule, ReactiveFormsModule, PortfolioComponent],
+      imports: [ReactiveFormsModule, PortfolioComponent],
       providers: [
         { provide: PortfolioService, useClass: MockPortfolioService },
         provideHttpClient(),

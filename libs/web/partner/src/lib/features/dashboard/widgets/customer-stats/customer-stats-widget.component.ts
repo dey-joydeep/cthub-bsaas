@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { CurrencyPipe, DecimalPipe } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,7 +13,7 @@ import { DashboardStats } from './models/customer-stats-widget.model';
 @Component({
   selector: 'app-customer-stats-widget',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule, MatProgressSpinnerModule, MatButtonModule, MatTooltipModule],
+  imports: [CurrencyPipe, DecimalPipe, MatCardModule, MatIconModule, MatProgressSpinnerModule, MatButtonModule, MatTooltipModule],
   templateUrl: './customer-stats-widget.component.html',
   styleUrls: ['./customer-stats-widget.component.css'],
 })
@@ -29,10 +29,7 @@ export class CustomerStatsWidgetComponent extends AbstractBaseComponent {
   };
 
   private statsSubscription?: Subscription;
-
-  constructor(private customerStatsWidgetService: CustomerStatsWidgetService) {
-    super();
-  }
+  private readonly customerStatsWidgetService = inject(CustomerStatsWidgetService);
 
   public override ngOnInit(): void {
     super.ngOnInit();

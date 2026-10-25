@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -37,12 +37,12 @@ export class ProfileComponent implements OnInit {
   error: string | null = null;
   success: string | null = null;
   imagePreview: string | ArrayBuffer | null = null;
+    private readonly fb = inject(FormBuilder);
+    private readonly profileService = inject(ProfileService);
+    private readonly snackBar = inject(MatSnackBar);
 
   constructor(
-    private fb: FormBuilder,
-    private profileService: ProfileService,
-    private snackBar: MatSnackBar,
-  ) {
+) {
     this.profileForm = this.fb.group({
       name: ['', Validators.required],
       email: [{ value: '', disabled: true }, [Validators.required, Validators.email]],

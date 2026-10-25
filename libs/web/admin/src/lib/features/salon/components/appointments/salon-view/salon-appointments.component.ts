@@ -1,12 +1,12 @@
-import { Component, OnInit, input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, input, inject } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-salon-appointments',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [DatePipe, RouterModule],
   templateUrl: './salon-appointments.component.html',
   styleUrls: ['./salon-appointments.component.css'],
 })
@@ -15,8 +15,7 @@ export class SalonAppointmentsComponent implements OnInit {
   appointments: any[] = [];
   loading = true;
   error: string | null = null;
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   ngOnInit(): void {
     if (!this.salonId()) {

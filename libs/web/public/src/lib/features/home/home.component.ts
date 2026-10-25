@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -19,7 +19,7 @@ import type { IServiceDto, ITestimonialDto, ICityDto, ISalonDto, IHomePageData }
   selector: 'app-home',
   standalone: true,
   imports: [
-    CommonModule,
+    DatePipe,
     RouterModule,
     FormsModule,
     MatCardModule,
@@ -49,14 +49,11 @@ export class HomeComponent implements OnInit {
   cities: ICityDto[] = [];
   searchQuery = '';
   userRole: string | null = null; // Will be set based on auth state
-  specialOffers: any[] = []; // Will be populated from API
+  specialOffers: any[] = [];
+  private readonly homeService = inject(HomeService);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly router = inject(Router);
   popularServices: IServiceDto[] = []; // Will be populated from API
-
-  constructor(
-    private homeService: HomeService,
-    private snackBar: MatSnackBar,
-    private router: Router,
-  ) {}
 
   ngOnInit(): void {
     this.loadHomePageData();

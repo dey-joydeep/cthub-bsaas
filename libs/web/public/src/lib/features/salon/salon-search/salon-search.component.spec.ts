@@ -3,8 +3,7 @@ import { SalonSearchComponent } from './salon-search.component';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { FormsModule } from '@angular/forms';
 import { SafeUrlPipe } from '@cthub-bsaas/web-ui';
-import { RouterTestingModule } from '@angular/router/testing';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 
 describe('SalonSearchComponent', () => {
@@ -14,8 +13,8 @@ describe('SalonSearchComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [SalonSearchComponent, HttpClientTestingModule, FormsModule, SafeUrlPipe, RouterTestingModule.withRoutes([])],
-      providers: [SafeUrlPipe, { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => null } } } }],
+      imports: [SalonSearchComponent, HttpClientTestingModule, FormsModule, SafeUrlPipe],
+      providers: [provideRouter([]), SafeUrlPipe, { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => null } } } }],
     }).compileComponents();
   }));
 

@@ -1,5 +1,5 @@
-import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import { TitleCasePipe } from '@angular/common';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,7 +18,7 @@ export interface DialogData {
   selector: 'app-appointment-cancel-dialog',
   standalone: true,
   imports: [
-    CommonModule,
+    TitleCasePipe,
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
@@ -34,13 +34,12 @@ export interface DialogData {
 export class AppointmentCancelDialogComponent {
   cancelForm: FormGroup;
   isSubmitting = false;
+  public readonly dialogRef = inject(MatDialogRef<AppointmentCancelDialogComponent>);
+  public readonly data = inject<DialogData>(MAT_DIALOG_DATA);
+  private readonly fb = inject(FormBuilder);
+  private readonly snackBar = inject(MatSnackBar);
 
-  constructor(
-    public dialogRef: MatDialogRef<AppointmentCancelDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: DialogData,
-    private fb: FormBuilder,
-    private snackBar: MatSnackBar,
-  ) {
+  constructor() {
     this.cancelForm = this.fb.group({
       reason: ['', [Validators.required, Validators.minLength(10)]],
     });

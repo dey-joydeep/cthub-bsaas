@@ -1,6 +1,6 @@
-import { CommonModule, DatePipe } from '@angular/common';
+import { DatePipe, DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CurrentUserService } from '../../../../../core/auth/services/current-user.service';
 import { Appointment } from '../../../models/appointment.model';
@@ -29,7 +29,7 @@ interface AppointmentWithDetails extends Omit<Appointment, 'startTime' | 'endTim
 @Component({
   selector: 'app-user-appointments',
   standalone: true,
-  imports: [CommonModule, RouterModule, DatePipe],
+  imports: [DatePipe, RouterModule, DatePipe],
   templateUrl: './user-appointments.component.html',
   styleUrls: ['./user-appointments.component.css'],
 })
@@ -38,11 +38,8 @@ export class UserAppointmentsComponent implements OnInit {
   loading = true;
   error: string | null = null;
   userId: string | null = null;
-
-  constructor(
-    private http: HttpClient,
-    private currentUserService: CurrentUserService,
-  ) {}
+  private readonly http = inject(HttpClient);
+  private readonly currentUserService = inject(CurrentUserService);
 
   ngOnInit(): void {
     const user = this.currentUserService.currentUser;

@@ -1,11 +1,11 @@
-import { Component, OnInit, input } from '@angular/core';
+import { Component, OnInit, input, inject } from '@angular/core';
 import { StaffRequestService, StaffRequest } from '../../services/staff-request.service';
-import { CommonModule } from '@angular/common';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-staff-request-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [DatePipe],
   templateUrl: './staff-request-list.component.html',
 })
 export class StaffRequestListComponent implements OnInit {
@@ -13,8 +13,7 @@ export class StaffRequestListComponent implements OnInit {
   requests: StaffRequest[] = [];
   loading = false;
   error: string | null = null;
-
-  constructor(private staffRequestService: StaffRequestService) {}
+  private readonly staffRequestService = inject(StaffRequestService);
 
   ngOnInit() {
     this.fetchRequests();

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -21,11 +21,10 @@ export class PortfolioManagementComponent {
   success: string | null = null;
   imagePreview: string | ArrayBuffer | null = null;
   portfolioForm: FormGroup;
+  private readonly fb = inject(FormBuilder);
+  private readonly portfolioService = inject(PortfolioService);
 
-  constructor(
-    private fb: FormBuilder,
-    private portfolioService: PortfolioService,
-  ) {
+  constructor() {
     this.portfolioForm = this.fb.group({
       title: ['', Validators.required],
       description: ['', Validators.required],

@@ -43,11 +43,11 @@
   .sidenav {
     width: 64px;
     overflow: hidden;
-    &-header {
-      padding: 16px 8px;
-      .logo {
-        font-size: 1.2rem;
-      }
+  }
+  .sidenav-header {
+    padding: 16px 8px;
+    .logo {
+      font-size: 1.2rem;
     }
   }
   .mat-list-item {

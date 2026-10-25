@@ -1,4 +1,4 @@
-import { Component, output, input } from '@angular/core';
+import { Component, output, input, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { StaffRequestService, CreateLeaveRequestPayload } from '../../services/staff-request.service';
 
@@ -17,11 +17,10 @@ export class StaffRequestFormComponent extends AbstractBaseComponent {
 
   form: FormGroup;
   submitting = false;
+  private readonly fb = inject(FormBuilder);
+  private readonly staffRequestService = inject(StaffRequestService);
 
-  constructor(
-    private fb: FormBuilder,
-    private staffRequestService: StaffRequestService,
-  ) {
+  constructor() {
     super();
     this.form = this.fb.group({
       leaveFrom: ['', Validators.required],

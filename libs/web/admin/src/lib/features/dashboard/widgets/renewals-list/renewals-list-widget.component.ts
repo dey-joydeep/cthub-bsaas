@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, inject } from '@angular/core';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -38,10 +38,7 @@ export class RenewalsListWidgetComponent extends AbstractBaseComponent {
 
   renewals: Renewal[] = [];
   private subscriptions = new Subscription();
-
-  constructor(private dashboardService: DashboardService) {
-    super();
-  }
+  private readonly dashboardService = inject(DashboardService);
 
   override ngOnDestroy(): void {
     this.subscriptions.unsubscribe();

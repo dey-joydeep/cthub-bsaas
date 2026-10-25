@@ -38,9 +38,8 @@ export class SalonSearchComponent implements OnInit {
 
   private readonly platformUtils = inject<PlatformUtils>(PLATFORM_UTILS_TOKEN);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly http = inject(HttpClient);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
-
-  constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     this.fetchServices();

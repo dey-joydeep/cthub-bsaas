@@ -1,10 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ProductSale } from './models/product-sales-widget.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProductSalesWidgetService {
-  constructor(public http: HttpClient) {}
+  public readonly http = inject(HttpClient);
 
   getProductSales(params?: string): Promise<ProductSale[]> {
     void this.http;

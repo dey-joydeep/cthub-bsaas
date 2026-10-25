@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -182,12 +182,11 @@ export class StaffFormDialogComponent {
     { id: 'on_leave', name: 'On Leave' },
     { id: 'pending', name: 'Pending' },
   ];
+  private readonly fb = inject(FormBuilder);
+  public readonly dialogRef = inject(MatDialogRef<StaffFormDialogComponent>);
+  public readonly data = inject<StaffFormData>(MAT_DIALOG_DATA);
 
-  constructor(
-    private fb: FormBuilder,
-    public dialogRef: MatDialogRef<StaffFormDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: StaffFormData,
-  ) {
+  constructor() {
     this.staffForm = this.fb.group({
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
@@ -200,8 +199,8 @@ export class StaffFormDialogComponent {
       bio: [''],
     });
 
-    if (data.mode === 'edit' && data.staff) {
-      this.patchForm(data.staff);
+    if (this.data?.mode === 'edit' && this.data.staff) {
+      this.patchForm(this.data.staff);
     }
   }
 

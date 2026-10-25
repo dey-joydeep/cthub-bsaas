@@ -47,6 +47,7 @@
     "build:lib:customer": "nx build web-lib-customer",
     "build:lib:partner": "nx build web-lib-partner",
     "build:lib:admin": "nx build web-lib-admin",
+    "test": "nx run-many --target=test --all",
     "test:all": "nx run-many --target=test --all",
     "test:watch": "nx run-many --target=test --all --watch",
     "test:affected": "nx affected:test",

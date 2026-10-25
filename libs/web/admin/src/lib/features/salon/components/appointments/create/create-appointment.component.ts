@@ -1,6 +1,6 @@
-import { CommonModule } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatNativeDateModule } from '@angular/material/core';
@@ -23,7 +23,7 @@ import { Staff } from '../../../models/staff.model';
   standalone: true,
   imports: [
     // Angular modules
-    CommonModule,
+    DatePipe,
     ReactiveFormsModule,
 
     // Material modules
@@ -50,13 +50,12 @@ export class CreateAppointmentComponent implements OnInit {
   error: string | null = null;
   success: string | null = null;
   userId: string | null = null;
+  private readonly http = inject(HttpClient);
+  private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
+  private readonly currentUserService = inject(CurrentUserService);
 
-  constructor(
-    private http: HttpClient,
-    private fb: FormBuilder,
-    private router: Router,
-    @Inject(CurrentUserService) private currentUserService: CurrentUserService,
-  ) {
+  constructor() {
     this.appointmentForm = this.fb.group({
       salonId: ['', Validators.required],
       serviceId: ['', Validators.required],

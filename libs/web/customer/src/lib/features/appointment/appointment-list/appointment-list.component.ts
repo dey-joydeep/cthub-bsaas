@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { DatePipe, TitleCasePipe, NgClass } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
@@ -20,7 +20,8 @@ import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.
   selector: 'app-appointment-list',
   standalone: true,
   imports: [
-    CommonModule,
+    DatePipe,
+    TitleCasePipe,
     MatCardModule,
     MatTableModule,
     MatButtonModule,
@@ -31,6 +32,7 @@ import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.
     MatPaginatorModule,
     MatChipsModule,
     MatTooltipModule,
+    NgClass,
   ],
   templateUrl: './appointment-list.component.html',
   styleUrls: ['./appointment-list.component.css'],
@@ -42,12 +44,9 @@ export class AppointmentListComponent implements OnInit {
   totalItems = 0;
   pageSize = 10;
   pageIndex = 0;
-
-  constructor(
-    private appointmentListService: AppointmentListService,
-    private snackBar: MatSnackBar,
-    private dialog: MatDialog,
-  ) {}
+  private readonly appointmentListService = inject(AppointmentListService);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
 
   ngOnInit(): void {
     this.loadAppointments();

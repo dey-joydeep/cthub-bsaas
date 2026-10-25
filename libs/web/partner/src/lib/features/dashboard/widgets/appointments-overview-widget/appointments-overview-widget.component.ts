@@ -1,5 +1,5 @@
-import { CommonModule, formatDate } from '@angular/common';
-import { AfterViewInit, Component, OnDestroy, OnInit, viewChild } from '@angular/core';
+import { DatePipe, CurrencyPipe, SlicePipe, formatDate, NgClass } from '@angular/common';
+import { AfterViewInit, Component, OnDestroy, OnInit, viewChild, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -34,7 +34,9 @@ import { AppointmentsOverviewWidgetService } from './appointments-overview-widge
   selector: 'app-appointments-overview-widget',
   standalone: true,
   imports: [
-    CommonModule,
+    DatePipe,
+    CurrencyPipe,
+    SlicePipe,
     RouterModule,
     MatCardModule,
     MatButtonModule,
@@ -58,6 +60,7 @@ import { AppointmentsOverviewWidgetService } from './appointments-overview-widge
     MatDividerModule,
     MatListModule,
     MatDialogModule,
+    NgClass,
   ],
   templateUrl: './appointments-overview-widget.component.html',
   styleUrls: ['./appointments-overview-widget.component.css'],
@@ -86,7 +89,9 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
     start: new FormControl<Date | null>(null),
     end: new FormControl<Date | null>(null),
   });
-
+  private readonly appointmentsOverviewWidgetService = inject(AppointmentsOverviewWidgetService);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
   // Status filter
   statusFilter = new FormControl<AppointmentStatus | 'ALL'>('ALL');
   statusOptions = [
@@ -102,12 +107,6 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
   selectedTabIndex = 0;
 
   private destroy$ = new Subject<void>();
-
-  constructor(
-    private appointmentsOverviewWidgetService: AppointmentsOverviewWidgetService,
-    private snackBar: MatSnackBar,
-    private dialog: MatDialog,
-  ) {}
 
   ngOnInit(): void {
     this.loadData();

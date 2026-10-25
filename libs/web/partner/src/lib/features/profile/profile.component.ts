@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -43,12 +43,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
   currentUser: Partial<MaybeUser> | null = null;
   isEditing = false;
   private sub?: Subscription;
+  private readonly fb = inject(FormBuilder);
+  private readonly currentUserPort = inject<CurrentUserPort>(CURRENT_USER);
+  private readonly snackBar = inject(MatSnackBar);
 
-  constructor(
-    private fb: FormBuilder,
-    @Inject(CURRENT_USER) private currentUserPort: CurrentUserPort,
-    private snackBar: MatSnackBar,
-  ) {
+  constructor() {
     this.profileForm = this.fb.group({
       firstName: ['', [Validators.required]],
       lastName: ['', [Validators.required]],

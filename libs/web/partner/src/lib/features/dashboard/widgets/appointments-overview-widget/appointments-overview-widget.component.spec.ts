@@ -21,7 +21,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { RouterTestingModule } from '@angular/router/testing';
+import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
 import { AppointmentStatus } from '@cthub-bsaas/shared';
@@ -103,7 +103,6 @@ describe('AppointmentsOverviewWidgetComponent', () => {
         AppointmentsOverviewWidgetComponent,
         NoopAnimationsModule,
         HttpClientTestingModule,
-        RouterTestingModule,
         MatCardModule,
         MatButtonModule,
         MatIconModule,
@@ -126,6 +125,7 @@ describe('AppointmentsOverviewWidgetComponent', () => {
         MatDialogModule,
       ],
       providers: [
+        provideRouter([]),
         { provide: AppointmentsOverviewWidgetService, useValue: dashboardService },
         { provide: MatSnackBar, useValue: snackBar },
       ],

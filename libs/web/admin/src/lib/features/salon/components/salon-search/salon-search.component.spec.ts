@@ -3,8 +3,7 @@ import { SalonSearchComponent } from './salon-search.component';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { FormsModule } from '@angular/forms';
 import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
-import { RouterTestingModule } from '@angular/router/testing';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { AUTH_STATE_PORT } from '@cthub-bsaas/web-core-auth';
 import { of } from 'rxjs';
 
@@ -15,8 +14,9 @@ describe('SalonSearchComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [SalonSearchComponent, HttpClientTestingModule, FormsModule, SafeUrlPipe, RouterTestingModule.withRoutes([])],
+      imports: [SalonSearchComponent, HttpClientTestingModule, FormsModule, SafeUrlPipe],
       providers: [
+        provideRouter([]),
         SafeUrlPipe,
         { provide: AUTH_STATE_PORT, useValue: { currentUser$: of(null) } },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => null } } } },

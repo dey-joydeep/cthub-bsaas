@@ -38,7 +38,7 @@
             <canvas baseChart [type]="lineChartType" [data]="lineChartData" [options]="lineChartOptions"> </canvas>
           </div>
           <!-- No data message -->
-          @if (!subscriptionData()?.length) {
+          @if (!subscriptionData().length) {
             <div class="no-data">
               <mat-icon>info</mat-icon>
               <span><ng-container i18n="@@DASHBOARD.SUBSCRIPTIONS.NO_DATA">No subscription data available.</ng-container></span>

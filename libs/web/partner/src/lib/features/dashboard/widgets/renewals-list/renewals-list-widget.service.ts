@@ -1,11 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { Renewal } from './models/renewals-list-widget.model';
 
 @Injectable({ providedIn: 'root' })
 export class RenewalsListWidgetService {
-  constructor(public http: HttpClient) {}
+    public readonly http = inject(HttpClient);
 
   getRenewals(tenantId?: string): Observable<Renewal[]> {
     void this.http;

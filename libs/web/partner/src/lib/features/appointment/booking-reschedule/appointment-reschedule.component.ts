@@ -1,5 +1,5 @@
-import { Component, OnDestroy, OnInit, Inject, ChangeDetectorRef } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef, inject } from '@angular/core';
+import { DatePipe, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, FormControl, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -27,7 +27,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
   selector: 'app-appointment-reschedule',
   standalone: true,
   imports: [
-    CommonModule,
+    DatePipe,
     RouterModule,
     ReactiveFormsModule,
     MatStepperModule,
@@ -78,6 +78,18 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
     return this.dateTimeFormGroup.get('date') as FormControl;
   }
 
+  private readonly appointmentRescheduleService = inject(AppointmentRescheduleService);
+  public readonly data = inject<{ appointment: Appointment }>(MAT_DIALOG_DATA);
+  private readonly dialogRef = inject(MatDialogRef<AppointmentRescheduleComponent>);
+  private readonly loadingService = inject(LoadingService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly snackBarConfig = inject(MAT_SNACK_BAR_DEFAULT_OPTIONS);
+  private readonly datePipe = inject(DatePipe);
+  private readonly fb = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+
   get minDateString(): string {
     return this.minDate.toISOString();
   }
@@ -100,19 +112,7 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
     '3': 'SALON.UPTON',
   };
 
-  constructor(
-    private appointmentRescheduleService: AppointmentRescheduleService,
-    @Inject(MAT_DIALOG_DATA) public data: { appointment: Appointment },
-    private dialogRef: MatDialogRef<AppointmentRescheduleComponent>,
-    @Inject(LoadingService) private loadingService: LoadingService,
-    private cdr: ChangeDetectorRef,
-    private snackBar: MatSnackBar,
-    @Inject(MAT_SNACK_BAR_DEFAULT_OPTIONS) private snackBarConfig: any,
-    private datePipe: DatePipe,
-    private fb: FormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-  ) {
+  constructor() {
     this.dateTimeFormGroup = this.fb.group({
       date: ['', [Validators.required, this.futureDateValidator.bind(this)]],
       time: ['', Validators.required],

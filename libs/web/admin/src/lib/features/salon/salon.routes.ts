@@ -1,13 +1,24 @@
 import { Routes } from '@angular/router';
-import { SalonListComponent } from './components/salon-list/salon-list.component';
-import { SalonProfileComponent } from './components/salon-profile/salon-profile.component';
-import { SalonSearchComponent } from './components/salon-search/salon-search.component';
-import { TopSalonsComponent } from './components/top-salons/top-salons.component';
 
 export const SALON_ROUTES: Routes = [
-  { path: '', component: SalonListComponent },
-  { path: 'search', component: SalonSearchComponent },
-  { path: 'top', component: TopSalonsComponent },
-  { path: 'profile/:id', component: SalonProfileComponent },
-  { path: ':id', component: SalonProfileComponent },
+  {
+    path: '',
+    loadComponent: () => import('./components/salon-list/salon-list.component').then((m) => m.SalonListComponent),
+  },
+  {
+    path: 'search',
+    loadComponent: () => import('./components/salon-search/salon-search.component').then((m) => m.SalonSearchComponent),
+  },
+  {
+    path: 'top',
+    loadComponent: () => import('./components/top-salons/top-salons.component').then((m) => m.TopSalonsComponent),
+  },
+  {
+    path: 'profile/:id',
+    loadComponent: () => import('./components/salon-profile/salon-profile.component').then((m) => m.SalonProfileComponent),
+  },
+  {
+    path: ':id',
+    loadComponent: () => import('./components/salon-profile/salon-profile.component').then((m) => m.SalonProfileComponent),
+  },
 ];

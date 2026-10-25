@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -13,8 +13,7 @@ export interface ApiResponse<T = any> {
 @Injectable({ providedIn: 'root' })
 export class AppointmentService {
   private apiUrl = '/api/appointments';
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   /**
    * Create a new appointment

@@ -1,25 +1,21 @@
 import { Routes } from '@angular/router';
-import { OwnerDashboardComponent } from './owner-dashboard/owner-dashboard.component';
-import { SalonManagementComponent } from './salon-management/salon-management.component';
-import { AppointmentManagementComponent } from './appointment-management/appointment-management.component';
-import { StaffManagementComponent } from './staff-management/staff-management.component';
 
 export const OWNER_ROUTES: Routes = [
   {
     path: '',
-    component: OwnerDashboardComponent,
+    loadComponent: () => import('./owner-dashboard/owner-dashboard.component').then((m) => m.OwnerDashboardComponent),
     pathMatch: 'full',
   },
   {
     path: 'salon',
-    component: SalonManagementComponent,
+    loadComponent: () => import('./salon-management/salon-management.component').then((m) => m.SalonManagementComponent),
   },
   {
     path: 'appointments',
-    component: AppointmentManagementComponent,
+    loadComponent: () => import('./appointment-management/appointment-management.component').then((m) => m.AppointmentManagementComponent),
   },
   {
     path: 'staff',
-    component: StaffManagementComponent,
+    loadComponent: () => import('./staff-management/staff-management.component').then((m) => m.StaffManagementComponent),
   },
 ];

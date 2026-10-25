@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { NgClass } from '@angular/common';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -19,7 +19,6 @@ import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.
   selector: 'app-appointment-detail',
   standalone: true,
   imports: [
-    CommonModule,
     RouterModule,
     MatButtonModule,
     MatCardModule,
@@ -28,6 +27,7 @@ import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.
     MatProgressSpinnerModule,
     MatDialogModule,
     MatSnackBarModule,
+    NgClass,
   ],
   templateUrl: './appointment-detail.component.html',
   styleUrls: ['./appointment-detail.component.css'],
@@ -38,16 +38,13 @@ export class AppointmentDetailComponent implements OnInit, OnDestroy {
   isLoading = true;
   isUpdating = false;
   // Make enum available in template
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly appointmentDetailService = inject(AppointmentDetailService);
+  private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
   readonly AppointmentStatus = AppointmentStatus;
   private subscriptions: Subscription[] = [];
-
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private appointmentDetailService: AppointmentDetailService,
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar,
-  ) {}
 
   ngOnInit(): void {
     this.loadAppointment();

@@ -1,5 +1,5 @@
 import { PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
-import { Component, OnInit, Inject, PLATFORM_ID, input, model } from '@angular/core';
+import { Component, OnInit, PLATFORM_ID, input, model, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { SalonService } from '../../services/salon.service';
 import { RouterModule } from '@angular/router';
@@ -43,14 +43,12 @@ export class TopSalonsComponent implements OnInit {
     address: 'Address not available',
     services: [],
   };
-
+  private readonly salonService = inject(SalonService);
+  private readonly platformUtils = inject<PlatformUtils>(PLATFORM_UTILS_TOKEN);
+  private readonly platformId = inject<object>(PLATFORM_ID);
   isBrowser: boolean;
 
-  constructor(
-    private salonService: SalonService,
-    @Inject(PLATFORM_UTILS_TOKEN) private platformUtils: PlatformUtils,
-    @Inject(PLATFORM_ID) private platformId: object,
-  ) {
+  constructor() {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 

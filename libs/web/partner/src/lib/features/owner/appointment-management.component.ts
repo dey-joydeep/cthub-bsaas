@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatNativeDateModule } from '@angular/material/core';
@@ -53,14 +53,12 @@ export class AppointmentManagementComponent implements OnInit {
     { id: 'st1', name: 'Alex Johnson', role: 'Stylist' },
     { id: 'st2', name: 'Sam Wilson', role: 'Colorist' },
   ];
-
+  private readonly fb = inject(FormBuilder);
+  private readonly appointmentService = inject(AppointmentService);
   // Current salon ID - in a real app, this would come from the auth service or route params
   private salonId = 'salon-123';
 
-  constructor(
-    private fb: FormBuilder,
-    private appointmentService: AppointmentService,
-  ) {
+  constructor() {
     this.appointmentForm = this.fb.group({
       customerId: ['', Validators.required],
       serviceId: ['', Validators.required],

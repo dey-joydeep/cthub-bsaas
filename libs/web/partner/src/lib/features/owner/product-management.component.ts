@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray, ReactiveFormsModule } from '@angular/forms';
 
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -49,12 +49,11 @@ export class ProductManagementComponent implements OnInit {
   ];
 
   private salonId = 'salon-123';
+  private readonly fb = inject(FormBuilder);
+  private readonly productService = inject(ProductService);
   private currentUserId = 'user-123';
 
-  constructor(
-    private fb: FormBuilder,
-    private productService: ProductService,
-  ) {
+  constructor() {
     this.productForm = this.fb.group({
       // Basic Info
       name: ['', [Validators.required, Validators.maxLength(100)]],

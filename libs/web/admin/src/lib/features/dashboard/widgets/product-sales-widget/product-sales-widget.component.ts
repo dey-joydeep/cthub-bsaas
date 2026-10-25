@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { DatePipe, CurrencyPipe, DecimalPipe } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -25,7 +25,9 @@ import { ProductSale } from './models/product-sales-widget.model';
   selector: 'app-product-sales-widget',
   standalone: true,
   imports: [
-    CommonModule,
+    DatePipe,
+    CurrencyPipe,
+    DecimalPipe,
     RouterModule,
     MatCardModule,
     MatButtonModule,
@@ -56,7 +58,7 @@ export class ProductSalesWidgetComponent extends AbstractBaseComponent implement
   pageIndex = 0;
   sortField = 'saleDate';
   sortDirection: 'asc' | 'desc' | undefined = 'desc';
-
+  private readonly productSalesWidgetService = inject(ProductSalesWidgetService);
   // Date range filter
   dateRange = new FormGroup({
     start: new FormControl<Date | null>(null),
@@ -71,10 +73,6 @@ export class ProductSalesWidgetComponent extends AbstractBaseComponent implement
     averageSale: number;
     topSellingProducts: Array<{ name: string; quantity: number }>;
   } | null = null;
-
-  constructor(private productSalesWidgetService: ProductSalesWidgetService) {
-    super();
-  }
 
   override ngOnInit(): void {
     super.ngOnInit();

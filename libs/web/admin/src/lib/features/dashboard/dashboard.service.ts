@@ -1,27 +1,25 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { environment } from '@cthub-bsaas/web-config/environments/admin/environment';
 import { AppointmentTrend, DashboardStats, ProductSales, Renewal, RevenueData, SubscriptionData } from './models/dashboard.model';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
-  private apiUrl = environment.apiUrl;
+  private apiUrl = '/api';
   private tenantId = 'demo-tenant';
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   getUpcomingRenewals(): Promise<Renewal[]> {
     return this.http
-      .get<Renewal[]>(`${environment.apiUrl}/dashboard/renewals?tenantId=${this.tenantId}`)
+      .get<Renewal[]>(`${this.apiUrl}/dashboard/renewals?tenantId=${this.tenantId}`)
       .toPromise()
       .then((data) => data || []);
   }
 
   getStats(): Promise<DashboardStats> {
     return this.http
-      .get<DashboardStats>(`${environment.apiUrl}/dashboard/stats`)
+      .get<DashboardStats>(`${this.apiUrl}/dashboard/stats`)
       .toPromise()
       .then(
         (data) =>
@@ -38,14 +36,14 @@ export class DashboardService {
 
   getProductSales(tenantId: string): Promise<ProductSales[]> {
     return this.http
-      .get<ProductSales[]>(`${environment.apiUrl}/dashboard/product-sales?tenantId=${tenantId}`)
+      .get<ProductSales[]>(`${this.apiUrl}/dashboard/product-sales?tenantId=${tenantId}`)
       .toPromise()
       .then((data) => data || []);
   }
 
   getRevenueData(): Promise<RevenueData[]> {
     return this.http
-      .get<RevenueData[]>(`${environment.apiUrl}/dashboard/revenue`)
+      .get<RevenueData[]>(`${this.apiUrl}/dashboard/revenue`)
       .toPromise()
       .then((data) => data || [])
       .catch((error) => {
@@ -56,7 +54,7 @@ export class DashboardService {
 
   getSubscriptionData(): Promise<SubscriptionData[]> {
     return this.http
-      .get<SubscriptionData[]>(`${environment.apiUrl}/dashboard/subscriptions`)
+      .get<SubscriptionData[]>(`${this.apiUrl}/dashboard/subscriptions`)
       .toPromise()
       .then((data) => data || [])
       .catch((error) => {
@@ -66,7 +64,7 @@ export class DashboardService {
   }
 
   getRevenueChart(): Observable<RevenueData[]> {
-    return this.http.get<{ data: RevenueData[] }>(`${environment.apiUrl}/dashboard/revenue/chart`).pipe(
+    return this.http.get<{ data: RevenueData[] }>(`${this.apiUrl}/dashboard/revenue/chart`).pipe(
       map((response) => response.data || []),
       catchError((error) => {
         console.error('Error fetching revenue chart data:', error);
@@ -76,7 +74,7 @@ export class DashboardService {
   }
 
   getAppointmentTrends(): Observable<AppointmentTrend[]> {
-    return this.http.get<{ data: AppointmentTrend[] }>(`${environment.apiUrl}/dashboard/appointments/trends`).pipe(
+    return this.http.get<{ data: AppointmentTrend[] }>(`${this.apiUrl}/dashboard/appointments/trends`).pipe(
       map((response) => response.data || []),
       catchError((error) => {
         console.error('Error fetching appointment trends:', error);

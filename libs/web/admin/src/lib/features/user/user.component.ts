@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { CurrentUserService } from '@cthub-bsaas/web-core/auth';
 import { UserService, UserStats } from './user.service';
@@ -13,13 +13,8 @@ import { UserService, UserStats } from './user.service';
 export class UserComponent extends AbstractBaseComponent implements OnInit {
   stats: UserStats | null = null;
   isAdmin = false;
-
-  constructor(
-    private userService: UserService,
-    public currentUserService: CurrentUserService,
-  ) {
-    super();
-  }
+  private readonly userService = inject(UserService);
+  public readonly currentUserService = inject(CurrentUserService);
 
   public override ngOnInit(): void {
     this.checkRoleAndFetch();

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -22,12 +22,11 @@ export class ProfileSettingsComponent implements OnInit {
   error: string | null = null;
   success: string | null = null;
   imagePreview: string | ArrayBuffer | null = null;
+  private readonly fb = inject(FormBuilder);
+  private readonly userService = inject(UserService);
+  public readonly currentUserService = inject(CurrentUserService);
 
-  constructor(
-    private fb: FormBuilder,
-    private userService: UserService,
-    public currentUserService: CurrentUserService,
-  ) {
+  constructor() {
     this.profileForm = this.fb.group({
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],

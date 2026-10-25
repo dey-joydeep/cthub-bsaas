@@ -1,6 +1,6 @@
-import { CommonModule } from '@angular/common';
+import { DatePipe, CurrencyPipe } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 // Core services
@@ -26,7 +26,7 @@ import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
 @Component({
   selector: 'app-salon-profile',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, SafeUrlPipe, FormsModule],
+  imports: [DatePipe, CurrencyPipe, HttpClientModule, SafeUrlPipe, FormsModule],
   templateUrl: './salon-profile.component.html',
   styleUrls: ['./salon-profile.component.css'],
 })
@@ -45,14 +45,13 @@ export class SalonProfileComponent implements OnInit {
 
   // Component state
   loading = false;
+  private readonly route = inject(ActivatedRoute);
+  private readonly http = inject(HttpClient);
+  public readonly currentUserService = inject(CurrentUserService);
+  public readonly errorService = inject(ErrorService);
   error: string | null = null;
 
-  constructor(
-    private route: ActivatedRoute,
-    private http: HttpClient,
-    @Inject(CurrentUserService) public currentUserService: CurrentUserService,
-    @Inject(ErrorService) public errorService: ErrorService,
-  ) {
+  constructor() {
     // Get the current user ID
     const user = this.currentUserService.currentUser;
     this.userId = user ? user.id : null;

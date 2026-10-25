@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -7,8 +7,7 @@ import { CreatePortfolioParams } from '../../models/portfolio-params.model';
 @Injectable({ providedIn: 'root' })
 export class PortfolioService {
   private apiUrl = '/api/portfolio';
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   savePortfolio(data: CreatePortfolioParams | FormData): Observable<{ success: boolean }> {
     let payload: any;

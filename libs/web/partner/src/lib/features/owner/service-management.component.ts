@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -21,11 +21,10 @@ export class ServiceManagementComponent {
   error: string | null = null;
   success: string | null = null;
   private currentUser: { id: string };
+  private readonly fb = inject(FormBuilder);
+  private readonly serviceService = inject(ServiceService);
 
-  constructor(
-    private fb: FormBuilder,
-    private serviceService: ServiceService,
-  ) {
+  constructor() {
     // In a real app, you would get this from your auth service
     this.currentUser = { id: 'current-user-id' };
 

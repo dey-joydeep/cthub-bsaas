@@ -155,7 +155,11 @@
         <ng-container i18n="@@COMMON.RESET">Reset</ng-container>
       </button>
       <button mat-raised-button color="primary" type="submit" [disabled]="loading || productForm.invalid">
-        <ng-container *ngIf="productForm.get('id')?.value" i18n="@@COMMON.UPDATE">Update</ng-container><ng-container *ngIf="!productForm.get('id')?.value" i18n="@@COMMON.SAVE">Save</ng-container>
+        @if (productForm.get('id')?.value) {
+          <ng-container i18n="@@COMMON.UPDATE">Update</ng-container>
+        } @else {
+          <ng-container i18n="@@COMMON.SAVE">Save</ng-container>
+        }
       </button>
     </div>
 

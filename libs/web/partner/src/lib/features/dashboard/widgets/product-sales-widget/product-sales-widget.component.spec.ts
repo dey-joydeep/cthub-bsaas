@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { provideRouter } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -55,7 +55,6 @@ describe('ProductSalesWidgetComponent', () => {
         ProductSalesWidgetComponent,
         NoopAnimationsModule,
         HttpClientTestingModule,
-        RouterTestingModule,
         MatCardModule,
         MatButtonModule,
         MatIconModule,
@@ -71,7 +70,7 @@ describe('ProductSalesWidgetComponent', () => {
         MatNativeDateModule,
         ReactiveFormsModule,
       ],
-      providers: [{ provide: ProductSalesWidgetService, useValue: productSalesWidgetService }],
+      providers: [provideRouter([]), { provide: ProductSalesWidgetService, useValue: productSalesWidgetService }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ProductSalesWidgetComponent);

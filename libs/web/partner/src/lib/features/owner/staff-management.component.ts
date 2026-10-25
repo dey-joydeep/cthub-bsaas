@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -25,12 +25,11 @@ export class StaffManagementComponent {
   salonId = '';
   staffList: Staff[] = [];
   selectedStaff: Staff | null = null;
+  private readonly fb = inject(FormBuilder);
+  private readonly staffService = inject(StaffService);
+  private readonly route = inject(ActivatedRoute);
 
-  constructor(
-    private fb: FormBuilder,
-    private staffService: StaffService,
-    private route: ActivatedRoute,
-  ) {
+  constructor() {
     this.staffForm = this.fb.group({
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],

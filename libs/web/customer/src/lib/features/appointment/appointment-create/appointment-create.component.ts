@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { DatePipe, CurrencyPipe } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -20,7 +20,8 @@ import { Service, Staff } from './model/appointment-create.model';
   selector: 'app-appointment-create',
   standalone: true,
   imports: [
-    CommonModule,
+    DatePipe,
+    CurrencyPipe,
     ReactiveFormsModule,
     RouterModule,
     MatStepperModule,
@@ -52,15 +53,14 @@ export class AppointmentCreateComponent implements OnInit {
   serviceFormGroup: FormGroup;
   staffFormGroup: FormGroup;
   dateTimeFormGroup: FormGroup;
+  private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly appointmentCreateService = inject(AppointmentCreateService);
   detailsFormGroup: FormGroup;
 
-  constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private route: ActivatedRoute,
-    private snackBar: MatSnackBar,
-    private appointmentCreateService: AppointmentCreateService,
-  ) {
+  constructor() {
     this.serviceFormGroup = this.fb.group({
       service: ['', Validators.required],
     });

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -20,8 +20,7 @@ export class SalonListComponent implements OnInit {
   salons: Salon[] = [];
   loading = true;
   error: string | null = null;
-
-  constructor(private salonService: SalonService) {}
+  private readonly salonService = inject(SalonService);
 
   ngOnInit() {
     this.loadSalons();

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -7,8 +7,7 @@ import { Salon, Review, Appointment } from './model/tenant.model';
 @Injectable({ providedIn: 'root' })
 export class TenantService {
   private apiUrl = '/api/salons';
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   getSalon(id: string): Observable<Salon> {
     return this.http.get<Salon>(`${this.apiUrl}/${id}`).pipe(catchError((err) => this.handleError(err)));

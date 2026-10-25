@@ -5,8 +5,7 @@ import { HomeService } from './services/home.service';
 import { of, throwError } from 'rxjs';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Router, RouterModule } from '@angular/router';
-import { RouterTestingModule } from '@angular/router/testing';
+import { Router, provideRouter } from '@angular/router';
 import { IHomePageData, ISalonDto, IServiceDto } from '../../models/home.models';
 
 const mockSalon: ISalonDto = {
@@ -111,11 +110,8 @@ describe('HomeComponent', () => {
     };
 
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule, RouterTestingModule.withRoutes([]), HomeComponent],
-      providers: [
-        { provide: HomeService, useValue: homeService },
-        { provide: MatSnackBar, useValue: snackBar },
-      ],
+      imports: [HttpClientTestingModule, HomeComponent],
+      providers: [provideRouter([]), { provide: HomeService, useValue: homeService }, { provide: MatSnackBar, useValue: snackBar }],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 

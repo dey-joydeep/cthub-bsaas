@@ -3,7 +3,6 @@ import { AppComponent } from './app.component';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { CommonModule } from '@angular/common';
 import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { vi } from 'vitest';
 import { of } from 'rxjs';
@@ -14,7 +13,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CommonModule, AppComponent],
+      imports: [AppComponent],
       providers: [
         provideRouter([]),
         provideHttpClient(),

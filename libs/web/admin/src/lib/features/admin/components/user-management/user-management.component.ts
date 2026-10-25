@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { TitleCasePipe, NgClass } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -23,7 +23,7 @@ interface User {
   selector: 'app-user-management',
   standalone: true,
   imports: [
-    CommonModule,
+    TitleCasePipe,
     MatTableModule,
     MatButtonModule,
     MatIconModule,
@@ -32,6 +32,7 @@ interface User {
     MatInputModule,
     MatPaginatorModule,
     MatSortModule,
+    NgClass,
   ],
   template: `
     <div class="p-6">

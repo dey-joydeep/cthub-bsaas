@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 
 import { PortfolioService } from './portfolio.service';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -19,11 +19,10 @@ export class PortfolioComponent extends AbstractBaseComponent {
   editForm: FormGroup;
   selectedImage: File | null = null;
   editSelectedImage: File | null = null;
+  public readonly portfolioService = inject(PortfolioService);
+  private readonly fb = inject(FormBuilder);
 
-  constructor(
-    public portfolioService: PortfolioService,
-    private fb: FormBuilder,
-  ) {
+  constructor() {
     super();
     this.addForm = this.fb.group({
       tenantId: ['', Validators.required],

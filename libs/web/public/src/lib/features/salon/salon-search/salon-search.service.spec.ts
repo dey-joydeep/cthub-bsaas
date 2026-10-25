@@ -27,7 +27,9 @@ describe('SalonSearchService', () => {
 
   it('should search salons successfully', () => {
     const mockResponse: { salons: Salon[]; total: number } = {
-      salons: [{ id: '1', name: 'Salon Search', address: '123 St', city: 'City', rating: 4.8, reviewCount: 5, imageUrl: 'url', services: [] }],
+      salons: [
+        { id: '1', name: 'Salon Search', address: '123 St', city: 'City', rating: 4.8, reviewCount: 5, imageUrl: 'url', services: [] },
+      ],
       total: 1,
     };
     const params = new HttpParams().set('city', 'City');

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -48,11 +48,10 @@ export class SalonManagementComponent {
     'Makeup',
     'Other',
   ];
+  private readonly fb = inject(FormBuilder);
+  private readonly salonService = inject(SalonService);
 
-  constructor(
-    private fb: FormBuilder,
-    private salonService: SalonService,
-  ) {
+  constructor() {
     // In a real app, you would get this from your auth service
     this.currentUser = {
       id: 'current-user-id',
