@@ -22,8 +22,11 @@ libs/web/customer/auth/src/lib/components/
 
 ```ts
 export const CUSTOMER_ROUTES: Routes = [
-  { path: 'me', loadComponent: () => import('./features/profile/profile.page').then(m => m.ProfilePage) },
-  { path: 'appointments', loadComponent: () => import('./features/appointments/appointment-list.component').then(m => m.AppointmentListComponent) },
+  { path: 'me', loadComponent: () => import('./features/profile/profile.page').then((m) => m.ProfilePage) },
+  {
+    path: 'appointments',
+    loadComponent: () => import('./features/appointments/appointment-list.component').then((m) => m.AppointmentListComponent),
+  },
 ];
 ```
 

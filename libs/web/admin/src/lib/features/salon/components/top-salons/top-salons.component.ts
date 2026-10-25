@@ -1,10 +1,9 @@
-﻿import { PlatformUtils, PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
-import { Component, Input, OnInit, Inject, PLATFORM_ID, Type } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
+import { Component, OnInit, PLATFORM_ID, input, model, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { SalonService } from '../../services/salon.service';
 import { RouterModule } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
-import { ISalonDto } from '../../../home/home.models';
+import { ISalonDto } from '@cthub-bsaas/shared/models/salon.dto';
 import type { PlatformUtils } from '@cthub-bsaas/web-core-platform';
 
 // Extend ISalonDto with any additional properties needed for this component
@@ -23,15 +22,15 @@ export type Salon = ISalonDto & {
 @Component({
   selector: 'app-top-salons',
   standalone: true,
-  imports: [CommonModule, RouterModule, TranslateModule],
+  imports: [RouterModule],
   templateUrl: './top-salons.component.html',
-  styleUrls: ['./top-salons.component.scss'],
+  styleUrls: ['./top-salons.component.css'],
   // Removed ChangeDetectionStrategy.OnPush as it requires careful state management
 })
 export class TopSalonsComponent implements OnInit {
-  @Input() salons: Salon[] = [];
-  @Input() title = 'Top Salons';
-  @Input() showViewAll = false;
+  salons = model<Salon[]>([]);
+  title = input('Top Salons');
+  showViewAll = input(false);
 
   loading = true;
   error: string | null = null;
@@ -44,26 +43,24 @@ export class TopSalonsComponent implements OnInit {
     address: 'Address not available',
     services: [],
   };
-
+  private readonly salonService = inject(SalonService);
+  private readonly platformUtils = inject<PlatformUtils>(PLATFORM_UTILS_TOKEN);
+  private readonly platformId = inject<object>(PLATFORM_ID);
   isBrowser: boolean;
 
-  constructor(
-    private salonService: SalonService,
-    @Inject(PLATFORM_UTILS_TOKEN) private platformUtils: PlatformUtils,
-    @Inject(PLATFORM_ID) private platformId: object,
-  ) {
+  constructor() {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
   ngOnInit(): void {
     // Only fetch salons if none were provided via input
-    if (this.salons.length === 0) {
+    if (this.salons().length === 0) {
       if (this.isBrowser && this.platformUtils.windowRef?.navigator?.geolocation) {
         this.platformUtils.windowRef.navigator.geolocation.getCurrentPosition(
           (pos: GeolocationPosition) => {
             this.fetchTopSalons(pos.coords.latitude, pos.coords.longitude);
           },
-          (err: GeolocationPositionError) => {
+          (_err: GeolocationPositionError) => {
             this.locationDenied = true;
             this.fetchTopSalons();
           },
@@ -84,7 +81,7 @@ export class TopSalonsComponent implements OnInit {
 
     this.salonService.getTopSalons(lat, lng).subscribe({
       next: (salons: Salon[]) => {
-        this.salons = salons;
+        this.salons.set(salons);
         this.loading = false;
       },
       error: (err: any) => {
@@ -122,4 +119,3 @@ export class TopSalonsComponent implements OnInit {
     }
   }
 }
-

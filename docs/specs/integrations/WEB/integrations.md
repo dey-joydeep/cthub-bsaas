@@ -5,11 +5,11 @@
 
 ## Routes
 
-| Route | Screen ID |
-| --- | --- |
-| `/partner/settings/integrations` | `integrations.providers` |
+| Route                                      | Screen ID                     |
+| ------------------------------------------ | ----------------------------- |
+| `/partner/settings/integrations`           | `integrations.providers`      |
 | `/partner/settings/integrations/:provider` | `integrations.providerDetail` |
-| `/admin/platform/integrations` | `integrations.platformHealth` |
+| `/admin/platform/integrations`             | `integrations.platformHealth` |
 
 ## Screen Requirements
 

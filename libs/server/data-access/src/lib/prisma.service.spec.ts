@@ -81,11 +81,7 @@ describe('PrismaService', () => {
 
   it('does not register query logging when not in development mode', () => {
     const handlers = new Map<PrismaEventName, (payload: unknown) => void>();
-    jest.spyOn(PrismaClient.prototype, '$on').mockImplementation(function (
-      this: PrismaClient,
-      event: unknown,
-      callback: unknown,
-    ) {
+    jest.spyOn(PrismaClient.prototype, '$on').mockImplementation(function (this: PrismaClient, event: unknown, callback: unknown) {
       if (event === 'query' || event === 'error') {
         handlers.set(event, callback as (payload: unknown) => void);
       }
@@ -101,11 +97,7 @@ describe('PrismaService', () => {
 
   it('defaults to non-development when no ConfigService is provided', () => {
     const handlers = new Map<PrismaEventName, (payload: unknown) => void>();
-    jest.spyOn(PrismaClient.prototype, '$on').mockImplementation(function (
-      this: PrismaClient,
-      event: unknown,
-      callback: unknown,
-    ) {
+    jest.spyOn(PrismaClient.prototype, '$on').mockImplementation(function (this: PrismaClient, event: unknown, callback: unknown) {
       if (event === 'query' || event === 'error') {
         handlers.set(event, callback as (payload: unknown) => void);
       }
@@ -202,14 +194,12 @@ describe('PrismaService', () => {
     });
     const transactionResult = { ok: true };
     const callback = jest.fn().mockResolvedValue(transactionResult);
-    const transactionSpy = jest
-      .spyOn(PrismaClient.prototype, '$transaction')
-      .mockImplementation((fnOrRequests: unknown) => {
-        if (typeof fnOrRequests === 'function') {
-          return fnOrRequests({} as PrismaClient);
-        }
-        return Promise.resolve(null);
-      });
+    const transactionSpy = jest.spyOn(PrismaClient.prototype, '$transaction').mockImplementation((fnOrRequests: unknown) => {
+      if (typeof fnOrRequests === 'function') {
+        return fnOrRequests({} as PrismaClient);
+      }
+      return Promise.resolve(null);
+    });
 
     const service = createService();
     const result = await service.$transaction(callback, { maxWait: 100, timeout: 200 });
@@ -298,9 +288,7 @@ describe('PrismaService', () => {
 
     const service = createService();
 
-    await expect(service.$transaction([] as unknown as PrismaPromise<unknown>[])).rejects.toThrow(
-      'An unknown database error occurred',
-    );
+    await expect(service.$transaction([] as unknown as PrismaPromise<unknown>[])).rejects.toThrow('An unknown database error occurred');
     expect(errorSpy).toHaveBeenCalledWith('Prisma Unknown Request Error:', unknownError);
   });
 
@@ -346,9 +334,7 @@ describe('PrismaService', () => {
 
     const service = createService();
 
-    await expect(service.$transaction([] as unknown as PrismaPromise<unknown>[])).rejects.toThrow(
-      'A critical database error occurred',
-    );
+    await expect(service.$transaction([] as unknown as PrismaPromise<unknown>[])).rejects.toThrow('A critical database error occurred');
     expect(fatalSpy).toHaveBeenCalledWith('Prisma Rust Panic:', rustPanicError);
   });
 

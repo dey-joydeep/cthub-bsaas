@@ -17,9 +17,10 @@ jest.mock('ioredis', () => {
 
 describe('RedisOAuthStateStore', () => {
   const cfg = {
-    get: (k: string) => ({
-      REDIS_URL: 'redis://localhost:6379/0',
-    }[k]),
+    get: (k: string) =>
+      ({
+        REDIS_URL: 'redis://localhost:6379/0',
+      })[k],
   } as unknown as ConfigService;
 
   it('persists state and consumes via atomic lua', async () => {

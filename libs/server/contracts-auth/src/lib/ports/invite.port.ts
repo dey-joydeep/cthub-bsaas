@@ -43,4 +43,3 @@ export interface InvitePort {
   validateStaff(token: string): Promise<InviteValidationResult>;
   completeStaff(input: RegistrationCompleteInput): Promise<RegistrationCompleteResult>;
 }
-

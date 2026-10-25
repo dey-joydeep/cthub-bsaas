@@ -10,7 +10,10 @@ export class GoogleOAuthAdapter implements OAuthPort {
   private readonly ttlSec: number;
   private readonly client: OAuth2Client;
 
-  constructor(private readonly config: ConfigService, private readonly stateStore: OAuthStateStore) {
+  constructor(
+    private readonly config: ConfigService,
+    private readonly stateStore: OAuthStateStore,
+  ) {
     this.ttlSec = parseInt(this.config.get<string>('OAUTH_STATE_TTL') ?? '600', 10);
     const clientId = this.config.get<string>('GOOGLE_CLIENT_ID') ?? '';
     const clientSecret = this.config.get<string>('GOOGLE_CLIENT_SECRET') ?? '';

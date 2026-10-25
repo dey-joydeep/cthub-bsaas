@@ -5,12 +5,12 @@
 
 ## Routes
 
-| Route | Screen ID |
-| --- | --- |
-| `/partner/settings/notifications/templates` | `notifications.templates` |
-| `/partner/settings/notifications/deliveries` | `notifications.deliveryLog` |
-| `/account/preferences` | `notifications.myPreferences` |
-| `/admin/platform/notifications` | `notifications.platformLog` |
+| Route                                        | Screen ID                     |
+| -------------------------------------------- | ----------------------------- |
+| `/partner/settings/notifications/templates`  | `notifications.templates`     |
+| `/partner/settings/notifications/deliveries` | `notifications.deliveryLog`   |
+| `/account/preferences`                       | `notifications.myPreferences` |
+| `/admin/platform/notifications`              | `notifications.platformLog`   |
 
 ## Screen Requirements
 

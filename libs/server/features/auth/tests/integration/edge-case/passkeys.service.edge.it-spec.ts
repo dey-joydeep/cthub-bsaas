@@ -1,11 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { PasskeysService } from '../../../src/lib/services/passkeys.service';
-import {
-  CREDENTIAL_PASSKEY_REPOSITORY,
-  SOCIAL_ACCOUNT_REPOSITORY,
-  USER_REPOSITORY,
-} from '@cthub-bsaas/server-contracts-auth';
+import { CREDENTIAL_PASSKEY_REPOSITORY, SOCIAL_ACCOUNT_REPOSITORY, USER_REPOSITORY } from '@cthub-bsaas/server-contracts-auth';
 import { AuditService } from '../../../src/lib/services/audit.service';
 
 describe('PasskeysService edge (Integration harnessed)', () => {
@@ -30,7 +26,11 @@ describe('PasskeysService edge (Integration harnessed)', () => {
         PasskeysService,
         {
           provide: CREDENTIAL_PASSKEY_REPOSITORY,
-          useValue: { countByUser: jest.fn().mockResolvedValue(2), deleteForUser: jest.fn().mockResolvedValue(false), listByUser: jest.fn() },
+          useValue: {
+            countByUser: jest.fn().mockResolvedValue(2),
+            deleteForUser: jest.fn().mockResolvedValue(false),
+            listByUser: jest.fn(),
+          },
         },
         { provide: SOCIAL_ACCOUNT_REPOSITORY, useValue: { findByUserId: jest.fn().mockResolvedValue([{ id: 's1' }]) } },
         { provide: USER_REPOSITORY, useValue: { findById: jest.fn().mockResolvedValue({ id: 'u1', passwordHash: 'hash' }) } },

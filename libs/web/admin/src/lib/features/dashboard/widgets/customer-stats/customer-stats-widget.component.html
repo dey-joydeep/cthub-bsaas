@@ -2,89 +2,101 @@
   <mat-card-header>
     <mat-card-title>
       <mat-icon class="header-icon">people_alt</mat-icon>
-      {{ 'DASHBOARD.CUSTOMERS.TITLE' | translate }}
+      <ng-container i18n="@@DASHBOARD.CUSTOMERS.TITLE">Customer Statistics</ng-container>
     </mat-card-title>
-    <button mat-icon-button (click)="refresh()" [disabled]="loading" matTooltip="{{ 'COMMON.REFRESH' | translate }}">
+    <button mat-icon-button (click)="refresh()" [disabled]="loading" matTooltip="Refresh" i18n-matTooltip="@@COMMON.REFRESH">
       <mat-icon>refresh</mat-icon>
     </button>
   </mat-card-header>
 
   <mat-card-content>
-    <div class="loading-container" *ngIf="loading">
-      <mat-spinner diameter="36"></mat-spinner>
-      <p>{{ 'DASHBOARD.LOADING' | translate }}</p>
-    </div>
+    @if (loading) {
+      <div class="loading-container">
+        <mat-spinner diameter="36"></mat-spinner>
+        <p><ng-container i18n="@@DASHBOARD.LOADING">Loading dashboard...</ng-container></p>
+      </div>
+    }
 
-    <div class="error-container" *ngIf="error && !loading">
-      <mat-icon color="warn">error_outline</mat-icon>
-      <p>{{ error }}</p>
-      <button mat-button color="primary" (click)="refresh()">
-        <mat-icon>refresh</mat-icon>
-        {{ 'COMMON.RETRY' | translate }}
-      </button>
-    </div>
+    @if (error && !loading) {
+      <div class="error-container">
+        <mat-icon color="warn">error_outline</mat-icon>
+        <p>{{ error }}</p>
+        <button mat-button color="primary" (click)="refresh()">
+          <mat-icon>refresh</mat-icon>
+          <ng-container i18n="@@COMMON.RETRY">Retry</ng-container>
+        </button>
+      </div>
+    }
 
-    <div class="stats-grid" *ngIf="!loading && !error">
-      <!-- First Row -->
-      <div class="stat-item total-customers">
-        <div class="stat-icon">
-          <mat-icon>people</mat-icon>
+    @if (!loading && !error) {
+      <div class="stats-grid">
+        <!-- First Row -->
+        <div class="stat-item total-customers">
+          <div class="stat-icon">
+            <mat-icon>people</mat-icon>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{ stats.totalCustomers | number }}</div>
+            <div class="stat-label"><ng-container i18n="@@DASHBOARD.CUSTOMERS.TOTAL">Total Customers</ng-container></div>
+            @if (stats.newCustomers !== undefined) {
+              <div class="stat-trend">
+                <mat-icon [class.positive]="stats.newCustomers >= 0" [class.negative]="stats.newCustomers < 0">
+                  {{ stats.newCustomers >= 0 ? 'trending_up' : 'trending_down' }}
+                </mat-icon>
+                <span>{{ stats.newCustomers | number }} <ng-container i18n="@@DASHBOARD.CUSTOMERS.NEW_THIS_MONTH">New This Month</ng-container></span>
+              </div>
+            }
+          </div>
         </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ stats.totalCustomers | number }}</div>
-          <div class="stat-label">{{ 'DASHBOARD.CUSTOMERS.TOTAL' | translate }}</div>
-          <div class="stat-trend" *ngIf="stats.newCustomers !== undefined">
-            <mat-icon [class.positive]="stats.newCustomers >= 0" [class.negative]="stats.newCustomers < 0">
-              {{ stats.newCustomers >= 0 ? 'trending_up' : 'trending_down' }}
-            </mat-icon>
-            <span>{{ stats.newCustomers | number }} {{ 'DASHBOARD.CUSTOMERS.NEW_THIS_MONTH' | translate }}</span>
+        <div class="stat-item active-customers">
+          <div class="stat-icon">
+            <mat-icon>groups</mat-icon>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{ stats.activeCustomers || 0 | number }}</div>
+            <div class="stat-label"><ng-container i18n="@@DASHBOARD.CUSTOMERS.ACTIVE">Active Customers</ng-container></div>
+            <div class="stat-subtext">{{ stats.count | number }} <ng-container i18n="@@DASHBOARD.CUSTOMERS.THIS_MONTH">This Month</ng-container></div>
+          </div>
+        </div>
+        <!-- Second Row -->
+        <div class="stat-item subscriptions">
+          <div class="stat-icon">
+            <mat-icon>subscriptions</mat-icon>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{ stats.activeSubscriptions | number }}</div>
+            <div class="stat-label"><ng-container i18n="@@DASHBOARD.CUSTOMERS.SUBSCRIPTIONS">Active Subscriptions</ng-container></div>
+            @if (stats.returningCustomers !== undefined) {
+              <div class="stat-subtext">
+                {{ stats.returningCustomers | number }}
+                <ng-container i18n="@@DASHBOARD.CUSTOMERS.RETURNING">Returning Customers</ng-container>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="stat-item revenue">
+          <div class="stat-icon">
+            <mat-icon>attach_money</mat-icon>
+          </div>
+          <div class="stat-content">
+            @if (stats.mrr) {
+              <div class="stat-value">
+                {{ stats.mrr | currency: 'USD' : 'symbol' : '1.0-0' }}
+                <span class="stat-unit">/mo</span>
+              </div>
+            }
+            @if (!stats.mrr) {
+              <div class="stat-value">
+                {{ stats.totalRevenue | currency: 'USD' : 'symbol' : '1.0-0' }}
+              </div>
+            }
+            <div class="stat-label"><ng-container i18n="@@DASHBOARD.REVENUE">Revenue</ng-container></div>
+            @if (stats.arr) {
+              <div class="stat-subtext"><ng-container i18n="@@DASHBOARD.ANNUAL">Annual</ng-container>: {{ stats.arr | currency: 'USD' : 'symbol' : '1.0-0' }}</div>
+            }
           </div>
         </div>
       </div>
-
-      <div class="stat-item active-customers">
-        <div class="stat-icon">
-          <mat-icon>groups</mat-icon>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ stats.activeCustomers || 0 | number }}</div>
-          <div class="stat-label">{{ 'DASHBOARD.CUSTOMERS.ACTIVE' | translate }}</div>
-          <div class="stat-subtext">{{ stats.count | number }} {{ 'DASHBOARD.CUSTOMERS.THIS_MONTH' | translate }}</div>
-        </div>
-      </div>
-
-      <!-- Second Row -->
-      <div class="stat-item subscriptions">
-        <div class="stat-icon">
-          <mat-icon>subscriptions</mat-icon>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ stats.activeSubscriptions | number }}</div>
-          <div class="stat-label">{{ 'DASHBOARD.CUSTOMERS.SUBSCRIPTIONS' | translate }}</div>
-          <div class="stat-subtext" *ngIf="stats.returningCustomers !== undefined">
-            {{ stats.returningCustomers | number }} {{ 'DASHBOARD.CUSTOMERS.RETURNING' | translate }}
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-item revenue">
-        <div class="stat-icon">
-          <mat-icon>attach_money</mat-icon>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value" *ngIf="stats.mrr">
-            {{ stats.mrr | currency: 'USD' : 'symbol' : '1.0-0' }}
-            <span class="stat-unit">/mo</span>
-          </div>
-          <div class="stat-value" *ngIf="!stats.mrr">
-            {{ stats.totalRevenue | currency: 'USD' : 'symbol' : '1.0-0' }}
-          </div>
-          <div class="stat-label">{{ 'DASHBOARD.REVENUE' | translate }}</div>
-          <div class="stat-subtext" *ngIf="stats.arr">
-            {{ 'DASHBOARD.ANNUAL' | translate }}: {{ stats.arr | currency: 'USD' : 'symbol' : '1.0-0' }}
-          </div>
-        </div>
-      </div>
-    </div>
+    }
   </mat-card-content>
 </mat-card>

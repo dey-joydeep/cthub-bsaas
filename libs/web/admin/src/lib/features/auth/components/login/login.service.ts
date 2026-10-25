@@ -1,64 +1,64 @@
-import { inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
 
 import {
-    AUTH_STATE_SETTER,
-    LOGIN_API,
-    type ApiResponse,
-    type AuthResponse,
-    type AuthStateSetter,
-    type AdminAuthUser,
-    type InitLoginResponse,
-    type LoginApiPort,
-    type LoginCredentials,
-    type VerifyOtpParams,
+  AUTH_STATE_SETTER,
+  LOGIN_API,
+  type AdminAuthUser,
+  type ApiResponse,
+  type AuthResponse,
+  type AuthStateSetter,
+  type InitLoginResponse,
+  type LoginApiPort,
+  type LoginCredentials,
+  type VerifyOtpParams,
 } from '../../tokens/login.tokens';
 
 @Injectable({ providedIn: 'root' })
 export class LoginService {
-    private readonly api = inject<LoginApiPort>(LOGIN_API);
-    private readonly authState = inject<AuthStateSetter>(AUTH_STATE_SETTER);
+  private readonly api = inject<LoginApiPort>(LOGIN_API);
+  private readonly authState = inject<AuthStateSetter>(AUTH_STATE_SETTER);
 
-    initLogin(credentials: LoginCredentials): Observable<InitLoginResponse> {
-        return this.api.initLogin(credentials).pipe(
-            map((res) => {
-                if (!res.success) throw new Error(res.error || 'Login initialization failed');
-                return res.data;
-            }),
-        );
-    }
+  initLogin(credentials: LoginCredentials): Observable<InitLoginResponse> {
+    return this.api.initLogin(credentials).pipe(
+      map((res) => {
+        if (!res.success) throw new Error(res.error || 'Login initialization failed');
+        return res.data;
+      }),
+    );
+  }
 
-    login(credentials: LoginCredentials): Observable<AdminAuthUser> {
-        return this.api.login(credentials).pipe(
-            map((res) => this.handleAuthResponse(res)),
-            catchError((err) => this.forwardError(err)),
-        );
-    }
+  login(credentials: LoginCredentials): Observable<AdminAuthUser> {
+    return this.api.login(credentials).pipe(
+      map((res) => this.handleAuthResponse(res)),
+      catchError((err) => this.forwardError(err)),
+    );
+  }
 
-    verifyOtp(params: VerifyOtpParams): Observable<AdminAuthUser> {
-        return this.api.verifyOtp(params).pipe(
-            map((res) => this.handleAuthResponse(res)),
-            catchError((err) => this.forwardError(err)),
-        );
-    }
+  verifyOtp(params: VerifyOtpParams): Observable<AdminAuthUser> {
+    return this.api.verifyOtp(params).pipe(
+      map((res) => this.handleAuthResponse(res)),
+      catchError((err) => this.forwardError(err)),
+    );
+  }
 
-    socialLogin(provider: 'google' | 'facebook', token: string): Observable<AdminAuthUser> {
-        return this.api.socialLogin(provider, token).pipe(
-            map((res) => this.handleAuthResponse(res)),
-            catchError((err) => this.forwardError(err)),
-        );
-    }
+  socialLogin(provider: 'google' | 'facebook', token: string): Observable<AdminAuthUser> {
+    return this.api.socialLogin(provider, token).pipe(
+      map((res) => this.handleAuthResponse(res)),
+      catchError((err) => this.forwardError(err)),
+    );
+  }
 
-    private handleAuthResponse(res: ApiResponse<AuthResponse>): AdminAuthUser {
-        if (!res.success || !res.data) {
-            throw new Error(res.error || 'Authentication failed');
-        }
-        const user = res.data.user as AdminAuthUser;
-        this.authState.setLoggedInUser(user);
-        return user;
+  private handleAuthResponse(res: ApiResponse<AuthResponse>): AdminAuthUser {
+    if (!res.success || !res.data) {
+      throw new Error(res.error || 'Authentication failed');
     }
+    const user = res.data.user as AdminAuthUser;
+    this.authState.setLoggedInUser(user);
+    return user;
+  }
 
-    private forwardError(err: unknown): Observable<never> {
-        return throwError(() => err);
-    }
+  private forwardError(err: unknown): Observable<never> {
+    return throwError(() => err);
+  }
 }

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { DatePipe, TitleCasePipe, NgClass } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -24,84 +24,97 @@ interface Salon {
 @Component({
   selector: 'app-salon-approval',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatTableModule, MatChipsModule, MatMenuModule, MatChipListbox],
+  imports: [
+    DatePipe,
+    TitleCasePipe,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTableModule,
+    MatChipsModule,
+    MatMenuModule,
+    MatChipListbox,
+    NgClass,
+  ],
   template: `
     <div class="p-6">
       <h2 class="text-2xl font-bold mb-6">Salon Approvals</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <mat-card *ngFor="let salon of salons" class="relative">
-          <mat-card-header>
-            <div mat-card-avatar class="bg-gray-200 rounded-full w-12 h-12 flex items-center justify-center">
-              <mat-icon>store</mat-icon>
+        @for (salon of salons; track salon) {
+          <mat-card class="relative">
+            <mat-card-header>
+              <div mat-card-avatar class="bg-gray-200 rounded-full w-12 h-12 flex items-center justify-center">
+                <mat-icon>store</mat-icon>
+              </div>
+              <mat-card-title>{{ salon.name }}</mat-card-title>
+              <mat-card-subtitle>
+                <span class="text-sm text-gray-500">Submitted: {{ salon.submittedDate | date: 'mediumDate' }}</span>
+              </mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content class="mt-4">
+              <div class="space-y-2 text-sm">
+                <div class="flex items-center">
+                  <mat-icon class="text-gray-500 mr-2" style="font-size: 20px; width: 20px; height: 20px;">person</mat-icon>
+                  <span>{{ salon.owner }}</span>
+                </div>
+                <div class="flex items-center">
+                  <mat-icon class="text-gray-500 mr-2" style="font-size: 20px; width: 20px; height: 20px;">email</mat-icon>
+                  <span>{{ salon.email }}</span>
+                </div>
+                <div class="flex items-center">
+                  <mat-icon class="text-gray-500 mr-2" style="font-size: 20px; width: 20px; height: 20px;">phone</mat-icon>
+                  <span>{{ salon.phone }}</span>
+                </div>
+                <div class="flex items-start">
+                  <mat-icon class="text-gray-500 mr-2 mt-1" style="font-size: 20px; width: 20px; height: 20px;">location_on</mat-icon>
+                  <span>{{ salon.address }}</span>
+                </div>
+                <div class="mt-3">
+                  <div class="text-sm font-medium text-gray-700 mb-1">Services:</div>
+                  <mat-chip-listbox>
+                    @for (service of salon.services; track service) {
+                      <mat-chip-option [selectable]="false">
+                        {{ service }}
+                      </mat-chip-option>
+                    }
+                  </mat-chip-listbox>
+                </div>
+              </div>
+            </mat-card-content>
+            <mat-card-actions class="flex justify-end gap-2 p-4">
+              <button mat-stroked-button color="warn" (click)="rejectSalon(salon)">
+                <mat-icon>close</mat-icon>
+                Reject
+              </button>
+              <button mat-raised-button color="primary" (click)="approveSalon(salon)">
+                <mat-icon>check</mat-icon>
+                Approve
+              </button>
+            </mat-card-actions>
+            <div class="absolute top-2 right-2">
+              <span
+                class="px-2 py-1 rounded-full text-xs"
+                [ngClass]="{
+                  'bg-yellow-100 text-yellow-800': salon.status === 'pending',
+                  'bg-green-100 text-green-800': salon.status === 'approved',
+                  'bg-red-100 text-red-800': salon.status === 'rejected',
+                }"
+              >
+                {{ salon.status | titlecase }}
+              </span>
             </div>
-            <mat-card-title>{{ salon.name }}</mat-card-title>
-            <mat-card-subtitle>
-              <span class="text-sm text-gray-500">Submitted: {{ salon.submittedDate | date: 'mediumDate' }}</span>
-            </mat-card-subtitle>
-          </mat-card-header>
-
-          <mat-card-content class="mt-4">
-            <div class="space-y-2 text-sm">
-              <div class="flex items-center">
-                <mat-icon class="text-gray-500 mr-2" style="font-size: 20px; width: 20px; height: 20px;">person</mat-icon>
-                <span>{{ salon.owner }}</span>
-              </div>
-              <div class="flex items-center">
-                <mat-icon class="text-gray-500 mr-2" style="font-size: 20px; width: 20px; height: 20px;">email</mat-icon>
-                <span>{{ salon.email }}</span>
-              </div>
-              <div class="flex items-center">
-                <mat-icon class="text-gray-500 mr-2" style="font-size: 20px; width: 20px; height: 20px;">phone</mat-icon>
-                <span>{{ salon.phone }}</span>
-              </div>
-              <div class="flex items-start">
-                <mat-icon class="text-gray-500 mr-2 mt-1" style="font-size: 20px; width: 20px; height: 20px;">location_on</mat-icon>
-                <span>{{ salon.address }}</span>
-              </div>
-
-              <div class="mt-3">
-                <div class="text-sm font-medium text-gray-700 mb-1">Services:</div>
-                <mat-chip-listbox>
-                  <mat-chip-option *ngFor="let service of salon.services" [selectable]="false">
-                    {{ service }}
-                  </mat-chip-option>
-                </mat-chip-listbox>
-              </div>
-            </div>
-          </mat-card-content>
-
-          <mat-card-actions class="flex justify-end gap-2 p-4">
-            <button mat-stroked-button color="warn" (click)="rejectSalon(salon)">
-              <mat-icon>close</mat-icon>
-              Reject
-            </button>
-            <button mat-raised-button color="primary" (click)="approveSalon(salon)">
-              <mat-icon>check</mat-icon>
-              Approve
-            </button>
-          </mat-card-actions>
-
-          <div class="absolute top-2 right-2">
-            <span
-              class="px-2 py-1 rounded-full text-xs"
-              [ngClass]="{
-                'bg-yellow-100 text-yellow-800': salon.status === 'pending',
-                'bg-green-100 text-green-800': salon.status === 'approved',
-                'bg-red-100 text-red-800': salon.status === 'rejected',
-              }"
-            >
-              {{ salon.status | titlecase }}
-            </span>
-          </div>
-        </mat-card>
+          </mat-card>
+        }
       </div>
 
-      <div *ngIf="salons.length === 0" class="text-center py-12 text-gray-500">
-        <mat-icon class="text-4xl mb-2">check_circle_outline</mat-icon>
-        <p class="text-lg">No pending salon approvals</p>
-        <p class="text-sm">All salons have been reviewed.</p>
-      </div>
+      @if (salons.length === 0) {
+        <div class="text-center py-12 text-gray-500">
+          <mat-icon class="text-4xl mb-2">check_circle_outline</mat-icon>
+          <p class="text-lg">No pending salon approvals</p>
+          <p class="text-sm">All salons have been reviewed.</p>
+        </div>
+      }
     </div>
   `,
   styles: [

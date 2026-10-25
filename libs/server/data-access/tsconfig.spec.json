@@ -1,20 +1,20 @@
 {
-    "extends": "./tsconfig.json",
-    "compilerOptions": {
-        "outDir": "../../../dist/out-tsc",
-        "module": "commonjs",
-        "moduleResolution": "node",
-        "types": ["jest", "node"],
-        "esModuleInterop": true,
-        "target": "es2022",
-        "isolatedModules": false,
-        "useDefineForClassFields": false
-    },
-    "include": ["**/*.spec.ts", "**/*.test.ts", "**/*.d.ts", "**/*.fixture.ts"],
-    "exclude": [],
-    "references": [
-        { "path": "../core/tsconfig.lib.json" },
-        { "path": "../contracts-auth/tsconfig.lib.json" },
-        { "path": "../../shared/tsconfig.lib.json" }
-    ]
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/out-tsc",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "types": ["jest", "node"],
+    "esModuleInterop": true,
+    "target": "es2022",
+    "isolatedModules": false,
+    "useDefineForClassFields": false
+  },
+  "include": ["**/*.spec.ts", "**/*.test.ts", "**/*.d.ts", "**/*.fixture.ts"],
+  "exclude": [],
+  "references": [
+    { "path": "../core/tsconfig.lib.json" },
+    { "path": "../contracts-auth/tsconfig.lib.json" },
+    { "path": "../../shared/tsconfig.lib.json" }
+  ]
 }

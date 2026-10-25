@@ -22,4 +22,3 @@ export interface OAuthPort {
   /** Exchange an authorization code for a profile. */
   exchangeCode(provider: string, code: string, state?: string): Promise<OAuthProfile>;
 }
-

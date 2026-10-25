@@ -1,25 +1,25 @@
-import { Component, Inject, Optional } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { REGISTER_API, type RegisterApiPort, type RegisterPayload } from '../../tokens/password.tokens';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './register.component.html',
-  styleUrls: ['./register.component.scss'],
+  styleUrls: ['./register.component.css'],
 })
 export class RegisterComponent {
+  private fb = inject(FormBuilder);
+  private registerApi = inject<RegisterApiPort | null>(REGISTER_API, { optional: true });
+
   registerForm: FormGroup;
   loading = false;
   error: string | null = null;
   success: boolean = false;
 
-  constructor(
-    private fb: FormBuilder,
-    @Optional() @Inject(REGISTER_API) private registerApi: RegisterApiPort | null,
-  ) {
+  constructor() {
     this.registerForm = this.fb.group({
       name: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],

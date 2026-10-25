@@ -1,23 +1,23 @@
 {
-    "name": "@cthub-bsaas/server-infrastructure",
-    "version": "0.0.1",
-    "type": "module",
-    "main": "./../../dist/libs/server/infrastructure/index.js",
-    "types": "./../../dist/libs/server/infrastructure/index.d.ts",
-    "exports": {
-        ".": {
-            "types": "./../../dist/libs/server/infrastructure/index.d.ts",
-            "default": "./../../dist/libs/server/infrastructure/index.js"
-        }
-    },
-    "sideEffects": false,
+  "name": "@cthub-bsaas/server-infrastructure",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./../../dist/libs/server/infrastructure/index.js",
+  "types": "./../../dist/libs/server/infrastructure/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./../../dist/libs/server/infrastructure/index.d.ts",
+      "default": "./../../dist/libs/server/infrastructure/index.js"
+    }
+  },
+  "sideEffects": false,
   "dependencies": {
-    "@cthub-bsaas/shared": "0.0.1",
     "@cthub-bsaas/server-core": "0.0.1",
     "@cthub-bsaas/server-data-access": "0.0.1",
-    "@simplewebauthn/server": "^9.0.3",
-    "ioredis": "^5.4.1",
+    "@cthub-bsaas/shared": "0.0.1",
+    "@simplewebauthn/server": "13.3.2",
     "google-auth-library": "^9.14.1",
-    "nodemailer": "^6.9.13"
+    "ioredis": "^5.4.1",
+    "nodemailer": "9.0.3"
   }
 }

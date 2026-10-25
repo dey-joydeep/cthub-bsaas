@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { UpdateUserProfileParams } from './models/user-params.model';
 import { catchError } from 'rxjs/operators';
@@ -14,8 +14,7 @@ export interface UserStats {
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private apiUrl = '/api/user/stats';
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   getUserStats(tenantId: string): Observable<UserStats> {
     return this.http.get<UserStats>(`${this.apiUrl}/stats?tenant_id=${tenantId}`).pipe(catchError((err) => this.handleError(err)));

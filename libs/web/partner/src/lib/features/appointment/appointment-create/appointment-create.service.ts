@@ -1,12 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { Service, Staff } from './models/appointment-create.model';
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentCreateService {
-  constructor(private http: HttpClient) {}
-
   getServices(): Observable<Service[]> {
     // Replace with actual API call
     return of([
@@ -27,7 +24,7 @@ export class AppointmentCreateService {
     ]);
   }
 
-  createAppointment(appointment: any): Observable<any> {
+  createAppointment(_appointment: any): Observable<any> {
     // Replace with actual API call
     return of({ success: true });
   }

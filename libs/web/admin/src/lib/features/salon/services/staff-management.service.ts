@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -13,8 +13,7 @@ export interface Staff {
 @Injectable({ providedIn: 'root' })
 export class StaffManagementService {
   private apiUrl = '/api/salons';
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   getStaff(salonId: string): Observable<Staff[]> {
     return this.http.get<Staff[]>(`${this.apiUrl}/${salonId}/staff`);

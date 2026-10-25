@@ -19,4 +19,3 @@ import { PrismaModule } from '@cthub-bsaas/server-data-access';
   exports: [RECOVERY_CODES_PORT],
 })
 export class RecoveryModule {}
-

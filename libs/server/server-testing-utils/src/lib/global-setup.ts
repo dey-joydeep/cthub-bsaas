@@ -16,7 +16,7 @@ export default async function globalSetup() {
   dotenv({ path: resolve(process.cwd(), '.env.test') });
 
   const schemaPath = resolve(process.cwd(), 'libs/server/data-access/prisma/schema.prisma');
-  const push = spawnSync('npx', ['prisma', 'db', 'push', '--skip-generate', '--schema', schemaPath], {
+  const push = spawnSync('npx', ['prisma', 'db', 'push', '--skip-generate', '--accept-data-loss', '--schema', schemaPath], {
     stdio: 'inherit',
     env: process.env,
     shell: process.platform === 'win32',
@@ -58,4 +58,3 @@ export default async function globalSetup() {
 
   await prisma.$disconnect();
 }
-

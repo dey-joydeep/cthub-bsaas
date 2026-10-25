@@ -1,9 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { environment } from '@cthub-bsaas/web-config/environments/admin/environment';
 import { DashboardStats, ProductSalesFilter, ProductSalesResponse, ProductSalesSummary } from '../models/dashboard.model';
 import { AppointmentsFilter, AppointmentsOverview, AppointmentsPageableResponse, Appointment } from '../models/appointment.model';
 import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.enum';
@@ -12,9 +11,8 @@ import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.
   providedIn: 'root',
 })
 export class DashboardService {
-  private apiUrl = `${environment.apiUrl}/dashboard`;
-
-  constructor(private http: HttpClient) {}
+  private apiUrl = '/api/dashboard';
+  private readonly http = inject(HttpClient);
 
   /**
    * Get dashboard statistics
@@ -39,7 +37,7 @@ export class DashboardService {
       });
     }
 
-    return this.http.get<AppointmentsOverview>(`${environment.apiUrl}/appointments/overview`, { params });
+    return this.http.get<AppointmentsOverview>('/api/appointments/overview', { params });
   }
 
   /**
@@ -58,7 +56,7 @@ export class DashboardService {
       });
     }
 
-    return this.http.get<AppointmentsPageableResponse>(`${environment.apiUrl}/appointments`, { params });
+    return this.http.get<AppointmentsPageableResponse>('/api/appointments', { params });
   }
 
   /**
@@ -66,7 +64,7 @@ export class DashboardService {
    * @param id Appointment ID
    */
   getAppointmentById(id: string): Observable<Appointment> {
-    return this.http.get<Appointment>(`${environment.apiUrl}/appointments/${id}`);
+    return this.http.get<Appointment>(`/api/appointments/${id}`);
   }
 
   /**
@@ -75,7 +73,7 @@ export class DashboardService {
    * @param status New status
    */
   updateAppointmentStatus(id: string, status: AppointmentStatus): Observable<Appointment> {
-    return this.http.patch<Appointment>(`${environment.apiUrl}/appointments/${id}/status`, { status });
+    return this.http.patch<Appointment>(`/api/appointments/${id}/status`, { status });
   }
 
   /**

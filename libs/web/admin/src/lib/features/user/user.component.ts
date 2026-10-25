@@ -1,27 +1,20 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
-import { TranslateModule } from '@ngx-translate/core';
 import { CurrentUserService } from '@cthub-bsaas/web-core/auth';
 import { UserService, UserStats } from './user.service';
 
 @Component({
   selector: 'app-user',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [],
   templateUrl: './user.component.html',
-  styleUrls: ['./user.component.scss'],
+  styleUrls: ['./user.component.css'],
 })
 export class UserComponent extends AbstractBaseComponent implements OnInit {
   stats: UserStats | null = null;
   isAdmin = false;
-
-  constructor(
-    private userService: UserService,
-    public currentUserService: CurrentUserService,
-  ) {
-    super();
-  }
+  private readonly userService = inject(UserService);
+  public readonly currentUserService = inject(CurrentUserService);
 
   public override ngOnInit(): void {
     this.checkRoleAndFetch();

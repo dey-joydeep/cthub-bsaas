@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -25,7 +25,6 @@ interface SystemSettings {
   selector: 'app-system-settings',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatCardModule,
     MatFormFieldModule,
@@ -160,6 +159,8 @@ export class SystemSettingsComponent {
   settingsForm: FormGroup;
 
   // Default values - in a real app, these would come from an API
+  private readonly fb = inject(FormBuilder);
+  private readonly snackBar = inject(MatSnackBar);
   defaultSettings: SystemSettings = {
     siteName: 'Beauty SaaS',
     contactEmail: 'admin@beautysaas.com',
@@ -170,10 +171,7 @@ export class SystemSettingsComponent {
     sessionTimeout: 30,
   };
 
-  constructor(
-    private fb: FormBuilder,
-    private snackBar: MatSnackBar,
-  ) {
+  constructor() {
     this.settingsForm = this.fb.group({
       siteName: [this.defaultSettings.siteName, [Validators.required, Validators.maxLength(100)]],
       contactEmail: [this.defaultSettings.contactEmail, [Validators.required, Validators.email]],

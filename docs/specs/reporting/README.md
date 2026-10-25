@@ -15,13 +15,13 @@ Define operational, financial, staff, customer, inventory, platform, export, and
 
 ## Documents
 
-| Area | Document |
-| --- | --- |
-| FRD | [Functional Requirements](FRD/reporting.md) |
-| HLD | [Architecture](HLD/reporting.md) |
-| LLD | [Implementation Design](LLD/reporting.md) |
-| API | [Endpoint Map](API/endpoint-map.md) |
-| Web | [Web Specification](WEB/reporting.md) |
+| Area       | Document                                                      |
+| ---------- | ------------------------------------------------------------- |
+| FRD        | [Functional Requirements](FRD/reporting.md)                   |
+| HLD        | [Architecture](HLD/reporting.md)                              |
+| LLD        | [Implementation Design](LLD/reporting.md)                     |
+| API        | [Endpoint Map](API/endpoint-map.md)                           |
+| Web        | [Web Specification](WEB/reporting.md)                         |
 | Validation | [Validation And Controls](VALIDATION/reporting-validation.md) |
-| Test | [Test Specification](TEST/reporting.md) |
-| Wireframes | [Wireframe Notes](WIREFRAMES/reporting.md) |
+| Test       | [Test Specification](TEST/reporting.md)                       |
+| Wireframes | [Wireframe Notes](WIREFRAMES/reporting.md)                    |

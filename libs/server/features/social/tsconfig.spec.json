@@ -11,9 +11,5 @@
     "useDefineForClassFields": false,
     "importHelpers": true
   },
-  "include": [
-    "**/*.spec.ts",
-    "**/*.it-spec.ts",
-    "**/*.d.ts"
-  ]
+  "include": ["**/*.spec.ts", "**/*.it-spec.ts", "**/*.d.ts"]
 }

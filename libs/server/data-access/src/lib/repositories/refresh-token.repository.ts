@@ -9,29 +9,29 @@ import { IRefreshTokenRepository } from '@cthub-bsaas/server-contracts-auth';
  */
 @Injectable()
 export class RefreshTokenRepository implements IRefreshTokenRepository {
-    constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-    /**
-     * @inheritdoc
-     */
-    create(data: Prisma.RefreshTokenUncheckedCreateInput): Promise<RefreshToken> {
-        return this.prisma.refreshToken.create({ data });
-    }
+  /**
+   * @inheritdoc
+   */
+  create(data: Prisma.RefreshTokenUncheckedCreateInput): Promise<RefreshToken> {
+    return this.prisma.refreshToken.create({ data });
+  }
 
-    /**
-     * @inheritdoc
-     */
-    findByJti(jti: string): Promise<RefreshToken | null> {
-        return this.prisma.refreshToken.findUnique({ where: { jti } });
-    }
+  /**
+   * @inheritdoc
+   */
+  findByJti(jti: string): Promise<RefreshToken | null> {
+    return this.prisma.refreshToken.findUnique({ where: { jti } });
+  }
 
-    /**
-     * @inheritdoc
-     */
-    revoke(jti: string): Promise<RefreshToken> {
-        return this.prisma.refreshToken.update({
-            where: { jti },
-            data: { revokedAt: new Date() },
-        });
-    }
+  /**
+   * @inheritdoc
+   */
+  revoke(jti: string): Promise<RefreshToken> {
+    return this.prisma.refreshToken.update({
+      where: { jti },
+      data: { revokedAt: new Date() },
+    });
+  }
 }

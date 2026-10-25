@@ -7,9 +7,12 @@ export class InMemoryChallengeStore implements ChallengeStore {
 
   set(key: string, value: string, ttlSec: number): Promise<void> {
     this.clearTimer(key);
-    const timeout = setTimeout(() => {
-      this.data.delete(key);
-    }, Math.max(1, Math.floor(ttlSec)) * 1000);
+    const timeout = setTimeout(
+      () => {
+        this.data.delete(key);
+      },
+      Math.max(1, Math.floor(ttlSec)) * 1000,
+    );
     this.data.set(key, { value, timeout });
     return Promise.resolve();
   }

@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xliff version="2.0" xmlns="urn:oasis:names:tc:xliff:document:2.0" srcLang="en-US" trgLang="ja">
+  <file id="ngi18n" original="ng.template">
+    <unit id="AUTH.FORGOT_PASSWORD.FAILED_TO_SEND">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/auth/components/forgot-password/forgot-password.component.ts:120</note>
+      </notes>
+      <segment>
+        <source>Failed to send reset instructions.</source>
+      <target>リセット手順の送信に失敗しました。</target>
+      </segment>
+    </unit>
+    <unit id="COMMON.ERRORS.GENERIC">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/auth/components/forgot-password/forgot-password.component.ts:125</note>
+      </notes>
+      <segment>
+        <source>An error occurred. Please try again.</source>
+      <target>エラーが発生しました。もう一度お試しください。</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.TITLE">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/dashboard.component.html:2,3</note>
+      </notes>
+      <segment>
+        <source>Dashboard</source>
+      <target>ダッシュボード</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.CUSTOMERS.TITLE">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/customer-stats/customer-stats-widget.component.html:5,7</note>
+      </notes>
+      <segment>
+        <source>Customer Statistics</source>
+      <target>顧客統計</target>
+      </segment>
+    </unit>
+    <unit id="COMMON.REFRESH">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/customer-stats/customer-stats-widget.component.html:7</note>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:35,36</note>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/subscription-chart/subscription-chart-widget.component.html:7</note>
+      </notes>
+      <segment>
+        <source>Refresh</source>
+      <target>更新</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.LOADING">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/customer-stats/customer-stats-widget.component.html:16,17</note>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/renewals-list/renewals-list-widget.component.html:11,12</note>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/subscription-chart/subscription-chart-widget.component.html:18,19</note>
+      </notes>
+      <segment>
+        <source>Loading dashboard...</source>
+      <target>ダッシュボードを読み込み中...</target>
+      </segment>
+    </unit>
+    <unit id="COMMON.RETRY">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/customer-stats/customer-stats-widget.component.html:26,27</note>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:59,60</note>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/subscription-chart/subscription-chart-widget.component.html:29,30</note>
+      </notes>
+      <segment>
+        <source>Retry</source>
+      <target>再試行</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.CUSTOMERS.TOTAL">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/customer-stats/customer-stats-widget.component.html:40,41</note>
+      </notes>
+      <segment>
+        <source>Total Customers</source>
+      <target>総顧客数</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.CUSTOMERS.NEW_THIS_MONTH">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/customer-stats/customer-stats-widget.component.html:46,48</note>
+      </notes>
+      <segment>
+        <source>New This Month</source>
+      <target>今月の新規</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.CUSTOMERS.ACTIVE">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/customer-stats/customer-stats-widget.component.html:57,58</note>
+      </notes>
+      <segment>
+        <source>Active Customers</source>
+      <target>アクティブな顧客</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.CUSTOMERS.THIS_MONTH">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/customer-stats/customer-stats-widget.component.html:58,60</note>
+      </notes>
+      <segment>
+        <source>This Month</source>
+      <target>今月</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.CUSTOMERS.SUBSCRIPTIONS">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/customer-stats/customer-stats-widget.component.html:68,69</note>
+      </notes>
+      <segment>
+        <source>Active Subscriptions</source>
+      <target>有効なサブスクリプション</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.CUSTOMERS.RETURNING">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/customer-stats/customer-stats-widget.component.html:70,72</note>
+      </notes>
+      <segment>
+        <source>Returning Customers</source>
+      <target>リピーター</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.REVENUE">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/customer-stats/customer-stats-widget.component.html:90,91</note>
+      </notes>
+      <segment>
+        <source>Revenue</source>
+      <target>収益</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.ANNUAL">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/customer-stats/customer-stats-widget.component.html:92</note>
+      </notes>
+      <segment>
+        <source>Annual</source>
+      <target>年間</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.CUSTOMER_STATS.ERROR_LOADING">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/customer-stats/customer-stats-widget.component.ts:65</note>
+      </notes>
+      <segment>
+        <source>Failed to load customer statistics. Please try again later.</source>
+      <target>Failed to load customer statistics. Please try again later.</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.TITLE">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:5,7</note>
+      </notes>
+      <segment>
+        <source>Product Sales</source>
+      <target>製品売上</target>
+      </segment>
+    </unit>
+    <unit id="COMMON.START_DATE">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:12,13</note>
+      </notes>
+      <segment>
+        <source>Start Date</source>
+      <target>開始日</target>
+      </segment>
+    </unit>
+    <unit id="COMMON.END_DATE">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:21,22</note>
+      </notes>
+      <segment>
+        <source>End Date</source>
+      <target>終了日</target>
+      </segment>
+    </unit>
+    <unit id="COMMON.ACTIONS">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:29</note>
+      </notes>
+      <segment>
+        <source>Actions</source>
+      <target>アクション</target>
+      </segment>
+    </unit>
+    <unit id="COMMON.EXPORT_CSV">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:39,40</note>
+      </notes>
+      <segment>
+        <source>Export CSV</source>
+      <target>CSVエクスポート</target>
+      </segment>
+    </unit>
+    <unit id="COMMON.LOADING">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:49,50</note>
+      </notes>
+      <segment>
+        <source>Loading...</source>
+      <target>読み込み中...</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.TOTAL_SALES">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:69,70</note>
+      </notes>
+      <segment>
+        <source>Total Sales</source>
+      <target>総売上</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.TRANSACTIONS">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:74,75</note>
+      </notes>
+      <segment>
+        <source>Transactions</source>
+      <target>トランザクション</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.TOTAL_REVENUE">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:79,80</note>
+      </notes>
+      <segment>
+        <source>Total Revenue</source>
+      <target>総収益</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.REVENUE">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:84,85</note>
+      </notes>
+      <segment>
+        <source>Revenue</source>
+      <target>収益</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.AVERAGE_SALE">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:89,90</note>
+      </notes>
+      <segment>
+        <source>Average Sale</source>
+      <target>平均売上</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.PER_ORDER">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:94,95</note>
+      </notes>
+      <segment>
+        <source>per order</source>
+      <target>注文ごと</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.ITEMS_SOLD">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:99,100</note>
+      </notes>
+      <segment>
+        <source>Items Sold</source>
+      <target>販売済みアイテム</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.TOTAL_ITEMS">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:104,105</note>
+      </notes>
+      <segment>
+        <source>Total Items</source>
+      <target>総アイテム数</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.TOP_PRODUCTS">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:114,115</note>
+      </notes>
+      <segment>
+        <source>Top Products</source>
+      <target>Top Products</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.SOLD">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:122,123</note>
+      </notes>
+      <segment>
+        <source>Sold</source>
+      <target>Sold</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.PRODUCT">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:137,139</note>
+      </notes>
+      <segment>
+        <source>Product</source>
+      <target>Product</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.QUANTITY">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:144,146</note>
+      </notes>
+      <segment>
+        <source>Quantity</source>
+      <target>Quantity</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.UNIT_PRICE">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:151,153</note>
+      </notes>
+      <segment>
+        <source>Unit Price</source>
+      <target>Unit Price</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.TOTAL">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:158,160</note>
+      </notes>
+      <segment>
+        <source>Total</source>
+      <target>Total</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.DATE">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:167,169</note>
+      </notes>
+      <segment>
+        <source>Date</source>
+      <target>日付</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.SOLD_BY">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:176,178</note>
+      </notes>
+      <segment>
+        <source>Sold By</source>
+      <target>Sold By</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.NO_DATA_TITLE">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:206,207</note>
+      </notes>
+      <segment>
+        <source>No Sales Data</source>
+      <target>No Sales Data</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.NO_DATA_DESCRIPTION">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html:207,210</note>
+      </notes>
+      <segment>
+        <source>No sales data available for this period.</source>
+      <target>No sales data available for this period.</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.PRODUCT_SALES.ERROR_LOADING">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.ts:125</note>
+      </notes>
+      <segment>
+        <source>Failed to load product sales.</source>
+      <target>Failed to load product sales.</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.RENEWALS.DAYS_UNTIL">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/renewals-list/renewals-list-widget.component.html:33,34</note>
+      </notes>
+      <segment>
+        <source>Days Until Renewal</source>
+      <target>Days Until Renewal</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.RENEWALS.PENDING">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/renewals-list/renewals-list-widget.component.html:61,63</note>
+      </notes>
+      <segment>
+        <source>Pending Renewals</source>
+      <target>Pending Renewals</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.RENEWALS.COMPLETED">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/renewals-list/renewals-list-widget.component.html:66,68</note>
+      </notes>
+      <segment>
+        <source>Completed Renewals</source>
+      <target>Completed Renewals</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.RENEWALS.OVERDUE">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/renewals-list/renewals-list-widget.component.html:71,73</note>
+      </notes>
+      <segment>
+        <source>Overdue Renewals</source>
+      <target>Overdue Renewals</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.RENEWALS.TOTAL_RENEWALS">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/renewals-list/renewals-list-widget.component.html:83,85</note>
+      </notes>
+      <segment>
+        <source>Total Renewals</source>
+      <target>Total Renewals</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.RENEWALS.TENANT_REQUIRED">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/renewals-list/renewals-list-widget.component.ts:60</note>
+      </notes>
+      <segment>
+        <source>Tenant ID is required.</source>
+      <target>Tenant ID is required.</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.RENEWALS.ERROR_LOADING">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/renewals-list/renewals-list-widget.component.ts:77</note>
+      </notes>
+      <segment>
+        <source>Failed to load renewals.</source>
+      <target>Failed to load renewals.</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.REVENUE.TITLE">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/revenue-chart/revenue-chart.component.html:3,4</note>
+      </notes>
+      <segment>
+        <source>Revenue Analytics</source>
+      <target>Revenue Analytics</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.REVENUE.NO_DATA">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/revenue-chart/revenue-chart.component.html:11,13</note>
+      </notes>
+      <segment>
+        <source>No revenue data available.</source>
+      <target>No revenue data available.</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.STATS.TITLE">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/stats/stats-widget.component.html:3,4</note>
+      </notes>
+      <segment>
+        <source>Statistics</source>
+      <target>統計</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.STATS.CUSTOMERS">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/stats/stats-widget.component.html:11,13</note>
+      </notes>
+      <segment>
+        <source>Customers</source>
+      <target>顧客数</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.STATS.APPOINTMENTS">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/stats/stats-widget.component.html:16,18</note>
+      </notes>
+      <segment>
+        <source>Appointments</source>
+      <target>予約数</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.STATS.REVENUE">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/stats/stats-widget.component.html:21,23</note>
+      </notes>
+      <segment>
+        <source>Revenue</source>
+      <target>収益</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.STATS.SUBSCRIPTIONS">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/stats/stats-widget.component.html:26,28</note>
+      </notes>
+      <segment>
+        <source>Active Subscriptions</source>
+      <target>有効なサブスクリプション</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.SUBSCRIPTIONS.TITLE">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/subscription-chart/subscription-chart-widget.component.html:4,6</note>
+      </notes>
+      <segment>
+        <source>Subscriptions Overview</source>
+      <target>Subscriptions Overview</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.SUBSCRIPTIONS.NO_DATA">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/subscription-chart/subscription-chart-widget.component.html:44,46</note>
+      </notes>
+      <segment>
+        <source>No subscription data available.</source>
+      <target>No subscription data available.</target>
+      </segment>
+    </unit>
+    <unit id="DASHBOARD.SUBSCRIPTION.ERROR_LOADING">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/dashboard/widgets/subscription-chart/subscription-chart-widget.component.ts:156</note>
+      </notes>
+      <segment>
+        <source>Failed to load subscription data.</source>
+      <target>Failed to load subscription data.</target>
+      </segment>
+    </unit>
+    <unit id="USER.TITLE">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/user/user.component.html:2,3</note>
+      </notes>
+      <segment>
+        <source>User Statistics</source>
+      <target>ユーザー統計</target>
+      </segment>
+    </unit>
+    <unit id="USER.LOADING">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/user/user.component.html:4,6</note>
+      </notes>
+      <segment>
+        <source>Loading statistics...</source>
+      <target>統計を読み込み中...</target>
+      </segment>
+    </unit>
+    <unit id="USER.BUSINESS_COUNT">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/user/user.component.html:11,12</note>
+      </notes>
+      <segment>
+        <source>Business Count</source>
+      <target>ビジネス数</target>
+      </segment>
+    </unit>
+    <unit id="USER.CUSTOMER_COUNT">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/user/user.component.html:15,16</note>
+      </notes>
+      <segment>
+        <source>Customer Count</source>
+      <target>Customer Count</target>
+      </segment>
+    </unit>
+    <unit id="USER.ACTIVE_BUSINESSES">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/user/user.component.html:19,20</note>
+      </notes>
+      <segment>
+        <source>Active Businesses</source>
+      <target>Active Businesses</target>
+      </segment>
+    </unit>
+    <unit id="USER.ACTIVE_CUSTOMERS">
+      <notes>
+        <note category="location">libs/web/admin/src/lib/features/user/user.component.html:23,24</note>
+      </notes>
+      <segment>
+        <source>Active Customers</source>
+      <target>アクティブな顧客</target>
+      </segment>
+    </unit>
+  </file>
+</xliff>

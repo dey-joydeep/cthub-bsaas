@@ -4,7 +4,7 @@ import { AuditService } from '../services/audit.service';
 import { BadRequestException } from '@nestjs/common';
 
 function makeAudit(): jest.Mocked<Pick<AuditService, 'log'>> {
-  return ({ log: jest.fn() } as unknown) as jest.Mocked<Pick<AuditService, 'log'>>;
+  return { log: jest.fn() } as unknown as jest.Mocked<Pick<AuditService, 'log'>>;
 }
 
 describe('RecoveryController (unit)', () => {

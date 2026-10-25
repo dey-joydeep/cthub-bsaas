@@ -1,5 +1,5 @@
-import { Component, Input, inject, signal, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal, OnInit, input } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatError, MatFormFieldModule } from '@angular/material/form-field';
@@ -9,12 +9,12 @@ import { DashboardApiService, Renewal } from '@cthub-bsaas/features/dashboard/se
 @Component({
   selector: 'app-renewals-list',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatProgressBarModule, MatFormFieldModule, MatError, MatListModule],
+  imports: [DatePipe, MatCardModule, MatProgressBarModule, MatFormFieldModule, MatError, MatListModule],
   templateUrl: './renewals-list.component.html',
-  styleUrls: ['./renewals-list.component.scss'],
+  styleUrls: ['./renewals-list.component.css'],
 })
 export class RenewalsListComponent implements OnInit {
-  @Input() tenantId = '';
+  tenantId = input('');
   renewals = signal<Renewal[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
@@ -22,16 +22,16 @@ export class RenewalsListComponent implements OnInit {
   private api = inject(DashboardApiService);
 
   ngOnInit() {
-    if (!this.tenantId) return;
+    if (!this.tenantId()) return;
     this.loading.set(true);
-    this.api.getRenewals(this.tenantId).subscribe({
+    this.api.getRenewals(this.tenantId()).subscribe({
       next: (res: Renewal[]) => {
         this.renewals.set(res);
         this.loading.set(false);
         this.error.set(null);
       },
       error: (err: Error) => {
-        this.error.set(err.message || 'Failed to load renewals');
+        this.error.set(err.message || $localize`:@@DASHBOARD.RENEWALS.ERROR_LOADING:Failed to load renewals`);
         this.loading.set(false);
       },
     });

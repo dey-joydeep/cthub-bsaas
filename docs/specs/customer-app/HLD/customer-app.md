@@ -9,15 +9,15 @@ Customer App owns customer-facing workflows. It consumes public discovery, accou
 
 ## Context Dependencies
 
-| Context | Dependency |
-| --- | --- |
+| Context          | Dependency                                        |
+| ---------------- | ------------------------------------------------- |
 | Public Discovery | Salon search, public profile, service visibility. |
-| Account/Profile | Customer identity, contact, preferences. |
-| Appointment | Booking, reschedule, cancel, status. |
-| POS/Receipts | Receipts, payments, refunds, dues. |
-| Packages/Loyalty | Balances, rewards, referrals. |
-| Reputation | Review submission and status. |
-| Notifications | Preferences and recent messages. |
+| Account/Profile  | Customer identity, contact, preferences.          |
+| Appointment      | Booking, reschedule, cancel, status.              |
+| POS/Receipts     | Receipts, payments, refunds, dues.                |
+| Packages/Loyalty | Balances, rewards, referrals.                     |
+| Reputation       | Review submission and status.                     |
+| Notifications    | Preferences and recent messages.                  |
 
 ## Data Ownership
 

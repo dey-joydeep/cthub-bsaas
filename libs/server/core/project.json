@@ -1,49 +1,44 @@
 {
-    "name": "server-core",
-    "sourceRoot": "libs/server/core/src",
-    "tags": ["type:lib", "platform:server", "scope:server-core", "scope:server", "type:core"],
-    "targets": {
-        "lint": {
-            "outputs": ["{options.outputFile}"],
-            "executor": "@nx/eslint:lint",
-            "options": {
-                "lintFilePatterns": ["libs/server/core/**/*.ts"]
-            }
-        },
-        "build": {
-            "executor": "@nx/js:tsc",
-            "outputs": ["{options.outputPath}"],
-            "options": {
-                "outputPath": "dist/libs/server/core",
-                "main": "libs/server/core/src/index.ts",
-                "tsConfig": "libs/server/core/tsconfig.lib.json",
-                "assets": [
-                    "libs/server/core/*.md"
-                ],
-                "rootDir": "libs/server/core/src"
-            }
-        },
-        "type-check": {
-            "executor": "nx:run-commands",
-            "dependsOn": [
-                "shared:build",
-                "server-contracts-auth:build"
-            ],
-            "options": {
-                "command": "tsc -b libs/server/core/tsconfig.json --pretty false"
-            }
-        },
-        "test": {
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-            "executor": "@nx/jest:jest",
-            "options": {
-                "passWithNoTests": true,
-                "jestConfig": "libs/server/core/jest.config.ts",
-                "codeCoverage": true,
-                "coverageReporters": ["text", "lcov"]
-            }
-        }
+  "name": "server-core",
+  "sourceRoot": "libs/server/core/src",
+  "tags": ["type:lib", "platform:server", "scope:server-core", "scope:server", "type:core"],
+  "targets": {
+    "lint": {
+      "outputs": ["{options.outputFile}"],
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["libs/server/core/**/*.ts"]
+      }
     },
-    "projectType": "library",
-    "prefix": "cthub-bsaas"
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/server/core",
+        "main": "libs/server/core/src/index.ts",
+        "tsConfig": "libs/server/core/tsconfig.lib.json",
+        "assets": ["libs/server/core/*.md"],
+        "rootDir": "libs/server/core/src"
+      }
+    },
+    "type-check": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["shared:build", "server-contracts-auth:build"],
+      "options": {
+        "command": "tsc -b libs/server/core/tsconfig.json --pretty false"
+      }
+    },
+    "test": {
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "executor": "@nx/jest:jest",
+      "options": {
+        "passWithNoTests": true,
+        "jestConfig": "libs/server/core/jest.config.ts",
+        "codeCoverage": true,
+        "coverageReporters": ["text", "lcov"]
+      }
+    }
+  },
+  "projectType": "library",
+  "prefix": "cthub-bsaas"
 }

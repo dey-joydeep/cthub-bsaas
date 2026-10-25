@@ -1,11 +1,10 @@
 import { PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
 import type { PlatformUtils } from '@cthub-bsaas/web-core-platform';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, HostListener, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { Component, HostListener, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
-import { TranslateModule } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 
 // Widget Components
@@ -23,10 +22,8 @@ import { DashboardService } from './dashboard.service';
   selector: 'app-dashboard',
   standalone: true,
   imports: [
-    CommonModule,
     MatCardModule,
     MatIconModule,
-    TranslateModule,
     StatsWidgetComponent,
     RevenueChartComponent,
     CustomerStatsWidgetComponent,
@@ -35,19 +32,18 @@ import { DashboardService } from './dashboard.service';
     RenewalsListWidgetComponent,
   ],
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.scss'],
+  styleUrls: ['./dashboard.component.css'],
 })
 export class DashboardComponent extends AbstractBaseComponent implements OnInit {
   tenantId: string = 'demo-tenant';
   private isBrowser: boolean;
 
   breakpoint: number = 1;
+  private readonly dashboardService = inject(DashboardService);
+  private readonly platformId = inject<object>(PLATFORM_ID);
+  private readonly platformUtils = inject<PlatformUtils>(PLATFORM_UTILS_TOKEN);
 
-  constructor(
-    private dashboardService: DashboardService,
-    @Inject(PLATFORM_ID) private platformId: object,
-    @Inject(PLATFORM_UTILS_TOKEN) private platformUtils: PlatformUtils,
-  ) {
+  constructor() {
     super();
     this.isBrowser = isPlatformBrowser(this.platformId);
     const initialWidth = this.isBrowser && this.platformUtils.windowRef ? this.platformUtils.windowRef.innerWidth : 0;

@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatBadgeModule } from '@angular/material/badge';
@@ -14,7 +14,6 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { Router, RouterModule } from '@angular/router';
 import { PLATFORM_UTILS_TOKEN, type PlatformUtils, StorageService } from '@cthub-bsaas/web-core-platform';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subject, Subscription, firstValueFrom, of, timer } from 'rxjs';
 import { catchError, switchMap, takeUntil, tap } from 'rxjs/operators';
 
@@ -107,7 +106,7 @@ class AuthService {
   selector: 'lib-header',
   standalone: true,
   imports: [
-    CommonModule,
+    DatePipe,
     RouterModule,
     MatToolbarModule,
     MatButtonModule,
@@ -121,7 +120,6 @@ class AuthService {
     MatDividerModule,
     MatSnackBarModule,
     FormsModule,
-    TranslateModule,
   ],
   templateUrl: './header.component.html',
   styleUrls: [], // Using inline styles for now
@@ -130,7 +128,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
   // Services
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
-  private translate = inject(TranslateService);
   private currentUserService = inject(CurrentUserService);
   private notificationService = inject(NotificationService);
   private authService = inject(AuthService);
@@ -168,6 +165,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   // Constants
   readonly languages: Language[] = [
     { code: 'en', name: 'English' },
+    { code: 'ja', name: '日本語' },
     { code: 'hi', name: 'हिंदी' },
     { code: 'bn', name: 'বাংলা', rtl: true },
     { code: 'ta', name: 'தமிழ்' },
@@ -343,8 +341,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
             // Show a subtle notification that new notifications are available
             this.snackBar
               .open(
-                this.translateText('NOTIFICATIONS.NEW_NOTIFICATIONS', { count: count - this.unreadCount }),
-                this.translateText('COMMON.VIEW'),
+                $localize`:@@NOTIFICATIONS.NEW_NOTIFICATIONS:${count - this.unreadCount} new notifications`,
+                $localize`:@@COMMON.VIEW:View`,
                 { duration: 5000 },
               )
               .onAction()
@@ -377,9 +375,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
   // Handle language change
   async onLanguageChange(languageCode: string, showSnackbar = true): Promise<void> {
     this.selectedLanguage = languageCode;
-    this.translate.use(languageCode).subscribe({
-      error: (error: unknown) => console.warn('Failed to change language:', error),
-    });
 
     // Save preference using storage service
     if (this.isBrowser) {
@@ -399,7 +394,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
     // Show snackbar if requested
     if (showSnackbar) {
-      this.snackBar.open(this.translateText('LANGUAGE_CHANGED'), this.translateText('CLOSE'), { duration: 3000 });
+      this.snackBar.open($localize`:@@LANGUAGE_CHANGED:Language changed`, $localize`:@@COMMON.CLOSE:Close`, { duration: 3000 });
+    }
+
+    // For compile-time i18n, redirect or reload browser to language path if initiated by user
+    if (this.isBrowser && showSnackbar && this.platformUtils.windowRef) {
+      const currentPath = this.platformUtils.windowRef.location.pathname;
+      const cleanPath = currentPath.replace(/^\/(en|bn|ja|hi|ta|te|mr|gu|kn|ml|pa)/, '');
+      const newPath = `/${languageCode}${cleanPath || '/'}`;
+      if (currentPath !== newPath) {
+        this.platformUtils.windowRef.location.assign(newPath);
+      }
     }
 
     // Emit event for other components
@@ -426,7 +431,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     // Show snackbar
     const selectedCity = this.cities.find((city) => city.id === cityId);
     if (selectedCity) {
-      this.snackBar.open(this.translateText('CITY_CHANGED', { city: selectedCity.name }), this.translateText('CLOSE'), {
+      this.snackBar.open($localize`:@@CITY_CHANGED:City changed to ${selectedCity.name}`, $localize`:@@COMMON.CLOSE:Close`, {
         duration: 3000,
       });
     }
@@ -506,16 +511,20 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.notificationService.markAllAsRead().subscribe({
       next: () => {
         // The service will update the notifications and count
-        this.snackBar.open(this.translateText('NOTIFICATIONS.MARKED_ALL_READ'), this.translateText('COMMON.OK'), {
+        this.snackBar.open($localize`:@@NOTIFICATIONS.MARKED_ALL_READ:Marked all as read`, $localize`:@@COMMON.OK:OK`, {
           duration: 3000,
         });
       },
       error: (error) => {
         console.error('Failed to mark all notifications as read', error);
-        this.snackBar.open(this.translateText('NOTIFICATIONS.MARK_READ_ERROR'), this.translateText('COMMON.CLOSE'), {
-          duration: 5000,
-          panelClass: ['error-snackbar'],
-        });
+        this.snackBar.open(
+          $localize`:@@NOTIFICATIONS.MARK_READ_ERROR:Failed to mark notifications as read`,
+          $localize`:@@COMMON.CLOSE:Close`,
+          {
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+          },
+        );
       },
     });
   }
@@ -531,7 +540,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Logout error:', error);
         this.isLoading = false;
-        this.snackBar.open(this.translateText('AUTH.LOGOUT_ERROR'), this.translateText('COMMON.CLOSE'), {
+        this.snackBar.open($localize`:@@AUTH.LOGOUT_ERROR:Logout failed`, $localize`:@@COMMON.CLOSE:Close`, {
           duration: 5000,
           panelClass: ['error-snackbar'],
         });
@@ -549,11 +558,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
   onSettingsClick(): void {
     this.navigate(this.router.navigate(['/settings']));
     this.showUserMenu = false;
-  }
-
-  private translateText(key: string, params?: Record<string, unknown>): string {
-    const translated: unknown = this.translate.instant(key, params);
-    return typeof translated === 'string' ? translated : key;
   }
 
   private navigate(navigation: Promise<boolean>): void {

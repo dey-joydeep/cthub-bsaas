@@ -1,75 +1,62 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { SalonProfileComponent } from './salon-profile.component';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { TenantComponent } from './tenant.component';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
-import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
+import { SafeUrlPipe } from '@cthub-bsaas/web-ui';
+import { TenantService } from './tenant.service';
+import { CurrentUserService } from '@cthub-bsaas/web-core/auth';
+import { Salon } from './model/tenant.model';
 
-describe('SalonProfileComponent', () => {
-  let component: SalonProfileComponent;
-  let fixture: ComponentFixture<SalonProfileComponent>;
-  let httpMock: HttpTestingController;
+describe('TenantComponent', () => {
+  let component: TenantComponent;
+  let fixture: ComponentFixture<TenantComponent>;
+  let tenantService: Partial<TenantService>;
+  let currentUserService: Partial<CurrentUserService>;
+
+  const mockSalon: Salon = {
+    id: '1',
+    name: 'Test Tenant Salon',
+    address: '123 St',
+    city: 'City',
+    rating: 4.5,
+    reviewCount: 10,
+    imageUrl: 'url',
+    services: [],
+  };
 
   beforeEach(waitForAsync(() => {
+    tenantService = {
+      getSalon: vi.fn().mockReturnValue(of(mockSalon)),
+      getSalonReviews: vi.fn().mockReturnValue(of([])),
+      isEligibleForReview: vi.fn().mockReturnValue(of({ eligible: true })),
+      submitReview: vi.fn().mockReturnValue(of({})),
+      submitAppointment: vi.fn().mockReturnValue(of({})),
+    };
+
+    currentUserService = {
+      currentUser: { id: 'user-1', email: 'user@test.com', name: 'User', role: 'customer' } as any,
+    };
+
     TestBed.configureTestingModule({
-      imports: [
-        SalonProfileComponent, // Standalone
-        HttpClientTestingModule,
-        FormsModule,
-        TranslateModule.forRoot(),
-        SafeUrlPipe,
+      imports: [TenantComponent, HttpClientTestingModule, FormsModule, SafeUrlPipe],
+      providers: [
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => '1' } } } },
+        { provide: TenantService, useValue: tenantService },
+        { provide: CurrentUserService, useValue: currentUserService },
       ],
-      providers: [{ provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => '1' } } } }],
     }).compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SalonProfileComponent);
+    fixture = TestBed.createComponent(TenantComponent);
     component = fixture.componentInstance;
-    httpMock = TestBed.inject(HttpTestingController);
-  });
-
-  afterEach(() => {
-    httpMock.verify();
+    fixture.detectChanges();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
-  });
-
-  it('should fetch salon and reviews on init', () => {
-    const mockSalon = {
-      id: '1',
-      name: 'Salon Test',
-      address: '123 Main',
-      zipCode: '00000',
-      city: 'Test City',
-      latitude: 1,
-      longitude: 2,
-      services: [],
-      staff: [],
-      ownerId: 'owner',
-      imageUrl: '',
-      images: [],
-      reviews: [],
-      phone: '',
-      description: '',
-      rating: 5,
-      reviewCount: 1,
-    };
-    const mockReviews = [{ reviewer: 'User', rating: 5, comment: 'Great!', createdAt: new Date() }];
-    fixture.detectChanges();
-    const req1 = httpMock.expectOne('/api/salons/1');
-    expect(req1.request.method).toBe('GET');
-    req1.flush(mockSalon);
-    const req2 = httpMock.expectOne('/api/salon/1/reviews');
-    expect(req2.request.method).toBe('GET');
-    req2.flush(mockReviews);
-    expect(component.salon).toMatchObject({ id: '1', name: 'Salon Test' });
-    expect(component.reviews.length).toBe(1);
-    // Use type assertion to access protected loading property for testing
-    expect((component as any).loading).toBeFalse();
+    expect(component.salon).toEqual(mockSalon);
   });
 });

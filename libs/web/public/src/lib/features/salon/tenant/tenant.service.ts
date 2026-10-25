@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -7,8 +7,7 @@ import { Salon, Review, Appointment } from './model/tenant.model';
 @Injectable({ providedIn: 'root' })
 export class TenantService {
   private apiUrl = '/api/salons';
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   getSalon(id: string): Observable<Salon> {
     return this.http.get<Salon>(`${this.apiUrl}/${id}`).pipe(catchError((err) => this.handleError(err)));
@@ -19,10 +18,12 @@ export class TenantService {
   }
 
   isEligibleForReview(userId: string, salonId: string): Observable<{ eligible: boolean }> {
-    return this.http.get<{ eligible: boolean }>(`/api/user/${userId}/salon/${salonId}/eligible-to-review`, { withCredentials: true }).pipe(catchError((err) => this.handleError(err)));
+    return this.http
+      .get<{ eligible: boolean }>(`/api/user/${userId}/salon/${salonId}/eligible-to-review`, { withCredentials: true })
+      .pipe(catchError((err) => this.handleError(err)));
   }
 
-  submitReview(salonId: string, review: { rating: number; comment: string; userId: string; }): Observable<Review> {
+  submitReview(salonId: string, review: { rating: number; comment: string; userId: string }): Observable<Review> {
     return this.http.post<Review>(`/api/salon/${salonId}/reviews`, review).pipe(catchError((err) => this.handleError(err)));
   }
 

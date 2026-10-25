@@ -1,12 +1,11 @@
-import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { CurrencyPipe, DecimalPipe } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
-import { TranslateModule } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { CustomerStatsWidgetService } from './customer-stats-widget.service';
 import { DashboardStats } from './models/customer-stats-widget.model';
@@ -14,9 +13,9 @@ import { DashboardStats } from './models/customer-stats-widget.model';
 @Component({
   selector: 'app-customer-stats-widget',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule, MatProgressSpinnerModule, MatButtonModule, MatTooltipModule, TranslateModule],
+  imports: [CurrencyPipe, DecimalPipe, MatCardModule, MatIconModule, MatProgressSpinnerModule, MatButtonModule, MatTooltipModule],
   templateUrl: './customer-stats-widget.component.html',
-  styleUrls: ['./customer-stats-widget.component.scss'],
+  styleUrls: ['./customer-stats-widget.component.css'],
 })
 export class CustomerStatsWidgetComponent extends AbstractBaseComponent {
   stats: DashboardStats = {
@@ -30,10 +29,7 @@ export class CustomerStatsWidgetComponent extends AbstractBaseComponent {
   };
 
   private statsSubscription?: Subscription;
-
-  constructor(private customerStatsWidgetService: CustomerStatsWidgetService) {
-    super();
-  }
+  private readonly customerStatsWidgetService = inject(CustomerStatsWidgetService);
 
   public override ngOnInit(): void {
     super.ngOnInit();
@@ -56,7 +52,7 @@ export class CustomerStatsWidgetComponent extends AbstractBaseComponent {
         this.loading = false;
       })
       .catch((error) => {
-        this.error = 'Failed to load customer statistics. Please try again later.';
+        this.error = $localize`:@@DASHBOARD.CUSTOMER_STATS.ERROR_LOADING:Failed to load customer statistics. Please try again later.`;
         this.loading = false;
         console.error('Error loading customer stats:', error);
       });

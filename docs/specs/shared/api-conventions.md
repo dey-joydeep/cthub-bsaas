@@ -54,22 +54,22 @@ Error JSON responses must use:
 
 ## HTTP Status Usage
 
-| Status | Use |
-| --- | --- |
-| `200` | Successful read or command with immediate response. |
-| `201` | Resource created. |
-| `202` | Accepted for asynchronous processing. |
-| `204` | Successful empty response only when the endpoint contract explicitly avoids envelopes. |
-| `302` | OAuth or external-provider redirect. |
-| `400` | Malformed body, invalid content type, or invalid request shape before DTO validation. |
-| `401` | Missing or invalid authentication. |
-| `403` | Authenticated but denied by CSRF, permission, or scope. |
-| `404` | Resource not found or hidden because it is outside scope. |
-| `409` | Valid request conflicts with current state or concurrency rules. |
-| `410` | Expired token, challenge, link, or invitation. |
-| `422` | Field or semantic validation failure. |
-| `429` | Rate limited or attempt budget exhausted. Must include `Retry-After` when applicable. |
-| `500` | Unexpected server failure. |
+| Status | Use                                                                                    |
+| ------ | -------------------------------------------------------------------------------------- |
+| `200`  | Successful read or command with immediate response.                                    |
+| `201`  | Resource created.                                                                      |
+| `202`  | Accepted for asynchronous processing.                                                  |
+| `204`  | Successful empty response only when the endpoint contract explicitly avoids envelopes. |
+| `302`  | OAuth or external-provider redirect.                                                   |
+| `400`  | Malformed body, invalid content type, or invalid request shape before DTO validation.  |
+| `401`  | Missing or invalid authentication.                                                     |
+| `403`  | Authenticated but denied by CSRF, permission, or scope.                                |
+| `404`  | Resource not found or hidden because it is outside scope.                              |
+| `409`  | Valid request conflicts with current state or concurrency rules.                       |
+| `410`  | Expired token, challenge, link, or invitation.                                         |
+| `422`  | Field or semantic validation failure.                                                  |
+| `429`  | Rate limited or attempt budget exhausted. Must include `Retry-After` when applicable.  |
+| `500`  | Unexpected server failure.                                                             |
 
 ## Pagination
 
@@ -77,12 +77,12 @@ List endpoints must use cursor pagination unless the feature explicitly document
 
 Required request fields:
 
-| Field | Rule |
-| --- | --- |
-| `limit` | Integer, default `25`, max `100` unless feature overrides. |
-| `cursor` | Opaque string from previous response. |
-| `sort` | Whitelisted sort key. |
-| `direction` | `asc` or `desc`, default per endpoint. |
+| Field       | Rule                                                       |
+| ----------- | ---------------------------------------------------------- |
+| `limit`     | Integer, default `25`, max `100` unless feature overrides. |
+| `cursor`    | Opaque string from previous response.                      |
+| `sort`      | Whitelisted sort key.                                      |
+| `direction` | `asc` or `desc`, default per endpoint.                     |
 
 Required response metadata:
 
@@ -108,8 +108,8 @@ Required response metadata:
 
 Write endpoints that create financial records, appointments, external calls, notifications, or imports must support idempotency.
 
-| Header | Rule |
-| --- | --- |
+| Header            | Rule                                                             |
+| ----------------- | ---------------------------------------------------------------- |
 | `Idempotency-Key` | Required for high-risk creates and provider callback processing. |
 
 Services must store enough request fingerprint information to reject conflicting reuse of the same key.

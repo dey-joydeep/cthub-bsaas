@@ -28,10 +28,7 @@ export class CsrfGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const skip = this.reflector.getAllAndOverride<boolean>(SKIP_CSRF_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const skip = this.reflector.getAllAndOverride<boolean>(SKIP_CSRF_KEY, [context.getHandler(), context.getClass()]);
     if (skip) return true;
 
     const req = context
@@ -43,7 +40,7 @@ export class CsrfGuard implements CanActivate {
     const header =
       (req.headers['x-xsrf-token'] as string | undefined) ||
       (req.headers['x-csrf-token'] as string | undefined) ||
-      ((req.headers['X-CSRF-Token'] as unknown) as string | undefined);
+      (req.headers['X-CSRF-Token'] as unknown as string | undefined);
     const cookie = req.cookies?.['XSRF-TOKEN'];
     // Enforce double-submit only when server has issued a CSRF cookie
     if (cookie) {

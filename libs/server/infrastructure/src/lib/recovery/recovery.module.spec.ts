@@ -7,9 +7,9 @@ describe('RecoveryModule', () => {
     const module = await Test.createTestingModule({
       imports: [RecoveryModule],
     })
-    .overrideProvider(PrismaService)
-    .useValue({})
-    .compile();
+      .overrideProvider(PrismaService)
+      .useValue({})
+      .compile();
 
     expect(module).toBeDefined();
   });

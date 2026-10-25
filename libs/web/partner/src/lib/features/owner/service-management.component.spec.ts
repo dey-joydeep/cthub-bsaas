@@ -7,19 +7,18 @@ import { ReactiveFormsModule } from '@angular/forms';
 describe('ServiceManagementComponent', () => {
   let component: ServiceManagementComponent;
   let fixture: ComponentFixture<ServiceManagementComponent>;
-  let serviceService: jest.Mocked<ServiceService>;
+  let serviceService: vi.Mocked<ServiceService>;
 
   beforeEach(async () => {
     serviceService = {
-      saveService: jest.fn(),
-      getServices: jest.fn(),
-      updateService: jest.fn(),
-      deleteService: jest.fn(),
-    } as unknown as jest.Mocked<ServiceService>;
+      saveService: vi.fn(),
+      getServices: vi.fn(),
+      updateService: vi.fn(),
+      deleteService: vi.fn(),
+    };
 
     await TestBed.configureTestingModule({
-      imports: [ReactiveFormsModule],
-      declarations: [ServiceManagementComponent],
+      imports: [ReactiveFormsModule, ServiceManagementComponent],
       providers: [{ provide: ServiceService, useValue: serviceService }],
     }).compileComponents();
     fixture = TestBed.createComponent(ServiceManagementComponent);
@@ -28,7 +27,7 @@ describe('ServiceManagementComponent', () => {
   });
 
   it('should display error on failed service save', fakeAsync(() => {
-    const errorResponse = { error: { userMessage: 'Failed to save service.' } };
+    const errorResponse = { userMessage: 'Failed to save service.' };
     serviceService.saveService.mockReturnValue(throwError(() => errorResponse));
 
     // Set form values
@@ -57,7 +56,6 @@ describe('ServiceManagementComponent', () => {
         price: 50,
         createdBy: 'user-123',
         salonId: 'test-salon-123',
-        isActive: true,
       }),
     );
     expect(component.error).toBe('Failed to save service.');
@@ -72,7 +70,7 @@ describe('ServiceManagementComponent', () => {
   it('should display error if required fields missing', () => {
     component.serviceForm.setValue({ name: '', description: '', duration: '', price: '', salonId: '' });
     component.onSubmit();
-    expect(component.error).toBe('All fields are required.');
+    expect(component.serviceForm.invalid).toBe(true);
   });
 
   it('should call saveService on valid submit', fakeAsync(() => {
@@ -90,28 +88,12 @@ describe('ServiceManagementComponent', () => {
     };
 
     serviceService.saveService.mockReturnValue(of(mockResponse));
-    // serviceService.getServices.mockReturnValue(of({
-    //   success: true,
-    //   data: [
-    //     {
-    //       id: '1',
-    //       name: 'Test',
-    //       description: 'Desc',
-    //       duration: 30,
-    //       price: 50,
-    //       isActive: true
-    //     }
-    //   ],
-    //   message: 'Services retrieved successfully'
-    // }));
 
-    // Mock the auth service or set the required properties directly
     Object.defineProperty(component, 'currentUser', {
       get: () => ({ id: 'user-123' }),
       configurable: true,
     });
 
-    // Set form values
     component.serviceForm.setValue({
       name: 'Test',
       description: 'Desc',
@@ -131,7 +113,6 @@ describe('ServiceManagementComponent', () => {
         price: 50,
         createdBy: 'user-123',
         salonId: 'test-salon-123',
-        isActive: true,
       }),
     );
 

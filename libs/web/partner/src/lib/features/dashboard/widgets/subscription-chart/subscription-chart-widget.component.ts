@@ -1,11 +1,10 @@
-import { Component, Input, OnChanges, SimpleChanges, ViewChild, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnChanges, SimpleChanges, inject, viewChild, model } from '@angular/core';
+
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslateModule } from '@ngx-translate/core';
 import { Observable, from, of } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
@@ -17,22 +16,13 @@ import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 @Component({
   selector: 'app-subscription-chart-widget',
   standalone: true,
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatIconModule,
-    MatButtonModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule,
-    TranslateModule,
-    BaseChartDirective,
-  ],
+  imports: [MatCardModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule, BaseChartDirective],
   templateUrl: './subscription-chart-widget.component.html',
-  styleUrls: ['./subscription-chart-widget.component.scss'],
+  styleUrls: ['./subscription-chart-widget.component.css'],
 })
 export class SubscriptionChartWidgetComponent extends AbstractBaseComponent implements OnChanges {
-  @Input() subscriptionData: SubscriptionData[] = [];
-  @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
+  subscriptionData = model<SubscriptionData[]>([]);
+  chart = viewChild<BaseChartDirective>(BaseChartDirective);
 
   // Chart configuration
   public lineChartType: ChartType = 'line';
@@ -108,15 +98,15 @@ export class SubscriptionChartWidgetComponent extends AbstractBaseComponent impl
   private subscriptionChartWidgetService = inject(SubscriptionChartWidgetService);
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['subscriptionData'] && this.subscriptionData?.length) {
+    if (changes['subscriptionData'] && this.subscriptionData()?.length) {
       this.updateChartData();
     }
   }
 
   private updateChartData(): void {
-    if (!this.subscriptionData?.length) return;
+    if (!this.subscriptionData()?.length) return;
 
-    const chartData = this.subscriptionData.map((data) => ({
+    const chartData = this.subscriptionData().map((data) => ({
       month: new Date(data.month).toLocaleDateString('en-US', { month: 'short' }),
       retentionRate: data.retentionRate,
     }));
@@ -133,9 +123,7 @@ export class SubscriptionChartWidgetComponent extends AbstractBaseComponent impl
     };
 
     // Force update the chart
-    if (this.chart) {
-      this.chart.update();
-    }
+    this.chart()?.update();
   }
 
   /**
@@ -152,13 +140,13 @@ export class SubscriptionChartWidgetComponent extends AbstractBaseComponent impl
 
     return data$.pipe(
       tap((data: SubscriptionData[]) => {
-        this.subscriptionData = data;
+        this.subscriptionData.set(data);
         this.updateChartData();
         this.error = null;
         this.loading = false;
       }),
       catchError((error: Error) => {
-        this.error = 'Failed to load subscription data';
+        this.error = $localize`:@@DASHBOARD.SUBSCRIPTION.ERROR_LOADING:Failed to load subscription data.`;
         this.loading = false;
         console.error('Error loading subscription data:', error);
         return of([]); // Return empty array on error

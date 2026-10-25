@@ -1,31 +1,29 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, input, inject } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { TranslateModule } from '@ngx-translate/core';
 import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-salon-appointments',
   standalone: true,
-  imports: [CommonModule, TranslateModule, RouterModule],
+  imports: [DatePipe, RouterModule],
   templateUrl: './salon-appointments.component.html',
-  styleUrls: ['./salon-appointments.component.scss'],
+  styleUrls: ['./salon-appointments.component.css'],
 })
 export class SalonAppointmentsComponent implements OnInit {
-  @Input() salonId?: string;
+  salonId = input<string>();
   appointments: any[] = [];
   loading = true;
   error: string | null = null;
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   ngOnInit(): void {
-    if (!this.salonId) {
+    if (!this.salonId()) {
       this.error = 'Salon ID is required.';
       this.loading = false;
       return;
     }
-    this.http.get(`/api/salon/${this.salonId}/appointments`).subscribe({
+    this.http.get(`/api/salon/${this.salonId()}/appointments`).subscribe({
       next: (data: any) => {
         this.appointments = data;
         this.loading = false;

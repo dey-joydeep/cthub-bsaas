@@ -5,14 +5,14 @@
 
 ## Routes
 
-| Route | Screen ID |
-| --- | --- |
-| `/customer` | `customer.dashboard` |
-| `/customer/book` | `customer.booking.flow` |
+| Route                    | Screen ID                    |
+| ------------------------ | ---------------------------- |
+| `/customer`              | `customer.dashboard`         |
+| `/customer/book`         | `customer.booking.flow`      |
 | `/customer/appointments` | `customer.appointments.list` |
-| `/customer/rewards` | `customer.rewards` |
-| `/customer/receipts` | `customer.receipts` |
-| `/customer/reviews` | `customer.reviews` |
+| `/customer/rewards`      | `customer.rewards`           |
+| `/customer/receipts`     | `customer.receipts`          |
+| `/customer/reviews`      | `customer.reviews`           |
 
 ## Screen Requirements
 

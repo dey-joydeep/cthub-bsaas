@@ -5,25 +5,25 @@
 
 ## Screen IDs
 
-| Screen ID | App | Purpose |
-| --- | --- | --- |
-| `admin.shell.private` | Admin | Authenticated platform admin layout. |
-| `partner.shell.private` | Partner | Authenticated salon owner/staff layout. |
-| `customer.shell.public` | Customer | Public discovery layout. |
-| `customer.shell.private` | Customer | Authenticated customer layout. |
+| Screen ID                | App      | Purpose                                 |
+| ------------------------ | -------- | --------------------------------------- |
+| `admin.shell.private`    | Admin    | Authenticated platform admin layout.    |
+| `partner.shell.private`  | Partner  | Authenticated salon owner/staff layout. |
+| `customer.shell.public`  | Customer | Public discovery layout.                |
+| `customer.shell.private` | Customer | Authenticated customer layout.          |
 
 ## Component Requirements
 
-| Component | Behavior |
-| --- | --- |
-| Header | Fixed or sticky according to app layout, stable height, no layout shift for counts. |
-| Sidebar | Desktop partner/admin navigation; collapsible state SSR-safe. |
-| Bottom navigation | Mobile customer and dense partner task shortcuts where needed. |
-| Profile menu | Profile, settings, security, logout, role label. |
-| Language selector | Current locale, supported locales, fallback handling. |
-| Branch selector | Partner-only, visible when more than one branch is allowed. |
-| Notification menu | Recent notifications, unread count, see-all route. |
-| Cart/checkout entry | Contextual to Customer checkout or Partner POS. |
+| Component           | Behavior                                                                            |
+| ------------------- | ----------------------------------------------------------------------------------- |
+| Header              | Fixed or sticky according to app layout, stable height, no layout shift for counts. |
+| Sidebar             | Desktop partner/admin navigation; collapsible state SSR-safe.                       |
+| Bottom navigation   | Mobile customer and dense partner task shortcuts where needed.                      |
+| Profile menu        | Profile, settings, security, logout, role label.                                    |
+| Language selector   | Current locale, supported locales, fallback handling.                               |
+| Branch selector     | Partner-only, visible when more than one branch is allowed.                         |
+| Notification menu   | Recent notifications, unread count, see-all route.                                  |
+| Cart/checkout entry | Contextual to Customer checkout or Partner POS.                                     |
 
 ## State Requirements
 

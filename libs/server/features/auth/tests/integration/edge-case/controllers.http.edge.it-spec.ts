@@ -33,12 +33,8 @@ describe('Controllers HTTP edge coverage (integration)', () => {
 
   it('POST /auth/webauthn/login/start without email or user returns 400', async () => {
     const server = harness.app.getHttpServer();
-    const res = await request(server)
-      .post('/auth/webauthn/login/start')
-      .set('Content-Type', 'application/json')
-      .send({});
+    const res = await request(server).post('/auth/webauthn/login/start').set('Content-Type', 'application/json').send({});
     expect(res.status).toBeGreaterThanOrEqual(400);
     expect(res.status).toBeLessThan(500);
   });
 });
-

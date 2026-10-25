@@ -9,13 +9,13 @@ Data Privacy/Governance owns privacy request lifecycle, retention policy, export
 
 ## Contexts
 
-| Context | Responsibility |
-| --- | --- |
-| Privacy Requests | Export/delete/anonymize request creation, review, execution, status. |
-| Retention Policy | Data category retention and legal/business hold rules. |
-| Export Service | Scoped export creation, storage, expiry, and audit. |
-| Merge Governance | Duplicate customer merge rules and audit trail. |
-| Restricted Data Access | Restricted notes and support-sensitive data access. |
+| Context                | Responsibility                                                       |
+| ---------------------- | -------------------------------------------------------------------- |
+| Privacy Requests       | Export/delete/anonymize request creation, review, execution, status. |
+| Retention Policy       | Data category retention and legal/business hold rules.               |
+| Export Service         | Scoped export creation, storage, expiry, and audit.                  |
+| Merge Governance       | Duplicate customer merge rules and audit trail.                      |
+| Restricted Data Access | Restricted notes and support-sensitive data access.                  |
 
 ## Diagram
 

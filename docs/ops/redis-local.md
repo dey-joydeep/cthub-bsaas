@@ -40,4 +40,3 @@ Use Redis to back ephemeral WebAuthn challenges with TTL and atomic consume.
   - Use another host port: `-p 6380:6379` and set `REDIS_URL=redis://localhost:6380/0`
 - Timeouts / network
   - Local Docker avoids most corporate proxy issues.
-

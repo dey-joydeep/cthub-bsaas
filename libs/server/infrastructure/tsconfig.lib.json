@@ -1,29 +1,29 @@
 {
-    "extends": "../../../tsconfig.base.json",
-    "compilerOptions": {
-        "types": ["node"],
-        "isolatedModules": false,
-        "skipLibCheck": true,
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "useDefineForClassFields": false,
-        "composite": true,
-        "rootDir": "./src",
-        "declaration": true,
-        "declarationMap": true,
-        "outDir": "../../../dist/libs/server/infrastructure"
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "isolatedModules": false,
+    "skipLibCheck": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "useDefineForClassFields": false,
+    "composite": true,
+    "rootDir": "./src",
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "../../../dist/libs/server/infrastructure"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["**/*.test.ts", "**/*.spec.ts"],
+  "references": [
+    {
+      "path": "../contracts-auth/tsconfig.lib.json"
     },
-    "include": ["src/**/*.ts"],
-    "exclude": ["**/*.test.ts", "**/*.spec.ts"],
-    "references": [
-        {
-            "path": "../contracts-auth/tsconfig.lib.json"
-        },
-        {
-            "path": "../data-access/tsconfig.lib.json"
-        },
-        {
-            "path": "../core/tsconfig.lib.json"
-        }
-    ]
+    {
+      "path": "../data-access/tsconfig.lib.json"
+    },
+    {
+      "path": "../core/tsconfig.lib.json"
+    }
+  ]
 }

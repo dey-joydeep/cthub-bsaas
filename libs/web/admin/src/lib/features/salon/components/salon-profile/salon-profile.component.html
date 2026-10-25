@@ -13,7 +13,9 @@
   <section class="salon-gallery">
     <h3>Gallery</h3>
     <div class="gallery-images">
-      <img *ngFor="let img of salon?.images" [src]="img" alt="Salon image" />
+      @for (img of salon?.images; track img) {
+        <img [src]="img" alt="Salon image" />
+      }
     </div>
   </section>
 
@@ -21,10 +23,14 @@
   <section class="salon-staff">
     <h3>Our Team</h3>
     <ul>
-      <li *ngFor="let staff of salon?.staff">
-        <span>{{ staff.name }}</span> - <span>{{ staff.role }}</span>
-        <a *ngIf="staff.portfolioUrl" [href]="staff.portfolioUrl" target="_blank">Portfolio</a>
-      </li>
+      @for (staff of salon?.staff; track staff) {
+        <li>
+          <span>{{ staff.name }}</span> - <span>{{ staff.role }}</span>
+          @if (staff.portfolioUrl) {
+            <a [href]="staff.portfolioUrl" target="_blank">Portfolio</a>
+          }
+        </li>
+      }
     </ul>
   </section>
 
@@ -37,11 +43,13 @@
         <th>Duration</th>
         <th>Price</th>
       </tr>
-      <tr *ngFor="let service of salon?.services">
-        <td>{{ service.name }}</td>
-        <td>{{ service.duration }}</td>
-        <td>{{ service.price | currency }}</td>
-      </tr>
+      @for (service of salon?.services; track service) {
+        <tr>
+          <td>{{ service.name }}</td>
+          <td>{{ service.duration }}</td>
+          <td>{{ service.price | currency }}</td>
+        </tr>
+      }
     </table>
   </section>
 
@@ -57,8 +65,7 @@
         loading="lazy"
         referrerpolicy="no-referrer-when-downgrade"
         title="Google Map of {{ salon?.name }}"
-        style="border: 0; border-radius: 8px; margin-bottom: 12px"
-      ></iframe>
+        style="border: 0; border-radius: 8px; margin-bottom: 12px"></iframe>
     </div>
     <button (click)="openMap()">Open in Google Maps</button>
   </section>
@@ -69,12 +76,16 @@
     <form (ngSubmit)="submitAppointment()">
       <label for="service">Service:</label>
       <select id="service" [(ngModel)]="appointment.serviceId" name="serviceId" required>
-        <option *ngFor="let service of serviceList" [value]="service.id">{{ service.name }}</option>
+        @for (service of serviceList; track service) {
+          <option [value]="service.id">{{ service.name }}</option>
+        }
       </select>
       <label for="staff">Staff (optional):</label>
       <select id="staff" [(ngModel)]="appointment.staffId" name="staffId">
         <option value="">Any</option>
-        <option *ngFor="let staff of staffList" [value]="staff.id">{{ staff.name }}</option>
+        @for (staff of staffList; track staff) {
+          <option [value]="staff.id">{{ staff.name }}</option>
+        }
       </select>
       <label for="date">Date:</label>
       <input id="date" type="date" [(ngModel)]="selectedDate" name="date" required />
@@ -89,33 +100,42 @@
   <!-- Reviews & Ratings -->
   <section class="salon-reviews">
     <h3>Reviews</h3>
-    <div *ngIf="reviews?.length; else noReviews">
-      <div *ngFor="let review of reviews" class="review">
-        <div class="review-header">
-          <span class="reviewer">{{ review.reviewer || review.userId }}</span>
-          <span class="rating">{{ review.rating }}/5</span>
-        </div>
-        <p>{{ review.comment }}</p>
-        <div class="review-meta">{{ review.createdAt | date }}</div>
+    @if (reviews.length) {
+      <div>
+        @for (review of reviews; track review) {
+          <div class="review">
+            <div class="review-header">
+              <span class="reviewer">{{ review.reviewer || review.userId }}</span>
+              <span class="rating">{{ review.rating }}/5</span>
+            </div>
+            <p>{{ review.comment }}</p>
+            <div class="review-meta">{{ review.createdAt | date }}</div>
+          </div>
+        }
       </div>
-    </div>
-    <ng-template #noReviews>
+    } @else {
       <p>No reviews yet.</p>
-    </ng-template>
-    <form *ngIf="eligibleToReview" (ngSubmit)="submitReview(rating.value, reviewText.value)" class="review-form">
-      <label for="rating">Your Rating</label>
-      <select #rating id="rating" required>
-        <option [value]="5">5</option>
-        <option [value]="4">4</option>
-        <option [value]="3">3</option>
-        <option [value]="2">2</option>
-        <option [value]="1">1</option>
-      </select>
-      <label for="reviewText">Your Review</label>
-      <textarea #reviewText id="reviewText" rows="3" required></textarea>
-      <button type="submit" [disabled]="submitting">{{ submitting ? 'Submitting...' : 'Submit Review' }}</button>
-      <div *ngIf="reviewError" class="error-message">{{ reviewError }}</div>
-    </form>
-    <div *ngIf="eligibleToReview === false && !submitting" class="not-eligible-msg">You are not eligible to review this salon.</div>
+    }
+    @if (eligibleToReview) {
+      <form (ngSubmit)="submitReview(rating.value, reviewText.value)" class="review-form">
+        <label for="rating">Your Rating</label>
+        <select #rating id="rating" required>
+          <option [value]="5">5</option>
+          <option [value]="4">4</option>
+          <option [value]="3">3</option>
+          <option [value]="2">2</option>
+          <option [value]="1">1</option>
+        </select>
+        <label for="reviewText">Your Review</label>
+        <textarea #reviewText id="reviewText" rows="3" required></textarea>
+        <button type="submit" [disabled]="submitting">{{ submitting ? 'Submitting...' : 'Submit Review' }}</button>
+        @if (reviewError) {
+          <div class="error-message">{{ reviewError }}</div>
+        }
+      </form>
+    }
+    @if (eligibleToReview === false && !submitting) {
+      <div class="not-eligible-msg">You are not eligible to review this salon.</div>
+    }
   </section>
 </div>

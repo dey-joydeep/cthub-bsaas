@@ -1,34 +1,20 @@
 import { InjectionToken } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import type {
-    ApiResponse,
-    AuthResponse,
-    AdminAuthUser,
-    InitLoginResponse,
-    LoginCredentials,
-    VerifyOtpParams,
-} from '../models/auth.models';
+import type { ApiResponse, AuthResponse, AdminAuthUser, InitLoginResponse, LoginCredentials, VerifyOtpParams } from '../models/auth.models';
 
 // Re-export model types for consumers importing from tokens
-export type {
-    ApiResponse,
-    AuthResponse,
-    AdminAuthUser,
-    InitLoginResponse,
-    LoginCredentials,
-    VerifyOtpParams,
-} from '../models/auth.models';
+export type { ApiResponse, AuthResponse, AdminAuthUser, InitLoginResponse, LoginCredentials, VerifyOtpParams } from '../models/auth.models';
 
 export interface LoginApiPort {
-    login(credentials: LoginCredentials): Observable<ApiResponse<AuthResponse>>;
-    initLogin(credentials: LoginCredentials): Observable<ApiResponse<InitLoginResponse>>;
-    verifyOtp(params: VerifyOtpParams): Observable<ApiResponse<AuthResponse>>;
-    socialLogin(provider: 'google' | 'facebook', token: string): Observable<ApiResponse<AuthResponse>>;
+  login(credentials: LoginCredentials): Observable<ApiResponse<AuthResponse>>;
+  initLogin(credentials: LoginCredentials): Observable<ApiResponse<InitLoginResponse>>;
+  verifyOtp(params: VerifyOtpParams): Observable<ApiResponse<AuthResponse>>;
+  socialLogin(provider: 'google' | 'facebook', token: string): Observable<ApiResponse<AuthResponse>>;
 }
 
 export interface AuthStateSetter {
-    setLoggedInUser(user: AdminAuthUser): void;
+  setLoggedInUser(user: AdminAuthUser): void;
 }
 
 export const LOGIN_API = new InjectionToken<LoginApiPort>('LOGIN_API');

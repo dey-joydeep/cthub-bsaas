@@ -1,5 +1,5 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -8,7 +8,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CURRENT_USER } from '@cthub-bsaas/web-core/auth';
 import type { CurrentUserPort } from '@cthub-bsaas/web-core/auth';
 import { Subscription } from 'rxjs';
@@ -26,7 +25,6 @@ type MaybeUser = {
   selector: 'app-profile',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatCardModule,
     MatFormFieldModule,
@@ -35,10 +33,9 @@ type MaybeUser = {
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatIconModule,
-    TranslateModule,
   ],
   templateUrl: './profile.component.html',
-  styleUrls: ['./profile.component.scss'],
+  styleUrls: ['./profile.component.css'],
 })
 export class ProfileComponent implements OnInit, OnDestroy {
   profileForm: FormGroup;
@@ -46,13 +43,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
   currentUser: Partial<MaybeUser> | null = null;
   isEditing = false;
   private sub?: Subscription;
+  private readonly fb = inject(FormBuilder);
+  private readonly currentUserPort = inject<CurrentUserPort>(CURRENT_USER);
+  private readonly snackBar = inject(MatSnackBar);
 
-  constructor(
-    private fb: FormBuilder,
-    @Inject(CURRENT_USER) private currentUserPort: CurrentUserPort,
-    private snackBar: MatSnackBar,
-    private translate: TranslateService,
-  ) {
+  constructor() {
     this.profileForm = this.fb.group({
       firstName: ['', [Validators.required]],
       lastName: ['', [Validators.required]],
@@ -113,6 +108,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       ...this.currentUser,
       ...this.profileForm.value,
     };
+    void updatedUser;
 
     // Simulate API call
     setTimeout(() => {
@@ -121,7 +117,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
       this.isEditing = false;
       this.profileForm.disable();
 
-      this.snackBar.open(this.translate.instant('PROFILE.UPDATE_SUCCESS'), this.translate.instant('COMMON.CLOSE'), { duration: 3000 });
+      this.snackBar.open($localize`:@@PROFILE.UPDATE_SUCCESS:Profile updated successfully.`, $localize`:@@COMMON.CLOSE:Close`, {
+        duration: 3000,
+      });
     }, 1000);
   }
 

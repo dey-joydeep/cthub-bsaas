@@ -55,12 +55,16 @@ export default [
 
             // Backend layering (contracts -> core -> data -> infra -> features)
             { sourceTag: 'layer:contracts', onlyDependOnLibsWithTags: ['layer:contracts', 'scope:shared'] },
-            { sourceTag: 'type:core',       onlyDependOnLibsWithTags: ['type:core', 'layer:contracts', 'scope:shared'] },
-            { sourceTag: 'type:data',       onlyDependOnLibsWithTags: ['type:data', 'type:core', 'layer:contracts', 'scope:shared'] },
-            { sourceTag: 'type:infra',      onlyDependOnLibsWithTags: ['type:infra', 'type:data', 'type:core', 'layer:contracts', 'scope:shared'] },
-            { sourceTag: 'type:feature',    onlyDependOnLibsWithTags: ['type:feature', 'type:infra', 'type:data', 'type:core', 'layer:contracts', 'scope:shared'] },
-
-            
+            { sourceTag: 'type:core', onlyDependOnLibsWithTags: ['type:core', 'layer:contracts', 'scope:shared'] },
+            { sourceTag: 'type:data', onlyDependOnLibsWithTags: ['type:data', 'type:core', 'layer:contracts', 'scope:shared'] },
+            {
+              sourceTag: 'type:infra',
+              onlyDependOnLibsWithTags: ['type:infra', 'type:data', 'type:core', 'layer:contracts', 'scope:shared'],
+            },
+            {
+              sourceTag: 'type:feature',
+              onlyDependOnLibsWithTags: ['type:feature', 'type:infra', 'type:data', 'type:core', 'layer:contracts', 'scope:shared'],
+            },
           ],
         },
       ],
@@ -93,10 +97,7 @@ export default [
     rules: {
       '@typescript-eslint/require-await': 'error',
       '@typescript-eslint/no-floating-promises': ['error', { ignoreVoid: false, ignoreIIFE: false }],
-      '@typescript-eslint/no-misused-promises': [
-        'error',
-        { checksVoidReturn: { attributes: false }, checksConditionals: true },
-      ],
+      '@typescript-eslint/no-misused-promises': ['error', { checksVoidReturn: { attributes: false }, checksConditionals: true }],
     },
   },
   // Type-aware tests under src (leverage project service)
@@ -119,14 +120,7 @@ export default [
   },
   // Non-source TS (other tests, scripts) use non-type-aware parsing
   {
-    files: [
-      '**/*.{spec,test}.ts',
-      '**/*.scripts.ts',
-      '**/*.e2e-spec.ts',
-      '**/*.migration.ts',
-      '**/tools/**/*.ts',
-      '**/scripts/**/*.ts',
-    ],
+    files: ['**/*.{spec,test}.ts', '**/*.scripts.ts', '**/*.e2e-spec.ts', '**/*.migration.ts', '**/tools/**/*.ts', '**/scripts/**/*.ts'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -192,14 +186,8 @@ export default [
         {
           patterns: [
             {
-              group: [
-                '../../server/**',
-                '../../../server/**',
-                '../../../../server/**',
-                '@cthub-bsaas/server-*',
-              ],
-              message:
-                'Web libraries must not import server libraries. Use @cthub-bsaas/shared or other web libs instead.',
+              group: ['../../server/**', '../../../server/**', '../../../../server/**', '@cthub-bsaas/server-*'],
+              message: 'Web libraries must not import server libraries. Use @cthub-bsaas/shared or other web libs instead.',
             },
           ],
         },

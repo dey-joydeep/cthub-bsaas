@@ -13,13 +13,10 @@ const hasFactory = (value: unknown): value is DecoratorMetadata =>
 
 function getFactory(): ParamFactory {
   class TestController {
-     
     handler(@OptionalUser() _value: unknown) {}
   }
 
-  const metadata = Reflect.getMetadata(ROUTE_ARGS_METADATA, TestController, 'handler') as
-    | Record<string, unknown>
-    | undefined;
+  const metadata = Reflect.getMetadata(ROUTE_ARGS_METADATA, TestController, 'handler') as Record<string, unknown> | undefined;
   if (!metadata) {
     throw new Error('OptionalUser metadata not found');
   }

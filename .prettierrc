@@ -5,5 +5,20 @@
   "semi": true,
   "endOfLine": "lf",
   "tabWidth": 2,
-  "useTabs": false
+  "useTabs": false,
+  "overrides": [
+    {
+      "files": ["*.html"],
+      "options": {
+        "printWidth": 220,
+        "bracketSameLine": true
+      }
+    },
+    {
+      "files": ["**/theme/*.css", "**/_*.css"],
+      "options": {
+        "parser": "scss"
+      }
+    }
+  ]
 }

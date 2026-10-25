@@ -18,9 +18,7 @@ export class ErrorInterceptor implements HttpInterceptor {
         } else if (error.status >= 400 && error.status < 500) {
           if (error.status === 401) {
             this.notificationService.showError('Your session has expired. Please log in again.');
-            void this.router
-              .navigate(['/auth/login'])
-              .catch(() => undefined);
+            void this.router.navigate(['/auth/login']).catch(() => undefined);
           } else if (error.status === 403) {
             this.notificationService.showError('You do not have permission to perform this action.');
           } else if (error.status === 404) {

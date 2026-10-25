@@ -1,5 +1,5 @@
-import { Component, Inject, Optional } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+
 import {
   FormBuilder,
   FormGroup,
@@ -18,8 +18,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 // Translation
-import { TranslateModule } from '@ngx-translate/core';
-
 // Tokens
 import { FORGOT_PASSWORD_API, type ForgotPasswordApiPort } from '../../tokens/password.tokens';
 
@@ -41,11 +39,14 @@ interface ResetPasswordForm {
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressBarModule, TranslateModule],
+  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressBarModule],
   templateUrl: './forgot-password.component.html',
-  styleUrls: ['./forgot-password.component.scss'],
+  styleUrls: ['./forgot-password.component.css'],
 })
 export class ForgotPasswordComponent {
+  private fb = inject(FormBuilder);
+  private forgotApi = inject<ForgotPasswordApiPort | null>(FORGOT_PASSWORD_API, { optional: true });
+
   forgotForm: FormGroup<ForgotPasswordForm>;
   otpForm: FormGroup<OtpForm>;
   resetForm: FormGroup<ResetPasswordForm>;
@@ -55,10 +56,7 @@ export class ForgotPasswordComponent {
   step: 'email' | 'otp' | 'reset' | 'success' = 'email';
   email = '';
 
-  constructor(
-    private fb: FormBuilder,
-    @Optional() @Inject(FORGOT_PASSWORD_API) private forgotApi: ForgotPasswordApiPort | null,
-  ) {
+  constructor() {
     // Initialize Forgot Password Form
     this.forgotForm = this.fb.group<ForgotPasswordForm>({
       email: new FormControl('', [Validators.required, Validators.email]),
@@ -113,12 +111,12 @@ export class ForgotPasswordComponent {
           this.email = email;
           this.step = 'otp';
         } else {
-          this.error = 'Failed to send reset instructions.';
+          this.error = $localize`:@@AUTH.FORGOT_PASSWORD.FAILED_TO_SEND:Failed to send reset instructions.`;
         }
       },
       error: (err: unknown) => {
         this.loading = false;
-        const msg = (err as any)?.message || 'An error occurred. Please try again.';
+        const msg = (err as any)?.message || $localize`:@@COMMON.ERRORS.GENERIC:An error occurred. Please try again.`;
         this.error = msg;
       },
     });

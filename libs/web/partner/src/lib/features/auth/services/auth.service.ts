@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { BehaviorSubject, Observable, firstValueFrom, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -9,6 +9,9 @@ import type { PartnerAuthUser } from '../models/auth.models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService implements AuthStatePort {
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly storage = inject(StorageService);
+
   private readonly TOKEN_KEY = 'access_token';
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
   private readonly TOKEN_EXPIRY_KEY = 'token_expiry';
@@ -18,7 +21,7 @@ export class AuthService implements AuthStatePort {
   private currentUserSubject = new BehaviorSubject<PartnerAuthUser | null>(null);
   public readonly currentUser$: Observable<PartnerAuthUser | null> = this.currentUserSubject.asObservable();
 
-  constructor(@Inject(PLATFORM_ID) private readonly platformId: object, private readonly storage: StorageService) {
+  constructor() {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
       this.initializeAuthState();

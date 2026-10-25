@@ -1,5 +1,5 @@
-import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import { TitleCasePipe } from '@angular/common';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,7 +8,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Appointment } from './models/appointment-cancel-dialog.model';
 
 export interface DialogData {
@@ -19,7 +18,7 @@ export interface DialogData {
   selector: 'app-appointment-cancel-dialog',
   standalone: true,
   imports: [
-    CommonModule,
+    TitleCasePipe,
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
@@ -28,22 +27,19 @@ export interface DialogData {
     MatProgressSpinnerModule,
     ReactiveFormsModule,
     MatSnackBarModule,
-    TranslateModule,
   ],
   templateUrl: './appointment-cancel-dialog.component.html',
-  styleUrls: ['./appointment-cancel-dialog.component.scss'],
+  styleUrls: ['./appointment-cancel-dialog.component.css'],
 })
 export class AppointmentCancelDialogComponent {
   cancelForm: FormGroup;
   isSubmitting = false;
+  public readonly dialogRef = inject(MatDialogRef<AppointmentCancelDialogComponent>);
+  public readonly data = inject<DialogData>(MAT_DIALOG_DATA);
+  private readonly fb = inject(FormBuilder);
+  private readonly snackBar = inject(MatSnackBar);
 
-  constructor(
-    public dialogRef: MatDialogRef<AppointmentCancelDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: DialogData,
-    private fb: FormBuilder,
-    private snackBar: MatSnackBar,
-    private translate: TranslateService,
-  ) {
+  constructor() {
     this.cancelForm = this.fb.group({
       reason: ['', [Validators.required, Validators.minLength(10)]],
     });
@@ -64,9 +60,13 @@ export class AppointmentCancelDialogComponent {
     // Simulate API call
     setTimeout(() => {
       this.isSubmitting = false;
-      this.snackBar.open(this.translate.instant('APPOINTMENT.CANCELLATION_SUCCESS'), this.translate.instant('COMMON.CLOSE'), {
-        duration: 3000,
-      });
+      this.snackBar.open(
+        $localize`:@@APPOINTMENT.CANCELLATION_SUCCESS:Appointment cancelled successfully.`,
+        $localize`:@@COMMON.CLOSE:Close`,
+        {
+          duration: 3000,
+        },
+      );
       this.dialogRef.close({
         action: 'confirmed',
         reason: reason,

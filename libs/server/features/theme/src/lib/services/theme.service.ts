@@ -40,7 +40,7 @@ export class ThemeService {
   private buildOrderBy(query: ThemeQueryDto): Prisma.ThemeOrderByWithRelationInput {
     const sortBy = query.sortBy || 'createdAt';
     const sortOrder = query.sortOrder || 'desc';
-    return { [sortBy]: sortOrder } as Prisma.ThemeOrderByWithRelationInput;
+    return { [sortBy]: sortOrder };
   }
 
   async create(createThemeDto: CreateThemeDto): Promise<ThemeResponseDto> {

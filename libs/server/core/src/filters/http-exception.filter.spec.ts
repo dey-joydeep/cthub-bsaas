@@ -115,11 +115,7 @@ describe('HttpExceptionFilter', () => {
       message: 'Generic error',
     });
     expect(typeof payload.timestamp).toBe('string');
-    expect(logger.error).toHaveBeenCalledWith(
-      'HTTP Exception: GET /',
-      exception.stack,
-      'HttpExceptionFilter',
-    );
+    expect(logger.error).toHaveBeenCalledWith('HTTP Exception: GET /', exception.stack, 'HttpExceptionFilter');
   });
 
   it('should handle non-Error exceptions and log them', () => {
@@ -142,11 +138,7 @@ describe('HttpExceptionFilter', () => {
       message: 'Internal server error',
     });
     expect(typeof payload.timestamp).toBe('string');
-    expect(logger.error).toHaveBeenCalledWith(
-      'HTTP Exception: GET /',
-      undefined,
-      'HttpExceptionFilter',
-    );
+    expect(logger.error).toHaveBeenCalledWith('HTTP Exception: GET /', undefined, 'HttpExceptionFilter');
   });
 
   it('should log server errors with status >= 500', () => {
@@ -157,10 +149,6 @@ describe('HttpExceptionFilter', () => {
     const exception = new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
     filter.catch(exception, host);
 
-    expect(logger.error).toHaveBeenCalledWith(
-      'HTTP Exception: POST /',
-      exception.stack,
-      'HttpExceptionFilter',
-    );
+    expect(logger.error).toHaveBeenCalledWith('HTTP Exception: POST /', exception.stack, 'HttpExceptionFilter');
   });
 });

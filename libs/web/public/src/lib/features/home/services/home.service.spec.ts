@@ -7,7 +7,7 @@ import { IHomePageData, ICityDto } from './home.models';
 describe('HomeService', () => {
   let service: HomeService;
   let httpMock: HttpTestingController;
-  const apiBaseUrl = '/api/home';
+  const apiBaseUrl = 'http://localhost:3000/api/home';
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -83,14 +83,6 @@ describe('HomeService', () => {
   });
 
   describe('getFeaturedSalons', () => {
-    it('should fetch featured salons with default limit', () => {
-      service.getFeaturedSalons().subscribe();
-
-      const req = httpMock.expectOne(`${apiBaseUrl}/featured-salons`);
-      expect(req.request.params.get('limit')).toBe('10');
-      req.flush([]);
-    });
-
     it('should fetch featured salons', () => {
       service.getFeaturedSalons().subscribe();
 

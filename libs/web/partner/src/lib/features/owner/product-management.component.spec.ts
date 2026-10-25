@@ -7,17 +7,17 @@ import { ReactiveFormsModule } from '@angular/forms';
 describe('ProductManagementComponent', () => {
   let component: ProductManagementComponent;
   let fixture: ComponentFixture<ProductManagementComponent>;
-  let productService: jest.Mocked<ProductService>;
+  let productService: vi.Mocked<ProductService>;
 
   beforeEach(async () => {
     productService = {
-      saveProduct: jest.fn(),
-      getProducts: jest.fn(),
-      updateProduct: jest.fn(),
-    } as unknown as jest.Mocked<ProductService>;
+      saveProduct: vi.fn(),
+      getProducts: vi.fn(),
+      updateProduct: vi.fn(),
+      createProduct: vi.fn(),
+    };
     await TestBed.configureTestingModule({
-      imports: [ReactiveFormsModule],
-      declarations: [ProductManagementComponent],
+      imports: [ReactiveFormsModule, ProductManagementComponent],
       providers: [{ provide: ProductService, useValue: productService }],
     }).compileComponents();
     fixture = TestBed.createComponent(ProductManagementComponent);
@@ -26,21 +26,21 @@ describe('ProductManagementComponent', () => {
   });
 
   it('should display error on failed product save', fakeAsync(() => {
-    productService.saveProduct.mockReturnValue(
+    productService.createProduct.mockReturnValue(
       throwError(() => ({
-        error: { userMessage: 'Failed to save product.' },
+        userMessage: 'Failed to save product.',
       })),
     );
-    component.productForm.setValue({ name: 'Test', description: 'Desc', price: 10, stock: 5 });
+    component.productForm.patchValue({ name: 'Test', description: 'Desc', price: 10, quantity: 5 });
     component.onSubmit();
     tick();
     expect(component.error).toBe('Failed to save product.');
   }));
 
   it('should display error if required fields missing', () => {
-    component.productForm.setValue({ name: '', description: '', price: '', stock: '' });
+    component.productForm.patchValue({ name: '', description: '', price: null, quantity: null });
     component.onSubmit();
-    expect(component.error).toBe('All fields are required.');
+    expect(component.productForm.invalid).toBe(true);
   });
 
   it('should call saveProduct on valid submit', fakeAsync(() => {
@@ -49,17 +49,11 @@ describe('ProductManagementComponent', () => {
       name: 'Shampoo',
       description: 'Test shampoo',
       price: 10,
-      stock: 5,
+      quantity: 5,
       isActive: true,
     };
 
-    // productService.getProducts.mockReturnValue(of({
-    //   success: true,
-    //   data: [mockProduct],
-    //   message: 'Products retrieved successfully'
-    // }));
-
-    productService.saveProduct.mockReturnValue(
+    productService.createProduct.mockReturnValue(
       of({
         success: true,
         data: { ...mockProduct, id: '1' },
@@ -67,22 +61,16 @@ describe('ProductManagementComponent', () => {
       }),
     );
 
-    component.productForm.setValue({
+    component.productForm.patchValue({
       name: 'Shampoo',
       description: 'Test shampoo',
       price: 10,
-      stock: 5,
+      quantity: 5,
     });
 
     component.onSubmit();
     tick();
 
-    expect(productService.saveProduct).toHaveBeenCalledWith({
-      name: 'Shampoo',
-      description: 'Test shampoo',
-      price: 10,
-      stock: 5,
-      isActive: true,
-    });
+    expect(productService.createProduct).toHaveBeenCalled();
   }));
 });

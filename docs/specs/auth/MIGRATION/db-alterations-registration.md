@@ -1,11 +1,15 @@
 # DB Alterations — Registration & Verification
+
 **Date:** 2025-09-07
 
 ## Summary
+
 Add minimal fields/models to support Customer OTP-first, Partner MFA gating + reminders, and unified verification challenges.
 
 ## Prisma Additions
+
 ### 1) User (fields)
+
 ```prisma
 model User {
   // existing...
@@ -18,6 +22,7 @@ model User {
 ```
 
 ### 2) New models
+
 ```prisma
 model RegistrationLink {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -55,6 +60,7 @@ model StaffInvite {
 ```
 
 ### 3) Extend EmailVerification
+
 ```prisma
 enum VerificationPurpose { registration, email_change, password_reset, mfa_change, mfa_add, social_link }
 
@@ -70,14 +76,17 @@ model EmailVerification {
 ```
 
 ## Migration Plan
-1) **Additive migration**: add fields/models; no destructive changes.  
-2) **Deploy code** that reads/writes new fields. If an old flag exists (`mustEnrollMFA`), write both during one release.  
-3) **Cleanup**: remove obsolete flag after verifying no reads.
+
+1. **Additive migration**: add fields/models; no destructive changes.
+2. **Deploy code** that reads/writes new fields. If an old flag exists (`mustEnrollMFA`), write both during one release.
+3. **Cleanup**: remove obsolete flag after verifying no reads.
 
 ## Rollback
+
 Drop newly added columns/models only; avoid renames without two-phase rollout.
 
 ## Post-deploy Validation
-- Create RegistrationLink/StaffInvite; verify indexes.  
-- OTP flows with `purpose` work for all endpoints.  
+
+- Create RegistrationLink/StaffInvite; verify indexes.
+- OTP flows with `purpose` work for all endpoints.
 - Scheduler finds due Partner users and updates `mfaReminderLastAt`.

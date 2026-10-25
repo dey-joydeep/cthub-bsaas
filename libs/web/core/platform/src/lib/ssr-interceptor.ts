@@ -21,4 +21,3 @@ export const ssrInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, nex
   // For browser environment, pass through the request
   return next(req);
 };
-

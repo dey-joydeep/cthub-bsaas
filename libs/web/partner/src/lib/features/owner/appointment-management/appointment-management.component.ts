@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
+import { DatePipe, TitleCasePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,7 +12,7 @@ import { Appointment } from './models/appointment-management.model';
 @Component({
   selector: 'app-appointment-management',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatTableModule, MatPaginatorModule, MatMenuModule],
+  imports: [DatePipe, TitleCasePipe, MatCardModule, MatButtonModule, MatIconModule, MatTableModule, MatPaginatorModule, MatMenuModule],
   template: `
     <div class="management-container">
       <div class="header">
@@ -44,7 +44,7 @@ import { Appointment } from './models/appointment-management.model';
             <ng-container matColumnDef="service">
               <th mat-header-cell *matHeaderCellDef>Service</th>
               <td mat-cell *matCellDef="let element">{{ element.serviceName }}</td>
-            </ng
+            </ng-container>
             <!-- Staff Column -->
             <ng-container matColumnDef="staff">
               <th mat-header-cell *matHeaderCellDef>Staff</th>
@@ -139,8 +139,7 @@ import { Appointment } from './models/appointment-management.model';
 export class AppointmentManagementComponent implements OnInit {
   displayedColumns: string[] = ['date', 'client', 'service', 'staff', 'status', 'actions'];
   dataSource: Appointment[] = [];
-
-  constructor(private appointmentManagementService: AppointmentManagementService) {}
+  private readonly appointmentManagementService = inject(AppointmentManagementService);
 
   ngOnInit(): void {
     this.appointmentManagementService.getAppointments().subscribe((appointments) => {

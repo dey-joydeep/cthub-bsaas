@@ -165,23 +165,23 @@
 
 ## 5. Task Tracking Table
 
-| Epic                | User Story | Task/Feature                              | Status   | Owner | Sprint |
-| ------------------- | ---------- | ----------------------------------------- | -------- | ----- | ------ |
-| Salon Management    | US1        | Owner registration via portal             | Planned  |       |        |
-| Salon Management    | US2        | Update/delete salon                       | Planned  |       |        |
-| Salon Management    | US3        | CRUD for services/products/staff          | Planned  |       |        |
-| Salon Management    | US4        | Approval flows (services/products/leaves) | Planned  |       |        |
-| Salon Management    | US5        | Appointment calendar & logic              | Planned  |       |        |
-| Salon Management    | US6        | Highlight/announce features               | Planned  |       |        |
-| Salon Management    | US7        | Portfolio CRUD                            | Complete |       |        |
-| Staff Experience    | US8        | Staff appointments/reviews                    | Planned  |       |        |
-| Staff Experience    | US9        | Staff leave/service/product requests      | Planned  |       |        |
-| Staff Experience    | US10       | Staff profile/nickname/contact mgmt       | Planned  |       |        |
-| Customer Experience | US11       | Customer appointment flow                     | Planned  |       |        |
-| Customer Experience | US12       | Appointment management (cancel/reschedule)| Planned  |       |        |
-| Customer Experience | US13       | Rate/review staff and salons              | Planned  |       |        |
-| Appointment Engine  | US14       | Slot calculation logic                    | Planned  |       |        |
-| Appointment Engine  | US15       | Multi-service slot calculation            | Planned  |       |        |
+| Epic                | User Story | Task/Feature                               | Status   | Owner | Sprint |
+| ------------------- | ---------- | ------------------------------------------ | -------- | ----- | ------ |
+| Salon Management    | US1        | Owner registration via portal              | Planned  |       |        |
+| Salon Management    | US2        | Update/delete salon                        | Planned  |       |        |
+| Salon Management    | US3        | CRUD for services/products/staff           | Planned  |       |        |
+| Salon Management    | US4        | Approval flows (services/products/leaves)  | Planned  |       |        |
+| Salon Management    | US5        | Appointment calendar & logic               | Planned  |       |        |
+| Salon Management    | US6        | Highlight/announce features                | Planned  |       |        |
+| Salon Management    | US7        | Portfolio CRUD                             | Complete |       |        |
+| Staff Experience    | US8        | Staff appointments/reviews                 | Planned  |       |        |
+| Staff Experience    | US9        | Staff leave/service/product requests       | Planned  |       |        |
+| Staff Experience    | US10       | Staff profile/nickname/contact mgmt        | Planned  |       |        |
+| Customer Experience | US11       | Customer appointment flow                  | Planned  |       |        |
+| Customer Experience | US12       | Appointment management (cancel/reschedule) | Planned  |       |        |
+| Customer Experience | US13       | Rate/review staff and salons               | Planned  |       |        |
+| Appointment Engine  | US14       | Slot calculation logic                     | Planned  |       |        |
+| Appointment Engine  | US15       | Multi-service slot calculation             | Planned  |       |        |
 
 ---
 

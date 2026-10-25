@@ -1,11 +1,14 @@
 # Auth Telemetry Events
+
 **Updated:** 2025-09-11
 
 ## Provider & Adapter
+
 - Frontend `TelemetryService` with adapters for **PostHog** (default), **GA4**, **Segment**.
 - Switch via environment tokens; single call site in service; no PII by default.
 
 ## Privacy & Governance
+
 - No raw emails/usernames; use `user_id` and optional `email_domain`. Hash if needed (salted SHA‑256).
 - Success events sampled (default 20%); error events 100%.
 - Respect consent flags. Default retention 13 months.
@@ -23,7 +26,7 @@
 - `auth.email_change_requested|confirmed` { old_domain, new_domain }
 - `auth.password_changed` { strength, had_breach_hint?: boolean }
 
-
 ## Implementation Notes
+
 - Strongly type event payloads in TS.
 - Log rate‑limited/blocked actions at WARN with code and cooldown.

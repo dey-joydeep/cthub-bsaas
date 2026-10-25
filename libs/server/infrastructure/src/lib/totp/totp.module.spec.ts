@@ -9,14 +9,14 @@ describe('TotpModule', () => {
     const module = await Test.createTestingModule({
       imports: [TotpModule, ConfigModule.forRoot()],
     })
-    .overrideProvider(PrismaService)
-    .useValue({})
-    .overrideProvider(EncryptionService)
-    .useValue({
-      encrypt: jest.fn(),
-      decrypt: jest.fn(),
-    })
-    .compile();
+      .overrideProvider(PrismaService)
+      .useValue({})
+      .overrideProvider(EncryptionService)
+      .useValue({
+        encrypt: jest.fn(),
+        decrypt: jest.fn(),
+      })
+      .compile();
 
     expect(module).toBeDefined();
   });

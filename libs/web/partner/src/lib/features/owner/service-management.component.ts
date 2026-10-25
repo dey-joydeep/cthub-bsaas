@@ -1,29 +1,19 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslateModule } from '@ngx-translate/core';
 import { ServiceService } from './service.service';
 
 @Component({
   selector: 'app-service-management',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatProgressBarModule,
-    MatIconModule,
-    TranslateModule,
-  ],
+  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressBarModule, MatIconModule],
   templateUrl: './service-management.component.html',
-  styleUrls: ['./service-management.component.scss'],
+  styleUrls: ['./service-management.component.css'],
 })
 export class ServiceManagementComponent {
   serviceForm;
@@ -31,11 +21,10 @@ export class ServiceManagementComponent {
   error: string | null = null;
   success: string | null = null;
   private currentUser: { id: string };
+  private readonly fb = inject(FormBuilder);
+  private readonly serviceService = inject(ServiceService);
 
-  constructor(
-    private fb: FormBuilder,
-    private serviceService: ServiceService,
-  ) {
+  constructor() {
     // In a real app, you would get this from your auth service
     this.currentUser = { id: 'current-user-id' };
 

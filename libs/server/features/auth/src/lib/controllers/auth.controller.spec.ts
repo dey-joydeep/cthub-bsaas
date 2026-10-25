@@ -8,10 +8,7 @@ import type { JwtService } from '@nestjs/jwt';
 
 describe('AuthController (core endpoints)', () => {
   let controller: AuthController;
-  let service: jest.Mocked<Pick<
-    AuthService,
-    'signIn' | 'signInWithTotp' | 'refreshToken' | 'logout'
-  >>;
+  let service: jest.Mocked<Pick<AuthService, 'signIn' | 'signInWithTotp' | 'refreshToken' | 'logout'>>;
   let cookies: jest.Mocked<Pick<AuthCookiesService, 'issue' | 'rotateOnRefresh' | 'clear'>>;
   let jwt: Pick<JwtService, 'decode'>;
   let decodeMock: jest.Mock;
@@ -19,11 +16,10 @@ describe('AuthController (core endpoints)', () => {
   const createLoginDto = (overrides: Partial<LoginDto> = {}): LoginDto =>
     Object.assign(new LoginDto(), { email: 'e@example.com', password: 'Password#1', ...overrides });
 
-  const createRefreshDto = (overrides: Partial<RefreshTokenDto> = {}): RefreshTokenDto =>
-    Object.assign(new RefreshTokenDto(), overrides);
+  const createRefreshDto = (overrides: Partial<RefreshTokenDto> = {}): RefreshTokenDto => Object.assign(new RefreshTokenDto(), overrides);
 
   const reqWithCookie = (cookieHeader?: string): ExpressRequest =>
-    ({ headers: cookieHeader ? { cookie: cookieHeader } : {} } as unknown as ExpressRequest);
+    ({ headers: cookieHeader ? { cookie: cookieHeader } : {} }) as unknown as ExpressRequest;
 
   beforeEach(() => {
     service = {
@@ -48,10 +44,7 @@ describe('AuthController (core endpoints)', () => {
     service.signIn.mockResolvedValue({ totpRequired: false, accessToken: 'at', refreshToken: 'rt' });
     const result = await controller.signIn(createLoginDto());
     expect(result).toEqual({ totpRequired: false });
-    expect(cookies.issue).toHaveBeenCalledWith(
-      expect.objectContaining({ accessToken: 'at', refreshToken: 'rt' }),
-      expect.any(Object),
-    );
+    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'at', refreshToken: 'rt' }), expect.any(Object));
   });
 
   it('signIn returns temp token when TOTP required', async () => {
@@ -63,10 +56,7 @@ describe('AuthController (core endpoints)', () => {
   it('login/totp issues cookies', async () => {
     const out = await controller.signInWithTotp({ tempToken: 't', totpCode: '123456' });
     expect(out).toEqual({});
-    expect(cookies.issue).toHaveBeenCalledWith(
-      expect.objectContaining({ accessToken: 'AT2', refreshToken: 'RT2' }),
-      expect.any(Object),
-    );
+    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'AT2', refreshToken: 'RT2' }), expect.any(Object));
   });
 
   it('login/totp uses default TTL path when roles are not CUSTOMER', async () => {
@@ -104,9 +94,7 @@ describe('AuthController (core endpoints)', () => {
   });
 
   it('refresh rejects when both cookie and body tokens are provided', async () => {
-    await expect(
-      controller.refresh(createRefreshDto({ refreshToken: 'from-body' }), reqWithCookie('bsaas_rt=cookie')),
-    ).rejects.toThrow();
+    await expect(controller.refresh(createRefreshDto({ refreshToken: 'from-body' }), reqWithCookie('bsaas_rt=cookie'))).rejects.toThrow();
     expect(cookies.rotateOnRefresh).not.toHaveBeenCalled();
   });
 

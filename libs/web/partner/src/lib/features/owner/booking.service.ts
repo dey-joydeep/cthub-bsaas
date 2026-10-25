@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -7,8 +7,7 @@ import { CreateAppointmentParams } from '../../models/appointment-params.model';
 @Injectable({ providedIn: 'root' })
 export class AppointmentService {
   private apiUrl = '/api/appointment';
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   createAppointment(params: CreateAppointmentParams): Observable<any> {
     const payload = {

@@ -8,7 +8,6 @@ import type { WebauthnRegisterStartDto } from '../dto/webauthn-register-start.dt
 import type { WebauthnAttestationDto } from '../dto/webauthn-attestation.dto';
 import type { WebauthnAssertionDto } from '../dto/webauthn-assertion.dto';
 
-
 const makeWebAuthn = () => ({
   startRegistration: jest.fn((_userId: string, _username: string) => Promise.resolve({ challenge: 'reg' })),
   finishRegistration: jest.fn((_userId: string, _resp: unknown) => Promise.resolve(undefined)),
@@ -108,10 +107,7 @@ describe('WebauthnController (unit)', () => {
     const out = await controller.webauthnLoginFinish({ response: {} } as WebauthnAssertionDto, user);
     expect(webAuthn.finishAuthentication).toHaveBeenCalled();
     expect(authService.issueTokensForUser).toHaveBeenCalledWith('u1');
-    expect(cookies.issue).toHaveBeenCalledWith(
-      expect.objectContaining({ accessToken: 'AT', refreshToken: 'RT' }),
-      expect.any(Object),
-    );
+    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'AT', refreshToken: 'RT' }), expect.any(Object));
     expect(out).toEqual({});
   });
 

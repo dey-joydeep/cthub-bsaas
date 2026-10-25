@@ -1,5 +1,4 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsString, IsNumber, IsOptional, IsUUID, MinLength, MaxLength, Min, Max } from 'class-validator';
 import { CreateSalonDto } from './create-salon.dto';

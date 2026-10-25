@@ -13,7 +13,7 @@ const buildConfig = (overrides: Partial<AuthConfig>): ConfigService =>
       cookieDomain: undefined,
       ...overrides,
     },
-  } as unknown as ConfigService);
+  }) as unknown as ConfigService;
 
 describe('cookie.util', () => {
   it('extracts refresh token from cookie header strings', () => {

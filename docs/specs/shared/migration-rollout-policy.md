@@ -9,14 +9,14 @@ Define safe database, API, and feature rollout practices for this project.
 
 ## Database Migration Rules
 
-| Rule ID | Rule |
-| --- | --- |
-| MIG-001 | Schema changes must be represented by meaningful migrations. |
-| MIG-002 | Destructive migrations require explicit review and a rollback or recovery note. |
-| MIG-003 | Backfills must be idempotent or clearly documented as one-time controlled operations. |
+| Rule ID | Rule                                                                                    |
+| ------- | --------------------------------------------------------------------------------------- |
+| MIG-001 | Schema changes must be represented by meaningful migrations.                            |
+| MIG-002 | Destructive migrations require explicit review and a rollback or recovery note.         |
+| MIG-003 | Backfills must be idempotent or clearly documented as one-time controlled operations.   |
 | MIG-004 | Large table changes should be phased into expand, backfill, switch, and contract steps. |
-| MIG-005 | Foreign keys and uniqueness constraints must reflect business scope rules. |
-| MIG-006 | Migration status must be checked before implementation branches are considered ready. |
+| MIG-005 | Foreign keys and uniqueness constraints must reflect business scope rules.              |
+| MIG-006 | Migration status must be checked before implementation branches are considered ready.   |
 
 ## API Rollout Rules
 
