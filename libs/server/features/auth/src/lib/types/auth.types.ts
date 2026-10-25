@@ -59,7 +59,7 @@ export type SimpleOk = {
  */
 export type JwtUserContext = {
   /** Internal user id as expected by shared request-scope guards. */
-  id: string;
+  id?: string;
   /** Internal user id (subject). */
   userId: string;
   /** User email address. */
@@ -70,4 +70,8 @@ export type JwtUserContext = {
   sessionId: string;
   /** Tenant id used by shared scope guards for tenant-scoped APIs. */
   tenantId?: string;
+  /** List of branch IDs that the staff member is authorized to manage. */
+  managedBranchIds?: string[];
+  /** Explicit flag indicating whether the user can manage branch settings. */
+  canManageBranches?: boolean;
 };

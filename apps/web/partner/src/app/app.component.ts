@@ -64,7 +64,7 @@ export class AppComponent implements OnInit, OnDestroy {
    * Check if the current user has admin role
    */
   get isAdmin(): boolean {
-    return this.currentUser?.roles?.includes('admin') || false;
+    return this.hasRole('admin');
   }
 
   /**

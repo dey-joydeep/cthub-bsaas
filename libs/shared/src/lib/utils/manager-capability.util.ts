@@ -38,13 +38,11 @@ export interface ManagerCapabilityUser {
   /** Single role or primary role string. */
   readonly role?: string | null;
   /** Role collection supporting string or object format. */
-  readonly roles?: readonly (string | { name?: string | null })[] | null;
+  readonly roles?: readonly (string | { readonly name?: string | null })[] | null;
   /** List of branch IDs that the user is authorized to manage. */
   readonly managedBranchIds?: readonly string[] | null;
   /** Explicit flag indicating whether the user can manage branch settings. */
   readonly canManageBranches?: boolean | null;
-  /** Allow additional properties. */
-  readonly [key: string]: unknown;
 }
 
 /**
@@ -68,6 +66,10 @@ export function hasManagerCapability(
     return true;
   }
 
+  if (user.canManageBranches === false) {
+    return false;
+  }
+
   const roleStr = typeof user.role === 'string' ? user.role.toLowerCase() : '';
   const roleNames = Array.isArray(user.roles)
     ? user.roles.map((r) => {
@@ -82,7 +84,7 @@ export function hasManagerCapability(
     return true;
   }
 
-  if (Array.isArray(user.managedBranchIds) && user.managedBranchIds.length > 0) {
+  if (allRoles.has('staff') && Array.isArray(user.managedBranchIds) && user.managedBranchIds.length > 0) {
     return true;
   }
 

@@ -294,13 +294,40 @@ export class AuthService {
     const jti = randomUUID();
     const roles = user.roles.map((r) => r.role.name);
     const isCustomer = roles.includes('CUSTOMER');
+    const isStaff = roles.some((r) => r.toLowerCase() === 'staff');
+    let managedBranchIds: string[] | undefined;
+    if (isStaff && typeof this.userRepository.findManagedBranchIds === 'function') {
+      try {
+        const branchIds = await this.userRepository.findManagedBranchIds(user.id);
+        if (branchIds.length > 0) {
+          managedBranchIds = branchIds;
+        }
+      } catch {
+        managedBranchIds = undefined;
+      }
+    }
+    const isOwnerOrAdmin = roles.some((r) => {
+      const lower = r.toLowerCase();
+      return lower === 'owner' || lower === 'admin';
+    });
+    const canManageBranches =
+      isOwnerOrAdmin || (Array.isArray(managedBranchIds) && managedBranchIds.length > 0);
+
     const rtTtl = isCustomer
       ? (this.configService.auth.refreshTokenExpiresInCustomer ?? this.configService.auth.refreshTokenExpiresInDefault)
       : this.configService.auth.refreshTokenExpiresInDefault;
     const tenantId = user.salonTenantId ?? undefined;
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
-        { sub: user.id, email: user.email, sessionId, roles, tenantId },
+        {
+          sub: user.id,
+          email: user.email,
+          sessionId,
+          roles,
+          tenantId,
+          ...(managedBranchIds ? { managedBranchIds } : {}),
+          canManageBranches,
+        },
         {
           secret: this.configService.auth.jwtAccessSecret,
           expiresIn: this.configService.auth.jwtExpiresIn,

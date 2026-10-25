@@ -150,25 +150,33 @@ Implemented on branch `feature/manager-capability-auth-contract`:
 
 1. **Shared Contract (`libs/shared`)**:
    - Added `isBranchManagerPosition()` and `hasManagerCapability()` in `libs/shared/src/lib/utils/manager-capability.util.ts`.
+   - Enhanced `hasManagerCapability()` to verify the user has the `STAFF` role before allowing branch list fallback, and respect explicit `canManageBranches: false`.
    - Added `managedBranchIds?: string[]` and `canManageBranches?: boolean` to `AuthenticatedUser` in `libs/shared/src/lib/types/user.types.ts`.
    - Replaced duplicate local branch manager position check in `libs/server/features/salon-owner/src/lib/services/salon-owner-settings.service.ts` with shared utility.
 
-2. **Web Core Auth (`libs/web/core/auth`)**:
+2. **Backend Auth Contract Pipeline (`libs/server/contracts-auth`, `libs/server/data-access`, `libs/server/features/auth`)**:
+   - Added `findManagedBranchIds(userId: string): Promise<string[]>` to `IUserRepository` port and `UserRepository` implementation. Queries `salonTenantStaff` where `isActive = true`, filtering with `isBranchManagerPosition()`.
+   - In `AuthService.generateTokens()`, for staff users, queries active manager assignments and signs access tokens containing `managedBranchIds` and `canManageBranches: true`.
+   - In `JwtStrategy.validate()`, propagates `managedBranchIds` and `canManageBranches` into `JwtUserContext`.
+
+3. **Web Core Auth (`libs/web/core/auth`)**:
    - Added `roles?: readonly string[]`, `managedBranchIds?: readonly string[]`, and `canManageBranches?: boolean` to `CurrentUserMin` and `BaseAuthUser`.
-   - Updated `roleGuard` to enforce `requireManagerCapability` when requested on routes, allowing owners/admins and manager-capable staff while blocking non-manager staff with redirection to `/unauthorized`.
+   - Updated `roleGuard` to defensively extract role strings from object-formatted roles (`{ name: 'staff' }`), support `redirectUrl` configuration, and enforce `requireManagerCapability`.
    - Exported `managerCapabilityGuard` for dedicated capability checks.
 
-3. **Web Partner & App (`libs/web/partner`, `apps/web/partner`)**:
+4. **Web Partner & App (`libs/web/partner`, `apps/web/partner`)**:
    - Extended `PartnerAuthUser` with `managedBranchIds` and `canManageBranches`.
-   - Corrected `AuthService.getCurrentUser()` to return the full `PartnerAuthUser` (rather than stripping everything except `{ id }`).
-   - Hydrated and stored `canManageBranches` using `hasManagerCapability` in `AuthService.setLoggedInUser()` and `initializeAuthState()`.
-   - Gated `/owner/branches` in `apps/web/partner/src/app/app.routes.ts` with `requireManagerCapability: true`.
-   - Gated Settings navigation in `apps/web/partner/src/app/app.component.ts` and `.html`: owners route to `/settings`, manager-capable staff route to `/owner/branches`, and non-manager staff have Settings hidden.
+   - Updated `AuthService.setLoggedInUser()` and `initializeAuthState()` to decode `managedBranchIds` and `canManageBranches` from token claims when not present in input payload.
+   - Gated `/owner/branches` in `apps/web/partner/src/app/app.routes.ts` with `requireManagerCapability: true` and `redirectUrl: '/unauthorized'`.
+   - Added `UnauthorizedComponent` registered at `/unauthorized` to present a clean access-restricted message instead of bouncing to login.
+   - Updated `apps/web/partner/src/app/app.component.ts` to use case-normalized `hasRole('admin')` for `isAdmin`, and allow `ADMIN` in `owner/settings` route data.
+   - Gated Settings navigation: owners and admins route to `/settings`, manager-capable staff route to `/owner/branches`, and non-manager staff have Settings hidden.
 
-4. **Automated Verification**:
-   - All tests passing in `shared` (100% coverage).
-   - All tests passing in `web-core-auth` (role guard, manager capability guard, auth guard).
-   - All tests passing in `web-lib-partner` (`auth.service.spec.ts` and `salon-owner-settings.component.spec.ts`).
-   - All tests passing in `web-app-partner` (`app.routes.spec.ts` and `app.component.spec.ts`).
-   - All tests passing in `server-feature-salon-owner` (93 tests).
-   - Clean lint on all touched projects.
+5. **Automated Verification**:
+   - All tests passing in `shared` (11/11 tests, 100% coverage).
+   - All tests passing in `server-data-access` (54/54 tests, 100% coverage).
+   - All tests passing in `server-feature-auth` (unit tests and jwt strategy).
+   - All tests passing in `web-core-auth` (15/15 tests across 3 suites).
+   - All tests passing in `web-lib-partner` (57/57 tests across 2 suites).
+   - All tests passing in `web-app-partner` (8/8 tests across 2 suites).
+   - All tests passing in `server-feature-salon-owner` (93/93 tests across 3 suites).

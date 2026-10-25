@@ -6,7 +6,7 @@ export type BaseAuthUser = {
   readonly [key: string]: unknown;
   readonly id: string;
   readonly role?: string;
-  readonly roles?: readonly string[];
+  readonly roles?: readonly (string | { readonly name?: string | null })[];
   readonly managedBranchIds?: readonly string[];
   readonly canManageBranches?: boolean;
 };

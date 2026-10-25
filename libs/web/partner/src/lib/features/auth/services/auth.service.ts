@@ -42,10 +42,7 @@ export class AuthService implements AuthStatePort {
 
   public setLoggedInUser(user: PartnerAuthUser): void {
     if (!this.isBrowser) return;
-    const enrichedUser: PartnerAuthUser = {
-      ...user,
-      canManageBranches: user.canManageBranches ?? hasManagerCapability(user),
-    };
+    const enrichedUser = this.enrichUser(user);
     this.currentUserSubject.next(enrichedUser);
     this.storage.setItem$(this.USER_KEY, enrichedUser).subscribe();
   }
@@ -68,15 +65,50 @@ export class AuthService implements AuthStatePort {
     this.storage.getItem$<PartnerAuthUser>(this.USER_KEY).subscribe({
       next: (user: PartnerAuthUser | null) => {
         if (user) {
-          const enrichedUser: PartnerAuthUser = {
-            ...user,
-            canManageBranches: user.canManageBranches ?? hasManagerCapability(user),
-          };
+          const enrichedUser = this.enrichUser(user);
           this.currentUserSubject.next(enrichedUser);
         }
       },
       error: () => this.clearAuthData(),
     });
+  }
+
+  private enrichUser(user: PartnerAuthUser): PartnerAuthUser {
+    let managedBranchIds = user.managedBranchIds;
+    let canManageBranches = user.canManageBranches;
+    let roles = user.roles;
+
+    const token =
+      typeof user.accessToken === 'string' && user.accessToken.length > 0
+        ? user.accessToken
+        : this.storage.getItem<string>(this.TOKEN_KEY, null);
+
+    if (token) {
+      const payload = this.decodeTokenPayload(token);
+      if (payload) {
+        if (!managedBranchIds && Array.isArray(payload['managedBranchIds'])) {
+          managedBranchIds = payload['managedBranchIds'] as string[];
+        }
+        if (canManageBranches === undefined && typeof payload['canManageBranches'] === 'boolean') {
+          canManageBranches = payload['canManageBranches'];
+        }
+        if (!roles && Array.isArray(payload['roles'])) {
+          roles = (payload['roles'] as unknown[]).map(String);
+        }
+      }
+    }
+
+    const candidate: PartnerAuthUser = {
+      ...user,
+      ...(roles ? { roles } : {}),
+      ...(managedBranchIds ? { managedBranchIds } : {}),
+      canManageBranches,
+    };
+
+    return {
+      ...candidate,
+      canManageBranches: candidate.canManageBranches ?? hasManagerCapability(candidate),
+    };
   }
 
   private getToken(): Observable<string | null> {
@@ -85,18 +117,22 @@ export class AuthService implements AuthStatePort {
     return of(typeof token === 'string' ? token : null);
   }
 
-  private isTokenValid(token: string | null | undefined): boolean {
-    if (!token) return false;
-
+  private decodeTokenPayload(token: string | null | undefined): Record<string, unknown> | null {
+    if (!token) return null;
     try {
       const base64Url = token.split('.')[1];
-      if (!base64Url) return false;
+      if (!base64Url) return null;
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const payload = JSON.parse(atob(base64));
-      const currentTime = Math.floor(Date.now() / 1000);
-      return payload.exp > currentTime;
+      return JSON.parse(atob(base64)) as Record<string, unknown>;
     } catch {
-      return false;
+      return null;
     }
+  }
+
+  private isTokenValid(token: string | null | undefined): boolean {
+    const payload = this.decodeTokenPayload(token);
+    if (!payload || typeof payload['exp'] !== 'number') return false;
+    const currentTime = Math.floor(Date.now() / 1000);
+    return payload['exp'] > currentTime;
   }
 }

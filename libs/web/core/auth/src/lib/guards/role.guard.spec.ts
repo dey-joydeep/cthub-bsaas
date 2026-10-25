@@ -46,7 +46,7 @@ describe('roleGuard', () => {
 
   it('allows uppercase user roles to satisfy lowercase route roles', async () => {
     currentUserPort.currentUser$ = of({ id: 'owner-1', role: 'OWNER' });
-    const route = { data: { roles: ['owner'] } } as ActivatedRouteSnapshot;
+    const route = { data: { roles: ['owner'] } } as unknown as ActivatedRouteSnapshot;
     const state = { url: '/owner/settings' } as RouterStateSnapshot;
 
     const result = await resolveGuardResult(runInInjectionContext(injector, () => roleGuard(route, state)));
@@ -55,7 +55,7 @@ describe('roleGuard', () => {
   });
 
   it('redirects unauthenticated users to login with the attempted returnUrl', async () => {
-    const route = { data: { roles: ['owner'] } } as ActivatedRouteSnapshot;
+    const route = { data: { roles: ['owner'] } } as unknown as ActivatedRouteSnapshot;
     const state = { url: '/owner/settings' } as RouterStateSnapshot;
 
     const result = await resolveGuardResult(runInInjectionContext(injector, () => roleGuard(route, state)));
@@ -67,7 +67,7 @@ describe('roleGuard', () => {
 
   it('redirects to unauthorized when the current user is missing a role', async () => {
     currentUserPort.currentUser$ = of({ id: 'owner-1' } as CurrentUserMin);
-    const route = { data: { roles: ['owner'] } } as ActivatedRouteSnapshot;
+    const route = { data: { roles: ['owner'] } } as unknown as ActivatedRouteSnapshot;
     const state = { url: '/owner/settings' } as RouterStateSnapshot;
 
     const result = await resolveGuardResult(runInInjectionContext(injector, () => roleGuard(route, state)));
@@ -83,7 +83,7 @@ describe('roleGuard', () => {
     });
     const route = {
       data: { roles: ['owner', 'staff'], requireManagerCapability: true },
-    } as ActivatedRouteSnapshot;
+    } as unknown as ActivatedRouteSnapshot;
     const state = { url: '/owner/branches' } as RouterStateSnapshot;
 
     const result = await resolveGuardResult(runInInjectionContext(injector, () => roleGuard(route, state)));
@@ -99,7 +99,7 @@ describe('roleGuard', () => {
     });
     const route = {
       data: { roles: ['owner', 'staff'], requireManagerCapability: true },
-    } as ActivatedRouteSnapshot;
+    } as unknown as ActivatedRouteSnapshot;
     const state = { url: '/owner/branches' } as RouterStateSnapshot;
 
     const result = await resolveGuardResult(runInInjectionContext(injector, () => roleGuard(route, state)));
@@ -114,7 +114,7 @@ describe('roleGuard', () => {
     });
     const route = {
       data: { roles: ['owner', 'staff'], requireManagerCapability: true },
-    } as ActivatedRouteSnapshot;
+    } as unknown as ActivatedRouteSnapshot;
     const state = { url: '/owner/branches' } as RouterStateSnapshot;
 
     const result = await resolveGuardResult(runInInjectionContext(injector, () => roleGuard(route, state)));
@@ -130,7 +130,7 @@ describe('roleGuard', () => {
     });
     const route = {
       data: { requireManagerCapability: true },
-    } as ActivatedRouteSnapshot;
+    } as unknown as ActivatedRouteSnapshot;
     const state = { url: '/owner/branches' } as RouterStateSnapshot;
 
     const result = await resolveGuardResult(runInInjectionContext(injector, () => roleGuard(route, state)));
@@ -141,7 +141,7 @@ describe('roleGuard', () => {
   describe('managerCapabilityGuard', () => {
     it('redirects unauthenticated users to login', async () => {
       currentUserPort.currentUser$ = of(null);
-      const route = {} as ActivatedRouteSnapshot;
+      const route = {} as unknown as ActivatedRouteSnapshot;
       const state = { url: '/owner/branches' } as RouterStateSnapshot;
 
       const result = await resolveGuardResult(
@@ -158,7 +158,7 @@ describe('roleGuard', () => {
         role: 'staff',
         canManageBranches: true,
       });
-      const route = {} as ActivatedRouteSnapshot;
+      const route = {} as unknown as ActivatedRouteSnapshot;
       const state = { url: '/owner/branches' } as RouterStateSnapshot;
 
       const result = await resolveGuardResult(
@@ -174,7 +174,7 @@ describe('roleGuard', () => {
         role: 'staff',
         managedBranchIds: [],
       });
-      const route = {} as ActivatedRouteSnapshot;
+      const route = {} as unknown as ActivatedRouteSnapshot;
       const state = { url: '/owner/branches' } as RouterStateSnapshot;
 
       const result = await resolveGuardResult(
@@ -182,6 +182,30 @@ describe('roleGuard', () => {
       );
 
       expect(result.toString()).toContain('/unauthorized');
+    });
+
+    it('allows manager-capable staff with object roles and respects custom redirectUrl', async () => {
+      currentUserPort.currentUser$ = of({
+        id: 'staff-obj',
+        roles: [{ name: 'STAFF' }],
+        managedBranchIds: ['branch-1'],
+      });
+      const route = {
+        data: { roles: ['staff'], requireManagerCapability: true, redirectUrl: '/custom-forbidden' },
+      } as unknown as ActivatedRouteSnapshot;
+      const state = { url: '/owner/branches' } as RouterStateSnapshot;
+
+      const result = await resolveGuardResult(runInInjectionContext(injector, () => roleGuard(route, state)));
+      expect(result).toBe(true);
+
+      // Non-manager staff with custom redirectUrl
+      currentUserPort.currentUser$ = of({
+        id: 'staff-obj-2',
+        roles: [{ name: 'STAFF' }],
+        managedBranchIds: [],
+      });
+      const blockedResult = await resolveGuardResult(runInInjectionContext(injector, () => roleGuard(route, state)));
+      expect(blockedResult.toString()).toContain('/custom-forbidden');
     });
   });
 });

@@ -51,6 +51,16 @@ describe('manager-capability.util', () => {
       expect(hasManagerCapability({ role: 'staff', canManageBranches: true })).toBe(true);
     });
 
+    it('returns false when canManageBranches is explicitly false even with managedBranchIds', () => {
+      expect(
+        hasManagerCapability({
+          role: 'staff',
+          managedBranchIds: ['branch-1'],
+          canManageBranches: false,
+        }),
+      ).toBe(false);
+    });
+
     it('returns true for owner and admin roles regardless of managedBranchIds', () => {
       expect(hasManagerCapability({ role: 'owner' })).toBe(true);
       expect(hasManagerCapability({ role: 'ADMIN' })).toBe(true);
@@ -72,6 +82,12 @@ describe('manager-capability.util', () => {
           managedBranchIds: ['branch-1', 'branch-2'],
         }),
       ).toBe(true);
+      expect(
+        hasManagerCapability({
+          roles: [{ name: 'STAFF' }],
+          managedBranchIds: ['branch-1'],
+        }),
+      ).toBe(true);
     });
 
     it('returns false for staff users without managedBranchIds or with empty array', () => {
@@ -82,9 +98,9 @@ describe('manager-capability.util', () => {
       expect(hasManagerCapability({ roles: [{ name: null }] })).toBe(false);
     });
 
-    it('returns false for customer role even if empty managedBranchIds', () => {
+    it('returns false for customer role even if non-empty managedBranchIds', () => {
       expect(hasManagerCapability({ role: 'customer' })).toBe(false);
-      expect(hasManagerCapability({ role: 'customer', managedBranchIds: [] })).toBe(false);
+      expect(hasManagerCapability({ role: 'customer', managedBranchIds: ['branch-1'] })).toBe(false);
     });
   });
 });

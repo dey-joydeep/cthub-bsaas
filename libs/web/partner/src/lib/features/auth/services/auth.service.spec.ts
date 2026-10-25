@@ -60,6 +60,32 @@ describe('AuthService (Partner)', () => {
     );
   });
 
+  it('extracts managedBranchIds and canManageBranches from accessToken when not present on user object', () => {
+    const claims = {
+      sub: 'staff-jwt',
+      roles: ['staff'],
+      managedBranchIds: ['branch-jwt-1'],
+      canManageBranches: true,
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    };
+    const b64 = Buffer.from(JSON.stringify(claims)).toString('base64');
+    const fakeToken = `header.${b64}.signature`;
+
+    const user: PartnerAuthUser = {
+      id: 'staff-jwt',
+      name: 'JWT Staff',
+      email: 'jwt@example.com',
+      role: 'staff',
+      accessToken: fakeToken,
+    };
+
+    service.setLoggedInUser(user);
+
+    const current = service.getCurrentUser();
+    expect(current?.managedBranchIds).toEqual(['branch-jwt-1']);
+    expect(current?.canManageBranches).toBe(true);
+  });
+
   it('derives canManageBranches as false for staff with empty managedBranchIds', () => {
     const user: PartnerAuthUser = {
       id: 'staff-2',

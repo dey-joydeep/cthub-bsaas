@@ -970,6 +970,88 @@ describe('AuthService', () => {
       const res = await service.signIn('test@example.com', 'password');
       expect(res).toEqual({ totpRequired: false, accessToken: 'access-token', refreshToken: 'refresh-token' });
     });
+
+    it('signIn for staff manager queries findManagedBranchIds and embeds branch ids and capability', async () => {
+      const staffUser: User & { roles: { role: { name: string } }[] } = {
+        ...mockUserWithRoles,
+        roles: [{ role: { name: 'STAFF' } }],
+      };
+      userRepository.findByEmail.mockResolvedValue(staffUser);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      credentialTotpRepository.findByUserId.mockResolvedValue(null);
+      sessionRepository.create.mockResolvedValue({
+        id: 'sess-staff',
+        userId: staffUser.id,
+        deviceOS: null,
+        deviceUA: null,
+        ipHash: null,
+        lastSeenAt: new Date(),
+        createdAt: new Date(),
+      } as Session);
+      userRepository.findManagedBranchIds = jest.fn().mockResolvedValue(['branch-101', 'branch-102']);
+      jwtService.signAsync.mockResolvedValueOnce('staff-access-token').mockResolvedValueOnce('staff-refresh-token');
+      refreshTokenRepository.create.mockResolvedValue({
+        jti: 'j-staff',
+        userId: staffUser.id,
+        sessionId: 'sess-staff',
+        issuedAt: new Date(),
+        revokedAt: null,
+        rotatedFrom: null,
+      } as RefreshToken);
+
+      const res = await service.signIn('staff@example.com', 'password');
+      expect(res).toEqual({ totpRequired: false, accessToken: 'staff-access-token', refreshToken: 'staff-refresh-token' });
+      expect(userRepository.findManagedBranchIds).toHaveBeenCalledWith(staffUser.id);
+      expect(jwtService.signAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sub: staffUser.id,
+          roles: ['STAFF'],
+          managedBranchIds: ['branch-101', 'branch-102'],
+          canManageBranches: true,
+        }),
+        expect.any(Object),
+      );
+    });
+
+    it('signIn for staff member handles findManagedBranchIds error gracefully', async () => {
+      const staffUser: User & { roles: { role: { name: string } }[] } = {
+        ...mockUserWithRoles,
+        roles: [{ role: { name: 'STAFF' } }],
+      };
+      userRepository.findByEmail.mockResolvedValue(staffUser);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      credentialTotpRepository.findByUserId.mockResolvedValue(null);
+      sessionRepository.create.mockResolvedValue({
+        id: 'sess-staff-err',
+        userId: staffUser.id,
+        deviceOS: null,
+        deviceUA: null,
+        ipHash: null,
+        lastSeenAt: new Date(),
+        createdAt: new Date(),
+      } as Session);
+      userRepository.findManagedBranchIds = jest.fn().mockRejectedValue(new Error('DB error'));
+      jwtService.signAsync.mockResolvedValueOnce('staff-at').mockResolvedValueOnce('staff-rt');
+      refreshTokenRepository.create.mockResolvedValue({
+        jti: 'j-err',
+        userId: staffUser.id,
+        sessionId: 'sess-staff-err',
+        issuedAt: new Date(),
+        revokedAt: null,
+        rotatedFrom: null,
+      } as RefreshToken);
+
+      const res = await service.signIn('staff@example.com', 'password');
+      expect(res).toEqual({ totpRequired: false, accessToken: 'staff-at', refreshToken: 'staff-rt' });
+      expect(jwtService.signAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sub: staffUser.id,
+          roles: ['STAFF'],
+          canManageBranches: false,
+        }),
+        expect.any(Object),
+      );
+    });
   });
 
   describe('Email Change', () => {

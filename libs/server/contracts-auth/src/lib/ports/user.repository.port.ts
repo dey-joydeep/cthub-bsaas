@@ -24,6 +24,12 @@ export interface IUserRepository {
      */
     findByEmail(email: string): Promise<(User & { roles: { role: { name: string } }[] }) | null>;
     /**
+     * Find managed branch IDs for a user holding an active branch manager assignment.
+     * @param {string} userId - User id.
+     * @returns {Promise<string[]>} Array of unique managed branch IDs.
+     */
+    findManagedBranchIds?(userId: string): Promise<string[]>;
+    /**
      * Create a new user.
      * @param {Omit<User, 'id' | 'createdAt' | 'updatedAt'>} data - Creation payload.
      * @returns {Promise<User>} Persisted user.

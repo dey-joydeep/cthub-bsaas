@@ -4,9 +4,22 @@ import { map, take } from 'rxjs/operators';
 import { CURRENT_USER } from '../interfaces/current-user.port';
 import { hasManagerCapability } from '@cthub-bsaas/shared';
 
+function extractRoleNames(roles?: readonly unknown[] | null): string[] {
+  if (!Array.isArray(roles)) return [];
+  return roles
+    .map((r) => {
+      if (typeof r === 'string') return r.toLowerCase();
+      if (r && typeof r === 'object' && typeof (r as { name?: unknown }).name === 'string') {
+        return (r as { name: string }).name.toLowerCase();
+      }
+      return '';
+    })
+    .filter(Boolean);
+}
+
 /**
  * Role guard that checks if user has required roles and optional capabilities.
- * Redirects to unauthorized page if user doesn't have required roles or capabilities.
+ * Redirects to unauthorized page or custom redirectUrl if user doesn't have required roles or capabilities.
  */
 export const roleGuard: CanActivateFn = (route, state) => {
   const currentUserService = inject(CURRENT_USER);
@@ -21,6 +34,8 @@ export const roleGuard: CanActivateFn = (route, state) => {
         return router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: state.url } });
       }
 
+      const unauthorizedUrl = (route.data?.['redirectUrl'] as string | undefined) || '/unauthorized';
+
       // Check manager capability requirement if specified
       const requiresManagerCapability = route.data?.['requireManagerCapability'] === true;
 
@@ -30,30 +45,30 @@ export const roleGuard: CanActivateFn = (route, state) => {
       const userRole = typeof user.role === 'string' ? user.role.toLowerCase() : null;
       const userRoles = [
         ...(userRole ? [userRole] : []),
-        ...((Array.isArray(user.roles) ? user.roles : []).map((r) => String(r).toLowerCase())),
+        ...extractRoleNames(user.roles),
       ];
 
       // If no roles are required, check capability then allow access
       if (!requiredRoles || requiredRoles.length === 0) {
         if (requiresManagerCapability && !hasManagerCapability(user)) {
-          return router.createUrlTree(['/unauthorized']);
+          return router.createUrlTree([unauthorizedUrl]);
         }
         return true;
       }
 
       // Check if user has any of the required roles
       if (userRoles.length === 0) {
-        return router.createUrlTree(['/unauthorized']);
+        return router.createUrlTree([unauthorizedUrl]);
       }
       const hasRequiredRole = requiredRoles.some((role) => userRoles.includes(role));
 
       if (!hasRequiredRole) {
-        return router.createUrlTree(['/unauthorized']);
+        return router.createUrlTree([unauthorizedUrl]);
       }
 
       // If route also requires manager capability, enforce it
       if (requiresManagerCapability && !hasManagerCapability(user)) {
-        return router.createUrlTree(['/unauthorized']);
+        return router.createUrlTree([unauthorizedUrl]);
       }
 
       return true;
@@ -77,8 +92,10 @@ export const managerCapabilityGuard: CanActivateFn = (route, state) => {
         return router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: state.url } });
       }
 
+      const unauthorizedUrl = (route.data?.['redirectUrl'] as string | undefined) || '/unauthorized';
+
       if (!hasManagerCapability(user)) {
-        return router.createUrlTree(['/unauthorized']);
+        return router.createUrlTree([unauthorizedUrl]);
       }
 
       return true;

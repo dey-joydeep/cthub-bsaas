@@ -50,6 +50,28 @@ describe('UserRepository', () => {
     expect(prisma.user.findUnique).toHaveBeenCalledWith(expect.objectContaining({ where: { email: 'e@example.com' } }));
   });
 
+  it('finds managed branch ids for manager positions', async () => {
+    prisma.salonTenantStaff.findMany.mockResolvedValue([
+      { salonId: 'branch-1', position: 'Branch Manager' },
+      { salonId: 'branch-2', position: 'manager' },
+      { salonId: 'branch-3', position: 'Stylist' },
+      { salonId: 'branch-1', position: 'MANAGER' },
+    ] as never);
+
+    const result = await repo.findManagedBranchIds('u1');
+    expect(result).toEqual(['branch-1', 'branch-2']);
+    expect(prisma.salonTenantStaff.findMany).toHaveBeenCalledWith({
+      where: {
+        userId: 'u1',
+        isActive: true,
+      },
+      select: {
+        salonId: true,
+        position: true,
+      },
+    });
+  });
+
   it('creates', async () => {
     const created = createUser();
     prisma.user.create.mockResolvedValue(created);

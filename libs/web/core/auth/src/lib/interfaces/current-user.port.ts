@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 export interface CurrentUserMin {
   readonly id?: string;
   readonly role?: string;
-  readonly roles?: readonly string[];
+  readonly roles?: readonly (string | { readonly name?: string | null })[];
   readonly isVerified?: boolean;
   readonly is_verified?: boolean;
   readonly managedBranchIds?: readonly string[];
