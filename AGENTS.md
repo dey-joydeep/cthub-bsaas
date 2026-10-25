@@ -2,7 +2,7 @@
 
 ## How To Use These Instructions
 
-Codex is normally invoked from the repository root. Before working in a scoped area, read the nearest relevant instruction file manually:
+These guidelines apply universally to all AI coding assistants (Antigravity, Codex, etc.) and human developers. Before working in a scoped area, read the nearest relevant instruction file manually:
 
 | Work area                      | Read this first                                                     |
 | ------------------------------ | ------------------------------------------------------------------- |
@@ -63,9 +63,13 @@ A lighter path is allowed only for a continuation fix inside the same active tas
 - Windows shell: prefer PowerShell Core (`pwsh`) when available.
 - Use `Get-Content` instead of `sed` for quick file reads on Windows.
 - Use forward slashes in Nx targets; PowerShell accepts them.
+- Server integration tests require the local test database from `.env.test` or `libs/server/data-access/prisma/.env`.
+
+## Dependencies And Package Installation
+
 - Match engines in `package.json` and `.nvmrc`.
 - Node and npm must be compatible with the repo before running builds/tests.
-- Server integration tests require the local test database from `.env.test` or `libs/server/data-access/prisma/.env`.
+- **NEVER EVER use `--legacy-peer-deps`** when installing or updating any package. Peer dependency conflicts must be resolved cleanly by matching compatible package versions in `package.json`, never bypassed, forced, or silenced with `--legacy-peer-deps`.
 
 ## Project Snapshot
 
@@ -120,6 +124,12 @@ Keep specs and implementation aligned. Cross-link PRs to relevant user stories a
 - Prefer UUIDv4 string IDs and clear domain aliases where helpful.
 - Centralize mappers in `*-mappers.ts`.
 - Mappers must omit secrets and internal-only fields by default.
+
+## Authorization And Capability Contracts
+
+- **Full-Slice Implementation**: When introducing or enforcing any authorization capability, claim, or user-context property, implement the complete vertical slice from database/repository to consumer.
+- **Producer-Consumer Parity**: Never gate a consumer (guard, UI route, or API handler) on an optional field without verifying or implementing its active production producer (database query, token generator in `AuthService`, and session hydration).
+- **No Mock-Only Validation**: Unit tests using hand-crafted mock user objects with pre-populated capabilities are insufficient on their own; at least one integration test must verify that the actual sign-in or token-generation pipeline produces those claims.
 
 ## Git And Commits
 
