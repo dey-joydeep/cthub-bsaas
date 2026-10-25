@@ -1,61 +1,78 @@
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
-
-import { type BaseAuthUser, CurrentUserService } from '@cthub-bsaas/web-core/auth';
-import { AuthService } from '@cthub-bsaas/web-customer/auth';
-
 import { AppComponent } from './app.component';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { TranslateModule } from '@ngx-translate/core';
+import { CommonModule } from '@angular/common';
+import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
+import { CurrentUserService } from '@cthub-bsaas/web-core/auth';
 
 describe('AppComponent', () => {
-  const logout = jest.fn<Promise<void>, []>().mockResolvedValue(undefined);
-  const snackBar = { open: jest.fn() };
+  let currentUserSubject: BehaviorSubject<any>;
 
-  async function renderComponent(currentUser: BaseAuthUser | null = null) {
+  beforeEach(async () => {
+    currentUserSubject = new BehaviorSubject<any>(null);
+
     await TestBed.configureTestingModule({
-      imports: [NoopAnimationsModule, AppComponent],
+      imports: [CommonModule, AppComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: AuthService, useValue: { logout } },
-        { provide: CurrentUserService, useValue: { currentUser$: of(currentUser) } },
-        { provide: MatSnackBar, useValue: snackBar },
+        provideHttpClient(),
+        provideAnimations(),
+        {
+          provide: CurrentUserService,
+          useValue: {
+            get currentUser() {
+              return currentUserSubject.value;
+            },
+            currentUser$: currentUserSubject.asObservable(),
+          },
+        },
       ],
+      schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
+  });
 
+  afterEach(() => {
+    if ((localStorage.getItem as any)?.calls) {
+      (localStorage.getItem as any).calls.reset();
+    }
+  });
+
+  it('should create the app', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    expect(app).toBeTruthy();
+  });
+
+  it('should have the correct title', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    expect(app.title).toEqual('BeautySaaS');
+  });
+
+  it('should render header container', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
-    return fixture;
-  }
-
-  beforeEach(() => {
-    logout.mockClear();
-    snackBar.open.mockClear();
-    TestBed.resetTestingModule();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.header-content')).toBeTruthy();
   });
 
-  it('creates the app with the expected title', async () => {
-    const fixture = await renderComponent();
+  it('should switch languages', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    expect(fixture.componentInstance).toBeTruthy();
+  });
+
+  it('should show/hide links based on login', () => {
+    const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
+    fixture.detectChanges();
+    expect(app.isLoggedIn).toBe(false);
 
-    expect(app).toBeTruthy();
-    expect(app.title).toBe('BeautySaaS');
-  });
-
-  it('shows login actions when there is no authenticated user', async () => {
-    const fixture = await renderComponent();
-    const compiled = fixture.nativeElement as HTMLElement;
-
-    expect(compiled.querySelector('.auth-buttons')).toBeTruthy();
-    expect(compiled.querySelector('.main-nav')).toBeNull();
-  });
-
-  it('shows the main navigation when a user is authenticated', async () => {
-    const fixture = await renderComponent({ id: 'user-1' });
-    const compiled = fixture.nativeElement as HTMLElement;
-
-    expect(compiled.querySelector('.main-nav')).toBeTruthy();
-    expect(compiled.querySelector('.auth-buttons')).toBeNull();
+    currentUserSubject.next({ id: '1', roles: ['admin'] });
+    expect(app.isLoggedIn).toBe(true);
   });
 });

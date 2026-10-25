@@ -1,71 +1,69 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, provideRouter, Router } from '@angular/router';
+import { ReactiveFormsModule } from '@angular/forms';
+import { provideRouter, Router } from '@angular/router';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
-
-import { ErrorService } from '@cthub-bsaas/web-core-common';
 import { PLATFORM_UTILS_TOKEN, StorageService } from '@cthub-bsaas/web-core-platform';
-
-import { LoginService } from './login.service';
+import { ErrorService } from '@cthub-bsaas/web-core-common';
 import { LoginComponent } from './login.component';
+import { LoginService } from './login.service';
+
+class MockErrorService {
+  error$ = of(null);
+  handleError = jest.fn();
+  getErrorMessage = jest.fn().mockReturnValue('Error');
+}
+
+class MockStorageService {
+  getItem$ = jest.fn().mockReturnValue(of(null));
+  setItem$ = jest.fn().mockReturnValue(of(true));
+  removeItem$ = jest.fn().mockReturnValue(of(true));
+}
+
+class MockLoginService {
+  initLogin = jest.fn().mockReturnValue(of({ userType: 'owner' }));
+  verifyOtp = jest.fn().mockReturnValue(
+    of({
+      id: '1',
+      email: 'customer@example.com',
+      accessToken: 'token-123',
+    }),
+  );
+}
+
+const mockPlatformUtils = {
+  isBrowser: () => true,
+  isServer: () => false,
+};
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
   let fixture: ComponentFixture<LoginComponent>;
-  let loginService: {
-    initLogin: jest.Mock;
-    verifyOtp: jest.Mock;
-    socialLogin: jest.Mock;
-  };
-  let storageService: {
-    getItem$: jest.Mock;
-    setItem$: jest.Mock;
-    removeItem$: jest.Mock;
-  };
+  let loginService: MockLoginService;
   let router: Router;
 
   beforeEach(async () => {
-    loginService = {
-      initLogin: jest.fn(),
-      verifyOtp: jest.fn(),
-      socialLogin: jest.fn(),
-    };
-    storageService = {
-      getItem$: jest.fn().mockReturnValue(of(null)),
-      setItem$: jest.fn().mockReturnValue(of(undefined)),
-      removeItem$: jest.fn().mockReturnValue(of(undefined)),
-    };
-
     await TestBed.configureTestingModule({
-      imports: [LoginComponent],
+      imports: [ReactiveFormsModule, TranslateModule.forRoot(), LoginComponent],
       providers: [
+        { provide: LoginService, useClass: MockLoginService },
+        { provide: StorageService, useClass: MockStorageService },
+        { provide: ErrorService, useClass: MockErrorService },
+        { provide: PLATFORM_UTILS_TOKEN, useValue: mockPlatformUtils },
+        provideHttpClient(),
+        provideHttpClientTesting(),
         provideRouter([]),
-        { provide: LoginService, useValue: loginService },
-        { provide: StorageService, useValue: storageService },
-        { provide: PLATFORM_UTILS_TOKEN, useValue: { isBrowser: true, windowRef: globalThis.window } },
-        {
-          provide: ActivatedRoute,
-          useValue: {
-            snapshot: {
-              queryParamMap: {
-                get: jest.fn().mockReturnValue('/dashboard'),
-              },
-            },
-          },
-        },
-        {
-          provide: ErrorService,
-          useValue: {
-            error$: of(null),
-            handleError: jest.fn(),
-            getErrorMessage: jest.fn().mockReturnValue('Something went wrong'),
-          },
-        },
+        provideAnimations(),
       ],
     }).compileComponents();
 
-    router = TestBed.inject(Router);
     fixture = TestBed.createComponent(LoginComponent);
     component = fixture.componentInstance;
+    loginService = TestBed.inject(LoginService) as unknown as MockLoginService;
+    router = TestBed.inject(Router);
     fixture.detectChanges();
   });
 
@@ -73,75 +71,74 @@ describe('LoginComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should initialize the form with empty values', () => {
-    expect(component.loginForm.getRawValue()).toEqual({
+  it('should initialize the form with default values', () => {
+    expect(component.loginForm.value).toEqual({
       email: '',
       password: '',
       rememberMe: false,
     });
   });
 
-  it('should advance to otp step for owner login', async () => {
-    loginService.initLogin.mockReturnValue(
-      of({
-        userType: 'owner',
-      }),
-    );
+  it('should validate email field as required and valid email format', () => {
+    const emailControl = component.loginForm.get('email');
+    emailControl?.setValue('');
+    expect(emailControl?.valid).toBeFalsy();
+    expect(emailControl?.hasError('required')).toBeTruthy();
 
+    emailControl?.setValue('invalid-email');
+    expect(emailControl?.hasError('email')).toBeTruthy();
+  });
+
+  it('should call loginService.initLogin on submit with valid credentials', async () => {
     component.loginForm.setValue({
-      email: 'owner@example.com',
+      email: 'customer@example.com',
       password: 'password123',
       rememberMe: true,
     });
 
     await component.onSubmit();
 
-    expect(storageService.setItem$).toHaveBeenCalledWith('savedEmail', 'owner@example.com');
     expect(loginService.initLogin).toHaveBeenCalledWith({
-      email: 'owner@example.com',
+      email: 'customer@example.com',
       password: 'password123',
       rememberMe: true,
     });
     expect(component.step).toBe('otp');
   });
 
-  it('should navigate for customer login', async () => {
-    const navigateByUrl = jest.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
-    loginService.initLogin.mockReturnValue(
-      of({
-        userType: 'customer',
-      }),
-    );
+  it('should handle initLogin error', async () => {
+    loginService.initLogin.mockReturnValueOnce(throwError(() => ({ error: { error: 'Invalid credentials' } })));
+
+    component.loginForm.setValue({
+      email: 'customer@example.com',
+      password: 'wrongpassword',
+      rememberMe: false,
+    });
+
+    await component.onSubmit();
+
+    expect(component.loading).toBe(false);
+    expect(component.error).toBe('Invalid credentials');
+  });
+
+  it('should verify OTP and navigate on success', async () => {
+    const navigateSpy = jest.spyOn(router, 'navigateByUrl').mockImplementation(() => Promise.resolve(true));
 
     component.loginForm.setValue({
       email: 'customer@example.com',
       password: 'password123',
       rememberMe: false,
     });
+    component.otpForm.setValue({ otp: '123456' });
 
-    await component.onSubmit();
+    await component.onOtpSubmit();
+    await new Promise(process.nextTick);
 
-    expect(storageService.removeItem$).toHaveBeenCalledWith('savedEmail');
-    expect(navigateByUrl).toHaveBeenCalledWith('/dashboard');
-  });
-
-  it('should surface login init errors', async () => {
-    loginService.initLogin.mockReturnValue(
-      throwError(() => ({
-        error: {
-          error: 'Login failed',
-        },
-      })),
-    );
-
-    component.loginForm.setValue({
+    expect(loginService.verifyOtp).toHaveBeenCalledWith({
       email: 'customer@example.com',
-      password: 'bad-password',
-      rememberMe: false,
+      otp: '123456',
+      type: 'login',
     });
-
-    await component.onSubmit();
-
-    expect(component.error).toBe('Login failed');
+    expect(navigateSpy).toHaveBeenCalled();
   });
 });

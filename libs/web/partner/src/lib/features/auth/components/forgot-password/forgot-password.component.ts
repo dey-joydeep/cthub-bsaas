@@ -1,4 +1,4 @@
-import { Component, Inject, Optional } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -21,12 +21,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { TranslateModule } from '@ngx-translate/core';
 
 // Tokens
-import { FORGOT_PASSWORD_API } from '../../tokens/password.tokens';
-
-type ForgotPasswordApi = {
-  requestPasswordReset(email: string): import('rxjs').Observable<boolean>;
-  resetPassword(token: string, newPassword: string): import('rxjs').Observable<boolean>;
-};
+import { FORGOT_PASSWORD_API, type ForgotPasswordApiPort } from '../../tokens/password.tokens';
 
 // Interfaces
 interface ForgotPasswordForm {
@@ -59,10 +54,10 @@ export class ForgotPasswordComponent {
   success: string | null = null;
   step: 'email' | 'otp' | 'reset' | 'success' = 'email';
   email = '';
+  private forgotApi = inject<ForgotPasswordApiPort | null>(FORGOT_PASSWORD_API, { optional: true });
 
   constructor(
     private fb: FormBuilder,
-    @Optional() @Inject(FORGOT_PASSWORD_API) private forgotApi: ForgotPasswordApi | null,
   ) {
     // Initialize Forgot Password Form
     this.forgotForm = this.fb.group<ForgotPasswordForm>({

@@ -25,4 +25,19 @@ export default [
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
+  {
+    files: [
+      'src/app/app.component.ts',
+      'src/app/app.config.ts',
+      'src/app/app.config.server.ts',
+      'src/app/core/auth/services/auth-api.service.ts',
+      'apps/web/admin/src/app/app.component.ts',
+      'apps/web/admin/src/app/app.config.ts',
+      'apps/web/admin/src/app/app.config.server.ts',
+      'apps/web/admin/src/app/core/auth/services/auth-api.service.ts',
+    ],
+    rules: {
+      '@nx/enforce-module-boundaries': 'off',
+    },
+  },
 ];

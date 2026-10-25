@@ -1,8 +1,8 @@
-import { Inject, Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { AUTH_STATE_SETTER, LOGIN_API } from '../../tokens/login.tokens';
+import { AUTH_STATE_SETTER, LOGIN_API, type AuthStateSetter, type LoginApiPort } from '../../tokens/login.tokens';
 import type {
     ApiResponse,
     AuthResponse,
@@ -12,24 +12,10 @@ import type {
     VerifyOtpParams,
 } from '../../models/auth.models';
 
-type LoginApi = {
-    login(credentials: LoginCredentials): Observable<ApiResponse<AuthResponse>>;
-    initLogin(credentials: LoginCredentials): Observable<ApiResponse<InitLoginResponse>>;
-    verifyOtp(params: VerifyOtpParams): Observable<ApiResponse<AuthResponse>>;
-    socialLogin(provider: 'google' | 'facebook', token: string): Observable<ApiResponse<AuthResponse>>;
-    resendOtp(email: string): Observable<ApiResponse<{ success: boolean; message?: string }>>;
-};
-
-type AuthStateSetterPort = {
-    setLoggedInUser(user: CustomerAuthUser): void;
-};
-
 @Injectable({ providedIn: 'root' })
 export class LoginService {
-    constructor(
-        @Inject(LOGIN_API) private readonly api: LoginApi,
-        @Inject(AUTH_STATE_SETTER) private readonly authState: AuthStateSetterPort,
-    ) {}
+    private readonly api = inject<LoginApiPort>(LOGIN_API);
+    private readonly authState = inject<AuthStateSetter>(AUTH_STATE_SETTER);
 
     initLogin(credentials: LoginCredentials): Observable<InitLoginResponse> {
         return this.api.initLogin(credentials).pipe(map((res) => res.data));
@@ -52,7 +38,7 @@ export class LoginService {
     }
 
     private handleAuth(res: ApiResponse<AuthResponse>): CustomerAuthUser {
-        const user: CustomerAuthUser = res.data;
+        const user = res.data.user as CustomerAuthUser;
         this.authState.setLoggedInUser(user);
         return user;
     }

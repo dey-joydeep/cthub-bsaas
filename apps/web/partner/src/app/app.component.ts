@@ -10,11 +10,10 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '@cthub-bsaas/web-partner/auth';
-import { CURRENT_USER, CurrentUserService, type BaseAuthUser } from '@cthub-bsaas/web-core/auth';
+import { CurrentUserService, type BaseAuthUser } from '@cthub-bsaas/web-core/auth';
 
 // Define a User interface with roles
 export interface User {
@@ -72,7 +71,7 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private authService: AuthService,
-    @Inject(CURRENT_USER) private currentUserService: CurrentUserService,
+    private currentUserService: CurrentUserService,
     private snackBar: MatSnackBar,
   ) {}
 

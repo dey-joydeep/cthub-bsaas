@@ -1,6 +1,6 @@
 // Core
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, Inject, OnDestroy, OnInit, Optional, PLATFORM_ID } from '@angular/core';
+import { Component, Inject, inject, OnDestroy, OnInit, Optional, PLATFORM_ID } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
@@ -24,13 +24,9 @@ import { TranslateModule } from '@ngx-translate/core';
 
 // Services
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
-import { PLATFORM_UTILS_TOKEN, StorageService } from '@cthub-bsaas/web-core-platform';
+import { PLATFORM_UTILS_TOKEN, type PlatformUtils, StorageService } from '@cthub-bsaas/web-core-platform';
 import { LoginService } from './login.service';
 import type { InitLoginResponse, PartnerAuthUser } from '../../models/auth.models';
-
-type BrowserPlatformUtils = {
-  isBrowser?: boolean;
-};
 
 @Component({
   standalone: true,
@@ -80,6 +76,7 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
   // Private state
   private resendTimer: any;
   private returnUrl = '';
+  protected platformUtils = inject<PlatformUtils>(PLATFORM_UTILS_TOKEN);
 
   // Debug logging helper methods
   private logDebug(message: string, data?: any) {
@@ -98,7 +95,6 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
   // Removed unused logError() to satisfy noUnusedLocals
 
   constructor(
-    @Inject(PLATFORM_UTILS_TOKEN) protected platformUtils: BrowserPlatformUtils,
     @Inject(FormBuilder) private fb: FormBuilder,
     @Inject(Router) private router: Router,
     @Inject(ActivatedRoute) private route: ActivatedRoute,

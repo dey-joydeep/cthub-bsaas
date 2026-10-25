@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
 
 import {
@@ -6,29 +6,18 @@ import {
     LOGIN_API,
     type ApiResponse,
     type AuthResponse,
+    type AuthStateSetter,
     type AdminAuthUser,
     type InitLoginResponse,
+    type LoginApiPort,
     type LoginCredentials,
     type VerifyOtpParams,
 } from '../../tokens/login.tokens';
 
-type LoginApi = {
-    login(credentials: LoginCredentials): Observable<ApiResponse<AuthResponse>>;
-    initLogin(credentials: LoginCredentials): Observable<ApiResponse<InitLoginResponse>>;
-    verifyOtp(params: VerifyOtpParams): Observable<ApiResponse<AuthResponse>>;
-    socialLogin(provider: 'google' | 'facebook', token: string): Observable<ApiResponse<AuthResponse>>;
-};
-
-type AuthStateSetterPort = {
-    setLoggedInUser(user: AdminAuthUser): void;
-};
-
 @Injectable({ providedIn: 'root' })
 export class LoginService {
-    constructor(
-        @Inject(LOGIN_API) private readonly api: LoginApi,
-        @Inject(AUTH_STATE_SETTER) private readonly authState: AuthStateSetterPort,
-    ) { }
+    private readonly api = inject<LoginApiPort>(LOGIN_API);
+    private readonly authState = inject<AuthStateSetter>(AUTH_STATE_SETTER);
 
     initLogin(credentials: LoginCredentials): Observable<InitLoginResponse> {
         return this.api.initLogin(credentials).pipe(
@@ -61,14 +50,15 @@ export class LoginService {
     }
 
     private handleAuthResponse(res: ApiResponse<AuthResponse>): AdminAuthUser {
-        if (!res.success) throw new Error(res.error || 'Authentication failed');
-        const user = { ...res.data } as AdminAuthUser;
+        if (!res.success || !res.data) {
+            throw new Error(res.error || 'Authentication failed');
+        }
+        const user = res.data.user as AdminAuthUser;
         this.authState.setLoggedInUser(user);
         return user;
     }
 
-    private forwardError(err: any) {
-        const message = err?.error?.message || err?.message || 'Authentication error';
-        return throwError(() => new Error(message));
+    private forwardError(err: unknown): Observable<never> {
+        return throwError(() => err);
     }
 }

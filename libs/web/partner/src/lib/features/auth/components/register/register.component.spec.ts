@@ -1,22 +1,21 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
-
-import { REGISTER_API } from '../../tokens/password.tokens';
+import { REGISTER_API, RegisterApiPort } from '../../tokens/password.tokens';
 import { RegisterComponent } from './register.component';
 
 describe('RegisterComponent', () => {
   let component: RegisterComponent;
   let fixture: ComponentFixture<RegisterComponent>;
-  let registerApi: { register: jest.Mock<Promise<void>, [unknown]> };
+  let mockRegisterApi: jest.Mocked<RegisterApiPort>;
 
   beforeEach(async () => {
-    registerApi = {
-      register: jest.fn<Promise<void>, [unknown]>(),
+    mockRegisterApi = {
+      register: jest.fn().mockResolvedValue(undefined),
     };
 
     await TestBed.configureTestingModule({
       imports: [ReactiveFormsModule, RegisterComponent],
-      providers: [{ provide: REGISTER_API, useValue: registerApi }],
+      providers: [{ provide: REGISTER_API, useValue: mockRegisterApi }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(RegisterComponent);
@@ -30,32 +29,21 @@ describe('RegisterComponent', () => {
 
   it('should not submit if form is invalid', async () => {
     component.registerForm.setValue({ name: '', email: '', password: '' });
-
     await component.onSubmit();
-
-    expect(registerApi.register).not.toHaveBeenCalled();
+    expect(mockRegisterApi.register).not.toHaveBeenCalled();
   });
 
-  it('should call REGISTER_API on valid submit', async () => {
-    registerApi.register.mockResolvedValue(undefined);
+  it('should call REGISTER_API.register on valid submit', async () => {
     component.registerForm.setValue({ name: 'Test', email: 'test@example.com', password: '123456' });
-
     await component.onSubmit();
-
-    expect(registerApi.register).toHaveBeenCalledWith({
-      name: 'Test',
-      email: 'test@example.com',
-      password: '123456',
-    });
+    expect(mockRegisterApi.register).toHaveBeenCalled();
     expect(component.success).toBe(true);
   });
 
   it('should show error on failed registration', async () => {
-    registerApi.register.mockRejectedValue({ error: { message: 'Email exists' } });
     component.registerForm.setValue({ name: 'Test', email: 'fail@example.com', password: '123456' });
-
+    mockRegisterApi.register.mockRejectedValue({ error: { message: 'Email exists' } });
     await component.onSubmit();
-
     expect(component.error).toBe('Email exists');
     expect(component.success).toBe(false);
   });

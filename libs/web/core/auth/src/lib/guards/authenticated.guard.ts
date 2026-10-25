@@ -32,7 +32,7 @@ function buildAttemptedUrl(segments: UrlSegment[]): string {
   return segmentPath.length > 0 ? `/${segmentPath}` : '/';
 }
 
-export const authCanMatch: CanMatchFn = (route, segments) => {
+export const authCanMatch: CanMatchFn = (_route, segments) => {
   const currentUserService = inject(CURRENT_USER);
   const router = inject(Router);
 

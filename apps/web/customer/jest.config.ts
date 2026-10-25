@@ -1,17 +1,8 @@
-/* eslint-disable */
 export default {
   displayName: 'web-app-customer',
   preset: '../../../jest.preset.cjs',
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/src/setup-jest.ts'],
-  coverageDirectory: '../../../coverage/apps/web/customer',
-  moduleNameMapper: {
-    '^@cthub-bsaas/web-customer$': '<rootDir>/../../../libs/web/customer/src/index.ts',
-    '^@cthub-bsaas/web-customer/auth$': '<rootDir>/../../../libs/web/customer/src/lib/features/auth/index.ts',
-    '^@cthub-bsaas/web-core/auth$': '<rootDir>/../../../libs/web/core/auth/src/index.ts',
-    '^@cthub-bsaas/web-core-auth$': '<rootDir>/../../../libs/web/core/auth/src/index.ts',
-    '^@cthub-bsaas/shared$': '<rootDir>/../../../libs/shared/src/index.ts',
-  },
   transform: {
     '^.+\\.(ts|mjs|js|html)$': [
       'jest-preset-angular',
