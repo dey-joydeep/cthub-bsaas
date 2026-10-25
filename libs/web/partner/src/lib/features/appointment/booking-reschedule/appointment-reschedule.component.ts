@@ -21,7 +21,6 @@ import { Appointment, TimeSlot } from './models/appointment-reschedule.model';
 import { LoadingService } from '@cthub-bsaas/web-core-common';
 import { AppointmentRescheduleService } from './appointment-reschedule.service';
 import { AppointmentStatus } from '@cthub-bsaas/shared';
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-appointment-reschedule',
@@ -79,7 +78,6 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
   }
 
   private readonly appointmentRescheduleService = inject(AppointmentRescheduleService);
-  public readonly data = inject<{ appointment: Appointment }>(MAT_DIALOG_DATA);
   private readonly loadingService = inject(LoadingService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly datePipe = inject(DatePipe);
