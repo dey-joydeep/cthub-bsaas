@@ -1,7 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Inject, Injectable, Optional, PLATFORM_ID } from '@angular/core';
-import { BehaviorSubject, Observable, firstValueFrom, forkJoin, of } from 'rxjs';
+import { BehaviorSubject, Observable, firstValueFrom, of } from 'rxjs';
 
 import { StorageService } from '@cthub-bsaas/web-core-platform';
 import type { AuthStatePort } from '@cthub-bsaas/web-core/auth';
@@ -18,6 +18,7 @@ export class AuthService implements AuthStatePort {
   private readonly isBrowser: boolean;
   private currentUserSubject = new BehaviorSubject<PartnerAuthUser | null>(null);
   public readonly currentUser$: Observable<PartnerAuthUser | null> = this.currentUserSubject.asObservable();
+  private initPromise: Promise<PartnerAuthUser | null> | null = null;
 
   constructor(
     @Inject(PLATFORM_ID) private readonly platformId: object,
@@ -26,7 +27,30 @@ export class AuthService implements AuthStatePort {
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
-      this.initializeAuthState();
+      this.initialize();
+    }
+  }
+
+  public initialize(): Promise<PartnerAuthUser | null> {
+    if (!this.isBrowser) return Promise.resolve(null);
+    if (!this.initPromise) {
+      this.initPromise = this.performInitialization();
+    }
+    return this.initPromise;
+  }
+
+  private async performInitialization(): Promise<PartnerAuthUser | null> {
+    try {
+      const cached = this.storage.getItem<PartnerAuthUser>(this.USER_KEY, null);
+      if (cached) {
+        this.currentUserSubject.next(this.enrichUser(cached));
+      }
+      if (this.http) {
+        return await this.hydrateCurrentUser();
+      }
+      return this.getCurrentUser();
+    } catch {
+      return this.getCurrentUser();
     }
   }
 
@@ -38,10 +62,27 @@ export class AuthService implements AuthStatePort {
   async isAuthenticated(): Promise<boolean> {
     if (!this.isBrowser) return false;
     const token = await firstValueFrom(this.getToken());
-    return this.isTokenValid(token);
+    if (this.isTokenValid(token)) {
+      return true;
+    }
+    if (this.currentUserSubject.value !== null) {
+      return true;
+    }
+    if (this.http) {
+      const user = await this.hydrateCurrentUser();
+      return user !== null;
+    }
+    return false;
   }
 
   async logout(): Promise<void> {
+    if (this.isBrowser && this.http) {
+      try {
+        await firstValueFrom(this.http.post('/api/auth/logout', {}));
+      } catch {
+        // Proceed with local cleanup even if server call fails
+      }
+    }
     this.clearAuthData();
   }
 
@@ -49,52 +90,45 @@ export class AuthService implements AuthStatePort {
     if (!this.isBrowser) return;
     const enrichedUser = this.enrichUser(user);
     this.currentUserSubject.next(enrichedUser);
+    if (typeof this.storage.setItem === 'function') {
+      this.storage.setItem(this.USER_KEY, enrichedUser);
+    }
     this.storage.setItem$(this.USER_KEY, enrichedUser).subscribe();
   }
 
   public clearAuthData(): void {
+    this.currentUserSubject.next(null);
     if (!this.isBrowser) return;
 
-    forkJoin([
-      this.storage.removeItem$(this.TOKEN_KEY),
-      this.storage.removeItem$(this.REFRESH_TOKEN_KEY),
-      this.storage.removeItem$(this.TOKEN_EXPIRY_KEY),
-      this.storage.removeItem$(this.USER_KEY),
-    ]).subscribe({
-      complete: () => this.currentUserSubject.next(null),
-      error: () => this.currentUserSubject.next(null),
-    });
+    if (typeof this.storage.removeItem === 'function') {
+      this.storage.removeItem(this.TOKEN_KEY);
+      this.storage.removeItem(this.REFRESH_TOKEN_KEY);
+      this.storage.removeItem(this.TOKEN_EXPIRY_KEY);
+      this.storage.removeItem(this.USER_KEY);
+    }
+
+    this.storage.removeItem$(this.TOKEN_KEY).subscribe();
+    this.storage.removeItem$(this.REFRESH_TOKEN_KEY).subscribe();
+    this.storage.removeItem$(this.TOKEN_EXPIRY_KEY).subscribe();
+    this.storage.removeItem$(this.USER_KEY).subscribe();
   }
 
   public async hydrateCurrentUser(): Promise<PartnerAuthUser | null> {
     if (!this.isBrowser || !this.http) return this.getCurrentUser();
     try {
-      const res = await firstValueFrom(
-        this.http.get<{ success: boolean; data?: PartnerAuthUser }>('/api/auth/me'),
-      );
+      const res = await firstValueFrom(this.http.get<{ success: boolean; data?: PartnerAuthUser }>('/api/auth/me'));
       if (res?.success && res.data) {
         this.setLoggedInUser(res.data);
         return this.getCurrentUser();
       }
-    } catch {
-      // session absent, invalid or network error
+    } catch (err: unknown) {
+      const status = (err as { status?: number })?.status;
+      if (status === 401 || status === 403) {
+        this.clearAuthData();
+        return null;
+      }
     }
     return this.getCurrentUser();
-  }
-
-  private initializeAuthState(): void {
-    this.storage.getItem$<PartnerAuthUser>(this.USER_KEY).subscribe({
-      next: (user: PartnerAuthUser | null) => {
-        if (user) {
-          const enrichedUser = this.enrichUser(user);
-          this.currentUserSubject.next(enrichedUser);
-        }
-        if (this.http) {
-          this.hydrateCurrentUser().catch(() => {});
-        }
-      },
-      error: () => this.clearAuthData(),
-    });
   }
 
   private enrichUser(user: PartnerAuthUser): PartnerAuthUser {

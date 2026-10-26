@@ -10,7 +10,7 @@ import {
   withXsrfConfiguration,
 } from '@angular/common/http';
 import { DOCUMENT } from '@angular/common';
-import { ApplicationConfig, ErrorHandler, importProvidersFrom, inject } from '@angular/core';
+import { ApplicationConfig, ErrorHandler, importProvidersFrom, inject, provideAppInitializer } from '@angular/core';
 import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { PreloadAllModules, provideRouter, withPreloading } from '@angular/router';
@@ -53,12 +53,7 @@ import { environment } from '@cthub-bsaas/web-config/environments/partner/enviro
 import { routes } from './app.routes';
 import { LOGIN_API, AUTH_STATE_SETTER } from '@cthub-bsaas/web-partner/auth';
 import { LoginApiService } from '@cthub-bsaas/web-partner/auth';
-import {
-  FORGOT_PASSWORD_API,
-  REGISTER_API,
-  type ForgotPasswordApiPort,
-  type RegisterApiPort,
-} from '@cthub-bsaas/web-partner/auth';
+import { FORGOT_PASSWORD_API, REGISTER_API, type ForgotPasswordApiPort, type RegisterApiPort } from '@cthub-bsaas/web-partner/auth';
 import { AuthService } from '@cthub-bsaas/web-partner/auth';
 
 // AoT requires an exported function for factories
@@ -175,6 +170,10 @@ export const appConfig: ApplicationConfig = {
     { provide: MAT_DATE_LOCALE, useValue: 'en-US' },
     { provide: ErrorHandler, useClass: ErrorHandlerService },
     { provide: AUTH_STATE_PORT, useExisting: AuthService },
+    provideAppInitializer(() => {
+      const auth = inject(AuthService);
+      return auth.initialize();
+    }),
     { provide: LOGIN_API, useClass: LoginApiService },
     { provide: AUTH_STATE_SETTER, useExisting: AuthService },
     { provide: CURRENT_USER, useExisting: CurrentUserService },

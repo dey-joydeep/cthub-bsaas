@@ -19,11 +19,7 @@ describe('AuthService (Partner)', () => {
     } as unknown as jest.Mocked<StorageService>;
 
     TestBed.configureTestingModule({
-      providers: [
-        AuthService,
-        { provide: PLATFORM_ID, useValue: 'browser' },
-        { provide: StorageService, useValue: storageMock },
-      ],
+      providers: [AuthService, { provide: PLATFORM_ID, useValue: 'browser' }, { provide: StorageService, useValue: storageMock }],
     });
 
     service = TestBed.inject(AuthService);
@@ -186,5 +182,100 @@ describe('AuthService (Partner)', () => {
     expect(hydrated?.id).toBe('staff-hydrated');
     expect(hydrated?.canManageBranches).toBe(true);
     expect(hydrated?.managedBranchIds).toEqual(['b-hydrated-1']);
+  });
+
+  it('isAuthenticated honors cookie-based session when user is in memory without JWT in storage', async () => {
+    storageMock.getItem.mockReturnValue(null);
+
+    expect(await service.isAuthenticated()).toBe(false);
+
+    service.setLoggedInUser({
+      id: 'staff-cookie',
+      name: 'Cookie Staff',
+      email: 'cookie@example.com',
+      role: 'staff',
+      canManageBranches: true,
+    });
+
+    expect(await service.isAuthenticated()).toBe(true);
+  });
+
+  it('logout sends POST /api/auth/logout to clear server session cookies when HttpClient is provided', async () => {
+    const httpMock = {
+      get: jest.fn().mockReturnValue(of({ success: false })),
+      post: jest.fn().mockReturnValue(of({ ok: true })),
+    };
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        AuthService,
+        { provide: PLATFORM_ID, useValue: 'browser' },
+        { provide: StorageService, useValue: storageMock },
+        { provide: HttpClient, useValue: httpMock },
+      ],
+    });
+
+    const httpService = TestBed.inject(AuthService);
+    httpService.setLoggedInUser({
+      id: 'staff-to-logout',
+      name: 'To Logout',
+      email: 'logout@example.com',
+      role: 'staff',
+    });
+
+    await httpService.logout();
+
+    expect(httpMock.post).toHaveBeenCalledWith('/api/auth/logout', {});
+    expect(httpService.getCurrentUser()).toBeNull();
+    expect(storageMock.removeItem$).toHaveBeenCalledWith('current_user');
+  });
+
+  it('initialize loads cached user and hydrates fresh capability via /api/auth/me', async () => {
+    const cachedUser: PartnerAuthUser = {
+      id: 'staff-cached',
+      name: 'Cached Staff',
+      email: 'cached@example.com',
+      role: 'staff',
+      canManageBranches: false,
+    };
+    storageMock.getItem.mockImplementation((key) => {
+      if (key === 'current_user') return cachedUser;
+      return null;
+    });
+
+    const httpMock = {
+      get: jest.fn().mockReturnValue(
+        of({
+          success: true,
+          data: {
+            id: 'staff-cached',
+            name: 'Cached Staff',
+            email: 'cached@example.com',
+            role: 'staff',
+            managedBranchIds: ['b-1'],
+            canManageBranches: true,
+          },
+        }),
+      ),
+      post: jest.fn(),
+    };
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        AuthService,
+        { provide: PLATFORM_ID, useValue: 'browser' },
+        { provide: StorageService, useValue: storageMock },
+        { provide: HttpClient, useValue: httpMock },
+      ],
+    });
+
+    const httpService = TestBed.inject(AuthService);
+    const initializedUser = await httpService.initialize();
+
+    expect(httpMock.get).toHaveBeenCalledWith('/api/auth/me');
+    expect(initializedUser?.canManageBranches).toBe(true);
+    expect(initializedUser?.managedBranchIds).toEqual(['b-1']);
   });
 });
