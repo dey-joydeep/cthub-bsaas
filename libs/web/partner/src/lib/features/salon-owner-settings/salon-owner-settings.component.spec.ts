@@ -4,7 +4,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Observable, of, throwError } from 'rxjs';
 
 import { CURRENT_USER } from '@cthub-bsaas/web-core-auth';
-import { BranchHoliday, BranchProfile, SalonBusiness } from './models/salon-owner-settings.models';
+import { BranchHoliday, BranchProfile, HolidayFormValue, SalonBusiness } from './models/salon-owner-settings.models';
 import { SalonOwnerSettingsApi } from './salon-owner-settings.api';
 import { SalonOwnerSettingsComponent } from './salon-owner-settings.component';
 
@@ -20,7 +20,7 @@ interface SettingsComponentHarness {
   branchForm: { patchValue(value: Partial<{ email: string }>): void; getRawValue(): { businessId: string } };
   hoursForm: { patchValue(value: Partial<{ timezone: string }>): void };
   holidayForm: {
-    patchValue(value: Partial<{ date: string; closed: boolean; reason: string; start: string; end: string }>): void;
+    patchValue(value: Partial<HolidayFormValue>): void;
     controls: { start: { errors: Record<string, unknown> | null }; end: { errors: Record<string, unknown> | null } };
   };
   policyForm: { controls: { bookingLeadMinutes: { setValue(value: number): void } } };

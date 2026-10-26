@@ -107,6 +107,20 @@ export interface BranchHolidayInput {
   readonly intervals?: readonly TimeInterval[];
 }
 
+export interface HolidayFormValue {
+  readonly date: string;
+  readonly closed: boolean;
+  readonly reason: string;
+  readonly start: string;
+  readonly end: string;
+}
+
+export interface HolidayIntervalValidationValue {
+  readonly closed?: boolean;
+  readonly start?: string;
+  readonly end?: string;
+}
+
 export interface BranchPolicyInput {
   readonly bookingLeadMinutes: number;
   readonly cancellationCutoffMinutes: number;

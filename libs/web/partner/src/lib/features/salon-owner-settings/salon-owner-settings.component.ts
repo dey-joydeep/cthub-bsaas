@@ -22,11 +22,18 @@ import { UserRole } from '@cthub-bsaas/shared';
 
 import {
   BranchHoliday,
+  BranchHolidayInput,
   BranchHours,
   BranchPolicy,
+  BranchPolicyInput,
   BranchProfile,
+  BranchProfileInput,
+  HolidayFormValue,
+  HolidayIntervalValidationValue,
   SalonBusiness,
+  SalonBusinessInput,
   WeeklyHoursDay,
+  WeeklyHoursInput,
 } from './models/salon-owner-settings.models';
 import { SalonOwnerSettingsApi } from './salon-owner-settings.api';
 
@@ -159,7 +166,7 @@ function intervalsValidator(): ValidatorFn {
 
 function holidayIntervalValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
-    const value = control.value as { closed?: boolean; start?: string; end?: string } | null;
+    const value = control.value as HolidayIntervalValidationValue | null;
     if (!value || value.closed !== false) {
       return null;
     }
@@ -402,7 +409,7 @@ export class SalonOwnerSettingsComponent {
     const startedBranchEditorVersion = this.branchEditorVersion;
     const requestVersion = ++this.businessSaveVersion;
     const formValue = this.businessForm.getRawValue();
-    const payload = {
+    const payload: SalonBusinessInput = {
       displayName: formValue.displayName.trim(),
       legalName: formValue.legalName.trim(),
       status: formValue.status,
@@ -463,7 +470,7 @@ export class SalonOwnerSettingsComponent {
     const startedBusinessId = this.selectedBusiness()?.id ?? value.businessId ?? null;
     const startedEditorVersion = this.branchEditorVersion;
     const requestVersion = ++this.branchSaveVersion;
-    const input = {
+    const input: BranchProfileInput = {
       ...value,
       name: value.name.trim(),
       phone: selected ? optionalTextOrNull(value.phone) : optionalText(value.phone),
@@ -674,7 +681,8 @@ export class SalonOwnerSettingsComponent {
     this.saving.set(true);
     this.error.set(null);
     this.message.set(null);
-    this.api.updateBranchPolicy(branch.id, this.policyForm.getRawValue()).subscribe({
+    const payload: BranchPolicyInput = this.policyForm.getRawValue();
+    this.api.updateBranchPolicy(branch.id, payload).subscribe({
       next: () => {
         if (requestVersion !== this.policySaveVersion || this.selectedBranch()?.id !== startedBranchId) {
           this.saving.set(false);
@@ -930,7 +938,7 @@ export class SalonOwnerSettingsComponent {
     };
   }
 
-  private buildWeeklyHoursInput() {
+  private buildWeeklyHoursInput(): WeeklyHoursInput {
     return {
       timezone: this.hoursForm.controls.timezone.value,
       acknowledgeExistingAppointmentsOutsideHours: this.hoursForm.controls.acknowledgeExistingAppointmentsOutsideHours.value,
@@ -1158,7 +1166,7 @@ export class SalonOwnerSettingsComponent {
     this.hoursForm.controls.acknowledgeExistingAppointmentsOutsideHours.setValue(false, { emitEvent: false });
   }
 
-  private buildHolidayInput(value: { date: string; closed: boolean; reason: string; start: string; end: string }) {
+  private buildHolidayInput(value: HolidayFormValue): BranchHolidayInput | null {
     const selectedHoliday = this.selectedHoliday();
     const reason = optionalText(value.reason);
 
