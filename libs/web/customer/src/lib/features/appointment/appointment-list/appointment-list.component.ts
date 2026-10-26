@@ -1,5 +1,5 @@
 import { DatePipe, TitleCasePipe, NgClass } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
@@ -35,6 +35,7 @@ import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.
     NgClass,
   ],
   templateUrl: './appointment-list.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./appointment-list.component.css'],
 })
 export class AppointmentListComponent implements OnInit {

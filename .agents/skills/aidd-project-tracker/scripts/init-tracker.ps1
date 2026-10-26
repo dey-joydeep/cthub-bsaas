@@ -143,7 +143,8 @@ mutation addSub(`$epic: ID!, `$sub: ID!) {
 "@
 
 foreach ($s in $createdSubs) {
-    $result = gh api graphql -f query=$mutation -f epic=$epicNodeId -f sub=$s.nodeId 2>&1
+    $subNodeId = $s.nodeId
+    $result = gh api graphql -f query=$mutation -f epic=$epicNodeId -f sub=$subNodeId 2>&1
     if ($LASTEXITCODE -ne 0) { Write-Host "    ⚠ Could not link #$($s.number): $result" -ForegroundColor Yellow }
     else { Write-Ok "#$($s.number) linked to Epic" }
 }

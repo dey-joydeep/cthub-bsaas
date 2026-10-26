@@ -3,14 +3,19 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "sourceRoot": "apps/e2e/api/src",
+  "tags": ["type:e2e", "platform:server"],
+  "implicitDependencies": ["api"],
   "targets": {
     "e2e": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/apps/e2e/api"],
       "options": {
-        "jestConfig": "apps/e2e/api/jest.config.ts",
         "passWithNoTests": true,
-        "codeCoverage": false
+        "coverage": false
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "coverage": true
+        }
       }
     },
     "type-check": {
@@ -20,13 +25,17 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/eslint.config.js",
+        "{workspaceRoot}/eslint.base.js",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/tools/eslint-rules/**/*"
+      ],
       "options": {
-        "lintFilePatterns": ["apps/e2e/api/**/*.ts"]
+        "args": ["**/*.ts"]
       }
     }
-  },
-  "implicitDependencies": ["api"],
-  "tags": ["type:e2e", "platform:server"]
+  }
 }

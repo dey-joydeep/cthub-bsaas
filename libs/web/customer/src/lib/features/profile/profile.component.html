@@ -10,7 +10,7 @@
             <img [src]="imagePreview" class="profile-picture-preview" />
           }
           @if (!imagePreview && currentUser?.avatar) {
-            <img [src]="currentUser?.avatar" class="profile-picture-preview" />
+            <img [src]="$safeNavigationMigration(currentUser?.avatar)" class="profile-picture-preview" />
           }
           <label for="profilePictureInput" class="upload-label">
             <mat-icon>photo_camera</mat-icon>

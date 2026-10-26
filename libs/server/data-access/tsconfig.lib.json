@@ -12,7 +12,8 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "useDefineForClassFields": false,
-    "tsBuildInfoFile": "../../../dist/.tsbuildinfo/server/data-access.tsbuildinfo"
+    "tsBuildInfoFile": "../../../dist/.tsbuildinfo/server/data-access.tsbuildinfo",
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["**/*.test.ts", "**/*.spec.ts"],

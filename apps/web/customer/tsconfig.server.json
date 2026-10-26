@@ -21,7 +21,8 @@
     "noImplicitThis": true,
     "alwaysStrict": true,
     "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "rootDir": "../../.."
   },
   "files": ["src/main.server.ts", "src/server.ts"],
   "include": ["src/**/*.d.ts"],

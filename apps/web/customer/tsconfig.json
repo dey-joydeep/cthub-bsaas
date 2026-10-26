@@ -31,7 +31,9 @@
     "types": ["node"],
     "esModuleInterop": true,
     "module": "preserve",
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "ignoreDeprecations": "6.0",
+    "rootDir": "../../.."
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

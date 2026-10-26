@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 import { RouterModule, RouterOutlet } from '@angular/router';
 import { HeaderComponent } from '../header/header.component';
@@ -8,6 +8,7 @@ import { HeaderComponent } from '../header/header.component';
   standalone: true,
   imports: [RouterModule, RouterOutlet, HeaderComponent],
   templateUrl: './layout.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./layout.component.css'],
 })
 export class LayoutComponent {

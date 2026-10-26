@@ -1,6 +1,6 @@
 import { PlatformUtils, PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
 import { isPlatformBrowser } from '@angular/common';
-import { Component, HostListener, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { Component, HostListener, OnInit, PLATFORM_ID, inject, ChangeDetectionStrategy } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
@@ -31,6 +31,7 @@ import { DashboardService } from './dashboard.service';
     RenewalsListWidgetComponent,
   ],
   templateUrl: './dashboard.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./dashboard.component.css'],
 })
 export class DashboardComponent extends AbstractBaseComponent implements OnInit {

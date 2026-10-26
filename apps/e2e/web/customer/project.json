@@ -3,6 +3,8 @@
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "sourceRoot": "apps/e2e/web/customer/src",
+  "tags": ["type:e2e", "platform:web"],
+  "implicitDependencies": ["web-app-customer"],
   "targets": {
     "e2e": {
       "executor": "nx:run-commands",
@@ -16,13 +18,18 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/eslint.config.js",
+        "{workspaceRoot}/eslint.base.js",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/tools/eslint-rules/**/*"
+      ],
       "options": {
-        "lintFilePatterns": ["apps/e2e/web/customer/**/*.ts"],
-        "errorOnUnmatchedPattern": false
+        "no-error-on-unmatched-pattern": true,
+        "args": ["**/*.ts"]
       }
     }
-  },
-  "implicitDependencies": ["web-app-customer"],
-  "tags": ["type:e2e", "platform:web"]
+  }
 }

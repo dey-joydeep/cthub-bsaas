@@ -1,5 +1,5 @@
 import { DatePipe, CurrencyPipe } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -37,6 +37,7 @@ import { Service, Staff } from './model/appointment-create.model';
     MatSnackBarModule,
   ],
   templateUrl: './appointment-create.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./appointment-create.component.css'],
 })
 export class AppointmentCreateComponent implements OnInit {

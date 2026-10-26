@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'admin-service-management',
@@ -10,6 +10,7 @@ import { Component } from '@angular/core';
       <p>Administrative tooling for shared services will be surfaced here.</p>
     </section>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
       .feature-placeholder {

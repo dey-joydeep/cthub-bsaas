@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,6 +10,7 @@ import { RevenueData } from './models/revenue-chart.model';
   standalone: true,
   imports: [MatCardModule, MatIconModule],
   templateUrl: './revenue-chart.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./revenue-chart.component.css'],
 })
 export class RevenueChartComponent extends AbstractBaseComponent {

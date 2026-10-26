@@ -1,4 +1,4 @@
-import { Component, OnChanges, SimpleChanges, inject, viewChild, model } from '@angular/core';
+import { Component, OnChanges, SimpleChanges, inject, viewChild, model, ChangeDetectionStrategy } from '@angular/core';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,6 +18,7 @@ import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
   standalone: true,
   imports: [MatCardModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule, BaseChartDirective],
   templateUrl: './subscription-chart-widget.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./subscription-chart-widget.component.css'],
 })
 export class SubscriptionChartWidgetComponent extends AbstractBaseComponent implements OnChanges {

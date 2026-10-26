@@ -1,19 +1,11 @@
 {
   "extends": "../tsconfig.lib.base.json",
   "compilerOptions": {
-    "rootDir": "src",
+    "rootDir": "../../..",
     "outDir": "../../../dist/out-tsc/libs/web/partner",
-    "paths": {
-      "@cthub-bsaas/shared": ["dist/libs/shared", "libs/shared/src/index.ts"],
-      "@cthub-bsaas/web-config": ["dist/libs/web/config", "libs/web/config/src/index.ts"],
-      "@cthub-bsaas/web-core-auth": ["dist/libs/web/core/auth", "libs/web/core/auth/src/index.ts"],
-      "@cthub-bsaas/web-core/auth": ["dist/libs/web/core/auth", "libs/web/core/auth/src/index.ts"],
-      "@cthub-bsaas/web-core-common": ["dist/libs/web/core/common", "libs/web/core/common/src/index.ts"],
-      "@cthub-bsaas/web-core-platform": ["dist/libs/web/core/platform", "libs/web/core/platform/src/index.ts"],
-      "@cthub-bsaas/web-ui": ["dist/libs/web/ui", "libs/web/ui/src/index.ts"]
-    },
     "module": "preserve",
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "ignoreDeprecations": "6.0"
   },
   "include": [
     "src/index.ts",
@@ -40,5 +32,13 @@
     "src/**/*.test.jsx",
     "src/**/*.spec.jsx",
     "src/test-setup.ts"
-  ]
+  ],
+  "angularCompilerOptions": {
+    "extendedDiagnostics": {
+      "checks": {
+        "nullishCoalescingNotNullable": "suppress",
+        "optionalChainNotNullable": "suppress"
+      }
+    }
+  }
 }

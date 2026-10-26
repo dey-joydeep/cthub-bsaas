@@ -11,7 +11,8 @@
     "declaration": true,
     "declarationMap": true,
     "outDir": "../../../dist/libs/server/core",
-    "tsBuildInfoFile": "../../../dist/.tsbuildinfo/server/core.tsbuildinfo"
+    "tsBuildInfoFile": "../../../dist/.tsbuildinfo/server/core.tsbuildinfo",
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["**/*.test.ts", "**/*.spec.ts", "src/testing/**"],

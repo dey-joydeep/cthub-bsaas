@@ -3,6 +3,17 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "sourceRoot": "apps/web/admin/src",
+  "i18n": {
+    "sourceLocale": "en-US",
+    "locales": {
+      "bn": {
+        "translation": "apps/web/admin/src/locale/messages.bn.xlf"
+      },
+      "ja": {
+        "translation": "apps/web/admin/src/locale/messages.ja.xlf"
+      }
+    }
+  },
   "tags": ["platform:web", "scope:web", "type:app"],
   "targets": {
     "build": {
@@ -69,12 +80,22 @@
         "development": {
           "buildTarget": "web-app-admin:build:development"
         }
+      },
+      "readyWhen": {
+        "signal": true
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/eslint.config.js",
+        "{workspaceRoot}/eslint.base.js",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/tools/eslint-rules/**/*"
+      ],
       "options": {
-        "lintFilePatterns": ["{projectRoot}/src/**/*.ts", "{projectRoot}/src/**/*.html"]
+        "args": ["src/**/*.ts", "src/**/*.html"]
       }
     },
     "extract-i18n": {
@@ -84,17 +105,6 @@
         "format": "xlf2",
         "outputPath": "apps/web/admin/src/locale",
         "outFile": "messages.xlf"
-      }
-    }
-  },
-  "i18n": {
-    "sourceLocale": "en-US",
-    "locales": {
-      "bn": {
-        "translation": "apps/web/admin/src/locale/messages.bn.xlf"
-      },
-      "ja": {
-        "translation": "apps/web/admin/src/locale/messages.ja.xlf"
       }
     }
   }

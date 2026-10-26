@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 
 import { PortfolioService } from './portfolio.service';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -10,6 +10,7 @@ import { PortfolioItem } from './models/portfolio.model';
   standalone: true,
   imports: [ReactiveFormsModule],
   templateUrl: './portfolio.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./portfolio.component.css'],
 })
 export class PortfolioComponent extends AbstractBaseComponent {
