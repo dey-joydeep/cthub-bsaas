@@ -9,6 +9,7 @@
     "build": {
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/libs/web/admin"],
+      "dependsOn": ["^build"],
       "defaultConfiguration": "production",
       "options": {
         "project": "libs/web/admin/ng-package.json",

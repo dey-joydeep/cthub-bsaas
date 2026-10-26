@@ -1,5 +1,5 @@
 import { DatePipe, CurrencyPipe, DecimalPipe } from '@angular/common';
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -53,8 +53,21 @@ export class ProductSalesWidgetComponent extends AbstractBaseComponent implement
 
   // Table data
   displayedColumns: string[] = ['productName', 'quantity', 'unitPrice', 'totalAmount', 'saleDate', 'soldBy'];
-  dataSource: ProductSale[] = [];
-  totalItems = 0;
+  readonly dataSourceSignal = signal<ProductSale[]>([]);
+  get dataSource(): ProductSale[] {
+    return this.dataSourceSignal();
+  }
+  set dataSource(val: ProductSale[]) {
+    this.dataSourceSignal.set(val);
+  }
+
+  readonly totalItemsSignal = signal(0);
+  get totalItems(): number {
+    return this.totalItemsSignal();
+  }
+  set totalItems(val: number) {
+    this.totalItemsSignal.set(val);
+  }
   pageSize = 10;
   pageIndex = 0;
   sortField = 'saleDate';

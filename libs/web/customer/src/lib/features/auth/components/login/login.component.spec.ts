@@ -145,6 +145,7 @@ describe('LoginComponent', () => {
   it('should handle login error', async () => {
     const error = { error: { error: 'Login failed' } };
     vi.spyOn(loginService, 'initLogin').mockReturnValue(throwError(() => error));
+    const errorSpy = vi.spyOn((component as any).errorService, 'handleError');
 
     component.loginForm.setValue({
       email: 'test@example.com',
@@ -155,7 +156,7 @@ describe('LoginComponent', () => {
     await component.onSubmit();
 
     expect(component.error).toBe('Login failed');
-    expect(errorService.handleError).toHaveBeenCalledWith(error);
+    expect(errorSpy).toHaveBeenCalledWith(error);
   });
 
   it('should show loading state during form submission', async () => {

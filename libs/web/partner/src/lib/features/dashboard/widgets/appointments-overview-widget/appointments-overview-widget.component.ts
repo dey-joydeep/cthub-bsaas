@@ -1,12 +1,12 @@
 import { DatePipe, CurrencyPipe, SlicePipe, formatDate, NgClass } from '@angular/common';
-import { AfterViewInit, Component, OnDestroy, OnInit, viewChild, inject } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, OnDestroy, OnInit, viewChild, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatNativeDateModule, MatOptionModule } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -33,6 +33,7 @@ import { AppointmentsOverviewWidgetService } from './appointments-overview-widge
 @Component({
   selector: 'app-appointments-overview-widget',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
     CurrencyPipe,
@@ -69,13 +70,32 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
   sort = viewChild<MatSort>(MatSort);
 
   // Data
-  overview: AppointmentsOverview | null = null;
+  readonly overviewSignal = signal<AppointmentsOverview | null>(null);
+  get overview(): AppointmentsOverview | null {
+    return this.overviewSignal();
+  }
+  set overview(val: AppointmentsOverview | null) {
+    this.overviewSignal.set(val);
+  }
   dataSource = new MatTableDataSource<Appointment>([]);
   displayedColumns: string[] = ['title', 'customerName', 'staffName', 'serviceName', 'startTime', 'duration', 'status', 'actions'];
 
   // Loading & error states
-  isLoading = true;
-  error: string | null = null;
+  readonly isLoadingSignal = signal(true);
+  get isLoading(): boolean {
+    return this.isLoadingSignal();
+  }
+  set isLoading(val: boolean) {
+    this.isLoadingSignal.set(val);
+  }
+
+  readonly errorSignal = signal<string | null>(null);
+  get error(): string | null {
+    return this.errorSignal();
+  }
+  set error(val: string | null) {
+    this.errorSignal.set(val);
+  }
 
   // Pagination
   pageIndex = 0;
@@ -91,7 +111,6 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
   });
   private readonly appointmentsOverviewWidgetService = inject(AppointmentsOverviewWidgetService);
   private readonly snackBar = inject(MatSnackBar);
-  private readonly dialog = inject(MatDialog);
   // Status filter
   statusFilter = new FormControl<AppointmentStatus | 'ALL'>('ALL');
   statusOptions = [

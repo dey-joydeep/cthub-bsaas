@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -18,6 +18,7 @@ import type { IServiceDto, ITestimonialDto, ICityDto, ISalonDto, IHomePageData }
 @Component({
   selector: 'app-home',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
     RouterModule,
@@ -129,17 +130,9 @@ export class HomeComponent implements OnInit {
         console.error('Failed to load home page data:', err);
         this.error = 'Failed to load data. Please try again later.';
         this.loading = false;
-        this.snackBar.open(this.error, 'Dismiss', { duration: 5000 });
+        this.showError(this.error);
       },
     });
-  }
-
-  private mapToSalon(salonDto: ISalonDto): ISalonDto {
-    return {
-      ...salonDto,
-      averageRating: salonDto.averageRating ?? salonDto.rating ?? 0, // Fallback to rating if averageRating is not available
-      services: salonDto.services || [],
-    };
   }
 
   /**
@@ -157,7 +150,7 @@ export class HomeComponent implements OnInit {
    * Gets the primary CTA route based on authentication status
    */
   getPrimaryCtaRoute(): string {
-    return this.isAuthenticated ? ['/appointments'] : ['/us/salons'];
+    return this.isAuthenticated ? '/appointments' : '/us/salons';
   }
 
   /**

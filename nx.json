@@ -31,18 +31,9 @@
         "libs/server/contracts-platform/**/*",
         "libs/server/core/**/*",
         "libs/server/data-access/**/*",
-        "libs/server/features/appointment/**/*",
         "libs/server/features/auth/**/*",
-        "libs/server/features/dashboard/**/*",
-        "libs/server/features/portfolio/**/*",
         "libs/server/features/**/*",
-        "libs/server/features/review/**/*",
-        "libs/server/features/salon/**/*",
         "libs/server/features/salon-owner/**/*",
-        "libs/server/features/salon-staff-request/**/*",
-        "libs/server/features/social/**/*",
-        "libs/server/features/theme/**/*",
-        "libs/server/features/user/**/*",
         "libs/server/infrastructure/**/*",
         "libs/shared/**/*"
       ]

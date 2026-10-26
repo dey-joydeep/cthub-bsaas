@@ -8,6 +8,7 @@ import {
 } from '@angular/common/http';
 import { ApplicationConfig, ErrorHandler, importProvidersFrom } from '@angular/core';
 import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
+import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter, withPreloading, PreloadAllModules, withComponentInputBinding } from '@angular/router';
 import { of } from 'rxjs';
@@ -26,6 +27,7 @@ import { AuthService } from '@cthub-bsaas/web-customer/auth';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideClientHydration(withEventReplay()),
     provideRouter(routes, withPreloading(PreloadAllModules), withComponentInputBinding()),
     provideHttpClient(
       withInterceptorsFromDi(),

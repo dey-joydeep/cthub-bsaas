@@ -1,12 +1,12 @@
-import { Directive, OnDestroy, OnInit, inject } from '@angular/core';
+import { Directive, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { Subject } from 'rxjs';
 import { ErrorService } from '../services/error.service';
 
 @Directive()
 export abstract class AbstractBaseComponent implements OnInit, OnDestroy {
   protected destroy$ = new Subject<void>();
-  private _error: string | null = null;
-  private _loading = false;
+  readonly loadingSignal = signal(false);
+  readonly errorSignal = signal<string | null>(null);
   protected readonly errorService = inject(ErrorService);
 
   ngOnInit(): void {
@@ -37,19 +37,19 @@ export abstract class AbstractBaseComponent implements OnInit, OnDestroy {
     this.loading = false;
   }
 
-  protected get loading(): boolean {
-    return this._loading;
+  public get loading(): boolean {
+    return this.loadingSignal();
   }
 
-  protected set loading(value: boolean) {
-    this._loading = value;
+  public set loading(value: boolean) {
+    this.loadingSignal.set(value);
   }
 
-  protected get error(): string | null {
-    return this._error;
+  public get error(): string | null {
+    return this.errorSignal();
   }
 
-  protected set error(value: string | null) {
-    this._error = value;
+  public set error(value: string | null) {
+    this.errorSignal.set(value);
   }
 }

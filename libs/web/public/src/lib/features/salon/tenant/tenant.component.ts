@@ -1,5 +1,5 @@
 import { DatePipe, CurrencyPipe } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 // Core services
@@ -18,6 +18,7 @@ import { TenantService } from './tenant.service';
 @Component({
   selector: 'app-tenant',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DatePipe, CurrencyPipe, SafeUrlPipe, FormsModule],
   templateUrl: './tenant.component.html',
   styleUrls: ['./tenant.component.css'],
@@ -66,7 +67,7 @@ export class TenantComponent implements OnInit {
       if (this.userId) {
         this.tenantService.isEligibleForReview(this.userId, salonId).subscribe({
           next: (res) => (this.eligibleToReview = res.eligible),
-          error: (err) => {
+          error: () => {
             this.eligibleToReview = null;
             // Optionally show user-friendly error if needed
           },

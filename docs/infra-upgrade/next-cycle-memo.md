@@ -1,88 +1,130 @@
-# Next Upgrade Cycle Memo — Architectural Decisions & Housekeeping
+# Infrastructure Upgrade Cycle Memo — Status & Forward Roadmap
 
-_This document serves as an authoritative architectural memo and forward-looking roadmap for the next infrastructure upgrade cycle (following the completion of the `20260501` upgrade cycle). It captures key architectural decisions, deferred migrations, and preparatory housekeeping items for **Nx**, **Angular**, **NestJS**, and **Prisma**._
-
----
-
-## 1. Database ORM Strategy (Prisma vs. Raw SQL / Query Builders)
-
-### Architectural Decision: Retain Prisma ORM as the Primary Standard
-
-There is an adage from the Java/Hibernate ecosystem: _"If an application handles queries more complex than basic CRUD, avoid using stateful ORMs."_ While true for stateful ORMs like Hibernate/JPA (which suffer from Persistence Context memory overhead, dirty checking, and `LazyInitializationException` traps), **it does not apply to Prisma.**
-
-- **Why Prisma Remains Our Standard:** Prisma is a **100% stateless data mapper and query builder**. It maintains no identity map or first-level cache, never throws lazy loading exceptions, and returns plain JavaScript/TypeScript objects (POJOs). Its compile-time type safety via schema-derived interfaces is unmatched for 85–90% of our domain operations (CRUD, nested relations, transactional scopes, and pagination).
-- **Mandate for Complex Queries (10–15% of workloads):** For ultra-complex reporting, analytical aggregations, window functions, or multi-table Common Table Expressions (CTEs), **do not abandon Prisma or introduce second ORMs.** Instead:
-  1. Use Prisma's native SQL escape hatches: **`$queryRaw`** and **`TypedSql`** (parameterized, SQL-injection-safe raw queries mapped to typed DTOs).
-  2. Leverage our **Hexagonal Architecture (Ports & Adapters)** boundary. Feature logic depends strictly on repository interfaces (`libs/server/contracts-*`). If an endpoint requires specialized SQL, implement it inside the concrete infrastructure adapter (`libs/server/infrastructure`) without polluting business logic.
+**Last Updated:** 2026-10-26  
+**Status:** Nx 24 & Angular 22 Cycle Completed (PR #91 Merged); Workspace Adoption Plan Documented; NestJS 12 Deferred
 
 ---
 
-## 2. Backend Framework & Test Runner Strategy (NestJS v11 Jest vs. NestJS v12 Vitest)
+## 1. Executive Status: Completed vs. Pending
 
-### Current Landscape: NestJS 12 Release & Tooling Shift
-
-The NestJS ecosystem has transitioned to **NestJS 12 (latest: `@nestjs/core@12.2.0`)**, with the `11.x` line entering legacy maintenance (`11.2.8`). NestJS 12 introduces several fundamental architectural changes:
-
-1. **Native Vitest as Default Runner:** For newly scaffolded ESM projects, the NestJS CLI has officially replaced Jest with **Vitest** out-of-the-box (paired with `oxlint` for linting).
-2. **Strict Pure ESM Packaging:** Core framework packages (`@nestjs/core`, `@nestjs/testing`, `@nestjs/common`) are published **strictly as pure ESM**.
-3. **Compiler Modernization:** NestJS 12 deprecates its legacy Webpack compiler in favor of **Rspack** and native Vite/Rollup pipelines.
-4. **Jest Incompatibility in v12:** Because Jest uses its own proprietary module loader rather than Node's native ESM resolution, running Jest against NestJS 12 pure ESM packages causes `Must use import to load ES Module` errors unless executed on Node 24.9+ with the `--experimental-vm-modules` flag.
-
-### Architectural Decision: Defer NestJS 12; Retain NestJS 11 + Jest Baseline
-
-While NestJS 12 is stable, **upgrading to NestJS 12 and migrating backend tests to Vitest are formally deferred** for our workspace:
-
-- **Why NestJS 12 is Deferred in This Cycle:**
-  1. **Upstream Nx Peer Dependency Blocker:** Verified that `@nx/nest` (even in the latest Nx `24.0.1`) explicitly caps its peer dependency range:
-     ```json
-     {
-       "@nestjs/core": ">=10.0.0 <12.0.0",
-       "@nestjs/common": ">=10.0.0 <12.0.0"
-     }
-     ```
-     Installing NestJS 12 alongside `@nx/nest` triggers `ERESOLVE` peer dependency conflicts under standard npm.
-  2. **Bundler & Generator Mismatch:** The current `@nx/nest:application` generator still hardcodes Webpack build targets and CommonJS module wrapping. It does not yet supply the Rspack compiler and pure ESM generator schemas required by NestJS 12.
-  3. **Preserving Bedrock Ground Truth:** Our single implemented domain feature (`server-feature-auth`) has achieved **100% statement, branch, function, and line test coverage** (172 unit tests, 158 integration tests) and **100% OpenAPI schema parity** on NestJS `11.1.27` with `@swc/jest`. Forcing an upgrade now would introduce experimental VM flags and destabilize our only fully verified business domain logic.
-- **Express 5 Alignment:** While Express 5 (`5.3.0`) is supported in `@nx/express`, NestJS 11 remains optimized around Express 4 (`4.21.2`). The Express 5 upgrade will be tackled concurrently with the NestJS 12 upgrade.
-- **Roadmap & Trigger for Next Cycle:**
-  - **Trigger:** Upstream release of official NestJS 12 support in `@nx/nest` with native Rspack and pure ESM generators.
-  - **Action:** Execute the NestJS 12 and backend Vitest migrations simultaneously via automated Nx migration generators once supported without flags.
+| Workstream                       | Status                 | Details / Target Version                                                                                                                  |
+| -------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **Nx Monorepo Core**             | **COMPLETED**          | Upgraded from `23.0.1` to **`24.0.1`**; inferred plugins active (`@nx/jest/plugin`, `@nx/eslint/plugin`, `@nx/vitest`)                    |
+| **Angular Framework & Material** | **COMPLETED**          | Upgraded from `21.2.9` to **`22.2.4`** (Signals, Standalone, SSR hydration, `ChangeDetectionStrategy.OnPush`)                             |
+| **Frontend Tooling & Compilers** | **COMPLETED**          | `vite.config.mts` modernized (native `tsconfigPaths`); `typescript@6.0.3`; `angular-eslint@22.6.0`; `@analogjs/vite-plugin-angular@2.7.5` |
+| **Database ORM Strategy**        | **RETAINED**           | **Prisma ORM 6.15.0** retained as sole standard; `$queryRaw`/`TypedSql` for complex CTEs/analytics                                        |
+| **Workspace Infra Adoption**     | **READY TO EXECUTE**   | Technical housekeeping sprint: `tsconfig.lib.json` inclusion, Signals refactor, Vitest spec cleanup, and Playwright E2E smoke tests       |
+| **Backend Framework & Tests**    | **DEFERRED (Pending)** | **NestJS 11.1.27 + Jest** baseline preserved; 100% test coverage maintained on `server-feature-auth`                                      |
+| **Express 5 Alignment**          | **DEFERRED (Pending)** | Express 4 (`4.21.2`) retained; deferred to align concurrently with NestJS 12                                                              |
 
 ---
 
-## 3. Nx Monorepo Housekeeping (Preparing for Nx v24)
+## 2. Completed in This Cycle (2026-10-26 — PR #91)
 
-During testing in Nx v23, several informational deprecation notices were emitted regarding plugins and executors that will be removed in **Nx v24**. Address these items prior to or during the Nx v24 upgrade:
+The infrastructure upgrade cycle was executed on branch `chore/nx24-angular22-upgrade` and merged into `main` via PR #91. Full details are recorded in [`docs/infra-upgrade/20261026-nx24-angular22/migration-report.md`](docs/infra-upgrade/20261026-nx24-angular22/migration-report.md).
 
-### A. Frontend Vite Configuration (`vite.config.mts`)
+### A. Nx 24 Migration & Deprecation Cleanup
 
-- **`nxViteTsPaths` Plugin:** Deprecated in `@nx/vite/plugins/nx-tsconfig-paths.plugin`.
-  - **Action:** Replace with `tsconfigPaths()` from the standard `vite-tsconfig-paths` package across all frontend project vite configs.
-- **`nxCopyAssetsPlugin` Plugin:** Deprecated in `@nx/vite/plugins/nx-copy-assets.plugin`.
-  - **Action:** Replace with Vite's native `publicDir` option or the `vite-plugin-static-copy` package.
+- Upgraded workspace to **Nx `24.0.1`** cleanly with standard npm install (**zero `--legacy-peer-deps`**).
+- Converted deprecated explicit executors (`@nx/jest:jest`, `@nx/eslint:lint`) to modern inferred target plugins.
+- Executed all 42 automated Nx/Angular migrations and cleaned up temporary migration assets.
 
-### B. Backend Jest Configuration (`project.json` / inferred targets)
+### B. Frontend Vite Modernization
 
-- **`@nx/jest:jest` Executor:** The explicit `@nx/jest:jest` executor is deprecated in favor of `@nx/jest/plugin` inferred targets.
-  - **Action:** Run `nx g @nx/jest:convert-to-inferred` across backend test projects to migrate to inferred targets before Nx v24.
+- Updated all 14 `vite.config.mts` files across `apps/web/*` and `libs/web/*`.
+- Removed deprecated `@nx/vite` plugins (`nxViteTsPaths`, `nxCopyAssetsPlugin`) in favor of native Vite `resolve: { tsconfigPaths: true }`.
+
+### C. Angular 22 & Component Architecture
+
+- Upgraded `@angular/*` packages, Angular Material, and CDK from `21.2.9` to **`22.2.4`**.
+- Aligned all frontend components across `apps/web/*` and `libs/web/*` to `ChangeDetectionStrategy.OnPush`.
+- Hardened TypeScript tsconfigs to resolve to source and eliminate stale `dist/` path shadowing in Vitest.
+- Fixed `nx.json` `targetDefaults.test.configurations.ci` to use `"coverage": true` for compatibility with both Vitest and Jest runners.
+
+### D. Full Validation Baseline
+
+- **Backend Unit Tests:** 172/172 passed (100% statement, branch, function, line coverage) on `server-feature-auth`.
+- **Backend Integration Tests:** 158/158 passed (100% coverage) against local PostgreSQL/Redis.
+- **Frontend Tests:** 14/14 web test projects passed under Vitest (`web-lib-partner` 71/71, `web-lib-public` 41/41, `web-lib-customer` 16/16).
+- **Workspace Validation:** 17 project type-checks passed (0 errors); 27 project lints passed (0 errors, 0 warnings); all 4 production applications built successfully.
+- **Codex Automated PR Review:** Approved with 👍 on PR #91.
 
 ---
 
-## 4. Angular 22 & Nx 24 Upgrade Strategy
+## 3. Retained Architectural Decisions
 
-### Current Status
+### A. Database ORM Strategy: Retain Prisma ORM as Primary Standard
 
-- **Nx:** Our workspace is stable on **Nx `23.0.1`**. Nx `24.0.1` is released.
-- **Angular:** Our workspace is on **Angular `21.2.9`**. Angular `22.2.3` is released.
-- **Nx Support:** `@nx/angular@24.0.1` peer dependencies declare support for Angular 20 through 22 (`>=20.0.0 <23.0.0`).
+- **Why Prisma Remains Our Standard:** Prisma is a **100% stateless data mapper and query builder**. It maintains no identity map or first-level cache, never throws lazy loading exceptions, and returns plain TypeScript objects (POJOs).
+- **Mandate for Complex Queries (10–15% of workloads):** For complex reporting, aggregations, window functions, or multi-table CTEs, **do not abandon Prisma or introduce secondary ORMs.** Instead:
+  1. Use Prisma's native SQL escape hatches: **`$queryRaw`** and **`TypedSql`**.
+  2. Implement database queries inside concrete infrastructure adapters (`libs/server/infrastructure`) behind Hexagonal repository interfaces (`libs/server/contracts-*`), keeping domain logic decoupled.
 
-### Architectural Recommendation: Dedicated Isolation Branch
+---
 
-Unlike NestJS 12 (which is blocked by upstream peer dependencies), upgrading to **Nx 24** and **Angular 22** is technically possible without package manager conflicts. However:
+## 4. Next Session: Full Workspace Adoption of the Infra Upgrade
 
-1. **Do Not Mix into Current Branch (`chore/infra-upgrade`):**
-   - Nx 24 removes explicit executors (`@nx/jest:jest`, `@nx/eslint:lint`), requiring all 39 projects to convert to inferred plugins.
-   - Angular 22 introduces component API and theme token shifts across Angular Material, touching all 3 frontend apps and 8 frontend libraries (where business features remain scaffolds/stubs except login).
-2. **Execute in a Dedicated Lane:**
-   - Merge `chore/infra-upgrade` to establish the clean, green NestJS 11 + Angular 21 + Nx 23 baseline.
-   - Create a fresh branch (`chore/nx24-angular22-upgrade`) to execute `npx nx migrate 24.0.1` and `@angular/core@22`, verifying frontend hydration, SSR, and Material styling in isolation.
+While the tooling and runtime dependencies are upgraded to Nx 24 and Angular 22, the existing codebase contains legacy prototype artifacts that have not yet fully adopted the new infrastructure standards.
+
+This is a **purely technical housekeeping effort** that does not require waiting for new backend business features. A ready-to-run AIDD prompt is preserved in [`docs/infra-upgrade/20261026-nx24-angular22/workspace-adoption-prompt.md`](docs/infra-upgrade/20261026-nx24-angular22/workspace-adoption-prompt.md). It will be executed in the next session as a focused Technical Modernization sprint:
+
+### A. Current Gaps in Workspace Infra Adoption
+
+| Domain                                   | Current Outdated State                                                                                                                      | Required Infra Adoption Action                                                                                                                                                            |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1. TypeScript Compilation Inclusion**  | Non-auth directories in `libs/web/{customer,partner,admin}` are excluded from `tsconfig.lib.json` `include` to bypass legacy import errors. | Fix obsolete imports (`../../models/*`) and expand `include: ["src/**/*.ts"]` across all web libraries so `nx run-many -t type-check` verifies 100% of frontend files under TypeScript 6. |
+| **2. Angular 22 Signals Modernization**  | Existing components use legacy Angular patterns (getter-based state, `@Input()` decorators, constructor DI, manual RxJS subscriptions).     | Refactor components to Angular 22 reactive primitives: `signal()`, `computed()`, `input()`, `output()`, and `inject()`.                                                                   |
+| **3. Vitest Spec Modernization**         | Legacy unit tests in `libs/web/partner` contain Jest/Jasmine globals (`vi` namespace typing, `fail()`).                                     | Update specs to standard Vitest assertion syntax so `nx run-many -t test` passes cleanly with zero runner warnings.                                                                       |
+| **4. E2E Playwright Smoke Tests**        | `apps/e2e/web/{customer,partner,admin}` only contain `lint-placeholder.ts`. `apps/e2e/api` has a trivial dummy test.                        | Build verified Playwright smoke tests exercising SSR rendering and client-side hydration for each web persona.                                                                            |
+| **5. Server Feature Skeleton Alignment** | 9 legacy backend directories in `libs/server/features/` fail strict `tsc` checks against current `server-core` / Prisma types.              | Align or prune legacy skeletons so `nx run-many -t type-check` validates cleanly across the entire server domain.                                                                         |
+
+### B. Step-by-Step Execution Plan (For Next Session)
+
+```mermaid
+flowchart TD
+    Step1["Step 1: Frontend Type-Check & Import Remediation<br/>(Expand tsconfig.lib.json to src/**/*.ts)"] --> Step2["Step 2: Angular 22 Signals Refactoring<br/>(Convert Auth & core widgets to signal/computed)"]
+    Step2 --> Step3["Step 3: Vitest Spec Modernization<br/>(Eliminate legacy Jest/Jasmine globals)"]
+    Step3 --> Step4["Step 4: Playwright E2E Smoke Tests<br/>(Test SSR hydration & client routing)"]
+    Step4 --> Step5["Step 5: Server Skeletons Graph Cleanup<br/>(Clean type-check across libs/server/features)"]
+```
+
+1. **Step 1: Expand Frontend Type-Checking (`tsconfig.lib.json`):**
+   - Resolve broken relative model imports in `libs/web/customer` and `libs/web/partner`.
+   - Update `tsconfig.lib.json` in all web libraries to `include: ["src/**/*.ts"]`.
+   - Verify `nx run-many -t type-check` passes cleanly across all 14 web projects.
+2. **Step 2: Migrate Components to Angular 22 Signals:**
+   - Convert `LoginComponent`, `RegisterComponent`, and active dashboard widgets to use `signal()`, `computed()`, `input()`, and `inject()`.
+   - Ensure `ChangeDetectionStrategy.OnPush` operates seamlessly with signal notifications.
+3. **Step 3: Standardize Vitest Specs:**
+   - Replace any lingering Jest/Jasmine calls (`fail()`, `vi` namespace mismatches) with native Vitest assertions.
+   - Verify `nx run-many -t test` runs with 100% green suites across all web libraries.
+4. **Step 4: Activate Playwright E2E Smoke Tests:**
+   - Replace `apps/e2e/web/{customer,partner,admin}/src/lint-placeholder.ts` with real Playwright tests verifying SSR startup and route navigation.
+5. **Step 5: Backend Skeletons Cleanup:**
+   - Address obsolete imports in `libs/server/features/` or prune unused legacy stubs to ensure full monorepo type-check health.
+
+---
+
+## 5. Deferred Workstreams (Externally Blocked)
+
+### A. NestJS 12 & Backend Vitest Migration (Deferred)
+
+- **The Blocker:** `@nx/nest` (in Nx `24.0.1`) strictly caps its peer dependency range:
+  ```json
+  {
+    "@nestjs/core": ">=10.0.0 <12.0.0",
+    "@nestjs/common": ">=10.0.0 <12.0.0"
+  }
+  ```
+  Installing NestJS 12 triggers `ERESOLVE` conflicts under standard npm. Additionally, NestJS 12 publishes strictly pure ESM, which breaks the backend Jest runner without experimental Node VM flags.
+- **Trigger for Next Cycle:** Upstream release of official NestJS 12 support in `@nx/nest` with native Rspack and pure ESM generator support.
+- **Planned Action:** Upgrade `@nestjs/*` to `12.x` and migrate backend Jest suites to Vitest concurrently once supported natively by Nx.
+
+### B. Express 5 Upgrade (Deferred)
+
+- Express 4 (`4.21.2`) is currently retained.
+- The Express 5 (`5.3.0`) upgrade will be executed concurrently with NestJS 12.
+
+### C. Product Slices (Feature Implementation Roadmap)
+
+- Implementation of new business domains (Slice 3: Salon Owner Business & Branch Settings, Slice 4: Staff & Services, Slice 5: Customer CRM, Slice 6: Appointments, etc.) will proceed sequentially per [`docs/specs/project-wide/IMPLEMENTATION/implementation-slicing.md`](docs/specs/project-wide/IMPLEMENTATION/implementation-slicing.md) once infra adoption is complete.

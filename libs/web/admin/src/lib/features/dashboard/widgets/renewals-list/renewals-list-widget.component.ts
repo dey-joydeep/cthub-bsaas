@@ -1,4 +1,4 @@
-import { Component, input, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, inject, ChangeDetectionStrategy, signal } from '@angular/core';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -37,7 +37,13 @@ export class RenewalsListWidgetComponent extends AbstractBaseComponent {
   title = input('Upcoming Renewals');
   subtitle = input('View all upcoming subscription renewals');
 
-  renewals: Renewal[] = [];
+  readonly renewalsSignal = signal<Renewal[]>([]);
+  get renewals(): Renewal[] {
+    return this.renewalsSignal();
+  }
+  set renewals(val: Renewal[]) {
+    this.renewalsSignal.set(val);
+  }
   private subscriptions = new Subscription();
   private readonly dashboardService = inject(DashboardService);
 

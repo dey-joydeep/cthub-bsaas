@@ -1,4 +1,4 @@
-import { Component, OnInit, input, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, input, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
@@ -6,6 +6,7 @@ import { RouterModule } from '@angular/router';
 @Component({
   selector: 'app-salon-appointments',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DatePipe, RouterModule],
   templateUrl: './salon-appointments.component.html',
   styleUrls: ['./salon-appointments.component.css'],

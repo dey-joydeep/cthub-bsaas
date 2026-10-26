@@ -4,5 +4,12 @@
   "sourceRoot": "libs/server/src",
   "projectType": "library",
   "tags": ["platform:server", "scope:server", "type:aggregate", "internal"],
-  "targets": {}
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo Server aggregate lint OK"
+      }
+    }
+  }
 }

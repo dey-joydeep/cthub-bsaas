@@ -12,7 +12,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '@cthub-bsaas/web-partner/auth';
-import { CurrentUserService, type BaseAuthUser } from '@cthub-bsaas/web-core/auth';
+import { CurrentUserService, type BaseAuthUser } from '@cthub-bsaas/web-core-auth';
 
 // Define a User interface with roles
 export interface User {

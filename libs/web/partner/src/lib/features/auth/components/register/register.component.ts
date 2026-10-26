@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
 
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 
@@ -18,9 +18,29 @@ export class RegisterComponent {
   private registerApi = inject<RegisterApiPort | null>(REGISTER_API, { optional: true });
 
   registerForm: FormGroup;
-  loading = false;
-  error: string | null = null;
-  success: boolean = false;
+  readonly loadingSignal = signal(false);
+  get loading(): boolean {
+    return this.loadingSignal();
+  }
+  set loading(val: boolean) {
+    this.loadingSignal.set(val);
+  }
+
+  readonly errorSignal = signal<string | null>(null);
+  get error(): string | null {
+    return this.errorSignal();
+  }
+  set error(val: string | null) {
+    this.errorSignal.set(val);
+  }
+
+  readonly successSignal = signal(false);
+  get success(): boolean {
+    return this.successSignal();
+  }
+  set success(val: boolean) {
+    this.successSignal.set(val);
+  }
 
   constructor() {
     this.registerForm = this.fb.group({
