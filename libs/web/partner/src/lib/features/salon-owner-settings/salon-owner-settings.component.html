@@ -50,10 +50,20 @@
                 <mat-form-field appearance="outline">
                   <mat-label>Display name</mat-label>
                   <input matInput formControlName="displayName" />
+                  @if (businessForm.controls.displayName.hasError('required') || businessForm.controls.displayName.hasError('minlength')) {
+                    <mat-error>Display name is required (min 2 characters).</mat-error>
+                  } @else if (businessForm.controls.displayName.hasError('maxlength')) {
+                    <mat-error>Display name cannot exceed 120 characters.</mat-error>
+                  }
                 </mat-form-field>
                 <mat-form-field appearance="outline">
                   <mat-label>Legal name</mat-label>
                   <input matInput formControlName="legalName" />
+                  @if (businessForm.controls.legalName.hasError('required') || businessForm.controls.legalName.hasError('minlength')) {
+                    <mat-error>Legal name is required (min 2 characters).</mat-error>
+                  } @else if (businessForm.controls.legalName.hasError('maxlength')) {
+                    <mat-error>Legal name cannot exceed 160 characters.</mat-error>
+                  }
                 </mat-form-field>
                 <mat-form-field appearance="outline">
                   <mat-label>Status</mat-label>
@@ -61,6 +71,9 @@
                     <mat-option value="ACTIVE">Active</mat-option>
                     <mat-option value="INACTIVE">Inactive</mat-option>
                   </mat-select>
+                  @if (businessForm.controls.status.hasError('required')) {
+                    <mat-error>Status is required.</mat-error>
+                  }
                 </mat-form-field>
                 <button mat-flat-button type="submit" [disabled]="saving()">Save business</button>
               </form>
@@ -104,22 +117,39 @@
               <mat-form-field appearance="outline">
                 <mat-label>Name</mat-label>
                 <input matInput formControlName="name" />
+                @if (branchForm.controls.name.hasError('required') || branchForm.controls.name.hasError('minlength')) {
+                  <mat-error>Branch name is required (min 2 characters).</mat-error>
+                } @else if (branchForm.controls.name.hasError('maxlength')) {
+                  <mat-error>Branch name cannot exceed 120 characters.</mat-error>
+                }
               </mat-form-field>
               <mat-form-field appearance="outline">
                 <mat-label>Phone</mat-label>
                 <input matInput formControlName="phone" />
+                @if (branchForm.controls.phone.hasError('maxlength')) {
+                  <mat-error>Phone number cannot exceed 30 characters.</mat-error>
+                }
               </mat-form-field>
               <mat-form-field appearance="outline">
                 <mat-label>Email</mat-label>
                 <input matInput formControlName="email" />
+                @if (branchForm.controls.email.hasError('email')) {
+                  <mat-error>Enter a valid email address.</mat-error>
+                }
               </mat-form-field>
               <mat-form-field appearance="outline">
                 <mat-label>Timezone</mat-label>
                 <input matInput formControlName="timezone" />
+                @if (branchForm.controls.timezone.hasError('required') || branchForm.controls.timezone.hasError('timezone')) {
+                  <mat-error>Enter a valid IANA timezone (e.g. Asia/Tokyo).</mat-error>
+                }
               </mat-form-field>
               <mat-form-field appearance="outline">
                 <mat-label>Currency</mat-label>
                 <input matInput formControlName="currency" />
+                @if (branchForm.controls.currency.hasError('required') || branchForm.controls.currency.hasError('currency')) {
+                  <mat-error>Enter a valid 3-letter currency code (e.g. JPY, USD).</mat-error>
+                }
               </mat-form-field>
               <mat-form-field appearance="outline">
                 <mat-label>Status</mat-label>
@@ -127,6 +157,9 @@
                   <mat-option value="ACTIVE">Active</mat-option>
                   <mat-option value="INACTIVE">Inactive</mat-option>
                 </mat-select>
+                @if (branchForm.controls.status.hasError('required')) {
+                  <mat-error>Status is required.</mat-error>
+                }
               </mat-form-field>
 
               <fieldset formGroupName="address">
@@ -134,26 +167,68 @@
                 <mat-form-field appearance="outline">
                   <mat-label>Line 1</mat-label>
                   <input matInput formControlName="line1" />
+                  @if (
+                    branchForm.controls.address.controls.line1.hasError('required') ||
+                    branchForm.controls.address.controls.line1.hasError('minlength')
+                  ) {
+                    <mat-error>Address line 1 is required.</mat-error>
+                  } @else if (branchForm.controls.address.controls.line1.hasError('maxlength')) {
+                    <mat-error>Address line 1 cannot exceed 160 characters.</mat-error>
+                  }
                 </mat-form-field>
                 <mat-form-field appearance="outline">
                   <mat-label>Line 2</mat-label>
                   <input matInput formControlName="line2" />
+                  @if (branchForm.controls.address.controls.line2.hasError('maxlength')) {
+                    <mat-error>Address line 2 cannot exceed 160 characters.</mat-error>
+                  }
                 </mat-form-field>
                 <mat-form-field appearance="outline">
                   <mat-label>City</mat-label>
                   <input matInput formControlName="city" />
+                  @if (
+                    branchForm.controls.address.controls.city.hasError('required') ||
+                    branchForm.controls.address.controls.city.hasError('minlength')
+                  ) {
+                    <mat-error>City is required.</mat-error>
+                  } @else if (branchForm.controls.address.controls.city.hasError('maxlength')) {
+                    <mat-error>City cannot exceed 80 characters.</mat-error>
+                  }
                 </mat-form-field>
                 <mat-form-field appearance="outline">
                   <mat-label>State</mat-label>
                   <input matInput formControlName="state" />
+                  @if (
+                    branchForm.controls.address.controls.state.hasError('required') ||
+                    branchForm.controls.address.controls.state.hasError('minlength')
+                  ) {
+                    <mat-error>State is required.</mat-error>
+                  } @else if (branchForm.controls.address.controls.state.hasError('maxlength')) {
+                    <mat-error>State cannot exceed 80 characters.</mat-error>
+                  }
                 </mat-form-field>
                 <mat-form-field appearance="outline">
                   <mat-label>Postal code</mat-label>
                   <input matInput formControlName="postalCode" />
+                  @if (
+                    branchForm.controls.address.controls.postalCode.hasError('required') ||
+                    branchForm.controls.address.controls.postalCode.hasError('minlength')
+                  ) {
+                    <mat-error>Postal code is required.</mat-error>
+                  } @else if (branchForm.controls.address.controls.postalCode.hasError('maxlength')) {
+                    <mat-error>Postal code cannot exceed 20 characters.</mat-error>
+                  }
                 </mat-form-field>
                 <mat-form-field appearance="outline">
                   <mat-label>Country</mat-label>
                   <input matInput formControlName="country" />
+                  @if (
+                    branchForm.controls.address.controls.country.hasError('required') ||
+                    branchForm.controls.address.controls.country.hasError('minlength') ||
+                    branchForm.controls.address.controls.country.hasError('maxlength')
+                  ) {
+                    <mat-error>Enter a valid 2-letter country code (e.g. JP).</mat-error>
+                  }
                 </mat-form-field>
               </fieldset>
 
@@ -192,6 +267,9 @@
             <mat-form-field appearance="outline">
               <mat-label>Timezone</mat-label>
               <input matInput formControlName="timezone" readonly />
+              @if (hoursForm.controls.timezone.hasError('branchTimezone')) {
+                <mat-error>Weekly hours must use the selected branch timezone.</mat-error>
+              }
             </mat-form-field>
             <div formArrayName="days" class="days">
               @for (day of dayForms.controls; track $index; let dayIndex = $index) {
@@ -274,20 +352,35 @@
             <mat-form-field appearance="outline">
               <mat-label>Date</mat-label>
               <input matInput type="date" formControlName="date" />
+              @if (holidayForm.controls.date.hasError('required')) {
+                <mat-error>Date is required.</mat-error>
+              }
             </mat-form-field>
             <mat-slide-toggle formControlName="closed">Closed</mat-slide-toggle>
             <mat-form-field appearance="outline">
               <mat-label>Reason</mat-label>
               <input matInput formControlName="reason" />
+              @if (holidayForm.controls.reason.hasError('maxlength')) {
+                <mat-error>Reason cannot exceed 160 characters.</mat-error>
+              }
             </mat-form-field>
             <mat-form-field appearance="outline">
               <mat-label>Open start</mat-label>
               <input matInput formControlName="start" />
+              @if (holidayForm.controls.start.hasError('required') || holidayForm.controls.start.hasError('pattern')) {
+                <mat-error>Enter a valid time in HH:mm format.</mat-error>
+              }
             </mat-form-field>
             <mat-form-field appearance="outline">
               <mat-label>Open end</mat-label>
               <input matInput formControlName="end" />
+              @if (holidayForm.controls.end.hasError('required') || holidayForm.controls.end.hasError('pattern')) {
+                <mat-error>Enter a valid time in HH:mm format.</mat-error>
+              }
             </mat-form-field>
+            @if (holidayForm.errors?.['intervalOrder']) {
+              <p class="interval-error" role="alert">Holiday open hours must start before they end.</p>
+            }
             <button mat-flat-button type="submit" [disabled]="saving() || !branchSettingsLoaded()">Save holiday</button>
           </form>
         </mat-card-content>
@@ -304,14 +397,32 @@
             <mat-form-field appearance="outline">
               <mat-label>Booking lead minutes</mat-label>
               <input matInput type="number" formControlName="bookingLeadMinutes" />
+              @if (
+                policyForm.controls.bookingLeadMinutes.hasError('required') ||
+                policyForm.controls.bookingLeadMinutes.hasError('integerRange')
+              ) {
+                <mat-error>Booking lead minutes must be a non-negative whole number.</mat-error>
+              }
             </mat-form-field>
             <mat-form-field appearance="outline">
               <mat-label>Cancellation cutoff minutes</mat-label>
               <input matInput type="number" formControlName="cancellationCutoffMinutes" />
+              @if (
+                policyForm.controls.cancellationCutoffMinutes.hasError('required') ||
+                policyForm.controls.cancellationCutoffMinutes.hasError('integerRange')
+              ) {
+                <mat-error>Cancellation cutoff minutes must be a non-negative whole number.</mat-error>
+              }
             </mat-form-field>
             <mat-form-field appearance="outline">
               <mat-label>No-show grace minutes</mat-label>
               <input matInput type="number" formControlName="noShowGraceMinutes" />
+              @if (
+                policyForm.controls.noShowGraceMinutes.hasError('required') ||
+                policyForm.controls.noShowGraceMinutes.hasError('integerRange')
+              ) {
+                <mat-error>No-show grace minutes must be a non-negative whole number.</mat-error>
+              }
             </mat-form-field>
             <button mat-flat-button type="submit" [disabled]="saving() || !branchSettingsLoaded()">Save policy</button>
           </form>

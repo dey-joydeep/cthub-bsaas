@@ -390,6 +390,7 @@ export class SalonOwnerSettingsComponent {
   protected saveBusiness(): void {
     if (this.businessForm.invalid) {
       this.businessForm.markAllAsTouched();
+      this.error.set('Fix validation errors on the business profile before saving.');
       return;
     }
 
@@ -452,6 +453,7 @@ export class SalonOwnerSettingsComponent {
   protected saveBranch(): void {
     if (this.branchForm.invalid) {
       this.branchForm.markAllAsTouched();
+      this.error.set('Fix validation errors on the branch profile before saving.');
       return;
     }
 
@@ -611,6 +613,8 @@ export class SalonOwnerSettingsComponent {
       this.holidayForm.markAllAsTouched();
       if (this.holidayForm.errors?.['intervalOrder']) {
         this.error.set('Holiday open hours must start before they end.');
+      } else {
+        this.error.set('Fix validation errors on holiday details before saving.');
       }
       return;
     }
@@ -660,6 +664,7 @@ export class SalonOwnerSettingsComponent {
     }
     if (this.policyForm.invalid) {
       this.policyForm.markAllAsTouched();
+      this.error.set('Fix validation errors on booking policies before saving.');
       return;
     }
 

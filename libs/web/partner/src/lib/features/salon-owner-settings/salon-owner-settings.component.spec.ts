@@ -561,7 +561,7 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(component.selectedBranch()).toBeNull();
   });
 
-  it('does not submit invalid branch policy values', () => {
+  it('does not submit invalid branch policy values and sets error banner', () => {
     const component = fixture.componentInstance as unknown as SettingsComponentHarness;
     api.updateBranchPolicy.mockClear();
     component.policyForm.controls.bookingLeadMinutes.setValue(-1);
@@ -569,9 +569,10 @@ describe('SalonOwnerSettingsComponent', () => {
     component.savePolicy();
 
     expect(api.updateBranchPolicy).not.toHaveBeenCalled();
+    expect(component.error()).toBe('Fix validation errors on booking policies before saving.');
   });
 
-  it('does not submit decimal or oversized policy values', () => {
+  it('does not submit decimal or oversized policy values and sets error banner', () => {
     const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
       policyForm: {
         patchValue(value: { bookingLeadMinutes: number; cancellationCutoffMinutes: number; noShowGraceMinutes: number }): void;
@@ -587,18 +588,53 @@ describe('SalonOwnerSettingsComponent', () => {
     component.savePolicy();
 
     expect(api.updateBranchPolicy).not.toHaveBeenCalled();
+    expect(component.error()).toBe('Fix validation errors on booking policies before saving.');
   });
 
-  it('does not submit invalid branch timezone or currency values', () => {
+  it('does not submit invalid branch timezone or currency values and displays accessible errors', async () => {
     const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
       branchForm: { patchValue(value: { timezone: string; currency: string }): void };
     };
+    const tabs = Array.from(fixture.nativeElement.querySelectorAll('[role="tab"]')) as HTMLElement[];
+    tabs.find((tab) => tab.textContent?.includes('Branches'))?.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
     api.updateBranch.mockClear();
     component.branchForm.patchValue({ timezone: 'Asia/Toky', currency: 'ZZZ' });
 
     component.saveBranch();
+    fixture.detectChanges();
+    await fixture.whenStable();
 
     expect(api.updateBranch).not.toHaveBeenCalled();
+    expect(component.error()).toBe('Fix validation errors on the branch profile before saving.');
+
+    const errorElements = Array.from(fixture.nativeElement.querySelectorAll('mat-error')) as HTMLElement[];
+    const errorTexts = errorElements.map((el) => el.textContent?.trim());
+    expect(errorTexts).toContain('Enter a valid IANA timezone (e.g. Asia/Tokyo).');
+    expect(errorTexts).toContain('Enter a valid 3-letter currency code (e.g. JPY, USD).');
+  });
+
+  it('does not submit invalid business profile values and displays accessible errors', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      businessForm: { patchValue(value: { displayName: string; legalName: string }): void };
+    };
+    api.createBusiness.mockClear();
+    api.updateBusiness.mockClear();
+    component.businessForm.patchValue({ displayName: ' ', legalName: 'a' });
+
+    component.saveBusiness();
+    fixture.detectChanges();
+
+    expect(api.createBusiness).not.toHaveBeenCalled();
+    expect(api.updateBusiness).not.toHaveBeenCalled();
+    expect(component.error()).toBe('Fix validation errors on the business profile before saving.');
+
+    const errorElements = Array.from(fixture.nativeElement.querySelectorAll('mat-error')) as HTMLElement[];
+    const errorTexts = errorElements.map((el) => el.textContent?.trim());
+    expect(errorTexts).toContain('Display name is required (min 2 characters).');
+    expect(errorTexts).toContain('Legal name is required (min 2 characters).');
   });
 
   it('does not submit invalid holiday or weekly-hours values', () => {
