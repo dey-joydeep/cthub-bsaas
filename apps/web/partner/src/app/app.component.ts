@@ -6,11 +6,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { BaseAuthUser } from '@cthub-bsaas/web-core/auth';
+import { AuthService } from '@cthub-bsaas/web-partner/auth';
+import { CurrentUserService, type BaseAuthUser } from '@cthub-bsaas/web-core/auth';
 import { Subscription } from 'rxjs';
-
-import { AuthService } from './features/auth/services/auth.service';
-import { CurrentUserService } from './features/auth/services/current-user.service';
 
 export interface User extends BaseAuthUser {
   id: string;
