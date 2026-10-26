@@ -3,7 +3,7 @@ import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject, Observable, firstValueFrom, forkJoin, of } from 'rxjs';
 
 import { StorageService } from '@cthub-bsaas/web-core-platform';
-import type { AuthStatePort } from '@cthub-bsaas/web-core/auth';
+import type { AuthStatePort, BaseAuthUser } from '@cthub-bsaas/web-core/auth';
 import type { CustomerAuthUser } from '../models/auth.models';
 
 @Injectable({ providedIn: 'root' })
@@ -17,14 +17,17 @@ export class AuthService implements AuthStatePort {
   private currentUserSubject = new BehaviorSubject<CustomerAuthUser | null>(null);
   public readonly currentUser$: Observable<CustomerAuthUser | null> = this.currentUserSubject.asObservable();
 
-  constructor(@Inject(PLATFORM_ID) private platformId: object, private storage: StorageService) {
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: object,
+    private storage: StorageService,
+  ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
       this.initializeAuthState();
     }
   }
 
-  getCurrentUser(): { readonly id: string } | null {
+  getCurrentUser(): BaseAuthUser | null {
     const u = this.currentUserSubject.value;
     return u ? { id: u.id } : null;
   }

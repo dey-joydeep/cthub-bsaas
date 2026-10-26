@@ -38,6 +38,13 @@ export interface SalonOwnerAddress {
   readonly country: string;
 }
 
+export interface LoadBusinessesOptions {
+  readonly selectBusinessId?: string;
+  readonly preserveBranchId?: string;
+  readonly expectedBranchEditorVersion?: number;
+  readonly isNewBusiness?: boolean;
+}
+
 export interface SalonBusinessInput {
   readonly displayName: string;
   readonly legalName: string;

@@ -15,12 +15,15 @@ interface SettingsComponentHarness {
   saveHoliday(): void;
   saveBusiness(): void;
   newBusiness(): void;
+  newBranch(): void;
   selectBusiness(business: SalonBusiness): void;
   selectBranch(branch: BranchProfile): void;
+  selectHoliday(holiday: BranchHoliday): void;
   branchForm: { patchValue(value: Partial<{ email: string }>): void; getRawValue(): { businessId: string } };
   hoursForm: { patchValue(value: Partial<{ timezone: string }>): void };
   holidayForm: {
     patchValue(value: Partial<HolidayFormValue>): void;
+    getRawValue(): HolidayFormValue;
     controls: { start: { errors: Record<string, unknown> | null }; end: { errors: Record<string, unknown> | null } };
   };
   policyForm: { controls: { bookingLeadMinutes: { setValue(value: number): void } } };
@@ -29,6 +32,7 @@ interface SettingsComponentHarness {
   holidays(): readonly BranchHoliday[];
   selectedBusiness(): SalonBusiness | null;
   selectedBranch(): BranchProfile | null;
+  selectedHoliday(): BranchHoliday | null;
   branchSettingsLoaded(): boolean;
   error(): string | null;
   message(): string | null;
@@ -1743,5 +1747,99 @@ describe('SalonOwnerSettingsComponent', () => {
         name: 'First Branch',
       }),
     );
+  });
+
+  it('retains businessId when clicking newBranch multiple times in branch-only mode', () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [NoopAnimationsModule, SalonOwnerSettingsComponent],
+      providers: [
+        { provide: SalonOwnerSettingsApi, useValue: api },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            parent: {
+              routeConfig: { path: 'owner/branches' },
+            },
+          },
+        },
+        {
+          provide: CURRENT_USER,
+          useValue: {
+            currentUser$: of({ id: 'owner-1', role: 'owner' }),
+            isAuthenticated$: of(true),
+            redirectUrl: null,
+          },
+        },
+      ],
+    });
+
+    const branchFixture = TestBed.createComponent(SalonOwnerSettingsComponent);
+    branchFixture.detectChanges();
+    const component = branchFixture.componentInstance as unknown as SettingsComponentHarness;
+
+    expect(component.branchForm.getRawValue().businessId).toBe('business-1');
+
+    component.newBranch();
+    expect(component.selectedBranch()).toBeNull();
+    expect(component.branchForm.getRawValue().businessId).toBe('business-1');
+
+    component.newBranch();
+    expect(component.selectedBranch()).toBeNull();
+    expect(component.branchForm.getRawValue().businessId).toBe('business-1');
+  });
+
+  it('does not overwrite active holiday editor draft when a previous holiday save resolves after selecting another holiday', () => {
+    let holidaySaveSubscriber: ((holiday: BranchHoliday) => void) | undefined;
+    api.setBranchHoliday.mockReturnValueOnce(
+      new Observable((subscriber) => {
+        holidaySaveSubscriber = (savedHoliday) => {
+          subscriber.next(savedHoliday);
+          subscriber.complete();
+        };
+      }),
+    );
+
+    const holidayA: BranchHoliday = {
+      id: 'holiday-a',
+      branchId: 'branch-1',
+      date: '2026-12-24',
+      closed: true,
+      reason: 'Holiday A Reason',
+      intervals: [],
+    };
+    const holidayB: BranchHoliday = {
+      id: 'holiday-b',
+      branchId: 'branch-1',
+      date: '2026-12-25',
+      closed: true,
+      reason: 'Holiday B Reason',
+      intervals: [],
+    };
+
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness;
+
+    component.selectHoliday(holidayA);
+    expect(component.selectedHoliday()?.id).toBe('holiday-a');
+    component.holidayForm.patchValue({ reason: 'Holiday A Updated' });
+
+    component.saveHoliday();
+
+    // User switches to Holiday B while Holiday A save is in flight
+    component.selectHoliday(holidayB);
+    expect(component.selectedHoliday()?.id).toBe('holiday-b');
+    expect(component.holidayForm.getRawValue().reason).toBe('Holiday B Reason');
+
+    // Holiday A save now completes
+    holidaySaveSubscriber?.({
+      ...holidayA,
+      reason: 'Holiday A Updated',
+    });
+
+    // The editor must NOT switch back to Holiday A
+    expect(component.selectedHoliday()?.id).toBe('holiday-b');
+    expect(component.holidayForm.getRawValue().reason).toBe('Holiday B Reason');
+    // But the holidays list signal should contain the updated Holiday A
+    expect(component.holidays().find((h) => h.id === 'holiday-a')?.reason).toBe('Holiday A Updated');
   });
 });

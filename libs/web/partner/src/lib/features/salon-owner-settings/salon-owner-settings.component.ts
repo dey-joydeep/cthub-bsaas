@@ -30,8 +30,10 @@ import {
   BranchProfileInput,
   HolidayFormValue,
   HolidayIntervalValidationValue,
+  LoadBusinessesOptions,
   SalonBusiness,
   SalonBusinessInput,
+  TimeInterval,
   WeeklyHoursDay,
   WeeklyHoursInput,
 } from './models/salon-owner-settings.models';
@@ -216,6 +218,7 @@ export class SalonOwnerSettingsComponent {
   private branchSettingsLoadVersion = 0;
   private businessSaveVersion = 0;
   private branchEditorVersion = 0;
+  private holidayEditorVersion = 0;
   private branchSaveVersion = 0;
   private hoursSaveVersion = 0;
   private holidaySaveVersion = 0;
@@ -337,6 +340,7 @@ export class SalonOwnerSettingsComponent {
     this.branchEditorVersion += 1;
     this.hoursSaveVersion += 1;
     this.holidaySaveVersion += 1;
+    this.holidayEditorVersion += 1;
     this.policySaveVersion += 1;
     this.selectedBranch.set(branch);
     this.selectedHoliday.set(null);
@@ -389,7 +393,12 @@ export class SalonOwnerSettingsComponent {
   protected newBranch(): void {
     this.branchEditorVersion += 1;
     this.policySaveVersion += 1;
-    const businessId = this.selectedBusiness()?.id ?? this.selectedBranch()?.businessId ?? '';
+    const businessId =
+      this.selectedBusiness()?.id ??
+      this.selectedBranch()?.businessId ??
+      optionalText(this.branchForm.controls.businessId.value) ??
+      this.branches()[0]?.businessId ??
+      '';
     this.branchLoadVersion += 1;
     this.resetBranchEditor(businessId);
   }
@@ -430,7 +439,12 @@ export class SalonOwnerSettingsComponent {
           return;
         }
         this.selectedBusiness.set(business);
-        this.loadBusinesses(business.id, preserveBranchId, startedBranchEditorVersion, isNewBusiness);
+        this.loadBusinesses({
+          selectBusinessId: business.id,
+          preserveBranchId,
+          expectedBranchEditorVersion: startedBranchEditorVersion,
+          isNewBusiness,
+        });
         this.message.set('Settings saved.');
         this.saving.set(false);
       },
@@ -632,6 +646,7 @@ export class SalonOwnerSettingsComponent {
       return;
     }
     const startedBranchId = branch.id;
+    const startedHolidayEditorVersion = this.holidayEditorVersion;
     const requestVersion = ++this.holidaySaveVersion;
     this.saving.set(true);
     this.error.set(null);
@@ -642,9 +657,10 @@ export class SalonOwnerSettingsComponent {
           this.saving.set(false);
           return;
         }
-        this.selectedHoliday.set(savedHoliday);
         this.holidays.update((holidays) => this.upsertHoliday(holidays, savedHoliday));
-        this.selectHoliday(savedHoliday);
+        if (startedHolidayEditorVersion === this.holidayEditorVersion) {
+          this.selectHoliday(savedHoliday);
+        }
         this.message.set('Settings saved.');
         this.saving.set(false);
       },
@@ -723,6 +739,7 @@ export class SalonOwnerSettingsComponent {
   }
 
   protected selectHoliday(holiday: BranchHoliday): void {
+    this.holidayEditorVersion += 1;
     this.selectedHoliday.set(holiday);
     const firstInterval = holiday.intervals[0];
     this.holidayForm.reset({
@@ -748,7 +765,7 @@ export class SalonOwnerSettingsComponent {
     return dayGroup;
   }
 
-  private createIntervalGroup(interval = { start: '09:00', end: '17:00' }) {
+  private createIntervalGroup(interval: TimeInterval = { start: '09:00', end: '17:00' }) {
     return this.fb.nonNullable.group({
       start: [interval.start, [Validators.required, Validators.pattern(timePattern)]],
       end: [interval.end, [Validators.required, Validators.pattern(timePattern)]],
@@ -772,12 +789,8 @@ export class SalonOwnerSettingsComponent {
     this.loadBusinesses();
   }
 
-  private loadBusinesses(
-    selectBusinessId?: string,
-    preserveBranchId?: string,
-    expectedBranchEditorVersion?: number,
-    isNewBusiness = false,
-  ): void {
+  private loadBusinesses(options: LoadBusinessesOptions = {}): void {
+    const { selectBusinessId, preserveBranchId, expectedBranchEditorVersion, isNewBusiness = false } = options;
     const requestVersion = ++this.businessLoadVersion;
     const startedBusinessId = this.selectedBusiness()?.id ?? null;
     const startedEditorVersion = this.businessEditorVersion;
@@ -985,6 +998,7 @@ export class SalonOwnerSettingsComponent {
   private resetBranchEditor(businessId: string): void {
     this.hoursSaveVersion += 1;
     this.holidaySaveVersion += 1;
+    this.holidayEditorVersion += 1;
     this.selectedBranch.set(null);
     this.selectedHoliday.set(null);
     this.branchSettingsLoaded.set(false);
