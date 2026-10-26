@@ -157,9 +157,7 @@
                 </mat-form-field>
               </fieldset>
 
-              <button mat-flat-button type="submit" [disabled]="saving()">
-                Save branch
-              </button>
+              <button mat-flat-button type="submit" [disabled]="saving()">Save branch</button>
             </form>
           </mat-card-content>
         </mat-card>
@@ -212,10 +210,24 @@
                             <mat-label>End</mat-label>
                             <input matInput formControlName="end" />
                           </mat-form-field>
-                          <button mat-icon-button type="button" aria-label="Remove interval" (click)="removeInterval(dayIndex, intervalIndex)">
+                          <button
+                            mat-icon-button
+                            type="button"
+                            aria-label="Remove interval"
+                            (click)="removeInterval(dayIndex, intervalIndex)"
+                          >
                             <mat-icon>remove_circle</mat-icon>
                           </button>
                         </div>
+                      }
+                      @if (day.get('intervals')?.touched && day.get('intervals')?.errors) {
+                        <p class="interval-error" role="alert">
+                          @if (day.get('intervals')?.errors?.['intervalOrder']) {
+                            Interval start time must be before end time.
+                          } @else if (day.get('intervals')?.errors?.['intervalOverlap']) {
+                            Intervals must not overlap.
+                          }
+                        </p>
                       }
                       <button mat-stroked-button type="button" (click)="addInterval(dayIndex)">
                         <mat-icon>add</mat-icon>

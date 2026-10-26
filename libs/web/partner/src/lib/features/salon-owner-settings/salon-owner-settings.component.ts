@@ -395,6 +395,7 @@ export class SalonOwnerSettingsComponent {
 
     const selected = this.selectedBusiness();
     const startedBusinessId = selected?.id ?? null;
+    const isNewBusiness = selected === null;
     const startedEditorVersion = this.businessEditorVersion;
     const preserveBranchId = this.selectedBranch()?.id;
     const startedBranchEditorVersion = this.branchEditorVersion;
@@ -421,7 +422,7 @@ export class SalonOwnerSettingsComponent {
           return;
         }
         this.selectedBusiness.set(business);
-        this.loadBusinesses(business.id, preserveBranchId, startedBranchEditorVersion);
+        this.loadBusinesses(business.id, preserveBranchId, startedBranchEditorVersion, isNewBusiness);
         this.message.set('Settings saved.');
         this.saving.set(false);
       },
@@ -542,20 +543,23 @@ export class SalonOwnerSettingsComponent {
       this.error.set('Branch settings are still loading.');
       return;
     }
-    if (this.hoursForm.invalid) {
-      this.hoursForm.markAllAsTouched();
-      if (this.hoursForm.controls.timezone.errors?.['branchTimezone']) {
-        this.error.set('Weekly hours must use the selected branch timezone.');
-      }
-      return;
-    }
     if (this.hasInvalidIntervalRanges()) {
       this.hoursForm.markAllAsTouched();
       this.error.set('Fix weekly hours so each interval starts before it ends and open-day intervals do not overlap.');
       return;
     }
     if (this.hasOpenDayWithoutIntervals()) {
+      this.hoursForm.markAllAsTouched();
       this.error.set('Add at least one interval for each open day before saving hours.');
+      return;
+    }
+    if (this.hoursForm.invalid) {
+      this.hoursForm.markAllAsTouched();
+      if (this.hoursForm.controls.timezone.errors?.['branchTimezone']) {
+        this.error.set('Weekly hours must use the selected branch timezone.');
+      } else {
+        this.error.set('Fix weekly hours so all intervals are valid.');
+      }
       return;
     }
 
@@ -755,7 +759,12 @@ export class SalonOwnerSettingsComponent {
     this.loadBusinesses();
   }
 
-  private loadBusinesses(selectBusinessId?: string, preserveBranchId?: string, expectedBranchEditorVersion?: number): void {
+  private loadBusinesses(
+    selectBusinessId?: string,
+    preserveBranchId?: string,
+    expectedBranchEditorVersion?: number,
+    isNewBusiness = false,
+  ): void {
     const requestVersion = ++this.businessLoadVersion;
     const startedBusinessId = this.selectedBusiness()?.id ?? null;
     const startedEditorVersion = this.businessEditorVersion;
@@ -773,7 +782,7 @@ export class SalonOwnerSettingsComponent {
         this.businesses.set(result.items);
         const selected = result.items.find((business) => business.id === selectBusinessId) ?? result.items[0] ?? null;
         if (selected) {
-          const isSameBusiness = this.selectedBusiness()?.id === selected.id;
+          const isSameBusiness = !isNewBusiness && this.selectedBusiness()?.id === selected.id;
           const branchEditorChanged = expectedBranchEditorVersion !== undefined && this.branchEditorVersion !== expectedBranchEditorVersion;
 
           if (isSameBusiness && branchEditorChanged) {
@@ -783,6 +792,9 @@ export class SalonOwnerSettingsComponent {
               legalName: selected.legalName,
               status: selected.status,
             });
+            if (!this.branchForm.controls.businessId.value) {
+              this.branchForm.controls.businessId.setValue(selected.id);
+            }
           } else if (isSameBusiness && preserveBranchId) {
             this.selectedBusiness.set(selected);
             this.businessForm.reset({
@@ -798,6 +810,9 @@ export class SalonOwnerSettingsComponent {
               legalName: selected.legalName,
               status: selected.status,
             });
+            if (!this.branchForm.controls.businessId.value) {
+              this.branchForm.controls.businessId.setValue(selected.id);
+            }
           } else {
             this.selectBusiness(selected, preserveBranchId);
           }

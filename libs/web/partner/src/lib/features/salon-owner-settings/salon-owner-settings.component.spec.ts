@@ -653,6 +653,7 @@ describe('SalonOwnerSettingsComponent', () => {
     component.dayForms.at(1).get('intervals').at(0).patchValue({ start: '17:00', end: '09:00' });
     component.saveHours();
     expect(api.replaceBranchHours).not.toHaveBeenCalled();
+    expect(component.error()).toBe('Fix weekly hours so each interval starts before it ends and open-day intervals do not overlap.');
 
     component.dayForms.at(1).get('intervals').at(0).patchValue({ start: '09:00', end: '12:00' });
     component.addInterval(1);
@@ -660,6 +661,7 @@ describe('SalonOwnerSettingsComponent', () => {
     component.saveHours();
 
     expect(api.replaceBranchHours).not.toHaveBeenCalled();
+    expect(component.error()).toBe('Fix weekly hours so each interval starts before it ends and open-day intervals do not overlap.');
   });
 
   it('does not save hours or policy while branch settings are still loading', () => {
@@ -1621,5 +1623,89 @@ describe('SalonOwnerSettingsComponent', () => {
 
     // Branch draft should remain active (selectedBranch stays null)
     expect(component.selectedBranch()).toBeNull();
+  });
+
+  it('seeds the branch business id after creating a business so new branches can be saved', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      businessForm: { patchValue(val: { displayName: string; legalName: string }): void };
+      branchForm: {
+        getRawValue(): { businessId: string };
+        patchValue(
+          val: Partial<{ name: string; address: { line1: string; city: string; state: string; postalCode: string; country: string } }>,
+        ): void;
+      };
+    };
+
+    api.createBusiness.mockReturnValueOnce(
+      of({
+        id: 'new-business-123',
+        tenantId: 'tenant-1',
+        displayName: 'Newly Created Salon',
+        legalName: 'Newly Created Salon Legal',
+        status: 'ACTIVE',
+        createdAt: '2026-05-26T00:00:00.000Z',
+        updatedAt: '2026-05-26T00:00:00.000Z',
+      }),
+    );
+    api.listBusinesses.mockReturnValueOnce(
+      of({
+        items: [
+          {
+            id: 'new-business-123',
+            tenantId: 'tenant-1',
+            displayName: 'Newly Created Salon',
+            legalName: 'Newly Created Salon Legal',
+            status: 'ACTIVE',
+            createdAt: '2026-05-26T00:00:00.000Z',
+            updatedAt: '2026-05-26T00:00:00.000Z',
+          },
+        ],
+        page: { page: 1, pageSize: 1, total: 1 },
+      }),
+    );
+    api.listBranches.mockReturnValueOnce(
+      of({
+        items: [],
+        page: { page: 1, pageSize: 0, total: 0 },
+      }),
+    );
+    api.createBranch.mockClear();
+    api.createBranch.mockReturnValueOnce(
+      of({
+        ...branch,
+        id: 'new-branch-1',
+        businessId: 'new-business-123',
+        name: 'First Branch',
+      }),
+    );
+
+    component.newBusiness();
+    component.businessForm.patchValue({
+      displayName: 'Newly Created Salon',
+      legalName: 'Newly Created Salon Legal',
+    });
+    component.saveBusiness();
+
+    expect(component.selectedBusiness()?.id).toBe('new-business-123');
+    expect(component.branchForm.getRawValue().businessId).toBe('new-business-123');
+
+    component.branchForm.patchValue({
+      name: 'First Branch',
+      address: {
+        line1: '123 Main St',
+        city: 'Tokyo',
+        state: 'Tokyo',
+        postalCode: '1000001',
+        country: 'JP',
+      },
+    });
+    component.saveBranch();
+
+    expect(api.createBranch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        businessId: 'new-business-123',
+        name: 'First Branch',
+      }),
+    );
   });
 });
