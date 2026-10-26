@@ -393,12 +393,12 @@ export class SalonOwnerSettingsComponent {
   protected newBranch(): void {
     this.branchEditorVersion += 1;
     this.policySaveVersion += 1;
-    const businessId =
-      this.selectedBusiness()?.id ??
-      this.selectedBranch()?.businessId ??
-      optionalText(this.branchForm.controls.businessId.value) ??
-      this.branches()[0]?.businessId ??
-      '';
+    const businessId = this.branchOnlyMode()
+      ? (this.selectedBranch()?.businessId ??
+        optionalText(this.branchForm.controls.businessId.value) ??
+        this.branches()[0]?.businessId ??
+        '')
+      : (this.selectedBusiness()?.id ?? '');
     this.branchLoadVersion += 1;
     this.resetBranchEditor(businessId);
   }
@@ -472,6 +472,11 @@ export class SalonOwnerSettingsComponent {
   }
 
   protected saveBranch(): void {
+    if (!this.branchOnlyMode() && !this.selectedBusiness()) {
+      this.error.set('Save or select a business before saving a branch.');
+      return;
+    }
+
     if (this.branchForm.invalid) {
       this.branchForm.markAllAsTouched();
       this.error.set('Fix validation errors on the branch profile before saving.');

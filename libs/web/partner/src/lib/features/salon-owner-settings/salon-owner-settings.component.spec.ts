@@ -1842,4 +1842,43 @@ describe('SalonOwnerSettingsComponent', () => {
     // But the holidays list signal should contain the updated Holiday A
     expect(component.holidays().find((h) => h.id === 'holiday-a')?.reason).toBe('Holiday A Updated');
   });
+
+  it('clears branch businessId when starting a new business draft and prevents saving branch until business is saved', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      branchForm: {
+        getRawValue(): { businessId: string };
+        patchValue(
+          val: Partial<{
+            name: string;
+            businessId: string;
+            address: { line1: string; city: string; state: string; postalCode: string; country: string };
+          }>,
+        ): void;
+      };
+    };
+
+    api.createBranch.mockClear();
+
+    expect(component.selectedBusiness()?.id).toBe('business-1');
+    expect(component.branchForm.getRawValue().businessId).toBe('business-1');
+
+    component.newBusiness();
+    expect(component.selectedBusiness()).toBeNull();
+    expect(component.branchForm.getRawValue().businessId).toBe('');
+
+    component.branchForm.patchValue({
+      name: 'Premature Branch',
+      address: {
+        line1: '123 Main St',
+        city: 'Tokyo',
+        state: 'Tokyo',
+        postalCode: '1000001',
+        country: 'JP',
+      },
+    });
+    component.saveBranch();
+
+    expect(api.createBranch).not.toHaveBeenCalled();
+    expect(component.error()).toBe('Save or select a business before saving a branch.');
+  });
 });
