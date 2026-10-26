@@ -15,7 +15,9 @@ export class AuthCookiesService {
   private parseDurationToSeconds(input: string | undefined): number | undefined {
     if (!input) return undefined;
     // Accept any single alpha unit and validate below; unknown units return undefined
-    const m = String(input).trim().match(/^\s*(\d+)\s*([a-z])?\s*$/i);
+    const m = String(input)
+      .trim()
+      .match(/^\s*(\d+)\s*([a-z])?\s*$/i);
     if (!m) return undefined;
     const value = parseInt(m[1], 10);
     const unit = (m[2] || 's').toLowerCase();
@@ -56,7 +58,7 @@ export class AuthCookiesService {
     if (params.refreshToken) {
       /* istanbul ignore next */
       const ttlStr = opts?.isCustomer
-        ? this.config.auth.refreshTokenExpiresInCustomer ?? this.config.auth.refreshTokenExpiresInDefault
+        ? (this.config.auth.refreshTokenExpiresInCustomer ?? this.config.auth.refreshTokenExpiresInDefault)
         : this.config.auth.refreshTokenExpiresInDefault;
       const rtMaxAge = this.parseDurationToSeconds(ttlStr);
       this.registry.set('bsaas_rt', params.refreshToken, {

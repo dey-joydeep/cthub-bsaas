@@ -1,9 +1,7 @@
-import { CommonModule } from '@angular/common';
-import { Component, Inject, OnInit } from '@angular/core';
+import { DatePipe, CurrencyPipe } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
-
 // Core services
 import { CurrentUserService } from '@cthub-bsaas/web-core/auth';
 
@@ -20,9 +18,9 @@ import { TenantService } from './tenant.service';
 @Component({
   selector: 'app-tenant',
   standalone: true,
-  imports: [CommonModule, TranslateModule, SafeUrlPipe, FormsModule],
+  imports: [DatePipe, CurrencyPipe, SafeUrlPipe, FormsModule],
   templateUrl: './tenant.component.html',
-  styleUrls: ['./tenant.component.scss'],
+  styleUrls: ['./tenant.component.css'],
 })
 export class TenantComponent implements OnInit {
   salon: Salon | null = null;
@@ -39,13 +37,12 @@ export class TenantComponent implements OnInit {
 
   // Component state
   loading = false;
+  private readonly route = inject(ActivatedRoute);
+  private readonly tenantService = inject(TenantService);
+  public readonly currentUserService = inject(CurrentUserService);
   error: string | null = null;
 
-  constructor(
-    private route: ActivatedRoute,
-    private tenantService: TenantService,
-    @Inject(CurrentUserService) public currentUserService: CurrentUserService,
-  ) {
+  constructor() {
     // Get the current user ID
     const user = this.currentUserService.currentUser;
     this.userId = user ? user.id : null;

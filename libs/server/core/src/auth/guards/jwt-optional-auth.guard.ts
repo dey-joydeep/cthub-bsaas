@@ -23,7 +23,7 @@ export class JwtOptionalAuthGuard extends AuthGuard('jwt') {
     void context;
     void status;
     if (user) {
-      return user as TUser;
+      return user;
     }
 
     if (err) {

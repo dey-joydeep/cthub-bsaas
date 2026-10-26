@@ -3,10 +3,8 @@
  * Use ERROR keys for exceptions and error responses, INFO/WARN reserved for future use.
  */
 export const AUTH_MESSAGE_KEYS = {
-  INFO: {
-  },
-  WARN: {
-  },
+  INFO: {},
+  WARN: {},
   ERROR: {
     INVALID_CREDENTIALS: 'error.auth.invalid_credentials',
     INVALID_TOTP_TOKEN: 'error.auth.invalid_totp_token',

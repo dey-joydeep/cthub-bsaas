@@ -9,13 +9,13 @@ Public Discovery owns anonymous and public customer discovery. It must not own b
 
 ## Architecture Concerns
 
-| Concern | Requirement |
-| --- | --- |
-| SSR | Public pages must render useful content server-side. |
-| SEO | Slugs, metadata, canonical URLs, and structured content must be stable. |
-| Public data shaping | Public DTOs must exclude internal IDs, private notes, unpublished prices, and staff private data. |
-| Cache | Public listings may be cached with invalidation on salon/service/review visibility changes. |
-| Search | Query model must support location, service, salon name, category, rating, and availability signals. |
+| Concern             | Requirement                                                                                         |
+| ------------------- | --------------------------------------------------------------------------------------------------- |
+| SSR                 | Public pages must render useful content server-side.                                                |
+| SEO                 | Slugs, metadata, canonical URLs, and structured content must be stable.                             |
+| Public data shaping | Public DTOs must exclude internal IDs, private notes, unpublished prices, and staff private data.   |
+| Cache               | Public listings may be cached with invalidation on salon/service/review visibility changes.         |
+| Search              | Query model must support location, service, salon name, category, rating, and availability signals. |
 
 ## Integration Points
 

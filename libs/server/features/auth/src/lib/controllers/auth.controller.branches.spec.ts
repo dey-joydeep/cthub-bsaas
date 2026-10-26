@@ -8,10 +8,7 @@ import type { JwtService } from '@nestjs/jwt';
 
 describe('AuthController branches (core)', () => {
   let controller: AuthController;
-  let service: jest.Mocked<Pick<
-    AuthService,
-    'signIn' | 'signInWithTotp' | 'refreshToken' | 'logout'
-  >>;
+  let service: jest.Mocked<Pick<AuthService, 'signIn' | 'signInWithTotp' | 'refreshToken' | 'logout'>>;
   let cookies: jest.Mocked<Pick<AuthCookiesService, 'issue' | 'rotateOnRefresh' | 'clear'>>;
   let jwt: Pick<JwtService, 'decode'>;
   let decodeMock: jest.Mock;
@@ -38,10 +35,7 @@ describe('AuthController branches (core)', () => {
     service.signIn.mockResolvedValueOnce({ totpRequired: false, accessToken: 'at', refreshToken: 'rt' });
     const out1 = await controller.signIn({ email: 'e', password: 'p' } as unknown as LoginDto);
     expect(out1).toEqual({ totpRequired: false });
-    expect(cookies.issue).toHaveBeenCalledWith(
-      expect.objectContaining({ accessToken: 'at', refreshToken: 'rt' }),
-      expect.any(Object),
-    );
+    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'at', refreshToken: 'rt' }), expect.any(Object));
 
     service.signIn.mockResolvedValueOnce({ totpRequired: true, tempToken: 'tmp' });
     const out2 = await controller.signIn({ email: 'e', password: 'p' } as unknown as LoginDto);
@@ -77,13 +71,17 @@ describe('AuthController branches (core)', () => {
 
     // service returns undefined -> throw
     service.refreshToken.mockResolvedValueOnce(undefined as unknown as Awaited<ReturnType<AuthService['refreshToken']>>);
-    await expect(controller.refresh({ refreshToken: 'body' } as RefreshTokenDto, { headers: {} } as unknown as ExpressRequest)).rejects.toThrow();
+    await expect(
+      controller.refresh({ refreshToken: 'body' } as RefreshTokenDto, { headers: {} } as unknown as ExpressRequest),
+    ).rejects.toThrow();
 
     // missing token entirely -> error
     await expect(controller.refresh({} as RefreshTokenDto, { headers: {} } as unknown as ExpressRequest)).rejects.toThrow();
 
     // empty cookie value -> error
-    await expect(controller.refresh({} as RefreshTokenDto, { headers: { cookie: 'bsaas_rt=' } } as unknown as ExpressRequest)).rejects.toThrow();
+    await expect(
+      controller.refresh({} as RefreshTokenDto, { headers: { cookie: 'bsaas_rt=' } } as unknown as ExpressRequest),
+    ).rejects.toThrow();
 
     // both cookie and body provided -> reject
     const before = (cookies.rotateOnRefresh as unknown as jest.Mock).mock.calls.length;
@@ -97,20 +95,14 @@ describe('AuthController branches (core)', () => {
 
     // cookie header present with refreshToken key but no '=' (undefined value) -> error
     await expect(
-      controller.refresh(
-        {} as RefreshTokenDto,
-        { headers: { cookie: 'refreshToken' } } as unknown as ExpressRequest,
-      ),
+      controller.refresh({} as RefreshTokenDto, { headers: { cookie: 'refreshToken' } } as unknown as ExpressRequest),
     ).rejects.toThrow();
   });
 
   it('TOTP login completes and sets cookies', async () => {
     const out = await controller.signInWithTotp({ tempToken: 't', totpCode: '123456' });
     expect(out).toEqual({});
-    expect(cookies.issue).toHaveBeenCalledWith(
-      expect.objectContaining({ accessToken: 'AT', refreshToken: 'RT' }),
-      expect.any(Object),
-    );
+    expect(cookies.issue).toHaveBeenCalledWith(expect.objectContaining({ accessToken: 'AT', refreshToken: 'RT' }), expect.any(Object));
   });
 
   it('logout clears cookies', async () => {

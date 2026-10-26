@@ -6,13 +6,6 @@
   "projectType": "library",
   "tags": ["platform:web", "scope:web-core", "type:core", "type:lib"],
   "targets": {
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "libs/web/core/platform/jest.config.ts"
-      }
-    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
@@ -28,11 +21,11 @@
     "build": {
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/libs/web/core/platform"],
+      "dependsOn": ["^build"],
       "options": {
         "project": "libs/web/core/platform/ng-package.json",
         "tsConfig": "libs/web/core/platform/tsconfig.lib.json"
-      },
-      "dependsOn": ["^build"]
+      }
     }
   }
 }

@@ -1,10 +1,9 @@
-import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 
 @Component({
   selector: 'admin-product-management',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <section class="feature-placeholder">
       <h1>Global Product Management</h1>

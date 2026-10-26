@@ -1,12 +1,11 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslateModule } from '@ngx-translate/core';
 import { StaffService } from './staff.service';
 import { Staff } from '../staff/models/staff.model';
 import { ActivatedRoute } from '@angular/router';
@@ -14,18 +13,9 @@ import { ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'app-staff-management',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatProgressBarModule,
-    MatIconModule,
-    TranslateModule,
-  ],
+  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressBarModule, MatIconModule],
   templateUrl: './staff-management.component.html',
-  styleUrls: ['./staff-management.component.scss'],
+  styleUrls: ['./staff-management.component.css'],
 })
 export class StaffManagementComponent {
   staffForm;
@@ -35,12 +25,11 @@ export class StaffManagementComponent {
   salonId = '';
   staffList: Staff[] = [];
   selectedStaff: Staff | null = null;
+  private readonly fb = inject(FormBuilder);
+  private readonly staffService = inject(StaffService);
+  private readonly route = inject(ActivatedRoute);
 
-  constructor(
-    private fb: FormBuilder,
-    private staffService: StaffService,
-    private route: ActivatedRoute,
-  ) {
+  constructor() {
     this.staffForm = this.fb.group({
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],

@@ -1,16 +1,16 @@
 {
-    "extends": "../../tsconfig.base.json",
-    "compilerOptions": {
-        "outDir": "../../dist/libs/shared",
-        "declaration": true,
-        "declarationMap": true,
-        "composite": true,
-        "rootDir": "./src",
-        "isolatedModules": false,
-        "useDefineForClassFields": true,
-        "lib": ["ES2022"],
-        "types": ["node"]
-    },
-    "include": ["src/**/*.ts"],
-    "exclude": ["**/*.spec.ts", "**/*.test.ts"]
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../dist/libs/shared",
+    "declaration": true,
+    "declarationMap": true,
+    "composite": true,
+    "rootDir": "./src",
+    "isolatedModules": false,
+    "useDefineForClassFields": true,
+    "lib": ["ES2022"],
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["**/*.spec.ts", "**/*.test.ts"]
 }

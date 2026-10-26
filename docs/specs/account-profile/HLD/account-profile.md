@@ -9,13 +9,13 @@ Account/profile owns user-facing identity and preference management. Auth remain
 
 ## Bounded Contexts
 
-| Context | Responsibility |
-| --- | --- |
-| Account Profile | Display profile, editable identity fields, preferences, privacy entry points. |
-| Auth | Passwords, sessions, MFA, passkeys, recovery codes, OAuth linking/unlinking security checks. |
-| Notifications | Communication preferences and delivery channel rules. |
-| Privacy/Governance | Data export/delete requests and retention rules. |
-| Staff Management | Operational staff fields such as skills, branch assignment, schedule, and roles. |
+| Context            | Responsibility                                                                               |
+| ------------------ | -------------------------------------------------------------------------------------------- |
+| Account Profile    | Display profile, editable identity fields, preferences, privacy entry points.                |
+| Auth               | Passwords, sessions, MFA, passkeys, recovery codes, OAuth linking/unlinking security checks. |
+| Notifications      | Communication preferences and delivery channel rules.                                        |
+| Privacy/Governance | Data export/delete requests and retention rules.                                             |
+| Staff Management   | Operational staff fields such as skills, branch assignment, schedule, and roles.             |
 
 ## Data Ownership
 
@@ -26,12 +26,12 @@ Account/profile owns user-facing identity and preference management. Auth remain
 
 ## Integration Points
 
-| Integration | Use |
-| --- | --- |
-| Auth API | Password, sessions, MFA, passkeys, recovery codes, OAuth provider operations. |
-| Notification preferences | Channel preference updates. |
-| Privacy request workflow | Export/delete request creation and status. |
-| Audit logging | Identity, security, consent, and privacy changes. |
+| Integration              | Use                                                                           |
+| ------------------------ | ----------------------------------------------------------------------------- |
+| Auth API                 | Password, sessions, MFA, passkeys, recovery codes, OAuth provider operations. |
+| Notification preferences | Channel preference updates.                                                   |
+| Privacy request workflow | Export/delete request creation and status.                                    |
+| Audit logging            | Identity, security, consent, and privacy changes.                             |
 
 ## Diagram
 

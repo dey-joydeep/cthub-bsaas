@@ -1,11 +1,11 @@
 <div class="chart-container">
   <mat-card>
     <mat-card-header>
-      <mat-card-title>{{ 'DASHBOARD.REVENUE_CHART.TITLE' | translate }}</mat-card-title>
-      <mat-card-subtitle>{{ 'DASHBOARD.REVENUE_CHART.SUBTITLE' | translate }}</mat-card-subtitle>
+      <mat-card-title><ng-container i18n="@@DASHBOARD.REVENUE_CHART.TITLE">Revenue Chart</ng-container></mat-card-title>
+      <mat-card-subtitle><ng-container i18n="@@DASHBOARD.REVENUE_CHART.SUBTITLE">Monthly revenue breakdown</ng-container></mat-card-subtitle>
 
       <div class="chart-actions" mat-card-actions>
-        <button mat-icon-button (click)="refreshChart()" [disabled]="isLoading" matTooltip="{{ 'COMMON.REFRESH' | translate }}">
+        <button mat-icon-button (click)="refreshChart()" [disabled]="isLoading" matTooltip="Refresh" i18n-matTooltip="@@COMMON.REFRESH">
           <mat-icon>refresh</mat-icon>
         </button>
       </div>
@@ -13,33 +13,44 @@
 
     <mat-card-content>
       <!-- Loading state -->
-      <div *ngIf="isLoading" class="loading-state">
-        <mat-spinner diameter="40"></mat-spinner>
-        <span>{{ 'DASHBOARD.LOADING' | translate }}</span>
-      </div>
+      @if (isLoading) {
+        <div class="loading-state">
+          <mat-spinner diameter="40"></mat-spinner>
+          <span><ng-container i18n="@@DASHBOARD.LOADING">Loading dashboard...</ng-container></span>
+        </div>
+      }
 
       <!-- Error state -->
-      <div *ngIf="error && !isLoading" class="error-state">
-        <mat-icon color="warn">error_outline</mat-icon>
-        <span>{{ error || ('COMMON.ERRORS.GENERIC' | translate) }}</span>
-        <button mat-button color="primary" (click)="refreshChart()" [disabled]="isLoading" class="retry-button">
-          <mat-icon>refresh</mat-icon>
-          {{ 'COMMON.RETRY' | translate }}
-        </button>
-      </div>
+      @if (error && !isLoading) {
+        <div class="error-state">
+          <mat-icon color="warn">error_outline</mat-icon>
+          @if (error) {
+            <span>{{ error }}</span>
+          } @else {
+            <span i18n="@@COMMON.ERRORS.GENERIC">An error occurred. Please try again.</span>
+          }
+          <button mat-button color="primary" (click)="refreshChart()" [disabled]="isLoading" class="retry-button">
+            <mat-icon>refresh</mat-icon>
+            <ng-container i18n="@@COMMON.RETRY">Retry</ng-container>
+          </button>
+        </div>
+      }
 
       <!-- Chart container -->
-      <div class="chart-wrapper" *ngIf="!isLoading && !error">
-        <div class="chart-canvas-container">
-          <canvas baseChart [type]="chartType" [data]="chartData" [options]="chartOptions"> </canvas>
+      @if (!isLoading && !error) {
+        <div class="chart-wrapper">
+          <div class="chart-canvas-container">
+            <canvas baseChart [type]="chartType" [data]="chartData" [options]="chartOptions"> </canvas>
+          </div>
+          <!-- No data message -->
+          @if (!revenueData?.length) {
+            <div class="no-data">
+              <mat-icon>info</mat-icon>
+              <span><ng-container i18n="@@DASHBOARD.REVENUE_CHART.NO_DATA">No revenue data available for chart.</ng-container></span>
+            </div>
+          }
         </div>
-
-        <!-- No data message -->
-        <div *ngIf="!revenueData?.length" class="no-data">
-          <mat-icon>info</mat-icon>
-          <span>{{ 'DASHBOARD.REVENUE_CHART.NO_DATA' | translate }}</span>
-        </div>
-      </div>
+      }
     </mat-card-content>
   </mat-card>
 </div>

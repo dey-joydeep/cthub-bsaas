@@ -6,4 +6,7 @@ export interface DashboardStats {
   totalRevenue: number;
   activeSubscriptions: number;
   count: number;
+  activeCustomers?: number;
+  mrr?: number;
+  arr?: number;
 }

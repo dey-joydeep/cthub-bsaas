@@ -10,4 +10,3 @@ export class TotpLoginDto {
   @Length(6, 6)
   totpCode!: string;
 }
-

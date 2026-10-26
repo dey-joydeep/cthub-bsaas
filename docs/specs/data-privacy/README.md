@@ -16,14 +16,14 @@ Define data access, retention, export, deletion/anonymization, customer merge go
 
 ## Documents
 
-| Area | Document |
-| --- | --- |
-| FRD | [Functional Requirements](FRD/data-privacy.md) |
-| FNRD | [Non-Functional Requirements](FNRD/non-functional-requirements.md) |
-| HLD | [Architecture](HLD/data-privacy.md) |
-| LLD | [Implementation Design](LLD/data-privacy.md) |
-| API | [Endpoint Map](API/endpoint-map.md) |
-| Web | [Web Specification](WEB/data-privacy.md) |
-| Validation | [Validation And Controls](VALIDATION/data-privacy-validation.md) |
-| Test | [Test Specification](TEST/data-privacy.md) |
-| Wireframes | [Wireframe Notes](WIREFRAMES/data-privacy.md) |
+| Area       | Document                                                           |
+| ---------- | ------------------------------------------------------------------ |
+| FRD        | [Functional Requirements](FRD/data-privacy.md)                     |
+| FNRD       | [Non-Functional Requirements](FNRD/non-functional-requirements.md) |
+| HLD        | [Architecture](HLD/data-privacy.md)                                |
+| LLD        | [Implementation Design](LLD/data-privacy.md)                       |
+| API        | [Endpoint Map](API/endpoint-map.md)                                |
+| Web        | [Web Specification](WEB/data-privacy.md)                           |
+| Validation | [Validation And Controls](VALIDATION/data-privacy-validation.md)   |
+| Test       | [Test Specification](TEST/data-privacy.md)                         |
+| Wireframes | [Wireframe Notes](WIREFRAMES/data-privacy.md)                      |

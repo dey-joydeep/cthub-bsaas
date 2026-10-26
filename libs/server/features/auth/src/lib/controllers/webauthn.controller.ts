@@ -1,6 +1,26 @@
-import { BadRequestException, Body, Controller, HttpCode, HttpStatus, Post, Request, UseGuards, UseInterceptors, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Request,
+  UseGuards,
+  UseInterceptors,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { CsrfGuard, JwtAuthGuard, JwtOptionalAuthGuard, OptionalUser, Public, ResponseEnvelopeInterceptor, SkipCsrf, CookiesInterceptor } from '@cthub-bsaas/server-core';
+import {
+  CsrfGuard,
+  JwtAuthGuard,
+  JwtOptionalAuthGuard,
+  OptionalUser,
+  Public,
+  ResponseEnvelopeInterceptor,
+  SkipCsrf,
+  CookiesInterceptor,
+} from '@cthub-bsaas/server-core';
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 import { WEB_AUTHN_PORT, WebAuthnPort } from '@cthub-bsaas/server-contracts-auth';
 import { Inject } from '@nestjs/common';
@@ -38,9 +58,7 @@ export class WebauthnController {
   @Post('webauthn/register/finish')
   @HttpCode(HttpStatus.OK)
   webauthnRegisterFinish(@Body() response: WebauthnAttestationDto, @Request() req: { user: { userId: string } }) {
-    return this.webAuthn
-      .finishRegistration(req.user.userId, response.response as unknown as Record<string, unknown>)
-      .then(() => ({ success: true as const }));
+    return this.webAuthn.finishRegistration(req.user.userId, response.response).then(() => ({ success: true as const }));
   }
 
   @Public()
@@ -74,7 +92,7 @@ export class WebauthnController {
       throw new UnauthorizedException();
     }
     return this.webAuthn
-      .finishAuthentication(userId, response.response as unknown as Record<string, unknown>)
+      .finishAuthentication(userId, response.response)
       .then(() => this.authService.issueTokensForUser(userId))
       .then((result) => {
         const isCustomer = isCustomerFromAccessToken(this.jwtService, result.accessToken);

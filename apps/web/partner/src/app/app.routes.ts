@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
-import { authCanMatch, roleGuard } from '@cthub-bsaas/web-core-auth';
 import { AUTH_ROUTES } from '@cthub-bsaas/web-partner/auth';
+import { authCanMatch, roleGuard } from '@cthub-bsaas/web-core-auth';
 import { SALON_OWNER_SETTINGS_ROUTES } from '@cthub-bsaas/web-partner';
 import { UserRole } from '@cthub-bsaas/shared';
 
@@ -21,6 +21,6 @@ export const routes: Routes = [
     data: { roles: [UserRole.OWNER, UserRole.STAFF] },
     children: SALON_OWNER_SETTINGS_ROUTES,
   },
-  { path: '', redirectTo: 'auth', pathMatch: 'full' },
-  { path: '**', redirectTo: 'auth' },
+  { path: '', loadChildren: () => import('@cthub-bsaas/web-partner').then((m) => m.PARTNER_ROUTES) },
+  { path: '**', redirectTo: '' },
 ];

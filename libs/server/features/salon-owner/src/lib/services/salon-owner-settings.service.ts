@@ -118,7 +118,7 @@ function hashIdempotencyPayload(input: unknown): string {
           return value;
         }
 
-        return Object.keys(value as Record<string, unknown>)
+        return Object.keys(value)
           .sort()
           .reduce<Record<string, unknown>>((result, key) => {
             result[key] = (value as Record<string, unknown>)[key];
@@ -396,7 +396,7 @@ export class SalonOwnerSettingsService {
               tenantId,
               displayName: trimRequired(input.displayName, 2),
               legalName: trimRequired(input.legalName, 2),
-              status: input.status as PrismaSalonOwnerStatus,
+              status: input.status,
             },
           });
           await this.recordIdempotentCreate(tx, context, tenantId, 'salon_owner.business.create.idempotency', requestHash, created.id);
@@ -459,7 +459,7 @@ export class SalonOwnerSettingsService {
             data: {
               displayName: trimRequired(input.displayName, 2),
               legalName: trimRequired(input.legalName, 2),
-              status: input.status as PrismaSalonOwnerStatus,
+              status: input.status,
             },
           });
           await this.createAuditEvent(tx, context, current.tenantId, 'salon_owner.business.update', businessId);
@@ -492,7 +492,7 @@ export class SalonOwnerSettingsService {
     const where = {
       ...(managedBranchIds ? { id: { in: managedBranchIds } } : {}),
       ...(businessId ? { businessId } : {}),
-      ...(filters.status ? { status: filters.status as PrismaSalonOwnerStatus } : {}),
+      ...(filters.status ? { status: filters.status } : {}),
       ...(search
         ? {
             name: {
@@ -1107,7 +1107,7 @@ export class SalonOwnerSettingsService {
       email: optionalTrimOrNull(input.email),
       timezone: input.timezone,
       currency,
-      status: input.status as PrismaSalonOwnerStatus,
+      status: input.status,
       address: normalizeAddress(input.address) as unknown as Prisma.InputJsonObject,
     };
   }
@@ -1430,7 +1430,7 @@ export class SalonOwnerSettingsService {
       ...(branch.email ? { email: branch.email } : {}),
       timezone: branch.timezone,
       currency: branch.currency,
-      status: branch.status as BranchProfileModel['status'],
+      status: branch.status,
       address: readAddress(branch.address),
       createdAt: toIso(branch.createdAt),
       updatedAt: toIso(branch.updatedAt),

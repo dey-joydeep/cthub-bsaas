@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -13,8 +13,7 @@ export interface SalonServiceItem {
 @Injectable({ providedIn: 'root' })
 export class ServiceApprovalService {
   private apiUrl = '/api/salons';
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   getServices(salonId: string): Observable<SalonServiceItem[]> {
     return this.http.get<SalonServiceItem[]>(`${this.apiUrl}/${salonId}/services`);

@@ -1,0 +1,105 @@
+/* Shared styles for Beauty SaaS */
+/* Color palette */
+var(--primary): #c2185b;
+var(--accent): #ffb6c1;
+$light-bg: #ffe0e9;
+$white: #fff;
+$shadow: 0 2px 16px rgba(0, 0, 0, 0.05);
+/* Hero section */
+.home-hero {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 350px;
+  background: linear-gradient(90deg, var(--accent) 0%, $light-bg 100%);
+  text-align: center;
+  padding: spacing-lg spacing-sm spacing-md spacing-sm;
+  border-radius: 0 0 32px 32px;
+  box-shadow: $shadow;
+}
+.hero-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+.hero-logo {
+  width: 80px;
+  margin-bottom: map.get($spacing-sizes, sm);
+}
+.hero-tagline {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: map.get($spacing-sizes, xs);
+}
+.hero-desc {
+  color: #444;
+  margin-bottom: map.get($spacing-sizes, md);
+}
+.cta-btn {
+  background: var(--primary);
+  color: $white;
+  padding: map.get($spacing-sizes, sm) map.get($spacing-sizes, lg);
+  border-radius: 24px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.cta-btn:hover {
+  background: color.scale(var(--primary), $lightness: -18.7155963303%);
+}
+/* Button styles */
+.btn {
+  font-family: $font-stack;
+  font-size: $font-size-base;
+  padding: map.get($spacing-sizes, sm) map.get($spacing-sizes, lg);
+  border-radius: 4px;
+  transition: background 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+.btn-primary:hover {
+  background: color.scale(var(--primary), $lightness: -18.7155963303%);
+}
+/* Feature styles */
+.feature-highlights {
+  display: flex;
+  justify-content: center;
+  gap: spacing-lg;
+  margin: map.get($spacing-sizes, md) 0 map.get($spacing-sizes, md) 0;
+  flex-wrap: wrap;
+}
+.feature {
+  background: $white;
+  border-radius: 12px;
+  padding: map.get($spacing-sizes, sm) map.get($spacing-sizes, lg);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  min-width: 220px;
+  max-width: 320px;
+}
+.feature h3 {
+  color: var(--primary);
+  margin-bottom: map.get($spacing-sizes, xs);
+}
+.feature-card {
+  flex: 1;
+  padding: map.get($spacing-sizes, lg);
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s;
+}
+.feature-card:hover {
+  transform: translateY(-5px);
+}
+@media (max-width: 900px) {
+  .feature-highlights {
+    flex-direction: column;
+    align-items: center;
+    gap: map.get($spacing-sizes, md);
+  }
+}

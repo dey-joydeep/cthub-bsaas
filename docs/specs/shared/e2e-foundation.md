@@ -16,12 +16,12 @@ Define the minimal e2e structure expected before full FE+BE journeys are impleme
 
 ## Expected Project Areas
 
-| Area | Purpose |
-| --- | --- |
-| `apps/e2e/api` | API smoke and high-value backend contract flows. |
-| `apps/e2e/web/admin` | Admin app smoke and future platform admin journeys. |
-| `apps/e2e/web/partner` | Partner/salon owner app smoke and future salon operations journeys. |
-| `apps/e2e/web/customer` | Customer app smoke and future public-to-customer journeys. |
+| Area                    | Purpose                                                             |
+| ----------------------- | ------------------------------------------------------------------- |
+| `apps/e2e/api`          | API smoke and high-value backend contract flows.                    |
+| `apps/e2e/web/admin`    | Admin app smoke and future platform admin journeys.                 |
+| `apps/e2e/web/partner`  | Partner/salon owner app smoke and future salon operations journeys. |
+| `apps/e2e/web/customer` | Customer app smoke and future public-to-customer journeys.          |
 
 ## Minimal Foundation
 
@@ -37,12 +37,12 @@ Each e2e project should eventually provide:
 
 ## Future Scenario Candidates
 
-| App | Smoke candidates |
-| --- | --- |
-| API | health, auth login, authenticated profile, OpenAPI availability when exposed. |
-| Admin | login, tenant/business lookup, support audit view. |
-| Partner | login, branch selector, appointment create, POS checkout, dashboard summary. |
-| Customer | public search, salon profile, booking start, customer login/profile. |
+| App      | Smoke candidates                                                              |
+| -------- | ----------------------------------------------------------------------------- |
+| API      | health, auth login, authenticated profile, OpenAPI availability when exposed. |
+| Admin    | login, tenant/business lookup, support audit view.                            |
+| Partner  | login, branch selector, appointment create, POS checkout, dashboard summary.  |
+| Customer | public search, salon profile, booking start, customer login/profile.          |
 
 ## Data Setup Rules
 

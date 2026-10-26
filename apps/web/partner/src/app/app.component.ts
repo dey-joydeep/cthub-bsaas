@@ -1,65 +1,58 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { BaseAuthUser } from '@cthub-bsaas/web-core/auth';
 import { Subscription } from 'rxjs';
-import { AuthService } from '@cthub-bsaas/web-partner/auth';
-import { CurrentUserService, type BaseAuthUser } from '@cthub-bsaas/web-core/auth';
 
-// Define a User interface with roles
-export interface User {
+import { AuthService } from './features/auth/services/auth.service';
+import { CurrentUserService } from './features/auth/services/current-user.service';
+
+export interface User extends BaseAuthUser {
   id: string;
-  email?: string;
+  email: string;
   firstName?: string;
   lastName?: string;
+  role?: string;
   roles?: string[];
-  [key: string]: unknown;
 }
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [
-    CommonModule,
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
     MatButtonModule,
     MatIconModule,
     MatMenuModule,
-    MatBadgeModule,
     MatDividerModule,
-    MatToolbarModule,
-    MatTooltipModule,
-    MatSidenavModule,
-    MatListModule,
+    MatBadgeModule,
     MatSnackBarModule,
   ],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss'],
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit, OnDestroy {
+  private router = inject(Router);
+  private authService = inject(AuthService);
+  private currentUserService = inject(CurrentUserService);
+  private snackBar = inject(MatSnackBar);
+
   title = 'BeautySaaS';
   error: string | null = null;
   // Public properties for template binding
   currentUser: User | null = null;
   isLoggedIn = false;
-  pendingApprovalsCount = 0; // Will be populated from a service
+  pendingApprovalsCount = 0;
 
-  /**
-   * Check if the current user has admin role
-   */
   get isAdmin(): boolean {
-    return this.currentUser?.roles?.includes('admin') || false;
+    return this.currentUser?.role === 'admin' || this.currentUser?.roles?.includes('admin') || false;
   }
 
   get settingsRoute(): string {
@@ -67,13 +60,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private authSubscription?: Subscription;
-
-  constructor(
-    private router: Router,
-    private authService: AuthService,
-    private currentUserService: CurrentUserService,
-    private snackBar: MatSnackBar,
-  ) {}
 
   ngOnInit(): void {
     this.initializeAuthSubscription();
@@ -86,81 +72,64 @@ export class AppComponent implements OnInit, OnDestroy {
         this.isLoggedIn = !!user;
 
         if (this.isAdmin) {
-          this.loadAdminData();
+          this.loadPendingApprovals();
         }
       },
-      error: (error: Error) => {
-        console.error('Error in user subscription:', error);
-        this.showError('Failed to load user data');
-        this.isLoggedIn = false;
-        this.currentUser = null;
+      error: () => {
+        this.error = 'Failed to load user information';
+        this.showNotification('Failed to load user information', 'error');
       },
     });
-  }
-
-  private loadAdminData(): void {
-    // Load admin-specific data here
-    this.loadPendingApprovals();
   }
 
   private loadPendingApprovals(): void {
-    // TODO: Implement actual service call to get pending approvals count
-    // For now, we'll simulate it
-    this.pendingApprovalsCount = 3; // Simulated count
+    // In real app, call service to get count
+    // For now, mock data
+    this.pendingApprovalsCount = 3;
   }
 
-  private showError(message: string): void {
-    this.error = message;
-    this.snackBar.open(message, 'Dismiss', {
-      duration: 5000,
-      panelClass: ['error-snackbar'],
+  async onLogout(): Promise<void> {
+    try {
+      await this.authService.logout();
+      this.currentUser = null;
+      this.isLoggedIn = false;
+      this.showNotification('Logged out successfully', 'success');
+      this.router.navigate(['/login']);
+    } catch {
+      this.showNotification('Error logging out', 'error');
+    }
+  }
+
+  private showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
+    this.snackBar.open(message, 'Close', {
+      duration: 3000,
+      panelClass: [`notification-${type}`],
+      horizontalPosition: 'end',
+      verticalPosition: 'top',
     });
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     if (this.authSubscription) {
       this.authSubscription.unsubscribe();
     }
   }
 
-  /**
-   * Handle user logout
-   */
-  async onLogout(): Promise<void> {
-    try {
-      await this.authService.logout();
-      this.router.navigate(['/auth/login']);
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to log out';
-      this.showError(errorMessage);
-      console.error('Logout error:', error);
-    }
+  // Navigation helpers for template
+  navigateToSettings(): void {
+    this.router.navigate(['/settings']);
   }
 
-  /**
-   * Navigate to the admin dashboard
-   */
-  navigateToAdminDashboard(): void {
-    if (this.isAdmin) {
-      this.router.navigate(['/admin/dashboard']);
-    }
-  }
-
-  /**
-   * Navigate to the user's profile
-   */
   navigateToProfile(): void {
-    if (this.currentUser?.id) {
+    if (this.currentUser) {
       this.router.navigate(['/profile', this.currentUser.id]);
     }
   }
 
   private hasRole(role: string): boolean {
     const normalizedRole = role.toLowerCase();
-    const roles = Array.isArray(this.currentUser?.roles)
-      ? this.currentUser.roles.filter((value): value is string => typeof value === 'string')
-      : [];
-    const directRole = typeof this.currentUser?.['role'] === 'string' ? this.currentUser.role : null;
+    const directRole = (this.currentUser as { role?: string } | null)?.role;
+    const roles: readonly string[] = (this.currentUser as { roles?: readonly string[] } | null)?.roles ?? (directRole ? [directRole] : []);
 
     return roles.some((value) => value.toLowerCase() === normalizedRole) || directRole?.toLowerCase() === normalizedRole;
   }

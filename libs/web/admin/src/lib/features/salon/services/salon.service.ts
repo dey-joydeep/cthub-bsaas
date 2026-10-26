@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -8,8 +8,7 @@ import { CreateSalonParams, UpdateSalonParams } from '../models/salon-params.mod
 @Injectable({ providedIn: 'root' })
 export class SalonService {
   private apiUrl = '/api/salons';
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   getSalons(): Observable<Salon[]> {
     return this.http.get<Salon[]>(this.apiUrl).pipe(catchError((err) => this.handleError(err)));

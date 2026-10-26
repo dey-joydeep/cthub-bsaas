@@ -1,6 +1,7 @@
 # Prisma Migration & Database Management Commands
 
 ## 1. Drop all tables in the database
+
 ```sql
 -- WARNING: This will delete all data
 DO $$ DECLARE
@@ -11,11 +12,13 @@ BEGIN
     END LOOP;
 END $$;
 ```
-*Run this in pgAdmin’s Query Tool or in psql connected to the target database.*
+
+_Run this in pgAdmin’s Query Tool or in psql connected to the target database._
 
 ---
 
 ## 2. Delete Prisma migration folder
+
 ```powershell
 # PowerShell
 Remove-Item -Recurse -Force prisma\migrations
@@ -23,23 +26,28 @@ Remove-Item -Recurse -Force prisma\migrations
 # Bash
 rm -rf prisma/migrations
 ```
-*Removes all local migration history so you can start fresh.*
+
+_Removes all local migration history so you can start fresh._
 
 ---
 
 ## 3. Create initial migration SQL (without applying)
+
 ```powershell
 npx prisma migrate dev --name init --create-only --schema prisma/schema.prisma
 ```
+
 - Creates `prisma/migrations/<timestamp>_init/migration.sql`.
 - Does **not** apply it to the database.
 
 ---
 
 ## 4. Create tables in the DB (apply migration)
+
 ```powershell
 npx prisma migrate dev --name init --schema prisma/schema.prisma
 ```
+
 - Creates a migration (if not already created).
 - Applies the migration SQL to the database.
 - Updates `_prisma_migrations` table in the DB.
@@ -47,6 +55,7 @@ npx prisma migrate dev --name init --schema prisma/schema.prisma
 ---
 
 ## 5. Verification SQLs (in pgAdmin or psql)
+
 ```sql
 -- Check current DB/schema
 SELECT current_database() AS db, current_schema() AS schema;
@@ -89,6 +98,7 @@ npx tsx -r dotenv/config prisma/seed.ts
 # Open Prisma Studio for GUI access
 npx prisma studio
 ```
+
 ---
 
-*Tip:* Always confirm you’re connected to the **correct database** by checking `DATABASE_URL` in `.env` before running destructive commands.
+_Tip:_ Always confirm you’re connected to the **correct database** by checking `DATABASE_URL` in `.env` before running destructive commands.

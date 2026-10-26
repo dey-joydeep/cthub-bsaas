@@ -1,10 +1,9 @@
 {
-"extends": "./tsconfig.json",
-"compilerOptions": {
-"outDir": "../../dist/apps/api",
-"types": ["node"]
-},
-"include": ["src/**/*.ts"],
-"exclude": ["src/**/*.spec.ts", "**/__tests__/**"]
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/apps/api",
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts", "**/__tests__/**"]
 }
-

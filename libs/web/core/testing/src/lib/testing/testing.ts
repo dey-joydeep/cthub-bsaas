@@ -1,10 +1,9 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-testing',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './testing.html',
-  styleUrl: './testing.scss',
+  styleUrl: './testing.css',
 })
 export class Testing {}

@@ -44,3 +44,8 @@ coverage/
 
 .claude/worktrees
 .claude/settings.local.json
+node_modules_*
+
+vitest.config.*.timestamp* 
+scratch/
+graph.json

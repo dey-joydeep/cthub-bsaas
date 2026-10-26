@@ -102,6 +102,7 @@ Keep specs and implementation aligned. Cross-link PRs to relevant user stories a
 - TypeScript strict.
 - ES modules.
 - Prettier/ESLint formatting.
+- Mandatory post-edit check: whenever an agent finishes modifying or creating files, it MUST run `npx prettier --write <files>` and `npx eslint --fix <files>` on the touched files. While staged-level checks allow warnings to pass, the AI agent MUST explicitly report any warnings or non-fatal lint issues to the user in its summary. Never silently ignore warnings.
 - 2-space indent.
 - Single quotes.
 - File names: `kebab-case.ts`.

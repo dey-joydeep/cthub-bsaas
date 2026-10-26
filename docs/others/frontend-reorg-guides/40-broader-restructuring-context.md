@@ -4,9 +4,10 @@ This document outlines the high-level strategy for the ongoing frontend restruct
 
 ## The Goal
 
-The ultimate goal is to refactor the three main frontend applications (`customer`, `admin`,  and `partner`) from monolithic `apps/web/*` structures into a more modular, library-based architecture within `libs/web/*`.
+The ultimate goal is to refactor the three main frontend applications (`customer`, `admin`, and `partner`) from monolithic `apps/web/*` structures into a more modular, library-based architecture within `libs/web/*`.
 
 This will achieve:
+
 - Better code sharing and reuse.
 - Improved separation of concerns.
 - More scalable and maintainable frontend codebase.

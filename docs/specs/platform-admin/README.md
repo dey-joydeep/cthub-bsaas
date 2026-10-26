@@ -15,13 +15,13 @@ Define SaaS platform administration: tenant oversight, salon provisioning, suppo
 
 ## Documents
 
-| Area | Document |
-| --- | --- |
-| FRD | [Functional Requirements](FRD/platform-admin.md) |
-| HLD | [Architecture](HLD/platform-admin.md) |
-| LLD | [Implementation Design](LLD/platform-admin.md) |
-| API | [Endpoint Map](API/endpoint-map.md) |
-| Web | [Web Specification](WEB/platform-admin.md) |
+| Area       | Document                                                           |
+| ---------- | ------------------------------------------------------------------ |
+| FRD        | [Functional Requirements](FRD/platform-admin.md)                   |
+| HLD        | [Architecture](HLD/platform-admin.md)                              |
+| LLD        | [Implementation Design](LLD/platform-admin.md)                     |
+| API        | [Endpoint Map](API/endpoint-map.md)                                |
+| Web        | [Web Specification](WEB/platform-admin.md)                         |
 | Validation | [Validation And Controls](VALIDATION/platform-admin-validation.md) |
-| Test | [Test Specification](TEST/platform-admin.md) |
-| Wireframes | [Wireframe Notes](WIREFRAMES/platform-admin.md) |
+| Test       | [Test Specification](TEST/platform-admin.md)                       |
+| Wireframes | [Wireframe Notes](WIREFRAMES/platform-admin.md)                    |

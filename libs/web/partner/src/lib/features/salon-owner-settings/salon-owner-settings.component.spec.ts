@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Observable, of, throwError } from 'rxjs';
+import { vi } from 'vitest';
 
 import { CURRENT_USER } from '@cthub-bsaas/web-core-auth';
 import { BranchHoliday, BranchProfile, HolidayFormValue, SalonBusiness } from './models/salon-owner-settings.models';
@@ -58,22 +59,22 @@ describe('SalonOwnerSettingsComponent', () => {
     updatedAt: '2026-05-26T00:00:00.000Z',
   };
   const api = {
-    listBusinesses: jest.fn(),
-    listBranches: jest.fn(),
-    createBusiness: jest.fn(),
-    updateBusiness: jest.fn(),
-    createBranch: jest.fn(),
-    updateBranch: jest.fn(),
-    getBranchHours: jest.fn(),
-    listBranchHolidays: jest.fn(),
-    getBranchPolicy: jest.fn(),
-    replaceBranchHours: jest.fn(),
-    setBranchHoliday: jest.fn(),
-    updateBranchPolicy: jest.fn(),
+    listBusinesses: vi.fn(),
+    listBranches: vi.fn(),
+    createBusiness: vi.fn(),
+    updateBusiness: vi.fn(),
+    createBranch: vi.fn(),
+    updateBranch: vi.fn(),
+    getBranchHours: vi.fn(),
+    listBranchHolidays: vi.fn(),
+    getBranchPolicy: vi.fn(),
+    replaceBranchHours: vi.fn(),
+    setBranchHoliday: vi.fn(),
+    updateBranchPolicy: vi.fn(),
   };
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     api.listBusinesses.mockReturnValue(
       of({
         items: [
@@ -1269,8 +1270,7 @@ describe('SalonOwnerSettingsComponent', () => {
 
   it('ignores stale branch-list responses after the selected business changes', () => {
     let firstRequestHandler:
-      | ((result: { items: BranchProfile[]; page: { page: number; pageSize: number; total: number } }) => void)
-      | undefined;
+      ((result: { items: BranchProfile[]; page: { page: number; pageSize: number; total: number } }) => void) | undefined;
     api.listBranches
       .mockReturnValueOnce(
         new Observable((subscriber) => {
@@ -1316,8 +1316,7 @@ describe('SalonOwnerSettingsComponent', () => {
 
   it('invalidates pending branch-list responses when starting a new branch', () => {
     let firstRequestHandler:
-      | ((result: { items: BranchProfile[]; page: { page: number; pageSize: number; total: number } }) => void)
-      | undefined;
+      ((result: { items: BranchProfile[]; page: { page: number; pageSize: number; total: number } }) => void) | undefined;
     api.listBranches.mockReturnValueOnce(
       new Observable((subscriber) => {
         firstRequestHandler = (result) => {

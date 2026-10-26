@@ -1,6 +1,12 @@
-import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
+import '@angular/localize/init';
+import '@analogjs/vite-plugin-angular/setup-vitest';
+import { afterEach } from 'vitest';
+import { getTestBed } from '@angular/core/testing';
+import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
-setupZoneTestEnv({
-  errorOnUnknownElements: true,
-  errorOnUnknownProperties: true,
+getTestBed().resetTestEnvironment();
+getTestBed().initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
+
+afterEach(() => {
+  getTestBed().resetTestingModule();
 });

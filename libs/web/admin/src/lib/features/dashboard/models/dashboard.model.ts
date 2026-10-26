@@ -3,7 +3,7 @@ export interface DashboardStats {
   totalAppointments: number;
   totalRevenue: number;
   activeSubscriptions: number;
-  count: number;
+  count?: number;
   newCustomers?: number;
   returningCustomers?: number;
   activeCustomers?: number;

@@ -9,45 +9,45 @@ import { ISessionRepository } from '@cthub-bsaas/server-contracts-auth';
  */
 @Injectable()
 export class SessionRepository implements ISessionRepository {
-    constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-    /**
-     * @inheritdoc
-     */
-    create(data: Prisma.SessionUncheckedCreateInput): Promise<Session> {
-        return this.prisma.session.create({ data });
-    }
+  /**
+   * @inheritdoc
+   */
+  create(data: Prisma.SessionUncheckedCreateInput): Promise<Session> {
+    return this.prisma.session.create({ data });
+  }
 
-    /**
-     * @inheritdoc
-     */
-    findById(id: string): Promise<Session | null> {
-        return this.prisma.session.findUnique({ where: { id } });
-    }
+  /**
+   * @inheritdoc
+   */
+  findById(id: string): Promise<Session | null> {
+    return this.prisma.session.findUnique({ where: { id } });
+  }
 
-    /**
-     * @inheritdoc
-     */
-    findByUserId(userId: string): Promise<Session[]> {
-        return this.prisma.session.findMany({ where: { userId } });
-    }
+  /**
+   * @inheritdoc
+   */
+  findByUserId(userId: string): Promise<Session[]> {
+    return this.prisma.session.findMany({ where: { userId } });
+  }
 
-    /**
-     * @inheritdoc
-     */
-    update(id: string, data: Prisma.SessionUpdateInput): Promise<Session> {
-        return this.prisma.session.update({
-            where: { id },
-            data,
-        });
-    }
+  /**
+   * @inheritdoc
+   */
+  update(id: string, data: Prisma.SessionUpdateInput): Promise<Session> {
+    return this.prisma.session.update({
+      where: { id },
+      data,
+    });
+  }
 
-    /**
-     * @inheritdoc
-     */
+  /**
+   * @inheritdoc
+   */
   async delete(id: string): Promise<Session> {
-        // Ensure dependent refresh tokens are removed to satisfy FK constraints
-        await this.prisma.refreshToken.deleteMany({ where: { sessionId: id } });
-        return this.prisma.session.delete({ where: { id } });
+    // Ensure dependent refresh tokens are removed to satisfy FK constraints
+    await this.prisma.refreshToken.deleteMany({ where: { sessionId: id } });
+    return this.prisma.session.delete({ where: { id } });
   }
 }

@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 async function main() {
   console.log(`Start seeding ...`);
 
-  const roles = Object.values(UserRole).map(name => ({ name }));
+  const roles = Object.values(UserRole).map((name) => ({ name }));
 
   await prisma.role.createMany({
     data: roles,

@@ -1,5 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { PartialType } from '@nestjs/mapped-types';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsArray, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
 import { BasePortfolioDto } from '../base-portfolio.dto';

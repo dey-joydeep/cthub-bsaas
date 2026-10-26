@@ -113,7 +113,7 @@ export class CurrentUserService implements OnDestroy {
       return;
     }
 
-    const updatedUser = { ...this.currentUser, ...user } as BaseAuthUser;
+    const updatedUser = { ...this.currentUser, ...user };
     this.currentUserSubject.next(updatedUser);
     this.saveUserToStorage(updatedUser);
   }

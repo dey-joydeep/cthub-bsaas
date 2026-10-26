@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import type { Observable } from 'rxjs';
 
 import {
@@ -19,9 +19,9 @@ import { environment } from '@cthub-bsaas/web-config/environments/admin/environm
  */
 @Injectable({ providedIn: 'root' })
 export class AuthApiService implements LoginApiPort {
-  private readonly baseUrl = `${environment.apiUrl}/auth`;
+  private readonly http = inject(HttpClient);
 
-  constructor(private readonly http: HttpClient) {}
+  private readonly baseUrl = `${environment.apiUrl}/auth`;
 
   login(credentials: LoginCredentials): Observable<ApiResponse<AuthResponse>> {
     return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/login`, credentials);

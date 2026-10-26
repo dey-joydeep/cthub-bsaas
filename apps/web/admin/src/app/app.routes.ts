@@ -1,8 +1,7 @@
 import { Routes } from '@angular/router';
-import { AUTH_ROUTES } from '@cthub-bsaas/web-admin/auth';
 
 export const routes: Routes = [
-  { path: 'auth', children: AUTH_ROUTES },
-  { path: '', redirectTo: 'auth', pathMatch: 'full' },
-  { path: '**', redirectTo: 'auth' },
+  { path: '', loadChildren: () => import('@cthub-bsaas/web-admin').then((m) => m.ADMIN_ROUTES) },
+  { path: 'auth', loadChildren: () => import('@cthub-bsaas/web-admin/auth').then((m) => m.AUTH_ROUTES) },
+  { path: '**', redirectTo: '' },
 ];

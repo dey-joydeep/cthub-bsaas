@@ -88,7 +88,12 @@ describe('OAuth extractUserId edge cases (integration harness)', () => {
   });
 
   it('oauthCallback links provider when user is authenticated', async () => {
-    const out = await controller.oauthCallback('google', { userId: 'u1' } as unknown as import('@cthub-bsaas/shared').AuthenticatedUser, 'c', 's');
+    const out = await controller.oauthCallback(
+      'google',
+      { userId: 'u1' } as unknown as import('@cthub-bsaas/shared').AuthenticatedUser,
+      'c',
+      's',
+    );
     expect(out).toEqual({});
     expect(authSvc.linkSocialAccount).toHaveBeenCalledWith('u1', 'google', 'pid');
   });

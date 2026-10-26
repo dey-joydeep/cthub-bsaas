@@ -10,4 +10,3 @@ export class WebauthnRegisterStartDto {
   @IsNotEmpty()
   username!: string;
 }
-

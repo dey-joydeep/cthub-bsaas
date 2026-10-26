@@ -28,7 +28,14 @@ describe('RefreshTokenRepository', () => {
   });
 
   it('revokes by jti', async () => {
-    const updated: RefreshToken = { jti: 'j1', userId: 'u1', sessionId: 's1', issuedAt: new Date(), revokedAt: new Date(), rotatedFrom: null };
+    const updated: RefreshToken = {
+      jti: 'j1',
+      userId: 'u1',
+      sessionId: 's1',
+      issuedAt: new Date(),
+      revokedAt: new Date(),
+      rotatedFrom: null,
+    };
     prisma.refreshToken.update.mockResolvedValue(updated);
     await expect(repo.revoke('j1')).resolves.toBe(updated);
   });

@@ -4,7 +4,6 @@ import type { TotpPort } from '@cthub-bsaas/server-contracts-auth';
 import type { VerifyTotpDto } from '../dto/verify-totp.dto';
 
 describe('TotpController', () => {
-
   it('enrollStart proxies to generateSecret and returns qr', async () => {
     const service: jest.Mocked<TotpPort> = {
       generateSecret: jest.fn().mockResolvedValue({ qrCodeDataUrl: 'data:image/png;base64,BBB', secret: 's' }),

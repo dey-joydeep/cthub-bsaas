@@ -5,11 +5,11 @@
 
 ## Routes
 
-| Route | Screen ID |
-| --- | --- |
-| `/customer/reviews/new` | `reputation.customerReviewForm` |
-| `/partner/reputation/reviews` | `reputation.ownerReviewList` |
-| `/partner/reputation/insights` | `reputation.insights` |
+| Route                                   | Screen ID                       |
+| --------------------------------------- | ------------------------------- |
+| `/customer/reviews/new`                 | `reputation.customerReviewForm` |
+| `/partner/reputation/reviews`           | `reputation.ownerReviewList`    |
+| `/partner/reputation/insights`          | `reputation.insights`           |
 | `/admin/platform/reputation/moderation` | `reputation.platformModeration` |
 
 ## Screen Requirements

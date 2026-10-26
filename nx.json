@@ -6,6 +6,19 @@
       "options": {
         "targetName": "lint"
       }
+    },
+    {
+      "plugin": "@nx/jest/plugin",
+      "options": {
+        "targetName": "jest:test"
+      }
+    },
+    {
+      "plugin": "@nx/vitest",
+      "options": {
+        "testTargetName": "test",
+        "testMode": "run"
+      }
     }
   ],
   "targetDefaults": {
@@ -47,7 +60,14 @@
     },
     "@nx/eslint:lint": {
       "cache": true,
-      "inputs": ["default", "{workspaceRoot}/eslint.config.js", "{workspaceRoot}/eslint.base.js", "{workspaceRoot}/.eslintrc.json"]
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/eslint.config.js",
+        "{workspaceRoot}/eslint.base.js",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/tools/eslint-rules/**/*"
+      ]
     },
     "e2e": {
       "cache": true
@@ -66,6 +86,10 @@
       "cache": true,
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
+    },
+    "@nx/vitest:test": {
+      "cache": true,
+      "inputs": ["default", "^production"]
     }
   },
   "namedInputs": {
@@ -132,7 +156,7 @@
       "unitTestRunner": "jest"
     },
     "@nx/angular:component": {
-      "style": "scss"
+      "style": "css"
     }
   },
   "defaultBase": "main",
@@ -140,5 +164,6 @@
     "version": {
       "preVersionCommand": "npx nx run-many -t build"
     }
-  }
+  },
+  "analytics": false
 }

@@ -15,13 +15,13 @@ Define provider-port architecture, configuration, webhooks, retries, secrets, an
 
 ## Documents
 
-| Area | Document |
-| --- | --- |
-| FRD | [Functional Requirements](FRD/integrations.md) |
-| HLD | [Architecture](HLD/integrations.md) |
-| LLD | [Implementation Design](LLD/integrations.md) |
-| API | [Endpoint Map](API/endpoint-map.md) |
-| Web | [Web Specification](WEB/integrations.md) |
+| Area       | Document                                                         |
+| ---------- | ---------------------------------------------------------------- |
+| FRD        | [Functional Requirements](FRD/integrations.md)                   |
+| HLD        | [Architecture](HLD/integrations.md)                              |
+| LLD        | [Implementation Design](LLD/integrations.md)                     |
+| API        | [Endpoint Map](API/endpoint-map.md)                              |
+| Web        | [Web Specification](WEB/integrations.md)                         |
 | Validation | [Validation And Controls](VALIDATION/integrations-validation.md) |
-| Test | [Test Specification](TEST/integrations.md) |
-| Wireframes | [Wireframe Notes](WIREFRAMES/integrations.md) |
+| Test       | [Test Specification](TEST/integrations.md)                       |
+| Wireframes | [Wireframe Notes](WIREFRAMES/integrations.md)                    |

@@ -1,48 +1,48 @@
 {
-    "compileOnSave": false,
-    "compilerOptions": {
-        "noFallthroughCasesInSwitch": true,
-        "noEmitOnError": false,
-        "forceConsistentCasingInFileNames": true,
-        "target": "ES2022",
-        "baseUrl": ".",
-        "isolatedModules": false,
-        "useDefineForClassFields": false,
-        "importHelpers": true,
-        "emitDecoratorMetadata": true,
-        "module": "ES2022",
-        "lib": ["ES2022", "dom"],
-        "esModuleInterop": true,
-        "allowJs": false,
-        "strict": true,
-        "moduleResolution": "node",
-        "paths": {
-            "@app/*": ["apps/api/src/*"],
+  "compileOnSave": false,
+  "compilerOptions": {
+    "noFallthroughCasesInSwitch": true,
+    "noEmitOnError": false,
+    "forceConsistentCasingInFileNames": true,
+    "target": "ES2022",
+    "baseUrl": ".",
+    "isolatedModules": false,
+    "useDefineForClassFields": false,
+    "importHelpers": true,
+    "emitDecoratorMetadata": true,
+    "module": "ES2022",
+    "lib": ["ES2022", "dom"],
+    "esModuleInterop": true,
+    "allowJs": false,
+    "strict": true,
+    "moduleResolution": "node",
+    "paths": {
+      "@app/*": ["apps/api/src/*"],
 
-            "@cthub-bsaas/server-data-access": ["libs/server/data-access/src/index.ts"],
-            "@cthub-bsaas/web-admin-auth": ["libs/web/admin/auth/src/index.ts"],
-            "@cthub-bsaas/web-config": ["libs/web/config/src/index.ts"],
-            "@cthub-bsaas/web-core-auth": ["libs/web/core/auth/src/index.ts"],
-            "@cthub-bsaas/web-core-http": ["libs/web/core/http/src/index.ts"],
-            "@cthub-bsaas/web-core-testing": ["libs/web/core/testing/src/index.ts"],
-            "@cthub-bsaas/web-customer-auth": ["libs/web/customer/auth/src/index.ts"],
-            "@cthub-bsaas/web-partner-auth": ["libs/web/partner/auth/src/index.ts"],
-            "@cthub-bsaas/web-ui": ["libs/web/ui/src/index.ts"]
-        },
-        "types": ["node", "jest"],
-        "experimentalDecorators": true,
-        "sourceMap": true,
-        "noUnusedParameters": true,
-        "noUnusedLocals": true,
-        "noImplicitReturns": true,
-        "noImplicitAny": true,
-        "resolveJsonModule": true
+      "@cthub-bsaas/server-data-access": ["libs/server/data-access/src/index.ts"],
+      "@cthub-bsaas/web-admin-auth": ["libs/web/admin/auth/src/index.ts"],
+      "@cthub-bsaas/web-config": ["libs/web/config/src/index.ts"],
+      "@cthub-bsaas/web-core-auth": ["libs/web/core/auth/src/index.ts"],
+      "@cthub-bsaas/web-core-http": ["libs/web/core/http/src/index.ts"],
+      "@cthub-bsaas/web-core-testing": ["libs/web/core/testing/src/index.ts"],
+      "@cthub-bsaas/web-customer-auth": ["libs/web/customer/auth/src/index.ts"],
+      "@cthub-bsaas/web-partner-auth": ["libs/web/partner/auth/src/index.ts"],
+      "@cthub-bsaas/web-ui": ["libs/web/ui/src/index.ts"]
     },
-    "exclude": ["node_modules", "dist"],
-    "angularCompilerOptions": {
-        "enableI18nLegacyMessageIdFormat": false,
-        "strictInjectionParameters": true,
-        "strictInputAccessModifiers": true,
-        "strictTemplates": true
-    }
+    "types": ["node", "jest"],
+    "experimentalDecorators": true,
+    "sourceMap": true,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true,
+    "noImplicitReturns": true,
+    "noImplicitAny": true,
+    "resolveJsonModule": true
+  },
+  "exclude": ["node_modules", "dist"],
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  }
 }

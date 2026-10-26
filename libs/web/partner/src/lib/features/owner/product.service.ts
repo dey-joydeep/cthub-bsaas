@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -7,8 +7,7 @@ import { ProductParams, CreateProductParams, UpdateProductParams } from '../../m
 @Injectable({ providedIn: 'root' })
 export class ProductService {
   private apiUrl = '/api/product';
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   saveProduct(data: ProductParams): Observable<{ success: boolean }> {
     const payload: ProductParams = {

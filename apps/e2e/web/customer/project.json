@@ -18,7 +18,8 @@
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": ["apps/e2e/web/customer/**/*.ts"]
+        "lintFilePatterns": ["apps/e2e/web/customer/**/*.ts"],
+        "errorOnUnmatchedPattern": false
       }
     }
   },

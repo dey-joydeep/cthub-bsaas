@@ -39,7 +39,10 @@ describe('Rate limiting (edge-case)', () => {
       providers: [
         { provide: AuthService, useValue: authSvc },
         { provide: WEB_AUTHN_PORT, useValue: webAuthn },
-        { provide: RECOVERY_CODES_PORT, useValue: { generate: jest.fn(async () => ['r1']), verifyAndConsume: jest.fn(async () => true) } as RecoveryCodesPort },
+        {
+          provide: RECOVERY_CODES_PORT,
+          useValue: { generate: jest.fn(async () => ['r1']), verifyAndConsume: jest.fn(async () => true) } as RecoveryCodesPort,
+        },
         { provide: OAUTH_PORT, useValue: { start: async () => ({ redirectUrl: 'x' }) } },
         { provide: JwtService, useValue: { decode: jest.fn(() => ({ roles: [] })) } },
         { provide: APP_GUARD, useClass: ThrottlerGuard },

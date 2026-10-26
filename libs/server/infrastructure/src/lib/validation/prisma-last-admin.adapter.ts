@@ -18,14 +18,14 @@ export class PrismaLastAdminAdapter implements ILastAdminValidatorDb {
     }));
   }
 
-  getActiveStaffRecord(userId: string) {
+  getActiveStaffRecord(userId: string): Promise<{ salonId: string } | null> {
     return this.prisma.salonTenantStaff.findFirst({
       where: { userId, isActive: true },
       select: { salonId: true },
     });
   }
 
-  countOtherActiveAdmins(salonId: string, userId: string) {
+  countOtherActiveAdmins(salonId: string, userId: string): Promise<number> {
     return this.prisma.salonTenantStaff.count({
       where: {
         salonId,

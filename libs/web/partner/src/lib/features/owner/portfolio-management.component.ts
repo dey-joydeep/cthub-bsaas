@@ -1,29 +1,19 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslateModule } from '@ngx-translate/core';
 import { PortfolioService } from './portfolio.service';
 
 @Component({
   selector: 'app-portfolio-management',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatProgressBarModule,
-    MatIconModule,
-    TranslateModule,
-  ],
+  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressBarModule, MatIconModule],
   templateUrl: './portfolio-management.component.html',
-  styleUrls: ['./portfolio-management.component.scss'],
+  styleUrls: ['./portfolio-management.component.css'],
 })
 export class PortfolioManagementComponent {
   loading = false;
@@ -31,15 +21,14 @@ export class PortfolioManagementComponent {
   success: string | null = null;
   imagePreview: string | ArrayBuffer | null = null;
   portfolioForm: FormGroup;
+  private readonly fb = inject(FormBuilder);
+  private readonly portfolioService = inject(PortfolioService);
 
-  constructor(
-    private fb: FormBuilder,
-    private portfolioService: PortfolioService,
-  ) {
+  constructor() {
     this.portfolioForm = this.fb.group({
       title: ['', Validators.required],
       description: ['', Validators.required],
-      image: [null as File | null, [Validators.required]],
+      image: [null as File | null],
     });
   }
 
@@ -60,7 +49,10 @@ export class PortfolioManagementComponent {
   }
 
   onSubmit() {
-    if (this.portfolioForm.invalid) return;
+    if (this.portfolioForm.invalid) {
+      this.error = 'Title and description are required.';
+      return;
+    }
     this.loading = true;
     this.error = null;
     // Ensure all required fields are present and not null

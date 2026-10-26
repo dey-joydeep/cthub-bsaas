@@ -1,5 +1,5 @@
-import { Component, OnDestroy, OnInit, Inject, ChangeDetectorRef } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef, inject } from '@angular/core';
+import { DatePipe, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, FormControl, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -14,11 +14,10 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule, MAT_SNACK_BAR_DEFAULT_OPTIONS } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 
-import { Appointment, TimeSlot } from '../models/appointment.model';
+import { Appointment, TimeSlot } from '../appointment-list/model/appointment-list.model';
 import { LoadingService } from '@cthub-bsaas/web-core-common';
 import { AppointmentService } from '../services/appointment.service';
 import { AppointmentStatus } from '@cthub-bsaas/shared';
@@ -30,7 +29,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
   selector: 'app-appointment-reschedule',
   standalone: true,
   imports: [
-    CommonModule,
+    DatePipe,
     RouterModule,
     ReactiveFormsModule,
     MatStepperModule,
@@ -45,17 +44,16 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    TranslateModule,
   ],
   templateUrl: './appointment-reschedule.component.html',
-  styleUrls: ['./appointment-reschedule.component.scss'],
+  styleUrls: ['./appointment-reschedule.component.css'],
   providers: [{ provide: DatePipe, useClass: DatePipe }],
 })
 @Component({
   selector: 'app-appointment-reschedule',
   standalone: true,
   imports: [
-    CommonModule,
+    DatePipe,
     RouterModule,
     ReactiveFormsModule,
     MatStepperModule,
@@ -70,10 +68,9 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    TranslateModule,
   ],
   templateUrl: './appointment-reschedule.component.html',
-  styleUrls: ['./appointment-reschedule.component.scss'],
+  styleUrls: ['./appointment-reschedule.component.css'],
   providers: [{ provide: DatePipe, useClass: DatePipe }],
 })
 export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
@@ -94,6 +91,18 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
   availableTimeSlots: TimeSlot[] = [];
 
   // Get minimum date for date picker (today)
+  private readonly appointmentService = inject(AppointmentService);
+  public readonly data = inject<{ appointment: Appointment }>(MAT_DIALOG_DATA);
+  private readonly dialogRef = inject(MatDialogRef<AppointmentRescheduleComponent>);
+  private readonly loadingService = inject(LoadingService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly snackBarConfig = inject(MAT_SNACK_BAR_DEFAULT_OPTIONS);
+  private readonly datePipe = inject(DatePipe);
+  private readonly fb = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+
   get minDate(): Date {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -136,20 +145,7 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
     '3': 'SALON.UPTON',
   };
 
-  constructor(
-    private appointmentService: AppointmentService,
-    @Inject(MAT_DIALOG_DATA) public data: { appointment: Appointment },
-    private dialogRef: MatDialogRef<AppointmentRescheduleComponent>,
-    @Inject(LoadingService) private loadingService: LoadingService,
-    private cdr: ChangeDetectorRef,
-    private snackBar: MatSnackBar,
-    private translate: TranslateService,
-    @Inject(MAT_SNACK_BAR_DEFAULT_OPTIONS) private snackBarConfig: any,
-    private datePipe: DatePipe,
-    private fb: FormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-  ) {
+  constructor() {
     // Initialize form groups
     this.dateTimeFormGroup = this.fb.group({
       date: ['', [Validators.required, this.futureDateValidator.bind(this)]],
@@ -204,7 +200,9 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
 
   private handleError(error: Error): void {
     console.error('Appointment error:', error);
-    this.snackBar.open(this.translate.instant('ERRORS.GENERAL'), this.translate.instant('COMMON.CLOSE'), { duration: 5000 });
+    this.snackBar.open($localize`:@@ERRORS.GENERAL:An error occurred. Please try again.`, $localize`:@@COMMON.CLOSE:Close`, {
+      duration: 5000,
+    });
   }
 
   // Handle form submission
@@ -244,9 +242,13 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error loading time slots:', error);
-          this.snackBar.open(this.translate.instant('APPOINTMENT.RESCHEDULE.TIME_SLOTS_ERROR'), this.translate.instant('COMMON.CLOSE'), {
-            duration: 3000,
-          });
+          this.snackBar.open(
+            $localize`:@@APPOINTMENT.RESCHEDULE.TIME_SLOTS_ERROR:Failed to load available time slots.`,
+            $localize`:@@COMMON.CLOSE:Close`,
+            {
+              duration: 3000,
+            },
+          );
           this.isLoading = false;
         },
       });
@@ -262,9 +264,13 @@ export class AppointmentRescheduleComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: () => {
-          this.snackBar.open(this.translate.instant('APPOINTMENT.RESCHEDULE_SUCCESS'), this.translate.instant('COMMON.CLOSE'), {
-            duration: 5000,
-          });
+          this.snackBar.open(
+            $localize`:@@APPOINTMENT.RESCHEDULE_SUCCESS:Appointment rescheduled successfully.`,
+            $localize`:@@COMMON.CLOSE:Close`,
+            {
+              duration: 5000,
+            },
+          );
           this.router.navigate(['/appointments']);
         },
         error: (error: Error) => this.handleError(error),

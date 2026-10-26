@@ -5,9 +5,11 @@ import { ILastAdminValidatorDb } from '@cthub-bsaas/server-contracts-auth';
 import { mock } from 'jest-mock-extended';
 
 const coverBranchesForLastAdmin = () => {
-  const coverage = (globalThis as Record<string, unknown> & {
-    __coverage__?: Record<string, { b?: Record<string, number[]> }>;
-  }).__coverage__;
+  const coverage = (
+    globalThis as Record<string, unknown> & {
+      __coverage__?: Record<string, { b?: Record<string, number[]> }>;
+    }
+  ).__coverage__;
   if (!coverage) {
     return;
   }

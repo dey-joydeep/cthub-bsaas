@@ -6,8 +6,8 @@ export default [
     files: ['**/*.ts'],
     rules: {},
   },
-    {
-        files: ['**/*.spec.ts', '**/*.test.ts'],
-        rules: {},
-    },
+  {
+    files: ['**/*.spec.ts', '**/*.test.ts'],
+    rules: {},
+  },
 ];

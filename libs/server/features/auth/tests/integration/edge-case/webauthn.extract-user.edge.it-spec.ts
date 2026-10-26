@@ -19,7 +19,10 @@ describe('WebAuthn extractUserId edge cases (integration harness)', () => {
 
   beforeAll(() => {
     webAuthn = { startAuthentication: jest.fn(async () => ({ challenge: 'auth' })) };
-    authSvc = { resolveUserIdByEmail: jest.fn(async () => 'uid-by-email'), issueTokensForUser: jest.fn(async () => ({ accessToken: 'AT', refreshToken: 'RT' })) };
+    authSvc = {
+      resolveUserIdByEmail: jest.fn(async () => 'uid-by-email'),
+      issueTokensForUser: jest.fn(async () => ({ accessToken: 'AT', refreshToken: 'RT' })),
+    };
     cookies = { issue: jest.fn() };
     decodeMock = jest.fn(() => ({ roles: [] }));
     jwt = { decode: decodeMock as unknown as JwtService['decode'] };
@@ -80,7 +83,12 @@ describe('WebAuthn extractUserId edge cases (integration harness)', () => {
   });
 
   it('webauthnLoginFinish throws when user context is missing', () => {
-    expect(() => controller.webauthnLoginFinish({ response: {} } as unknown as import('../../../src/lib/dto/webauthn-assertion.dto').WebauthnAssertionDto, undefined)).toThrow();
+    expect(() =>
+      controller.webauthnLoginFinish(
+        { response: {} } as unknown as import('../../../src/lib/dto/webauthn-assertion.dto').WebauthnAssertionDto,
+        undefined,
+      ),
+    ).toThrow();
   });
 
   it('webauthnLoginFinish issues cookies on success and computes isCustomer', async () => {

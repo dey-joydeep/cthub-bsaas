@@ -21,6 +21,7 @@ This backend supports a pluggable OAuth adapter for Customer login. It defaults 
   - `META_REDIRECT_URI=https://your-domain.example.com/auth/oauth/meta/callback`
 
 Notes:
+
 - The callback path used by the controller is: `GET /auth/oauth/:provider/callback`
 - Match `:provider` to `google` or `meta`
 - For local testing with dev adapter: keep `OAUTH_ADAPTER=dev` (no external calls)
@@ -45,4 +46,3 @@ Notes:
 
 - `oauth.*.misconfigured`: missing env vars.
 - 400/401 from provider: check client/secret, redirect URI, and app status (development vs live mode).
-

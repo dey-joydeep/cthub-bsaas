@@ -1,5 +1,12 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, UseGuards, UseInterceptors } from '@nestjs/common';
-import { CookiesInterceptor, CsrfGuard, JwtOptionalAuthGuard, Public, ResponseEnvelopeInterceptor, SkipCsrf } from '@cthub-bsaas/server-core';
+import {
+  CookiesInterceptor,
+  CsrfGuard,
+  JwtOptionalAuthGuard,
+  Public,
+  ResponseEnvelopeInterceptor,
+  SkipCsrf,
+} from '@cthub-bsaas/server-core';
 import { RegistrationCompleteInput } from '@cthub-bsaas/server-contracts-auth';
 import { AuthService } from '../services/auth.service';
 import { AuthCookiesService } from '../services/auth-cookies.service';
@@ -8,7 +15,10 @@ import { AuthCookiesService } from '../services/auth-cookies.service';
 @UseGuards(CsrfGuard, JwtOptionalAuthGuard)
 @UseInterceptors(CookiesInterceptor, ResponseEnvelopeInterceptor)
 export class RegistrationController {
-  constructor(private readonly authService: AuthService, private readonly authCookies: AuthCookiesService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly authCookies: AuthCookiesService,
+  ) {}
 
   // Owner
   @Public()
@@ -65,4 +75,3 @@ export class RegistrationController {
     return this.authService.register(body.email, body.password, body.name).then(() => ({ success: true as const }));
   }
 }
-

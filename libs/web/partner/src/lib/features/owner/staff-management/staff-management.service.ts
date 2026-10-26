@@ -1,13 +1,14 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { Staff } from './models/staff-management.model';
 
 @Injectable({ providedIn: 'root' })
 export class StaffManagementService {
-  constructor(private http: HttpClient) {}
+  public readonly http = inject(HttpClient);
 
   getStaff(): Observable<Staff[]> {
+    void this.http;
     // Simulate API call
     return of([
       {

@@ -1,9 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MarkdownModule } from 'ngx-markdown';
-import { of } from 'rxjs';
-
-import { StaticContentService } from './static-content.service';
 import { PrivacyComponent } from './privacy';
+import { MarkdownModule } from 'ngx-markdown';
 
 describe('PrivacyComponent', () => {
   let component: PrivacyComponent;
@@ -12,14 +9,6 @@ describe('PrivacyComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [PrivacyComponent, MarkdownModule.forRoot()],
-      providers: [
-        {
-          provide: StaticContentService,
-          useValue: {
-            getContent: jest.fn().mockReturnValue(of('## Privacy')),
-          },
-        },
-      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PrivacyComponent);

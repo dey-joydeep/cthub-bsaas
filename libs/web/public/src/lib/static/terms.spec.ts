@@ -1,9 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MarkdownModule } from 'ngx-markdown';
-import { of } from 'rxjs';
-
-import { StaticContentService } from './static-content.service';
 import { TermsComponent } from './terms';
+import { MarkdownModule } from 'ngx-markdown';
 
 describe('TermsComponent', () => {
   let component: TermsComponent;
@@ -12,14 +9,6 @@ describe('TermsComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [TermsComponent, MarkdownModule.forRoot()],
-      providers: [
-        {
-          provide: StaticContentService,
-          useValue: {
-            getContent: jest.fn().mockReturnValue(of('## Terms')),
-          },
-        },
-      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TermsComponent);

@@ -16,4 +16,3 @@ export interface IEmailVerificationRepository {
   markUsed(id: string): Promise<void>;
   incrementAttempts(id: string): Promise<void>;
 }
-

@@ -5,15 +5,15 @@
 
 ## Routes
 
-| Route | Screen ID |
-| --- | --- |
-| `/admin/platform` | `platform.dashboard` |
-| `/admin/platform/tenants` | `platform.tenants.list` |
-| `/admin/platform/tenants/:id` | `platform.tenant.detail` |
-| `/admin/platform/provisioning` | `platform.provisioning` |
-| `/admin/platform/support` | `platform.support` |
-| `/admin/platform/feature-flags` | `platform.featureFlags` |
-| `/admin/platform/audit` | `platform.audit` |
+| Route                           | Screen ID                |
+| ------------------------------- | ------------------------ |
+| `/admin/platform`               | `platform.dashboard`     |
+| `/admin/platform/tenants`       | `platform.tenants.list`  |
+| `/admin/platform/tenants/:id`   | `platform.tenant.detail` |
+| `/admin/platform/provisioning`  | `platform.provisioning`  |
+| `/admin/platform/support`       | `platform.support`       |
+| `/admin/platform/feature-flags` | `platform.featureFlags`  |
+| `/admin/platform/audit`         | `platform.audit`         |
 
 ## Screen Requirements
 

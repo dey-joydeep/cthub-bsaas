@@ -15,12 +15,12 @@ export class PasswordResetRepository implements IPasswordResetRepository {
         expiresAt: data.expiresAt,
       },
     });
-    return created as unknown as PasswordResetRecord;
+    return created;
   }
 
   async findById(id: string): Promise<PasswordResetRecord | null> {
     const rec = await this.prisma.passwordReset.findUnique({ where: { id } });
-    return (rec as unknown as PasswordResetRecord) ?? null;
+    return rec ?? null;
   }
 
   async markUsed(id: string): Promise<void> {

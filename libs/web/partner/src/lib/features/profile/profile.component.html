@@ -1,66 +1,82 @@
 <div class="profile-container">
   <mat-card class="profile-card">
     <mat-card-header>
-      <mat-card-title>{{ 'PROFILE.TITLE' | translate }}</mat-card-title>
-      <mat-card-subtitle>{{ 'PROFILE.SUBTITLE' | translate }}</mat-card-subtitle>
+      <mat-card-title><ng-container i18n="@@PROFILE.TITLE">Profile Settings</ng-container></mat-card-title>
+      <mat-card-subtitle><ng-container i18n="@@PROFILE.SUBTITLE">Manage your profile and account settings</ng-container></mat-card-subtitle>
 
       <div class="spacer"></div>
 
-      <button *ngIf="!isEditing" mat-raised-button color="primary" (click)="onEdit()">
-        <mat-icon>edit</mat-icon>
-        {{ 'COMMON.EDIT' | translate }}
-      </button>
+      @if (!isEditing) {
+        <button mat-raised-button color="primary" (click)="onEdit()">
+          <mat-icon>edit</mat-icon>
+          <ng-container i18n="@@COMMON.EDIT">Edit</ng-container>
+        </button>
+      }
     </mat-card-header>
 
     <mat-card-content>
       <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
         <div class="form-row">
           <mat-form-field appearance="outline" class="form-field">
-            <mat-label>{{ 'PROFILE.FIRST_NAME' | translate }}</mat-label>
+            <mat-label><ng-container i18n="@@PROFILE.FIRST_NAME">First Name</ng-container></mat-label>
             <input matInput formControlName="firstName" required />
             <mat-icon matSuffix>person</mat-icon>
-            <mat-error *ngIf="firstName?.hasError('required')">
-              {{ 'VALIDATION.REQUIRED' | translate }}
-            </mat-error>
+            @if (firstName?.hasError('required')) {
+              <mat-error>
+                <ng-container i18n="@@VALIDATION.REQUIRED">This field is required.</ng-container>
+              </mat-error>
+            }
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="form-field">
-            <mat-label>{{ 'PROFILE.LAST_NAME' | translate }}</mat-label>
+            <mat-label><ng-container i18n="@@PROFILE.LAST_NAME">Last Name</ng-container></mat-label>
             <input matInput formControlName="lastName" required />
             <mat-icon matSuffix>person_outline</mat-icon>
-            <mat-error *ngIf="lastName?.hasError('required')">
-              {{ 'VALIDATION.REQUIRED' | translate }}
-            </mat-error>
+            @if (lastName?.hasError('required')) {
+              <mat-error>
+                <ng-container i18n="@@VALIDATION.REQUIRED">This field is required.</ng-container>
+              </mat-error>
+            }
           </mat-form-field>
         </div>
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>{{ 'PROFILE.EMAIL' | translate }}</mat-label>
+          <mat-label><ng-container i18n="@@PROFILE.EMAIL">Email Address</ng-container></mat-label>
           <input matInput formControlName="email" type="email" required />
           <mat-icon matSuffix>email</mat-icon>
-          <mat-error *ngIf="email?.hasError('required')">
-            {{ 'VALIDATION.REQUIRED' | translate }}
-          </mat-error>
-          <mat-error *ngIf="email?.hasError('email')">
-            {{ 'VALIDATION.INVALID_EMAIL' | translate }}
-          </mat-error>
+          @if (email?.hasError('required')) {
+            <mat-error>
+              <ng-container i18n="@@VALIDATION.REQUIRED">This field is required.</ng-container>
+            </mat-error>
+          }
+          @if (email?.hasError('email')) {
+            <mat-error>
+              <ng-container i18n="@@VALIDATION.INVALID_EMAIL">Please enter a valid email address.</ng-container>
+            </mat-error>
+          }
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>{{ 'PROFILE.PHONE' | translate }}</mat-label>
+          <mat-label><ng-container i18n="@@PROFILE.PHONE">Phone Number</ng-container></mat-label>
           <input matInput formControlName="phone" type="tel" />
           <mat-icon matSuffix>phone</mat-icon>
         </mat-form-field>
 
-        <div class="form-actions" *ngIf="isEditing">
-          <button mat-button type="button" (click)="onCancel()" class="cancel-button">
-            {{ 'COMMON.CANCEL' | translate }}
-          </button>
-          <button mat-raised-button color="primary" type="submit" [disabled]="profileForm.invalid || isLoading" class="save-button">
-            <span *ngIf="!isLoading">{{ 'COMMON.SAVE' | translate }}</span>
-            <mat-spinner *ngIf="isLoading" diameter="24"></mat-spinner>
-          </button>
-        </div>
+        @if (isEditing) {
+          <div class="form-actions">
+            <button mat-button type="button" (click)="onCancel()" class="cancel-button">
+              <ng-container i18n="@@COMMON.CANCEL">Cancel</ng-container>
+            </button>
+            <button mat-raised-button color="primary" type="submit" [disabled]="profileForm.invalid || isLoading" class="save-button">
+              @if (!isLoading) {
+                <span><ng-container i18n="@@COMMON.SAVE">Save</ng-container></span>
+              }
+              @if (isLoading) {
+                <mat-spinner diameter="24"></mat-spinner>
+              }
+            </button>
+          </div>
+        }
       </form>
     </mat-card-content>
   </mat-card>

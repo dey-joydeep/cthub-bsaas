@@ -61,7 +61,7 @@ describe('AuthService edge-case: revoked RT reuse deny_only path (IT harness)', 
     const audit = { log: jest.fn() } as unknown as AuditService;
 
     // Instantiate AuthService directly with stubs for unused deps
-    const unused = <T>(): T => ({} as T);
+    const unused = <T>(): T => ({}) as T;
     const rateLimiter: RateLimiter = {
       checkOrThrow: async (): Promise<void> => undefined,
     };

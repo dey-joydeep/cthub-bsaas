@@ -16,8 +16,8 @@
 
 ### Appointment Module
 
-| Component              | Status  | Issues |
-| ---------------------- | ------- | ------ |
+| Component             | Status  | Issues |
+| --------------------- | ------- | ------ |
 | AppointmentReschedule | ⚠️ Fair | 5      |
 | AppointmentList       | ✅ Good | 0      |
 | AppointmentDetail     | ✅ Good | 0      |

@@ -7,9 +7,9 @@ describe('OAuthModule', () => {
     const module = await Test.createTestingModule({
       imports: [OAuthModule],
     })
-    .overrideProvider(PrismaService)
-    .useValue({})
-    .compile();
+      .overrideProvider(PrismaService)
+      .useValue({})
+      .compile();
 
     expect(module).toBeDefined();
   });

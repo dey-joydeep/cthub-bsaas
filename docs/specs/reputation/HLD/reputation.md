@@ -9,13 +9,13 @@ Reputation owns review lifecycle, moderation, owner response, public visibility,
 
 ## State Model
 
-| State | Meaning |
-| --- | --- |
-| `pending` | Submitted and awaiting moderation or automatic checks. |
-| `approved` | Publicly visible according to profile settings. |
-| `rejected` | Not public, retained for audit according to policy. |
-| `hidden` | Temporarily not public. |
-| `flagged` | Requires moderation review. |
+| State      | Meaning                                                |
+| ---------- | ------------------------------------------------------ |
+| `pending`  | Submitted and awaiting moderation or automatic checks. |
+| `approved` | Publicly visible according to profile settings.        |
+| `rejected` | Not public, retained for audit according to policy.    |
+| `hidden`   | Temporarily not public.                                |
+| `flagged`  | Requires moderation review.                            |
 
 ## Diagram
 

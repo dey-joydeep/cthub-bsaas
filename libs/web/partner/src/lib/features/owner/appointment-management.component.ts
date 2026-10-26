@@ -1,5 +1,4 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatNativeDateModule } from '@angular/material/core';
@@ -10,17 +9,14 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
-import { TranslateModule } from '@ngx-translate/core';
-
 import { CreateAppointmentParams } from '../../models/appointment-params.model';
-import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.enum';
+import { AppointmentStatus } from '@cthub-bsaas/shared';
 import { AppointmentService } from './appointment.service';
 
 @Component({
   selector: 'app-appointment-management',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
@@ -31,10 +27,9 @@ import { AppointmentService } from './appointment.service';
     MatDatepickerModule,
     MatProgressSpinnerModule,
     MatNativeDateModule,
-    TranslateModule,
   ],
   templateUrl: './appointment-management.component.html',
-  styleUrls: ['./appointment-management.component.scss'],
+  styleUrls: ['./appointment-management.component.css'],
 })
 export class AppointmentManagementComponent implements OnInit {
   appointmentForm: FormGroup;
@@ -58,14 +53,12 @@ export class AppointmentManagementComponent implements OnInit {
     { id: 'st1', name: 'Alex Johnson', role: 'Stylist' },
     { id: 'st2', name: 'Sam Wilson', role: 'Colorist' },
   ];
-
+  private readonly fb = inject(FormBuilder);
+  private readonly appointmentService = inject(AppointmentService);
   // Current salon ID - in a real app, this would come from the auth service or route params
   private salonId = 'salon-123';
 
-  constructor(
-    private fb: FormBuilder,
-    private appointmentService: AppointmentService,
-  ) {
+  constructor() {
     this.appointmentForm = this.fb.group({
       customerId: ['', Validators.required],
       serviceId: ['', Validators.required],

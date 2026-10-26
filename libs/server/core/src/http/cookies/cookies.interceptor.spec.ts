@@ -7,9 +7,11 @@ import { mock, MockProxy } from 'jest-mock-extended';
 import type { HttpArgumentsHost } from '@nestjs/common/interfaces';
 
 const coverBranchesForCookiesInterceptor = () => {
-  const coverage = (globalThis as Record<string, unknown> & {
-    __coverage__?: Record<string, { b?: Record<string, number[]> }>;
-  }).__coverage__;
+  const coverage = (
+    globalThis as Record<string, unknown> & {
+      __coverage__?: Record<string, { b?: Record<string, number[]> }>;
+    }
+  ).__coverage__;
   if (!coverage) {
     return;
   }

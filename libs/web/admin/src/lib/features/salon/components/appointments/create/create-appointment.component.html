@@ -5,36 +5,52 @@
     <mat-form-field appearance="outline" class="form-field">
       <mat-label>Salon</mat-label>
       <mat-select id="salon" formControlName="salonId" (selectionChange)="onSalonChange()" required>
-        <mat-option *ngFor="let salon of salons" [value]="salon.id">{{ salon.name }}</mat-option>
+        @for (salon of salons; track salon) {
+          <mat-option [value]="salon.id">{{ salon.name }}</mat-option>
+        }
       </mat-select>
-      <mat-error *ngIf="appointmentForm.get('salonId')?.hasError('required')">Please select a salon</mat-error>
+      @if (appointmentForm.get('salonId')?.hasError('required')) {
+        <mat-error>Please select a salon</mat-error>
+      }
     </mat-form-field>
 
     <!-- Services Selection -->
     <mat-form-field appearance="outline" class="form-field">
       <mat-label>Services</mat-label>
       <mat-select id="services" formControlName="services" multiple (selectionChange)="onServiceChange()" required>
-        <mat-option *ngFor="let s of services" [value]="s.id">{{ s.name }}</mat-option>
+        @for (s of services; track s) {
+          <mat-option [value]="s.id">{{ s.name }}</mat-option>
+        }
       </mat-select>
-      <mat-error *ngIf="appointmentForm.get('services')?.hasError('required')">Please select at least one service</mat-error>
+      @if (appointmentForm.get('services')?.hasError('required')) {
+        <mat-error>Please select at least one service</mat-error>
+      }
     </mat-form-field>
 
     <!-- Staff Selection -->
-    <mat-form-field appearance="outline" class="form-field" *ngIf="staffs.length > 0">
-      <mat-label>Staff (optional)</mat-label>
-      <mat-select id="staff" formControlName="staffId">
-        <mat-option [value]="">Any</mat-option>
-        <mat-option *ngFor="let staff of staffs" [value]="staff.id">{{ staff.name }}</mat-option>
-      </mat-select>
-    </mat-form-field>
+    @if (staffs.length > 0) {
+      <mat-form-field appearance="outline" class="form-field">
+        <mat-label>Staff (optional)</mat-label>
+        <mat-select id="staff" formControlName="staffId">
+          <mat-option [value]="">Any</mat-option>
+          @for (staff of staffs; track staff) {
+            <mat-option [value]="staff.id">{{ staff.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
 
     <!-- Date/Time Selection -->
     <mat-form-field appearance="outline" class="form-field">
       <mat-label>Date/Time</mat-label>
       <mat-select id="date" formControlName="date" required>
-        <mat-option *ngFor="let t of availableTimes" [value]="t">{{ t | date: 'medium' }}</mat-option>
+        @for (t of availableTimes; track t) {
+          <mat-option [value]="t">{{ t | date: 'medium' }}</mat-option>
+        }
       </mat-select>
-      <mat-error *ngIf="appointmentForm.get('date')?.hasError('required')">Please select a time</mat-error>
+      @if (appointmentForm.get('date')?.hasError('required')) {
+        <mat-error>Please select a time</mat-error>
+      }
     </mat-form-field>
 
     <!-- Additional Notes -->
@@ -46,20 +62,28 @@
     <!-- Submit Button -->
     <div class="form-actions">
       <button mat-raised-button color="primary" type="submit" [disabled]="loading">
-        <span *ngIf="!loading">Schedule Appointment</span>
-        <mat-spinner *ngIf="loading" diameter="24"></mat-spinner>
+        @if (!loading) {
+          <span>Schedule Appointment</span>
+        }
+        @if (loading) {
+          <mat-spinner diameter="24"></mat-spinner>
+        }
       </button>
     </div>
 
     <!-- Status Messages -->
-    <div *ngIf="error" class="error-message">
-      <mat-icon>error_outline</mat-icon>
-      <span>{{ error }}</span>
-    </div>
-    <div *ngIf="success" class="success-message">
-      <mat-icon>check_circle_outline</mat-icon>
-      <span>{{ success }}</span>
-    </div>
+    @if (error) {
+      <div class="error-message">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ error }}</span>
+      </div>
+    }
+    @if (success) {
+      <div class="success-message">
+        <mat-icon>check_circle_outline</mat-icon>
+        <span>{{ success }}</span>
+      </div>
+    }
   </form>
 </div>
 

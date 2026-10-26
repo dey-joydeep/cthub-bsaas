@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
+import { DatePipe, TitleCasePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,7 +18,8 @@ import { Staff } from './models/staff-management.model';
   selector: 'app-staff-management',
   standalone: true,
   imports: [
-    CommonModule,
+    DatePipe,
+    TitleCasePipe,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -219,8 +220,8 @@ export class StaffManagementComponent implements OnInit {
   displayedColumns: string[] = ['name', 'role', 'status', 'lastActive', 'actions'];
 
   dataSource: Staff[] = [];
-
-  constructor(private dialog: MatDialog, private staffManagementService: StaffManagementService) {}
+  private readonly dialog = inject(MatDialog);
+  private readonly staffManagementService = inject(StaffManagementService);
 
   ngOnInit(): void {
     this.staffManagementService.getStaff().subscribe((staff) => {

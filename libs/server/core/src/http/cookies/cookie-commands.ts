@@ -14,8 +14,7 @@ export interface CookieOptions {
 }
 
 export type CookieCommand =
-  | { action: 'set'; name: string; value: string; options?: CookieOptions }
-  | { action: 'clear'; name: string; options?: CookieOptions };
+  { action: 'set'; name: string; value: string; options?: CookieOptions } | { action: 'clear'; name: string; options?: CookieOptions };
 
 /**
  * @public
@@ -48,7 +47,7 @@ export class CookieRegistry {
 
 /** Build a single Set-Cookie header string for both Express and Fastify */
 export function buildSetCookie(cmd: CookieCommand): string {
-  const opts = cmd.action === 'set' ? cmd.options ?? {} : cmd.options ?? {};
+  const opts = cmd.action === 'set' ? (cmd.options ?? {}) : (cmd.options ?? {});
   const name = cmd.name;
   const value = cmd.action === 'set' ? encodeURIComponent(cmd.value) : '';
   const parts: string[] = [`${name}=${value}`];
@@ -79,4 +78,3 @@ export function buildSetCookie(cmd: CookieCommand): string {
 
   return parts.join('; ');
 }
-

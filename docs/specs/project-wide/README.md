@@ -9,11 +9,11 @@ This folder closes the project-wide documentation gap between feature specificat
 
 ## Documents
 
-| Document | Purpose |
-| --- | --- |
-| [Project-Wide OpenAPI Contract](API/openapi.yaml) | Target HTTP contract for project-wide feature areas that are not covered by Auth or Salon Owner MVP OpenAPI files. |
-| [Project-Wide API Schema Catalog](API/schema-catalog.md) | Operation-level DTO fields and response payload expectations used with the OpenAPI contract. |
-| [Implementation Slicing Plan](IMPLEMENTATION/implementation-slicing.md) | Coding-ready backend/frontend work slices, sequencing, validation gates, and branch strategy. |
+| Document                                                                | Purpose                                                                                                            |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| [Project-Wide OpenAPI Contract](API/openapi.yaml)                       | Target HTTP contract for project-wide feature areas that are not covered by Auth or Salon Owner MVP OpenAPI files. |
+| [Project-Wide API Schema Catalog](API/schema-catalog.md)                | Operation-level DTO fields and response payload expectations used with the OpenAPI contract.                       |
+| [Implementation Slicing Plan](IMPLEMENTATION/implementation-slicing.md) | Coding-ready backend/frontend work slices, sequencing, validation gates, and branch strategy.                      |
 
 ## Source-Of-Truth Rule
 

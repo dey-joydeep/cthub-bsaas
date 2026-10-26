@@ -34,6 +34,14 @@ Read this file before working under `libs/web/**`.
 - Prefer Angular abstractions that work in SSR, such as `HttpClient`, `TransferState`, and CDK utilities.
 - Use relative API URLs unless a server-side proxy/config requires otherwise.
 
+## Internationalization (i18n)
+
+- Standard mechanism: use native Angular compile-time i18n (`@angular/localize` and `$localize`). Do not install or import legacy `@ngx-translate` runtime modules or pipes (`| translate`).
+- Template localization: use standard `i18n="@@KEY_ID"` attributes on HTML elements or `<ng-container i18n="@@KEY_ID">Text</ng-container>` for unwrapped text nodes.
+- Attribute localization: when localizing element attributes (`matTooltip`, `placeholder`, `aria-label`, `title`), always use the `i18n-attributeName="@@KEY_ID"` syntax (e.g., `<button matTooltip="Refresh" i18n-matTooltip="@@COMMON.REFRESH">`). Never place `<ng-container>` or other HTML tags inside attribute quotes.
+- TypeScript localization: use native tagged template literals: `$localize`:@@KEY_ID:Default English String``.
+- Testing: do not provide or mock `TranslateService`, `MockTranslateService`, or `TranslateModule` in `TestBed`. Native `$localize` tokens fall back directly to their inline English default string in unit tests; assert against the English string directly.
+
 ## Client Models And APIs
 
 - Any object parameter or object return must use a named interface/type/model/DTO.

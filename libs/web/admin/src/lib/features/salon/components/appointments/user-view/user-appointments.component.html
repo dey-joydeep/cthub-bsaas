@@ -1,36 +1,48 @@
 <div class="user-appointments-container">
   <h2>Your Appointments</h2>
-  <div *ngIf="loading">Loading...</div>
-  <div *ngIf="error" class="error-message">{{ error }}</div>
-  <table *ngIf="!loading && appointments.length > 0" class="responsive-table">
-    <thead>
-      <tr>
-        <th>Salon</th>
-        <th>Service</th>
-        <th>Date & Time</th>
-        <th>Duration</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let appointment of appointments">
-        <td>
-          <a *ngIf="appointment.salonId" [routerLink]="['/salon', appointment.salonId]">
-            {{ appointment.salon?.name || 'Salon #' + appointment.salonId }}
-          </a>
-        </td>
-        <td>{{ appointment.service?.name || 'Service #' + appointment.serviceId }}</td>
-        <td>{{ appointment.startTime | date: 'medium' }}</td>
-        <td>{{ getDuration(appointment) }}</td>
-        <td>
-          <span [class]="'status-badge status-' + appointment.status.toLowerCase()">
-            {{ appointment.status }}
-          </span>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <div *ngIf="!loading && appointments.length === 0">No appointments found.</div>
+  @if (loading) {
+    <div>Loading...</div>
+  }
+  @if (error) {
+    <div class="error-message">{{ error }}</div>
+  }
+  @if (!loading && appointments.length > 0) {
+    <table class="responsive-table">
+      <thead>
+        <tr>
+          <th>Salon</th>
+          <th>Service</th>
+          <th>Date & Time</th>
+          <th>Duration</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (appointment of appointments; track appointment) {
+          <tr>
+            <td>
+              @if (appointment.salonId) {
+                <a [routerLink]="['/salon', appointment.salonId]">
+                  {{ appointment.salon?.name || 'Salon #' + appointment.salonId }}
+                </a>
+              }
+            </td>
+            <td>{{ appointment.service?.name || 'Service #' + appointment.serviceId }}</td>
+            <td>{{ appointment.startTime | date: 'medium' }}</td>
+            <td>{{ getDuration(appointment) }}</td>
+            <td>
+              <span [class]="'status-badge status-' + appointment.status.toLowerCase()">
+                {{ appointment.status }}
+              </span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+  @if (!loading && appointments.length === 0) {
+    <div>No appointments found.</div>
+  }
   <style>
     .responsive-table {
       width: 100%;

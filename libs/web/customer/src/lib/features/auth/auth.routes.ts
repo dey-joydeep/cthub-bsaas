@@ -1,9 +1,6 @@
-import { authGuard } from '@cthub-bsaas/web-core-auth';
+import { publicGuard } from '@cthub-bsaas/web-core-auth';
 import { Routes } from '@angular/router';
 // Components
-import { LoginComponent } from './components/login/login.component';
-import { RegisterComponent } from './components/register/register.component';
-import { ForgotPasswordComponent } from './components/forgot-password/forgot-password.component';
 
 // Guards
 export const AUTH_ROUTES: Routes = [
@@ -14,21 +11,21 @@ export const AUTH_ROUTES: Routes = [
   },
   {
     path: 'login',
-    component: LoginComponent,
+    loadComponent: () => import('./components/login/login.component').then((m) => m.LoginComponent),
     title: 'Login',
-    canActivate: [authGuard],
+    canActivate: [publicGuard],
   },
   {
     path: 'register',
-    component: RegisterComponent,
+    loadComponent: () => import('./components/register/register.component').then((m) => m.RegisterComponent),
     title: 'Register',
-    canActivate: [authGuard],
+    canActivate: [publicGuard],
   },
   {
     path: 'forgot-password',
-    component: ForgotPasswordComponent,
+    loadComponent: () => import('./components/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent),
     title: 'Forgot Password',
-    canActivate: [authGuard],
+    canActivate: [publicGuard],
   },
   {
     path: '**',

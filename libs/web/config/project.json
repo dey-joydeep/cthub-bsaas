@@ -12,14 +12,6 @@
         "lintFilePatterns": ["libs/web/config/src/**/*.ts"]
       }
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/libs/web/config"],
-      "options": {
-        "jestConfig": "libs/web/config/jest.config.ts",
-        "passWithNoTests": true
-      }
-    },
     "type-check": {
       "executor": "nx:run-commands",
       "options": {

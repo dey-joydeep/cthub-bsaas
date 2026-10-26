@@ -1,14 +1,14 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
+
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ProfileService } from './profile.service';
 import { User } from './model/profile.model';
 
@@ -16,19 +16,18 @@ import { User } from './model/profile.model';
   selector: 'app-profile',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatProgressSpinnerModule,
+    MatProgressBarModule,
     MatSnackBarModule,
     MatIconModule,
-    TranslateModule,
   ],
   templateUrl: './profile.component.html',
-  styleUrls: ['./profile.component.scss'],
+  styleUrls: ['./profile.component.css'],
 })
 export class ProfileComponent implements OnInit {
   profileForm: FormGroup;
@@ -38,13 +37,12 @@ export class ProfileComponent implements OnInit {
   error: string | null = null;
   success: string | null = null;
   imagePreview: string | ArrayBuffer | null = null;
+    private readonly fb = inject(FormBuilder);
+    private readonly profileService = inject(ProfileService);
+    private readonly snackBar = inject(MatSnackBar);
 
   constructor(
-    private fb: FormBuilder,
-    private profileService: ProfileService,
-    private snackBar: MatSnackBar,
-    private translate: TranslateService,
-  ) {
+) {
     this.profileForm = this.fb.group({
       name: ['', Validators.required],
       email: [{ value: '', disabled: true }, [Validators.required, Validators.email]],
@@ -59,7 +57,7 @@ export class ProfileComponent implements OnInit {
   }
 
   loadUserProfile(): void {
-    this.profileService.getProfile().subscribe(user => {
+    this.profileService.getProfile().subscribe((user) => {
       if (user) {
         this.currentUser = user;
         this.profileForm.patchValue({
@@ -112,7 +110,9 @@ export class ProfileComponent implements OnInit {
         this.isSubmitting = false;
         if (res.success) {
           this.success = 'Profile updated!';
-          this.snackBar.open(this.translate.instant('PROFILE.UPDATE_SUCCESS'), this.translate.instant('COMMON.CLOSE'), { duration: 3000 });
+          this.snackBar.open($localize`:@@PROFILE.UPDATE_SUCCESS:Profile updated successfully.`, $localize`:@@COMMON.CLOSE:Close`, {
+            duration: 3000,
+          });
         } else {
           this.error = 'Failed to update profile.';
         }

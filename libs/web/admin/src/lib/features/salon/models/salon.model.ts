@@ -1,7 +1,14 @@
 import { SalonServiceItem } from './salon-service-item.model';
 import { Staff } from './staff.model';
-// Importing Review from the reviews module
-import { Review } from '../../reviews/models/review.model';
+export interface Review {
+  id: string;
+  salonId: string;
+  userId: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  reviewer?: string;
+}
 
 export interface Salon {
   id: string;

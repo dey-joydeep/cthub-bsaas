@@ -9,13 +9,13 @@ Platform Admin owns SaaS operational administration. It must not become a bypass
 
 ## Contexts
 
-| Context | Responsibility |
-| --- | --- |
-| Tenant Operations | Tenant/business status, provisioning, suspension, metadata. |
-| Support Operations | Scoped support views, reason capture, support audit. |
-| Platform Configuration | Feature flags, maintenance mode, global settings. |
-| Platform Health | Health and operational dashboard read models. |
-| Audit Review | Admin action search and review. |
+| Context                | Responsibility                                              |
+| ---------------------- | ----------------------------------------------------------- |
+| Tenant Operations      | Tenant/business status, provisioning, suspension, metadata. |
+| Support Operations     | Scoped support views, reason capture, support audit.        |
+| Platform Configuration | Feature flags, maintenance mode, global settings.           |
+| Platform Health        | Health and operational dashboard read models.               |
+| Audit Review           | Admin action search and review.                             |
 
 ## Security
 

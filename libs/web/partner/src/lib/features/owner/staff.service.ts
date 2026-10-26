@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Staff } from '../staff/models/staff.model';
@@ -7,8 +7,7 @@ import { Staff } from '../staff/models/staff.model';
 @Injectable({ providedIn: 'root' })
 export class StaffService {
   private apiUrl = '/api';
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   addStaff(salonId: string, data: FormData): Observable<Staff> {
     return this.http.post<Staff>(`${this.apiUrl}/salons/${salonId}/staff`, data).pipe(catchError((err) => this.handleError(err)));

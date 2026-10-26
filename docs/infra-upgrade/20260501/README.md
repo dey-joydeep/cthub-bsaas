@@ -47,3 +47,11 @@ Angular migration remains governed by the official Angular Update Guide even tho
 - Nx Vitest plugin: https://nx.dev/docs/technologies/test-tools/vitest/introduction
 - Nx Vitest migrations: https://nx.dev/docs/technologies/test-tools/vitest/migrations
 - Node.js releases: https://nodejs.org/en/about/previous-releases
+
+---
+
+## Next Upgrade Cycle Guidance
+
+For architectural decisions, deferred migrations (Angular 22), and housekeeping items (Nx v24 deprecations, NestJS v12 Vitest roadmap, Prisma ORM strategy) for future cycles, reference:
+
+- [Next Upgrade Cycle Memo](../next-cycle-memo.md)

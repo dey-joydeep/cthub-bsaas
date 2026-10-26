@@ -1,13 +1,11 @@
-/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
-/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../../dist/apps/web/customer",
-    "module": "ES2022",
+    "module": "preserve",
     "moduleResolution": "bundler",
     "target": "ES2022",
-    "types": ["node"],
+    "types": ["node", "@angular/localize"],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
@@ -16,7 +14,6 @@
   "files": ["src/main.ts"],
   "include": ["src/**/*.ts", "src/**/*.d.ts"],
   "exclude": [
-    "**/setup-jest.ts",
     "**/*.spec.ts",
     "**/*.spec.tsx",
     "**/*.test.ts",
@@ -28,6 +25,19 @@
     "**/*.stories.tsx",
     "**/testHelpers.*",
     "**/test-*",
-    "**/__mocks__/**/*"
+    "**/__mocks__/**/*",
+    "vite.config.ts",
+    "vite.config.mts",
+    "vitest.config.ts",
+    "vitest.config.mts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx",
+    "src/test-setup.ts"
   ]
 }

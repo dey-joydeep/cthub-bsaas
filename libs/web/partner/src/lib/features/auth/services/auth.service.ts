@@ -1,13 +1,17 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { BehaviorSubject, Observable, firstValueFrom, forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 import { StorageService } from '@cthub-bsaas/web-core-platform';
-import type { AuthStatePort, BaseAuthUser } from '@cthub-bsaas/web-core/auth';
+import type { AuthStatePort, BaseAuthUser } from '@cthub-bsaas/web-core-auth';
 import type { PartnerAuthUser } from '../models/auth.models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService implements AuthStatePort {
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly storage = inject(StorageService);
+
   private readonly TOKEN_KEY = 'access_token';
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
   private readonly TOKEN_EXPIRY_KEY = 'token_expiry';
@@ -17,10 +21,7 @@ export class AuthService implements AuthStatePort {
   private currentUserSubject = new BehaviorSubject<PartnerAuthUser | null>(null);
   public readonly currentUser$: Observable<PartnerAuthUser | null> = this.currentUserSubject.asObservable();
 
-  constructor(
-    @Inject(PLATFORM_ID) private readonly platformId: object,
-    private readonly storage: StorageService,
-  ) {
+  constructor() {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
       this.initializeAuthState();
@@ -75,8 +76,7 @@ export class AuthService implements AuthStatePort {
 
   private getToken(): Observable<string | null> {
     if (!this.isBrowser) return of(null);
-    const token = this.storage.getItem<string>(this.TOKEN_KEY, null);
-    return of(typeof token === 'string' ? token : null);
+    return this.storage.getItem$<string>(this.TOKEN_KEY).pipe(catchError(() => of(null)));
   }
 
   private isTokenValid(token: string | null | undefined): boolean {

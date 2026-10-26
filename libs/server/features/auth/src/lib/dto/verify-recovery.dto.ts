@@ -10,4 +10,3 @@ export class VerifyRecoveryDto {
   @Matches(/^[A-Za-z0-9-]{6,}$/)
   code!: string;
 }
-

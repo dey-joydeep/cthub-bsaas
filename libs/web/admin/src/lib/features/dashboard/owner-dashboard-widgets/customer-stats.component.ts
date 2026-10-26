@@ -1,5 +1,5 @@
-import { Component, Input, inject, signal, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal, OnInit, input } from '@angular/core';
+
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatError, MatFormFieldModule } from '@angular/material/form-field';
@@ -8,12 +8,12 @@ import { DashboardApiService } from '@cthub-bsaas/features/dashboard/services/da
 @Component({
   selector: 'app-customer-stats',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatProgressBarModule, MatFormFieldModule, MatError],
+  imports: [MatCardModule, MatProgressBarModule, MatFormFieldModule, MatError],
   templateUrl: './customer-stats.component.html',
-  styleUrls: ['./customer-stats.component.scss'],
+  styleUrls: ['./customer-stats.component.css'],
 })
 export class CustomerStatsComponent implements OnInit {
-  @Input() tenantId = '';
+  tenantId = input('');
   active = signal(0);
   passive = signal(0);
   loading = signal(true);
@@ -22,7 +22,7 @@ export class CustomerStatsComponent implements OnInit {
   private api = inject(DashboardApiService);
 
   ngOnInit() {
-    if (!this.tenantId) return;
+    if (!this.tenantId()) return;
     this.loading.set(true);
     this.api.getUserStats(this.tenantId).subscribe({
       next: (res) => {
@@ -32,7 +32,7 @@ export class CustomerStatsComponent implements OnInit {
         this.error.set(null);
       },
       error: (err) => {
-        this.error.set(err.message || 'Failed to load customer stats');
+        this.error.set(err.message || $localize`:@@DASHBOARD.CUSTOMER_STATS.ERROR_LOADING:Failed to load customer stats`);
         this.loading.set(false);
       },
     });

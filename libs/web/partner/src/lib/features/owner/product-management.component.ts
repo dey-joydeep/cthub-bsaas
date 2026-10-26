@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray, ReactiveFormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,8 +12,6 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatCardModule } from '@angular/material/card';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslateModule } from '@ngx-translate/core';
-
 import { ProductService } from './product.service';
 import { ProductParams, ProductCategoryParams, ProductImageParams } from '../../models/product-params.model';
 
@@ -21,7 +19,6 @@ import { ProductParams, ProductCategoryParams, ProductImageParams } from '../../
   selector: 'app-product-management',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
@@ -33,10 +30,9 @@ import { ProductParams, ProductCategoryParams, ProductImageParams } from '../../
     MatChipsModule,
     MatCardModule,
     MatTabsModule,
-    TranslateModule,
   ],
   templateUrl: './product-management.component.html',
-  styleUrls: ['./product-management.component.scss'],
+  styleUrls: ['./product-management.component.css'],
 })
 export class ProductManagementComponent implements OnInit {
   productForm: FormGroup;
@@ -53,12 +49,11 @@ export class ProductManagementComponent implements OnInit {
   ];
 
   private salonId = 'salon-123';
+  private readonly fb = inject(FormBuilder);
+  private readonly productService = inject(ProductService);
   private currentUserId = 'user-123';
 
-  constructor(
-    private fb: FormBuilder,
-    private productService: ProductService,
-  ) {
+  constructor() {
     this.productForm = this.fb.group({
       // Basic Info
       name: ['', [Validators.required, Validators.maxLength(100)]],
@@ -100,7 +95,7 @@ export class ProductManagementComponent implements OnInit {
   addNewImage(image: Partial<ProductImageParams> = {}) {
     this.images.push(
       this.fb.group({
-        url: [image.url || '', Validators.required],
+        url: [image.url || ''],
         altText: [image.altText || ''],
         isDefault: [image.isDefault || false],
       }),

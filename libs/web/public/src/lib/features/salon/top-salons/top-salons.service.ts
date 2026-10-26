@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -7,9 +7,7 @@ import { Salon } from './model/top-salons.model';
 @Injectable({ providedIn: 'root' })
 export class TopSalonsService {
   private apiUrl = '/api/salons';
-
-  constructor(private http: HttpClient) {}
-
+  private readonly http = inject(HttpClient);
   // Fetch top salons, optionally with geolocation
   getTopSalons(latitude?: number, longitude?: number) {
     let params = {};

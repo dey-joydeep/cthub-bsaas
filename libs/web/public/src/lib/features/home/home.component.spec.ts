@@ -1,0 +1,189 @@
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { HomeComponent } from './home.component';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { HomeService } from './services/home.service';
+import { of, throwError } from 'rxjs';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router, provideRouter } from '@angular/router';
+import { IHomePageData, ISalonDto, IServiceDto } from '../../models/home.models';
+
+const mockSalon: ISalonDto = {
+  id: '1',
+  name: 'Test Salon',
+  slug: 'test-salon',
+  description: 'Test description',
+  email: 'test@example.com',
+  phone: '1234567890',
+  address: '123 Test St',
+  city: 'Test City',
+  isOpen: true,
+  isFeatured: true,
+  averageRating: 4.5,
+  reviewCount: 10,
+  featuredImage: 'test.jpg',
+  imageUrl: 'test.jpg',
+  services: [],
+  gallery: [],
+  reviews: [],
+  categories: [
+    {
+      id: '1',
+      name: 'Hair',
+      slug: 'hair',
+    },
+  ],
+  amenities: ['WiFi', 'Parking'],
+};
+
+const mockService: IServiceDto = {
+  id: '1',
+  name: 'Haircut',
+  description: 'A haircut service',
+  price: 30,
+  duration: 30,
+  categoryId: '1',
+  salonId: '1',
+  isActive: true,
+  isFeatured: true,
+  imageUrl: 'test.jpg',
+};
+
+const mockHomeData: IHomePageData = {
+  featuredSalons: [mockSalon],
+  newSalons: [],
+  featuredServices: [mockService],
+  testimonials: [
+    {
+      id: '1',
+      content: 'Great service!',
+      rating: 5,
+      author: {
+        id: '1',
+        name: 'Test User',
+        avatar: 'test.jpg',
+        location: 'Test City',
+      },
+      salon: {
+        id: '1',
+        name: 'Test Salon',
+        slug: 'test-salon',
+      },
+      service: {
+        id: '1',
+        name: 'Haircut',
+      },
+      createdAt: '2023-01-01T00:00:00.000Z',
+    },
+  ],
+  cities: [
+    {
+      id: '1',
+      name: 'Test City',
+      state: 'Test State',
+      country: 'Test Country',
+      isActive: true,
+      salonCount: 1,
+    },
+  ],
+};
+
+describe('HomeComponent', () => {
+  let component: HomeComponent;
+  let fixture: ComponentFixture<HomeComponent>;
+  let homeService: vi.Mocked<HomeService>;
+  let snackBar: vi.Mocked<MatSnackBar>;
+  let router: Router;
+
+  beforeEach(waitForAsync(() => {
+    homeService = {
+      getHomePageData: vi.fn(),
+      searchSalons: vi.fn(),
+      getFeaturedSalons: vi.fn(),
+      getFeaturedServices: vi.fn(),
+      getTestimonials: vi.fn(),
+      getCities: vi.fn(),
+    };
+
+    snackBar = {
+      open: vi.fn(),
+    };
+
+    TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule, HomeComponent],
+      providers: [provideRouter([]), { provide: HomeService, useValue: homeService }, { provide: MatSnackBar, useValue: snackBar }],
+      schemas: [NO_ERRORS_SCHEMA],
+    }).compileComponents();
+
+    homeService = TestBed.inject(HomeService) as vi.Mocked<HomeService>;
+    snackBar = TestBed.inject(MatSnackBar) as vi.Mocked<MatSnackBar>;
+    router = TestBed.inject(Router);
+  }));
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(HomeComponent);
+    component = fixture.componentInstance;
+    homeService.getHomePageData.mockReturnValue(
+      of({
+        featuredSalons: [],
+        featuredServices: [],
+        testimonials: [],
+        cities: [],
+      }),
+    );
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should load home data on init', () => {
+    homeService.getHomePageData.mockReturnValue(of(mockHomeData));
+    component.ngOnInit();
+    expect(homeService.getHomePageData).toHaveBeenCalled();
+    expect(component.homeData).toEqual(mockHomeData);
+    expect(component.loading).toBe(false);
+  });
+
+  it('should handle error when loading home data fails', () => {
+    const error = new Error('Failed to load data');
+    homeService.getHomePageData.mockReturnValue(throwError(() => error));
+    const snackBarSpy = vi.spyOn(component['snackBar'], 'open');
+    component.ngOnInit();
+    expect(component.loading).toBe(false);
+    expect(component.error).toBe('Failed to load data. Please try again later.');
+    expect(snackBarSpy).toHaveBeenCalledWith('Failed to load data. Please try again later.', 'Dismiss', { duration: 5000 });
+  });
+
+  it('should format price correctly', () => {
+    expect(component.formatPrice(30)).toBe('$30');
+    expect(component.formatPrice(29.99)).toBe('$29.99');
+  });
+
+  it('should format duration correctly', () => {
+    expect(component.formatDuration(90)).toBe('1h 30m');
+    expect(component.formatDuration(30)).toBe('30m');
+  });
+
+  it('should navigate to salon details when a salon is clicked', () => {
+    const navigateSpy = vi.spyOn(router, 'navigate');
+    (component as any).navigateToSalon = (slug: string) => {
+      router.navigate(['/salon', slug]);
+    };
+
+    (component as any).navigateToSalon('test-salon');
+    expect(navigateSpy).toHaveBeenCalledWith(['/salon', 'test-salon']);
+  });
+
+  it('should navigate to search with query when search is performed', () => {
+    const navigateSpy = vi.spyOn(router, 'navigate');
+    (component as any).searchQuery = 'test';
+    (component as any).onSearch = () => {
+      router.navigate(['/search'], { queryParams: { q: (component as any).searchQuery } });
+    };
+
+    (component as any).onSearch();
+    expect(navigateSpy).toHaveBeenCalledWith(['/search'], { queryParams: { q: 'test' } });
+  });
+});

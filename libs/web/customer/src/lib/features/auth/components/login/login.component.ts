@@ -1,6 +1,6 @@
 // Core
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, Inject, inject, OnDestroy, OnInit, Optional, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
@@ -20,8 +20,6 @@ import { firstValueFrom } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 // Translate
-import { TranslateModule } from '@ngx-translate/core';
-
 // Services
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { PLATFORM_UTILS_TOKEN, type PlatformUtils, StorageService } from '@cthub-bsaas/web-core-platform';
@@ -31,12 +29,8 @@ import type { CustomerAuthUser } from '../../models/auth.models';
 @Component({
   standalone: true,
   imports: [
-    // Angular Modules
-    CommonModule,
     ReactiveFormsModule,
     RouterModule,
-
-    // Angular Material Modules
     MatButtonModule,
     MatCardModule,
     MatCheckboxModule,
@@ -46,15 +40,22 @@ import type { CustomerAuthUser } from '../../models/auth.models';
     MatInputModule,
     MatProgressBarModule,
     MatProgressSpinnerModule,
-
-    // Third-party Modules
-    TranslateModule,
   ],
   selector: 'app-login',
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss'],
+  styleUrls: ['./login.component.css'],
 })
 export class LoginComponent extends AbstractBaseComponent implements OnInit, OnDestroy {
+  protected platformUtils = inject<PlatformUtils>(PLATFORM_UTILS_TOKEN);
+  private fb = inject<FormBuilder>(FormBuilder);
+  private router = inject<Router>(Router);
+  private route = inject<ActivatedRoute>(ActivatedRoute);
+  private storageService = inject<StorageService>(StorageService);
+  private loginService = inject<LoginService>(LoginService);
+  private platformId = inject(PLATFORM_ID);
+  private cdr = inject(ChangeDetectorRef);
+  private ssrDebug = inject<any>('SSR_DEBUG' as any, { optional: true });
+
   // Component state
   private isBrowser: boolean;
 
@@ -76,7 +77,6 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
   // Private state
   private resendTimer: any;
   private returnUrl = '';
-  protected platformUtils = inject<PlatformUtils>(PLATFORM_UTILS_TOKEN);
 
   // Debug logging helper methods
   private logDebug(message: string, data?: any) {
@@ -104,16 +104,10 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
     }
   }
 
-  constructor(
-    @Inject(FormBuilder) private fb: FormBuilder,
-    @Inject(Router) private router: Router,
-    @Inject(ActivatedRoute) private route: ActivatedRoute,
-    @Inject(StorageService) private storageService: StorageService,
-    @Inject(LoginService) private loginService: LoginService,
-    @Inject(PLATFORM_ID) private platformId: object,
-    @Optional() @Inject('SSR_DEBUG') private ssrDebug: any,
-  ) {
+  constructor() {
     super();
+    const platformId = this.platformId;
+
     this.isBrowser = isPlatformBrowser(this.platformId);
 
     // Log constructor execution for debugging
@@ -157,6 +151,7 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
         clearInterval(timer);
         this.resendDisabled = false;
       }
+      this.cdr.markForCheck();
     }, 1000);
   }
 
@@ -235,11 +230,13 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
             this.loading = false;
             this.error = 'Unknown user type';
           }
+          this.cdr.markForCheck();
         },
         error: (error: any) => {
           this.loading = false;
           this.error = error.error?.error || 'Login failed';
           this.errorService.handleError(error);
+          this.cdr.markForCheck();
         },
       });
   }
@@ -275,12 +272,14 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
           }
 
           this.loading = false;
+          this.cdr.markForCheck();
           this.router.navigateByUrl(this.returnUrl);
         },
         error: (error: any) => {
           this.loading = false;
           this.error = error.message || 'Invalid OTP';
           this.errorService.handleError(error);
+          this.cdr.markForCheck();
         },
       });
   }
@@ -304,6 +303,7 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
         clearInterval(this.resendTimer);
         this.resendDisabled = false;
       }
+      this.cdr.markForCheck();
     }, 1000);
   }
 
@@ -323,7 +323,7 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
           this.error = null;
         },
         error: (err: unknown) => {
-          this.error = this.errorService.getErrorMessage(err as any);
+          this.error = this.errorService.getErrorMessage(err);
         },
       });
   }
@@ -356,7 +356,7 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
         error: (err: unknown) => {
           this.loading = false;
           this.error = 'An error occurred while resending OTP. Please try again.';
-          this.errorService.handleError(err as any);
+          this.errorService.handleError(err);
         },
       });
   }
@@ -416,4 +416,3 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
       );
   }
 }
-

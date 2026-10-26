@@ -1,13 +1,14 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { Appointment } from './models/appointment-management.model';
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentManagementService {
-  constructor(private http: HttpClient) {}
+  public readonly http = inject(HttpClient);
 
   getAppointments(): Observable<Appointment[]> {
+    void this.http;
     // Simulate API call
     return of([
       {

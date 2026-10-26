@@ -1,0 +1,807 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xliff version="2.0" xmlns="urn:oasis:names:tc:xliff:document:2.0" srcLang="en-US" trgLang="ja">
+  <file id="ngi18n" original="ng.template">
+    <unit id="APPOINTMENT.CONFIRM_CANCELLATION">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-cancel-dialog/appointment-cancel-dialog.component.html:3,6</note>
+      </notes>
+      <segment>
+        <source>Confirm Cancellation</source>
+      <target>キャンセルの確認</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.CANCELLATION_WARNING">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-cancel-dialog/appointment-cancel-dialog.component.html:7,9</note>
+      </notes>
+      <segment>
+        <source>Are you sure you want to cancel this appointment?</source>
+      <target>この予約をキャンセルしてもよろしいですか？</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.CANCELLATION_REASON">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-cancel-dialog/appointment-cancel-dialog.component.html:11,13</note>
+      </notes>
+      <segment>
+        <source>Reason for cancellation</source>
+      <target>キャンセルの理由</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.REASON_PLACEHOLDER">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-cancel-dialog/appointment-cancel-dialog.component.html:16,18</note>
+      </notes>
+      <segment>
+        <source>Enter reason for cancellation...</source>
+      <target>キャンセルの理由を入力してください...</target>
+      </segment>
+    </unit>
+    <unit id="VALIDATION.REASON_REQUIRED">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-cancel-dialog/appointment-cancel-dialog.component.html:23,25</note>
+      </notes>
+      <segment>
+        <source>Please provide a reason.</source>
+      <target>理由を入力してください。</target>
+      </segment>
+    </unit>
+    <unit id="VALIDATION.REASON_MIN_LENGTH">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-cancel-dialog/appointment-cancel-dialog.component.html:28,30</note>
+      </notes>
+      <segment>
+        <source>Reason must be at least 10 characters.</source>
+      <target>理由は10文字以上である必要があります。</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.REASON_HELP">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-cancel-dialog/appointment-cancel-dialog.component.html:31,32</note>
+      </notes>
+      <segment>
+        <source>Please let us know why you are cancelling</source>
+      <target>キャンセルの理由を教えてください</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.SERVICE">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-cancel-dialog/appointment-cancel-dialog.component.html:37,38</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.html:34,35</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.html:19,20</note>
+      </notes>
+      <segment>
+        <source>Service</source>
+      <target>サービス</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.DATE">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-cancel-dialog/appointment-cancel-dialog.component.html:41,42</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:184,185</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.html:49,50</note>
+      </notes>
+      <segment>
+        <source>Date</source>
+      <target>日付</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.TIME">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-cancel-dialog/appointment-cancel-dialog.component.html:45,46</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:194,195</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.html:55,56</note>
+      </notes>
+      <segment>
+        <source>Time</source>
+      <target>時間</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.CANCEL_APPOINTMENT">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-cancel-dialog/appointment-cancel-dialog.component.html:54,56</note>
+      </notes>
+      <segment>
+        <source>Cancel Appointment</source>
+      <target>予約をキャンセル</target>
+      </segment>
+    </unit>
+    <unit id="COMMON.CANCEL">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-cancel-dialog/appointment-cancel-dialog.component.html:61,62</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.ts:93</note>
+      </notes>
+      <segment>
+        <source>Cancel</source>
+      <target>キャンセル</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.CONFIRM_CANCEL">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-cancel-dialog/appointment-cancel-dialog.component.html:65,67</note>
+      </notes>
+      <segment>
+        <source>Confirm Cancel</source>
+      <target>キャンセルを確認</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.CANCELLATION_SUCCESS">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-cancel-dialog/appointment-cancel-dialog.component.ts:64</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.ts:82</note>
+      </notes>
+      <segment>
+        <source>Appointment cancelled successfully.</source>
+      <target>予約が正常にキャンセルされました。</target>
+      </segment>
+    </unit>
+    <unit id="COMMON.CLOSE">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-cancel-dialog/appointment-cancel-dialog.component.ts:64</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.ts:146</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.ts:82</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.ts:89</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.ts:114</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.ts:130</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.ts:72</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.ts:104</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.ts:111</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.ts:124</note>
+        <note category="location">libs/web/customer/src/lib/features/profile/profile.component.ts:113</note>
+      </notes>
+      <segment>
+        <source>Close</source>
+      <target>閉じる</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.NEW_APPOINTMENT">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:4,5</note>
+      </notes>
+      <segment>
+        <source>New Appointment</source>
+      <target>新規予約</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.APPOINTMENT_SUBTITLE">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:5,6</note>
+      </notes>
+      <segment>
+        <source>Manage your appointments</source>
+      <target>予約を管理する</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.SELECT_SERVICE">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:13,15</note>
+      </notes>
+      <segment>
+        <source>Select Service</source>
+      <target>サービスを選択</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.CHOOSE_SERVICE">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:16,17</note>
+      </notes>
+      <segment>
+        <source>Choose Service</source>
+      <target>サービスを選ぶ</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.SERVICE_SELECTION_HELP">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:17,19</note>
+      </notes>
+      <segment>
+        <source>Choose the service you would like to book</source>
+      <target>予約したいサービスを選択してください</target>
+      </segment>
+    </unit>
+    <unit id="COMMON.MINUTES">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:31</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:167,168</note>
+      </notes>
+      <segment>
+        <source>minutes</source>
+      <target>分</target>
+      </segment>
+    </unit>
+    <unit id="VALIDATION.SERVICE_REQUIRED">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:40,41</note>
+      </notes>
+      <segment>
+        <source>Please select a service.</source>
+      <target>サービスを選択してください。</target>
+      </segment>
+    </unit>
+    <unit id="COMMON.NEXT">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:47,48</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:89,90</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:147,148</note>
+      </notes>
+      <segment>
+        <source>Next</source>
+      <target>次へ</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.SELECT_STAFF">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:56,58</note>
+      </notes>
+      <segment>
+        <source>Select Staff</source>
+      <target>スタッフを選択</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.CHOOSE_STAFF">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:59,60</note>
+      </notes>
+      <segment>
+        <source>Choose Staff</source>
+      <target>スタッフを選ぶ</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.STAFF_SELECTION_HELP">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:60,62</note>
+      </notes>
+      <segment>
+        <source>Choose your preferred staff member</source>
+      <target>希望するスタッフを選択してください</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.AVAILABLE">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:73</note>
+      </notes>
+      <segment>
+        <source>Available</source>
+      <target>利用可能</target>
+      </segment>
+    </unit>
+    <unit id="VALIDATION.STAFF_REQUIRED">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:81,82</note>
+      </notes>
+      <segment>
+        <source>Please select a staff member.</source>
+      <target>スタッフを選択してください。</target>
+      </segment>
+    </unit>
+    <unit id="COMMON.BACK">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:87,88</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:145,146</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:227,228</note>
+      </notes>
+      <segment>
+        <source>Back</source>
+      <target>戻る</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.SELECT_DATETIME">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:98,100</note>
+      </notes>
+      <segment>
+        <source>Select Date &amp; Time</source>
+      <target>日時を選択</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.CHOOSE_DATETIME">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:101,102</note>
+      </notes>
+      <segment>
+        <source>Choose Date &amp; Time</source>
+      <target>日時を選ぶ</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.DATETIME_SELECTION_HELP">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:102,104</note>
+      </notes>
+      <segment>
+        <source>Select a convenient date and time</source>
+      <target>都合の良い日時を選択してください</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.SELECT_DATE">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:106,107</note>
+      </notes>
+      <segment>
+        <source>Select Date</source>
+      <target>日付を選択</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.CHOOSE_DATE">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:108,109</note>
+      </notes>
+      <segment>
+        <source>Choose Date</source>
+      <target>日付を選ぶ</target>
+      </segment>
+    </unit>
+    <unit id="VALIDATION.DATE_REQUIRED">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:114,115</note>
+      </notes>
+      <segment>
+        <source>Date is required.</source>
+      <target>日付は必須です。</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.AVAILABLE_TIMESLOTS">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:122,123</note>
+      </notes>
+      <segment>
+        <source>Available Time Slots</source>
+      <target>利用可能な時間枠</target>
+      </segment>
+    </unit>
+    <unit id="VALIDATION.TIME_REQUIRED">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:136,137</note>
+      </notes>
+      <segment>
+        <source>Time slot is required.</source>
+      <target>時間枠は必須です。</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.REVIEW_CONFIRM">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:156,158</note>
+      </notes>
+      <segment>
+        <source>Confirm Details</source>
+      <target>詳細を確認</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.REVIEW_DETAILS">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:159,160</note>
+      </notes>
+      <segment>
+        <source>Review Details</source>
+      <target>詳細をレビュー</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.REVIEW_DETAILS_HELP">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:160,162</note>
+      </notes>
+      <segment>
+        <source>Please review your appointment details before confirming</source>
+      <target>確認する前に予約詳細をレビューしてください</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.STAFF">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:176,177</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.html:42,43</note>
+      </notes>
+      <segment>
+        <source>Staff</source>
+      <target>スタッフ</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.NOTES">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:202</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.html:61,62</note>
+      </notes>
+      <segment>
+        <source>Notes</source>
+      <target>備考</target>
+      </segment>
+    </unit>
+    <unit id="COMMON.OPTIONAL">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:202,203</note>
+      </notes>
+      <segment>
+        <source>Optional</source>
+      <target>任意</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.NOTES_PLACEHOLDER">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:207,209</note>
+      </notes>
+      <segment>
+        <source>Enter any special requests or notes...</source>
+      <target>特別リクエストや備考を入力してください...</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.TERMS_AGREEMENT">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:214,215</note>
+      </notes>
+      <segment>
+        <source>I agree to the cancellation policy</source>
+      <target>キャンセルポリシーに同意します</target>
+      </segment>
+    </unit>
+    <unit id="VALIDATION.TERMS_REQUIRED">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:218,219</note>
+      </notes>
+      <segment>
+        <source>You must agree to the terms.</source>
+      <target>利用規約に同意する必要があります。</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.CONFIRM_APPOINTMENT">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.html:230,232</note>
+      </notes>
+      <segment>
+        <source>Confirm Appointment</source>
+      <target>予約を確定</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.CREATE_SUCCESS">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-create/appointment-create.component.ts:146</note>
+      </notes>
+      <segment>
+        <source>Appointment created successfully.</source>
+      <target>予約が正常に作成されました。</target>
+      </segment>
+    </unit>
+    <unit id="COMMON.BACK_TO_APPOINTMENTS">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.html:5,8</note>
+      </notes>
+      <segment>
+        <source>Back to Appointments</source>
+      <target>予約一覧に戻る</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.APPOINTMENT_DETAILS">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.html:22</note>
+      </notes>
+      <segment>
+        <source>Appointment Details</source>
+      <target>予約詳細</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.SERVICE_DETAILS">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.html:32,33</note>
+      </notes>
+      <segment>
+        <source>Service Details</source>
+      <target>サービス詳細</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.SALON">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.html:38,39</note>
+      </notes>
+      <segment>
+        <source>Salon</source>
+      <target>サロン</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.DETAILS">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.html:47,48</note>
+      </notes>
+      <segment>
+        <source>Details</source>
+      <target>予約詳細</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.RESCHEDULE">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.html:70,71</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.html:65,66</note>
+      </notes>
+      <segment>
+        <source>Reschedule</source>
+      <target>予約変更</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.CANCEL">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.html:73,74</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.html:74,75</note>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.ts:92</note>
+      </notes>
+      <segment>
+        <source>Cancel Appointment</source>
+      <target>予約をキャンセル</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.NOT_FOUND_TITLE">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.html:87,88</note>
+      </notes>
+      <segment>
+        <source>Appointment Not Found</source>
+      <target>予約が見つかりません</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.NOT_FOUND_MESSAGE">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.html:88,89</note>
+      </notes>
+      <segment>
+        <source>The requested appointment could not be found.</source>
+      <target>指定された予約が見つかりませんでした。</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.VIEW_ALL_APPOINTMENTS">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.html:90,92</note>
+      </notes>
+      <segment>
+        <source>View All Appointments</source>
+      <target>すべての予約を表示</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.CANCELLATION_ERROR">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.ts:89</note>
+      </notes>
+      <segment>
+        <source>Failed to cancel appointment.</source>
+      <target>予約のキャンセルに失敗しました。</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.INVALID_ID">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.ts:114</note>
+      </notes>
+      <segment>
+        <source>Invalid appointment ID.</source>
+      <target>無効な予約IDです。</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.LOAD_ERROR">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-detail/appointment-detail.component.ts:130</note>
+      </notes>
+      <segment>
+        <source>Failed to load appointment details.</source>
+      <target>予約詳細の読み込みに失敗しました।</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.MY_APPOINTMENTS">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.html:4,5</note>
+      </notes>
+      <segment>
+        <source>My Appointments</source>
+      <target>マイ予約</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.VIEW_MANAGE_APPOINTMENTS">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.html:5,6</note>
+      </notes>
+      <segment>
+        <source>View and manage your appointments</source>
+      <target>予約の確認と管理</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.AT_SALON">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.html:26</note>
+      </notes>
+      <segment>
+        <source>At Salon</source>
+      <target>サロンで</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.DATE_TIME">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.html:35,36</note>
+      </notes>
+      <segment>
+        <source>Date &amp; Time</source>
+      <target>日時</target>
+      </segment>
+    </unit>
+    <unit id="COMMON.STATUS">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.html:46,47</note>
+      </notes>
+      <segment>
+        <source>Status</source>
+      <target>ステータス</target>
+      </segment>
+    </unit>
+    <unit id="COMMON.ACTIONS">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.html:56,57</note>
+      </notes>
+      <segment>
+        <source>Actions</source>
+      <target>アクション</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.LIST.LOAD_ERROR">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.ts:72</note>
+      </notes>
+      <segment>
+        <source>Failed to load appointments.</source>
+      <target>予約の読み込みに失敗しました。</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.CANCEL_CONFIRM_TITLE">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.ts:90</note>
+      </notes>
+      <segment>
+        <source>Confirm Cancellation</source>
+      <target>キャンセルの確認</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.CANCEL_CONFIRM_MESSAGE">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.ts:91</note>
+      </notes>
+      <segment>
+        <source>Are you sure you want to cancel this appointment?</source>
+      <target>この予約をキャンセルしてもよろしいですか？</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.CANCEL_SUCCESS">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.ts:104</note>
+      </notes>
+      <segment>
+        <source>Appointment cancelled successfully.</source>
+      <target>予約が正常にキャンセルされました。</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.CANCEL_ERROR">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.ts:111</note>
+      </notes>
+      <segment>
+        <source>Failed to cancel appointment.</source>
+      <target>予約のキャンセルに失敗しました。</target>
+      </segment>
+    </unit>
+    <unit id="APPOINTMENT.RESCHEDULE_MESSAGE">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/appointment/appointment-list/appointment-list.component.ts:124</note>
+      </notes>
+      <segment>
+        <source>Please select a new time slot.</source>
+      <target>新しい時間枠を選択してください。</target>
+      </segment>
+    </unit>
+    <unit id="AUTH.FORGOT_PASSWORD.FAILED_TO_SEND">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/auth/components/forgot-password/forgot-password.component.ts:120</note>
+      </notes>
+      <segment>
+        <source>Failed to send reset instructions.</source>
+      <target>リセット手順の送信に失敗しました。</target>
+      </segment>
+    </unit>
+    <unit id="COMMON.ERRORS.GENERIC">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/auth/components/forgot-password/forgot-password.component.ts:125</note>
+      </notes>
+      <segment>
+        <source>An error occurred. Please try again.</source>
+      <target>エラーが発生しました。もう一度お試しください。</target>
+      </segment>
+    </unit>
+    <unit id="PROFILE.TITLE">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/profile/profile.component.html:4</note>
+      </notes>
+      <segment>
+        <source>Profile Settings</source>
+      <target>プロファイル設定</target>
+      </segment>
+    </unit>
+    <unit id="PROFILE.CHANGE_PICTURE">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/profile/profile.component.html:17,18</note>
+      </notes>
+      <segment>
+        <source>Change Picture</source>
+      <target>写真を変更</target>
+      </segment>
+    </unit>
+    <unit id="PROFILE.NAME">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/profile/profile.component.html:23</note>
+      </notes>
+      <segment>
+        <source>Full Name</source>
+      <target>氏名</target>
+      </segment>
+    </unit>
+    <unit id="PROFILE.NAME_REQUIRED">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/profile/profile.component.html:26,27</note>
+      </notes>
+      <segment>
+        <source>Name is required.</source>
+      <target>名前は必須です।</target>
+      </segment>
+    </unit>
+    <unit id="PROFILE.EMAIL">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/profile/profile.component.html:31</note>
+      </notes>
+      <segment>
+        <source>Email Address</source>
+      <target>メールアドレス</target>
+      </segment>
+    </unit>
+    <unit id="PROFILE.EMAIL_INVALID">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/profile/profile.component.html:34,35</note>
+      </notes>
+      <segment>
+        <source>Please enter a valid email address.</source>
+      <target>有効なメールアドレスを入力してください。</target>
+      </segment>
+    </unit>
+    <unit id="PROFILE.CONTACT">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/profile/profile.component.html:39,40</note>
+      </notes>
+      <segment>
+        <source>Contact Information</source>
+      <target>連絡先情報</target>
+      </segment>
+    </unit>
+    <unit id="PROFILE.PASSWORD">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/profile/profile.component.html:44,45</note>
+      </notes>
+      <segment>
+        <source>Password</source>
+      <target>パスワード</target>
+      </segment>
+    </unit>
+    <unit id="PROFILE.PASSWORD_HINT">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/profile/profile.component.html:46,47</note>
+      </notes>
+      <segment>
+        <source>Leave blank to keep current password</source>
+      <target>現在のパスワードを維持する場合は空白にしてください</target>
+      </segment>
+    </unit>
+    <unit id="PROFILE.UPDATE">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/profile/profile.component.html:61,62</note>
+      </notes>
+      <segment>
+        <source>Update Profile</source>
+      <target>プロファイルを更新</target>
+      </segment>
+    </unit>
+    <unit id="PROFILE.UPDATE_SUCCESS">
+      <notes>
+        <note category="location">libs/web/customer/src/lib/features/profile/profile.component.ts:113</note>
+      </notes>
+      <segment>
+        <source>Profile updated successfully.</source>
+      <target>プロファイルが正常に更新されました。</target>
+      </segment>
+    </unit>
+  </file>
+</xliff>
