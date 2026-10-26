@@ -68,8 +68,7 @@
       },
       "configurations": {
         "ci": {
-          "ci": true,
-          "codeCoverage": true
+          "coverage": true
         }
       },
       "cache": true
