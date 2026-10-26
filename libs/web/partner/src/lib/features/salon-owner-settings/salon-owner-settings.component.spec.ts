@@ -440,7 +440,9 @@ describe('SalonOwnerSettingsComponent', () => {
     component.branchForm.patchValue({ status: 'INACTIVE' });
     component.saveBranch();
 
-    expect(component.error()).toBe('This branch cannot be archived while it has future confirmed appointments. Move or cancel those appointments first.');
+    expect(component.error()).toBe(
+      'This branch cannot be archived while it has future confirmed appointments. Move or cancel those appointments first.',
+    );
   });
 
   it('shows a specific message when branch currency changes are blocked by a lock', () => {
@@ -471,9 +473,7 @@ describe('SalonOwnerSettingsComponent', () => {
 
     component.saveBranch();
 
-    expect(component.error()).toBe(
-      'This business is inactive. Reactivate the business before creating a branch or reactivating one.',
-    );
+    expect(component.error()).toBe('This business is inactive. Reactivate the business before creating a branch or reactivating one.');
   });
 
   it('clears optional branch email when the field is blank on update', () => {
@@ -574,11 +574,7 @@ describe('SalonOwnerSettingsComponent', () => {
   it('does not submit decimal or oversized policy values', () => {
     const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
       policyForm: {
-        patchValue(value: {
-          bookingLeadMinutes: number;
-          cancellationCutoffMinutes: number;
-          noShowGraceMinutes: number;
-        }): void;
+        patchValue(value: { bookingLeadMinutes: number; cancellationCutoffMinutes: number; noShowGraceMinutes: number }): void;
       };
     };
     api.updateBranchPolicy.mockClear();
@@ -991,9 +987,7 @@ describe('SalonOwnerSettingsComponent', () => {
   });
 
   it('ignores stale business-save responses after the selected business changes', () => {
-    let saveHandler:
-      | ((savedBusiness: SalonBusiness) => void)
-      | undefined;
+    let saveHandler: ((savedBusiness: SalonBusiness) => void) | undefined;
     api.updateBusiness.mockReturnValueOnce(
       new Observable((subscriber) => {
         saveHandler = (savedBusiness) => {
@@ -1032,9 +1026,7 @@ describe('SalonOwnerSettingsComponent', () => {
   });
 
   it('ignores stale business-list reloads after the selected business changes', () => {
-    let reloadHandler:
-      | ((result: { items: SalonBusiness[]; page: { page: number; pageSize: number; total: number } }) => void)
-      | undefined;
+    let reloadHandler: ((result: { items: SalonBusiness[]; page: { page: number; pageSize: number; total: number } }) => void) | undefined;
     api.updateBusiness.mockReturnValueOnce(
       of({
         id: 'business-1',
@@ -1098,9 +1090,7 @@ describe('SalonOwnerSettingsComponent', () => {
   });
 
   it('ignores stale business-create responses after restarting a new business draft', () => {
-    let createHandler:
-      | ((savedBusiness: SalonBusiness) => void)
-      | undefined;
+    let createHandler: ((savedBusiness: SalonBusiness) => void) | undefined;
     api.createBusiness.mockReturnValueOnce(
       new Observable((subscriber) => {
         createHandler = (savedBusiness) => {
@@ -1146,10 +1136,7 @@ describe('SalonOwnerSettingsComponent', () => {
     );
     api.listBranches.mockReturnValueOnce(
       of({
-        items: [
-          branch,
-          { ...branch, id: 'branch-2', name: 'Second' },
-        ],
+        items: [branch, { ...branch, id: 'branch-2', name: 'Second' }],
         page: { page: 1, pageSize: 2, total: 2 },
       }),
     );
@@ -1163,9 +1150,7 @@ describe('SalonOwnerSettingsComponent', () => {
   });
 
   it('ignores stale branch-list reloads after switching branches', () => {
-    let reloadHandler:
-      | ((result: { items: BranchProfile[]; page: { page: number; pageSize: number; total: number } }) => void)
-      | undefined;
+    let reloadHandler: ((result: { items: BranchProfile[]; page: { page: number; pageSize: number; total: number } }) => void) | undefined;
     api.updateBranch.mockReturnValueOnce(of(branch));
     api.listBranches.mockReturnValueOnce(
       new Observable((subscriber) => {
@@ -1180,10 +1165,7 @@ describe('SalonOwnerSettingsComponent', () => {
     component.saveBranch();
     component.selectBranch({ ...branch, id: 'branch-2', name: 'Second' });
     reloadHandler?.({
-      items: [
-        branch,
-        { ...branch, id: 'branch-2', name: 'Second' },
-      ],
+      items: [branch, { ...branch, id: 'branch-2', name: 'Second' }],
       page: { page: 1, pageSize: 2, total: 2 },
     });
 
@@ -1521,5 +1503,123 @@ describe('SalonOwnerSettingsComponent', () => {
 
     component.removeInterval(1, 1);
     expect(component.getDayIntervals(1).length).toBe(1);
+  });
+
+  it('marks required text fields invalid when filled only with whitespace', () => {
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      businessForm: {
+        controls: {
+          displayName: { setValue(val: string): void; errors: Record<string, unknown> | null; valid: boolean };
+          legalName: { setValue(val: string): void; errors: Record<string, unknown> | null; valid: boolean };
+        };
+        invalid: boolean;
+      };
+      branchForm: {
+        controls: {
+          name: { setValue(val: string): void; errors: Record<string, unknown> | null; valid: boolean };
+          address: {
+            controls: {
+              line1: { setValue(val: string): void; errors: Record<string, unknown> | null; valid: boolean };
+              city: { setValue(val: string): void; errors: Record<string, unknown> | null; valid: boolean };
+            };
+          };
+        };
+        invalid: boolean;
+      };
+    };
+
+    component.businessForm.controls.displayName.setValue('   ');
+    expect(component.businessForm.controls.displayName.errors).toEqual(expect.objectContaining({ required: true }));
+    expect(component.businessForm.controls.displayName.valid).toBe(false);
+
+    component.businessForm.controls.displayName.setValue(' a ');
+    expect(component.businessForm.controls.displayName.errors).toEqual(
+      expect.objectContaining({ minlength: { requiredLength: 2, actualLength: 1 } }),
+    );
+
+    component.businessForm.controls.legalName.setValue('   ');
+    expect(component.businessForm.controls.legalName.errors).toEqual(expect.objectContaining({ required: true }));
+
+    component.branchForm.controls.name.setValue('   ');
+    expect(component.branchForm.controls.name.errors).toEqual(expect.objectContaining({ required: true }));
+
+    component.branchForm.controls.address.controls.line1.setValue('   ');
+    expect(component.branchForm.controls.address.controls.line1.errors).toEqual(expect.objectContaining({ required: true }));
+
+    api.updateBusiness.mockClear();
+    component.saveBusiness();
+    expect(api.updateBusiness).not.toHaveBeenCalled();
+  });
+
+  it('preserves the active branch selection when an existing business is saved in a multi-branch business', () => {
+    const branch2: BranchProfile = { ...branch, id: 'branch-2', name: 'Second Branch' };
+    api.listBranches.mockReturnValue(
+      of({
+        items: [branch, branch2],
+        page: { page: 1, pageSize: 2, total: 2 },
+      }),
+    );
+    api.updateBusiness.mockReturnValue(
+      of({
+        id: 'business-1',
+        displayName: 'Updated Salon One',
+        legalName: 'Salon One Legal',
+        status: 'ACTIVE',
+      }),
+    );
+
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      businessForm: { patchValue(val: { displayName: string }): void };
+    };
+
+    component.selectBranch(branch2);
+    expect(component.selectedBranch()?.id).toBe('branch-2');
+
+    api.listBranches.mockClear();
+    component.businessForm.patchValue({ displayName: 'Updated Salon One' });
+    component.saveBusiness();
+
+    expect(api.updateBusiness).toHaveBeenCalledWith('business-1', {
+      displayName: 'Updated Salon One',
+      legalName: 'Salon One Legal',
+      status: 'ACTIVE',
+    });
+    expect(api.listBranches).toHaveBeenCalledWith('business-1');
+    expect(component.selectedBranch()?.id).toBe('branch-2');
+  });
+
+  it('preserves a branch draft started while a business save or reload is in flight', () => {
+    let businessSaveSubscriber: ((business: SalonBusiness) => void) | undefined;
+    api.updateBusiness.mockReturnValueOnce(
+      new Observable((subscriber) => {
+        businessSaveSubscriber = (business) => {
+          subscriber.next(business);
+          subscriber.complete();
+        };
+      }),
+    );
+
+    const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
+      newBranch(): void;
+      businessForm: { patchValue(val: { displayName: string }): void };
+    };
+
+    component.businessForm.patchValue({ displayName: 'In-Flight Business Save' });
+    component.saveBusiness();
+
+    // User starts a new branch draft while the business save is in flight
+    component.newBranch();
+    expect(component.selectedBranch()).toBeNull();
+
+    // Now business save completes
+    businessSaveSubscriber?.({
+      id: 'business-1',
+      displayName: 'In-Flight Business Save',
+      legalName: 'Salon One Legal',
+      status: 'ACTIVE',
+    });
+
+    // Branch draft should remain active (selectedBranch stays null)
+    expect(component.selectedBranch()).toBeNull();
   });
 });

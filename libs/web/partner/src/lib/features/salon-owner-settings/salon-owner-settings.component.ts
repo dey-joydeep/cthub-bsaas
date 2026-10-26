@@ -1,15 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
-import {
-  AbstractControl,
-  FormArray,
-  FormBuilder,
-  ReactiveFormsModule,
-  ValidationErrors,
-  ValidatorFn,
-  Validators,
-} from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -28,7 +20,14 @@ import { forkJoin, of } from 'rxjs';
 import { CURRENT_USER } from '@cthub-bsaas/web-core-auth';
 import { UserRole } from '@cthub-bsaas/shared';
 
-import { BranchHoliday, BranchHours, BranchPolicy, BranchProfile, SalonBusiness, WeeklyHoursDay } from './models/salon-owner-settings.models';
+import {
+  BranchHoliday,
+  BranchHours,
+  BranchPolicy,
+  BranchProfile,
+  SalonBusiness,
+  WeeklyHoursDay,
+} from './models/salon-owner-settings.models';
 import { SalonOwnerSettingsApi } from './salon-owner-settings.api';
 
 const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
@@ -96,6 +95,23 @@ function nonNegativeIntValidator(max = maxInt32): ValidatorFn {
     const value = control.value;
     if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > max) {
       return { integerRange: true };
+    }
+    return null;
+  };
+}
+
+function trimmedRequired(minLength = 1): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const rawValue = control.value;
+    if (typeof rawValue !== 'string') {
+      return { required: true };
+    }
+    const trimmed = rawValue.trim();
+    if (trimmed.length === 0) {
+      return { required: true };
+    }
+    if (trimmed.length < minLength) {
+      return { minlength: { requiredLength: minLength, actualLength: trimmed.length } };
     }
     return null;
   };
@@ -224,42 +240,48 @@ export class SalonOwnerSettingsComponent {
   protected readonly canCreateBranch = computed(() => !this.branchOnlyMode() || !this.isStaffUser());
 
   protected readonly businessForm = this.fb.nonNullable.group({
-    displayName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(120)]],
-    legalName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(160)]],
+    displayName: ['', [trimmedRequired(2), Validators.maxLength(120)]],
+    legalName: ['', [trimmedRequired(2), Validators.maxLength(160)]],
     status: this.fb.nonNullable.control<'ACTIVE' | 'INACTIVE'>('ACTIVE', Validators.required),
   });
 
   protected readonly branchForm = this.fb.nonNullable.group({
     businessId: ['', Validators.required],
-    name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(120)]],
+    name: ['', [trimmedRequired(2), Validators.maxLength(120)]],
     phone: ['', Validators.maxLength(30)],
     email: ['', Validators.email],
     timezone: ['Asia/Tokyo', [Validators.required, timezoneValidator()]],
     currency: ['JPY', [Validators.required, currencyValidator()]],
     status: this.fb.nonNullable.control<'ACTIVE' | 'INACTIVE'>('ACTIVE', Validators.required),
     address: this.fb.nonNullable.group({
-      line1: ['', [Validators.required, Validators.maxLength(160)]],
+      line1: ['', [trimmedRequired(1), Validators.maxLength(160)]],
       line2: ['', Validators.maxLength(160)],
-      city: ['', [Validators.required, Validators.maxLength(80)]],
-      state: ['', [Validators.required, Validators.maxLength(80)]],
-      postalCode: ['', [Validators.required, Validators.maxLength(20)]],
-      country: ['JP', [Validators.required, Validators.minLength(2), Validators.maxLength(2)]],
+      city: ['', [trimmedRequired(1), Validators.maxLength(80)]],
+      state: ['', [trimmedRequired(1), Validators.maxLength(80)]],
+      postalCode: ['', [trimmedRequired(1), Validators.maxLength(20)]],
+      country: ['JP', [trimmedRequired(2), Validators.maxLength(2)]],
     }),
   });
 
   protected readonly hoursForm = this.fb.nonNullable.group({
-    timezone: ['Asia/Tokyo', [Validators.required, timezoneValidator(), (control: AbstractControl) => this.validateSelectedBranchTimezone(control)]],
+    timezone: [
+      'Asia/Tokyo',
+      [Validators.required, timezoneValidator(), (control: AbstractControl) => this.validateSelectedBranchTimezone(control)],
+    ],
     acknowledgeExistingAppointmentsOutsideHours: [false],
     days: this.fb.array(weekdays.map((_, dayOfWeek) => this.createDayGroup(dayOfWeek))),
   });
 
-  protected readonly holidayForm = this.fb.nonNullable.group({
-    date: [localDateInputValue(), Validators.required],
-    closed: [true],
-    reason: ['', Validators.maxLength(160)],
-    start: ['09:00'],
-    end: ['17:00'],
-  }, { validators: [holidayIntervalValidator()] });
+  protected readonly holidayForm = this.fb.nonNullable.group(
+    {
+      date: [localDateInputValue(), Validators.required],
+      closed: [true],
+      reason: ['', Validators.maxLength(160)],
+      start: ['09:00'],
+      end: ['17:00'],
+    },
+    { validators: [holidayIntervalValidator()] },
+  );
 
   protected readonly policyForm = this.fb.nonNullable.group({
     bookingLeadMinutes: [defaultPolicy.bookingLeadMinutes, [Validators.required, nonNegativeIntValidator()]],
@@ -285,20 +307,22 @@ export class SalonOwnerSettingsComponent {
     return this.hoursForm.controls.days;
   }
 
-  protected selectBusiness(business: SalonBusiness): void {
+  protected selectBusiness(business: SalonBusiness, preserveBranchId?: string): void {
     this.businessLoadVersion += 1;
     this.businessEditorVersion += 1;
-    this.branchEditorVersion += 1;
     this.selectedBusiness.set(business);
     this.branchSettingsLoadVersion += 1;
-    this.branches.set([]);
     this.businessForm.reset({
       displayName: business.displayName,
       legalName: business.legalName,
       status: business.status,
     });
-    this.newBranch();
-    this.loadBranches(business.id);
+    if (!preserveBranchId) {
+      this.branchEditorVersion += 1;
+      this.branches.set([]);
+      this.newBranch();
+    }
+    this.loadBranches(business.id, preserveBranchId);
   }
 
   protected selectBranch(branch: BranchProfile): void {
@@ -372,10 +396,16 @@ export class SalonOwnerSettingsComponent {
     const selected = this.selectedBusiness();
     const startedBusinessId = selected?.id ?? null;
     const startedEditorVersion = this.businessEditorVersion;
+    const preserveBranchId = this.selectedBranch()?.id;
+    const startedBranchEditorVersion = this.branchEditorVersion;
     const requestVersion = ++this.businessSaveVersion;
-    const request = selected
-      ? this.api.updateBusiness(selected.id, this.businessForm.getRawValue())
-      : this.api.createBusiness(this.businessForm.getRawValue());
+    const formValue = this.businessForm.getRawValue();
+    const payload = {
+      displayName: formValue.displayName.trim(),
+      legalName: formValue.legalName.trim(),
+      status: formValue.status,
+    };
+    const request = selected ? this.api.updateBusiness(selected.id, payload) : this.api.createBusiness(payload);
 
     this.saving.set(true);
     this.error.set(null);
@@ -391,7 +421,7 @@ export class SalonOwnerSettingsComponent {
           return;
         }
         this.selectedBusiness.set(business);
-        this.loadBusinesses(business.id);
+        this.loadBusinesses(business.id, preserveBranchId, startedBranchEditorVersion);
         this.message.set('Settings saved.');
         this.saving.set(false);
       },
@@ -405,7 +435,9 @@ export class SalonOwnerSettingsComponent {
           return;
         }
         if (this.isBusinessDeactivationConflictError(error)) {
-          this.error.set('This business cannot be deactivated while it still has active branches. Archive or deactivate those branches first.');
+          this.error.set(
+            'This business cannot be deactivated while it still has active branches. Archive or deactivate those branches first.',
+          );
           this.saving.set(false);
           return;
         }
@@ -430,11 +462,17 @@ export class SalonOwnerSettingsComponent {
     const requestVersion = ++this.branchSaveVersion;
     const input = {
       ...value,
+      name: value.name.trim(),
       phone: selected ? optionalTextOrNull(value.phone) : optionalText(value.phone),
       email: selected ? optionalTextOrNull(value.email) : optionalText(value.email),
       address: {
         ...value.address,
+        line1: value.address.line1.trim(),
         line2: selected ? optionalTextOrNull(value.address.line2) : optionalText(value.address.line2),
+        city: value.address.city.trim(),
+        state: value.address.state.trim(),
+        postalCode: value.address.postalCode.trim(),
+        country: value.address.country.trim().toUpperCase(),
       },
     };
     const request = selected ? this.api.updateBranch(selected.id, input) : this.api.createBranch(input);
@@ -469,12 +507,16 @@ export class SalonOwnerSettingsComponent {
           return;
         }
         if (this.isBranchArchiveConflictError(error)) {
-          this.error.set('This branch cannot be archived while it has future confirmed appointments. Move or cancel those appointments first.');
+          this.error.set(
+            'This branch cannot be archived while it has future confirmed appointments. Move or cancel those appointments first.',
+          );
           this.saving.set(false);
           return;
         }
         if (this.isBranchCurrencyLockedError(error)) {
-          this.error.set('This branch currency is locked because finance history already exists. Keep the current currency for this branch.');
+          this.error.set(
+            'This branch currency is locked because finance history already exists. Keep the current currency for this branch.',
+          );
           this.saving.set(false);
           return;
         }
@@ -681,9 +723,9 @@ export class SalonOwnerSettingsComponent {
     const dayGroup = this.fb.nonNullable.group({
       dayOfWeek: [value?.dayOfWeek ?? dayOfWeek],
       open: [value?.open ?? dayOfWeek > 0],
-      intervals: this.fb.nonNullable.array([
-        ...intervals.map((interval) => this.createIntervalGroup(interval)),
-      ], { validators: [intervalsValidator()] }),
+      intervals: this.fb.nonNullable.array([...intervals.map((interval) => this.createIntervalGroup(interval))], {
+        validators: [intervalsValidator()],
+      }),
     });
     this.syncDayIntervalsState(dayGroup);
     return dayGroup;
@@ -713,7 +755,7 @@ export class SalonOwnerSettingsComponent {
     this.loadBusinesses();
   }
 
-  private loadBusinesses(selectBusinessId?: string): void {
+  private loadBusinesses(selectBusinessId?: string, preserveBranchId?: string, expectedBranchEditorVersion?: number): void {
     const requestVersion = ++this.businessLoadVersion;
     const startedBusinessId = this.selectedBusiness()?.id ?? null;
     const startedEditorVersion = this.businessEditorVersion;
@@ -731,7 +773,34 @@ export class SalonOwnerSettingsComponent {
         this.businesses.set(result.items);
         const selected = result.items.find((business) => business.id === selectBusinessId) ?? result.items[0] ?? null;
         if (selected) {
-          this.selectBusiness(selected);
+          const isSameBusiness = this.selectedBusiness()?.id === selected.id;
+          const branchEditorChanged = expectedBranchEditorVersion !== undefined && this.branchEditorVersion !== expectedBranchEditorVersion;
+
+          if (isSameBusiness && branchEditorChanged) {
+            this.selectedBusiness.set(selected);
+            this.businessForm.reset({
+              displayName: selected.displayName,
+              legalName: selected.legalName,
+              status: selected.status,
+            });
+          } else if (isSameBusiness && preserveBranchId) {
+            this.selectedBusiness.set(selected);
+            this.businessForm.reset({
+              displayName: selected.displayName,
+              legalName: selected.legalName,
+              status: selected.status,
+            });
+            this.loadBranches(selected.id, preserveBranchId);
+          } else if (isSameBusiness && !preserveBranchId && expectedBranchEditorVersion !== undefined) {
+            this.selectedBusiness.set(selected);
+            this.businessForm.reset({
+              displayName: selected.displayName,
+              legalName: selected.legalName,
+              status: selected.status,
+            });
+          } else {
+            this.selectBusiness(selected, preserveBranchId);
+          }
         } else if (!this.branchOnlyMode()) {
           this.resetBranchEditor('');
         }
@@ -756,10 +825,7 @@ export class SalonOwnerSettingsComponent {
     const requestVersion = ++this.branchLoadVersion;
     this.api.listBranches(businessId).subscribe({
       next: (result) => {
-        if (
-          requestVersion !== this.branchLoadVersion ||
-          (typeof businessId === 'string' && this.selectedBusiness()?.id !== businessId)
-        ) {
+        if (requestVersion !== this.branchLoadVersion || (typeof businessId === 'string' && this.selectedBusiness()?.id !== businessId)) {
           return;
         }
         this.branches.set(result.items);
@@ -775,10 +841,7 @@ export class SalonOwnerSettingsComponent {
         }
       },
       error: (error: unknown) => {
-        if (
-          requestVersion !== this.branchLoadVersion ||
-          (typeof businessId === 'string' && this.selectedBusiness()?.id !== businessId)
-        ) {
+        if (requestVersion !== this.branchLoadVersion || (typeof businessId === 'string' && this.selectedBusiness()?.id !== businessId)) {
           return;
         }
         this.branches.set([]);
@@ -850,8 +913,7 @@ export class SalonOwnerSettingsComponent {
   private buildWeeklyHoursInput() {
     return {
       timezone: this.hoursForm.controls.timezone.value,
-      acknowledgeExistingAppointmentsOutsideHours:
-        this.hoursForm.controls.acknowledgeExistingAppointmentsOutsideHours.value,
+      acknowledgeExistingAppointmentsOutsideHours: this.hoursForm.controls.acknowledgeExistingAppointmentsOutsideHours.value,
       days: (this.hoursForm.controls.days.getRawValue() as WeeklyHoursDay[]).map((day) => ({
         ...day,
         intervals: day.open ? day.intervals : [],
@@ -937,25 +999,18 @@ export class SalonOwnerSettingsComponent {
           : null;
 
     const errorCode =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'code' in responseError &&
-      typeof responseError.code === 'string'
+      typeof responseError === 'object' && responseError !== null && 'code' in responseError && typeof responseError.code === 'string'
         ? responseError.code
         : null;
     const errorMessage =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'message' in responseError &&
-      typeof responseError.message === 'string'
+      typeof responseError === 'object' && responseError !== null && 'message' in responseError && typeof responseError.message === 'string'
         ? responseError.message
         : typeof responseError === 'string'
           ? responseError
           : null;
 
     return (
-      errorCode === 'error.branch.hours.appointments_outside_hours' ||
-      errorMessage === 'error.branch.hours.appointments_outside_hours'
+      errorCode === 'error.branch.hours.appointments_outside_hours' || errorMessage === 'error.branch.hours.appointments_outside_hours'
     );
   }
 
@@ -968,17 +1023,11 @@ export class SalonOwnerSettingsComponent {
           : null;
 
     const errorCode =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'code' in responseError &&
-      typeof responseError.code === 'string'
+      typeof responseError === 'object' && responseError !== null && 'code' in responseError && typeof responseError.code === 'string'
         ? responseError.code
         : null;
     const errorMessage =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'message' in responseError &&
-      typeof responseError.message === 'string'
+      typeof responseError === 'object' && responseError !== null && 'message' in responseError && typeof responseError.message === 'string'
         ? responseError.message
         : typeof responseError === 'string'
           ? responseError
@@ -996,17 +1045,11 @@ export class SalonOwnerSettingsComponent {
           : null;
 
     const errorCode =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'code' in responseError &&
-      typeof responseError.code === 'string'
+      typeof responseError === 'object' && responseError !== null && 'code' in responseError && typeof responseError.code === 'string'
         ? responseError.code
         : null;
     const errorMessage =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'message' in responseError &&
-      typeof responseError.message === 'string'
+      typeof responseError === 'object' && responseError !== null && 'message' in responseError && typeof responseError.message === 'string'
         ? responseError.message
         : typeof responseError === 'string'
           ? responseError
@@ -1024,17 +1067,11 @@ export class SalonOwnerSettingsComponent {
           : null;
 
     const errorCode =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'code' in responseError &&
-      typeof responseError.code === 'string'
+      typeof responseError === 'object' && responseError !== null && 'code' in responseError && typeof responseError.code === 'string'
         ? responseError.code
         : null;
     const errorMessage =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'message' in responseError &&
-      typeof responseError.message === 'string'
+      typeof responseError === 'object' && responseError !== null && 'message' in responseError && typeof responseError.message === 'string'
         ? responseError.message
         : typeof responseError === 'string'
           ? responseError
@@ -1052,17 +1089,11 @@ export class SalonOwnerSettingsComponent {
           : null;
 
     const errorCode =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'code' in responseError &&
-      typeof responseError.code === 'string'
+      typeof responseError === 'object' && responseError !== null && 'code' in responseError && typeof responseError.code === 'string'
         ? responseError.code
         : null;
     const errorMessage =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'message' in responseError &&
-      typeof responseError.message === 'string'
+      typeof responseError === 'object' && responseError !== null && 'message' in responseError && typeof responseError.message === 'string'
         ? responseError.message
         : typeof responseError === 'string'
           ? responseError
@@ -1085,17 +1116,11 @@ export class SalonOwnerSettingsComponent {
           ? error.error
           : null;
     const errorCode =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'code' in responseError &&
-      typeof responseError.code === 'string'
+      typeof responseError === 'object' && responseError !== null && 'code' in responseError && typeof responseError.code === 'string'
         ? responseError.code
         : null;
     const errorMessage =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'message' in responseError &&
-      typeof responseError.message === 'string'
+      typeof responseError === 'object' && responseError !== null && 'message' in responseError && typeof responseError.message === 'string'
         ? responseError.message
         : typeof responseError === 'string'
           ? responseError
@@ -1150,5 +1175,4 @@ export class SalonOwnerSettingsComponent {
     const next = holidays.filter((holiday) => holiday.date !== savedHoliday.date).concat(savedHoliday);
     return next.slice().sort((left, right) => left.date.localeCompare(right.date));
   }
-
 }

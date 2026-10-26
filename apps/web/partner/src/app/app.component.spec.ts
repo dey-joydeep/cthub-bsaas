@@ -84,4 +84,13 @@ describe('AppComponent', () => {
 
     expect(app.settingsRoute).toBe('/owner/branches');
   });
+
+  it('routes owner-staff settings entry to the full owner settings screen', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+
+    app.currentUser = { id: 'owner-staff-1', roles: ['staff', 'owner'] };
+
+    expect(app.settingsRoute).toBe('/settings');
+  });
 });

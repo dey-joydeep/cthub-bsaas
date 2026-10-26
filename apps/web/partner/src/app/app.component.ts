@@ -63,7 +63,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   get settingsRoute(): string {
-    return this.hasRole('staff') ? '/owner/branches' : '/settings';
+    return this.hasRole('staff') && !this.hasRole('owner') ? '/owner/branches' : '/settings';
   }
 
   private authSubscription?: Subscription;
