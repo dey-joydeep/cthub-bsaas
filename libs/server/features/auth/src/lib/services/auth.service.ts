@@ -24,7 +24,7 @@ import { BadRequestException, Inject, Injectable, Optional, UnauthorizedExceptio
 import { ConfigService } from '@cthub-bsaas/server-core';
 import { JwtService } from '@nestjs/jwt';
 import { AuditService } from './audit.service';
-import type { AuthSignInResult, TokenPair } from '../types/auth.types';
+import type { AuthSignInResult, AuthUserSummary, TokenPair } from '../types/auth.types';
 import type { OAuthProfile } from '@cthub-bsaas/server-contracts-auth';
 import { AUTH_MESSAGE_KEYS, COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 import { RATE_LIMITER, type RateLimiter } from '@cthub-bsaas/server-infrastructure';
@@ -189,9 +189,9 @@ export class AuthService {
       return { totpRequired: true, tempToken };
     }
     const session = await this.sessionRepository.create({ userId: user.id });
-    const { accessToken, refreshToken } = await this.generateTokens(user, session.id);
+    const { accessToken, refreshToken, user: userSummary } = await this.generateTokens(user, session.id);
     this.audit.log('login_password_success', { userId: user.id, sessionId: session.id });
-    return { totpRequired: false, accessToken, refreshToken };
+    return { totpRequired: false, accessToken, refreshToken, user: userSummary! };
   }
 
   public async signInWithTotp(tempToken: string, totpCode: string): Promise<TokenPair> {
@@ -342,7 +342,15 @@ export class AuthService {
       ),
     ]);
     await this.refreshTokenRepository.create({ jti, userId: user.id, sessionId });
-    return { accessToken, refreshToken };
+    const userSummary: AuthUserSummary = {
+      id: user.id,
+      email: user.email,
+      roles,
+      tenantId,
+      ...(managedBranchIds ? { managedBranchIds } : {}),
+      canManageBranches,
+    };
+    return { accessToken, refreshToken, user: userSummary };
   }
 
   public async issueTokensForUser(userId: string): Promise<TokenPair> {

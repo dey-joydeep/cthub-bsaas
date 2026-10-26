@@ -7,13 +7,34 @@ export type TokenPair = {
   accessToken: string;
   /** Refresh token used to rotate credentials securely. */
   refreshToken: string;
+  /** Browser-readable user profile and capabilities. */
+  user?: AuthUserSummary;
+};
+
+/**
+ * @public
+ * Authenticated user profile and capabilities summary for browser client consumption.
+ */
+export type AuthUserSummary = {
+  /** Internal user id. */
+  id: string;
+  /** User email address. */
+  email: string;
+  /** List of role names for authorization checks. */
+  roles: string[];
+  /** Optional salon tenant id. */
+  tenantId?: string;
+  /** List of branch IDs that the staff member is authorized to manage. */
+  managedBranchIds?: string[];
+  /** Explicit flag indicating whether the user can manage branch settings. */
+  canManageBranches: boolean;
 };
 
 /**
  * @public
  * Result of the primary login flow.
  * - If TOTP is enabled, a temporary token is returned to complete MFA.
- * - Otherwise, an access/refresh token pair is issued.
+ * - Otherwise, an access/refresh token pair and user summary are issued.
  */
 export type AuthSignInResult =
   | {
@@ -25,6 +46,8 @@ export type AuthSignInResult =
   | ({
       /** No TOTP flow is required; tokens are issued immediately. */
       totpRequired: false;
+      /** Browser-readable user profile and capabilities. */
+      user: AuthUserSummary;
     } & TokenPair);
 
 /**
@@ -42,6 +65,8 @@ export type SignInHttpResponse =
   | {
       /** No TOTP flow is required. */
       totpRequired: false;
+      /** Authenticated user summary with capabilities for browser consumption. */
+      user: AuthUserSummary;
     };
 
 /**

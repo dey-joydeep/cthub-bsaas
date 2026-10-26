@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpClient } from '@angular/common/http';
 import { PLATFORM_ID } from '@angular/core';
 import { of } from 'rxjs';
 import { StorageService } from '@cthub-bsaas/web-core-platform';
@@ -130,5 +131,60 @@ describe('AuthService (Partner)', () => {
 
     expect(service.getCurrentUser()).toBeNull();
     expect(storageMock.removeItem$).toHaveBeenCalledWith('current_user');
+  });
+
+  it('preserves browser-provided canManageBranches and managedBranchIds directly from login payload', () => {
+    const user: PartnerAuthUser = {
+      id: 'staff-direct-1',
+      name: 'Direct Manager',
+      email: 'mgr@example.com',
+      role: 'staff',
+      roles: ['staff'],
+      managedBranchIds: ['b-direct-1'],
+      canManageBranches: true,
+    };
+
+    service.setLoggedInUser(user);
+
+    const current = service.getCurrentUser();
+    expect(current?.canManageBranches).toBe(true);
+    expect(current?.managedBranchIds).toEqual(['b-direct-1']);
+  });
+
+  it('hydrates user and capabilities from /api/auth/me when HttpClient is available', async () => {
+    const httpMock = {
+      get: jest.fn().mockReturnValue(
+        of({
+          success: true,
+          data: {
+            id: 'staff-hydrated',
+            name: 'Hydrated Manager',
+            email: 'hydrated@example.com',
+            role: 'staff',
+            roles: ['staff'],
+            managedBranchIds: ['b-hydrated-1'],
+            canManageBranches: true,
+          },
+        }),
+      ),
+    };
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        AuthService,
+        { provide: PLATFORM_ID, useValue: 'browser' },
+        { provide: StorageService, useValue: storageMock },
+        { provide: HttpClient, useValue: httpMock },
+      ],
+    });
+
+    const httpService = TestBed.inject(AuthService);
+    const hydrated = await httpService.hydrateCurrentUser();
+
+    expect(httpMock.get).toHaveBeenCalledWith('/api/auth/me');
+    expect(hydrated?.id).toBe('staff-hydrated');
+    expect(hydrated?.canManageBranches).toBe(true);
+    expect(hydrated?.managedBranchIds).toEqual(['b-hydrated-1']);
   });
 });

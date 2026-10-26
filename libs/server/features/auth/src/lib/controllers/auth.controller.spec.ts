@@ -45,9 +45,21 @@ describe('AuthController (core endpoints)', () => {
   });
 
   it('signIn sets CSRF and auth cookies when no TOTP', async () => {
-    service.signIn.mockResolvedValue({ totpRequired: false, accessToken: 'at', refreshToken: 'rt' });
+    const userSummary = {
+      id: 'u1',
+      email: 'e@example.com',
+      roles: ['STAFF'],
+      canManageBranches: true,
+      managedBranchIds: ['b1'],
+    };
+    service.signIn.mockResolvedValue({
+      totpRequired: false,
+      accessToken: 'at',
+      refreshToken: 'rt',
+      user: userSummary,
+    });
     const result = await controller.signIn(createLoginDto());
-    expect(result).toEqual({ totpRequired: false });
+    expect(result).toEqual({ totpRequired: false, user: userSummary });
     expect(cookies.issue).toHaveBeenCalledWith(
       expect.objectContaining({ accessToken: 'at', refreshToken: 'rt' }),
       expect.any(Object),
@@ -62,7 +74,7 @@ describe('AuthController (core endpoints)', () => {
 
   it('login/totp issues cookies', async () => {
     const out = await controller.signInWithTotp({ tempToken: 't', totpCode: '123456' });
-    expect(out).toEqual({});
+    expect(out).toEqual({ user: undefined });
     expect(cookies.issue).toHaveBeenCalledWith(
       expect.objectContaining({ accessToken: 'AT2', refreshToken: 'RT2' }),
       expect.any(Object),
@@ -72,15 +84,36 @@ describe('AuthController (core endpoints)', () => {
   it('login/totp uses default TTL path when roles are not CUSTOMER', async () => {
     decodeMock.mockReturnValueOnce({ roles: [] });
     const out = await controller.signInWithTotp({ tempToken: 't', totpCode: '123456' });
-    expect(out).toEqual({});
+    expect(out).toEqual({ user: undefined });
     expect(cookies.issue).toHaveBeenCalled();
   });
 
   it('login/totp handles decode null safely', async () => {
     decodeMock.mockReturnValueOnce(null);
     const out = await controller.signInWithTotp({ tempToken: 't', totpCode: '123456' });
-    expect(out).toEqual({});
+    expect(out).toEqual({ user: undefined });
     expect(cookies.issue).toHaveBeenCalled();
+  });
+
+  it('me returns current user profile and capabilities from jwt context', () => {
+    const userContext = {
+      userId: 'u1',
+      email: 'e@example.com',
+      roles: ['STAFF'],
+      sessionId: 'sess-1',
+      tenantId: 'tenant-1',
+      managedBranchIds: ['b1'],
+      canManageBranches: true,
+    };
+    const result = controller.me({ user: userContext as any });
+    expect(result).toEqual({
+      id: 'u1',
+      email: 'e@example.com',
+      roles: ['STAFF'],
+      tenantId: 'tenant-1',
+      managedBranchIds: ['b1'],
+      canManageBranches: true,
+    });
   });
 
   it('refresh uses cookie token and rotates cookies', async () => {

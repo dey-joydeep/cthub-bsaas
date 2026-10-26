@@ -278,12 +278,30 @@ describe('AuthService', () => {
       credentialTotpRepository.findByUserId.mockResolvedValue(null);
       sessionRepository.create.mockResolvedValue(session);
       jwtService.signAsync.mockResolvedValue('some-token');
-      // @ts-expect-error - private method
-      jest.spyOn(service, 'generateTokens').mockResolvedValue({ accessToken: 'access-token', refreshToken: 'refresh-token' });
+      jest.spyOn(service as any, 'generateTokens').mockResolvedValue({
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        user: {
+          id: mockUserWithRoles.id,
+          email: mockUserWithRoles.email,
+          roles: ['CUSTOMER'],
+          canManageBranches: false,
+        },
+      });
 
       const result = await service.signIn(email, password);
 
-      expect(result).toEqual({ totpRequired: false, accessToken: 'access-token', refreshToken: 'refresh-token' });
+      expect(result).toEqual({
+        totpRequired: false,
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        user: {
+          id: mockUserWithRoles.id,
+          email: mockUserWithRoles.email,
+          roles: ['CUSTOMER'],
+          canManageBranches: false,
+        },
+      });
     });
 
     it('should throw UnauthorizedException for invalid email', async () => {
@@ -673,7 +691,9 @@ describe('AuthService', () => {
       } as RefreshToken);
 
       const result = await service.issueTokensForUser(withCustomer.id);
-      expect(result).toEqual({ accessToken: 'access-token', refreshToken: 'refresh-token' });
+      expect(result).toEqual(
+        expect.objectContaining({ accessToken: 'access-token', refreshToken: 'refresh-token' }),
+      );
       const [, refreshArgs] = (jwtService.signAsync as jest.Mock).mock.calls[1] as [unknown, { expiresIn: string }];
       expect(refreshArgs.expiresIn).toBe('10d');
     });
@@ -818,7 +838,9 @@ describe('AuthService', () => {
       const result = await service.issueTokensForUser(withCustomer.id);
 
       // Assert
-      expect(result).toEqual({ accessToken: 'access-token', refreshToken: 'refresh-token' });
+      expect(result).toEqual(
+        expect.objectContaining({ accessToken: 'access-token', refreshToken: 'refresh-token' }),
+      );
       const [, refreshArgs] = (jwtService.signAsync as jest.Mock).mock.calls[1] as [unknown, { expiresIn: string }];
       expect(refreshArgs.expiresIn).toBe('180d');
     });
@@ -870,7 +892,9 @@ describe('AuthService', () => {
       } as RefreshToken);
 
       const result = await service.issueTokensForUser(withStaff.id);
-      expect(result).toEqual({ accessToken: 'access-token', refreshToken: 'refresh-token' });
+      expect(result).toEqual(
+        expect.objectContaining({ accessToken: 'access-token', refreshToken: 'refresh-token' }),
+      );
       const [, refreshArgs] = (jwtService.signAsync as jest.Mock).mock.calls[1] as [unknown, { expiresIn: string }];
       expect(refreshArgs.expiresIn).toBe('5d');
     });
@@ -936,7 +960,9 @@ describe('AuthService', () => {
         rotatedFrom: null,
       } as RefreshToken);
       const result = await service.issueTokensForUser(withRole.id);
-      expect(result).toEqual({ accessToken: 'access-token', refreshToken: 'refresh-token' });
+      expect(result).toEqual(
+        expect.objectContaining({ accessToken: 'access-token', refreshToken: 'refresh-token' }),
+      );
       expect(jwtService.signAsync).toHaveBeenNthCalledWith(
         1,
         expect.objectContaining({ sub: withRole.id, sessionId: 'sess', tenantId: 'tenant-1' }),
@@ -968,7 +994,15 @@ describe('AuthService', () => {
         rotatedFrom: null,
       } as RefreshToken);
       const res = await service.signIn('test@example.com', 'password');
-      expect(res).toEqual({ totpRequired: false, accessToken: 'access-token', refreshToken: 'refresh-token' });
+      expect(res).toEqual({
+        totpRequired: false,
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        user: expect.objectContaining({
+          id: mockUserWithRoles.id,
+          email: mockUserWithRoles.email,
+        }),
+      });
     });
 
     it('signIn for staff manager queries findManagedBranchIds and embeds branch ids and capability', async () => {
@@ -1000,7 +1034,18 @@ describe('AuthService', () => {
       } as RefreshToken);
 
       const res = await service.signIn('staff@example.com', 'password');
-      expect(res).toEqual({ totpRequired: false, accessToken: 'staff-access-token', refreshToken: 'staff-refresh-token' });
+      expect(res).toEqual({
+        totpRequired: false,
+        accessToken: 'staff-access-token',
+        refreshToken: 'staff-refresh-token',
+        user: {
+          id: staffUser.id,
+          email: staffUser.email,
+          roles: ['STAFF'],
+          managedBranchIds: ['branch-101', 'branch-102'],
+          canManageBranches: true,
+        },
+      });
       expect(userRepository.findManagedBranchIds).toHaveBeenCalledWith(staffUser.id);
       expect(jwtService.signAsync).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -1042,7 +1087,17 @@ describe('AuthService', () => {
       } as RefreshToken);
 
       const res = await service.signIn('staff@example.com', 'password');
-      expect(res).toEqual({ totpRequired: false, accessToken: 'staff-at', refreshToken: 'staff-rt' });
+      expect(res).toEqual({
+        totpRequired: false,
+        accessToken: 'staff-at',
+        refreshToken: 'staff-rt',
+        user: {
+          id: staffUser.id,
+          email: staffUser.email,
+          roles: ['STAFF'],
+          canManageBranches: false,
+        },
+      });
       expect(jwtService.signAsync).toHaveBeenCalledWith(
         expect.objectContaining({
           sub: staffUser.id,

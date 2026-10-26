@@ -1,5 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Inject, Injectable, Optional, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject, Observable, firstValueFrom, forkJoin, of } from 'rxjs';
 
 import { StorageService } from '@cthub-bsaas/web-core-platform';
@@ -18,7 +19,11 @@ export class AuthService implements AuthStatePort {
   private currentUserSubject = new BehaviorSubject<PartnerAuthUser | null>(null);
   public readonly currentUser$: Observable<PartnerAuthUser | null> = this.currentUserSubject.asObservable();
 
-  constructor(@Inject(PLATFORM_ID) private readonly platformId: object, private readonly storage: StorageService) {
+  constructor(
+    @Inject(PLATFORM_ID) private readonly platformId: object,
+    private readonly storage: StorageService,
+    @Optional() @Inject(HttpClient) private readonly http?: HttpClient,
+  ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
       this.initializeAuthState();
@@ -61,12 +66,31 @@ export class AuthService implements AuthStatePort {
     });
   }
 
+  public async hydrateCurrentUser(): Promise<PartnerAuthUser | null> {
+    if (!this.isBrowser || !this.http) return this.getCurrentUser();
+    try {
+      const res = await firstValueFrom(
+        this.http.get<{ success: boolean; data?: PartnerAuthUser }>('/api/auth/me'),
+      );
+      if (res?.success && res.data) {
+        this.setLoggedInUser(res.data);
+        return this.getCurrentUser();
+      }
+    } catch {
+      // session absent, invalid or network error
+    }
+    return this.getCurrentUser();
+  }
+
   private initializeAuthState(): void {
     this.storage.getItem$<PartnerAuthUser>(this.USER_KEY).subscribe({
       next: (user: PartnerAuthUser | null) => {
         if (user) {
           const enrichedUser = this.enrichUser(user);
           this.currentUserSubject.next(enrichedUser);
+        }
+        if (this.http) {
+          this.hydrateCurrentUser().catch(() => {});
         }
       },
       error: () => this.clearAuthData(),

@@ -467,6 +467,22 @@ describe('AuthController (Integration) - success flows', () => {
 
         expect(payload.managedBranchIds).toEqual([fixture.salonId]);
         expect(payload.canManageBranches).toBe(true);
+
+        expect(res.body.data.user).toBeDefined();
+        expect(res.body.data.user.canManageBranches).toBe(true);
+        expect(res.body.data.user.managedBranchIds).toEqual([fixture.salonId]);
+
+        const meRes = await harness
+          .withAuth(request(harness.app.getHttpServer()).get('/auth/me'), cookies)
+          .expect(200);
+
+        expect(meRes.body.data).toEqual(expect.objectContaining({
+          id: staff.id,
+          email: staff.email,
+          roles: expect.arrayContaining(['STAFF']),
+          canManageBranches: true,
+          managedBranchIds: [fixture.salonId],
+        }));
       });
 
       it('withholds manager capability for staff without manager position', async () => {
@@ -501,6 +517,16 @@ describe('AuthController (Integration) - success flows', () => {
 
         expect(payload.managedBranchIds ?? []).toEqual([]);
         expect(payload.canManageBranches).toBe(false);
+
+        expect(res.body.data.user).toBeDefined();
+        expect(res.body.data.user.canManageBranches).toBe(false);
+
+        const meRes = await harness
+          .withAuth(request(harness.app.getHttpServer()).get('/auth/me'), cookies)
+          .expect(200);
+
+        expect(meRes.body.data.canManageBranches).toBe(false);
+        expect(meRes.body.data.managedBranchIds).toBeUndefined();
       });
     });
   });

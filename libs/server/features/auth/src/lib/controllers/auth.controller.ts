@@ -8,7 +8,7 @@ import {
   SkipCsrf,
 } from '@cthub-bsaas/server-core';
 import { COMMON_MESSAGE_KEYS, AUTH_MESSAGE_KEYS } from '@cthub-bsaas/shared';
-import { BadRequestException, Body, Controller, HttpCode, HttpStatus, Post, Request, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Post, Request, UseGuards, UseInterceptors } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { Request as ExpressRequest } from 'express';
 import { LoginDto } from '../dto/login.dto';
@@ -16,7 +16,7 @@ import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { AuditService } from '../services/audit.service';
 import { AuthCookiesService } from '../services/auth-cookies.service';
 import { AuthService } from '../services/auth.service';
-import type { SignInHttpResponse, SimpleOk } from '../types/auth.types';
+import type { AuthUserSummary, JwtUserContext, SignInHttpResponse, SimpleOk } from '../types/auth.types';
 import { JwtService } from '@nestjs/jwt';
 import { isCustomerFromAccessToken } from '../utils/is-customer.util';
 import { parseRefreshCookie } from '../utils/cookie.util';
@@ -50,7 +50,9 @@ export class AuthController {
         },
         { isCustomer },
       );
-      return result.totpRequired ? { totpRequired: true, tempToken: result.tempToken } : { totpRequired: false };
+      return result.totpRequired
+        ? { totpRequired: true, tempToken: result.tempToken }
+        : { totpRequired: false, user: result.user };
     });
   }
 
@@ -60,19 +62,35 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60 } })
   @HttpCode(HttpStatus.OK)
   @Post('login/totp')
-  signInWithTotp(@Body() signInWithTotpDto: SignInTotpDto): Promise<Record<string, never>> {
+  signInWithTotp(@Body() signInWithTotpDto: SignInTotpDto): Promise<{ user?: AuthUserSummary }> {
     return this.authService.signInWithTotp(signInWithTotpDto.tempToken, signInWithTotpDto.totpCode).then((tokens) => {
       const isCustomer = this.isCustomerFromAccess(tokens.accessToken);
+      const csrf = (Math.random().toString(36) + Math.random().toString(36)).slice(2);
       this.authCookies.issue(
         {
-          csrf: (Math.random().toString(36) + Math.random().toString(36)).slice(2),
+          csrf,
           accessToken: tokens.accessToken,
           refreshToken: tokens.refreshToken,
         },
         { isCustomer },
       );
-      return {} as const;
+      return { user: tokens.user };
     });
+  }
+
+  /** Get current authenticated user profile and capabilities */
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Get('me')
+  me(@Request() req: { user: JwtUserContext }): AuthUserSummary {
+    return {
+      id: req.user.userId,
+      email: req.user.email,
+      roles: req.user.roles,
+      tenantId: req.user.tenantId,
+      managedBranchIds: req.user.managedBranchIds,
+      canManageBranches: req.user.canManageBranches ?? false,
+    };
   }
 
   private isCustomerFromAccess(accessToken?: string): boolean {
