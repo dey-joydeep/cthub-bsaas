@@ -14,13 +14,19 @@ export interface ResponseEnvelope<T> {
   readonly meta?: ResponseEnvelopeMeta;
 }
 
+export interface PageInfo {
+  readonly page: number;
+  readonly pageSize: number;
+  readonly total: number;
+}
+
+export interface PagedItems<T> {
+  readonly items: readonly T[];
+}
+
 export interface PagedEnvelope<T> {
   readonly items: readonly T[];
-  readonly page: {
-    readonly page: number;
-    readonly pageSize: number;
-    readonly total: number;
-  };
+  readonly page: PageInfo;
 }
 
 export interface SalonOwnerAddress {
