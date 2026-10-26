@@ -1,6 +1,6 @@
 <div class="appointment-reschedule-container">
   <div class="back-button">
-    <button mat-button [routerLink]="['/appointments', appointment?.id]" [disabled]="!appointment || isSubmitting">
+    <button mat-button [routerLink]="['/appointments', $safeNavigationMigration(appointment?.id)]" [disabled]="!appointment || isSubmitting">
       <mat-icon>arrow_back</mat-icon>
       <ng-container i18n="@@COMMON.BACK">Back</ng-container>
     </button>
@@ -125,7 +125,7 @@
                           <div class="date-time">
                             <mat-icon>event_available</mat-icon>
                             <span>
-                              {{ formatDate(dateTimeFormGroup.get('date')?.value) }}
+                              {{ formatDate($safeNavigationMigration(dateTimeFormGroup.get('date')?.value)) }}
                               at {{ dateTimeFormGroup.get('time')?.value || '--:--' }}
                             </span>
                           </div>

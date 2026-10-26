@@ -1,4 +1,4 @@
-import { Component, input, inject } from '@angular/core';
+import { Component, input, inject, ChangeDetectionStrategy } from '@angular/core';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,6 +16,7 @@ import { Subscription } from 'rxjs';
   standalone: true,
   imports: [MatCardModule, MatIconModule, MatListModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule],
   templateUrl: './renewals-list-widget.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./renewals-list-widget.component.css'],
 })
 export class RenewalsListWidgetComponent extends AbstractBaseComponent {

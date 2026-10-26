@@ -1,4 +1,4 @@
-import { HttpHandlerFn, HttpInterceptorFn, HttpRequest, provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { HttpHandlerFn, HttpInterceptorFn, HttpRequest, provideHttpClient, withFetch, withInterceptors, withXhr } from '@angular/common/http';
 import { APP_ID, ApplicationConfig, EnvironmentProviders, isDevMode, mergeApplicationConfig, PLATFORM_ID, Provider } from '@angular/core';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { provideServerRendering, ɵSERVER_CONTEXT as SERVER_CONTEXT } from '@angular/platform-server';
@@ -83,7 +83,7 @@ const serverProviders: (Provider | EnvironmentProviders)[] = [
   { provide: SERVER_CONTEXT, useValue: 'ssr' },
   { provide: MAT_DATE_LOCALE, useValue: 'en-US' },
 
-  provideHttpClient(withInterceptors([ssrInterceptor, loadingInterceptor, (req: HttpRequest<unknown>, next: HttpHandlerFn) => next(req)])),
+  provideHttpClient(withXhr(), withInterceptors([ssrInterceptor, loadingInterceptor, (req: HttpRequest<unknown>, next: HttpHandlerFn) => next(req)])),
 
   { provide: 'SSR', useValue: true },
   { provide: 'BROWSER', useValue: false },

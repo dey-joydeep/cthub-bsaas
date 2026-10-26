@@ -5,7 +5,8 @@
     "module": "commonjs",
     "types": ["jest", "node"],
     "isolatedModules": false,
-    "useDefineForClassFields": false
+    "useDefineForClassFields": false,
+    "rootDir": "."
   },
   "include": ["**/*.spec.ts", "**/*.it-spec.ts", "**/*.d.ts"]
 }

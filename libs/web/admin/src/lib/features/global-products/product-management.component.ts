@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'admin-product-management',
@@ -10,6 +10,7 @@ import { Component } from '@angular/core';
       <p>This section is under construction. Product administration tooling will be configured here.</p>
     </section>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
       .feature-placeholder {

@@ -6,7 +6,7 @@ import { of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { SafeUrlPipe } from '@cthub-bsaas/web-ui';
 import { TenantService } from './tenant.service';
-import { CurrentUserService } from '@cthub-bsaas/web-core/auth';
+import { CurrentUserService } from '@cthub-bsaas/web-core-auth';
 import { Salon } from './model/tenant.model';
 
 describe('TenantComponent', () => {

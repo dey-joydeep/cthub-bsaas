@@ -7,9 +7,16 @@
   "tags": ["platform:web", "scope:web-core", "type:core", "type:lib"],
   "targets": {
     "lint": {
-      "executor": "@nx/eslint:lint",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/eslint.config.js",
+        "{workspaceRoot}/eslint.base.js",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/tools/eslint-rules/**/*"
+      ],
       "options": {
-        "lintFilePatterns": ["libs/web/core/common/src/**/*.ts"]
+        "args": ["src/**/*.ts"]
       }
     },
     "type-check": {

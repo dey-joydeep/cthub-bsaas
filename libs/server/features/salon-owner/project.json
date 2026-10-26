@@ -8,6 +8,7 @@
     "build": {
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
         "outputPath": "dist/libs/server/features/salon-owner",
         "tsConfig": "libs/server/features/salon-owner/tsconfig.lib.json",
@@ -23,14 +24,19 @@
         "development": {
           "tsConfig": "libs/server/features/salon-owner/tsconfig.lib.json"
         }
-      },
-      "defaultConfiguration": "production"
+      }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/eslint.config.js",
+        "{workspaceRoot}/eslint.base.js",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/tools/eslint-rules/**/*"
+      ],
       "options": {
-        "lintFilePatterns": ["libs/server/features/salon-owner/**/*.ts"]
+        "args": ["**/*.ts"]
       }
     },
     "type-check": {
@@ -41,21 +47,22 @@
       }
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "libs/server/features/salon-owner/jest.config.ts",
         "passWithNoTests": true,
-        "codeCoverage": true,
         "coverageReporters": ["text", "lcov"],
-        "coverageDirectory": "coverage/libs/server/features/salon-owner"
+        "coverageDirectory": "../../../../coverage/libs/server/features/salon-owner",
+        "coverage": true
       },
       "configurations": {
+        "ci": {
+          "ci": true,
+          "coverage": true
+        },
         "ut": {
-          "jestConfig": "libs/server/features/salon-owner/jest.unit.config.ts"
+          "config": "./jest.unit.config.ts"
         },
         "it": {
-          "jestConfig": "libs/server/features/salon-owner/jest.int.config.ts"
+          "config": "./jest.int.config.ts"
         }
       }
     }

@@ -36,7 +36,9 @@
     "noUnusedLocals": true,
     "noImplicitReturns": true,
     "noImplicitAny": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "noUncheckedSideEffectImports": false,
+    "ignoreDeprecations": "6.0"
   },
   "exclude": ["node_modules", "dist"],
   "angularCompilerOptions": {

@@ -1,13 +1,22 @@
 {
   "name": "server-core",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/server/core/src",
+  "projectType": "library",
+  "prefix": "cthub-bsaas",
   "tags": ["type:lib", "platform:server", "scope:server-core", "scope:server", "type:core"],
   "targets": {
     "lint": {
-      "outputs": ["{options.outputFile}"],
-      "executor": "@nx/eslint:lint",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/eslint.config.js",
+        "{workspaceRoot}/eslint.base.js",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/tools/eslint-rules/**/*"
+      ],
       "options": {
-        "lintFilePatterns": ["libs/server/core/**/*.ts"]
+        "args": ["**/*.ts"]
       }
     },
     "build": {
@@ -29,16 +38,17 @@
       }
     },
     "test": {
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "executor": "@nx/jest:jest",
       "options": {
         "passWithNoTests": true,
-        "jestConfig": "libs/server/core/jest.config.ts",
-        "codeCoverage": true,
-        "coverageReporters": ["text", "lcov"]
+        "coverageReporters": ["text", "lcov"],
+        "coverage": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "coverage": true
+        }
       }
     }
-  },
-  "projectType": "library",
-  "prefix": "cthub-bsaas"
+  }
 }

@@ -1,5 +1,5 @@
 import { PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
-import { Component, inject, PLATFORM_ID, OnInit } from '@angular/core';
+import { Component, inject, PLATFORM_ID, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
@@ -14,6 +14,7 @@ import type { PlatformUtils } from '@cthub-bsaas/web-core-platform';
   standalone: true,
   imports: [RouterModule, FormsModule, SafeUrlPipe],
   templateUrl: './salon-search.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./salon-search.component.css'],
 })
 export class SalonSearchComponent implements OnInit {

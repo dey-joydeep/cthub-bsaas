@@ -1,5 +1,5 @@
 import { PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
-import { Component, OnInit, PLATFORM_ID, input, model, inject } from '@angular/core';
+import { Component, OnInit, PLATFORM_ID, input, model, inject, ChangeDetectionStrategy } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { SalonService } from '../../services/salon.service';
 import { RouterModule } from '@angular/router';
@@ -24,6 +24,7 @@ export type Salon = ISalonDto & {
   standalone: true,
   imports: [RouterModule],
   templateUrl: './top-salons.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./top-salons.component.css'],
   // Removed ChangeDetectionStrategy.OnPush as it requires careful state management
 })

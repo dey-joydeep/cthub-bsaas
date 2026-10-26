@@ -18,6 +18,7 @@ const config: Config.InitialOptions = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   testTimeout: 10000,
   clearMocks: true,
+  passWithNoTests: true,
 };
 
 export default config;

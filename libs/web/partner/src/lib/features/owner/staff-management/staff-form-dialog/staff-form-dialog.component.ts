@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -128,6 +128,7 @@ export interface StaffFormData {
       </form>
     </mat-dialog-content>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
       .form-row {

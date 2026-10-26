@@ -30,7 +30,7 @@ export class LoggerService implements OnModuleInit {
     const { dir, access, app } = this.configService.log;
     this.ensureLogDirectory(dir);
 
-    const isTest = process.env.NODE_ENV === 'test';
+    const isTest = process.env['NODE_ENV'] === 'test';
 
     this.appLogger = pino({
       level: app.level,

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 
@@ -10,6 +10,7 @@ import { REGISTER_API, type RegisterApiPort, type RegisterPayload } from '../../
   standalone: true,
   imports: [ReactiveFormsModule],
   templateUrl: './register.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./register.component.css'],
 })
 export class RegisterComponent {

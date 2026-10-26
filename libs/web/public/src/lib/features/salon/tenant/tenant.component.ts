@@ -3,7 +3,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 // Core services
-import { CurrentUserService } from '@cthub-bsaas/web-core/auth';
+import { CurrentUserService } from '@cthub-bsaas/web-core-auth';
 
 // Models
 import { Appointment, SalonServiceItem, Salon, Staff, Review } from './model/tenant.model';

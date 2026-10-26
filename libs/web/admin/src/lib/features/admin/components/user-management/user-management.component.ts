@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { TitleCasePipe, NgClass } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -34,6 +34,7 @@ interface User {
     MatSortModule,
     NgClass,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="p-6">
       <h2 class="text-2xl font-bold mb-6">User Management</h2>
