@@ -15,15 +15,21 @@ test.describe('Partner Web App - SSR Hydration Smoke Tests', () => {
 
     // Verify Angular server rendering metadata (ng-version attribute stamped on host)
     expect(html).toMatch(/<app-root[^>]+ng-version=/);
+
+    // Verify transfer state script ID matches client APP_ID (does not use discordant server-only ID)
+    expect(html).not.toContain('id="server-app-state"');
   });
 
   test('should hydrate client-side without errors and redirect to auth when unauthenticated', async ({ page }) => {
     const consoleErrors: string[] = [];
+    const consoleWarnings: string[] = [];
     const pageErrors: Error[] = [];
 
     page.on('console', (msg) => {
       if (msg.type() === 'error') {
         consoleErrors.push(msg.text());
+      } else if (msg.type() === 'warning') {
+        consoleWarnings.push(msg.text());
       }
     });
 
@@ -45,9 +51,11 @@ test.describe('Partner Web App - SSR Hydration Smoke Tests', () => {
     // Verify login form is rendered
     await expect(page.locator('form, input[type="email"], input[type="password"]').first()).toBeVisible();
 
-    // Verify no hydration mismatch errors (e.g., NG0500)
-    const hydrationErrors = consoleErrors.filter((msg) => msg.includes('NG0500') || msg.includes('NG0501') || msg.includes('hydration'));
-    expect(hydrationErrors).toHaveLength(0);
+    // Verify no hydration mismatch errors or warnings (e.g., NG0500, missing metadata, hydration disabled)
+    const hydrationIssues = [...consoleErrors, ...consoleWarnings].filter(
+      (msg) => msg.includes('NG050') || msg.toLowerCase().includes('hydration') || msg.toLowerCase().includes('missing-metadata'),
+    );
+    expect(hydrationIssues).toHaveLength(0);
 
     // Verify no unhandled page errors
     expect(pageErrors).toHaveLength(0);
