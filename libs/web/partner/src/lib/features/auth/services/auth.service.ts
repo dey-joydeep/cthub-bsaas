@@ -20,6 +20,9 @@ export class AuthService implements AuthStatePort {
   public readonly currentUser$: Observable<PartnerAuthUser | null> = this.currentUserSubject.asObservable();
   private initPromise: Promise<PartnerAuthUser | null> | null = null;
 
+  public sessionTtlMs = 5 * 60 * 1000;
+  private lastValidatedAt = 0;
+
   constructor(
     @Inject(PLATFORM_ID) private readonly platformId: object,
     private readonly storage: StorageService,
@@ -65,14 +68,20 @@ export class AuthService implements AuthStatePort {
     if (this.isTokenValid(token)) {
       return true;
     }
-    if (this.currentUserSubject.value !== null) {
+
+    const hasUser = this.currentUserSubject.value !== null;
+    const isStale = Date.now() - this.lastValidatedAt > this.sessionTtlMs;
+
+    if (hasUser && !isStale) {
       return true;
     }
+
     if (this.http) {
       const user = await this.hydrateCurrentUser();
       return user !== null;
     }
-    return false;
+
+    return hasUser && !isStale;
   }
 
   async logout(): Promise<void> {
@@ -88,6 +97,7 @@ export class AuthService implements AuthStatePort {
 
   public setLoggedInUser(user: PartnerAuthUser): void {
     if (!this.isBrowser) return;
+    this.lastValidatedAt = Date.now();
     const enrichedUser = this.enrichUser(user);
     this.currentUserSubject.next(enrichedUser);
     if (typeof this.storage.setItem === 'function') {
@@ -97,6 +107,7 @@ export class AuthService implements AuthStatePort {
   }
 
   public clearAuthData(): void {
+    this.lastValidatedAt = 0;
     this.currentUserSubject.next(null);
     if (!this.isBrowser) return;
 
@@ -118,6 +129,7 @@ export class AuthService implements AuthStatePort {
     try {
       const res = await firstValueFrom(this.http.get<{ success: boolean; data?: PartnerAuthUser }>('/api/auth/me'));
       if (res?.success && res.data) {
+        this.lastValidatedAt = Date.now();
         this.setLoggedInUser(res.data);
         return this.getCurrentUser();
       }
@@ -135,6 +147,7 @@ export class AuthService implements AuthStatePort {
     let managedBranchIds = user.managedBranchIds;
     let canManageBranches = user.canManageBranches;
     let roles = user.roles;
+    let role = user.role;
 
     const token =
       typeof user.accessToken === 'string' && user.accessToken.length > 0
@@ -156,8 +169,22 @@ export class AuthService implements AuthStatePort {
       }
     }
 
+    if (!role && roles && roles.length > 0) {
+      const lowerRoles = roles.map((r) => r.toLowerCase());
+      if (lowerRoles.includes('owner')) {
+        role = 'owner';
+      } else if (lowerRoles.includes('admin')) {
+        role = 'admin';
+      } else if (lowerRoles.includes('staff')) {
+        role = 'staff';
+      } else {
+        role = lowerRoles[0];
+      }
+    }
+
     const candidate: PartnerAuthUser = {
       ...user,
+      ...(role ? { role } : {}),
       ...(roles ? { roles } : {}),
       ...(managedBranchIds ? { managedBranchIds } : {}),
       canManageBranches,

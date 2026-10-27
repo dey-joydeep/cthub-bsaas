@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClient } from '@angular/common/http';
 import { PLATFORM_ID } from '@angular/core';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { StorageService } from '@cthub-bsaas/web-core-platform';
 import { AuthService } from './auth.service';
 import type { PartnerAuthUser } from '../models/auth.models';
@@ -277,5 +277,95 @@ describe('AuthService (Partner)', () => {
     expect(httpMock.get).toHaveBeenCalledWith('/api/auth/me');
     expect(initializedUser?.canManageBranches).toBe(true);
     expect(initializedUser?.managedBranchIds).toEqual(['b-1']);
+  });
+
+  it('normalizes role from roles array when role is missing on hydrated user', () => {
+    const userWithoutRole: PartnerAuthUser = {
+      id: 'staff-roles-only',
+      name: 'Roles Staff',
+      email: 'roles@example.com',
+      roles: ['STAFF'],
+      managedBranchIds: ['branch-1'],
+    };
+
+    service.setLoggedInUser(userWithoutRole);
+
+    const current = service.getCurrentUser();
+    expect(current?.role).toBe('staff');
+    expect(current?.canManageBranches).toBe(true);
+  });
+
+  it('revalidates stale cookie session via /api/auth/me when session TTL expires', async () => {
+    const httpMock = {
+      get: jest.fn().mockReturnValue(
+        of({
+          success: true,
+          data: {
+            id: 'staff-revalidated',
+            name: 'Revalidated Staff',
+            email: 'reval@example.com',
+            roles: ['STAFF'],
+          },
+        }),
+      ),
+      post: jest.fn(),
+    };
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        AuthService,
+        { provide: PLATFORM_ID, useValue: 'browser' },
+        { provide: StorageService, useValue: storageMock },
+        { provide: HttpClient, useValue: httpMock },
+      ],
+    });
+
+    const httpService = TestBed.inject(AuthService);
+    httpService.setLoggedInUser({
+      id: 'staff-1',
+      name: 'Staff',
+      email: 'staff@example.com',
+      role: 'staff',
+    });
+
+    httpService.sessionTtlMs = 0;
+
+    const authed = await httpService.isAuthenticated();
+    expect(httpMock.get).toHaveBeenCalledWith('/api/auth/me');
+    expect(authed).toBe(true);
+    expect(httpService.getCurrentUser()?.id).toBe('staff-revalidated');
+  });
+
+  it('clears cached auth state if stale session revalidation returns 401 error', async () => {
+    const httpMock = {
+      get: jest.fn().mockReturnValue(throwError(() => ({ status: 401, message: 'Unauthorized' }))),
+      post: jest.fn(),
+    };
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        AuthService,
+        { provide: PLATFORM_ID, useValue: 'browser' },
+        { provide: StorageService, useValue: storageMock },
+        { provide: HttpClient, useValue: httpMock },
+      ],
+    });
+
+    const httpService = TestBed.inject(AuthService);
+    httpService.setLoggedInUser({
+      id: 'staff-expired',
+      name: 'Expired Staff',
+      email: 'expired@example.com',
+      role: 'staff',
+    });
+
+    httpService.sessionTtlMs = 0;
+
+    const authed = await httpService.isAuthenticated();
+    expect(httpMock.get).toHaveBeenCalledWith('/api/auth/me');
+    expect(authed).toBe(false);
+    expect(httpService.getCurrentUser()).toBeNull();
   });
 });
