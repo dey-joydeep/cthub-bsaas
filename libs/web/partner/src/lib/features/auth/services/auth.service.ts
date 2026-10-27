@@ -1,9 +1,10 @@
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { Inject, Injectable, Optional, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject, Observable, firstValueFrom, of } from 'rxjs';
 
 import { StorageService } from '@cthub-bsaas/web-core-platform';
+import { BYPASS_ERROR_INTERCEPTOR } from '@cthub-bsaas/web-core-common';
 import type { AuthStatePort } from '@cthub-bsaas/web-core/auth';
 import { hasManagerCapability } from '@cthub-bsaas/shared';
 import type { PartnerAuthUser } from '../models/auth.models';
@@ -22,6 +23,7 @@ export class AuthService implements AuthStatePort {
 
   public sessionTtlMs = 5 * 60 * 1000;
   private lastValidatedAt = 0;
+  private authGeneration = 0;
 
   constructor(
     @Inject(PLATFORM_ID) private readonly platformId: object,
@@ -64,15 +66,23 @@ export class AuthService implements AuthStatePort {
 
   async isAuthenticated(): Promise<boolean> {
     if (!this.isBrowser) return false;
+
+    if (this.initPromise) {
+      await this.initPromise;
+    }
+
     const token = await firstValueFrom(this.getToken());
     if (this.isTokenValid(token)) {
       return true;
     }
 
     const hasUser = this.currentUserSubject.value !== null;
-    const isStale = Date.now() - this.lastValidatedAt > this.sessionTtlMs;
+    if (!hasUser) {
+      return false;
+    }
 
-    if (hasUser && !isStale) {
+    const isStale = Date.now() - this.lastValidatedAt >= this.sessionTtlMs;
+    if (!isStale) {
       return true;
     }
 
@@ -81,13 +91,22 @@ export class AuthService implements AuthStatePort {
       return user !== null;
     }
 
-    return hasUser && !isStale;
+    return false;
   }
 
   async logout(): Promise<void> {
+    this.authGeneration++;
     if (this.isBrowser && this.http) {
       try {
-        await firstValueFrom(this.http.post('/api/auth/logout', {}));
+        await firstValueFrom(
+          this.http.post(
+            '/api/auth/logout',
+            {},
+            {
+              context: new HttpContext().set(BYPASS_ERROR_INTERCEPTOR, true),
+            },
+          ),
+        );
       } catch {
         // Proceed with local cleanup even if server call fails
       }
@@ -107,6 +126,7 @@ export class AuthService implements AuthStatePort {
   }
 
   public clearAuthData(): void {
+    this.authGeneration++;
     this.lastValidatedAt = 0;
     this.currentUserSubject.next(null);
     if (!this.isBrowser) return;
@@ -126,19 +146,39 @@ export class AuthService implements AuthStatePort {
 
   public async hydrateCurrentUser(): Promise<PartnerAuthUser | null> {
     if (!this.isBrowser || !this.http) return this.getCurrentUser();
+    const requestGeneration = ++this.authGeneration;
     try {
-      const res = await firstValueFrom(this.http.get<{ success: boolean; data?: PartnerAuthUser }>('/api/auth/me'));
+      const res = await firstValueFrom(
+        this.http.get<{ success: boolean; data?: PartnerAuthUser }>('/api/auth/me', {
+          context: new HttpContext().set(BYPASS_ERROR_INTERCEPTOR, true),
+        }),
+      );
+
+      // Ignore hydration response if logout or clear was triggered while request was in-flight
+      if (requestGeneration !== this.authGeneration) {
+        return null;
+      }
+
       if (res?.success && res.data) {
         this.lastValidatedAt = Date.now();
         this.setLoggedInUser(res.data);
         return this.getCurrentUser();
       }
+      this.clearAuthData();
+      return null;
     } catch (err: unknown) {
+      if (requestGeneration !== this.authGeneration) {
+        return null;
+      }
       const status = (err as { status?: number })?.status;
       if (status === 401 || status === 403) {
         this.clearAuthData();
         return null;
       }
+    }
+
+    if (requestGeneration !== this.authGeneration) {
+      return null;
     }
     return this.getCurrentUser();
   }

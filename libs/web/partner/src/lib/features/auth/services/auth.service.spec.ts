@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { PLATFORM_ID } from '@angular/core';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { StorageService } from '@cthub-bsaas/web-core-platform';
+import { BYPASS_ERROR_INTERCEPTOR } from '@cthub-bsaas/web-core-common';
 import { AuthService } from './auth.service';
 import type { PartnerAuthUser } from '../models/auth.models';
 
@@ -178,7 +179,14 @@ describe('AuthService (Partner)', () => {
     const httpService = TestBed.inject(AuthService);
     const hydrated = await httpService.hydrateCurrentUser();
 
-    expect(httpMock.get).toHaveBeenCalledWith('/api/auth/me');
+    expect(httpMock.get).toHaveBeenCalledWith(
+      '/api/auth/me',
+      expect.objectContaining({
+        context: expect.any(HttpContext),
+      }),
+    );
+    const getOptions = httpMock.get.mock.calls[0][1] as { context: HttpContext };
+    expect(getOptions.context.get(BYPASS_ERROR_INTERCEPTOR)).toBe(true);
     expect(hydrated?.id).toBe('staff-hydrated');
     expect(hydrated?.canManageBranches).toBe(true);
     expect(hydrated?.managedBranchIds).toEqual(['b-hydrated-1']);
@@ -226,7 +234,13 @@ describe('AuthService (Partner)', () => {
 
     await httpService.logout();
 
-    expect(httpMock.post).toHaveBeenCalledWith('/api/auth/logout', {});
+    expect(httpMock.post).toHaveBeenCalledWith(
+      '/api/auth/logout',
+      {},
+      expect.objectContaining({
+        context: expect.any(HttpContext),
+      }),
+    );
     expect(httpService.getCurrentUser()).toBeNull();
     expect(storageMock.removeItem$).toHaveBeenCalledWith('current_user');
   });
@@ -274,9 +288,41 @@ describe('AuthService (Partner)', () => {
     const httpService = TestBed.inject(AuthService);
     const initializedUser = await httpService.initialize();
 
-    expect(httpMock.get).toHaveBeenCalledWith('/api/auth/me');
+    expect(httpMock.get).toHaveBeenCalledWith(
+      '/api/auth/me',
+      expect.objectContaining({
+        context: expect.any(HttpContext),
+      }),
+    );
+    const getOptions = httpMock.get.mock.calls[0][1] as { context: HttpContext };
+    expect(getOptions.context.get(BYPASS_ERROR_INTERCEPTOR)).toBe(true);
     expect(initializedUser?.canManageBranches).toBe(true);
     expect(initializedUser?.managedBranchIds).toEqual(['b-1']);
+  });
+
+  it('does not repeatedly probe /api/auth/me when no user is signed in', async () => {
+    const httpMock = {
+      get: jest.fn().mockReturnValue(of({ success: false })),
+      post: jest.fn(),
+    };
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        AuthService,
+        { provide: PLATFORM_ID, useValue: 'browser' },
+        { provide: StorageService, useValue: storageMock },
+        { provide: HttpClient, useValue: httpMock },
+      ],
+    });
+
+    const httpService = TestBed.inject(AuthService);
+    await httpService.initialize();
+    httpMock.get.mockClear();
+
+    const authed = await httpService.isAuthenticated();
+    expect(authed).toBe(false);
+    expect(httpMock.get).not.toHaveBeenCalled();
   });
 
   it('normalizes role from roles array when role is missing on hydrated user', () => {
@@ -332,7 +378,14 @@ describe('AuthService (Partner)', () => {
     httpService.sessionTtlMs = 0;
 
     const authed = await httpService.isAuthenticated();
-    expect(httpMock.get).toHaveBeenCalledWith('/api/auth/me');
+    expect(httpMock.get).toHaveBeenCalledWith(
+      '/api/auth/me',
+      expect.objectContaining({
+        context: expect.any(HttpContext),
+      }),
+    );
+    const getOptions = httpMock.get.mock.calls[0][1] as { context: HttpContext };
+    expect(getOptions.context.get(BYPASS_ERROR_INTERCEPTOR)).toBe(true);
     expect(authed).toBe(true);
     expect(httpService.getCurrentUser()?.id).toBe('staff-revalidated');
   });
@@ -364,8 +417,64 @@ describe('AuthService (Partner)', () => {
     httpService.sessionTtlMs = 0;
 
     const authed = await httpService.isAuthenticated();
-    expect(httpMock.get).toHaveBeenCalledWith('/api/auth/me');
+    expect(httpMock.get).toHaveBeenCalledWith(
+      '/api/auth/me',
+      expect.objectContaining({
+        context: expect.any(HttpContext),
+      }),
+    );
+    const getOptions = httpMock.get.mock.calls[0][1] as { context: HttpContext };
+    expect(getOptions.context.get(BYPASS_ERROR_INTERCEPTOR)).toBe(true);
     expect(authed).toBe(false);
+    expect(httpService.getCurrentUser()).toBeNull();
+  });
+
+  it('ignores hydration response started before logout', async () => {
+    const responseSubject = new Subject<{ success: boolean; data: PartnerAuthUser }>();
+    const httpMock = {
+      get: jest.fn().mockReturnValue(responseSubject.asObservable()),
+      post: jest.fn().mockReturnValue(of({})),
+    };
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        AuthService,
+        { provide: PLATFORM_ID, useValue: 'browser' },
+        { provide: StorageService, useValue: storageMock },
+        { provide: HttpClient, useValue: httpMock },
+      ],
+    });
+
+    const httpService = TestBed.inject(AuthService);
+    httpService.setLoggedInUser({
+      id: 'staff-logging-out',
+      name: 'Logging Out',
+      email: 'logging-out@example.com',
+      role: 'staff',
+    });
+
+    // Start hydration while user is logged in
+    const hydratePromise = httpService.hydrateCurrentUser();
+
+    // User logs out while hydration is in flight
+    await httpService.logout();
+    expect(httpService.getCurrentUser()).toBeNull();
+
+    // In-flight response arrives late
+    responseSubject.next({
+      success: true,
+      data: {
+        id: 'staff-logging-out',
+        name: 'Logging Out',
+        email: 'logging-out@example.com',
+        role: 'staff',
+      },
+    });
+    responseSubject.complete();
+
+    const result = await hydratePromise;
+    expect(result).toBeNull();
     expect(httpService.getCurrentUser()).toBeNull();
   });
 });
