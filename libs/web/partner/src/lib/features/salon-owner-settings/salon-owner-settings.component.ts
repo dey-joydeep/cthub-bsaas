@@ -228,7 +228,15 @@ export class SalonOwnerSettingsComponent {
     initialValue: null,
   });
 
-  protected readonly weekdays = weekdays;
+  protected readonly weekdays = [
+    $localize`:@@COMMON.WEEKDAY_SUN:Sun`,
+    $localize`:@@COMMON.WEEKDAY_MON:Mon`,
+    $localize`:@@COMMON.WEEKDAY_TUE:Tue`,
+    $localize`:@@COMMON.WEEKDAY_WED:Wed`,
+    $localize`:@@COMMON.WEEKDAY_THU:Thu`,
+    $localize`:@@COMMON.WEEKDAY_FRI:Fri`,
+    $localize`:@@COMMON.WEEKDAY_SAT:Sat`,
+  ];
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
   protected readonly message = signal<string | null>(null);
@@ -406,7 +414,9 @@ export class SalonOwnerSettingsComponent {
   protected saveBusiness(): void {
     if (this.businessForm.invalid) {
       this.businessForm.markAllAsTouched();
-      this.error.set('Fix validation errors on the business profile before saving.');
+      this.error.set(
+        $localize`:@@SALON_OWNER_SETTINGS.ERROR_VALIDATION_BUSINESS:Fix validation errors on the business profile before saving.`,
+      );
       return;
     }
 
@@ -445,7 +455,7 @@ export class SalonOwnerSettingsComponent {
           expectedBranchEditorVersion: startedBranchEditorVersion,
           isNewBusiness,
         });
-        this.message.set('Settings saved.');
+        this.message.set($localize`:@@SALON_OWNER_SETTINGS.MSG_SAVED:Settings saved.`);
         this.saving.set(false);
       },
       error: (error: unknown) => {
@@ -459,13 +469,13 @@ export class SalonOwnerSettingsComponent {
         }
         if (this.isBusinessDeactivationConflictError(error)) {
           this.error.set(
-            'This business cannot be deactivated while it still has active branches. Archive or deactivate those branches first.',
+            $localize`:@@SALON_OWNER_SETTINGS.ERROR_DEACTIVATE_BRANCHES:This business cannot be deactivated while it still has active branches. Archive or deactivate those branches first.`,
           );
           this.saving.set(false);
           return;
         }
 
-        this.error.set('Settings could not be saved.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_SAVE_FAILED:Settings could not be saved.`);
         this.saving.set(false);
       },
     });
@@ -473,13 +483,13 @@ export class SalonOwnerSettingsComponent {
 
   protected saveBranch(): void {
     if (!this.branchOnlyMode() && !this.selectedBusiness()) {
-      this.error.set('Save or select a business before saving a branch.');
+      this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_SELECT_BUSINESS:Save or select a business before saving a branch.`);
       return;
     }
 
     if (this.branchForm.invalid) {
       this.branchForm.markAllAsTouched();
-      this.error.set('Fix validation errors on the branch profile before saving.');
+      this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_VALIDATION_BRANCH:Fix validation errors on the branch profile before saving.`);
       return;
     }
 
@@ -522,7 +532,7 @@ export class SalonOwnerSettingsComponent {
         }
         this.selectedBranch.set(branch);
         this.loadBranches(this.branchOnlyMode() ? undefined : branch.businessId, branch.id);
-        this.message.set('Settings saved.');
+        this.message.set($localize`:@@SALON_OWNER_SETTINGS.MSG_SAVED:Settings saved.`);
         this.saving.set(false);
       },
       error: (error: unknown) => {
@@ -537,25 +547,27 @@ export class SalonOwnerSettingsComponent {
         }
         if (this.isBranchArchiveConflictError(error)) {
           this.error.set(
-            'This branch cannot be archived while it has future confirmed appointments. Move or cancel those appointments first.',
+            $localize`:@@SALON_OWNER_SETTINGS.ERROR_ARCHIVE_APPOINTMENTS:This branch cannot be archived while it has future confirmed appointments. Move or cancel those appointments first.`,
           );
           this.saving.set(false);
           return;
         }
         if (this.isBranchCurrencyLockedError(error)) {
           this.error.set(
-            'This branch currency is locked because finance history already exists. Keep the current currency for this branch.',
+            $localize`:@@SALON_OWNER_SETTINGS.ERROR_CURRENCY_LOCKED:This branch currency is locked because finance history already exists. Keep the current currency for this branch.`,
           );
           this.saving.set(false);
           return;
         }
         if (this.isBranchBusinessInactiveError(error)) {
-          this.error.set('This business is inactive. Reactivate the business before creating a branch or reactivating one.');
+          this.error.set(
+            $localize`:@@SALON_OWNER_SETTINGS.ERROR_BUSINESS_INACTIVE:This business is inactive. Reactivate the business before creating a branch or reactivating one.`,
+          );
           this.saving.set(false);
           return;
         }
 
-        this.error.set('Settings could not be saved.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_SAVE_FAILED:Settings could not be saved.`);
         this.saving.set(false);
       },
     });
@@ -564,29 +576,33 @@ export class SalonOwnerSettingsComponent {
   protected saveHours(): void {
     const branch = this.selectedBranch();
     if (!branch) {
-      this.error.set('Select a branch before saving hours.');
+      this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_SELECT_BRANCH_HOURS:Select a branch before saving hours.`);
       return;
     }
     if (!this.branchSettingsLoaded()) {
-      this.error.set('Branch settings are still loading.');
+      this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_BRANCH_SETTINGS_LOADING:Branch settings are still loading.`);
       return;
     }
     if (this.hasInvalidIntervalRanges()) {
       this.hoursForm.markAllAsTouched();
-      this.error.set('Fix weekly hours so each interval starts before it ends and open-day intervals do not overlap.');
+      this.error.set(
+        $localize`:@@SALON_OWNER_SETTINGS.ERROR_HOURS_INVALID_INTERVALS:Fix weekly hours so each interval starts before it ends and open-day intervals do not overlap.`,
+      );
       return;
     }
     if (this.hasOpenDayWithoutIntervals()) {
       this.hoursForm.markAllAsTouched();
-      this.error.set('Add at least one interval for each open day before saving hours.');
+      this.error.set(
+        $localize`:@@SALON_OWNER_SETTINGS.ERROR_OPEN_DAY_INTERVALS:Add at least one interval for each open day before saving hours.`,
+      );
       return;
     }
     if (this.hoursForm.invalid) {
       this.hoursForm.markAllAsTouched();
       if (this.hoursForm.controls.timezone.errors?.['branchTimezone']) {
-        this.error.set('Weekly hours must use the selected branch timezone.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_HOURS_BRANCH_TIMEZONE:Weekly hours must use the selected branch timezone.`);
       } else {
-        this.error.set('Fix weekly hours so all intervals are valid.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_HOURS_VALIDATION:Fix weekly hours so all intervals are valid.`);
       }
       return;
     }
@@ -604,7 +620,7 @@ export class SalonOwnerSettingsComponent {
         }
         this.hoursConflictRequiresAcknowledgement.set(false);
         this.hoursForm.controls.acknowledgeExistingAppointmentsOutsideHours.setValue(false);
-        this.message.set('Settings saved.');
+        this.message.set($localize`:@@SALON_OWNER_SETTINGS.MSG_SAVED:Settings saved.`);
         this.saving.set(false);
       },
       error: (error: unknown) => {
@@ -614,12 +630,14 @@ export class SalonOwnerSettingsComponent {
         }
         if (this.isHoursConflictError(error)) {
           this.hoursConflictRequiresAcknowledgement.set(true);
-          this.error.set('Confirm the hours change before saving because future appointments fall outside the proposed schedule.');
+          this.error.set(
+            $localize`:@@SALON_OWNER_SETTINGS.ERROR_HOURS_CONFLICT:Confirm the hours change before saving because future appointments fall outside the proposed schedule.`,
+          );
           this.saving.set(false);
           return;
         }
 
-        this.error.set('Settings could not be saved.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_SAVE_FAILED:Settings could not be saved.`);
         this.saving.set(false);
       },
     });
@@ -628,19 +646,19 @@ export class SalonOwnerSettingsComponent {
   protected saveHoliday(): void {
     const branch = this.selectedBranch();
     if (!branch) {
-      this.error.set('Select a branch before saving a holiday.');
+      this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_SELECT_BRANCH_HOLIDAY:Select a branch before saving a holiday.`);
       return;
     }
     if (!this.branchSettingsLoaded()) {
-      this.error.set('Branch settings are still loading.');
+      this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_BRANCH_SETTINGS_LOADING:Branch settings are still loading.`);
       return;
     }
     if (this.holidayForm.invalid) {
       this.holidayForm.markAllAsTouched();
       if (this.holidayForm.errors?.['intervalOrder']) {
-        this.error.set('Holiday open hours must start before they end.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_HOLIDAY_INTERVAL_ORDER:Holiday open hours must start before they end.`);
       } else {
-        this.error.set('Fix validation errors on holiday details before saving.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_VALIDATION_HOLIDAY:Fix validation errors on holiday details before saving.`);
       }
       return;
     }
@@ -666,7 +684,7 @@ export class SalonOwnerSettingsComponent {
         if (startedHolidayEditorVersion === this.holidayEditorVersion) {
           this.selectHoliday(savedHoliday);
         }
-        this.message.set('Settings saved.');
+        this.message.set($localize`:@@SALON_OWNER_SETTINGS.MSG_SAVED:Settings saved.`);
         this.saving.set(false);
       },
       error: () => {
@@ -674,7 +692,7 @@ export class SalonOwnerSettingsComponent {
           this.saving.set(false);
           return;
         }
-        this.error.set('Settings could not be saved.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_SAVE_FAILED:Settings could not be saved.`);
         this.saving.set(false);
       },
     });
@@ -683,16 +701,16 @@ export class SalonOwnerSettingsComponent {
   protected savePolicy(): void {
     const branch = this.selectedBranch();
     if (!branch) {
-      this.error.set('Select a branch before saving policy.');
+      this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_SELECT_BRANCH_POLICY:Select a branch before saving policy.`);
       return;
     }
     if (!this.branchSettingsLoaded()) {
-      this.error.set('Branch settings are still loading.');
+      this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_BRANCH_SETTINGS_LOADING:Branch settings are still loading.`);
       return;
     }
     if (this.policyForm.invalid) {
       this.policyForm.markAllAsTouched();
-      this.error.set('Fix validation errors on booking policies before saving.');
+      this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_VALIDATION_POLICY:Fix validation errors on booking policies before saving.`);
       return;
     }
 
@@ -709,7 +727,7 @@ export class SalonOwnerSettingsComponent {
           this.saving.set(false);
           return;
         }
-        this.message.set('Settings saved.');
+        this.message.set($localize`:@@SALON_OWNER_SETTINGS.MSG_SAVED:Settings saved.`);
         this.saving.set(false);
       },
       error: () => {
@@ -717,7 +735,7 @@ export class SalonOwnerSettingsComponent {
           this.saving.set(false);
           return;
         }
-        this.error.set('Settings could not be saved.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_SAVE_FAILED:Settings could not be saved.`);
         this.saving.set(false);
       },
     });
@@ -861,7 +879,7 @@ export class SalonOwnerSettingsComponent {
           this.loading.set(false);
           return;
         }
-        this.error.set('Business settings could not be loaded.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_LOAD_BUSINESS_FAILED:Business settings could not be loaded.`);
         this.loading.set(false);
       },
     });
@@ -894,10 +912,12 @@ export class SalonOwnerSettingsComponent {
         this.selectedBranch.set(null);
         this.resetBranchEditor(this.selectedBusiness()?.id ?? '');
         if (this.branchOnlyMode() && this.isStaffUser() && this.isForbiddenError(error)) {
-          this.error.set('You need branch-manager access to manage branch settings for this business.');
+          this.error.set(
+            $localize`:@@SALON_OWNER_SETTINGS.ERROR_FORBIDDEN_BRANCH_MANAGER:You need branch-manager access to manage branch settings for this business.`,
+          );
           return;
         }
-        this.error.set('Branches could not be loaded.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_LOAD_BRANCHES_FAILED:Branches could not be loaded.`);
       },
     });
   }
@@ -927,7 +947,7 @@ export class SalonOwnerSettingsComponent {
           return;
         }
         this.branchSettingsLoaded.set(false);
-        this.error.set('Branch settings could not be loaded.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_LOAD_BRANCH_SETTINGS_FAILED:Branch settings could not be loaded.`);
       },
     });
   }
@@ -1200,7 +1220,9 @@ export class SalonOwnerSettingsComponent {
     if (selectedHoliday && !selectedHoliday.closed && selectedHoliday.intervals.length > 1) {
       const [firstInterval] = selectedHoliday.intervals;
       if (value.date !== selectedHoliday.date || value.start !== firstInterval?.start || value.end !== firstInterval?.end) {
-        this.error.set('This holiday has multiple open intervals. Change only the reason here, or recreate the holiday to edit its hours.');
+        this.error.set(
+          $localize`:@@SALON_OWNER_SETTINGS.ERROR_HOLIDAY_MULTIPLE_INTERVALS:This holiday has multiple open intervals. Change only the reason here, or recreate the holiday to edit its hours.`,
+        );
         return null;
       }
 
