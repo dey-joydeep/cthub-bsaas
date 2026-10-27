@@ -17,12 +17,20 @@ config_file = "agents/api-contract-reviewer.toml"
 description = "Security reviewer for auth, authorization, scope isolation, CSRF, cookies, sessions, tokens, validation, sensitive logging, and frontend storage risks."
 config_file = "agents/security-reviewer.toml"
 
+[agents.security-adversarial-reviewer]
+description = "Independent attack-path reviewer for critical security, tenant isolation, identity, and financial decisions. Use alongside security-reviewer, with a separate question and evidence review."
+config_file = "agents/security-adversarial-reviewer.toml"
+
+[agents.product-spec-reviewer]
+description = "Independent product specification reviewer for critical salon workflows, business rules, acceptance criteria, and MVP scope."
+config_file = "agents/product-spec-reviewer.toml"
+
 [agents.test-reviewer]
 description = "Test reviewer for unit, integration, contract, e2e, regression, permission, validation, conflict, and edge-case coverage."
 config_file = "agents/test-reviewer.toml"
 
 [agents.angular-ssr-reviewer]
-description = "Frontend reviewer for Angular 20, SSR safety, Material v3, Tailwind v4 twc- prefix usage, accessibility, web state handling, and web tests."
+description = "Frontend reviewer for Angular 21, SSR safety, Material v3, Tailwind v4 twc- prefix usage, accessibility, web state handling, and web tests."
 config_file = "agents/angular-ssr-reviewer.toml"
 
 [agents.nestjs-prisma-reviewer]

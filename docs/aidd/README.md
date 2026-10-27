@@ -1,26 +1,32 @@
-# Codex AIDD Guide
+# AI-Driven Development Guide
 
 **Status:** Current operating guide
 
 ## Purpose
 
-This folder defines how Codex should be used for AI-driven development in this repository. It complements, but does not replace, `AGENTS.md`, scoped `AGENTS.md` files, and the production documentation standards.
+This folder defines the shared development life cycle and the Codex-specific operating guidance for this repository. It complements `AGENTS.md`, scoped instructions, and the production documentation standards. Antigravity-specific execution guidance lives in `GEMINI.md` and `.agents/agents/`; Codex agent definitions live in `.codex/agents/`.
+
+Start with the [AI-Driven Development Life Cycle](development-lifecycle.md) for product objective, PO-to-release stages, continuous QA, agent ownership, review and security gates, tracking, and branch policy. Then use the relevant task playbook and scoped instructions.
 
 ## Source Order
 
 When instructions overlap, use this order:
 
-1. System and developer instructions from the active Codex session.
+1. System and developer instructions from the active Codex or Antigravity runtime.
 2. Root `AGENTS.md`.
 3. Nearest scoped `AGENTS.md`.
 4. `docs/quality-standards/production-documentation-standard.md` for production documentation work.
 5. `docs/specs/project-wide/IMPLEMENTATION/implementation-slicing.md` for implementation sequencing.
 6. These AIDD docs and prompt templates.
 
+For Antigravity execution, also apply the relevant `GEMINI.md` and selected `.agents/agents/` profile. Runtime instructions and user requests take precedence over repository guidance.
+
 ## Documents
 
 | Document                                                  | Use                                                                                           |
 | --------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| [Development Life Cycle](development-lifecycle.md)        | Shared product-to-release process, roles, routing, and gates.                                 |
+| [Autonomous Recovery](autonomous-recovery.md)             | Local work-unit ledger, checkpoints, interruption recovery, and stale-evidence rules.         |
 | [Codex Operating Model](codex-operating-model.md)         | Repository-specific workflow for analysis, design, implementation, validation, and reporting. |
 | [Codex Task Policy](codex-task-policy.md)                 | Depth, stop conditions, and completion expectations by task type.                             |
 | [Codex Review Checklist](codex-review-checklist.md)       | Checklist for PR reviews and self-review before handoff.                                      |
@@ -30,7 +36,11 @@ When instructions overlap, use this order:
 
 ## Repo Codex Assets
 
-- `.codex/agents/*.toml` contains shipped reviewer and implementation helper agents.
+- `.agents/agents/*.md` contains Antigravity delivery-role agents.
+- `scripts/aidd/run-agy-agent.mjs` pins the minimum Antigravity model for automated role execution.
+- `scripts/aidd/agent-work-ledger.mjs` records local checkpoints and exports trackable snapshots under `docs/status/aidd/`.
+- `.agents/skills/*` contains reusable Antigravity and Codex workflows where applicable.
+- `.codex/agents/*.toml` contains Codex reviewer and implementation helper agents.
 - `.codex/environments/environment.toml` points at the repo bootstrap command for fresh Codex worktrees.
 - `.codex/prompts/*.md` contains reusable planning, implementation, review, CI-fix, and test prompts.
 

@@ -37,6 +37,8 @@ Codex should mention:
 - relevant production documentation standards for docs/spec work;
 - affected apps, libs, docs, tests, and commands.
 
+For a resumed long-running or multi-agent task, identify its task ID and read [Autonomous Recovery](../autonomous-recovery.md). If the prior writers have stopped, run `npm run aidd:ledger -- recover --task <id>` before dispatching new work. Use the returned `readyUnits` and preserved checkpoints; do not treat a still-running or stale unit as complete.
+
 ## Useful commands inside Codex
 
 ```text

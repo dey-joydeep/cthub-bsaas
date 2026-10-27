@@ -4,9 +4,12 @@
 
 Describe what changed and why.
 
-## Source Context
+## Source Requirement / Spec
 
-Link the source requirement, issue, user story, spec, implementation slice, or correction input.
+- Tracking issue:
+- Product outcome and success measure:
+- Acceptance criteria covered:
+- Related user story, spec, or implementation slice:
 
 ## AIDD Scope
 
@@ -14,19 +17,20 @@ Link the source requirement, issue, user story, spec, implementation slice, or c
 - New task or continuation:
 - In scope:
 - Out of scope:
+- Implementing agent and model:
 
 ## Impact Matrix
 
-| Area | Impact | Notes |
-| --- | --- | --- |
-| User Stories | None / Updated / Checked |  |
-| Requirements | None / Updated / Checked |  |
-| Design Docs | None / Updated / Checked |  |
-| API | None / Updated / Checked |  |
-| Validation | None / Updated / Checked |  |
-| Web | None / Updated / Checked |  |
-| Tests | None / Updated / Checked |  |
-| Data Model | None / Updated / Checked |  |
+| Area         | Impact                   | Notes |
+| ------------ | ------------------------ | ----- |
+| User Stories | None / Updated / Checked |       |
+| Requirements | None / Updated / Checked |       |
+| Design Docs  | None / Updated / Checked |       |
+| API          | None / Updated / Checked |       |
+| Validation   | None / Updated / Checked |       |
+| Web          | None / Updated / Checked |       |
+| Tests        | None / Updated / Checked |       |
+| Data Model   | None / Updated / Checked |       |
 
 ## Validation
 
@@ -41,6 +45,15 @@ Commands not run:
 ## Risks and Follow-ups
 
 -
+
+## Independent Gates
+
+- QA evidence and result:
+- Independent Codex review link and finding disposition:
+- Reviewer identity, reviewed base/head commits, scope, and verdict:
+- Codex security check link or reason it is not applicable:
+- Critical product or security decision: second independent assessment and resolution, if applicable:
+- Release and rollback evidence, if this PR is a release candidate:
 
 ## Specialized Templates
 
