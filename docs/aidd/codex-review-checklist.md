@@ -4,6 +4,8 @@
 
 Use this checklist when Codex reviews its own changes, reviews a pull request, or prepares a completion report.
 
+For a merge gate, the Codex reviewer must be independent of the implementer. Security checks are owned by Codex; critical security decisions require a second independent Codex assessment. See [development-lifecycle.md](development-lifecycle.md).
+
 ## Scope and traceability
 
 - [ ] The change matches the requested scope.

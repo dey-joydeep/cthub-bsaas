@@ -1,45 +1,45 @@
 # CTHub Agent Rules
 
-## Mandatory: Project Tracker Initialization
+Read the root `AGENTS.md`, the nearest scoped `AGENTS.md`, and
+`docs/aidd/development-lifecycle.md` before starting a repository task. The
+life-cycle document owns the product goal, PO-to-release handoffs, QA role,
+and review gates.
+For long-running or multi-agent work, follow `docs/aidd/autonomous-recovery.md`
+and checkpoint bounded work units before handoff. Resume interrupted units from
+the local ledger without treating partial evidence as complete. Publish a
+checkpoint to the private tracking issue when progress must survive this
+checkout.
 
-**Before writing any code, documentation, or making any commits for a new
-trackable work item (feature, bug, migration, spike, chore, doc), you MUST:**
+Antigravity execution requires Gemini 3.8 Flash or a stronger eligible model.
+Verify the effective model before interactive work; a `flash` tier does not
+pin a version. Automated role runs use `scripts/aidd/run-agy-agent.mjs`.
+Independent code and contract review and all security checks belong to Codex.
+Critical product specifications need an independent Codex reviewer; critical
+security decisions need two independently tasked Codex assessments.
 
-1. Invoke the `aidd-project-tracker` skill.
-2. Gather `EpicTitle`, `EpicBody`, and `SubIssuesJson` from the task context.
-3. Run the appropriate script:
-   - **Windows:** `.agents/skills/aidd-project-tracker/scripts/init-tracker.ps1`
-   - **macOS/Linux:** `.agents/skills/aidd-project-tracker/scripts/init-tracker.sh`
-4. Confirm the Epic, sub-issues, and project board fields are fully populated
-   before proceeding.
+## Issue-First Tracking
 
-**Do NOT skip this step.** A task without an Epic on the project board is
-invisible to the team and violates the AIDD process.
+For a trackable change, search the existing issue and project board before
+creating tracking. Reuse the issue when it already covers the requested outcome
+and record its number in the task handoff.
 
-The skill handles everything automatically: Epic creation, sub-issue creation,
-parent-child linking (via GraphQL), project board assignment, and field
-population (Status, Priority, Size, Estimate, Domain, Start date, End date).
+- Use one issue for a standalone change with acceptance criteria and validation.
+- Use an Epic with sub-issues only when the outcome has at least two independent,
+  reviewable delivery slices. Invoke `aidd-project-tracker` when a new Epic is
+  needed; it previews the plan before any GitHub write.
+- Keep a continuation fix under its existing issue or PR. A read-only question,
+  review, or trivial correction does not require new tracking.
+- Check for an existing Epic and sub-issues before invoking the initializer. Do
+  not create duplicates to satisfy a process step.
 
-### When NOT to create an Epic
+Tracking records the work; it is not permission to create branches, commit,
+merge, deploy, or change product scope. Follow the root repository rules for
+those actions.
 
-- The task is a direct continuation of an already-initialized Epic (just add a
-  sub-issue to the existing one instead).
-- The task is a one-liner fix with no trackable deliverable (e.g., fixing a
-  typo, updating a comment).
+## Post-Edit Validation
 
-## Mandatory: Post-Edit Formatting, Linting, & Warning Reporting
-
-**Whenever an AI agent finishes modifying or creating any code or test files (`.ts`, `.spec.ts`, `.html`, `.css`, `.scss`, etc.), you MUST perform file-level AST validation before completing your turn or asking for commit approval:**
-
-1. **Format edited files:** Run Prettier directly on the touched files:
-   ```powershell
-   npx prettier --write <path/to/edited-file1> <path/to/edited-file2>
-   ```
-2. **Lint edited files:** Run ESLint directly on any touched TypeScript/JavaScript files:
-   ```powershell
-   npx eslint --fix <path/to/edited-file1.ts> <path/to/edited-file2.ts>
-   ```
-3. **Mandatory Warning Reporting:** Inspect the terminal output from ESLint. While warnings will not block staged-level checks or commits, **you MUST explicitly report any warnings or non-fatal lint issues (such as unused variables, deprecated methods, or type assertions) to the user in your response.** Never silently ignore warnings.
+Follow the root `AGENTS.md` post-edit checks for touched files. Report warnings
+and non-fatal lint issues in the completion summary.
 
 ### Reference
 

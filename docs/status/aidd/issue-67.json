@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "task": "issue-67",
+  "goal": "Advance the AIDD lifecycle and recovery workflow",
+  "issue": "67",
+  "branch": "chore/aidd-lifecycle-overhaul",
+  "base": "main",
+  "createdAt": "2026-10-27T02:09:13.266Z",
+  "exportedAt": "2026-10-27T10:58:43.736Z",
+  "exportedHead": "22faba5673c233c5185da46b85dd839e51227dda",
+  "units": [
+    {
+      "definition": {
+        "id": "change-hygiene",
+        "kind": "implementation",
+        "owner": "codex-root",
+        "paths": [
+          "AGENTS.md",
+          "docs/AGENTS.md",
+          "docs/aidd/change-hygiene.md",
+          "docs/aidd/README.md",
+          "docs/aidd/codex-validation-commands.md",
+          "docs/aidd/playbooks/new-task-flow.md",
+          "docs/aidd/playbooks/merge-readiness-flow.md",
+          ".gitignore",
+          ".lintstagedrc",
+          ".husky/pre-commit",
+          ".husky/pre-push",
+          ".github/workflows/ci.yml",
+          ".github/PULL_REQUEST_TEMPLATE/aidd-implementation.md",
+          ".github/pull_request_template.md",
+          "package.json",
+          "scripts/aidd/check-changed-format.mjs",
+          "scripts/aidd/check-changed-format.test.mjs",
+          "scripts/aidd/check-aidd-setup.mjs"
+        ],
+        "dependsOn": ["recovery-mechanism"],
+        "acceptance": "Changed-file formatting, scoped linting, inclusion rules, and AIDD PR gates are documented and validated"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Added a canonical change scope matrix, staged-file checks, changed-file format verification, safer environment-file exclusions, and PR gates for AIDD and affected projects.",
+          "remainingPaths": [],
+          "evidence": [
+            "docs/aidd/change-hygiene.md",
+            ".github/workflows/ci.yml",
+            ".lintstagedrc",
+            "scripts/aidd/check-changed-format.mjs",
+            "scripts/aidd/check-changed-format.test.mjs"
+          ],
+          "commands": [
+            { "command": "npm run aidd:format:test", "exitCode": 0 },
+            { "command": "npm run aidd:format:changed -- --worktree", "exitCode": 0 },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "npm run aidd:assets", "exitCode": 0 },
+            {
+              "command": "npx eslint --max-warnings 0 scripts/aidd/check-aidd-setup.mjs scripts/aidd/check-changed-format.mjs scripts/aidd/check-changed-format.test.mjs .husky/install.mjs",
+              "exitCode": 0
+            },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": []
+        },
+        "source": {
+          "fingerprint": "81d34751c7364c0fa3eeffd4fbe799a1058d7635244101428717bb687c11d938",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda"
+        }
+      }
+    },
+    {
+      "definition": {
+        "id": "hook-install",
+        "kind": "verification",
+        "owner": "codex-root",
+        "paths": [".husky/install.mjs"],
+        "dependsOn": ["change-hygiene"],
+        "acceptance": "Hook installation skips production and CI while local development installs the pre-commit hook"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Hook installation succeeds for local development and exits cleanly in CI and production environments.",
+          "remainingPaths": [],
+          "evidence": [".husky/install.mjs", "package.json", "docs/aidd/change-hygiene.md"],
+          "commands": [
+            { "command": "npm run prepare", "exitCode": 0 },
+            { "command": "node .husky/install.mjs with CI=true and NODE_ENV=production in separate child processes", "exitCode": 0 },
+            { "command": "npx prettier --check .husky/install.mjs package.json", "exitCode": 0 },
+            { "command": "npx eslint --max-warnings 0 .husky/install.mjs", "exitCode": 0 }
+          ],
+          "findings": []
+        },
+        "source": {
+          "fingerprint": "ba25a5aee3b32f7daeb88a92f3500ebd82620a723a5ca1b3fa2e8c234a9c8a26",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda",
+          "base": "22faba5673c233c5185da46b85dd839e51227dda",
+          "baseTip": "22faba5673c233c5185da46b85dd839e51227dda"
+        }
+      }
+    },
+    {
+      "definition": {
+        "id": "independent-review",
+        "kind": "review",
+        "owner": "codex-independent",
+        "paths": ["."],
+        "dependsOn": ["recovery-mechanism"],
+        "acceptance": "Final whole-PR Codex review passes at a clean committed head"
+      },
+      "status": "pending",
+      "lastType": null,
+      "checkpoint": null
+    },
+    {
+      "definition": {
+        "id": "recovery-mechanism",
+        "kind": "implementation",
+        "owner": "codex-root",
+        "paths": [
+          "scripts/aidd/agent-work-ledger.mjs",
+          "scripts/aidd/agent-work-ledger.test.mjs",
+          "docs/aidd/autonomous-recovery.md",
+          "package.json",
+          "AGENTS.md",
+          ".agents/AGENTS.md",
+          "docs/aidd/development-lifecycle.md",
+          "docs/aidd/README.md",
+          "docs/aidd/playbooks/local-codex-startup.md",
+          "docs/aidd/playbooks/new-task-flow.md",
+          "scripts/aidd/check-aidd-setup.mjs"
+        ],
+        "dependsOn": [],
+        "acceptance": "Recovery ledger handles interruption and stale evidence with passing targeted tests"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Validated recovery guidance and setup checks after adding the change scope policy.",
+          "remainingPaths": [],
+          "evidence": [
+            "scripts/aidd/agent-work-ledger.mjs",
+            "scripts/aidd/agent-work-ledger.test.mjs",
+            "docs/aidd/autonomous-recovery.md",
+            "docs/status/aidd/README.md",
+            "docs/aidd/README.md",
+            "scripts/aidd/check-aidd-setup.mjs"
+          ],
+          "commands": [
+            { "command": "npm run aidd:ledger:test", "exitCode": 0 },
+            {
+              "command": "npx eslint scripts/aidd/agent-work-ledger.mjs scripts/aidd/agent-work-ledger.test.mjs scripts/aidd/check-aidd-setup.mjs",
+              "exitCode": 0
+            },
+            {
+              "command": "npx prettier --check scripts/aidd/agent-work-ledger.mjs scripts/aidd/agent-work-ledger.test.mjs docs/aidd/autonomous-recovery.md docs/status/aidd/README.md docs/status/aidd/issue-67.json",
+              "exitCode": 0
+            },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": [
+            { "summary": "Removed caller-controlled test executable override from production ledger CLI.", "disposition": "closed" },
+            {
+              "summary": "Process publication now verifies that the pinned source commit contains the exact process snapshot.",
+              "disposition": "closed"
+            }
+          ]
+        },
+        "source": {
+          "fingerprint": "d83be794727c4c10f0f4fd4a86ed65bdd2b4d4c380adb1a38336c75a99e692c1",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda"
+        }
+      }
+    },
+    {
+      "definition": {
+        "id": "source-checkpoint",
+        "kind": "implementation",
+        "owner": "codex-root",
+        "paths": [
+          "scripts/aidd/source-checkpoint.mjs",
+          "scripts/aidd/source-checkpoint.test.mjs",
+          "docs/aidd/autonomous-recovery.md",
+          "AGENTS.md",
+          "package.json"
+        ],
+        "dependsOn": ["recovery-mechanism"],
+        "acceptance": "Private source checkpoint restores an unpushed branch and uncommitted source without changing the working branch or index"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Added authorized private source checkpoints on a dedicated Git ref and verified fresh-machine restoration of an unpushed branch with uncommitted files.",
+          "remainingPaths": [],
+          "evidence": [
+            "scripts/aidd/source-checkpoint.mjs",
+            "scripts/aidd/source-checkpoint.test.mjs",
+            "docs/aidd/autonomous-recovery.md",
+            "AGENTS.md"
+          ],
+          "commands": [
+            { "command": "npm run aidd:ledger:test", "exitCode": 0 },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            {
+              "command": "npx eslint scripts/aidd/source-checkpoint.mjs scripts/aidd/source-checkpoint.test.mjs scripts/aidd/check-aidd-setup.mjs",
+              "exitCode": 0
+            },
+            {
+              "command": "npx prettier --check scripts/aidd/source-checkpoint.mjs scripts/aidd/source-checkpoint.test.mjs scripts/aidd/check-aidd-setup.mjs docs/aidd/autonomous-recovery.md docs/status/aidd/README.md AGENTS.md package.json",
+              "exitCode": 0
+            },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": [
+            { "summary": "Verified effective private push destination and disabled automatic tag following.", "disposition": "closed" },
+            {
+              "summary": "Scanned unpushed parent history and rejected large or binary blobs that cannot be safely scanned.",
+              "disposition": "closed"
+            },
+            {
+              "summary": "Bound apply to the reviewed preview tree and pinned source commit in the owner-authored issue checkpoint.",
+              "disposition": "closed"
+            }
+          ]
+        },
+        "source": {
+          "fingerprint": "f06065e100096b6e3c896569aa2cde5937e08a81e3bfed15776a7274446cd09e",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda"
+        }
+      }
+    }
+  ]
+}

@@ -64,16 +64,43 @@ jobs:
             echo "NX_HEAD=HEAD" >> "$GITHUB_ENV"
           fi
 
+      - name: Detect change areas
+        id: change_scope
+        shell: bash
+        run: |
+          DIFF_FILES="$(git diff --name-only "$NX_BASE" "$NX_HEAD")"
+          if echo "$DIFF_FILES" | grep -Eq '^(apps/|libs/|package-lock\.json$|nx\.json$|tsconfig[^/]*\.json$|eslint[^/]*$)'; then
+            echo "runnable=true" >> "$GITHUB_OUTPUT"
+          fi
+          if echo "$DIFF_FILES" | grep -Eq '(^|/)(AGENTS|GEMINI)\.md$|^(package\.json$|\.gitignore$|\.prettierignore$|\.prettierrc$|docs/aidd/|docs/status/aidd/|scripts/aidd/|\.agents/|\.codex/|\.husky/|\.lintstagedrc$|\.github/workflows/|\.github/PULL_REQUEST_TEMPLATE/|\.github/pull_request_template\.md$)'; then
+            echo "aidd=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check changed-file format and whitespace
+        run: |
+          npm run aidd:format:changed -- "$NX_BASE" "$NX_HEAD"
+          git diff --check "$NX_BASE" "$NX_HEAD"
+
+      - name: Check AIDD process assets
+        if: steps.change_scope.outputs.aidd == 'true'
+        run: |
+          npm run aidd:check
+          npm run aidd:assets
+          npm run aidd:links
+          npm run aidd:format:test
+          npm run aidd:ledger:test
+          npx eslint --max-warnings 0 scripts/aidd/*.mjs
+
       - name: Enable Nx Cloud read-only mode
         if: github.event_name != 'pull_request'
         run: npx nx-cloud start-ci-run --distribute-on='5 linux-medium-js' --stop-agents-after='build'
 
       - name: Run linting
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' || steps.change_scope.outputs.runnable == 'true'
         run: npx nx affected --target=lint --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=ci
 
       - name: Run tests
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' || steps.change_scope.outputs.runnable == 'true'
         run: npx nx affected --target=test --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=ci
 
       - name: OpenAPI parity (auth)

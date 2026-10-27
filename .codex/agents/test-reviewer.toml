@@ -12,7 +12,7 @@ Review only. Do not edit files.
 - AGENTS.md
 - every scoped AGENTS.md file required for changed areas
 - docs/aidd/README.md
-- related TEST specs, validation specs, Jest configs, and nearby tests
+- related TEST specs, validation specs, the affected project's Jest or Vitest configuration, and nearby tests
 
 ## Focus
 

@@ -42,7 +42,12 @@ function optionalContent(path, patterns) {
 }
 
 requiredPath('AGENTS.md');
+requiredPath('README.md');
 requiredPath('docs/aidd/README.md');
+requiredPath('docs/aidd/development-lifecycle.md');
+requiredPath('docs/aidd/autonomous-recovery.md');
+requiredPath('docs/aidd/change-hygiene.md');
+requiredPath('docs/status/aidd/README.md');
 requiredPath('docs/aidd/codex-operating-model.md');
 requiredPath('docs/aidd/codex-task-policy.md');
 requiredPath('docs/aidd/codex-review-checklist.md');
@@ -52,14 +57,48 @@ requiredPath('docs/quality-standards/visual-collaboration-guideline.md');
 requiredPath('.codex/config.toml');
 requiredPath('.codex/prompts');
 requiredPath('.agents/skills');
+requiredPath('.agents/AGENTS.md');
+requiredPath('.agents/agents/product-owner.md');
+requiredPath('.agents/agents/qa-engineer.md');
+requiredPath('.agents/agents/release-agent.md');
+requiredPath('scripts/aidd/run-agy-agent.mjs');
+requiredPath('scripts/aidd/agent-work-ledger.mjs');
+requiredPath('scripts/aidd/source-checkpoint.mjs');
+requiredPath('scripts/aidd/check-changed-format.mjs');
+requiredPath('.husky/pre-commit');
+requiredPath('.husky/install.mjs');
+requiredPath('.lintstagedrc');
+requiredPath('.github/pull_request_template.md');
 
-requiredContent('AGENTS.md', [/AIDD/i, /docs\/aidd\/README\.md/]);
-requiredContent('docs/aidd/README.md', [/Codex AIDD/i, /codex-operating-model\.md/, /codex-task-policy\.md/]);
+requiredContent('AGENTS.md', [/AIDD/i, /docs\/aidd\/README\.md/, /development-lifecycle\.md/]);
+requiredContent('README.md', [/scalable SaaS platform for beauty salons/i, /development-lifecycle\.md/]);
+requiredContent('docs/aidd/README.md', [
+  /AI-Driven Development Guide/i,
+  /development-lifecycle\.md/,
+  /codex-task-policy\.md/,
+  /change-hygiene\.md/,
+]);
+requiredContent('docs/aidd/development-lifecycle.md', [
+  /QA participates from requirements through operation/i,
+  /Codex is the required owner/i,
+  /Gemini 3\.8 Flash/i,
+  /Critical security/i,
+]);
+requiredContent('.agents/AGENTS.md', [/Gemini 3\.8 Flash/i, /Codex/i, /development-lifecycle\.md/]);
+requiredContent('.github/pull_request_template.md', [/Tracking issue:/i, /Independent Codex review link/i, /Codex security check link/i]);
 requiredContent('docs/aidd/codex-operating-model.md', [/Standard AIDD flow/i, /FRD\/FNRD\/HLD\/LLD\/API\/validation\/web\/test/i]);
 requiredContent('docs/aidd/codex-task-policy.md', [/New task/i, /Continuation fix/i]);
 requiredContent('docs/aidd/codex-validation-commands.md', [/npx nx/i]);
 requiredContent('docs/aidd/codex-review-checklist.md', [/Scope and traceability/i, /Tests and validation/i]);
 optionalContent('package.json', [/"aidd:check"/, /"aidd:assets"/, /"aidd:links"/]);
+requiredContent('package.json', [
+  /"prepare"\s*:\s*"node \.husky\/install\.mjs"/,
+  /"aidd:ledger"/,
+  /"aidd:ledger:test"/,
+  /"aidd:source-checkpoint"/,
+  /"aidd:format:changed"/,
+  /"aidd:format:test"/,
+]);
 
 if (warnings.length > 0) {
   console.warn('AIDD setup warnings:');

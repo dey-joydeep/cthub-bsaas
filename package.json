@@ -28,6 +28,7 @@
     "libs/web/ui"
   ],
   "scripts": {
+    "prepare": "node .husky/install.mjs",
     "postinstall": "node scripts/check-versions/node-version.js",
     "dev:web-admin": "nx serve web-app-admin",
     "dev:web-customer": "nx serve web-app-customer",
@@ -102,7 +103,12 @@
     "openapi:check:salon-owner": "tsx scripts/openapi-salon-owner-check.ts",
     "aidd:check": "node scripts/aidd/check-aidd-setup.mjs",
     "aidd:assets": "node scripts/aidd/check-codex-assets.mjs",
-    "aidd:links": "node scripts/aidd/check-doc-links.mjs"
+    "aidd:links": "node scripts/aidd/check-doc-links.mjs",
+    "aidd:ledger": "node scripts/aidd/agent-work-ledger.mjs",
+    "aidd:ledger:test": "node --test scripts/aidd/agent-work-ledger.test.mjs scripts/aidd/source-checkpoint.test.mjs",
+    "aidd:source-checkpoint": "node scripts/aidd/source-checkpoint.mjs",
+    "aidd:format:changed": "node scripts/aidd/check-changed-format.mjs",
+    "aidd:format:test": "node --test scripts/aidd/check-changed-format.test.mjs"
   },
   "devDependencies": {
     "@analogjs/vite-plugin-angular": "2.6.2",
