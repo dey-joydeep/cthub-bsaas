@@ -24,6 +24,7 @@ export class AuthService implements AuthStatePort {
   public sessionTtlMs = 5 * 60 * 1000;
   private lastValidatedAt = 0;
   private authGeneration = 0;
+  private inFlightHydration: Promise<PartnerAuthUser | null> | null = null;
 
   constructor(
     @Inject(PLATFORM_ID) private readonly platformId: object,
@@ -96,6 +97,7 @@ export class AuthService implements AuthStatePort {
 
   async logout(): Promise<void> {
     this.authGeneration++;
+    this.inFlightHydration = null;
     if (this.isBrowser && this.http) {
       try {
         await firstValueFrom(
@@ -127,6 +129,7 @@ export class AuthService implements AuthStatePort {
 
   public clearAuthData(): void {
     this.authGeneration++;
+    this.inFlightHydration = null;
     this.lastValidatedAt = 0;
     this.currentUserSubject.next(null);
     if (!this.isBrowser) return;
@@ -146,7 +149,26 @@ export class AuthService implements AuthStatePort {
 
   public async hydrateCurrentUser(): Promise<PartnerAuthUser | null> {
     if (!this.isBrowser || !this.http) return this.getCurrentUser();
-    const requestGeneration = ++this.authGeneration;
+
+    if (this.inFlightHydration) {
+      return this.inFlightHydration;
+    }
+
+    const requestGeneration = this.authGeneration;
+    const hydrationPromise = this.performHydration(requestGeneration);
+    this.inFlightHydration = hydrationPromise;
+
+    try {
+      return await hydrationPromise;
+    } finally {
+      if (this.inFlightHydration === hydrationPromise) {
+        this.inFlightHydration = null;
+      }
+    }
+  }
+
+  private async performHydration(requestGeneration: number): Promise<PartnerAuthUser | null> {
+    if (!this.http) return null;
     try {
       const res = await firstValueFrom(
         this.http.get<{ success: boolean; data?: PartnerAuthUser }>('/api/auth/me', {

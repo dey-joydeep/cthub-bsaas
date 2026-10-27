@@ -477,4 +477,59 @@ describe('AuthService (Partner)', () => {
     expect(result).toBeNull();
     expect(httpService.getCurrentUser()).toBeNull();
   });
+
+  it('shares pending in-flight hydration across concurrent checks without duplicate HTTP requests', async () => {
+    const responseSubject = new Subject<{ success: boolean; data: PartnerAuthUser }>();
+    const httpMock = {
+      get: jest.fn().mockReturnValue(responseSubject.asObservable()),
+      post: jest.fn(),
+    };
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        AuthService,
+        { provide: PLATFORM_ID, useValue: 'browser' },
+        { provide: StorageService, useValue: storageMock },
+        { provide: HttpClient, useValue: httpMock },
+      ],
+    });
+
+    const httpService = TestBed.inject(AuthService);
+    // Complete constructor initialization
+    responseSubject.next({ success: false });
+    await httpService.initialize();
+
+    httpService.setLoggedInUser({
+      id: 'staff-concurrent',
+      name: 'Concurrent Staff',
+      email: 'concurrent@example.com',
+      role: 'staff',
+    });
+
+    httpMock.get.mockClear();
+
+    // Trigger two concurrent hydration calls
+    const call1 = httpService.hydrateCurrentUser();
+    const call2 = httpService.hydrateCurrentUser();
+
+    // Only one HTTP GET should have been issued
+    expect(httpMock.get).toHaveBeenCalledTimes(1);
+
+    responseSubject.next({
+      success: true,
+      data: {
+        id: 'staff-concurrent',
+        name: 'Concurrent Staff',
+        email: 'concurrent@example.com',
+        role: 'staff',
+      },
+    });
+    responseSubject.complete();
+
+    const [user1, user2] = await Promise.all([call1, call2]);
+    expect(user1?.id).toBe('staff-concurrent');
+    expect(user2?.id).toBe('staff-concurrent');
+    expect(httpMock.get).toHaveBeenCalledTimes(1);
+  });
 });
