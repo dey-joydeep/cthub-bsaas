@@ -4,7 +4,7 @@ Read this file before working under `libs/web/**`.
 
 ## Stack
 
-- Angular 20.
+- Angular 21.
 - Standalone components for new code.
 - SSR enabled.
 - Angular Material v3.
@@ -66,3 +66,5 @@ Read this file before working under `libs/web/**`.
 - Use Angular-compatible test utilities.
 - Integration-style web service tests may live under `tests/integration/**/*.it-spec.ts` when meaningful and configured.
 - E2E belongs under app-level projects in `apps/e2e/**`.
+- For visible changes, inspect the affected route when an app can run. Check console errors, hydration, responsive layout, keyboard access, and changed states; preserve browser evidence for QA.
+- When implementing an existing design, use its source or checked-in spec. Report an unavailable design source rather than guessing precise tokens.

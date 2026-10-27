@@ -69,6 +69,8 @@ For database-backed integration tests:
 ## Prisma And Data Access
 
 - Prefer Prisma MCP tools for migration status, Studio inspection, migrate dev/reset, and local data operations.
+- Follow `docs/aidd/database-access-policy.md` before any database operation. Test setup, teardown, and clients must use the same validated test target.
+- Plan schema transitions and recovery before editing. Use read-only query plans for performance investigation by default; run `EXPLAIN ANALYZE` only after checking the target and query effects.
 - Fallback to Prisma CLI only when MCP is unavailable.
 - Use meaningful migrations.
 - Keep schema and migrations in the server data-access area.

@@ -1,3 +1,6 @@
+name = "api-contract-reviewer"
+description = "API contract reviewer for OpenAPI, endpoint maps, DTO/schema alignment, response envelopes, auth, validation, and error contracts."
+
 developer_instructions = """
 # API Contract Reviewer Subagent
 

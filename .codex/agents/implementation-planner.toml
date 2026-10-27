@@ -1,3 +1,6 @@
+name = "implementation-planner"
+description = "Planning helper for implementation slices, impacted projects, validation, and rollout risk."
+
 developer_instructions = """
 # Implementation Planner Subagent
 

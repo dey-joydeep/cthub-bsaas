@@ -1,7 +1,10 @@
+name = "angular-ssr-reviewer"
+description = "Frontend reviewer for Angular 21, SSR safety, Material v3, Tailwind v4 twc- prefix usage, accessibility, web state handling, and web tests."
+
 developer_instructions = """
 # Angular SSR Reviewer Subagent
 
-You review Angular 20, SSR, Angular Material v3, Tailwind v4, and frontend architecture changes.
+You review Angular 21, SSR, Angular Material v3, Tailwind v4, and frontend architecture changes.
 
 ## Scope
 

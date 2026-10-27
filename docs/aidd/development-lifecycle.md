@@ -1,0 +1,73 @@
+# AI-Driven Development Life Cycle
+
+**Status:** Current operating policy
+
+## Product objective
+
+Build a scalable SaaS platform for beauty salons. Salon operations are the first product area. The initial release must make a single-branch salon operationally credible while keeping tenant, business, and branch boundaries suitable for later multi-branch growth. [Salon Owner release scope](../us/salon-owner/release-scope.md) defines the MVP; [current product stories](../us/README.md) and [specs](../specs/README.md) define feature behavior.
+
+The product owner (PO) agent maintains the outcome, priority, scope, and success measure from discovery through post-release assessment. The operating model assumes one human developer today: agents perform the named team roles, while that human remains accountable for business priorities, access, and any decision reserved by repository or deployment policy. Role separation is an evidence and review boundary, not a requirement for separate human employees.
+
+## Life cycle
+
+Each independently releasable slice follows this cycle. Later slices may be in discovery while an earlier slice is in implementation. A phase can be concise for a small change; do not create a document solely to satisfy a phase name.
+
+| Phase                              | Accountable role                    | Work and exit evidence                                                                                                                                  |
+| ---------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Product goal                    | PO                                  | Define the salon user, problem, intended outcome, priority, and measurable success criterion. Mark unsupported assumptions.                             |
+| 2. Discovery                       | PO with BA and BI                   | Inspect users, workflows, product data, current behavior, and competing priorities. Record the decision to proceed, defer, or stop.                     |
+| 3. Requirements                    | BA with PO and QA                   | Define business rules, permission boundaries, edge cases, acceptance examples, and relevant non-functional requirements. QA confirms testability.       |
+| 4. Solution design                 | Architect with DBA, QA, and DevOps  | Define UX, module boundaries, API/data contracts, migration and operational impact, test approach, and risks. Resolve blocking decisions before build.  |
+| 5. Release planning                | PO with architect and release agent | Divide the outcome into vertical slices, identify dependencies, and select the next independently reviewable and releasable slice.                      |
+| 6. Implementation                  | Assigned developer agent            | Implement the slice, update affected contracts and specs, add meaningful tests, and report the exact validation run.                                    |
+| 7. Integration and QA              | QA                                  | Verify acceptance, integration, regression, accessibility, and relevant performance behavior. Record defects and evidence.                              |
+| 8. Independent review and security | Codex reviewers                     | Review the changed code, contracts, tests, architecture, and documentation. Codex owns all security checks. Resolve or explicitly disposition findings. |
+| 9. Staging and acceptance          | QA with PO                          | Exercise the release candidate in a production-like environment; PO evaluates acceptance criteria and QA records the quality recommendation.            |
+| 10. Release                        | Release agent with DevOps           | Confirm CI, review, security, migration, monitoring, and rollback evidence; execute only actions authorized by repository and deployment policy.        |
+| 11. Operate and measure            | DevOps and BI with PO               | Observe incidents, reliability, usage, and the original success measure. Compare outcome with the baseline.                                             |
+| 12. Improve or retire              | PO                                  | Feed findings into the backlog; expand, correct, or retire the capability.                                                                              |
+
+QA participates from requirements through operation. Its formal verification result complements Codex code review and security assessment; none substitutes for another.
+
+## Agent ownership and routing
+
+- Antigravity (AGY) is the default executor for PO, BA/BI, architecture preparation, implementation, QA execution, DevOps preparation, and release preparation. Codex may execute those tasks when its tools or context make it a better fit.
+- **Codex is the required owner of independent code/contract review and every security check.** The implementer cannot be the sole reviewer of its own change. A Codex-authored change requires a separate Codex reviewer or independent review run.
+- AGY work uses **Gemini 3.8 Flash or a stronger eligible model**. Custom agents inherit the selected parent model. Automated runs use `scripts/aidd/run-agy-agent.mjs` to pin and verify an allowed model (default `gemini-3.8-flash-medium`); interactive runs must show the effective model before work starts. A `flash` tier alone does not pin a version. Escalate reasoning/model capability for ambiguous or high-risk execution.
+- Assign bounded, specified work to a junior-style developer agent; give integration across modules and ambiguous design to a senior-style agent. Role names describe scope and required oversight, not an intrinsic guarantee of skill.
+- Use the database architect agent when schema design, tenant data boundaries, migration sequencing, indexing, or data-volume risk matters. It prepares the design; Codex independently reviews consequential database changes and owns security assessment. All database work follows the database access policy.
+- Use one coordinator for the work item. Parallel agents receive non-overlapping file ownership or isolated worktrees and return concise evidence. Do not add an agent when the task is a short dependent sequence.
+- Long-running or multi-agent work uses the [AIDD recovery protocol](autonomous-recovery.md). The coordinator defines bounded units before dispatch, agents checkpoint progress, and interrupted units resume from the last valid checkpoint. Partial or stale work cannot satisfy a release gate.
+
+| Risk class                                                           | Minimum agent involvement                                                                                                                         |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Routine correction or docs edit                                      | One executor, relevant automated validation, and Codex review when proposed for merge.                                                            |
+| Moderate feature slice                                               | Assigned developer, QA, and an independent Codex reviewer.                                                                                        |
+| Critical product specification or architecture decision              | AGY PO/BA or architect author plus an independent Codex product/architecture reviewer; record disagreements and resolution before implementation. |
+| Critical security, tenant isolation, financial, or identity decision | Two independently tasked Codex assessments with different review questions; reconcile findings before release.                                    |
+
+Security-sensitive changes also receive the normal implementation, QA, CI, and release gates. A second agent is independent only when it is given the source evidence and its own question before seeing the first agent's conclusion.
+
+## Review evidence and freshness
+
+The implementer self-reviews the complete diff before handoff. The independent Codex reviewer then inspects the proposed merge-base-to-head change, affected callers, failure paths, and relevant tests without editing it. Record the reviewer identity, reviewed base and head commit, scope, verdict, findings, and each finding's disposition. For an uncommitted working tree, label the review provisional; it cannot establish merge readiness.
+
+Fix confirmed findings across the affected defect class, including sibling paths, and verify the correction. Focused follow-up reviews can close those findings. Once known findings are resolved, obtain a fresh independent review of the whole PR at the final committed head. A new commit invalidates that final verdict and any approval tied to the old head; earlier finding-closure evidence may inform the next review. Use one independent reviewer by default, adding specialists for a concrete expertise gap or the critical-decision thresholds above.
+
+## Tracking, handoffs, and gates
+
+1. Search for existing work before creating tracking. Reuse the relevant issue for a continuation. Use one issue for a standalone deliverable; create an Epic with sub-issues only for a genuinely multi-slice outcome. Read-only questions and trivial changes need no new Epic.
+2. Keep each slice traceable from product outcome and acceptance criteria to implementation, tests, PR, review findings, release evidence, and measured result. Link to existing source documents instead of copying them.
+3. A handoff states the decision or output, evidence and links, unresolved questions, risks, and the next owner. The receiving agent verifies prerequisites rather than treating a previous agent's claim as proof.
+4. Work item states are **Discovery → Ready for build → In progress → In review → Release ready → Released → Measured**. Reopen an earlier state when a gate fails. CI results, QA evidence, and Codex findings are required inputs to release readiness.
+5. The PO resolves product scope and priority disagreements. The architect resolves technical design within the accepted product intent. Codex reviewers can block release on unresolved correctness or security findings; the accountable owner records any risk acceptance allowed by policy.
+
+## Branches and workspaces
+
+Use one protected `main` branch and one short-lived branch per independent implementation slice. Do not create branches per role. Reviewers and QA inspect the same PR or commit; parallel editing streams use separate branches and worktrees. Release from a tested commit on `main` and tag it. Add a release branch only when maintaining a separate deployed version requires one. Follow the repository's explicit branch-creation and commit authorization rules.
+
+## Completion evidence
+
+A slice is ready for release only when the acceptance criteria and affected specs agree with implementation; targeted tests and CI complete; QA records its result; independent Codex review and applicable Codex security assessments are resolved; and the release agent has deployment, monitoring, and rollback evidence. After release, BI and PO report the measured outcome against the original goal.
+
+The PR template records these gates, but the current CI cannot verify which model or provider performed a review. Until a trusted review-status integration and branch protection are configured, the release owner must inspect the linked Codex review and security evidence before marking a slice release ready. A filled template field alone is not approval.

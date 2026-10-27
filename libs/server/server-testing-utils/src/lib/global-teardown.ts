@@ -1,6 +1,7 @@
 import { config as dotenv } from 'dotenv';
 import { resolve } from 'node:path';
 import { PrismaClient } from '@prisma/client';
+import { bindTestDatabaseTarget } from '@cthub-bsaas/server-core';
 
 /**
  * Jest global teardown for server integration tests.
@@ -11,7 +12,8 @@ import { PrismaClient } from '@prisma/client';
  */
 export default async function globalTeardown() {
   dotenv({ path: resolve(process.cwd(), '.env.test') });
-  const prisma = new PrismaClient();
+  const target = bindTestDatabaseTarget();
+  const prisma = new PrismaClient({ datasources: { db: { url: target.url } } });
   const email = 'it-user@example.com';
   const roleNames = ['admin', 'owner', 'staff', 'customer'];
   const tenantEmail = 'it-tenant@example.com';

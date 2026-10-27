@@ -1,0 +1,419 @@
+{
+  "version": 1,
+  "task": "issue-67",
+  "goal": "Advance the AIDD lifecycle and recovery workflow",
+  "issue": "67",
+  "branch": "chore/aidd-lifecycle-overhaul",
+  "base": "main",
+  "createdAt": "2026-10-27T02:09:13.266Z",
+  "exportedAt": "2026-10-27T16:55:38.041Z",
+  "exportedHead": "22faba5673c233c5185da46b85dd839e51227dda",
+  "units": [
+    {
+      "definition": {
+        "id": "agent-adapters",
+        "kind": "verification",
+        "owner": "codex-root",
+        "paths": [
+          "docs/aidd/agent-activation.md",
+          "docs/aidd/README.md",
+          "scripts/aidd/check-aidd-setup.mjs",
+          ".codex/config.toml",
+          ".codex/agents",
+          "scripts/aidd/run-agy-agent.mjs"
+        ],
+        "dependsOn": ["shared-agent-instructions"],
+        "acceptance": "Provider role profiles have portable metadata, documented activation, and one shared policy source"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Documented Antigravity and Codex role discovery and activation. Added portable Codex profile metadata and a setup check that enforces registration consistency.",
+          "remainingPaths": [],
+          "evidence": [
+            "docs/aidd/agent-activation.md",
+            ".codex/config.toml",
+            ".codex/agents/database-reviewer.toml",
+            "scripts/aidd/check-aidd-setup.mjs"
+          ],
+          "commands": [
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "npm run aidd:assets", "exitCode": 0 },
+            {
+              "command": "npx eslint --max-warnings 0 scripts/aidd/check-aidd-setup.mjs scripts/aidd/test-database-target.test.mjs",
+              "exitCode": 0
+            },
+            { "command": "npm run aidd:format:changed -- --worktree", "exitCode": 0 }
+          ],
+          "findings": []
+        },
+        "source": {
+          "fingerprint": "1702f4767c0694d4810b292accb04b21e06db86e9152444903d194e74f52253f",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda",
+          "base": "22faba5673c233c5185da46b85dd839e51227dda",
+          "baseTip": "1b4cca5c47269e6990b75b672a7531d87125ff35"
+        }
+      }
+    },
+    {
+      "definition": {
+        "id": "change-hygiene",
+        "kind": "implementation",
+        "owner": "codex-root",
+        "paths": [
+          "AGENTS.md",
+          "docs/AGENTS.md",
+          "docs/aidd/change-hygiene.md",
+          "docs/aidd/README.md",
+          "docs/aidd/codex-validation-commands.md",
+          "docs/aidd/playbooks/new-task-flow.md",
+          "docs/aidd/playbooks/merge-readiness-flow.md",
+          ".gitignore",
+          ".lintstagedrc",
+          ".husky/pre-commit",
+          ".husky/pre-push",
+          ".github/workflows/ci.yml",
+          ".github/PULL_REQUEST_TEMPLATE/aidd-implementation.md",
+          ".github/pull_request_template.md",
+          "package.json",
+          "scripts/aidd/check-changed-format.mjs",
+          "scripts/aidd/check-changed-format.test.mjs",
+          "scripts/aidd/check-aidd-setup.mjs"
+        ],
+        "dependsOn": ["recovery-mechanism"],
+        "acceptance": "Changed-file formatting, scoped linting, inclusion rules, and AIDD PR gates are documented and validated"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Revalidated shared AIDD and recovery rules after the database guard and instruction consolidation. No live database command was run. Nx project discovery is unavailable because the local @nx/vitest plugin cannot resolve.",
+          "remainingPaths": [],
+          "evidence": ["docs/aidd/README.md", "docs/aidd/autonomous-recovery.md", "docs/status/aidd/README.md"],
+          "commands": [
+            { "command": "npm run aidd:ledger:test", "exitCode": 0 },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "npm run aidd:assets", "exitCode": 0 },
+            { "command": "npm run aidd:format:changed -- --worktree", "exitCode": 0 },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": []
+        },
+        "source": {
+          "fingerprint": "81af188a664a44a31b27ea4ba8d235a6b787ba95a2c38625a241dd2389ff8c05",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda"
+        }
+      }
+    },
+    {
+      "definition": {
+        "id": "database-safety",
+        "kind": "implementation",
+        "owner": "codex-root",
+        "paths": [
+          "AGENTS.md",
+          "libs/server/AGENTS.md",
+          "docs/aidd/database-access-policy.md",
+          "docs/aidd/change-hygiene.md",
+          "docs/aidd/development-lifecycle.md",
+          "docs/aidd/README.md",
+          "docs/useful-commands/prisma-commands.md",
+          ".agents/agents/database-architect.md",
+          ".codex/agents/database-reviewer.toml",
+          ".codex/config.toml",
+          "libs/server/core/src/index.ts",
+          "libs/server/core/src/config/test-database-target.ts",
+          "libs/server/data-access/test/setup/prismaTestClient.ts",
+          "libs/server/server-testing-utils/project.json",
+          "libs/server/server-testing-utils/src/lib/global-setup.ts",
+          "libs/server/server-testing-utils/src/lib/global-teardown.ts",
+          "libs/server/server-testing-utils/src/lib/test-database-worker-setup.ts",
+          "libs/server/features",
+          "scripts/aidd/test-database-target.test.mjs",
+          "scripts/aidd/check-aidd-setup.mjs",
+          "package.json",
+          ".github/workflows/ci.yml"
+        ],
+        "dependsOn": ["recovery-mechanism"],
+        "acceptance": "Automated tests bind only a validated test database, and DBA ownership and environment profiles are documented"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Test setup, teardown, workers, and the legacy Prisma helper now bind a validated test target. Database profiles and DBA ownership are documented. Pure guard tests passed; database-backed integration tests were not run because Nx cannot resolve the installed @nx/vitest plugin. No database connection was opened.",
+          "remainingPaths": [],
+          "evidence": [
+            "libs/server/core/src/config/test-database-target.ts",
+            "libs/server/server-testing-utils/src/lib/global-setup.ts",
+            "libs/server/server-testing-utils/src/lib/global-teardown.ts",
+            "libs/server/server-testing-utils/src/lib/test-database-worker-setup.ts",
+            "docs/aidd/database-access-policy.md",
+            ".agents/agents/database-architect.md",
+            ".codex/agents/database-reviewer.toml"
+          ],
+          "commands": [
+            { "command": "npm run aidd:db-guard:test", "exitCode": 0 },
+            { "command": "npx tsc -p libs/server/core/tsconfig.lib.json --noEmit --pretty false", "exitCode": 0 },
+            { "command": "npx tsc -p libs/server/server-testing-utils/tsconfig.lib.json --noEmit --pretty false", "exitCode": 0 },
+            {
+              "command": "npx eslint --config libs/server/core/eslint.config.js --max-warnings 0 libs/server/core/src/config/test-database-target.ts libs/server/core/src/index.ts",
+              "exitCode": 0
+            },
+            {
+              "command": "npx eslint --config libs/server/data-access/eslint.config.js --max-warnings 0 libs/server/data-access/test/setup/prismaTestClient.ts",
+              "exitCode": 0
+            },
+            {
+              "command": "npx eslint --config eslint.base.js --rule '@nx/enforce-module-boundaries: off' --max-warnings 0 scoped database guard files",
+              "exitCode": 0
+            },
+            { "command": "npm run aidd:format:changed -- --worktree", "exitCode": 0 }
+          ],
+          "findings": [
+            {
+              "summary": "Independent Codex security and adversarial assessments identified inherited DATABASE_URL paths in setup and teardown; these were closed by binding the validated test target before database operations.",
+              "disposition": "closed"
+            }
+          ]
+        },
+        "source": {
+          "fingerprint": "5bbde18d2b35617980cb83471cddd19bd5a5b89097f5eb24ad3da281fa23375a",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda"
+        }
+      }
+    },
+    {
+      "definition": {
+        "id": "hook-install",
+        "kind": "verification",
+        "owner": "codex-root",
+        "paths": [".husky/install.mjs"],
+        "dependsOn": ["change-hygiene"],
+        "acceptance": "Hook installation skips production and CI while local development installs the pre-commit hook"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Revalidated shared AIDD and recovery rules after the database guard and instruction consolidation. No live database command was run. Nx project discovery is unavailable because the local @nx/vitest plugin cannot resolve.",
+          "remainingPaths": [],
+          "evidence": ["docs/aidd/README.md", "docs/aidd/autonomous-recovery.md", "docs/status/aidd/README.md"],
+          "commands": [
+            { "command": "npm run aidd:ledger:test", "exitCode": 0 },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "npm run aidd:assets", "exitCode": 0 },
+            { "command": "npm run aidd:format:changed -- --worktree", "exitCode": 0 },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": []
+        },
+        "source": {
+          "fingerprint": "9104087308c3877a5ad6e73c9b945bdeefa3cc34d7bf9e73dc20800a6870f666",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda",
+          "base": "22faba5673c233c5185da46b85dd839e51227dda",
+          "baseTip": "1b4cca5c47269e6990b75b672a7531d87125ff35"
+        }
+      }
+    },
+    {
+      "definition": {
+        "id": "independent-review",
+        "kind": "review",
+        "owner": "codex-independent",
+        "paths": ["."],
+        "dependsOn": ["recovery-mechanism"],
+        "acceptance": "Final whole-PR Codex review passes at a clean committed head"
+      },
+      "status": "pending",
+      "lastType": null,
+      "checkpoint": null
+    },
+    {
+      "definition": {
+        "id": "recovery-mechanism",
+        "kind": "implementation",
+        "owner": "codex-root",
+        "paths": [
+          "scripts/aidd/agent-work-ledger.mjs",
+          "scripts/aidd/agent-work-ledger.test.mjs",
+          "docs/aidd/autonomous-recovery.md",
+          "package.json",
+          "AGENTS.md",
+          ".agents/AGENTS.md",
+          "docs/aidd/development-lifecycle.md",
+          "docs/aidd/README.md",
+          "docs/aidd/playbooks/local-codex-startup.md",
+          "docs/aidd/playbooks/new-task-flow.md",
+          "scripts/aidd/check-aidd-setup.mjs"
+        ],
+        "dependsOn": [],
+        "acceptance": "Recovery ledger handles interruption and stale evidence with passing targeted tests"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Pinned the only permitted test environment fixture in the private source checkpoint scanner. Verified source restoration, changed-fixture rejection, sensitive-path rejection, AIDD checks, and formatting.",
+          "remainingPaths": [],
+          "evidence": ["scripts/aidd/source-checkpoint.mjs", "scripts/aidd/source-checkpoint.test.mjs", "docs/aidd/autonomous-recovery.md"],
+          "commands": [
+            { "command": "node --test scripts/aidd/source-checkpoint.test.mjs", "exitCode": 0 },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "npm run aidd:assets", "exitCode": 0 },
+            { "command": "npm run aidd:format:changed -- --worktree", "exitCode": 0 },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": []
+        },
+        "source": {
+          "fingerprint": "90e2c4efcc98b72433950d9d20df76dd5100056e356281d26fbd5bbbe633e553",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda"
+        }
+      }
+    },
+    {
+      "definition": {
+        "id": "shared-agent-instructions",
+        "kind": "implementation",
+        "owner": "codex-root",
+        "paths": [
+          "AGENTS.md",
+          ".agents/AGENTS.md",
+          "apps/api/AGENTS.md",
+          "apps/e2e/AGENTS.md",
+          "libs/server/AGENTS.md",
+          "libs/web/AGENTS.md",
+          "docs/aidd/README.md",
+          "docs/aidd/codex-operating-model.md",
+          "scripts/aidd/check-aidd-setup.mjs",
+          ".github/workflows/ci.yml",
+          "GEMINI.md",
+          "apps/api/GEMINI.md",
+          "apps/e2e/GEMINI.md",
+          "docs/GEMINI.md",
+          "libs/server/GEMINI.md",
+          "libs/server/features/auth/GEMINI.md",
+          "libs/shared/GEMINI.md",
+          "libs/web/GEMINI.md"
+        ],
+        "dependsOn": ["recovery-mechanism"],
+        "acceptance": "Codex and Antigravity use shared scoped AGENTS instructions without duplicate GEMINI files"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Official Antigravity rules confirm AGENTS.md is supported in directory scope. Consolidated shared instructions, removed eight duplicate GEMINI.md files, and retained provider execution details in their native adapter areas.",
+          "remainingPaths": [],
+          "evidence": ["AGENTS.md", ".agents/AGENTS.md", "docs/aidd/README.md", "libs/web/AGENTS.md"],
+          "commands": [
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "npm run aidd:assets", "exitCode": 0 },
+            { "command": "npm run aidd:format:changed -- --worktree", "exitCode": 0 },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": []
+        },
+        "source": {
+          "fingerprint": "9f0bac2ee603182d1a96098db48800041ed75469d87e5fa796ab9975c6bb4254",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda"
+        }
+      }
+    },
+    {
+      "definition": {
+        "id": "source-checkpoint",
+        "kind": "implementation",
+        "owner": "codex-root",
+        "paths": [
+          "scripts/aidd/source-checkpoint.mjs",
+          "scripts/aidd/source-checkpoint.test.mjs",
+          "docs/aidd/autonomous-recovery.md",
+          "AGENTS.md",
+          "package.json"
+        ],
+        "dependsOn": ["recovery-mechanism"],
+        "acceptance": "Private source checkpoint restores an unpushed branch and uncommitted source without changing the working branch or index"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Pinned the only permitted test environment fixture in the private source checkpoint scanner. Verified source restoration, changed-fixture rejection, sensitive-path rejection, AIDD checks, and formatting.",
+          "remainingPaths": [],
+          "evidence": ["scripts/aidd/source-checkpoint.mjs", "scripts/aidd/source-checkpoint.test.mjs", "docs/aidd/autonomous-recovery.md"],
+          "commands": [
+            { "command": "node --test scripts/aidd/source-checkpoint.test.mjs", "exitCode": 0 },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "npm run aidd:assets", "exitCode": 0 },
+            { "command": "npm run aidd:format:changed -- --worktree", "exitCode": 0 },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": []
+        },
+        "source": {
+          "fingerprint": "de46afd593b048476ca9068ff3ce875aaf18b34e642f1fd15172949ebe409193",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda"
+        }
+      }
+    },
+    {
+      "definition": {
+        "id": "test-db-isolation",
+        "kind": "verification",
+        "owner": "codex-root",
+        "paths": [
+          ".env.test",
+          "docker-compose.test.yml",
+          ".github/workflows/ci.yml",
+          "libs/server/core/src/config/test-database-target.ts",
+          "scripts/aidd/test-database-target.test.mjs",
+          "docs/aidd/database-access-policy.md",
+          "AGENTS.md"
+        ],
+        "dependsOn": ["database-safety"],
+        "acceptance": "Local and CI tests use an isolated test-only PostgreSQL target and dedicated test-named account"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "The tracked test fixture and CI now target an isolated PostgreSQL service on port 55432 with a test-named database and account. Docker Compose syntax passed; the local Docker daemon is not running, so no live database test was run.",
+          "remainingPaths": [],
+          "evidence": [
+            ".env.test",
+            "docker-compose.test.yml",
+            ".github/workflows/ci.yml",
+            "libs/server/core/src/config/test-database-target.ts",
+            "docs/aidd/database-access-policy.md"
+          ],
+          "commands": [
+            { "command": "npm run aidd:db-guard:test", "exitCode": 0 },
+            { "command": "npx tsc -p libs/server/core/tsconfig.lib.json --noEmit --pretty false", "exitCode": 0 },
+            { "command": "docker compose -f docker-compose.test.yml config --quiet", "exitCode": 0 },
+            { "command": "npm run aidd:format:changed -- --worktree", "exitCode": 0 },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "npm run aidd:assets", "exitCode": 0 },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": []
+        },
+        "source": {
+          "fingerprint": "5d9598f3a08c20a804d035040b5e537346b7a2cbb40c7f10389f2574adb663e8",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda",
+          "base": "22faba5673c233c5185da46b85dd839e51227dda",
+          "baseTip": "1b4cca5c47269e6990b75b672a7531d87125ff35"
+        }
+      }
+    }
+  ]
+}

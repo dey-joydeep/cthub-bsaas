@@ -1,0 +1,6 @@
+{
+  "name": "server-testing-utils",
+  "sourceRoot": "libs/server/server-testing-utils/src",
+  "projectType": "library",
+  "tags": ["type:lib", "platform:server", "scope:server", "type:core"]
+}

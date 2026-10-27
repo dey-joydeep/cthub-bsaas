@@ -29,10 +29,13 @@ Do not edit. First produce:
 ## Merge readiness criteria
 
 - PR scope is clear and limited.
+- Changed files satisfy the [change scope and validation matrix](../change-hygiene.md).
 - Relevant root and scoped `AGENTS.md` instructions were checked.
 - Relevant docs/specs are aligned.
 - No unrelated formatting or file moves.
 - Validation is run or explicitly deferred with a reason.
+- QA evidence and independent Codex review are present; applicable Codex security findings are resolved or dispositioned.
+- The final Codex whole-PR review and any approval name the current committed head and target base; a later commit requires a new final review.
 - Risks and follow-ups are visible.
 - The branch is up to date or merge conflicts are understood.
 

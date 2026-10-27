@@ -1,3 +1,6 @@
+name = "nestjs-prisma-reviewer"
+description = "Backend reviewer for NestJS 11, Prisma, repository boundaries, DTO validation, response envelopes, i18n/error codes, and server tests."
+
 developer_instructions = """
 # NestJS Prisma Reviewer Subagent
 
