@@ -45,7 +45,12 @@
           "apps/web/customer/src/styles.css"
         ],
         "scripts": [],
-        "browser": "apps/web/customer/src/main.ts"
+        "browser": "apps/web/customer/src/main.ts",
+        "server": "apps/web/customer/src/main.server.ts",
+        "prerender": false,
+        "ssr": {
+          "entry": "apps/web/customer/src/server.ts"
+        }
       },
       "configurations": {
         "production": {

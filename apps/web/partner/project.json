@@ -45,7 +45,12 @@
           "apps/web/partner/src/styles.css"
         ],
         "scripts": [],
-        "browser": "apps/web/partner/src/main.ts"
+        "browser": "apps/web/partner/src/main.ts",
+        "server": "apps/web/partner/src/main.server.ts",
+        "prerender": false,
+        "ssr": {
+          "entry": "apps/web/partner/src/server.ts"
+        }
       },
       "configurations": {
         "production": {
@@ -70,7 +75,7 @@
       "defaultConfiguration": "development",
       "options": {
         "buildTarget": "web-app-partner:build:development",
-        "port": 4200,
+        "port": 4201,
         "host": "localhost"
       },
       "configurations": {

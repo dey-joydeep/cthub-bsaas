@@ -1,13 +1,20 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Admin Web App - SSR Hydration Smoke Tests', () => {
-  test('should deliver server-side rendered initial HTML', async ({ request, baseURL }) => {
+  test('should deliver server-side rendered initial HTML with pre-rendered content and hydration markers', async ({ request, baseURL }) => {
     const response = await request.get(baseURL || '/');
     expect(response.status()).toBeLessThan(400);
 
     const html = await response.text();
     expect(html).toContain('<!DOCTYPE html>');
-    expect(html).toContain('<app-root');
+
+    // Verify server-rendered markup exists inside app-root rather than an empty placeholder
+    const appRootMatch = html.match(/<app-root[^>]*>([\s\S]*?)<\/app-root>/);
+    expect(appRootMatch).not.toBeNull();
+    expect(appRootMatch?.[1]?.trim().length).toBeGreaterThan(0);
+
+    // Verify Angular server rendering metadata (ng-version attribute stamped on host)
+    expect(html).toMatch(/<app-root[^>]+ng-version=/);
   });
 
   test('should hydrate client-side without errors and redirect to auth when unauthenticated', async ({ page }) => {
@@ -30,9 +37,10 @@ test.describe('Admin Web App - SSR Hydration Smoke Tests', () => {
     // Verify auth redirection under web-core-auth
     await expect(page).toHaveURL(/.*\/auth\/login/);
 
-    // Verify app-root is present and hydrated
+    // Verify app-root is present, rendered, and hydrated
     const appRoot = page.locator('app-root');
     await expect(appRoot).toBeVisible();
+    await expect(appRoot).toHaveAttribute('ng-version');
 
     // Verify login form is rendered
     await expect(page.locator('form, input[type="email"], input[type="password"]').first()).toBeVisible();
