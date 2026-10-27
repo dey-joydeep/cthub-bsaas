@@ -29,11 +29,15 @@ Root instructions define global safety, workflow, and repository conventions. Sc
 
 AIDD is the default workflow for every new task, including a new error-fix request. A request such as "fix this error" is still a new task unless it is explicitly part of an already-running implementation session.
 
+The [AI-driven development life cycle](docs/aidd/development-lifecycle.md) defines the product goal, role ownership, handoffs, and release gates for both Codex and Antigravity. Reuse an existing issue when the work continues it; use one issue for a standalone deliverable and an Epic only for a multi-slice outcome. Independent review and security checks belong to Codex. Antigravity execution requires Gemini 3.8 Flash or stronger; verify the effective model because an agent's `flash` tier does not pin a version.
+
+For long-running or multi-agent work, use the [AIDD recovery protocol](docs/aidd/autonomous-recovery.md): initialize bounded work units before dispatch, checkpoint each reviewable increment, and recover interrupted units from the local ledger. Publish process state to the private tracking issue and source state to the dedicated private Git ref when progress must survive loss of the checkout. A partial or stale checkpoint is not completion evidence.
+
 For every new task, Codex must:
 
 1. Read this root `AGENTS.md` and the nearest scoped `AGENTS.md` for the touched area.
 2. Read `docs/aidd/README.md` and follow the applicable AIDD guide or prompt template.
-3. Inspect relevant docs and code before editing.
+3. Inspect relevant docs and code before editing, and identify the work item's product outcome and acceptance criteria when applicable.
 4. Produce a short plan before non-trivial edits.
 5. Keep design/spec/API/validation/test documents aligned when behavior or contracts change.
 6. Run the narrowest meaningful validation command, or report exactly why validation was not run.
@@ -69,10 +73,10 @@ A lighter path is allowed only for a continuation fix inside the same active tas
 
 ## Project Snapshot
 
-- Monorepo: Nx 21.
+- Monorepo: Nx 23.
 - Backend: NestJS 11.
-- Frontend: Angular 20, standalone + SSR, Angular Material v3, Tailwind v4.
-- Tests: Jest 29 for current server and web tests.
+- Frontend: Angular 21, standalone + SSR, Angular Material v3, Tailwind v4.
+- Tests: Jest 30 and Vitest 4; inspect the affected project's test target before choosing a command.
 - Apps: backend API under `apps/api`; Angular runnable wrappers under `apps/web/**`; E2E under `apps/e2e/**`.
 - Libraries: main implementation lives under `libs/**`.
 - TypeScript path aliases are defined in `tsconfig.base.json`.
@@ -102,7 +106,7 @@ Keep specs and implementation aligned. Cross-link PRs to relevant user stories a
 - TypeScript strict.
 - ES modules.
 - Prettier/ESLint formatting.
-- Mandatory post-edit check: whenever an agent finishes modifying or creating files, it MUST run `npx prettier --write <files>` and `npx eslint --fix <files>` on the touched files. While staged-level checks allow warnings to pass, the AI agent MUST explicitly report any warnings or non-fatal lint issues to the user in its summary. Never silently ignore warnings.
+- Post-edit checks: format touched files supported by Prettier. Lint touched TypeScript/JavaScript files with the affected Nx lint target or scoped ESLint when needed. Report warnings and non-fatal lint issues explicitly; do not silently ignore them.
 - 2-space indent.
 - Single quotes.
 - File names: `kebab-case.ts`.
@@ -125,6 +129,7 @@ Keep specs and implementation aligned. Cross-link PRs to relevant user stories a
 ## Git And Commits
 
 - Do not commit unless the user explicitly instructs you to commit.
+- The user has authorized one standing exception for AIDD recovery: `npm run aidd:source-checkpoint -- apply <task-id>` may create and push a private commit only to `refs/aidd/checkpoints/<task-id>`. It must preserve the current branch and normal index, verify the private remote, and reject likely secrets. This does not authorize normal branch commits, pushes, PR merges, or releases.
 - Commit authorization is scoped to the immediately preceding task only.
 - Before committing, show or inspect the staged set.
 - Do not revert user changes unless explicitly requested.

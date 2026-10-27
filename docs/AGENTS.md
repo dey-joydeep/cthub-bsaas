@@ -11,7 +11,7 @@ Read this file before working under `docs/**`.
 - Auth API contract: `docs/specs/auth/API/openapi.yaml`
 - Status and branch handoff: `docs/status/**`
 - Infrastructure planning: `docs/infra-upgrade/**`
-- Codex/AIDD operating model and prompts: `docs/aidd/README.md`
+- Shared AI-driven development life cycle and Codex playbooks: `docs/aidd/README.md`
 
 ## Source Of Truth
 
@@ -21,6 +21,7 @@ Read this file before working under `docs/**`.
 - Specs must reflect current implementation unless explicitly marked as future planning.
 - Status docs must not contradict active specs or implementation.
 - When docs are stale, update or remove stale language rather than adding another conflicting note.
+- Critical product specifications and architecture decisions require an independent Codex reviewer in addition to the author; see `docs/aidd/development-lifecycle.md`.
 
 ## Auth Documentation
 

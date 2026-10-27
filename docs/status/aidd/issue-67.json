@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "task": "issue-67",
+  "goal": "Advance the AIDD lifecycle and recovery workflow",
+  "issue": "67",
+  "branch": "chore/aidd-lifecycle-overhaul",
+  "base": "main",
+  "createdAt": "2026-10-27T02:09:13.266Z",
+  "exportedAt": "2026-10-27T03:50:39.168Z",
+  "exportedHead": "22faba5673c233c5185da46b85dd839e51227dda",
+  "units": [
+    {
+      "definition": {
+        "id": "independent-review",
+        "kind": "review",
+        "owner": "codex-independent",
+        "paths": ["."],
+        "dependsOn": ["recovery-mechanism"],
+        "acceptance": "Final whole-PR Codex review passes at a clean committed head"
+      },
+      "status": "pending",
+      "lastType": null,
+      "checkpoint": null
+    },
+    {
+      "definition": {
+        "id": "recovery-mechanism",
+        "kind": "implementation",
+        "owner": "codex-root",
+        "paths": [
+          "scripts/aidd/agent-work-ledger.mjs",
+          "scripts/aidd/agent-work-ledger.test.mjs",
+          "docs/aidd/autonomous-recovery.md",
+          "package.json",
+          "AGENTS.md",
+          ".agents/AGENTS.md",
+          "docs/aidd/development-lifecycle.md",
+          "docs/aidd/README.md",
+          "docs/aidd/playbooks/local-codex-startup.md",
+          "docs/aidd/playbooks/new-task-flow.md",
+          "scripts/aidd/check-aidd-setup.mjs"
+        ],
+        "dependsOn": [],
+        "acceptance": "Recovery ledger handles interruption and stale evidence with passing targeted tests"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Implemented and validated local, tracked, and private-issue AIDD process recovery checkpoints.",
+          "remainingPaths": [],
+          "evidence": [
+            "scripts/aidd/agent-work-ledger.mjs",
+            "scripts/aidd/agent-work-ledger.test.mjs",
+            "docs/aidd/autonomous-recovery.md",
+            "docs/status/aidd/README.md"
+          ],
+          "commands": [
+            { "command": "npm run aidd:ledger:test", "exitCode": 0 },
+            {
+              "command": "npx eslint scripts/aidd/agent-work-ledger.mjs scripts/aidd/agent-work-ledger.test.mjs scripts/aidd/check-aidd-setup.mjs",
+              "exitCode": 0
+            },
+            {
+              "command": "npx prettier --check scripts/aidd/agent-work-ledger.mjs scripts/aidd/agent-work-ledger.test.mjs docs/aidd/autonomous-recovery.md docs/status/aidd/README.md docs/status/aidd/issue-67.json",
+              "exitCode": 0
+            },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": []
+        },
+        "source": {
+          "fingerprint": "e4eebd4f6fc5955511f6af341fae023fa6aeb865735875e207e6718552c32c79",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda"
+        }
+      }
+    },
+    {
+      "definition": {
+        "id": "source-checkpoint",
+        "kind": "implementation",
+        "owner": "codex-root",
+        "paths": [
+          "scripts/aidd/source-checkpoint.mjs",
+          "scripts/aidd/source-checkpoint.test.mjs",
+          "docs/aidd/autonomous-recovery.md",
+          "AGENTS.md",
+          "package.json"
+        ],
+        "dependsOn": ["recovery-mechanism"],
+        "acceptance": "Private source checkpoint restores an unpushed branch and uncommitted source without changing the working branch or index"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Added authorized private source checkpoints on a dedicated Git ref and verified fresh-machine restoration of an unpushed branch with uncommitted files.",
+          "remainingPaths": [],
+          "evidence": [
+            "scripts/aidd/source-checkpoint.mjs",
+            "scripts/aidd/source-checkpoint.test.mjs",
+            "docs/aidd/autonomous-recovery.md",
+            "AGENTS.md"
+          ],
+          "commands": [
+            { "command": "npm run aidd:ledger:test", "exitCode": 0 },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            {
+              "command": "npx eslint scripts/aidd/source-checkpoint.mjs scripts/aidd/source-checkpoint.test.mjs scripts/aidd/check-aidd-setup.mjs",
+              "exitCode": 0
+            },
+            {
+              "command": "npx prettier --check scripts/aidd/source-checkpoint.mjs scripts/aidd/source-checkpoint.test.mjs scripts/aidd/check-aidd-setup.mjs docs/aidd/autonomous-recovery.md docs/status/aidd/README.md AGENTS.md package.json",
+              "exitCode": 0
+            },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": []
+        },
+        "source": {
+          "fingerprint": "0a57ec308385642385314d909918de8e86528820a57d3bb37e84a83e89848c99",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda"
+        }
+      }
+    }
+  ]
+}

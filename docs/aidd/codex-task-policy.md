@@ -4,6 +4,8 @@
 
 This policy defines how Codex should choose depth, validation, and documentation effort.
 
+Use [development-lifecycle.md](development-lifecycle.md) for the shared PO-to-release sequence, agent routing, continuous QA, and Codex review and security gates.
+
 ## General rules
 
 - AIDD applies by default to every new task.
@@ -15,6 +17,8 @@ This policy defines how Codex should choose depth, validation, and documentation
 - Update docs when behavior, contracts, setup, or architecture changes.
 - Report uncertainty honestly.
 - Do not commit unless the user explicitly asks for a commit.
+- Search for existing issue tracking before creating new items. Use one issue for a standalone deliverable and an Epic only for a multi-slice outcome.
+- A Codex implementation must receive independent Codex review before merge; all security checks are performed by Codex.
 
 ## New task versus continuation fix
 
@@ -40,6 +44,8 @@ Continuation fixes may be lighter, but they must remain inside the original scop
 | Refactor            | Preserve behavior, keep API stable, run tests around touched projects.                                    |
 | Security            | Treat as high-risk; preserve or strengthen safeguards, add tests, document impact.                        |
 
+Critical product specifications require an independent Codex product or architecture reviewer in addition to the author. Critical security decisions require two independently tasked Codex assessments. Assign a stronger model and deeper reasoning when risk or ambiguity requires it; do not choose a model solely from the agent's role name.
+
 ## When to update design docs
 
 Update or create docs when a change affects any of the following:
@@ -56,12 +62,10 @@ Update or create docs when a change affects any of the following:
 
 Stop and report before continuing when:
 
-- The repository contradicts the requested change.
-- The change requires secrets or unavailable local services.
-- Validation cannot run because the GitHub-side environment lacks the local workspace.
-- The change would require broad refactoring beyond the requested scope.
-- The change risks data loss or a breaking API/schema change.
-- Current code contradicts the documented source of truth and the user has not approved a doc or code correction path.
+- The repository contradicts the requested change and the correct behavior cannot be determined from available evidence.
+- The next step requires secrets, unavailable services, or an action outside granted permissions.
+- Validation cannot run in the current environment; report the specific command and reason.
+- The change requires broad refactoring, risks data loss, or changes a public API/schema beyond the accepted scope; prepare a concrete impact assessment and request the required decision.
 
 ## Completion standard
 
