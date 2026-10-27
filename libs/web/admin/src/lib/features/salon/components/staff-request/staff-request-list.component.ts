@@ -1,27 +1,26 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, OnInit, input, inject } from '@angular/core';
 import { StaffRequestService, StaffRequest } from '../../services/staff-request.service';
-import { CommonModule } from '@angular/common';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-staff-request-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [DatePipe],
   templateUrl: './staff-request-list.component.html',
 })
 export class StaffRequestListComponent implements OnInit {
-  @Input() staffId: string = '';
+  staffId = input<string>('');
   requests: StaffRequest[] = [];
   loading = false;
   error: string | null = null;
-
-  constructor(private staffRequestService: StaffRequestService) {}
+  private readonly staffRequestService = inject(StaffRequestService);
 
   ngOnInit() {
     this.fetchRequests();
   }
 
   fetchRequests() {
-    if (!this.staffId) return;
+    if (!this.staffId()) return;
     this.loading = true;
     this.error = null;
     this.staffRequestService.getRequestsForStaff(this.staffId).subscribe({

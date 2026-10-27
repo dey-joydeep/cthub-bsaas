@@ -1,9 +1,8 @@
-import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { CommonModule } from '@angular/common';
+
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
-import { TranslateModule } from '@ngx-translate/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,24 +15,15 @@ import { ErrorService } from '@cthub-bsaas/web-core-common';
 @Component({
   selector: 'app-revenue-chart-widget',
   standalone: true,
-  imports: [
-    CommonModule,
-    TranslateModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTooltipModule,
-    MatProgressSpinnerModule,
-    BaseChartDirective,
-  ],
+  imports: [MatCardModule, MatButtonModule, MatIconModule, MatTooltipModule, MatProgressSpinnerModule, BaseChartDirective],
   templateUrl: './revenue-chart-widget.component.html',
-  styleUrls: ['./revenue-chart-widget.component.scss'],
+  styleUrls: ['./revenue-chart-widget.component.css'],
   host: { class: 'revenue-chart' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RevenueChartWidgetComponent implements OnInit, OnDestroy {
   private dataSubscription?: Subscription;
-  @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
+  chart = viewChild<BaseChartDirective>(BaseChartDirective);
 
   // Chart configuration
   public chartType = 'line' as const;
@@ -42,6 +32,9 @@ export class RevenueChartWidgetComponent implements OnInit, OnDestroy {
   public error: string | null = null;
 
   // Chart data with proper typing
+    private readonly revenueChartWidgetService = inject(RevenueChartWidgetService);
+    protected readonly errorService = inject(ErrorService);
+    private readonly changeDetectorRef = inject(ChangeDetectorRef);
   public chartData: ChartData<'line', number[], string> = {
     labels: [],
     datasets: [
@@ -112,12 +105,6 @@ export class RevenueChartWidgetComponent implements OnInit, OnDestroy {
     },
   };
 
-  constructor(
-    private revenueChartWidgetService: RevenueChartWidgetService,
-    protected errorService: ErrorService,
-    private changeDetectorRef: ChangeDetectorRef,
-  ) {}
-
   public ngOnInit(): void {
     this.loadData();
   }
@@ -130,7 +117,7 @@ export class RevenueChartWidgetComponent implements OnInit, OnDestroy {
 
   private handleDataError(error: unknown): void {
     console.error('Error in revenue chart:', error);
-    this.error = error instanceof Error ? error.message : 'Failed to load revenue data';
+    this.error = $localize`:@@DASHBOARD.REVENUE.ERROR_LOADING:Failed to load revenue data.`;
     this.isLoading = false;
     this.changeDetectorRef.detectChanges();
   }
@@ -157,7 +144,7 @@ export class RevenueChartWidgetComponent implements OnInit, OnDestroy {
 
   private updateChartData(revenueData: RevenueData[]): void {
     if (!revenueData?.length) {
-      this.error = 'No revenue data available';
+      this.error = $localize`:@@DASHBOARD.REVENUE.NO_DATA:No revenue data available.`;
       this.isLoading = false;
       this.changeDetectorRef.detectChanges();
       return;
@@ -175,10 +162,10 @@ export class RevenueChartWidgetComponent implements OnInit, OnDestroy {
       };
 
       this.error = null;
-      this.chart?.update();
+      this.chart()?.update();
     } catch (error) {
       console.error('Error updating chart data:', error);
-      this.error = 'Failed to update chart data';
+      this.error = $localize`:@@DASHBOARD.REVENUE.ERROR_UPDATING:Failed to update chart data.`;
       this.changeDetectorRef.detectChanges();
     }
   }

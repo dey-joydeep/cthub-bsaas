@@ -32,8 +32,7 @@ describe('EmailModule', () => {
       .compile();
   };
 
-  const getEmailPort = (moduleRef: TestingModule) =>
-    moduleRef.get<ConsoleEmailAdapter | NodemailerEmailAdapter>(EMAIL_PORT);
+  const getEmailPort = (moduleRef: TestingModule) => moduleRef.get<ConsoleEmailAdapter | NodemailerEmailAdapter>(EMAIL_PORT);
 
   it('should provide ConsoleEmailAdapter in test environment', async () => {
     const moduleRef = await compileModule('test');

@@ -29,8 +29,7 @@ import { InMemoryChallengeStore } from './challenge.store.memory';
     // Adapter: always use production @simplewebauthn adapter; tests override via TestingModule when needed.
     {
       provide: WEB_AUTHN_PORT,
-      useFactory: (cfg: ConfigService, prisma: PrismaService, store: ChallengeStore) =>
-        new WebAuthnSimpleAdapter(cfg, prisma, store),
+      useFactory: (cfg: ConfigService, prisma: PrismaService, store: ChallengeStore) => new WebAuthnSimpleAdapter(cfg, prisma, store),
       inject: [ConfigService, PrismaService, CHALLENGE_STORE],
     },
   ],

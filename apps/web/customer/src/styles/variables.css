@@ -1,0 +1,21 @@
+/* Color palette */
+var(--primary): #c2185b;
+var(--accent): #ffb6c1;
+var(--warn): #f44336;
+$background: #f5f5f5;
+$text: #333333;
+/* Typography */
+$font-stack: 'Roboto', sans-serif;
+$font-size-base: 14px;
+$line-height-base: 1.5;
+/* Spacing */
+$spacing-unit: 8px;
+$spacing-sizes: (xs: $spacing-unit * 0.5, sm: $spacing-unit, md: $spacing-unit * 1.5, lg: $spacing-unit * 2, xl: $spacing-unit * 3);
+/* Export spacing values */
+:export {
+  spacing-xs: map.get($spacing-sizes, xs);
+  spacing-sm: map.get($spacing-sizes, sm);
+  spacing-md: map.get($spacing-sizes, md);
+  spacing-lg: map.get($spacing-sizes, lg);
+  spacing-xl: map.get($spacing-sizes, xl);
+}

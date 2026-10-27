@@ -10,6 +10,8 @@ Codex is the primary AIDD agent for this project. New AIDD process changes shoul
 
 - `AGENTS.md` and nested `AGENTS.md` files
 - `docs/aidd/*`
+- `.codex/agents/*`
+- `.codex/environments/*`
 - `.codex/prompts/*`
 - `.codex/config.toml` only when project-level Codex configuration is required
 
@@ -69,15 +71,15 @@ Requirement / issue
 
 ## Task classes
 
-| Task class             | Codex behavior                                                                                                 |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Documentation-only     | Update docs, keep examples consistent, no code changes unless requested.                                       |
-| Design/spec            | Update HLD/LLD/API/test-plan first; avoid implementation changes unless requested.                             |
+| Task class             | Codex behavior                                                                                                  |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Documentation-only     | Update docs, keep examples consistent, no code changes unless requested.                                        |
+| Design/spec            | Update HLD/LLD/API/test-plan first; avoid implementation changes unless requested.                              |
 | New bug/error fix      | Treat as a new AIDD task: inspect docs/code, identify scope, patch minimally, add regression test where useful. |
-| Continuation fix       | Patch the validation error produced inside the current active task; preserve the original AIDD trace.          |
-| Feature implementation | Work from user story plus FRD/FNRD/HLD/LLD/API/validation/test docs; update missing specs before code changes. |
-| Refactor               | Preserve behavior, keep public API stable, run tests around touched projects.                                  |
-| Review                 | Report correctness, security, architecture, tests, and maintainability risks before proposing changes.         |
+| Continuation fix       | Patch the validation error produced inside the current active task; preserve the original AIDD trace.           |
+| Feature implementation | Work from user story plus FRD/FNRD/HLD/LLD/API/validation/test docs; update missing specs before code changes.  |
+| Refactor               | Preserve behavior, keep public API stable, run tests around touched projects.                                   |
+| Review                 | Report correctness, security, architecture, tests, and maintainability risks before proposing changes.          |
 
 ## Design documentation expectations
 
@@ -98,6 +100,14 @@ Codex responses and PR descriptions should include:
 - Design/spec impact.
 - Risks and follow-ups.
 
+## Repo-shipped agent roles
+
+This repository currently ships:
+
+- reviewer agents for architecture, API contracts, security, tests, Angular SSR, NestJS or Prisma, and docs traceability
+- implementation helpers for planning, backend implementation, frontend implementation, and docs or contract alignment
+- an environment bootstrap command for fresh Codex worktrees
+
 ## Local workspace caution
 
-GitHub-side automation can only see committed GitHub content. The developer may have uncommitted local files under `E:\workspace\cthub-bsaas`. Before merging, compare the PR with the local workspace.
+GitHub-side automation can only see committed GitHub content. The developer may have uncommitted local files under the local workspace root. Before merging, compare the PR with the local workspace.

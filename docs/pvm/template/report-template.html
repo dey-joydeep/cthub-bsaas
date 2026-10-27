@@ -1,73 +1,87 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Package Version Report - {{TARGET}}</title>
-    <link rel="stylesheet" href="../styles.css">
-</head>
-<body>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
     <h1>Package Version Report</h1>
-    
+
     <div class="info-grid">
-        <div class="info-box">
-            <h3>Overview</h3>
-            <div class="info-item">
-                <span class="info-label">Generated on:</span>
-                <span class="info-value">{{GENERATED_DATE}}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Project:</span>
-                <span class="info-value">{{TARGET}}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Total Packages:</span>
-                <span class="info-value">{{TOTAL_PACKAGES}}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Outdated Packages:</span>
-                <span class="info-value">{{OUTDATED_COUNT}}</span>
-            </div>
+      <div class="info-box">
+        <h3>Overview</h3>
+        <div class="info-item">
+          <span class="info-label">Generated on:</span>
+          <span class="info-value">{{GENERATED_DATE}}</span>
         </div>
-        
-        <div class="info-box">
-            <h3>Summary</h3>
-            <div class="info-item">
-                <span class="info-label">Total Checked:</span>
-                <span class="info-value">{{TOTAL_PACKAGES}}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Up to Date:</span>
-                <span class="info-value">{{UP_TO_DATE_COUNT}}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Updates Available:</span>
-                <span class="info-value">{{OUTDATED_COUNT}}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Not Found:</span>
-                <span class="info-value">{{NOT_FOUND_COUNT}}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Errors:</span>
-                <span class="info-value">{{ERROR_COUNT}}</span>
-            </div>
+        <div class="info-item">
+          <span class="info-label">Project:</span>
+          <span class="info-value">{{TARGET}}</span>
         </div>
+        <div class="info-item">
+          <span class="info-label">Total Packages:</span>
+          <span class="info-value">{{TOTAL_PACKAGES}}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Outdated Packages:</span>
+          <span class="info-value">{{OUTDATED_COUNT}}</span>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <h3>Summary</h3>
+        <div class="info-item">
+          <span class="info-label">Total Checked:</span>
+          <span class="info-value">{{TOTAL_PACKAGES}}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Up to Date:</span>
+          <span class="info-value">{{UP_TO_DATE_COUNT}}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Updates Available:</span>
+          <span class="info-value">{{OUTDATED_COUNT}}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Not Found:</span>
+          <span class="info-value">{{NOT_FOUND_COUNT}}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Errors:</span>
+          <span class="info-value">{{ERROR_COUNT}}</span>
+        </div>
+      </div>
     </div>
-    
+
     <div class="legend">
-        <div class="legend-item"><div class="legend-color legend-ok"></div> Up to date</div>
-        <div class="legend-item"><div class="legend-color legend-minor-update"></div> Minor Update Available</div>
-        <div class="legend-item"><div class="legend-color legend-major-update"></div> Major Update Available</div>
-        <div class="legend-item"><div class="legend-color legend-missing"></div> Package not found</div>
-        <div class="legend-item"><div class="legend-color legend-error"></div> Error checking version</div>
+      <div class="legend-item">
+        <div class="legend-color legend-ok"></div>
+        Up to date
+      </div>
+      <div class="legend-item">
+        <div class="legend-color legend-minor-update"></div>
+        Minor Update Available
+      </div>
+      <div class="legend-item">
+        <div class="legend-color legend-major-update"></div>
+        Major Update Available
+      </div>
+      <div class="legend-item">
+        <div class="legend-color legend-missing"></div>
+        Package not found
+      </div>
+      <div class="legend-item">
+        <div class="legend-color legend-error"></div>
+        Error checking version
+      </div>
     </div>
-    
-    {{DEPENDENCIES_SECTION}}
-    {{DEV_DEPENDENCIES_SECTION}}
-    
+
+    {{DEPENDENCIES_SECTION}} {{DEV_DEPENDENCIES_SECTION}}
+
     <footer>
-        <p>Report generated by Package Version Checker</p>
+      <p>Report generated by Package Version Checker</p>
     </footer>
-</body>
+  </body>
 </html>

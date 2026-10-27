@@ -3,17 +3,29 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "sourceRoot": "apps/web/admin/src",
+  "i18n": {
+    "sourceLocale": "en-US",
+    "locales": {
+      "bn": {
+        "translation": "apps/web/admin/src/locale/messages.bn.xlf"
+      },
+      "ja": {
+        "translation": "apps/web/admin/src/locale/messages.ja.xlf"
+      }
+    }
+  },
   "tags": ["platform:web", "scope:web", "type:app"],
   "targets": {
     "build": {
       "executor": "@nx/angular:application",
       "outputs": ["{options.outputPath.base}"],
+      "defaultConfiguration": "production",
       "options": {
         "outputPath": {
           "base": "dist/apps/admin"
         },
         "index": "apps/web/admin/src/index.html",
-        "polyfills": ["apps/web/admin/src/polyfills.ts"],
+        "polyfills": ["@angular/localize/init"],
         "tsConfig": "apps/web/admin/tsconfig.app.json",
         "assets": [
           {
@@ -27,7 +39,11 @@
             "output": "/"
           }
         ],
-        "styles": ["libs/web/config/src/styles/styles.css", "apps/web/admin/src/styles.scss"],
+        "styles": [
+          "libs/web/config/src/styles/material-theme.css",
+          "libs/web/config/src/styles/styles.css",
+          "apps/web/admin/src/styles.css"
+        ],
         "scripts": [],
         "browser": "apps/web/admin/src/main.ts"
       },
@@ -47,11 +63,11 @@
           "sourceMap": true,
           "extractLicenses": false
         }
-      },
-      "defaultConfiguration": "production"
+      }
     },
     "serve": {
       "executor": "@nx/angular:dev-server",
+      "defaultConfiguration": "development",
       "options": {
         "buildTarget": "web-app-admin:build:development",
         "port": 4200,
@@ -65,20 +81,30 @@
           "buildTarget": "web-app-admin:build:development"
         }
       },
-      "defaultConfiguration": "development"
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "apps/web/admin/jest.config.ts",
-        "passWithNoTests": true
+      "readyWhen": {
+        "signal": true
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/eslint.config.js",
+        "{workspaceRoot}/eslint.base.js",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/tools/eslint-rules/**/*"
+      ],
       "options": {
-        "lintFilePatterns": ["{projectRoot}/src/**/*.ts", "{projectRoot}/src/**/*.html"]
+        "args": ["src/**/*.ts", "src/**/*.html"]
+      }
+    },
+    "extract-i18n": {
+      "executor": "@nx/angular:extract-i18n",
+      "options": {
+        "buildTarget": "web-app-admin:build",
+        "format": "xlf2",
+        "outputPath": "apps/web/admin/src/locale",
+        "outFile": "messages.xlf"
       }
     }
   }

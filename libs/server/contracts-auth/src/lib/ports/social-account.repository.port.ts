@@ -16,4 +16,3 @@ export interface ISocialAccountRepository {
   findByUserId(userId: string): Promise<SocialAccount[]>;
   unlink(userId: string, provider: string): Promise<void>;
 }
-

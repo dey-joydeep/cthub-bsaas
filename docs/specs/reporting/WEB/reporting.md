@@ -5,14 +5,14 @@
 
 ## Routes
 
-| Route | Screen ID |
-| --- | --- |
-| `/partner/reports/financial` | `reports.financial` |
+| Route                           | Screen ID              |
+| ------------------------------- | ---------------------- |
+| `/partner/reports/financial`    | `reports.financial`    |
 | `/partner/reports/appointments` | `reports.appointments` |
-| `/partner/reports/staff` | `reports.staff` |
-| `/partner/reports/customers` | `reports.customers` |
-| `/partner/reports/inventory` | `reports.inventory` |
-| `/partner/reports/exports` | `reports.exports` |
+| `/partner/reports/staff`        | `reports.staff`        |
+| `/partner/reports/customers`    | `reports.customers`    |
+| `/partner/reports/inventory`    | `reports.inventory`    |
+| `/partner/reports/exports`      | `reports.exports`      |
 
 ## Screen Requirements
 

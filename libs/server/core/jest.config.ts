@@ -11,7 +11,6 @@ const config: Config = {
   // Keep it simple; the preset handles ts-jest + tsconfig paths
   testMatch: ['**/*.spec.ts', '**/*.test.ts'],
 
-
   moduleFileExtensions: ['ts', 'js', 'json', 'html'],
 
   // Reasonable defaults; adjust if you need different coverage gates

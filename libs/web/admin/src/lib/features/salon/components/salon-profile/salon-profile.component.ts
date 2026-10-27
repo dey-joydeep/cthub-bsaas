@@ -1,23 +1,20 @@
-import { CommonModule } from '@angular/common';
+import { DatePipe, CurrencyPipe } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
-
 // Core services
-import { CurrentUserService } from '../../../../core/auth/services/current-user.service';
+import { CurrentUserService } from '@cthub-bsaas/web-core-auth';
 import { ErrorService } from '@cthub-bsaas/web-core-common';
 
 // Models from salon module
 import { Appointment } from '../../models/appointment.model';
 import { SalonServiceItem } from '../../models/salon-service-item.model';
-import { Salon } from '../../models/salon.model';
+import { Salon, Review } from '../../models/salon.model';
 import { Staff } from '../../models/staff.model';
 
 // Models from other modules
 import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.enum';
-import { Review } from '../../../reviews/models/review.model';
 
 // Pipes
 import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
@@ -29,9 +26,10 @@ import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
 @Component({
   selector: 'app-salon-profile',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, TranslateModule, SafeUrlPipe, FormsModule],
+  imports: [DatePipe, CurrencyPipe, HttpClientModule, SafeUrlPipe, FormsModule],
   templateUrl: './salon-profile.component.html',
-  styleUrls: ['./salon-profile.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./salon-profile.component.css'],
 })
 export class SalonProfileComponent implements OnInit {
   salon: Salon | null = null;
@@ -48,14 +46,13 @@ export class SalonProfileComponent implements OnInit {
 
   // Component state
   loading = false;
+  private readonly route = inject(ActivatedRoute);
+  private readonly http = inject(HttpClient);
+  public readonly currentUserService = inject(CurrentUserService);
+  public readonly errorService = inject(ErrorService);
   error: string | null = null;
 
-  constructor(
-    private route: ActivatedRoute,
-    private http: HttpClient,
-    @Inject(CurrentUserService) public currentUserService: CurrentUserService,
-    @Inject(ErrorService) private errorService: ErrorService,
-  ) {
+  constructor() {
     // Get the current user ID
     const user = this.currentUserService.currentUser;
     this.userId = user ? user.id : null;
@@ -73,6 +70,7 @@ export class SalonProfileComponent implements OnInit {
         },
         error: (err) => {
           this.error = err.error?.userMessage || err.error?.error || 'Failed to load salon';
+          this.errorService.handleError(err);
           this.loading = false;
         },
       });
@@ -81,7 +79,7 @@ export class SalonProfileComponent implements OnInit {
           .get<{ eligible: boolean }>(`/api/user/${this.userId}/salon/${salonId}/eligible-to-review`, { withCredentials: true })
           .subscribe({
             next: (res) => (this.eligibleToReview = res.eligible),
-            error: (err) => {
+            error: (_err) => {
               this.eligibleToReview = null;
               // Optionally show user-friendly error if needed
             },
@@ -152,8 +150,8 @@ export class SalonProfileComponent implements OnInit {
       customerId: this.userId,
       staffId: this.appointment.staffId,
       serviceId: this.appointment.serviceId,
-      // startTime,
-      // endTime,
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
       status: AppointmentStatus.PENDING,
       notes: this.appointment.notes || '',
     };

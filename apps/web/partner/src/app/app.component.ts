@@ -1,24 +1,17 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { Inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { Subscription } from 'rxjs';
 import { AuthService } from '@cthub-bsaas/web-partner/auth';
-import { CURRENT_USER, CurrentUserService, type BaseAuthUser } from '@cthub-bsaas/web-core/auth';
+import { CURRENT_USER, CurrentUserService, type BaseAuthUser } from '@cthub-bsaas/web-core-auth';
 import { hasManagerCapability } from '@cthub-bsaas/shared';
+import { Subscription } from 'rxjs';
 
-// Define a User interface with roles and manager capabilities
-export interface User {
+export interface User extends BaseAuthUser {
   id: string;
   email?: string;
   firstName?: string;
@@ -34,49 +27,40 @@ export interface User {
   selector: 'app-root',
   standalone: true,
   imports: [
-    CommonModule,
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
     MatButtonModule,
     MatIconModule,
     MatMenuModule,
-    MatBadgeModule,
     MatDividerModule,
-    MatToolbarModule,
-    MatTooltipModule,
-    MatSidenavModule,
-    MatListModule,
+    MatBadgeModule,
     MatSnackBarModule,
   ],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit, OnDestroy {
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
+  private readonly currentUserService = inject<CurrentUserService>(CURRENT_USER);
+  private readonly snackBar = inject(MatSnackBar);
+
   title = 'BeautySaaS';
   error: string | null = null;
-  // Public properties for template binding
   currentUser: User | null = null;
   isLoggedIn = false;
-  pendingApprovalsCount = 0; // Will be populated from a service
+  pendingApprovalsCount = 0;
 
-  /**
-   * Check if the current user has admin role
-   */
   get isAdmin(): boolean {
     return this.hasRole('admin');
   }
 
-  /**
-   * Check if the current user has branch manager capability
-   */
   get canManageBranches(): boolean {
     return hasManagerCapability(this.currentUser);
   }
 
-  /**
-   * Determine settings route or null if user does not have permission
-   */
   get settingsRoute(): string | null {
     if (this.hasRole('owner') || this.isAdmin) {
       return '/settings';
@@ -89,13 +73,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private authSubscription?: Subscription;
 
-  constructor(
-    private router: Router,
-    private authService: AuthService,
-    @Inject(CURRENT_USER) private currentUserService: CurrentUserService,
-    private snackBar: MatSnackBar,
-  ) {}
-
   ngOnInit(): void {
     this.initializeAuthSubscription();
   }
@@ -107,69 +84,61 @@ export class AppComponent implements OnInit, OnDestroy {
         this.isLoggedIn = !!user;
 
         if (this.isAdmin) {
-          this.loadAdminData();
+          this.loadPendingApprovals();
         }
       },
-      error: (error: Error) => {
-        console.error('Error in user subscription:', error);
-        this.showError('Failed to load user data');
+      error: () => {
+        this.error = 'Failed to load user information';
+        this.showNotification('Failed to load user information', 'error');
         this.isLoggedIn = false;
         this.currentUser = null;
       },
     });
   }
 
-  private loadAdminData(): void {
-    // Load admin-specific data here
-    this.loadPendingApprovals();
-  }
-
   private loadPendingApprovals(): void {
-    // TODO: Implement actual service call to get pending approvals count
-    // For now, we'll simulate it
-    this.pendingApprovalsCount = 3; // Simulated count
+    this.pendingApprovalsCount = 3;
   }
 
-  private showError(message: string): void {
-    this.error = message;
-    this.snackBar.open(message, 'Dismiss', {
-      duration: 5000,
-      panelClass: ['error-snackbar'],
+  async onLogout(): Promise<void> {
+    try {
+      await this.authService.logout();
+      this.currentUser = null;
+      this.isLoggedIn = false;
+      this.showNotification('Logged out successfully', 'success');
+      this.router.navigate(['/auth/login']);
+    } catch {
+      this.showNotification('Error logging out', 'error');
+    }
+  }
+
+  private showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
+    this.snackBar.open(message, 'Close', {
+      duration: 3000,
+      panelClass: [`notification-${type}`],
+      horizontalPosition: 'end',
+      verticalPosition: 'top',
     });
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     if (this.authSubscription) {
       this.authSubscription.unsubscribe();
     }
   }
 
-  /**
-   * Handle user logout
-   */
-  async onLogout(): Promise<void> {
-    try {
-      await this.authService.logout();
-      this.router.navigate(['/auth/login']);
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to log out';
-      this.showError(errorMessage);
-      console.error('Logout error:', error);
-    }
-  }
-
-  /**
-   * Navigate to the admin dashboard
-   */
   navigateToAdminDashboard(): void {
     if (this.isAdmin) {
       this.router.navigate(['/admin/dashboard']);
     }
   }
 
-  /**
-   * Navigate to the user's profile
-   */
+  navigateToSettings(): void {
+    if (this.settingsRoute) {
+      this.router.navigate([this.settingsRoute]);
+    }
+  }
+
   navigateToProfile(): void {
     if (this.currentUser?.id) {
       this.router.navigate(['/profile', this.currentUser.id]);
@@ -177,12 +146,13 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private hasRole(role: string): boolean {
-    const normalizedRole = role.toLowerCase();
-    const roles = Array.isArray(this.currentUser?.roles)
-      ? this.currentUser.roles.filter((value): value is string => typeof value === 'string')
-      : [];
-    const directRole = typeof this.currentUser?.['role'] === 'string' ? this.currentUser.role : null;
-
-    return roles.some((value) => value.toLowerCase() === normalizedRole) || directRole?.toLowerCase() === normalizedRole;
+    const target = role.toLowerCase();
+    const current = this.currentUser;
+    if (!current) return false;
+    if (typeof current.role === 'string' && current.role.toLowerCase() === target) return true;
+    if (Array.isArray(current.roles)) {
+      return current.roles.some((r) => typeof r === 'string' && r.toLowerCase() === target);
+    }
+    return false;
   }
 }

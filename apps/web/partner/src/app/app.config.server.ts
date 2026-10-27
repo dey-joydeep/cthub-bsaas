@@ -1,32 +1,13 @@
-import {
-  HttpClient,
-  HttpHandlerFn,
-  HttpInterceptorFn,
-  HttpRequest,
-  provideHttpClient,
-  withFetch,
-  withInterceptors,
-} from '@angular/common/http';
-import {
-  APP_ID,
-  ApplicationConfig,
-  EnvironmentProviders,
-  inject,
-  isDevMode,
-  mergeApplicationConfig,
-  PLATFORM_ID,
-  Provider,
-  TransferState,
-} from '@angular/core';
+import { HttpHandlerFn, HttpInterceptorFn, HttpRequest, provideHttpClient, withFetch, withInterceptors, withXhr } from '@angular/common/http';
+import { APP_ID, ApplicationConfig, EnvironmentProviders, isDevMode, mergeApplicationConfig, PLATFORM_ID, Provider } from '@angular/core';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { provideServerRendering, ɵSERVER_CONTEXT as SERVER_CONTEXT } from '@angular/platform-server';
 import { ErrorService, loadingInterceptor } from '@cthub-bsaas/web-core-common';
-import { TranslateServerLoader, ssrInterceptor, ssrTranslateInterceptor } from '@cthub-bsaas/web-core-platform';
-import { TranslateLoader, TranslateStore } from '@ngx-translate/core';
+import { ssrInterceptor } from '@cthub-bsaas/web-core-platform';
 import { appConfig } from './app.config';
 
 // Server-side interceptors
-const serverInterceptors: HttpInterceptorFn[] = [ssrInterceptor, ssrTranslateInterceptor, loadingInterceptor];
+const serverInterceptors: HttpInterceptorFn[] = [ssrInterceptor, loadingInterceptor];
 
 // Mock browser APIs for SSR
 const mockWindow = {
@@ -77,28 +58,6 @@ const serverProviders: (Provider | EnvironmentProviders)[] = [
       return new ErrorService();
     },
   },
-
-  // Translation with SSR support
-  {
-    provide: TranslateLoader,
-    useFactory: () => {
-      console.log('🔧 Initializing TranslateServerLoader');
-      const transferState = inject(TransferState);
-      const http = inject(HttpClient);
-      return new TranslateServerLoader(transferState, http, './assets/i18n/', '.json');
-    },
-  },
-
-  // Core services with SSR support
-  {
-    provide: TranslateStore,
-    useFactory: () => {
-      console.log('🔧 Initializing TranslateStore for SSR');
-      return new TranslateStore();
-    },
-  },
-  TranslateStore,
-
   // Server-specific configurations
   { provide: MAT_DATE_LOCALE, useValue: 'en-US' },
   { provide: 'SSR', useValue: true },
@@ -124,7 +83,7 @@ const serverProviders: (Provider | EnvironmentProviders)[] = [
   { provide: SERVER_CONTEXT, useValue: 'ssr' },
   { provide: MAT_DATE_LOCALE, useValue: 'en-US' },
 
-  provideHttpClient(withInterceptors([ssrInterceptor, loadingInterceptor, (req: HttpRequest<unknown>, next: HttpHandlerFn) => next(req)])),
+  provideHttpClient(withXhr(), withInterceptors([ssrInterceptor, loadingInterceptor, (req: HttpRequest<unknown>, next: HttpHandlerFn) => next(req)])),
 
   { provide: 'SSR', useValue: true },
   { provide: 'BROWSER', useValue: false },

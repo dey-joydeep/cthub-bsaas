@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -7,8 +7,7 @@ import { Salon, SalonServiceItem } from './model/salon-search.model';
 @Injectable({ providedIn: 'root' })
 export class SalonSearchService {
   private apiUrl = '/api/salons';
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   searchSalons(params: HttpParams): Observable<{ salons: Salon[]; total: number }> {
     return this.http.get<{ salons: Salon[]; total: number }>('/api/salons', { params }).pipe(catchError((err) => this.handleError(err)));

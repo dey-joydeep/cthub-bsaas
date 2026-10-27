@@ -1,44 +1,48 @@
 <h2 mat-dialog-title>
   <mat-icon color="warn" class="dialog-icon">warning</mat-icon>
-  {{ 'APPOINTMENT.CONFIRM_CANCELLATION' | translate }}
+  <ng-container i18n="@@APPOINTMENT.CONFIRM_CANCELLATION">Confirm Cancellation</ng-container>
 </h2>
 
 <mat-dialog-content>
-  <p>{{ 'APPOINTMENT.CANCELLATION_WARNING' | translate }}</p>
+  <p><ng-container i18n="@@APPOINTMENT.CANCELLATION_WARNING">Are you sure you want to cancel this appointment?</ng-container></p>
 
   <form [formGroup]="cancelForm" (ngSubmit)="onSubmit()">
     <mat-form-field appearance="outline" class="full-width">
-      <mat-label>{{ 'APPOINTMENT.CANCELLATION_REASON' | translate }}</mat-label>
+      <mat-label><ng-container i18n="@@APPOINTMENT.CANCELLATION_REASON">Reason for cancellation</ng-container></mat-label>
       <textarea
         matInput
         formControlName="reason"
         rows="4"
-        [placeholder]="'APPOINTMENT.REASON_PLACEHOLDER' | translate"
+        i18n-placeholder="@@APPOINTMENT.REASON_PLACEHOLDER"
+        placeholder="Enter reason for cancellation..."
         cdkTextareaAutosize
         cdkAutosizeMinRows="3"
-        cdkAutosizeMaxRows="6"
-      ></textarea>
-      <mat-error *ngIf="reason?.hasError('required')">
-        {{ 'VALIDATION.REASON_REQUIRED' | translate }}
-      </mat-error>
-      <mat-error *ngIf="reason?.hasError('minlength')">
-        {{ 'VALIDATION.REASON_MIN_LENGTH' | translate }}
-      </mat-error>
-      <mat-hint>{{ 'APPOINTMENT.REASON_HELP' | translate }}</mat-hint>
+        cdkAutosizeMaxRows="6"></textarea>
+      @if (reason?.hasError('required')) {
+        <mat-error>
+          <ng-container i18n="@@VALIDATION.REASON_REQUIRED">Please provide a reason.</ng-container>
+        </mat-error>
+      }
+      @if (reason?.hasError('minlength')) {
+        <mat-error>
+          <ng-container i18n="@@VALIDATION.REASON_MIN_LENGTH">Reason must be at least 10 characters.</ng-container>
+        </mat-error>
+      }
+      <mat-hint><ng-container i18n="@@APPOINTMENT.REASON_HELP">Please let us know why you are cancelling</ng-container></mat-hint>
     </mat-form-field>
   </form>
 
   <div class="appointment-details">
     <div class="detail-item">
-      <span class="detail-label">{{ 'APPOINTMENT.SERVICE' | translate }}:</span>
+      <span class="detail-label"><ng-container i18n="@@APPOINTMENT.SERVICE">Service</ng-container>:</span>
       <span class="detail-value">{{ data.appointment.serviceId | titlecase }}</span>
     </div>
     <div class="detail-item">
-      <span class="detail-label">{{ 'APPOINTMENT.DATE' | translate }}:</span>
+      <span class="detail-label"><ng-container i18n="@@APPOINTMENT.DATE">Date</ng-container>:</span>
       <span class="detail-value">{{ appointmentDate }}</span>
     </div>
     <div class="detail-item">
-      <span class="detail-label">{{ 'APPOINTMENT.TIME' | translate }}:</span>
+      <span class="detail-label"><ng-container i18n="@@APPOINTMENT.TIME">Time</ng-container>:</span>
       <span class="detail-value">{{ appointmentTime }}</span>
     </div>
   </div>
@@ -46,14 +50,22 @@
 
 <mat-dialog-actions align="end">
   <button mat-button color="warn" [disabled]="isSubmitting">
-    <span *ngIf="!isSubmitting">{{ 'APPOINTMENT.CANCEL_APPOINTMENT' | translate }}</span>
-    <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
+    @if (!isSubmitting) {
+      <span><ng-container i18n="@@APPOINTMENT.CANCEL_APPOINTMENT">Cancel Appointment</ng-container></span>
+    }
+    @if (isSubmitting) {
+      <mat-spinner diameter="20"></mat-spinner>
+    }
   </button>
   <button mat-button (click)="onNoClick()" [disabled]="isSubmitting">
-    {{ 'COMMON.CANCEL' | translate }}
+    <ng-container i18n="@@COMMON.CANCEL">Cancel</ng-container>
   </button>
   <button mat-raised-button color="warn" [disabled]="cancelForm.invalid || isSubmitting" (click)="onSubmit()">
-    <span *ngIf="!isSubmitting">{{ 'APPOINTMENT.CONFIRM_CANCEL' | translate }}</span>
-    <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
+    @if (!isSubmitting) {
+      <span><ng-container i18n="@@APPOINTMENT.CONFIRM_CANCEL">Confirm Cancel</ng-container></span>
+    }
+    @if (isSubmitting) {
+      <mat-spinner diameter="20"></mat-spinner>
+    }
   </button>
 </mat-dialog-actions>

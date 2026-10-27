@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,7 +8,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 @Component({
   selector: 'app-salon-management',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatTabsModule],
+  imports: [MatCardModule, MatButtonModule, MatIconModule, MatTabsModule],
   template: `
     <div class="management-container">
       <h1>Salon Management</h1>
@@ -58,6 +58,7 @@ import { MatTabsModule } from '@angular/material/tabs';
       </mat-tab-group>
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
       .management-container {

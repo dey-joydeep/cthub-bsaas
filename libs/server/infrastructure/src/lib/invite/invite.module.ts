@@ -14,4 +14,3 @@ import { InvitePrismaAdapter } from './invite.adapter';
   exports: [INVITE_PORT],
 })
 export class InviteModule {}
-

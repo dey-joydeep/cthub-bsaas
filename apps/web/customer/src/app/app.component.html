@@ -4,98 +4,107 @@
     <div class="logo">
       <a routerLink="/">BeautySaaS</a>
     </div>
-    <nav class="main-nav" *ngIf="isLoggedIn">
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-        <mat-icon>home</mat-icon>
-        <span>Home</span>
-      </a>
-      <a routerLink="/salons" routerLinkActive="active">
-        <mat-icon>store</mat-icon>
-        <span>Salons</span>
-      </a>
-      <a routerLink="/appointments" routerLinkActive="active">
-        <mat-icon>event</mat-icon>
-        <span>Appointments</span>
-      </a>
-
-      <!-- Admin Navigation -->
-      <ng-container *ngIf="isAdmin">
-        <button mat-button [matMenuTriggerFor]="adminMenu" class="admin-menu-trigger">
-          <mat-icon>admin_panel_settings</mat-icon>
-          <span>Admin</span>
+    @if (isLoggedIn) {
+      <nav class="main-nav">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+          <mat-icon>home</mat-icon>
+          <span>Home</span>
+        </a>
+        <a routerLink="/salons" routerLinkActive="active">
+          <mat-icon>store</mat-icon>
+          <span>Salons</span>
+        </a>
+        <a routerLink="/appointments" routerLinkActive="active">
+          <mat-icon>event</mat-icon>
+          <span>Appointments</span>
+        </a>
+        <!-- Admin Navigation -->
+        @if (isAdmin) {
+          <button mat-button [matMenuTriggerFor]="adminMenu" class="admin-menu-trigger">
+            <mat-icon>admin_panel_settings</mat-icon>
+            <span>Admin</span>
+          </button>
+          <mat-menu #adminMenu="matMenu" class="admin-dropdown">
+            <button mat-menu-item routerLink="/admin/dashboard">
+              <mat-icon>dashboard</mat-icon>
+              <span>Dashboard</span>
+            </button>
+            <button mat-menu-item routerLink="/admin/users">
+              <mat-icon>people</mat-icon>
+              <span>User Management</span>
+            </button>
+            <button mat-menu-item routerLink="/admin/salon-approvals">
+              <mat-icon>check_circle</mat-icon>
+              <span>Salon Approvals</span>
+              @if (pendingApprovalsCount > 0) {
+                <span class="badge">{{ pendingApprovalsCount }}</span>
+              }
+            </button>
+            <mat-divider />
+            <button mat-menu-item routerLink="/admin/settings">
+              <mat-icon>settings</mat-icon>
+              <span>System Settings</span>
+            </button>
+          </mat-menu>
+        }
+      </nav>
+    }
+    @if (isLoggedIn) {
+      <div class="user-actions">
+        <button mat-button [matMenuTriggerFor]="userMenu" class="user-menu-trigger">
+          <mat-icon>account_circle</mat-icon>
+          @if (currentUser?.firstName || currentUser?.lastName) {
+            <span class="user-name"> {{ currentUser?.firstName }} {{ currentUser?.lastName }} </span>
+          }
         </button>
-        <mat-menu #adminMenu="matMenu" class="admin-dropdown">
-          <button mat-menu-item routerLink="/admin/dashboard">
-            <mat-icon>dashboard</mat-icon>
-            <span>Dashboard</span>
+        <mat-menu #userMenu="matMenu" class="user-dropdown">
+          @if (currentUser) {
+            <div class="user-info">
+              <div class="user-avatar">
+                <mat-icon>account_circle</mat-icon>
+              </div>
+              <div class="user-details">
+                <div class="user-name">{{ currentUser.firstName }} {{ currentUser.lastName }}</div>
+                <div class="user-email">{{ currentUser.email }}</div>
+                @if (isAdmin) {
+                  <div class="user-role">
+                    <mat-icon class="role-icon">admin_panel_settings</mat-icon>
+                    <span>Administrator</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+          <mat-divider />
+          <button mat-menu-item routerLink="/profile" routerLinkActive="active">
+            <mat-icon>person</mat-icon>
+            <span>Profile</span>
           </button>
-          <button mat-menu-item routerLink="/admin/users">
-            <mat-icon>people</mat-icon>
-            <span>User Management</span>
-          </button>
-          <button mat-menu-item routerLink="/admin/salon-approvals">
-            <mat-icon>check_circle</mat-icon>
-            <span>Salon Approvals</span>
-            <span *ngIf="pendingApprovalsCount > 0" class="badge">{{ pendingApprovalsCount }}</span>
-          </button>
-          <mat-divider></mat-divider>
-          <button mat-menu-item routerLink="/admin/settings">
+          <button mat-menu-item routerLink="/settings" routerLinkActive="active">
             <mat-icon>settings</mat-icon>
-            <span>System Settings</span>
+            <span>Settings</span>
+          </button>
+          <mat-divider />
+          <button mat-menu-item (click)="onLogout()">
+            <mat-icon>logout</mat-icon>
+            <span>Logout</span>
           </button>
         </mat-menu>
-      </ng-container>
-    </nav>
-    <div class="user-actions" *ngIf="isLoggedIn; else loginButton">
-      <button mat-button [matMenuTriggerFor]="userMenu" class="user-menu-trigger">
-        <mat-icon>account_circle</mat-icon>
-        <span class="user-name" *ngIf="currentUser?.firstName || currentUser?.lastName">
-          {{ currentUser?.firstName }} {{ currentUser?.lastName }}
-        </span>
-      </button>
-      <mat-menu #userMenu="matMenu" class="user-dropdown">
-        <div class="user-info" *ngIf="currentUser">
-          <div class="user-avatar">
-            <mat-icon>account_circle</mat-icon>
-          </div>
-          <div class="user-details">
-            <div class="user-name">{{ currentUser.firstName }} {{ currentUser.lastName }}</div>
-            <div class="user-email">{{ currentUser.email }}</div>
-            <div class="user-role" *ngIf="isAdmin">
-              <mat-icon class="role-icon">admin_panel_settings</mat-icon>
-              <span>Administrator</span>
-            </div>
-          </div>
-        </div>
-        <mat-divider></mat-divider>
-        <button mat-menu-item routerLink="/profile" routerLinkActive="active">
-          <mat-icon>person</mat-icon>
-          <span>Profile</span>
-        </button>
-        <button mat-menu-item routerLink="/settings" routerLinkActive="active">
-          <mat-icon>settings</mat-icon>
-          <span>Settings</span>
-        </button>
-        <mat-divider></mat-divider>
-        <button mat-menu-item (click)="onLogout()">
-          <mat-icon>logout</mat-icon>
-          <span>Logout</span>
-        </button>
-      </mat-menu>
-    </div>
-
-    <ng-template #loginButton>
+      </div>
+    } @else {
       <div class="auth-buttons">
         <a mat-button routerLink="/login" class="login-button">Log In</a>
         <a mat-raised-button color="primary" routerLink="/register" class="signup-button">Sign Up</a>
       </div>
-    </ng-template>
+    }
   </div>
 </header>
 
 <main class="app-content">
-  <div class="error-message" *ngIf="error" role="alert">
-    {{ error }}
-  </div>
-  <router-outlet></router-outlet>
+  @if (error) {
+    <div class="error-message" role="alert">
+      {{ error }}
+    </div>
+  }
+  <router-outlet />
 </main>

@@ -25,4 +25,3 @@ export interface RecoveryCodesPort {
    */
   verifyAndConsume(userId: string, code: string): Promise<boolean>;
 }
-

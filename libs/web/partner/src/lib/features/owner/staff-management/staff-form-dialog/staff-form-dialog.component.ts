@@ -1,5 +1,5 @@
-import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
@@ -19,7 +19,6 @@ export interface StaffFormData {
   selector: 'app-staff-form-dialog',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatDialogModule,
@@ -41,13 +40,17 @@ export interface StaffFormData {
           <mat-form-field appearance="outline" class="form-field">
             <mat-label>First Name</mat-label>
             <input matInput formControlName="firstName" required />
-            <mat-error *ngIf="staffForm.get('firstName')?.hasError('required')"> First name is required </mat-error>
+            @if (staffForm.get('firstName')?.hasError('required')) {
+              <mat-error> First name is required </mat-error>
+            }
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="form-field">
             <mat-label>Last Name</mat-label>
             <input matInput formControlName="lastName" required />
-            <mat-error *ngIf="staffForm.get('lastName')?.hasError('required')"> Last name is required </mat-error>
+            @if (staffForm.get('lastName')?.hasError('required')) {
+              <mat-error> Last name is required </mat-error>
+            }
           </mat-form-field>
         </div>
 
@@ -55,8 +58,12 @@ export interface StaffFormData {
           <mat-form-field appearance="outline" class="form-field">
             <mat-label>Email</mat-label>
             <input matInput type="email" formControlName="email" required />
-            <mat-error *ngIf="staffForm.get('email')?.hasError('required')"> Email is required </mat-error>
-            <mat-error *ngIf="staffForm.get('email')?.hasError('email')"> Please enter a valid email </mat-error>
+            @if (staffForm.get('email')?.hasError('required')) {
+              <mat-error> Email is required </mat-error>
+            }
+            @if (staffForm.get('email')?.hasError('email')) {
+              <mat-error> Please enter a valid email </mat-error>
+            }
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="form-field">
@@ -69,19 +76,25 @@ export interface StaffFormData {
           <mat-form-field appearance="outline" class="form-field">
             <mat-label>Role</mat-label>
             <mat-select formControlName="role" required>
-              <mat-option *ngFor="let role of roles" [value]="role.id">
-                {{ role.name }}
-              </mat-option>
+              @for (role of roles; track role) {
+                <mat-option [value]="role.id">
+                  {{ role.name }}
+                </mat-option>
+              }
             </mat-select>
-            <mat-error *ngIf="staffForm.get('role')?.hasError('required')"> Role is required </mat-error>
+            @if (staffForm.get('role')?.hasError('required')) {
+              <mat-error> Role is required </mat-error>
+            }
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="form-field">
             <mat-label>Status</mat-label>
             <mat-select formControlName="status" required>
-              <mat-option *ngFor="let status of statuses" [value]="status.id">
-                {{ status.name }}
-              </mat-option>
+              @for (status of statuses; track status) {
+                <mat-option [value]="status.id">
+                  {{ status.name }}
+                </mat-option>
+              }
             </mat-select>
           </mat-form-field>
         </div>
@@ -115,6 +128,7 @@ export interface StaffFormData {
       </form>
     </mat-dialog-content>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
       .form-row {
@@ -169,12 +183,11 @@ export class StaffFormDialogComponent {
     { id: 'on_leave', name: 'On Leave' },
     { id: 'pending', name: 'Pending' },
   ];
+  private readonly fb = inject(FormBuilder);
+  public readonly dialogRef = inject(MatDialogRef<StaffFormDialogComponent>);
+  public readonly data = inject<StaffFormData>(MAT_DIALOG_DATA);
 
-  constructor(
-    private fb: FormBuilder,
-    public dialogRef: MatDialogRef<StaffFormDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: StaffFormData,
-  ) {
+  constructor() {
     this.staffForm = this.fb.group({
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
@@ -187,8 +200,8 @@ export class StaffFormDialogComponent {
       bio: [''],
     });
 
-    if (data.mode === 'edit' && data.staff) {
-      this.patchForm(data.staff);
+    if (this.data?.mode === 'edit' && this.data.staff) {
+      this.patchForm(this.data.staff);
     }
   }
 

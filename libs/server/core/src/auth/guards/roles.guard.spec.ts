@@ -128,22 +128,18 @@ describe('RolesGuard', () => {
 
     it('should fallback to the raw role value when hierarchy has no mapping', () => {
       const originalValues = Object.values;
-      const valuesSpy = jest
-        .spyOn(Object, 'values')
-        .mockImplementation((target: unknown) => {
-          const baseResult = originalValues.call(Object, target as never);
-          if (target === UserRole) {
-            return [...(baseResult as unknown[]), 'mystery-role'];
-          }
-          return baseResult as unknown[];
-        });
+      const valuesSpy = jest.spyOn(Object, 'values').mockImplementation((target: unknown) => {
+        const baseResult = originalValues.call(Object, target as never);
+        if (target === UserRole) {
+          return [...(baseResult as unknown[]), 'mystery-role'];
+        }
+        return baseResult as unknown[];
+      });
 
       const mysteriousRole = 'mystery-role' as unknown as UserRole;
-      const context = createMockExecutionContext(
-        { roles: [mysteriousRole] as unknown as AuthenticatedUser['roles'] },
-        reflector,
-        [mysteriousRole],
-      );
+      const context = createMockExecutionContext({ roles: [mysteriousRole] as unknown as AuthenticatedUser['roles'] }, reflector, [
+        mysteriousRole,
+      ]);
 
       try {
         expect(guard.canActivate(context)).toBe(true);

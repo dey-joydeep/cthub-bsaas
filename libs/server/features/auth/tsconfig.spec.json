@@ -1,19 +1,16 @@
 {
-    "extends": "./tsconfig.json",
-    "compilerOptions": {
-        "outDir": "../../../../dist/out-tsc",
-        "module": "commonjs",
-        "moduleResolution": "node",
-        "types": ["jest", "node"],
-        "esModuleInterop": true,
-        "target": "es2022",
-        "isolatedModules": true,
-        "useDefineForClassFields": false,
-        "importHelpers": true
-    },
-    "include": [
-        "**/*.spec.ts",
-        "**/*.it-spec.ts",
-        "**/*.d.ts"
-    ]
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../../dist/out-tsc",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "types": ["jest", "node"],
+    "esModuleInterop": true,
+    "target": "es2022",
+    "isolatedModules": true,
+    "useDefineForClassFields": false,
+    "importHelpers": true,
+    "rootDir": "../../.."
+  },
+  "include": ["**/*.spec.ts", "**/*.it-spec.ts", "**/*.d.ts"]
 }

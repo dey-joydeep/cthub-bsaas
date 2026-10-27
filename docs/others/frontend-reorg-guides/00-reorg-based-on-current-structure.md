@@ -35,9 +35,9 @@ Locales per spec: **en, bn, hi**.
 
 ## End State
 
-1) **New** `libs/web/public` for **browse/SEO** (home, city, tenant, public reviews, static docs).
-2) **Existing** `libs/web/customer` gets a `customer.routes.ts` and `pages/` (profile, bookings, review compose). Keep `auth` sub-lib as-is.
-3) `apps/web/customer` thin shell that **lazy‑loads** both route arrays and hosts the header/outlet.
+1. **New** `libs/web/public` for **browse/SEO** (home, city, tenant, public reviews, static docs).
+2. **Existing** `libs/web/customer` gets a `customer.routes.ts` and `pages/` (profile, bookings, review compose). Keep `auth` sub-lib as-is.
+3. `apps/web/customer` thin shell that **lazy‑loads** both route arrays and hosts the header/outlet.
 
 ---
 
@@ -69,6 +69,7 @@ libs/web/customer/
     ├── customer.routes.ts
     └── pages/{profile,bookings,review-compose}/
 ```
+
 > Reuse `libs/web/customer/auth/src/lib/components/{login,register,forgot-password}`.
 
 ### 4) Thin app routes
@@ -79,8 +80,8 @@ apps/web/customer/src/app/app.routes.ts
 
 ```ts
 export const routes: Routes = [
-  { path: '', loadChildren: () => import('@beauty-saas/web/public').then(m => m.PUBLIC_ROUTES) },
-  { path: '', canMatch: [authCanMatch], loadChildren: () => import('@beauty-saas/web/customer').then(m => m.CUSTOMER_ROUTES) },
+  { path: '', loadChildren: () => import('@beauty-saas/web/public').then((m) => m.PUBLIC_ROUTES) },
+  { path: '', canMatch: [authCanMatch], loadChildren: () => import('@beauty-saas/web/customer').then((m) => m.CUSTOMER_ROUTES) },
   { path: '**', redirectTo: '' },
 ];
 ```

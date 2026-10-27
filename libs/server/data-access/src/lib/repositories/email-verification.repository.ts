@@ -14,12 +14,12 @@ export class EmailVerificationRepository implements IEmailVerificationRepository
         where: { id: existing.id },
         data: { codeHash, expiresAt, attempts: 0, usedAt: null, createdAt: now },
       });
-      return updated as unknown as EmailVerificationRecord;
+      return updated;
     }
     const created = await this.prisma.emailVerification.create({
       data: { email, codeHash, expiresAt, attempts: 0, usedAt: null, createdAt: now },
     });
-    return created as unknown as EmailVerificationRecord;
+    return created;
   }
 
   async findActiveByEmail(email: string): Promise<EmailVerificationRecord | null> {
@@ -27,7 +27,7 @@ export class EmailVerificationRepository implements IEmailVerificationRepository
     const rec = await this.prisma.emailVerification.findFirst({
       where: { email, usedAt: null, expiresAt: { gt: now } },
     });
-    return (rec as unknown as EmailVerificationRecord) ?? null;
+    return rec ?? null;
   }
 
   async markUsed(id: string): Promise<void> {

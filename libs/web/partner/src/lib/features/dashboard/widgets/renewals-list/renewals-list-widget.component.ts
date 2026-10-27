@@ -1,12 +1,11 @@
-import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, input, inject, ChangeDetectionStrategy } from '@angular/core';
+
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslateModule } from '@ngx-translate/core';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { RenewalsListWidgetService } from './renewals-list-widget.service';
 import { Renewal, RenewalStatus } from './models/renewals-list-widget.model';
@@ -15,30 +14,19 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-renewals-list-widget',
   standalone: true,
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatIconModule,
-    MatListModule,
-    MatButtonModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule,
-    TranslateModule,
-  ],
+  imports: [MatCardModule, MatIconModule, MatListModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule],
   templateUrl: './renewals-list-widget.component.html',
-  styleUrls: ['./renewals-list-widget.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./renewals-list-widget.component.css'],
 })
 export class RenewalsListWidgetComponent extends AbstractBaseComponent {
-  @Input() tenantId!: string;
-  @Input() title = 'Upcoming Renewals';
-  @Input() subtitle = 'View all upcoming subscription renewals';
+  tenantId = input.required<string>();
+  title = input('Upcoming Renewals');
+  subtitle = input('View all upcoming subscription renewals');
 
   renewals: Renewal[] = [];
   private subscriptions = new Subscription();
-
-  constructor(private renewalsListWidgetService: RenewalsListWidgetService) {
-    super();
-  }
+  private readonly renewalsListWidgetService = inject(RenewalsListWidgetService);
 
   override ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
@@ -46,15 +34,15 @@ export class RenewalsListWidgetComponent extends AbstractBaseComponent {
   }
 
   private loadRenewals() {
-    if (!this.tenantId) {
-      this.error = 'Tenant ID is required';
+    if (!this.tenantId()) {
+      this.error = $localize`:@@DASHBOARD.RENEWALS.TENANT_REQUIRED:Tenant ID is required.`;
       return;
     }
 
     this.loading = true;
     this.error = null;
 
-    const sub = this.renewalsListWidgetService.getRenewals(this.tenantId).subscribe({
+    const sub = this.renewalsListWidgetService.getRenewals(this.tenantId()).subscribe({
       next: (renewals: Renewal[]) => {
         this.renewals = renewals.map((renewal: Renewal) => ({
           ...renewal,
@@ -64,7 +52,7 @@ export class RenewalsListWidgetComponent extends AbstractBaseComponent {
         this.loading = false;
       },
       error: (error: unknown) => {
-        this.error = error instanceof Error ? error.message : 'Failed to load renewals';
+        this.error = $localize`:@@DASHBOARD.RENEWALS.ERROR_LOADING:Failed to load renewals.`;
         this.handleError(error);
         this.loading = false;
       },
@@ -105,7 +93,7 @@ export class RenewalsListWidgetComponent extends AbstractBaseComponent {
     }
   }
 
-  getStatusIcon(status: RenewalStatus): string {
+  getStatusIcon(status?: RenewalStatus): string {
     switch (status) {
       case 'pending':
         return 'schedule';
@@ -132,21 +120,23 @@ export class RenewalsListWidgetComponent extends AbstractBaseComponent {
     });
   }
 
-  formatRenewalStatus(status: 'pending' | 'completed' | 'overdue'): string {
-    const statusMap = {
+  formatRenewalStatus(status?: 'pending' | 'completed' | 'overdue' | RenewalStatus): string {
+    if (!status) return '';
+    const statusMap: Record<string, string> = {
       pending: 'DASHBOARD.RENEWALS.STATUS.PENDING',
       completed: 'DASHBOARD.RENEWALS.STATUS.COMPLETED',
       overdue: 'DASHBOARD.RENEWALS.STATUS.OVERDUE',
     };
-    return statusMap[status];
+    return statusMap[status] || '';
   }
 
-  getStatusColor(status: 'pending' | 'completed' | 'overdue'): string {
-    const colorMap = {
+  getStatusColor(status?: 'pending' | 'completed' | 'overdue' | RenewalStatus): string {
+    if (!status) return 'var(--mat-info)';
+    const colorMap: Record<string, string> = {
       pending: 'var(--mat-warning)',
       completed: 'var(--mat-success)',
       overdue: 'var(--mat-error)',
     };
-    return colorMap[status];
+    return colorMap[status] || 'var(--mat-info)';
   }
 }

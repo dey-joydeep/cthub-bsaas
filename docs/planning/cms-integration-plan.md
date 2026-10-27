@@ -28,9 +28,9 @@ This decouples the frontend from the CMS and keeps all CMS API keys secure on th
 1.  **Navigate to the Content-Type Builder** in the Strapi admin panel.
 2.  **Create a new Collection Type** named `Static Page`.
 3.  **Add the following fields** to the `Static Page` collection type:
-    *   `title` (Type: `Text`, Required)
-    *   `slug` (Type: `UID`, attach to `title` field). This will automatically generate URL-friendly slugs like `privacy-policy`.
-    *   `contentBody` (Type: `Rich Text (Markdown)`)
+    - `title` (Type: `Text`, Required)
+    - `slug` (Type: `UID`, attach to `title` field). This will automatically generate URL-friendly slugs like `privacy-policy`.
+    - `contentBody` (Type: `Rich Text (Markdown)`)
 4.  **Save** the content type.
 5.  **Navigate to Content Manager** and create entries for `Terms of Service`, `Privacy Policy`, and `FAQ`.
 6.  **Publish** the entries.
@@ -48,45 +48,47 @@ This decouples the frontend from the CMS and keeps all CMS API keys secure on th
     nx generate @nx/nest:service content --project=api --directory=src/app/modules/content
     ```
 3.  **Implement the Service (`content.service.ts`):**
-    *   Add logic to fetch data from the Strapi API. Use environment variables for the Strapi URL and API token.
-    *   Example Method:
-        ```typescript
-        import { Injectable } from '@nestjs/common';
-        import { HttpService } from '@nestjs/axios'; // Make sure to import HttpModule in content.module.ts
-        import { map } from 'rxjs/operators';
+    - Add logic to fetch data from the Strapi API. Use environment variables for the Strapi URL and API token.
+    - Example Method:
+      ```typescript
+      import { Injectable } from '@nestjs/common';
+      import { HttpService } from '@nestjs/axios'; // Make sure to import HttpModule in content.module.ts
+      import { map } from 'rxjs/operators';
 
-        @Injectable()
-        export class ContentService {
-          private readonly strapiUrl = process.env.STRAPI_API_URL;
-          private readonly strapiToken = process.env.STRAPI_API_TOKEN;
+      @Injectable()
+      export class ContentService {
+        private readonly strapiUrl = process.env.STRAPI_API_URL;
+        private readonly strapiToken = process.env.STRAPI_API_TOKEN;
 
-          constructor(private http: HttpService) {}
+        constructor(private http: HttpService) {}
 
-          findOneBySlug(slug: string) {
-            const requestUrl = `${this.strapiUrl}/api/static-pages?filters[slug][$eq]=${slug}`;
-            return this.http.get(requestUrl, {
+        findOneBySlug(slug: string) {
+          const requestUrl = `${this.strapiUrl}/api/static-pages?filters[slug][$eq]=${slug}`;
+          return this.http
+            .get(requestUrl, {
               headers: { Authorization: `Bearer ${this.strapiToken}` },
-            }).pipe(map(response => response.data.data[0])); // Strapi v4 returns data in a nested structure
-          }
+            })
+            .pipe(map((response) => response.data.data[0])); // Strapi v4 returns data in a nested structure
         }
-        ```
+      }
+      ```
 4.  **Implement the Controller (`content.controller.ts`):**
-    *   Create a public GET endpoint that uses the service.
-    *   Example Endpoint:
-        ```typescript
-        import { Controller, Get, Param } from '@nestjs/common';
-        import { ContentService } from './content.service';
+    - Create a public GET endpoint that uses the service.
+    - Example Endpoint:
+      ```typescript
+      import { Controller, Get, Param } from '@nestjs/common';
+      import { ContentService } from './content.service';
 
-        @Controller('content')
-        export class ContentController {
-          constructor(private readonly contentService: ContentService) {}
+      @Controller('content')
+      export class ContentController {
+        constructor(private readonly contentService: ContentService) {}
 
-          @Get(':slug')
-          findOne(@Param('slug') slug: string) {
-            return this.contentService.findOneBySlug(slug);
-          }
+        @Get(':slug')
+        findOne(@Param('slug') slug: string) {
+          return this.contentService.findOneBySlug(slug);
         }
-        ```
+      }
+      ```
 
 ### Step 4: Update the Frontend Service
 

@@ -9,6 +9,7 @@
     "build": {
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/libs/web/admin"],
+      "defaultConfiguration": "production",
       "options": {
         "project": "libs/web/admin/ng-package.json",
         "tsConfig": "libs/web/admin/tsconfig.lib.json"
@@ -18,31 +19,24 @@
           "tsConfig": "libs/web/admin/tsconfig.lib.prod.json"
         },
         "development": {}
-      },
-      "defaultConfiguration": "production"
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/libs/web/admin"],
-      "options": {
-        "jestConfig": "libs/web/admin/jest.config.ts"
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": [
-          "libs/web/admin/src/index.ts",
-          "libs/web/admin/src/lib/features/auth/**/*.ts",
-          "libs/web/admin/src/lib/features/auth/**/*.html",
-          "libs/web/admin/src/lib/features/auth/**/*.scss"
-        ]
+        "cwd": "{projectRoot}",
+        "command": "eslint src/index.ts src/lib/features/auth/**/*.ts src/lib/features/auth/**/*.html"
       }
     },
     "type-check": {
       "executor": "nx:run-commands",
       "options": {
         "command": "npx tsc -p libs/web/admin/tsconfig.lib.json --noEmit"
+      }
+    },
+    "test": {
+      "outputs": ["{projectRoot}/{options.coverage.reportsDirectory}", "{workspaceRoot}/coverage/libs/web/admin"],
+      "options": {
+        "coverage.reportsDirectory": "../../../coverage/libs/web/admin"
       }
     }
   }

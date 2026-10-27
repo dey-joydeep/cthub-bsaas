@@ -52,16 +52,16 @@ These are valuable but should not block the first stable upgrade if time is tigh
 
 If full latest stable migration is not viable:
 
-| Area | Full target | Fallback |
-|---|---:|---:|
-| Node | 24 LTS only | `>=22 <25` |
-| Nx | latest stable at execution time | latest stable Nx 22 patch |
-| Angular | 21.2 | latest Angular 20.3 patch |
-| TypeScript | `~5.9.2` | keep Angular-compatible TS 5.8.x for Angular 20 fallback |
-| Vitest | web tests on Vitest 4 | pilot one web lib only |
-| Prisma | 7.x | latest 6.x |
-| Express | 5.x after spike | keep 4.21.x |
-| WebAuthn | 13.x | keep current until dedicated auth migration |
+| Area       |                     Full target |                                                 Fallback |
+| ---------- | ------------------------------: | -------------------------------------------------------: |
+| Node       |                     24 LTS only |                                               `>=22 <25` |
+| Nx         | latest stable at execution time |                                latest stable Nx 22 patch |
+| Angular    |                            21.2 |                                latest Angular 20.3 patch |
+| TypeScript |                        `~5.9.2` | keep Angular-compatible TS 5.8.x for Angular 20 fallback |
+| Vitest     |           web tests on Vitest 4 |                                   pilot one web lib only |
+| Prisma     |                             7.x |                                               latest 6.x |
+| Express    |                 5.x after spike |                                              keep 4.21.x |
+| WebAuthn   |                            13.x |              keep current until dedicated auth migration |
 
 ## Stop Conditions
 
@@ -86,4 +86,3 @@ If the full plan cannot fit, the minimum acceptable first iteration is:
 5. Backend stays on Jest with green Auth UT/IT.
 6. Frontend Vitest pilot is completed for one low-risk web lib or deferred with documented blocker.
 7. All CI/documented commands are updated to avoid stale Node 18 assumptions.
-

@@ -30,15 +30,15 @@ Continuation fixes may be lighter, but they must remain inside the original scop
 
 ## Task depth
 
-| Task                | Required behavior                                                                                          |
-| ------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Question / analysis | Read relevant files, answer with file paths and evidence.                                                  |
-| Documentation       | Update docs only unless code changes are explicitly requested.                                             |
-| New bug/error fix   | Treat as AIDD: inspect docs/code, identify scope, patch minimally, add regression test where practical.    |
-| Continuation fix    | Patch only the current-task validation error, rerun targeted validation, and preserve the original trace.   |
-| Feature             | Confirm FRD/FNRD/HLD/LLD/API/validation/test trail, then implement with tests.                             |
-| Refactor            | Preserve behavior, keep API stable, run tests around touched projects.                                     |
-| Security            | Treat as high-risk; preserve or strengthen safeguards, add tests, document impact.                         |
+| Task                | Required behavior                                                                                         |
+| ------------------- | --------------------------------------------------------------------------------------------------------- |
+| Question / analysis | Read relevant files, answer with file paths and evidence.                                                 |
+| Documentation       | Update docs only unless code changes are explicitly requested.                                            |
+| New bug/error fix   | Treat as AIDD: inspect docs/code, identify scope, patch minimally, add regression test where practical.   |
+| Continuation fix    | Patch only the current-task validation error, rerun targeted validation, and preserve the original trace. |
+| Feature             | Confirm FRD/FNRD/HLD/LLD/API/validation/test trail, then implement with tests.                            |
+| Refactor            | Preserve behavior, keep API stable, run tests around touched projects.                                    |
+| Security            | Treat as high-risk; preserve or strengthen safeguards, add tests, document impact.                        |
 
 ## When to update design docs
 

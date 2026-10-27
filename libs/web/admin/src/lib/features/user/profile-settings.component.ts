@@ -1,30 +1,21 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslateModule } from '@ngx-translate/core';
 import { UserService } from './user.service';
-import { CurrentUserService } from '../../core/auth/services/current-user.service';
+import { CurrentUserService } from '@cthub-bsaas/web-core-auth';
 
 @Component({
   selector: 'app-profile-settings',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatProgressBarModule,
-    MatIconModule,
-    TranslateModule,
-  ],
+  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressBarModule, MatIconModule],
   templateUrl: './profile-settings.component.html',
-  styleUrls: ['./profile-settings.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./profile-settings.component.css'],
 })
 export class ProfileSettingsComponent implements OnInit {
   profileForm;
@@ -32,12 +23,11 @@ export class ProfileSettingsComponent implements OnInit {
   error: string | null = null;
   success: string | null = null;
   imagePreview: string | ArrayBuffer | null = null;
+  private readonly fb = inject(FormBuilder);
+  private readonly userService = inject(UserService);
+  public readonly currentUserService = inject(CurrentUserService);
 
-  constructor(
-    private fb: FormBuilder,
-    private userService: UserService,
-    public currentUserService: CurrentUserService,
-  ) {
+  constructor() {
     this.profileForm = this.fb.group({
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
@@ -52,9 +42,9 @@ export class ProfileSettingsComponent implements OnInit {
     const user = this.currentUserService.currentUser;
     if (user) {
       this.profileForm.patchValue({
-        name: `${user.firstName} ${user.lastName}`.trim(), // Combine firstName and lastName
-        email: user.email,
-        contact: user.phone || '',
+        name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+        email: (user.email as string) || '',
+        contact: ((user as Record<string, unknown>)['phone'] as string) || '',
       });
     }
   }

@@ -15,10 +15,7 @@ export function IsValidAppointmentStatus(validationOptions?: ValidationOptions) 
       },
       validator: {
         validate(value: unknown) {
-          return (
-            typeof value === 'string' &&
-            (Object.values(AppointmentStatus) as string[]).includes(value)
-          );
+          return typeof value === 'string' && (Object.values(AppointmentStatus) as string[]).includes(value);
         },
       },
     });

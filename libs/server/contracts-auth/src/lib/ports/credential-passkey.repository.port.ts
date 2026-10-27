@@ -33,4 +33,3 @@ export interface ICredentialPasskeyRepository {
   /** Deletes a passkey owned by the user. Returns true when deleted. */
   deleteForUser(userId: string, credentialId: string): Promise<boolean>;
 }
-

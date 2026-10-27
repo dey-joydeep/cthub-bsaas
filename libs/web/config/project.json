@@ -7,17 +7,16 @@
   "tags": ["platform:web", "scope:web-config", "scope:web", "type:config", "type:lib"],
   "targets": {
     "lint": {
-      "executor": "@nx/eslint:lint",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/eslint.config.js",
+        "{workspaceRoot}/eslint.base.js",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/tools/eslint-rules/**/*"
+      ],
       "options": {
-        "lintFilePatterns": ["libs/web/config/src/**/*.ts"]
-      }
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/libs/web/config"],
-      "options": {
-        "jestConfig": "libs/web/config/jest.config.ts",
-        "passWithNoTests": true
+        "args": ["src/**/*.ts"]
       }
     },
     "type-check": {

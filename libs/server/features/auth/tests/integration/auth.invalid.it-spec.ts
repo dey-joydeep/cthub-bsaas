@@ -55,29 +55,20 @@ describe('AuthController (Integration) - validation failures', () => {
       expect(challengeLogin.body.data.totpRequired).toBe(true);
       const challengeCookies = harness.expectCookies(harness.toCookiesArray(challengeLogin.headers['set-cookie']));
 
-      await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/login/totp'), challengeCookies)
-        .send({})
-        .expect(400);
+      await harness.withAuth(request(harness.app.getHttpServer()).post('/auth/login/totp'), challengeCookies).send({}).expect(400);
     });
   });
 
   describe('partner', () => {
     describe('owner', () => {
       it('rejects owner registration completion without password', async () => {
-        await request(harness.app.getHttpServer())
-          .post('/auth/owner/registration/complete')
-          .send({ token: 'placeholder' })
-          .expect(400);
+        await request(harness.app.getHttpServer()).post('/auth/owner/registration/complete').send({ token: 'placeholder' }).expect(400);
       });
     });
 
     describe('staff', () => {
       it('rejects staff registration completion without password', async () => {
-        await request(harness.app.getHttpServer())
-          .post('/auth/staff/registration/complete')
-          .send({ token: 'placeholder' })
-          .expect(400);
+        await request(harness.app.getHttpServer()).post('/auth/staff/registration/complete').send({ token: 'placeholder' }).expect(400);
       });
     });
   });
@@ -92,17 +83,11 @@ describe('AuthController (Integration) - validation failures', () => {
         .expect(200);
       const cookies = harness.expectCookies(harness.toCookiesArray(loginRes.headers['set-cookie']));
 
-      await harness
-        .withAuth(request(harness.app.getHttpServer()).post('/auth/login/totp'), cookies)
-        .send({})
-        .expect(400);
+      await harness.withAuth(request(harness.app.getHttpServer()).post('/auth/login/totp'), cookies).send({}).expect(400);
     });
 
     it('rejects login payload missing required fields', async () => {
-      await request(harness.app.getHttpServer())
-        .post('/auth/login')
-        .send({ email: 'not-an-email' })
-        .expect(400);
+      await request(harness.app.getHttpServer()).post('/auth/login').send({ email: 'not-an-email' }).expect(400);
     });
 
     it('rejects password change request with invalid body', async () => {
@@ -136,23 +121,15 @@ describe('AuthController (Integration) - validation failures', () => {
     });
 
     it('rejects email verification confirmation without identifying payload', async () => {
-      await request(harness.app.getHttpServer())
-        .post('/auth/email/verify/confirm')
-        .send({})
-        .expect(400);
+      await request(harness.app.getHttpServer()).post('/auth/email/verify/confirm').send({}).expect(400);
     });
 
     it('rejects webauthn login start when payload is omitted', async () => {
-      await request(harness.app.getHttpServer())
-        .post('/auth/webauthn/login/start')
-        .expect(400);
+      await request(harness.app.getHttpServer()).post('/auth/webauthn/login/start').expect(400);
     });
 
     it('rejects webauthn login start when no identity is provided', async () => {
-      await request(harness.app.getHttpServer())
-        .post('/auth/webauthn/login/start')
-        .send({})
-        .expect(400);
+      await request(harness.app.getHttpServer()).post('/auth/webauthn/login/start').send({}).expect(400);
     });
   });
 });

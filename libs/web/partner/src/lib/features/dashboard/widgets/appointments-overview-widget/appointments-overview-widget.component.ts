@@ -1,5 +1,5 @@
-import { CommonModule, formatDate } from '@angular/common';
-import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { DatePipe, CurrencyPipe, SlicePipe, formatDate, NgClass } from '@angular/common';
+import { AfterViewInit, Component, OnDestroy, OnInit, viewChild, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -26,16 +26,17 @@ import { of, Subject } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 
 import { RouterModule } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Appointment, AppointmentsFilter, AppointmentsOverview, StatusBadgeConfig } from './models/appointments-overview-widget.model';
-import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.enum';
+import { AppointmentStatus } from '@cthub-bsaas/shared';
 import { AppointmentsOverviewWidgetService } from './appointments-overview-widget.service';
 
 @Component({
   selector: 'app-appointments-overview-widget',
   standalone: true,
   imports: [
-    CommonModule,
+    DatePipe,
+    CurrencyPipe,
+    SlicePipe,
     RouterModule,
     MatCardModule,
     MatButtonModule,
@@ -59,13 +60,13 @@ import { AppointmentsOverviewWidgetService } from './appointments-overview-widge
     MatDividerModule,
     MatListModule,
     MatDialogModule,
-    TranslateModule,
+    NgClass,
   ],
   templateUrl: './appointments-overview-widget.component.html',
-  styleUrls: ['./appointments-overview-widget.component.scss'],
+  styleUrls: ['./appointments-overview-widget.component.css'],
 })
 export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild(MatSort) sort!: MatSort;
+  sort = viewChild<MatSort>(MatSort);
 
   // Data
   overview: AppointmentsOverview | null = null;
@@ -88,29 +89,24 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
     start: new FormControl<Date | null>(null),
     end: new FormControl<Date | null>(null),
   });
-
+  private readonly appointmentsOverviewWidgetService = inject(AppointmentsOverviewWidgetService);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
   // Status filter
   statusFilter = new FormControl<AppointmentStatus | 'ALL'>('ALL');
   statusOptions = [
     { value: 'ALL' as const, label: 'All Statuses' },
-    { value: AppointmentStatus.PENDING, label: 'Pending' },
-    { value: AppointmentStatus.CONFIRMED, label: 'Confirmed' },
-    { value: AppointmentStatus.COMPLETED, label: 'Completed' },
-    { value: AppointmentStatus.CANCELLED, label: 'Cancelled' },
-    { value: AppointmentStatus.NOSHOW, label: 'No Show' },
+    { value: 'PENDING' as AppointmentStatus, label: 'Pending' },
+    { value: 'CONFIRMED' as AppointmentStatus, label: 'Confirmed' },
+    { value: 'COMPLETED' as AppointmentStatus, label: 'Completed' },
+    { value: 'CANCELLED' as AppointmentStatus, label: 'Cancelled' },
+    { value: 'NOSHOW' as AppointmentStatus, label: 'No Show' },
   ] as const;
 
   // Tabs
   selectedTabIndex = 0;
 
   private destroy$ = new Subject<void>();
-
-  constructor(
-    private appointmentsOverviewWidgetService: AppointmentsOverviewWidgetService,
-    private snackBar: MatSnackBar,
-    private dialog: MatDialog,
-    private translate: TranslateService,
-  ) {}
 
   ngOnInit(): void {
     this.loadData();
@@ -133,7 +129,10 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
   }
 
   ngAfterViewInit(): void {
-    this.dataSource.sort = this.sort;
+    const sortInstance = this.sort();
+    if (sortInstance) {
+      this.dataSource.sort = sortInstance;
+    }
   }
 
   ngOnDestroy(): void {
@@ -155,7 +154,7 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
         takeUntil(this.destroy$),
         catchError((error) => {
           console.error('Error loading appointments overview:', error);
-          this.error = this.translate.instant('DASHBOARD.APPOINTMENTS.ERROR_LOADING');
+          this.error = $localize`:@@DASHBOARD.APPOINTMENTS.ERROR_LOADING:Failed to load appointments.`;
           return of(null);
         }),
         finalize(() => (this.isLoading = false)),
@@ -244,61 +243,58 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
    * @returns The icon name
    */
   getStatusIcon(status: AppointmentStatus | 'ALL'): string {
-    const icons: Record<AppointmentStatus | 'ALL', string> = {
+    const icons: Record<string, string> = {
       ALL: 'schedule',
-      [AppointmentStatus.PENDING]: 'schedule',
-      [AppointmentStatus.CONFIRMED]: 'check_circle',
-      [AppointmentStatus.COMPLETED]: 'done_all',
-      [AppointmentStatus.CANCELLED]: 'cancel',
-      [AppointmentStatus.NOSHOW]: 'no_accounts',
-      [AppointmentStatus.RESCHEDULED]: 'reschedule',
+      PENDING: 'schedule',
+      CONFIRMED: 'check_circle',
+      COMPLETED: 'done_all',
+      CANCELLED: 'cancel',
+      NOSHOW: 'no_accounts',
+      RESCHEDULED: 'reschedule',
     };
-    return icons[status as AppointmentStatus] || 'help';
+    return icons[status] || 'help';
   }
 
   /**
    * Get the status badge configuration
    */
   getStatusBadge(status: AppointmentStatus): StatusBadgeConfig {
-    // Convert string 'PENDING' to AppointmentStatus.PENDING if needed
-    const statusValue = status === 'PENDING' ? AppointmentStatus.PENDING : status;
-
-    const badges: Record<AppointmentStatus, StatusBadgeConfig> = {
-      [AppointmentStatus.PENDING]: {
-        text: this.translate.instant('DASHBOARD.APPOINTMENTS.STATUS.PENDING'),
+    const badges: Record<string, StatusBadgeConfig> = {
+      PENDING: {
+        text: $localize`:@@DASHBOARD.APPOINTMENTS.STATUS.PENDING:Pending`,
         class: 'status-pending',
         icon: 'schedule',
       },
-      [AppointmentStatus.CONFIRMED]: {
-        text: this.translate.instant('DASHBOARD.APPOINTMENTS.STATUS.CONFIRMED'),
+      CONFIRMED: {
+        text: $localize`:@@DASHBOARD.APPOINTMENTS.STATUS.CONFIRMED:Confirmed`,
         class: 'status-confirmed',
         icon: 'check_circle',
       },
-      [AppointmentStatus.COMPLETED]: {
-        text: this.translate.instant('DASHBOARD.APPOINTMENTS.STATUS.COMPLETED'),
+      COMPLETED: {
+        text: $localize`:@@DASHBOARD.APPOINTMENTS.STATUS.COMPLETED:Completed`,
         class: 'status-completed',
         icon: 'done_all',
       },
-      [AppointmentStatus.CANCELLED]: {
-        text: this.translate.instant('DASHBOARD.APPOINTMENTS.STATUS.CANCELLED'),
+      CANCELLED: {
+        text: $localize`:@@DASHBOARD.APPOINTMENTS.STATUS.CANCELLED:Cancelled`,
         class: 'status-cancelled',
         icon: 'cancel',
       },
-      [AppointmentStatus.NOSHOW]: {
-        text: this.translate.instant('DASHBOARD.APPOINTMENTS.STATUS.NOSHOW'),
+      NOSHOW: {
+        text: $localize`:@@DASHBOARD.APPOINTMENTS.STATUS.NOSHOW:No-show`,
         class: 'status-noshow',
         icon: 'no_accounts',
       },
-      [AppointmentStatus.RESCHEDULED]: {
-        text: this.translate.instant('DASHBOARD.APPOINTMENTS.STATUS.RESCHEDULED'),
+      RESCHEDULED: {
+        text: $localize`:@@DASHBOARD.APPOINTMENTS.STATUS.RESCHEDULED:Rescheduled`,
         class: 'status-rescheduled',
         icon: 'reschedule',
       },
     };
 
     return (
-      badges[statusValue as AppointmentStatus] || {
-        text: statusValue,
+      badges[status] || {
+        text: status,
         class: 'status-unknown',
         icon: 'help',
       }
@@ -335,17 +331,25 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.snackBar.open(this.translate.instant('DASHBOARD.APPOINTMENTS.STATUS_UPDATED'), this.translate.instant('COMMON.CLOSE'), {
-            duration: 3000,
-          });
+          this.snackBar.open(
+            $localize`:@@DASHBOARD.APPOINTMENTS.STATUS_UPDATED:Appointment status updated.`,
+            $localize`:@@COMMON.CLOSE:Close`,
+            {
+              duration: 3000,
+            },
+          );
           this.loadData();
         },
         error: (error) => {
           console.error('Error updating appointment status:', error);
-          this.snackBar.open(this.translate.instant('DASHBOARD.APPOINTMENTS.STATUS_UPDATE_ERROR'), this.translate.instant('COMMON.CLOSE'), {
-            duration: 5000,
-            panelClass: ['error-snackbar'],
-          });
+          this.snackBar.open(
+            $localize`:@@DASHBOARD.APPOINTMENTS.STATUS_UPDATE_ERROR:Failed to update status.`,
+            $localize`:@@COMMON.CLOSE:Close`,
+            {
+              duration: 5000,
+              panelClass: ['error-snackbar'],
+            },
+          );
         },
       });
   }

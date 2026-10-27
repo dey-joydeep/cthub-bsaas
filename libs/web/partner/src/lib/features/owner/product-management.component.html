@@ -1,139 +1,150 @@
 <div class="product-management-container">
   <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="product-form">
-    <h1>{{ 'PRODUCT_MANAGEMENT.TITLE' | translate }}</h1>
+    <h1><ng-container i18n="@@PRODUCT_MANAGEMENT.TITLE">Product Management</ng-container></h1>
 
     <mat-tab-group [(selectedIndex)]="selectedTabIndex" class="product-tabs">
       <!-- Basic Information Tab -->
-      <mat-tab [label]="'PRODUCT_MANAGEMENT.TABS.BASIC' | translate">
+      <mat-tab i18n-label="@@PRODUCT_MANAGEMENT.TABS.BASIC" label="Basic Info">
         <div class="tab-content">
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.NAME' | translate }}</mat-label>
+            <mat-label><ng-container i18n="@@PRODUCT_MANAGEMENT.FIELDS.NAME">Product Name</ng-container></mat-label>
             <input matInput formControlName="name" required />
-            <mat-error *ngIf="productForm.get('name')?.hasError('required')">
-              {{ 'VALIDATION.REQUIRED' | translate }}
-            </mat-error>
-            <mat-error *ngIf="productForm.get('name')?.hasError('maxlength')">
-              {{ 'VALIDATION.MAX_LENGTH' | translate: { max: 100 } }}
-            </mat-error>
+            @if (productForm.get('name')?.hasError('required')) {
+              <mat-error>
+                <ng-container i18n="@@VALIDATION.REQUIRED">This field is required.</ng-container>
+              </mat-error>
+            }
+            @if (productForm.get('name')?.hasError('maxlength')) {
+              <mat-error>
+                <ng-container i18n="@@VALIDATION.MAX_LENGTH">Maximum length is 100</ng-container>
+              </mat-error>
+            }
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.DESCRIPTION' | translate }}</mat-label>
+            <mat-label><ng-container i18n="@@PRODUCT_MANAGEMENT.FIELDS.DESCRIPTION">Description</ng-container></mat-label>
             <textarea matInput formControlName="description" rows="3"></textarea>
-            <mat-hint *ngIf="!productForm.get('description')?.value">
-              {{ 'PRODUCT_MANAGEMENT.FIELDS.DESCRIPTION_HINT' | translate }}
-            </mat-hint>
+            @if (!productForm.get('description')?.value) {
+              <mat-hint>
+                <ng-container i18n="@@PRODUCT_MANAGEMENT.FIELDS.DESCRIPTION_HINT">Enter a detailed description of the product</ng-container>
+              </mat-hint>
+            }
           </mat-form-field>
 
           <div class="form-row">
             <mat-form-field appearance="outline" class="half-width">
-              <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.SKU' | translate }}</mat-label>
+              <mat-label><ng-container i18n="@@PRODUCT_MANAGEMENT.FIELDS.SKU">SKU</ng-container></mat-label>
               <input matInput formControlName="sku" />
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="half-width">
-              <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.BARCODE' | translate }}</mat-label>
+              <mat-label><ng-container i18n="@@PRODUCT_MANAGEMENT.FIELDS.BARCODE">Barcode</ng-container></mat-label>
               <input matInput formControlName="barcode" />
             </mat-form-field>
           </div>
 
           <mat-checkbox formControlName="isActive">
-            {{ 'PRODUCT_MANAGEMENT.FIELDS.IS_ACTIVE' | translate }}
+            <ng-container i18n="@@PRODUCT_MANAGEMENT.FIELDS.IS_ACTIVE">Active</ng-container>
           </mat-checkbox>
 
           <mat-checkbox formControlName="isFeatured">
-            {{ 'PRODUCT_MANAGEMENT.FIELDS.IS_FEATURED' | translate }}
+            <ng-container i18n="@@PRODUCT_MANAGEMENT.FIELDS.IS_FEATURED">Featured Product</ng-container>
           </mat-checkbox>
         </div>
       </mat-tab>
 
       <!-- Pricing Tab -->
-      <mat-tab [label]="'PRODUCT_MANAGEMENT.TABS.PRICING' | translate">
+      <mat-tab i18n-label="@@PRODUCT_MANAGEMENT.TABS.PRICING" label="Pricing">
         <div class="tab-content">
           <mat-form-field appearance="outline" class="half-width">
-            <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.PRICE' | translate }} *</mat-label>
+            <mat-label><ng-container i18n="@@PRODUCT_MANAGEMENT.FIELDS.PRICE">Price</ng-container> *</mat-label>
             <input matInput type="number" formControlName="price" step="0.01" min="0" required />
             <span matPrefix>$&nbsp;</span>
-            <mat-error *ngIf="productForm.get('price')?.hasError('required')">
-              {{ 'VALIDATION.REQUIRED' | translate }}
-            </mat-error>
+            @if (productForm.get('price')?.hasError('required')) {
+              <mat-error>
+                <ng-container i18n="@@VALIDATION.REQUIRED">This field is required.</ng-container>
+              </mat-error>
+            }
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="half-width">
-            <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.COMPARE_AT_PRICE' | translate }}</mat-label>
+            <mat-label><ng-container i18n="@@PRODUCT_MANAGEMENT.FIELDS.COMPARE_AT_PRICE">Compare at Price</ng-container></mat-label>
             <input matInput type="number" formControlName="compareAtPrice" step="0.01" min="0" />
             <span matPrefix>$&nbsp;</span>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="half-width">
-            <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.COST_PER_ITEM' | translate }}</mat-label>
+            <mat-label><ng-container i18n="@@PRODUCT_MANAGEMENT.FIELDS.COST_PER_ITEM">Cost per Item</ng-container></mat-label>
             <input matInput type="number" formControlName="costPerItem" step="0.01" min="0" />
             <span matPrefix>$&nbsp;</span>
           </mat-form-field>
 
           <mat-checkbox formControlName="trackQuantity">
-            {{ 'PRODUCT_MANAGEMENT.FIELDS.TRACK_QUANTITY' | translate }}
+            <ng-container i18n="@@PRODUCT_MANAGEMENT.FIELDS.TRACK_QUANTITY">Track quantity</ng-container>
           </mat-checkbox>
 
-          <mat-form-field appearance="outline" class="half-width" *ngIf="productForm.get('trackQuantity')?.value">
-            <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.QUANTITY' | translate }} *</mat-label>
-            <input matInput type="number" formControlName="quantity" min="0" required />
-          </mat-form-field>
+          @if (productForm.get('trackQuantity')?.value) {
+            <mat-form-field appearance="outline" class="half-width">
+              <mat-label><ng-container i18n="@@PRODUCT_MANAGEMENT.FIELDS.QUANTITY">Quantity</ng-container> *</mat-label>
+              <input matInput type="number" formControlName="quantity" min="0" required />
+            </mat-form-field>
+          }
 
           <mat-checkbox formControlName="continueSellingWhenOutOfStock">
-            {{ 'PRODUCT_MANAGEMENT.FIELDS.CONTINUE_SELLING' | translate }}
+            <ng-container i18n="@@PRODUCT_MANAGEMENT.FIELDS.CONTINUE_SELLING">Continue selling when out of stock</ng-container>
           </mat-checkbox>
         </div>
       </mat-tab>
 
       <!-- Organization Tab -->
-      <mat-tab [label]="'PRODUCT_MANAGEMENT.TABS.ORGANIZATION' | translate">
+      <mat-tab i18n-label="@@PRODUCT_MANAGEMENT.TABS.ORGANIZATION" label="Organization">
         <div class="tab-content">
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.CATEGORIES' | translate }}</mat-label>
+            <mat-label><ng-container i18n="@@PRODUCT_MANAGEMENT.FIELDS.CATEGORIES">Categories</ng-container></mat-label>
             <mat-select formControlName="categories" multiple>
-              <mat-option *ngFor="let category of categories" [value]="category.id">
-                {{ category.name }}
-              </mat-option>
+              @for (category of categories; track category) {
+                <mat-option [value]="category.id">
+                  {{ category.name }}
+                </mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.TAGS' | translate }}</mat-label>
+            <mat-label><ng-container i18n="@@PRODUCT_MANAGEMENT.FIELDS.TAGS">Tags</ng-container></mat-label>
             <input matInput formControlName="tags" />
-            <mat-hint>{{ 'PRODUCT_MANAGEMENT.FIELDS.TAGS_HINT' | translate }}</mat-hint>
+            <mat-hint><ng-container i18n="@@PRODUCT_MANAGEMENT.FIELDS.TAGS_HINT">Comma separated tags</ng-container></mat-hint>
           </mat-form-field>
         </div>
       </mat-tab>
 
       <!-- Images Tab -->
-      <mat-tab [label]="'PRODUCT_MANAGEMENT.TABS.IMAGES' | translate">
+      <mat-tab i18n-label="@@PRODUCT_MANAGEMENT.TABS.IMAGES" label="Images">
         <div class="tab-content">
-          <div formArrayName="images" *ngFor="let image of images.controls; let i = index">
-            <div [formGroupName]="i" class="image-upload-row">
-              <mat-form-field appearance="outline" class="image-url">
-                <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.IMAGE_URL' | translate }}</mat-label>
-                <input matInput formControlName="url" placeholder="https://example.com/image.jpg" />
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="image-alt">
-                <mat-label>{{ 'PRODUCT_MANAGEMENT.FIELDS.ALT_TEXT' | translate }}</mat-label>
-                <input matInput formControlName="altText" />
-              </mat-form-field>
-
-              <mat-checkbox formControlName="isDefault" class="default-checkbox">
-                {{ 'PRODUCT_MANAGEMENT.FIELDS.DEFAULT_IMAGE' | translate }}
-              </mat-checkbox>
-
-              <button type="button" mat-icon-button color="warn" (click)="removeImage(i)" matTooltip="Remove image">
-                <mat-icon>delete</mat-icon>
-              </button>
+          @for (image of images.controls; track image; let i = $index) {
+            <div formArrayName="images">
+              <div [formGroupName]="i" class="image-upload-row">
+                <mat-form-field appearance="outline" class="image-url">
+                  <mat-label><ng-container i18n="@@PRODUCT_MANAGEMENT.FIELDS.IMAGE_URL">Image URL</ng-container></mat-label>
+                  <input matInput formControlName="url" placeholder="https://example.com/image.jpg" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="image-alt">
+                  <mat-label><ng-container i18n="@@PRODUCT_MANAGEMENT.FIELDS.ALT_TEXT">Alt Text</ng-container></mat-label>
+                  <input matInput formControlName="altText" />
+                </mat-form-field>
+                <mat-checkbox formControlName="isDefault" class="default-checkbox">
+                  <ng-container i18n="@@PRODUCT_MANAGEMENT.FIELDS.DEFAULT_IMAGE">Default Image</ng-container>
+                </mat-checkbox>
+                <button type="button" mat-icon-button color="warn" (click)="removeImage(i)" matTooltip="Remove image">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
             </div>
-          </div>
+          }
 
           <button type="button" mat-button color="primary" (click)="addNewImage()" class="add-image-btn">
             <mat-icon>add</mat-icon>
-            {{ 'PRODUCT_MANAGEMENT.ACTIONS.ADD_IMAGE' | translate }}
+            <ng-container i18n="@@PRODUCT_MANAGEMENT.ACTIONS.ADD_IMAGE">Add Image</ng-container>
           </button>
         </div>
       </mat-tab>
@@ -141,25 +152,35 @@
 
     <div class="form-actions">
       <button mat-button type="button" (click)="productForm.reset()" [disabled]="loading">
-        {{ 'COMMON.RESET' | translate }}
+        <ng-container i18n="@@COMMON.RESET">Reset</ng-container>
       </button>
       <button mat-raised-button color="primary" type="submit" [disabled]="loading || productForm.invalid">
-        {{ (productForm.get('id')?.value ? 'COMMON.UPDATE' : 'COMMON.SAVE') | translate }}
+        @if (productForm.get('id')?.value) {
+          <ng-container i18n="@@COMMON.UPDATE">Update</ng-container>
+        } @else {
+          <ng-container i18n="@@COMMON.SAVE">Save</ng-container>
+        }
       </button>
     </div>
 
-    <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+    @if (loading) {
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    }
 
     <div class="form-messages">
-      <mat-error *ngIf="error" class="error-message">
-        <mat-icon>error_outline</mat-icon>
-        {{ error }}
-      </mat-error>
+      @if (error) {
+        <mat-error class="error-message">
+          <mat-icon>error_outline</mat-icon>
+          {{ error }}
+        </mat-error>
+      }
 
-      <div *ngIf="success" class="success-message">
-        <mat-icon>check_circle</mat-icon>
-        {{ success }}
-      </div>
+      @if (success) {
+        <div class="success-message">
+          <mat-icon>check_circle</mat-icon>
+          {{ success }}
+        </div>
+      }
     </div>
   </form>
 </div>

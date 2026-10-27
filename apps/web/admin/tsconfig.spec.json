@@ -1,39 +1,24 @@
-/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
-/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
-    "module": "esnext",
-    "moduleResolution": "node",
-    "target": "ES2022",
-    "types": ["jest", "node"],
-    "esModuleInterop": true,
-    "strictNullChecks": true,
-    "noImplicitAny": false,
-    "strict": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": false,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "lib": ["es2022", "dom"],
-    "isolatedModules": true,
-    "useDefineForClassFields": true
+    "outDir": "../../../dist/out-tsc",
+    "types": ["vitest/globals", "vitest/importMeta", "vite/client", "node", "vitest"],
+    "rootDir": "../../.."
   },
   "include": [
-    "src/**/*.spec.ts",
-    "src/**/*.d.ts",
-    "src/setup-jest.ts",
-    "jest.config.ts",
+    "vite.config.ts",
+    "vite.config.mts",
+    "vitest.config.ts",
+    "vitest.config.mts",
     "src/**/*.test.ts",
+    "src/**/*.spec.ts",
     "src/**/*.test.tsx",
-    "src/**/test-utils.tsx",
-    "src/**/test-utils.ts",
-    "src/**/__mocks__/*.ts",
-    "src/**/__tests__/*.ts"
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx",
+    "src/**/*.d.ts"
   ],
-  "files": ["src/setup-jest.ts"],
-  "exclude": ["node_modules/jasmine", "node_modules/jasmine-core", "node_modules/@types/jasmine", "**/*.mjs"]
+  "files": ["src/test-setup.ts"]
 }

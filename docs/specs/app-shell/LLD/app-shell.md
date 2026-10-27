@@ -5,29 +5,29 @@
 
 ## Suggested Web Modules
 
-| Module | Responsibility |
-| --- | --- |
-| `web-core-shell` | Shell context, navigation model, route layout helpers. |
-| `web-ui-shell` | Header, sidebar, menus, branch selector, global feedback components. |
+| Module                  | Responsibility                                                             |
+| ----------------------- | -------------------------------------------------------------------------- |
+| `web-core-shell`        | Shell context, navigation model, route layout helpers.                     |
+| `web-ui-shell`          | Header, sidebar, menus, branch selector, global feedback components.       |
 | App-specific shell libs | Admin, Partner, and Customer route composition and navigation definitions. |
 
 ## Core Models
 
-| Model | Fields |
-| --- | --- |
-| `ShellSessionModel` | `isAuthenticated`, `userId`, `displayName`, `roles`, `activeApp`. |
-| `ShellContextModel` | `tenantId`, `businessId`, `branchId`, `availableBranches`, `permissions`. |
-| `ShellNavigationItemModel` | `id`, `labelKey`, `route`, `icon`, `requiredPermission`, `children`. |
-| `GlobalFeedbackModel` | `kind`, `messageKey`, `correlationId`, `retryAction`. |
+| Model                      | Fields                                                                    |
+| -------------------------- | ------------------------------------------------------------------------- |
+| `ShellSessionModel`        | `isAuthenticated`, `userId`, `displayName`, `roles`, `activeApp`.         |
+| `ShellContextModel`        | `tenantId`, `businessId`, `branchId`, `availableBranches`, `permissions`. |
+| `ShellNavigationItemModel` | `id`, `labelKey`, `route`, `icon`, `requiredPermission`, `children`.      |
+| `GlobalFeedbackModel`      | `kind`, `messageKey`, `correlationId`, `retryAction`.                     |
 
 ## Service Contracts
 
-| Service | Methods |
-| --- | --- |
-| `ShellContextService` | `loadContext()`, `setBusiness()`, `setBranch()`, `clearContext()`. |
-| `ShellNavigationService` | `getNavigation(app, context)`, `canShow(item, permissions)`. |
-| `LocalePreferenceService` | `getActiveLocale()`, `setLocale(locale)`. |
-| `GlobalFeedbackService` | `showError(error)`, `showConflict(error)`, `clear()`. |
+| Service                   | Methods                                                            |
+| ------------------------- | ------------------------------------------------------------------ |
+| `ShellContextService`     | `loadContext()`, `setBusiness()`, `setBranch()`, `clearContext()`. |
+| `ShellNavigationService`  | `getNavigation(app, context)`, `canShow(item, permissions)`.       |
+| `LocalePreferenceService` | `getActiveLocale()`, `setLocale(locale)`.                          |
+| `GlobalFeedbackService`   | `showError(error)`, `showConflict(error)`, `clear()`.              |
 
 ## Context Switch Sequence
 

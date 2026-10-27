@@ -5,12 +5,12 @@
 
 ## Routes
 
-| Route | Screen ID |
-| --- | --- |
-| `/account/privacy` | `privacy.myRequests` |
-| `/partner/data-exports` | `privacy.businessExports` |
-| `/partner/customers/merge` | `privacy.customerMerge` |
-| `/admin/platform/privacy-requests` | `privacy.platformQueue` |
+| Route                              | Screen ID                 |
+| ---------------------------------- | ------------------------- |
+| `/account/privacy`                 | `privacy.myRequests`      |
+| `/partner/data-exports`            | `privacy.businessExports` |
+| `/partner/customers/merge`         | `privacy.customerMerge`   |
+| `/admin/platform/privacy-requests` | `privacy.platformQueue`   |
 
 ## Screen Requirements
 

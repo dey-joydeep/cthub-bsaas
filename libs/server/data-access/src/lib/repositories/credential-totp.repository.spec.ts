@@ -53,5 +53,6 @@ describe('CredentialTotpRepository', () => {
     } as CredentialTOTP;
     prisma.credentialTOTP.update.mockResolvedValue(updated);
     await expect(repo.update('u1', { verified: true })).resolves.toBe(updated);
+    await expect(repo.update('u1', { secretEncrypted: Buffer.from('sec') })).resolves.toBe(updated);
   });
 });

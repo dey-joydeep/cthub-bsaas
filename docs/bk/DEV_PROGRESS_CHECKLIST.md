@@ -56,18 +56,18 @@ Track the progress of each feature/module through all critical phases: Coding, U
 
 ### Appointment
 
-| Feature                     | Coding | Unit Test | Integration Test | Edge Test | Lint Fixed |
-| --------------------------- | :----: | :-------: | :--------------: | :-------: | :--------: |
-| Appointment Flow      |  [ ]   |    [ ]    |       [ ]        |    [ ]    |    [ ]     |
+| Feature                   | Coding | Unit Test | Integration Test | Edge Test | Lint Fixed |
+| ------------------------- | :----: | :-------: | :--------------: | :-------: | :--------: |
+| Appointment Flow          |  [ ]   |    [ ]    |       [ ]        |    [ ]    |    [ ]     |
 | Multi-Service Appointment |  [ ]   |    [ ]    |       [ ]        |    [ ]    |    [ ]     |
-| Slot Calculation      |  [ ]   |    [ ]    |       [ ]        |    [ ]    |    [ ]     |
+| Slot Calculation          |  [ ]   |    [ ]    |       [ ]        |    [ ]    |    [ ]     |
 
 ### Customer
 
-| Feature             | Coding | Unit Test | Integration Test | Edge Test | Lint Fixed |
-| ------------------- | :----: | :-------: | :--------------: | :-------: | :--------: |
+| Feature                       | Coding | Unit Test | Integration Test | Edge Test | Lint Fixed |
+| ----------------------------- | :----: | :-------: | :--------------: | :-------: | :--------: |
 | Appointment/Review Management |  [ ]   |    [ ]    |       [ ]        |    [ ]    |    [ ]     |
-| Profile Management  |  [ ]   |    [ ]    |       [ ]        |    [ ]    |    [ ]     |
+| Profile Management            |  [ ]   |    [ ]    |       [ ]        |    [ ]    |    [ ]     |
 
 ---
 

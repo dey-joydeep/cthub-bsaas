@@ -11,8 +11,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname  = path.dirname(__filename);
-const repoRoot   = path.resolve(__dirname, '..');
+const __dirname = path.dirname(__filename);
+const repoRoot = path.resolve(__dirname, '..');
 
 const ROOT_PKG = path.join(repoRoot, 'package.json');
 
@@ -68,8 +68,8 @@ function main() {
   const appsRoot = path.join(repoRoot, 'apps');
   const libsRoot = path.join(repoRoot, 'libs');
 
-  const appPkgs  = fs.existsSync(appsRoot) ? findPackageDirs(appsRoot, 'apps') : [];
-  const libPkgs  = fs.existsSync(libsRoot) ? findPackageDirs(libsRoot, 'libs') : [];
+  const appPkgs = fs.existsSync(appsRoot) ? findPackageDirs(appsRoot, 'apps') : [];
+  const libPkgs = fs.existsSync(libsRoot) ? findPackageDirs(libsRoot, 'libs') : [];
 
   const workspaces = [...appPkgs, ...libPkgs];
 

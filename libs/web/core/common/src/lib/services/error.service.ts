@@ -28,9 +28,25 @@ export class ErrorService {
   handleError(error: unknown, context: string = 'App'): void {
     console.error(`[${context}] Error:`, error);
 
+    let message = 'An unknown error occurred';
+    if (typeof error === 'object' && error !== null) {
+      const errObj = error as Record<string, unknown>;
+      const innerErr = errObj['error'];
+      if (typeof innerErr === 'object' && innerErr !== null) {
+        const innerErrObj = innerErr as Record<string, unknown>;
+        if (typeof innerErrObj['error'] === 'string') {
+          message = innerErrObj['error'];
+        } else if (typeof innerErrObj['message'] === 'string') {
+          message = innerErrObj['message'];
+        }
+      } else if (typeof errObj['message'] === 'string') {
+        message = errObj['message'];
+      }
+    }
+
     let errorState: ErrorState = {
       type: ErrorType.UNKNOWN,
-      message: 'An unknown error occurred',
+      message,
       timestamp: new Date(),
     };
 
@@ -91,9 +107,7 @@ export class ErrorService {
     } else if (error.status >= 400 && error.status < 500) {
       errorState.type = ErrorType.VALIDATION;
       const payload: unknown = error.error;
-      errorState.message = this.isErrorWithMessage(payload)
-        ? payload.message
-        : 'An error occurred with your request';
+      errorState.message = this.isErrorWithMessage(payload) ? payload.message : 'An error occurred with your request';
     } else if (error.status >= 500) {
       errorState.type = ErrorType.SERVER;
       errorState.message = 'A server error occurred. Please try again later.';
@@ -102,9 +116,7 @@ export class ErrorService {
     return errorState;
   }
 
-  private hasMessageProperty(
-    error: unknown,
-  ): error is { error: { message: string } } {
+  private hasMessageProperty(error: unknown): error is { error: { message: string } } {
     if (typeof error !== 'object' || error === null) {
       return false;
     }
@@ -112,19 +124,11 @@ export class ErrorService {
     const root = error as Record<string, unknown>;
     const nested = root['error'];
 
-    return (
-      typeof nested === 'object' &&
-      nested !== null &&
-      typeof (nested as Record<string, unknown>)['message'] === 'string'
-    );
+    return typeof nested === 'object' && nested !== null && typeof (nested as Record<string, unknown>)['message'] === 'string';
   }
 
   private isErrorWithMessage(error: unknown): error is { message: string } {
-    return (
-      typeof error === 'object' &&
-      error !== null &&
-      typeof (error as Record<string, unknown>)['message'] === 'string'
-    );
+    return typeof error === 'object' && error !== null && typeof (error as Record<string, unknown>)['message'] === 'string';
   }
 
   private isHttpErrorResponse(error: unknown): error is HttpErrorResponse {

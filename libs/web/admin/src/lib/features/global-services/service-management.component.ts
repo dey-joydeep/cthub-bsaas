@@ -1,16 +1,16 @@
-import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'admin-service-management',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <section class="feature-placeholder">
       <h1>Global Service Management</h1>
       <p>Administrative tooling for shared services will be surfaced here.</p>
     </section>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
       .feature-placeholder {

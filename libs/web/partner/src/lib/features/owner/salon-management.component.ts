@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -8,7 +8,6 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
-import { TranslateModule } from '@ngx-translate/core';
 import { SalonService } from './salon.service';
 import { CreateSalonParams } from '../../models/salon-params.model';
 import { User } from '../../models/user.model';
@@ -18,7 +17,6 @@ import { UserRole } from '@cthub-bsaas/shared';
   selector: 'app-salon-management',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
@@ -27,10 +25,9 @@ import { UserRole } from '@cthub-bsaas/shared';
     MatIconModule,
     MatSelectModule,
     MatChipsModule,
-    TranslateModule,
   ],
   templateUrl: './salon-management.component.html',
-  styleUrls: ['./salon-management.component.scss'],
+  styleUrls: ['./salon-management.component.css'],
 })
 export class SalonManagementComponent {
   salonForm: FormGroup;
@@ -51,11 +48,10 @@ export class SalonManagementComponent {
     'Makeup',
     'Other',
   ];
+  private readonly fb = inject(FormBuilder);
+  private readonly salonService = inject(SalonService);
 
-  constructor(
-    private fb: FormBuilder,
-    private salonService: SalonService,
-  ) {
+  constructor() {
     // In a real app, you would get this from your auth service
     this.currentUser = {
       id: 'current-user-id',

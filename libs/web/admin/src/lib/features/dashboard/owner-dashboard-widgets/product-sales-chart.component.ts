@@ -1,5 +1,5 @@
-import { Component, Input, inject, signal, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal, OnInit, input } from '@angular/core';
+
 import { ChartData, ChartOptions } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -9,12 +9,12 @@ import { DashboardApiService, ProductSalesData } from '@cthub-bsaas/features/das
 @Component({
   selector: 'app-product-sales-chart',
   standalone: true,
-  imports: [CommonModule, BaseChartDirective, MatProgressBarModule, MatError],
+  imports: [BaseChartDirective, MatProgressBarModule, MatError],
   templateUrl: './product-sales-chart.component.html',
-  styleUrls: ['./product-sales-chart.component.scss'],
+  styleUrls: ['./product-sales-chart.component.css'],
 })
 export class ProductSalesChartComponent implements OnInit {
-  @Input() tenantId = '';
+  tenantId = input('');
   data = signal<ChartData<'bar'>>({ labels: [], datasets: [] });
   options: ChartOptions<'bar'> = { responsive: true };
   loading = signal(true);
@@ -23,7 +23,7 @@ export class ProductSalesChartComponent implements OnInit {
   private api = inject(DashboardApiService);
 
   ngOnInit() {
-    if (!this.tenantId) return;
+    if (!this.tenantId()) return;
     this.loading.set(true);
     this.api.getProductSales(this.tenantId).subscribe({
       next: (res: ProductSalesData) => {
@@ -32,7 +32,7 @@ export class ProductSalesChartComponent implements OnInit {
         this.error.set(null);
       },
       error: (err: Error) => {
-        this.error.set(err.message || 'Failed to load product sales');
+        this.error.set(err.message || $localize`:@@DASHBOARD.PRODUCT_SALES.ERROR_LOADING:Failed to load product sales`);
         this.loading.set(false);
       },
     });

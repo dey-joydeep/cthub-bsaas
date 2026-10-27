@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
 
 import {
@@ -6,37 +6,26 @@ import {
   LOGIN_API,
   type ApiResponse,
   type AuthResponse,
+  type AuthStateSetter,
   type InitLoginResponse,
+  type LoginApiPort,
   type LoginCredentials,
   type PartnerAuthUser,
   type VerifyOtpParams,
 } from '../../tokens/login.tokens';
 
-type LoginApi = {
-  login(credentials: LoginCredentials): Observable<ApiResponse<AuthResponse>>;
-  initLogin(credentials: LoginCredentials): Observable<ApiResponse<InitLoginResponse>>;
-  verifyOtp(params: VerifyOtpParams): Observable<ApiResponse<AuthResponse>>;
-  socialLogin(provider: 'google' | 'facebook', token: string): Observable<ApiResponse<AuthResponse>>;
-  resendOtp(email: string): Observable<ApiResponse<{ success: boolean; message?: string }>>;
-};
-
-type AuthStateSetterPort = {
-  setLoggedInUser(user: PartnerAuthUser): void;
-};
-
 @Injectable({ providedIn: 'root' })
 export class LoginService {
-  constructor(
-    @Inject(LOGIN_API) private readonly api: LoginApi,
-    @Inject(AUTH_STATE_SETTER) private readonly authState: AuthStateSetterPort,
-  ) {}
+  private readonly api = inject<LoginApiPort>(LOGIN_API);
+  private readonly authState = inject<AuthStateSetter>(AUTH_STATE_SETTER);
 
   initLogin(credentials: LoginCredentials): Observable<InitLoginResponse> {
     return this.api.initLogin(credentials).pipe(
       map((res) => {
-        if (!res.success) throw new Error(res.error || 'Login initialization failed');
+        if (!res.success || !res.data) throw new Error(res.error || 'Failed to initialize login');
         return res.data;
       }),
+      catchError((err) => this.forwardError(err)),
     );
   }
 
@@ -61,17 +50,20 @@ export class LoginService {
     );
   }
 
-  resendOtp(email: string) {
+  resendOtp(email: string): Observable<{ success: boolean; message?: string }> {
     return this.api.resendOtp(email).pipe(
       map((res) => {
         if (!res.success) throw new Error(res.error || 'Failed to resend OTP');
-        return res.data;
+        return { success: true, message: res.message };
       }),
+      catchError((err) => this.forwardError(err)),
     );
   }
 
   private handleAuthResponse(res: ApiResponse<AuthResponse>): PartnerAuthUser {
-    if (!res.success) throw new Error(res.error || 'Authentication failed');
+    if (!res.success) {
+      throw new Error(res.error || 'Authentication failed');
+    }
     const data = res.data as Record<string, unknown> | undefined;
     const source =
       data && typeof data === 'object' && 'user' in data && data['user'] ? (data['user'] as Record<string, unknown>) : (data ?? {});
@@ -80,8 +72,7 @@ export class LoginService {
     return user;
   }
 
-  private forwardError(err: any) {
-    const message = err?.error?.message || err?.message || 'Authentication error';
-    return throwError(() => new Error(message));
+  private forwardError(err: unknown): Observable<never> {
+    return throwError(() => err);
   }
 }

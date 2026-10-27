@@ -23,18 +23,18 @@ Track the progress of each frontend feature/module through all critical phases: 
 
 ### Appointment
 
-| Feature               | Coding | Unit Test | Integration Test | Edge Test | Lint Fixed |
-| --------------------- | :----: | :-------: | :--------------: | :-------: | :--------: |
-| Appointment Flow UI   |  [ ]   |    [ ]    |       [ ]        |    [ ]    |    [ ]     |
-| Appointment Calendar  |  [ ]   |    [ ]    |       [ ]        |    [ ]    |    [ ]     |
+| Feature              | Coding | Unit Test | Integration Test | Edge Test | Lint Fixed |
+| -------------------- | :----: | :-------: | :--------------: | :-------: | :--------: |
+| Appointment Flow UI  |  [ ]   |    [ ]    |       [ ]        |    [ ]    |    [ ]     |
+| Appointment Calendar |  [ ]   |    [ ]    |       [ ]        |    [ ]    |    [ ]     |
 
 ### Services
 
-| Feature                | Coding | Unit Test | Integration Test | Edge Test | Lint Fixed |
-| ---------------------- | :----: | :-------: | :--------------: | :-------: | :--------: |
-| Services List/CRUD UI  |  [x]   |    [x]    |       [ ]        |    [ ]    |    [x]     |
+| Feature                    | Coding | Unit Test | Integration Test | Edge Test | Lint Fixed |
+| -------------------------- | :----: | :-------: | :--------------: | :-------: | :--------: |
+| Services List/CRUD UI      |  [x]   |    [x]    |       [ ]        |    [ ]    |    [x]     |
 | Service Appointment Widget |  [ ]   |    [ ]    |       [ ]        |    [ ]    |    [ ]     |
-| Approve Services/Prod. |  [ ]   |    [ ]    |       [ ]        |    [ ]    |    [ ]     |
+| Approve Services/Prod.     |  [ ]   |    [ ]    |       [ ]        |    [ ]    |    [ ]     |
 
 ### Products
 

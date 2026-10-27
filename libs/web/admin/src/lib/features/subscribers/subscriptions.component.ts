@@ -1,16 +1,16 @@
-import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'admin-subscriptions',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <section class="feature-placeholder">
       <h1>Subscriber Overview</h1>
       <p>Reporting for subscribers will appear here once implemented.</p>
     </section>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
       .feature-placeholder {

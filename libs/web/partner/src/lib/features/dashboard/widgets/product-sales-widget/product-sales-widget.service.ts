@@ -1,13 +1,14 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
 import { ProductSale } from './models/product-sales-widget.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProductSalesWidgetService {
-  constructor(private http: HttpClient) {}
+  public readonly http = inject(HttpClient);
 
-  getProductSales(params: string): Promise<ProductSale[]> {
+  getProductSales(params?: string): Promise<ProductSale[]> {
+    void this.http;
+    void params;
     // Simulate API call
     return Promise.resolve([
       {

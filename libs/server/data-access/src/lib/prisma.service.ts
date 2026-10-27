@@ -97,10 +97,7 @@ export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'que
         return await super.$transaction(txArg, { isolationLevel });
       } else if (typeof arg === 'function') {
         const cb = arg as (
-          prisma: Omit<
-            PrismaClient,
-            '$transaction' | '$on' | '$connect' | '$disconnect' | '$use' | '$extends'
-          >,
+          prisma: Omit<PrismaClient, '$transaction' | '$on' | '$connect' | '$disconnect' | '$use' | '$extends'>,
         ) => Promise<unknown>;
         return await super.$transaction(cb, options);
       }

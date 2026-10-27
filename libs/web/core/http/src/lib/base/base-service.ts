@@ -18,26 +18,22 @@ export abstract class BaseService {
   }
 
   protected get<T>(url: string): Observable<T> {
-    return this.http.get<T>(this.getFullUrl(url)).pipe(
-      catchError((error: HttpErrorResponse | Error) => this.handleError(error))
-    );
+    return this.http.get<T>(this.getFullUrl(url)).pipe(catchError((error: HttpErrorResponse | Error) => this.handleError(error)));
   }
 
   protected post<TResponse, TBody = unknown>(url: string, body: TBody): Observable<TResponse> {
-    return this.http.post<TResponse>(this.getFullUrl(url), body).pipe(
-      catchError((error: HttpErrorResponse | Error) => this.handleError(error))
-    );
+    return this.http
+      .post<TResponse>(this.getFullUrl(url), body)
+      .pipe(catchError((error: HttpErrorResponse | Error) => this.handleError(error)));
   }
 
   protected put<TResponse, TBody = unknown>(url: string, body: TBody): Observable<TResponse> {
-    return this.http.put<TResponse>(this.getFullUrl(url), body).pipe(
-      catchError((error: HttpErrorResponse | Error) => this.handleError(error))
-    );
+    return this.http
+      .put<TResponse>(this.getFullUrl(url), body)
+      .pipe(catchError((error: HttpErrorResponse | Error) => this.handleError(error)));
   }
 
   protected delete<T>(url: string): Observable<T> {
-    return this.http.delete<T>(this.getFullUrl(url)).pipe(
-      catchError((error: HttpErrorResponse | Error) => this.handleError(error))
-    );
+    return this.http.delete<T>(this.getFullUrl(url)).pipe(catchError((error: HttpErrorResponse | Error) => this.handleError(error)));
   }
 }

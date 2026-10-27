@@ -3,6 +3,7 @@
 This version removes potential circular dependencies by moving all **ports/contracts** into a neutral library that both **features** and **infrastructure/data-access** can depend on, without importing each other.
 
 Key rules:
+
 - **Features do not import Infrastructure.** Composition happens in the app/root module.
 - **Infrastructure** and **Data‑access** both depend on **Contracts** (ports) and **Core**, never on **Features**.
 - **Contracts** lives alongside **Core** and exports only interface types + DI tokens.
@@ -164,21 +165,22 @@ shared  ←  core  ←  contracts-auth
           {
             "enforceBuildableLibDependency": true,
             "depConstraints": [
-              { "sourceTag": "type:feature",     "onlyDependOnLibsWithTags": ["type:core","type:shared","type:data-access"] },
-              { "sourceTag": "type:infra",       "onlyDependOnLibsWithTags": ["type:core","type:shared"] },
-              { "sourceTag": "type:data-access", "onlyDependOnLibsWithTags": ["type:core","type:shared"] },
-              { "sourceTag": "type:core",        "onlyDependOnLibsWithTags": ["type:core","type:shared"] },
-              { "sourceTag": "type:shared",      "onlyDependOnLibsWithTags": ["type:shared"] }
-            ]
-          }
-        ]
-      }
-    }
-  ]
+              { "sourceTag": "type:feature", "onlyDependOnLibsWithTags": ["type:core", "type:shared", "type:data-access"] },
+              { "sourceTag": "type:infra", "onlyDependOnLibsWithTags": ["type:core", "type:shared"] },
+              { "sourceTag": "type:data-access", "onlyDependOnLibsWithTags": ["type:core", "type:shared"] },
+              { "sourceTag": "type:core", "onlyDependOnLibsWithTags": ["type:core", "type:shared"] },
+              { "sourceTag": "type:shared", "onlyDependOnLibsWithTags": ["type:shared"] },
+            ],
+          },
+        ],
+      },
+    },
+  ],
 }
 ```
 
 **Tags to add in `project.json`:**
+
 ```json
 { "name": "@cthub/server-core",            "tags": ["scope:server","type:core"] }
 { "name": "@cthub/server-contracts-auth",  "tags": ["scope:server","type:core","layer:contracts"] }
@@ -215,26 +217,31 @@ export interface WebAuthnPort {
 ```
 
 **Binding in Infrastructure:**
+
 ```ts
 // libs/server/infrastructure/src/lib/totp/totp.module.ts
 @Module({
   providers: [{ provide: TOTP_PORT, useClass: TotpOtplibAdapter }],
-  exports:   [TOTP_PORT],
+  exports: [TOTP_PORT],
 })
 export class TotpInfraModule {}
 ```
 
 **Using in Feature:**
+
 ```ts
 // libs/server/features/auth/src/lib/application/verify-totp.usecase.ts
 @Injectable()
 export class VerifyTotpUseCase {
   constructor(@Inject(TOTP_PORT) private readonly totp: TotpPort) {}
-  async execute(dto: { userId: string; token: string }) { /* ... */ }
+  async execute(dto: { userId: string; token: string }) {
+    /* ... */
+  }
 }
 ```
 
 **Composition in App (no feature→infra import):**
+
 ```ts
 // apps/api/src/app.module.ts
 @Module({

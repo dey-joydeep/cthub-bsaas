@@ -1,14 +1,15 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+
 import { RouterModule, RouterOutlet } from '@angular/router';
 import { HeaderComponent } from '../header/header.component';
 
 @Component({
   selector: 'lib-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterOutlet, HeaderComponent],
+  imports: [RouterModule, RouterOutlet, HeaderComponent],
   templateUrl: './layout.component.html',
-  styleUrls: ['./layout.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./layout.component.css'],
 })
 export class LayoutComponent {
   // Component is now simplified to just provide the layout structure

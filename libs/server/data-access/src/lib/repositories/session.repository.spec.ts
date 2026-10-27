@@ -13,7 +13,15 @@ describe('SessionRepository', () => {
   });
 
   it('creates a session', async () => {
-    const created: Session = { id: 's1', userId: 'u1', createdAt: new Date(), lastSeenAt: new Date(), deviceUA: null, deviceOS: null, ipHash: null };
+    const created: Session = {
+      id: 's1',
+      userId: 'u1',
+      createdAt: new Date(),
+      lastSeenAt: new Date(),
+      deviceUA: null,
+      deviceOS: null,
+      ipHash: null,
+    };
     prisma.session.create.mockResolvedValue(created);
     const data: Prisma.SessionUncheckedCreateInput = { userId: 'u1' };
     const res = await repo.create(data);
@@ -22,26 +30,52 @@ describe('SessionRepository', () => {
   });
 
   it('finds by id', async () => {
-    const found: Session = { id: 's1', userId: 'u1', createdAt: new Date(), lastSeenAt: new Date(), deviceUA: null, deviceOS: null, ipHash: null };
+    const found: Session = {
+      id: 's1',
+      userId: 'u1',
+      createdAt: new Date(),
+      lastSeenAt: new Date(),
+      deviceUA: null,
+      deviceOS: null,
+      ipHash: null,
+    };
     prisma.session.findUnique.mockResolvedValue(found);
     await expect(repo.findById('s1')).resolves.toBe(found);
   });
 
   it('lists by userId', async () => {
-    const list: Session[] = [{ id: 's1', userId: 'u1', createdAt: new Date(), lastSeenAt: new Date(), deviceUA: null, deviceOS: null, ipHash: null }];
+    const list: Session[] = [
+      { id: 's1', userId: 'u1', createdAt: new Date(), lastSeenAt: new Date(), deviceUA: null, deviceOS: null, ipHash: null },
+    ];
     prisma.session.findMany.mockResolvedValue(list);
     await expect(repo.findByUserId('u1')).resolves.toBe(list);
   });
 
   it('updates', async () => {
-    const updated: Session = { id: 's1', userId: 'u1', createdAt: new Date(), lastSeenAt: new Date(), deviceUA: null, deviceOS: null, ipHash: null };
+    const updated: Session = {
+      id: 's1',
+      userId: 'u1',
+      createdAt: new Date(),
+      lastSeenAt: new Date(),
+      deviceUA: null,
+      deviceOS: null,
+      ipHash: null,
+    };
     prisma.session.update.mockResolvedValue(updated);
     const data: Prisma.SessionUpdateInput = { lastSeenAt: new Date() } as Prisma.SessionUpdateInput;
     await expect(repo.update('s1', data)).resolves.toBe(updated);
   });
 
   it('deletes', async () => {
-    const deleted: Session = { id: 's1', userId: 'u1', createdAt: new Date(), lastSeenAt: new Date(), deviceUA: null, deviceOS: null, ipHash: null };
+    const deleted: Session = {
+      id: 's1',
+      userId: 'u1',
+      createdAt: new Date(),
+      lastSeenAt: new Date(),
+      deviceUA: null,
+      deviceOS: null,
+      ipHash: null,
+    };
     prisma.session.delete.mockResolvedValue(deleted);
     await expect(repo.delete('s1')).resolves.toBe(deleted);
   });

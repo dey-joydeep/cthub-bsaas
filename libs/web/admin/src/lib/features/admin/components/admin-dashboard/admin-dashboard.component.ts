@@ -1,12 +1,12 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { DatePipe, NgClass } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule],
+  imports: [DatePipe, MatCardModule, MatIconModule, NgClass],
   template: `
     <div class="p-6">
       <h2 class="text-2xl font-bold mb-6">Admin Dashboard</h2>
@@ -64,21 +64,24 @@ import { MatIconModule } from '@angular/material/icon';
         <mat-card>
           <mat-card-content>
             <div class="space-y-4">
-              <div *ngFor="let activity of recentActivities" class="flex items-start">
-                <mat-icon class="mr-3 mt-1" [ngClass]="getActivityIconClass(activity.type)">
-                  {{ getActivityIcon(activity.type) }}
-                </mat-icon>
-                <div>
-                  <p class="font-medium">{{ activity.message }}</p>
-                  <p class="text-sm text-gray-500">{{ activity.timestamp | date: 'medium' }}</p>
+              @for (activity of recentActivities; track activity) {
+                <div class="flex items-start">
+                  <mat-icon class="mr-3 mt-1" [ngClass]="getActivityIconClass(activity.type)">
+                    {{ getActivityIcon(activity.type) }}
+                  </mat-icon>
+                  <div>
+                    <p class="font-medium">{{ activity.message }}</p>
+                    <p class="text-sm text-gray-500">{{ activity.timestamp | date: 'medium' }}</p>
+                  </div>
                 </div>
-              </div>
+              }
             </div>
           </mat-card-content>
         </mat-card>
       </div>
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
       mat-card {

@@ -1,19 +1,17 @@
-import { CommonModule } from '@angular/common';
 import { provideHttpClient } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { PortfolioComponent } from './portfolio.component';
 import { PortfolioService } from './portfolio.service';
 
 class MockPortfolioService {
-  getPortfolioItems = jest.fn().mockReturnValue(of([]));
-  createPortfolioItem = jest.fn().mockReturnValue(of({}));
-  updatePortfolioItem = jest.fn().mockReturnValue(of({}));
-  deletePortfolioItem = jest.fn().mockReturnValue(of({}));
+  getPortfolioItems = vi.fn().mockReturnValue(of([]));
+  createPortfolioItem = vi.fn().mockReturnValue(of({}));
+  updatePortfolioItem = vi.fn().mockReturnValue(of({}));
+  deletePortfolioItem = vi.fn().mockReturnValue(of({}));
 }
 
 describe('PortfolioComponent', () => {
@@ -23,7 +21,7 @@ describe('PortfolioComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CommonModule, ReactiveFormsModule, PortfolioComponent, TranslateModule.forRoot()],
+      imports: [ReactiveFormsModule, PortfolioComponent],
       providers: [
         { provide: PortfolioService, useClass: MockPortfolioService },
         provideHttpClient(),

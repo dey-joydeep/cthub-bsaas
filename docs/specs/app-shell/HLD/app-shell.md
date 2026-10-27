@@ -9,22 +9,22 @@ The app shell is a web-layer capability shared by Admin, Partner, and Customer a
 
 ## Dependencies
 
-| Dependency | Use |
-| --- | --- |
-| Auth/session context | Determine authenticated state, actor roles, and profile menu. |
-| RBAC baseline | Hide or disable navigation based on allowed operations. |
-| Tenant/business/branch scoping | Populate partner business/branch selector. |
-| Notification feature | Show unread count and recent notifications. |
-| Cart/POS/checkout features | Show cart or checkout entry where supported. |
-| i18n | Resolve language and localized labels. |
+| Dependency                     | Use                                                           |
+| ------------------------------ | ------------------------------------------------------------- |
+| Auth/session context           | Determine authenticated state, actor roles, and profile menu. |
+| RBAC baseline                  | Hide or disable navigation based on allowed operations.       |
+| Tenant/business/branch scoping | Populate partner business/branch selector.                    |
+| Notification feature           | Show unread count and recent notifications.                   |
+| Cart/POS/checkout features     | Show cart or checkout entry where supported.                  |
+| i18n                           | Resolve language and localized labels.                        |
 
 ## Route Groups
 
-| App | Public shell | Private shell |
-| --- | --- | --- |
-| Admin | Login and password recovery. | Platform admin dashboard, tenant/business review, support, audit. |
-| Partner | Login, registration completion, recovery. | Salon owner/staff operations with business/branch context. |
-| Customer | Public discovery, login, registration. | Customer bookings, profile, rewards, notifications. |
+| App      | Public shell                              | Private shell                                                     |
+| -------- | ----------------------------------------- | ----------------------------------------------------------------- |
+| Admin    | Login and password recovery.              | Platform admin dashboard, tenant/business review, support, audit. |
+| Partner  | Login, registration completion, recovery. | Salon owner/staff operations with business/branch context.        |
+| Customer | Public discovery, login, registration.    | Customer bookings, profile, rewards, notifications.               |
 
 ## State Ownership
 

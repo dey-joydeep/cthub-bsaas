@@ -5,11 +5,11 @@
 
 ## Routes
 
-| Route | Screen ID |
-| --- | --- |
-| `/` | `public.home` |
-| `/search` | `public.search` |
-| `/salons/:slug` | `public.salonProfile` |
+| Route                                 | Screen ID              |
+| ------------------------------------- | ---------------------- |
+| `/`                                   | `public.home`          |
+| `/search`                             | `public.search`        |
+| `/salons/:slug`                       | `public.salonProfile`  |
 | `/salons/:slug/services/:serviceSlug` | `public.serviceDetail` |
 
 ## Screen Requirements

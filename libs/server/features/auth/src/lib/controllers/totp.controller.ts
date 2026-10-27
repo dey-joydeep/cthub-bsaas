@@ -26,7 +26,10 @@ export class TotpController {
   @HttpCode(HttpStatus.OK)
   @Post('enroll/finish')
   @Throttle({ default: { limit: 5, ttl: 60 } })
-  public async enrollFinish(@Request() req: { user: { userId: string } }, @Body() verifyTotpDto: VerifyTotpDto): Promise<{ success: true }> {
+  public async enrollFinish(
+    @Request() req: { user: { userId: string } },
+    @Body() verifyTotpDto: VerifyTotpDto,
+  ): Promise<{ success: true }> {
     const isVerified = await this.totpService.verifyToken(req.user.userId, verifyTotpDto.token);
     if (!isVerified) {
       throw new UnauthorizedException(AUTH_MESSAGE_KEYS.ERROR.INVALID_TOTP_TOKEN);

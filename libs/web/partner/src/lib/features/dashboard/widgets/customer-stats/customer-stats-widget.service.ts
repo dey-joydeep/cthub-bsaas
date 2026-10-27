@@ -1,13 +1,13 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
 import { DashboardStats } from './models/customer-stats-widget.model';
 
 @Injectable({ providedIn: 'root' })
 export class CustomerStatsWidgetService {
-  constructor(private http: HttpClient) {}
+  public readonly http = inject(HttpClient);
 
   getStats(): Promise<DashboardStats> {
+    void this.http;
     // Simulate API call
     return Promise.resolve({
       totalCustomers: 1200,

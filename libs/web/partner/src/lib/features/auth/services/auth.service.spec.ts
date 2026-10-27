@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClient, HttpContext } from '@angular/common/http';
 import { PLATFORM_ID } from '@angular/core';
 import { Subject, of, throwError } from 'rxjs';
+import { vi, type Mocked } from 'vitest';
 import { StorageService } from '@cthub-bsaas/web-core-platform';
 import { BYPASS_ERROR_INTERCEPTOR } from '@cthub-bsaas/web-core-common';
 import { AuthService } from './auth.service';
@@ -9,15 +10,15 @@ import type { PartnerAuthUser } from '../models/auth.models';
 
 describe('AuthService (Partner)', () => {
   let service: AuthService;
-  let storageMock: jest.Mocked<StorageService>;
+  let storageMock: Mocked<StorageService>;
 
   beforeEach(() => {
     storageMock = {
-      getItem$: jest.fn().mockReturnValue(of(null)),
-      getItem: jest.fn().mockReturnValue(null),
-      setItem$: jest.fn().mockReturnValue(of(true)),
-      removeItem$: jest.fn().mockReturnValue(of(true)),
-    } as unknown as jest.Mocked<StorageService>;
+      getItem$: vi.fn().mockReturnValue(of(null)),
+      getItem: vi.fn().mockReturnValue(null),
+      setItem$: vi.fn().mockReturnValue(of(true)),
+      removeItem$: vi.fn().mockReturnValue(of(true)),
+    } as unknown as Mocked<StorageService>;
 
     TestBed.configureTestingModule({
       providers: [AuthService, { provide: PLATFORM_ID, useValue: 'browser' }, { provide: StorageService, useValue: storageMock }],
@@ -150,7 +151,7 @@ describe('AuthService (Partner)', () => {
 
   it('hydrates user and capabilities from /api/auth/me when HttpClient is available', async () => {
     const httpMock = {
-      get: jest.fn().mockReturnValue(
+      get: vi.fn().mockReturnValue(
         of({
           success: true,
           data: {
@@ -210,8 +211,8 @@ describe('AuthService (Partner)', () => {
 
   it('logout sends POST /api/auth/logout to clear server session cookies when HttpClient is provided', async () => {
     const httpMock = {
-      get: jest.fn().mockReturnValue(of({ success: false })),
-      post: jest.fn().mockReturnValue(of({ ok: true })),
+      get: vi.fn().mockReturnValue(of({ success: false })),
+      post: vi.fn().mockReturnValue(of({ ok: true })),
     };
 
     TestBed.resetTestingModule();
@@ -259,7 +260,7 @@ describe('AuthService (Partner)', () => {
     });
 
     const httpMock = {
-      get: jest.fn().mockReturnValue(
+      get: vi.fn().mockReturnValue(
         of({
           success: true,
           data: {
@@ -272,7 +273,7 @@ describe('AuthService (Partner)', () => {
           },
         }),
       ),
-      post: jest.fn(),
+      post: vi.fn(),
     };
 
     TestBed.resetTestingModule();
@@ -302,8 +303,8 @@ describe('AuthService (Partner)', () => {
 
   it('does not repeatedly probe /api/auth/me when no user is signed in', async () => {
     const httpMock = {
-      get: jest.fn().mockReturnValue(of({ success: false })),
-      post: jest.fn(),
+      get: vi.fn().mockReturnValue(of({ success: false })),
+      post: vi.fn(),
     };
 
     TestBed.resetTestingModule();
@@ -343,7 +344,7 @@ describe('AuthService (Partner)', () => {
 
   it('revalidates stale cookie session via /api/auth/me when session TTL expires', async () => {
     const httpMock = {
-      get: jest.fn().mockReturnValue(
+      get: vi.fn().mockReturnValue(
         of({
           success: true,
           data: {
@@ -354,7 +355,7 @@ describe('AuthService (Partner)', () => {
           },
         }),
       ),
-      post: jest.fn(),
+      post: vi.fn(),
     };
 
     TestBed.resetTestingModule();
@@ -392,8 +393,8 @@ describe('AuthService (Partner)', () => {
 
   it('clears cached auth state if stale session revalidation returns 401 error', async () => {
     const httpMock = {
-      get: jest.fn().mockReturnValue(throwError(() => ({ status: 401, message: 'Unauthorized' }))),
-      post: jest.fn(),
+      get: vi.fn().mockReturnValue(throwError(() => ({ status: 401, message: 'Unauthorized' }))),
+      post: vi.fn(),
     };
 
     TestBed.resetTestingModule();
@@ -432,8 +433,8 @@ describe('AuthService (Partner)', () => {
   it('ignores hydration response started before logout', async () => {
     const responseSubject = new Subject<{ success: boolean; data: PartnerAuthUser }>();
     const httpMock = {
-      get: jest.fn().mockReturnValue(responseSubject.asObservable()),
-      post: jest.fn().mockReturnValue(of({})),
+      get: vi.fn().mockReturnValue(responseSubject.asObservable()),
+      post: vi.fn().mockReturnValue(of({})),
     };
 
     TestBed.resetTestingModule();
@@ -481,8 +482,8 @@ describe('AuthService (Partner)', () => {
   it('shares pending in-flight hydration across concurrent checks without duplicate HTTP requests', async () => {
     const responseSubject = new Subject<{ success: boolean; data: PartnerAuthUser }>();
     const httpMock = {
-      get: jest.fn().mockReturnValue(responseSubject.asObservable()),
-      post: jest.fn(),
+      get: vi.fn().mockReturnValue(responseSubject.asObservable()),
+      post: vi.fn(),
     };
 
     TestBed.resetTestingModule();

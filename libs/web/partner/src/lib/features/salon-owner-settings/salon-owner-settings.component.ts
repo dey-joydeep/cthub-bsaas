@@ -1,15 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
-import {
-  AbstractControl,
-  FormArray,
-  FormBuilder,
-  ReactiveFormsModule,
-  ValidationErrors,
-  ValidatorFn,
-  Validators,
-} from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -28,7 +20,23 @@ import { forkJoin, of } from 'rxjs';
 import { CURRENT_USER } from '@cthub-bsaas/web-core-auth';
 import { UserRole } from '@cthub-bsaas/shared';
 
-import { BranchHoliday, BranchHours, BranchPolicy, BranchProfile, SalonBusiness, WeeklyHoursDay } from './models/salon-owner-settings.models';
+import {
+  BranchHoliday,
+  BranchHolidayInput,
+  BranchHours,
+  BranchPolicy,
+  BranchPolicyInput,
+  BranchProfile,
+  BranchProfileInput,
+  HolidayFormValue,
+  HolidayIntervalValidationValue,
+  LoadBusinessesOptions,
+  SalonBusiness,
+  SalonBusinessInput,
+  TimeInterval,
+  WeeklyHoursDay,
+  WeeklyHoursInput,
+} from './models/salon-owner-settings.models';
 import { SalonOwnerSettingsApi } from './salon-owner-settings.api';
 
 const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
@@ -101,6 +109,23 @@ function nonNegativeIntValidator(max = maxInt32): ValidatorFn {
   };
 }
 
+function trimmedRequired(minLength = 1): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const rawValue = control.value;
+    if (typeof rawValue !== 'string') {
+      return { required: true };
+    }
+    const trimmed = rawValue.trim();
+    if (trimmed.length === 0) {
+      return { required: true };
+    }
+    if (trimmed.length < minLength) {
+      return { minlength: { requiredLength: minLength, actualLength: trimmed.length } };
+    }
+    return null;
+  };
+}
+
 function intervalsValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const intervals = control.value;
@@ -143,7 +168,7 @@ function intervalsValidator(): ValidatorFn {
 
 function holidayIntervalValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
-    const value = control.value as { closed?: boolean; start?: string; end?: string } | null;
+    const value = control.value as HolidayIntervalValidationValue | null;
     if (!value || value.closed !== false) {
       return null;
     }
@@ -193,6 +218,7 @@ export class SalonOwnerSettingsComponent {
   private branchSettingsLoadVersion = 0;
   private businessSaveVersion = 0;
   private branchEditorVersion = 0;
+  private holidayEditorVersion = 0;
   private branchSaveVersion = 0;
   private hoursSaveVersion = 0;
   private holidaySaveVersion = 0;
@@ -202,7 +228,15 @@ export class SalonOwnerSettingsComponent {
     initialValue: null,
   });
 
-  protected readonly weekdays = weekdays;
+  protected readonly weekdays = [
+    $localize`:@@COMMON.WEEKDAY_SUN:Sun`,
+    $localize`:@@COMMON.WEEKDAY_MON:Mon`,
+    $localize`:@@COMMON.WEEKDAY_TUE:Tue`,
+    $localize`:@@COMMON.WEEKDAY_WED:Wed`,
+    $localize`:@@COMMON.WEEKDAY_THU:Thu`,
+    $localize`:@@COMMON.WEEKDAY_FRI:Fri`,
+    $localize`:@@COMMON.WEEKDAY_SAT:Sat`,
+  ];
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
   protected readonly message = signal<string | null>(null);
@@ -224,42 +258,48 @@ export class SalonOwnerSettingsComponent {
   protected readonly canCreateBranch = computed(() => !this.branchOnlyMode() || !this.isStaffUser());
 
   protected readonly businessForm = this.fb.nonNullable.group({
-    displayName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(120)]],
-    legalName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(160)]],
+    displayName: ['', [trimmedRequired(2), Validators.maxLength(120)]],
+    legalName: ['', [trimmedRequired(2), Validators.maxLength(160)]],
     status: this.fb.nonNullable.control<'ACTIVE' | 'INACTIVE'>('ACTIVE', Validators.required),
   });
 
   protected readonly branchForm = this.fb.nonNullable.group({
     businessId: ['', Validators.required],
-    name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(120)]],
+    name: ['', [trimmedRequired(2), Validators.maxLength(120)]],
     phone: ['', Validators.maxLength(30)],
     email: ['', Validators.email],
     timezone: ['Asia/Tokyo', [Validators.required, timezoneValidator()]],
     currency: ['JPY', [Validators.required, currencyValidator()]],
     status: this.fb.nonNullable.control<'ACTIVE' | 'INACTIVE'>('ACTIVE', Validators.required),
     address: this.fb.nonNullable.group({
-      line1: ['', [Validators.required, Validators.maxLength(160)]],
+      line1: ['', [trimmedRequired(1), Validators.maxLength(160)]],
       line2: ['', Validators.maxLength(160)],
-      city: ['', [Validators.required, Validators.maxLength(80)]],
-      state: ['', [Validators.required, Validators.maxLength(80)]],
-      postalCode: ['', [Validators.required, Validators.maxLength(20)]],
-      country: ['JP', [Validators.required, Validators.minLength(2), Validators.maxLength(2)]],
+      city: ['', [trimmedRequired(1), Validators.maxLength(80)]],
+      state: ['', [trimmedRequired(1), Validators.maxLength(80)]],
+      postalCode: ['', [trimmedRequired(1), Validators.maxLength(20)]],
+      country: ['JP', [trimmedRequired(2), Validators.maxLength(2)]],
     }),
   });
 
   protected readonly hoursForm = this.fb.nonNullable.group({
-    timezone: ['Asia/Tokyo', [Validators.required, timezoneValidator(), (control: AbstractControl) => this.validateSelectedBranchTimezone(control)]],
+    timezone: [
+      'Asia/Tokyo',
+      [Validators.required, timezoneValidator(), (control: AbstractControl) => this.validateSelectedBranchTimezone(control)],
+    ],
     acknowledgeExistingAppointmentsOutsideHours: [false],
     days: this.fb.array(weekdays.map((_, dayOfWeek) => this.createDayGroup(dayOfWeek))),
   });
 
-  protected readonly holidayForm = this.fb.nonNullable.group({
-    date: [localDateInputValue(), Validators.required],
-    closed: [true],
-    reason: ['', Validators.maxLength(160)],
-    start: ['09:00'],
-    end: ['17:00'],
-  }, { validators: [holidayIntervalValidator()] });
+  protected readonly holidayForm = this.fb.nonNullable.group(
+    {
+      date: [localDateInputValue(), Validators.required],
+      closed: [true],
+      reason: ['', Validators.maxLength(160)],
+      start: ['09:00'],
+      end: ['17:00'],
+    },
+    { validators: [holidayIntervalValidator()] },
+  );
 
   protected readonly policyForm = this.fb.nonNullable.group({
     bookingLeadMinutes: [defaultPolicy.bookingLeadMinutes, [Validators.required, nonNegativeIntValidator()]],
@@ -285,20 +325,22 @@ export class SalonOwnerSettingsComponent {
     return this.hoursForm.controls.days;
   }
 
-  protected selectBusiness(business: SalonBusiness): void {
+  protected selectBusiness(business: SalonBusiness, preserveBranchId?: string): void {
     this.businessLoadVersion += 1;
     this.businessEditorVersion += 1;
-    this.branchEditorVersion += 1;
     this.selectedBusiness.set(business);
     this.branchSettingsLoadVersion += 1;
-    this.branches.set([]);
     this.businessForm.reset({
       displayName: business.displayName,
       legalName: business.legalName,
       status: business.status,
     });
-    this.newBranch();
-    this.loadBranches(business.id);
+    if (!preserveBranchId) {
+      this.branchEditorVersion += 1;
+      this.branches.set([]);
+      this.newBranch();
+    }
+    this.loadBranches(business.id, preserveBranchId);
   }
 
   protected selectBranch(branch: BranchProfile): void {
@@ -306,6 +348,7 @@ export class SalonOwnerSettingsComponent {
     this.branchEditorVersion += 1;
     this.hoursSaveVersion += 1;
     this.holidaySaveVersion += 1;
+    this.holidayEditorVersion += 1;
     this.policySaveVersion += 1;
     this.selectedBranch.set(branch);
     this.selectedHoliday.set(null);
@@ -358,7 +401,12 @@ export class SalonOwnerSettingsComponent {
   protected newBranch(): void {
     this.branchEditorVersion += 1;
     this.policySaveVersion += 1;
-    const businessId = this.selectedBusiness()?.id ?? this.selectedBranch()?.businessId ?? '';
+    const businessId = this.branchOnlyMode()
+      ? (this.selectedBranch()?.businessId ??
+        optionalText(this.branchForm.controls.businessId.value) ??
+        this.branches()[0]?.businessId ??
+        '')
+      : (this.selectedBusiness()?.id ?? '');
     this.branchLoadVersion += 1;
     this.resetBranchEditor(businessId);
   }
@@ -366,16 +414,26 @@ export class SalonOwnerSettingsComponent {
   protected saveBusiness(): void {
     if (this.businessForm.invalid) {
       this.businessForm.markAllAsTouched();
+      this.error.set(
+        $localize`:@@SALON_OWNER_SETTINGS.ERROR_VALIDATION_BUSINESS:Fix validation errors on the business profile before saving.`,
+      );
       return;
     }
 
     const selected = this.selectedBusiness();
     const startedBusinessId = selected?.id ?? null;
+    const isNewBusiness = selected === null;
     const startedEditorVersion = this.businessEditorVersion;
+    const preserveBranchId = this.selectedBranch()?.id;
+    const startedBranchEditorVersion = this.branchEditorVersion;
     const requestVersion = ++this.businessSaveVersion;
-    const request = selected
-      ? this.api.updateBusiness(selected.id, this.businessForm.getRawValue())
-      : this.api.createBusiness(this.businessForm.getRawValue());
+    const formValue = this.businessForm.getRawValue();
+    const payload: SalonBusinessInput = {
+      displayName: formValue.displayName.trim(),
+      legalName: formValue.legalName.trim(),
+      status: formValue.status,
+    };
+    const request = selected ? this.api.updateBusiness(selected.id, payload) : this.api.createBusiness(payload);
 
     this.saving.set(true);
     this.error.set(null);
@@ -391,8 +449,13 @@ export class SalonOwnerSettingsComponent {
           return;
         }
         this.selectedBusiness.set(business);
-        this.loadBusinesses(business.id);
-        this.message.set('Settings saved.');
+        this.loadBusinesses({
+          selectBusinessId: business.id,
+          preserveBranchId,
+          expectedBranchEditorVersion: startedBranchEditorVersion,
+          isNewBusiness,
+        });
+        this.message.set($localize`:@@SALON_OWNER_SETTINGS.MSG_SAVED:Settings saved.`);
         this.saving.set(false);
       },
       error: (error: unknown) => {
@@ -405,20 +468,28 @@ export class SalonOwnerSettingsComponent {
           return;
         }
         if (this.isBusinessDeactivationConflictError(error)) {
-          this.error.set('This business cannot be deactivated while it still has active branches. Archive or deactivate those branches first.');
+          this.error.set(
+            $localize`:@@SALON_OWNER_SETTINGS.ERROR_DEACTIVATE_BRANCHES:This business cannot be deactivated while it still has active branches. Archive or deactivate those branches first.`,
+          );
           this.saving.set(false);
           return;
         }
 
-        this.error.set('Settings could not be saved.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_SAVE_FAILED:Settings could not be saved.`);
         this.saving.set(false);
       },
     });
   }
 
   protected saveBranch(): void {
+    if (!this.branchOnlyMode() && !this.selectedBusiness()) {
+      this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_SELECT_BUSINESS:Save or select a business before saving a branch.`);
+      return;
+    }
+
     if (this.branchForm.invalid) {
       this.branchForm.markAllAsTouched();
+      this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_VALIDATION_BRANCH:Fix validation errors on the branch profile before saving.`);
       return;
     }
 
@@ -428,13 +499,19 @@ export class SalonOwnerSettingsComponent {
     const startedBusinessId = this.selectedBusiness()?.id ?? value.businessId ?? null;
     const startedEditorVersion = this.branchEditorVersion;
     const requestVersion = ++this.branchSaveVersion;
-    const input = {
+    const input: BranchProfileInput = {
       ...value,
+      name: value.name.trim(),
       phone: selected ? optionalTextOrNull(value.phone) : optionalText(value.phone),
       email: selected ? optionalTextOrNull(value.email) : optionalText(value.email),
       address: {
         ...value.address,
+        line1: value.address.line1.trim(),
         line2: selected ? optionalTextOrNull(value.address.line2) : optionalText(value.address.line2),
+        city: value.address.city.trim(),
+        state: value.address.state.trim(),
+        postalCode: value.address.postalCode.trim(),
+        country: value.address.country.trim().toUpperCase(),
       },
     };
     const request = selected ? this.api.updateBranch(selected.id, input) : this.api.createBranch(input);
@@ -455,7 +532,7 @@ export class SalonOwnerSettingsComponent {
         }
         this.selectedBranch.set(branch);
         this.loadBranches(this.branchOnlyMode() ? undefined : branch.businessId, branch.id);
-        this.message.set('Settings saved.');
+        this.message.set($localize`:@@SALON_OWNER_SETTINGS.MSG_SAVED:Settings saved.`);
         this.saving.set(false);
       },
       error: (error: unknown) => {
@@ -469,22 +546,28 @@ export class SalonOwnerSettingsComponent {
           return;
         }
         if (this.isBranchArchiveConflictError(error)) {
-          this.error.set('This branch cannot be archived while it has future confirmed appointments. Move or cancel those appointments first.');
+          this.error.set(
+            $localize`:@@SALON_OWNER_SETTINGS.ERROR_ARCHIVE_APPOINTMENTS:This branch cannot be archived while it has future confirmed appointments. Move or cancel those appointments first.`,
+          );
           this.saving.set(false);
           return;
         }
         if (this.isBranchCurrencyLockedError(error)) {
-          this.error.set('This branch currency is locked because finance history already exists. Keep the current currency for this branch.');
+          this.error.set(
+            $localize`:@@SALON_OWNER_SETTINGS.ERROR_CURRENCY_LOCKED:This branch currency is locked because finance history already exists. Keep the current currency for this branch.`,
+          );
           this.saving.set(false);
           return;
         }
         if (this.isBranchBusinessInactiveError(error)) {
-          this.error.set('This business is inactive. Reactivate the business before creating a branch or reactivating one.');
+          this.error.set(
+            $localize`:@@SALON_OWNER_SETTINGS.ERROR_BUSINESS_INACTIVE:This business is inactive. Reactivate the business before creating a branch or reactivating one.`,
+          );
           this.saving.set(false);
           return;
         }
 
-        this.error.set('Settings could not be saved.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_SAVE_FAILED:Settings could not be saved.`);
         this.saving.set(false);
       },
     });
@@ -493,27 +576,34 @@ export class SalonOwnerSettingsComponent {
   protected saveHours(): void {
     const branch = this.selectedBranch();
     if (!branch) {
-      this.error.set('Select a branch before saving hours.');
+      this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_SELECT_BRANCH_HOURS:Select a branch before saving hours.`);
       return;
     }
     if (!this.branchSettingsLoaded()) {
-      this.error.set('Branch settings are still loading.');
+      this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_BRANCH_SETTINGS_LOADING:Branch settings are still loading.`);
+      return;
+    }
+    if (this.hasInvalidIntervalRanges()) {
+      this.hoursForm.markAllAsTouched();
+      this.error.set(
+        $localize`:@@SALON_OWNER_SETTINGS.ERROR_HOURS_INVALID_INTERVALS:Fix weekly hours so each interval starts before it ends and open-day intervals do not overlap.`,
+      );
+      return;
+    }
+    if (this.hasOpenDayWithoutIntervals()) {
+      this.hoursForm.markAllAsTouched();
+      this.error.set(
+        $localize`:@@SALON_OWNER_SETTINGS.ERROR_OPEN_DAY_INTERVALS:Add at least one interval for each open day before saving hours.`,
+      );
       return;
     }
     if (this.hoursForm.invalid) {
       this.hoursForm.markAllAsTouched();
       if (this.hoursForm.controls.timezone.errors?.['branchTimezone']) {
-        this.error.set('Weekly hours must use the selected branch timezone.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_HOURS_BRANCH_TIMEZONE:Weekly hours must use the selected branch timezone.`);
+      } else {
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_HOURS_VALIDATION:Fix weekly hours so all intervals are valid.`);
       }
-      return;
-    }
-    if (this.hasInvalidIntervalRanges()) {
-      this.hoursForm.markAllAsTouched();
-      this.error.set('Fix weekly hours so each interval starts before it ends and open-day intervals do not overlap.');
-      return;
-    }
-    if (this.hasOpenDayWithoutIntervals()) {
-      this.error.set('Add at least one interval for each open day before saving hours.');
       return;
     }
 
@@ -530,7 +620,7 @@ export class SalonOwnerSettingsComponent {
         }
         this.hoursConflictRequiresAcknowledgement.set(false);
         this.hoursForm.controls.acknowledgeExistingAppointmentsOutsideHours.setValue(false);
-        this.message.set('Settings saved.');
+        this.message.set($localize`:@@SALON_OWNER_SETTINGS.MSG_SAVED:Settings saved.`);
         this.saving.set(false);
       },
       error: (error: unknown) => {
@@ -540,12 +630,14 @@ export class SalonOwnerSettingsComponent {
         }
         if (this.isHoursConflictError(error)) {
           this.hoursConflictRequiresAcknowledgement.set(true);
-          this.error.set('Confirm the hours change before saving because future appointments fall outside the proposed schedule.');
+          this.error.set(
+            $localize`:@@SALON_OWNER_SETTINGS.ERROR_HOURS_CONFLICT:Confirm the hours change before saving because future appointments fall outside the proposed schedule.`,
+          );
           this.saving.set(false);
           return;
         }
 
-        this.error.set('Settings could not be saved.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_SAVE_FAILED:Settings could not be saved.`);
         this.saving.set(false);
       },
     });
@@ -554,17 +646,19 @@ export class SalonOwnerSettingsComponent {
   protected saveHoliday(): void {
     const branch = this.selectedBranch();
     if (!branch) {
-      this.error.set('Select a branch before saving a holiday.');
+      this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_SELECT_BRANCH_HOLIDAY:Select a branch before saving a holiday.`);
       return;
     }
     if (!this.branchSettingsLoaded()) {
-      this.error.set('Branch settings are still loading.');
+      this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_BRANCH_SETTINGS_LOADING:Branch settings are still loading.`);
       return;
     }
     if (this.holidayForm.invalid) {
       this.holidayForm.markAllAsTouched();
       if (this.holidayForm.errors?.['intervalOrder']) {
-        this.error.set('Holiday open hours must start before they end.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_HOLIDAY_INTERVAL_ORDER:Holiday open hours must start before they end.`);
+      } else {
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_VALIDATION_HOLIDAY:Fix validation errors on holiday details before saving.`);
       }
       return;
     }
@@ -575,6 +669,7 @@ export class SalonOwnerSettingsComponent {
       return;
     }
     const startedBranchId = branch.id;
+    const startedHolidayEditorVersion = this.holidayEditorVersion;
     const requestVersion = ++this.holidaySaveVersion;
     this.saving.set(true);
     this.error.set(null);
@@ -585,10 +680,11 @@ export class SalonOwnerSettingsComponent {
           this.saving.set(false);
           return;
         }
-        this.selectedHoliday.set(savedHoliday);
         this.holidays.update((holidays) => this.upsertHoliday(holidays, savedHoliday));
-        this.selectHoliday(savedHoliday);
-        this.message.set('Settings saved.');
+        if (startedHolidayEditorVersion === this.holidayEditorVersion) {
+          this.selectHoliday(savedHoliday);
+        }
+        this.message.set($localize`:@@SALON_OWNER_SETTINGS.MSG_SAVED:Settings saved.`);
         this.saving.set(false);
       },
       error: () => {
@@ -596,7 +692,7 @@ export class SalonOwnerSettingsComponent {
           this.saving.set(false);
           return;
         }
-        this.error.set('Settings could not be saved.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_SAVE_FAILED:Settings could not be saved.`);
         this.saving.set(false);
       },
     });
@@ -605,15 +701,16 @@ export class SalonOwnerSettingsComponent {
   protected savePolicy(): void {
     const branch = this.selectedBranch();
     if (!branch) {
-      this.error.set('Select a branch before saving policy.');
+      this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_SELECT_BRANCH_POLICY:Select a branch before saving policy.`);
       return;
     }
     if (!this.branchSettingsLoaded()) {
-      this.error.set('Branch settings are still loading.');
+      this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_BRANCH_SETTINGS_LOADING:Branch settings are still loading.`);
       return;
     }
     if (this.policyForm.invalid) {
       this.policyForm.markAllAsTouched();
+      this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_VALIDATION_POLICY:Fix validation errors on booking policies before saving.`);
       return;
     }
 
@@ -623,13 +720,14 @@ export class SalonOwnerSettingsComponent {
     this.saving.set(true);
     this.error.set(null);
     this.message.set(null);
-    this.api.updateBranchPolicy(branch.id, this.policyForm.getRawValue()).subscribe({
+    const payload: BranchPolicyInput = this.policyForm.getRawValue();
+    this.api.updateBranchPolicy(branch.id, payload).subscribe({
       next: () => {
         if (requestVersion !== this.policySaveVersion || this.selectedBranch()?.id !== startedBranchId) {
           this.saving.set(false);
           return;
         }
-        this.message.set('Settings saved.');
+        this.message.set($localize`:@@SALON_OWNER_SETTINGS.MSG_SAVED:Settings saved.`);
         this.saving.set(false);
       },
       error: () => {
@@ -637,7 +735,7 @@ export class SalonOwnerSettingsComponent {
           this.saving.set(false);
           return;
         }
-        this.error.set('Settings could not be saved.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_SAVE_FAILED:Settings could not be saved.`);
         this.saving.set(false);
       },
     });
@@ -664,6 +762,7 @@ export class SalonOwnerSettingsComponent {
   }
 
   protected selectHoliday(holiday: BranchHoliday): void {
+    this.holidayEditorVersion += 1;
     this.selectedHoliday.set(holiday);
     const firstInterval = holiday.intervals[0];
     this.holidayForm.reset({
@@ -681,15 +780,15 @@ export class SalonOwnerSettingsComponent {
     const dayGroup = this.fb.nonNullable.group({
       dayOfWeek: [value?.dayOfWeek ?? dayOfWeek],
       open: [value?.open ?? dayOfWeek > 0],
-      intervals: this.fb.nonNullable.array([
-        ...intervals.map((interval) => this.createIntervalGroup(interval)),
-      ], { validators: [intervalsValidator()] }),
+      intervals: this.fb.nonNullable.array([...intervals.map((interval) => this.createIntervalGroup(interval))], {
+        validators: [intervalsValidator()],
+      }),
     });
     this.syncDayIntervalsState(dayGroup);
     return dayGroup;
   }
 
-  private createIntervalGroup(interval = { start: '09:00', end: '17:00' }) {
+  private createIntervalGroup(interval: TimeInterval = { start: '09:00', end: '17:00' }) {
     return this.fb.nonNullable.group({
       start: [interval.start, [Validators.required, Validators.pattern(timePattern)]],
       end: [interval.end, [Validators.required, Validators.pattern(timePattern)]],
@@ -713,7 +812,8 @@ export class SalonOwnerSettingsComponent {
     this.loadBusinesses();
   }
 
-  private loadBusinesses(selectBusinessId?: string): void {
+  private loadBusinesses(options: LoadBusinessesOptions = {}): void {
+    const { selectBusinessId, preserveBranchId, expectedBranchEditorVersion, isNewBusiness = false } = options;
     const requestVersion = ++this.businessLoadVersion;
     const startedBusinessId = this.selectedBusiness()?.id ?? null;
     const startedEditorVersion = this.businessEditorVersion;
@@ -731,7 +831,40 @@ export class SalonOwnerSettingsComponent {
         this.businesses.set(result.items);
         const selected = result.items.find((business) => business.id === selectBusinessId) ?? result.items[0] ?? null;
         if (selected) {
-          this.selectBusiness(selected);
+          const isSameBusiness = !isNewBusiness && this.selectedBusiness()?.id === selected.id;
+          const branchEditorChanged = expectedBranchEditorVersion !== undefined && this.branchEditorVersion !== expectedBranchEditorVersion;
+
+          if (isSameBusiness && branchEditorChanged) {
+            this.selectedBusiness.set(selected);
+            this.businessForm.reset({
+              displayName: selected.displayName,
+              legalName: selected.legalName,
+              status: selected.status,
+            });
+            if (!this.branchForm.controls.businessId.value) {
+              this.branchForm.controls.businessId.setValue(selected.id);
+            }
+          } else if (isSameBusiness && preserveBranchId) {
+            this.selectedBusiness.set(selected);
+            this.businessForm.reset({
+              displayName: selected.displayName,
+              legalName: selected.legalName,
+              status: selected.status,
+            });
+            this.loadBranches(selected.id, preserveBranchId);
+          } else if (isSameBusiness && !preserveBranchId && expectedBranchEditorVersion !== undefined) {
+            this.selectedBusiness.set(selected);
+            this.businessForm.reset({
+              displayName: selected.displayName,
+              legalName: selected.legalName,
+              status: selected.status,
+            });
+            if (!this.branchForm.controls.businessId.value) {
+              this.branchForm.controls.businessId.setValue(selected.id);
+            }
+          } else {
+            this.selectBusiness(selected, preserveBranchId);
+          }
         } else if (!this.branchOnlyMode()) {
           this.resetBranchEditor('');
         }
@@ -746,7 +879,7 @@ export class SalonOwnerSettingsComponent {
           this.loading.set(false);
           return;
         }
-        this.error.set('Business settings could not be loaded.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_LOAD_BUSINESS_FAILED:Business settings could not be loaded.`);
         this.loading.set(false);
       },
     });
@@ -756,10 +889,7 @@ export class SalonOwnerSettingsComponent {
     const requestVersion = ++this.branchLoadVersion;
     this.api.listBranches(businessId).subscribe({
       next: (result) => {
-        if (
-          requestVersion !== this.branchLoadVersion ||
-          (typeof businessId === 'string' && this.selectedBusiness()?.id !== businessId)
-        ) {
+        if (requestVersion !== this.branchLoadVersion || (typeof businessId === 'string' && this.selectedBusiness()?.id !== businessId)) {
           return;
         }
         this.branches.set(result.items);
@@ -775,20 +905,19 @@ export class SalonOwnerSettingsComponent {
         }
       },
       error: (error: unknown) => {
-        if (
-          requestVersion !== this.branchLoadVersion ||
-          (typeof businessId === 'string' && this.selectedBusiness()?.id !== businessId)
-        ) {
+        if (requestVersion !== this.branchLoadVersion || (typeof businessId === 'string' && this.selectedBusiness()?.id !== businessId)) {
           return;
         }
         this.branches.set([]);
         this.selectedBranch.set(null);
         this.resetBranchEditor(this.selectedBusiness()?.id ?? '');
         if (this.branchOnlyMode() && this.isStaffUser() && this.isForbiddenError(error)) {
-          this.error.set('You need branch-manager access to manage branch settings for this business.');
+          this.error.set(
+            $localize`:@@SALON_OWNER_SETTINGS.ERROR_FORBIDDEN_BRANCH_MANAGER:You need branch-manager access to manage branch settings for this business.`,
+          );
           return;
         }
-        this.error.set('Branches could not be loaded.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_LOAD_BRANCHES_FAILED:Branches could not be loaded.`);
       },
     });
   }
@@ -818,7 +947,7 @@ export class SalonOwnerSettingsComponent {
           return;
         }
         this.branchSettingsLoaded.set(false);
-        this.error.set('Branch settings could not be loaded.');
+        this.error.set($localize`:@@SALON_OWNER_SETTINGS.ERROR_LOAD_BRANCH_SETTINGS_FAILED:Branch settings could not be loaded.`);
       },
     });
   }
@@ -847,11 +976,10 @@ export class SalonOwnerSettingsComponent {
     };
   }
 
-  private buildWeeklyHoursInput() {
+  private buildWeeklyHoursInput(): WeeklyHoursInput {
     return {
       timezone: this.hoursForm.controls.timezone.value,
-      acknowledgeExistingAppointmentsOutsideHours:
-        this.hoursForm.controls.acknowledgeExistingAppointmentsOutsideHours.value,
+      acknowledgeExistingAppointmentsOutsideHours: this.hoursForm.controls.acknowledgeExistingAppointmentsOutsideHours.value,
       days: (this.hoursForm.controls.days.getRawValue() as WeeklyHoursDay[]).map((day) => ({
         ...day,
         intervals: day.open ? day.intervals : [],
@@ -895,6 +1023,7 @@ export class SalonOwnerSettingsComponent {
   private resetBranchEditor(businessId: string): void {
     this.hoursSaveVersion += 1;
     this.holidaySaveVersion += 1;
+    this.holidayEditorVersion += 1;
     this.selectedBranch.set(null);
     this.selectedHoliday.set(null);
     this.branchSettingsLoaded.set(false);
@@ -937,25 +1066,18 @@ export class SalonOwnerSettingsComponent {
           : null;
 
     const errorCode =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'code' in responseError &&
-      typeof responseError.code === 'string'
+      typeof responseError === 'object' && responseError !== null && 'code' in responseError && typeof responseError.code === 'string'
         ? responseError.code
         : null;
     const errorMessage =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'message' in responseError &&
-      typeof responseError.message === 'string'
+      typeof responseError === 'object' && responseError !== null && 'message' in responseError && typeof responseError.message === 'string'
         ? responseError.message
         : typeof responseError === 'string'
           ? responseError
           : null;
 
     return (
-      errorCode === 'error.branch.hours.appointments_outside_hours' ||
-      errorMessage === 'error.branch.hours.appointments_outside_hours'
+      errorCode === 'error.branch.hours.appointments_outside_hours' || errorMessage === 'error.branch.hours.appointments_outside_hours'
     );
   }
 
@@ -968,17 +1090,11 @@ export class SalonOwnerSettingsComponent {
           : null;
 
     const errorCode =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'code' in responseError &&
-      typeof responseError.code === 'string'
+      typeof responseError === 'object' && responseError !== null && 'code' in responseError && typeof responseError.code === 'string'
         ? responseError.code
         : null;
     const errorMessage =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'message' in responseError &&
-      typeof responseError.message === 'string'
+      typeof responseError === 'object' && responseError !== null && 'message' in responseError && typeof responseError.message === 'string'
         ? responseError.message
         : typeof responseError === 'string'
           ? responseError
@@ -996,17 +1112,11 @@ export class SalonOwnerSettingsComponent {
           : null;
 
     const errorCode =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'code' in responseError &&
-      typeof responseError.code === 'string'
+      typeof responseError === 'object' && responseError !== null && 'code' in responseError && typeof responseError.code === 'string'
         ? responseError.code
         : null;
     const errorMessage =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'message' in responseError &&
-      typeof responseError.message === 'string'
+      typeof responseError === 'object' && responseError !== null && 'message' in responseError && typeof responseError.message === 'string'
         ? responseError.message
         : typeof responseError === 'string'
           ? responseError
@@ -1024,17 +1134,11 @@ export class SalonOwnerSettingsComponent {
           : null;
 
     const errorCode =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'code' in responseError &&
-      typeof responseError.code === 'string'
+      typeof responseError === 'object' && responseError !== null && 'code' in responseError && typeof responseError.code === 'string'
         ? responseError.code
         : null;
     const errorMessage =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'message' in responseError &&
-      typeof responseError.message === 'string'
+      typeof responseError === 'object' && responseError !== null && 'message' in responseError && typeof responseError.message === 'string'
         ? responseError.message
         : typeof responseError === 'string'
           ? responseError
@@ -1052,17 +1156,11 @@ export class SalonOwnerSettingsComponent {
           : null;
 
     const errorCode =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'code' in responseError &&
-      typeof responseError.code === 'string'
+      typeof responseError === 'object' && responseError !== null && 'code' in responseError && typeof responseError.code === 'string'
         ? responseError.code
         : null;
     const errorMessage =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'message' in responseError &&
-      typeof responseError.message === 'string'
+      typeof responseError === 'object' && responseError !== null && 'message' in responseError && typeof responseError.message === 'string'
         ? responseError.message
         : typeof responseError === 'string'
           ? responseError
@@ -1085,17 +1183,11 @@ export class SalonOwnerSettingsComponent {
           ? error.error
           : null;
     const errorCode =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'code' in responseError &&
-      typeof responseError.code === 'string'
+      typeof responseError === 'object' && responseError !== null && 'code' in responseError && typeof responseError.code === 'string'
         ? responseError.code
         : null;
     const errorMessage =
-      typeof responseError === 'object' &&
-      responseError !== null &&
-      'message' in responseError &&
-      typeof responseError.message === 'string'
+      typeof responseError === 'object' && responseError !== null && 'message' in responseError && typeof responseError.message === 'string'
         ? responseError.message
         : typeof responseError === 'string'
           ? responseError
@@ -1113,7 +1205,7 @@ export class SalonOwnerSettingsComponent {
     this.hoursForm.controls.acknowledgeExistingAppointmentsOutsideHours.setValue(false, { emitEvent: false });
   }
 
-  private buildHolidayInput(value: { date: string; closed: boolean; reason: string; start: string; end: string }) {
+  private buildHolidayInput(value: HolidayFormValue): BranchHolidayInput | null {
     const selectedHoliday = this.selectedHoliday();
     const reason = optionalText(value.reason);
 
@@ -1128,7 +1220,9 @@ export class SalonOwnerSettingsComponent {
     if (selectedHoliday && !selectedHoliday.closed && selectedHoliday.intervals.length > 1) {
       const [firstInterval] = selectedHoliday.intervals;
       if (value.date !== selectedHoliday.date || value.start !== firstInterval?.start || value.end !== firstInterval?.end) {
-        this.error.set('This holiday has multiple open intervals. Change only the reason here, or recreate the holiday to edit its hours.');
+        this.error.set(
+          $localize`:@@SALON_OWNER_SETTINGS.ERROR_HOLIDAY_MULTIPLE_INTERVALS:This holiday has multiple open intervals. Change only the reason here, or recreate the holiday to edit its hours.`,
+        );
         return null;
       }
 
@@ -1150,5 +1244,4 @@ export class SalonOwnerSettingsComponent {
     const next = holidays.filter((holiday) => holiday.date !== savedHoliday.date).concat(savedHoliday);
     return next.slice().sort((left, right) => left.date.localeCompare(right.date));
   }
-
 }

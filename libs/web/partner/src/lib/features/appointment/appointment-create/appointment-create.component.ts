@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { DatePipe, CurrencyPipe } from '@angular/common';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -13,7 +13,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatStepperModule } from '@angular/material/stepper';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AppointmentCreateService } from './appointment-create.service';
 import { Service, Staff } from './models/appointment-create.model';
 
@@ -21,7 +20,8 @@ import { Service, Staff } from './models/appointment-create.model';
   selector: 'app-appointment-create',
   standalone: true,
   imports: [
-    CommonModule,
+    DatePipe,
+    CurrencyPipe,
     ReactiveFormsModule,
     RouterModule,
     MatStepperModule,
@@ -35,10 +35,10 @@ import { Service, Staff } from './models/appointment-create.model';
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    TranslateModule,
   ],
   templateUrl: './appointment-create.component.html',
-  styleUrls: ['./appointment-create.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./appointment-create.component.css'],
 })
 export class AppointmentCreateComponent implements OnInit {
   isLinear = true;
@@ -54,16 +54,14 @@ export class AppointmentCreateComponent implements OnInit {
   serviceFormGroup: FormGroup;
   staffFormGroup: FormGroup;
   dateTimeFormGroup: FormGroup;
+  private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly appointmentCreateService = inject(AppointmentCreateService);
   detailsFormGroup: FormGroup;
 
-  constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private route: ActivatedRoute,
-    private snackBar: MatSnackBar,
-    private translate: TranslateService,
-    private appointmentCreateService: AppointmentCreateService
-  ) {
+  constructor() {
     this.serviceFormGroup = this.fb.group({
       service: ['', Validators.required],
     });
@@ -84,7 +82,7 @@ export class AppointmentCreateComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.appointmentCreateService.getServices().subscribe(services => {
+    this.appointmentCreateService.getServices().subscribe((services) => {
       this.services = services;
       // If a service ID is provided in the route, pre-select it
       const serviceId = this.route.snapshot.queryParamMap.get('serviceId');
@@ -97,7 +95,7 @@ export class AppointmentCreateComponent implements OnInit {
       }
     });
 
-    this.appointmentCreateService.getStaff().subscribe(staff => {
+    this.appointmentCreateService.getStaff().subscribe((staff) => {
       this.staffMembers = staff;
     });
   }
@@ -146,7 +144,9 @@ export class AppointmentCreateComponent implements OnInit {
 
     this.appointmentCreateService.createAppointment(appointment).subscribe(() => {
       this.isSubmitting = false;
-      this.snackBar.open(this.translate.instant('APPOINTMENT.CREATE_SUCCESS'), this.translate.instant('COMMON.CLOSE'), { duration: 5000 });
+      this.snackBar.open($localize`:@@APPOINTMENT.CREATE_SUCCESS:Appointment created successfully.`, $localize`:@@COMMON.CLOSE:Close`, {
+        duration: 5000,
+      });
 
       // Navigate to appointment list or confirmation page
       this.router.navigate(['/appointments']);

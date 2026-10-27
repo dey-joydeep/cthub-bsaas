@@ -32,4 +32,3 @@ import { RedisOAuthStateStore } from './state.store.redis';
   exports: [OAUTH_PORT],
 })
 export class OAuthModule {}
-

@@ -87,11 +87,7 @@ export interface CreateAuthTestUserOptions {
  * @param options Additional creation customisations.
  * @returns The created and fully updated user record.
  */
-export async function createAuthTestUser(
-  prisma: PrismaClient,
-  roles: UserRole[],
-  options: CreateAuthTestUserOptions = {},
-): Promise<User> {
+export async function createAuthTestUser(prisma: PrismaClient, roles: UserRole[], options: CreateAuthTestUserOptions = {}): Promise<User> {
   const uniqueRoles = Array.from(new Set(roles));
   if (uniqueRoles.length === 0) {
     throw new Error('createAuthTestUser requires at least one role.');
@@ -102,8 +98,7 @@ export async function createAuthTestUser(
   const email = options.email ?? `test-${randomUUID()}@example.com`;
   const passwordHash = await bcrypt.hash(options.password ?? 'password', 10);
   const isVerified = options.isVerified ?? true;
-  const emailVerifiedAt =
-    typeof options.emailVerifiedAt === 'undefined' ? (isVerified ? new Date() : null) : options.emailVerifiedAt;
+  const emailVerifiedAt = typeof options.emailVerifiedAt === 'undefined' ? (isVerified ? new Date() : null) : options.emailVerifiedAt;
   const registrationStatus = options.registrationStatus ?? RegistrationStatus.COMPLETED;
 
   const user = await prisma.user.create({
@@ -157,10 +152,7 @@ export async function createCustomerTestUser(
  * @param options Optional customisation overrides.
  * @returns The created user record.
  */
-export async function createAdminTestUser(
-  prisma: PrismaClient,
-  options: CreateAuthTestUserOptions = {},
-): Promise<User> {
+export async function createAdminTestUser(prisma: PrismaClient, options: CreateAuthTestUserOptions = {}): Promise<User> {
   const user = await createAuthTestUser(prisma, [UserRole.ADMIN], options);
 
   await prisma.saasOwner.upsert({
@@ -183,10 +175,7 @@ export async function createAdminTestUser(
  * @param options Optional customisation overrides.
  * @returns The created user record.
  */
-export async function createOwnerTestUser(
-  prisma: PrismaClient,
-  options: CreateAuthTestUserOptions = {},
-): Promise<User> {
+export async function createOwnerTestUser(prisma: PrismaClient, options: CreateAuthTestUserOptions = {}): Promise<User> {
   return createAuthTestUser(prisma, [UserRole.OWNER], options);
 }
 
@@ -197,10 +186,7 @@ export async function createOwnerTestUser(
  * @param options Optional customisation overrides.
  * @returns The created user record.
  */
-export async function createStaffTestUser(
-  prisma: PrismaClient,
-  options: CreateAuthTestUserOptions = {},
-): Promise<User> {
+export async function createStaffTestUser(prisma: PrismaClient, options: CreateAuthTestUserOptions = {}): Promise<User> {
   return createAuthTestUser(prisma, [UserRole.STAFF], options);
 }
 

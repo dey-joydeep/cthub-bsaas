@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -7,8 +7,7 @@ import { CreateServiceParams } from '../../models/service-params.model';
 @Injectable({ providedIn: 'root' })
 export class ServiceService {
   private apiUrl = '/api/service';
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   saveService(data: CreateServiceParams): Observable<{ success: boolean }> {
     return this.http.post<{ success: boolean }>(`${this.apiUrl}/save`, data).pipe(catchError((err) => this.handleError(err)));

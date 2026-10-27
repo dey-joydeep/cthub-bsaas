@@ -1,8 +1,8 @@
 {
   "folders": [
     {
-      "path": "."
-    }
+      "path": ".",
+    },
   ],
   "settings": {
     "nxConsole.generateAiAgentRules": true,
@@ -20,14 +20,14 @@
       { "icon": "nest-guard", "extensions": ["api/src/app/guards"], "format": "svg" },
       // Associate Angular icons with web app folders
       { "icon": "angular", "extensions": ["apps/web"], "format": "svg" },
-      { "icon": "angular-component", "extensions": ["web/admin", "web/customer", "web/partner"], "format": "svg" }
+      { "icon": "angular-component", "extensions": ["web/admin", "web/customer", "web/partner"], "format": "svg" },
     ],
     "vsicons.associations.files": [
       // Associate specific file icons for Angular
       { "icon": "angular-routing", "filenames": ["app-routing.module.ts", "app.routes.ts"], "format": "svg" },
       { "icon": "angular-module", "filenames": ["app.module.ts"], "format": "svg" },
       { "icon": "angular-component", "filenames": ["app.component.ts"], "format": "svg" },
-      { "icon": "angular-service", "filenames": ["app.service.ts"], "format": "svg" }
-    ]
-  }
+      { "icon": "angular-service", "filenames": ["app.service.ts"], "format": "svg" },
+    ],
+  },
 }

@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, Inject, OnInit } from '@angular/core';
+import { DatePipe, CurrencyPipe, DecimalPipe } from '@angular/common';
+import { ChangeDetectorRef, Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -15,11 +15,10 @@ import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { takeUntil } from 'rxjs';
 
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
-import { DateRange } from '@cthub-bsaas/ui/models/date-range.model';
+import { DateRange } from '@cthub-bsaas/web-ui';
 import { ProductSalesWidgetService } from './product-sales-widget.service';
 import { ProductSale } from './models/product-sales-widget.model';
 
@@ -27,7 +26,9 @@ import { ProductSale } from './models/product-sales-widget.model';
   selector: 'app-product-sales-widget',
   standalone: true,
   imports: [
-    CommonModule,
+    DatePipe,
+    CurrencyPipe,
+    DecimalPipe,
     RouterModule,
     MatCardModule,
     MatButtonModule,
@@ -43,10 +44,10 @@ import { ProductSale } from './models/product-sales-widget.model';
     MatDatepickerModule,
     MatNativeDateModule,
     ReactiveFormsModule,
-    TranslateModule,
   ],
   templateUrl: './product-sales-widget.component.html',
-  styleUrls: ['./product-sales-widget.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./product-sales-widget.component.css'],
 })
 export class ProductSalesWidgetComponent extends AbstractBaseComponent implements OnInit {
   // Loading and error states are managed by AbstractBaseComponent
@@ -59,7 +60,8 @@ export class ProductSalesWidgetComponent extends AbstractBaseComponent implement
   pageIndex = 0;
   sortField = 'saleDate';
   sortDirection: 'asc' | 'desc' | undefined = 'desc';
-
+  private readonly productSalesWidgetService = inject(ProductSalesWidgetService);
+  private readonly cdr = inject(ChangeDetectorRef);
   // Date range filter
   dateRange = new FormGroup({
     start: new FormControl<Date | null>(null),
@@ -74,13 +76,6 @@ export class ProductSalesWidgetComponent extends AbstractBaseComponent implement
     averageSale: number;
     topSellingProducts: Array<{ name: string; quantity: number }>;
   } | null = null;
-
-  constructor(
-    private productSalesWidgetService: ProductSalesWidgetService,
-    @Inject(TranslateService) private translate: TranslateService,
-  ) {
-    super();
-  }
 
   override ngOnInit(): void {
     super.ngOnInit();
@@ -122,13 +117,15 @@ export class ProductSalesWidgetComponent extends AbstractBaseComponent implement
         this.dataSource = Array.isArray(data) ? data : [];
         this.totalItems = Array.isArray(data) ? data.length : 0;
         this.loading = false;
+        this.cdr.detectChanges();
       })
       .catch((err: any) => {
         console.error('Error loading product sales:', err);
         this.handleError(err);
-        const errorMessage = this.translate.instant('DASHBOARD.PRODUCT_SALES.ERROR_LOADING');
+        const errorMessage = $localize`:@@DASHBOARD.PRODUCT_SALES.ERROR_LOADING:Failed to load product sales.`;
         this.errorService.handleError(new Error(errorMessage));
         this.loading = false;
+        this.cdr.detectChanges();
       });
   }
 
@@ -163,6 +160,7 @@ export class ProductSalesWidgetComponent extends AbstractBaseComponent implement
             quantity: item.quantity || 0,
           })),
         };
+        this.cdr.detectChanges();
       })
       .catch((err: any) => {
         console.error('Error loading product sales summary:', err);

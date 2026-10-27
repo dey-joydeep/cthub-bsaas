@@ -12,7 +12,8 @@
     "useDefineForClassFields": false,
     "composite": true,
     "rootDir": "./src",
-    "tsBuildInfoFile": "../../../dist/.tsbuildinfo/server/contracts-auth.tsbuildinfo"
+    "tsBuildInfoFile": "../../../dist/.tsbuildinfo/server/contracts-auth.tsbuildinfo",
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["**/*.test.ts", "**/*.spec.ts"],

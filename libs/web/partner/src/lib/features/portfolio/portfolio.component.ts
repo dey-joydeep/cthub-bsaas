@@ -1,17 +1,17 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+
 import { PortfolioService } from './portfolio.service';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 import { PortfolioItem } from './models/portfolio.model';
 
 @Component({
   selector: 'app-portfolio',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './portfolio.component.html',
-  styleUrls: ['./portfolio.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./portfolio.component.css'],
 })
 export class PortfolioComponent extends AbstractBaseComponent {
   portfolioItems: PortfolioItem[] = [];
@@ -20,11 +20,10 @@ export class PortfolioComponent extends AbstractBaseComponent {
   editForm: FormGroup;
   selectedImage: File | null = null;
   editSelectedImage: File | null = null;
+  public readonly portfolioService = inject(PortfolioService);
+  private readonly fb = inject(FormBuilder);
 
-  constructor(
-    public portfolioService: PortfolioService,
-    private fb: FormBuilder,
-  ) {
+  constructor() {
     super();
     this.addForm = this.fb.group({
       tenantId: ['', Validators.required],

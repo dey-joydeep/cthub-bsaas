@@ -67,11 +67,7 @@ async function deleteTestUser(prisma: PrismaClient, user: User | null | undefine
   await prisma.user.delete({ where: { id: user.id } });
 }
 
-async function createAuthTestUser(
-  prisma: PrismaClient,
-  roles: UserRole[],
-  options: CreateAuthTestUserOptions = {},
-): Promise<User> {
+async function createAuthTestUser(prisma: PrismaClient, roles: UserRole[], options: CreateAuthTestUserOptions = {}): Promise<User> {
   const uniqueRoles = Array.from(new Set(roles));
   if (uniqueRoles.length === 0) {
     throw new Error('createAuthTestUser requires at least one role.');
@@ -82,8 +78,7 @@ async function createAuthTestUser(
   const email = options.email ?? `test-${randomUUID()}@example.com`;
   const passwordHash = await bcrypt.hash(options.password ?? 'password', 10);
   const isVerified = options.isVerified ?? true;
-  const emailVerifiedAt =
-    typeof options.emailVerifiedAt === 'undefined' ? (isVerified ? new Date() : null) : options.emailVerifiedAt;
+  const emailVerifiedAt = typeof options.emailVerifiedAt === 'undefined' ? (isVerified ? new Date() : null) : options.emailVerifiedAt;
   const registrationStatus = options.registrationStatus ?? RegistrationStatus.COMPLETED;
 
   const user = await prisma.user.create({
@@ -154,9 +149,7 @@ export interface RegisterUserOptions extends Omit<CreateAuthTestUserOptions, 'em
   readonly roles?: UserRole[];
 }
 
-export async function setupAuthIntegrationHarness(
-  options: SetupAuthIntegrationHarnessOptions = {},
-): Promise<AuthIntegrationHarness> {
+export async function setupAuthIntegrationHarness(options: SetupAuthIntegrationHarnessOptions = {}): Promise<AuthIntegrationHarness> {
   const sentEmails: CapturedEmail[] = [];
   const emailPort: EmailPort = {
     async sendMail(to: string, subject: string, body: string) {

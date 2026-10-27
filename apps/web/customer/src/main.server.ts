@@ -1,11 +1,11 @@
-import { bootstrapApplication } from '@angular/platform-browser';
+import { bootstrapApplication, BootstrapContext } from '@angular/platform-browser';
 import { AppComponent } from './app/app.component';
 import { config as serverConfig } from './app/app.config.server';
 import { MaterialSsrHandler, materialSsrHandlerFactory } from '@cthub-bsaas/web-core-platform';
 import { provideServerRendering } from '@angular/platform-server';
-import { PLATFORM_ID } from '@angular/core';
+import { PLATFORM_ID, provideZonelessChangeDetection } from '@angular/core';
 
-const bootstrap = async () => {
+const bootstrap = async (context: BootstrapContext) => {
   console.log('🚀 Starting server-side rendering bootstrap...');
 
   try {
@@ -98,7 +98,11 @@ const bootstrap = async () => {
     console.log('🚀 Bootstrapping Angular application...');
     let appRef;
     try {
-      appRef = await bootstrapApplication(AppComponent, ssrConfig);
+      appRef = await bootstrapApplication(
+        AppComponent,
+        { ...ssrConfig, providers: [provideZonelessChangeDetection(), ...ssrConfig.providers] },
+        context,
+      );
       console.log('✅ Angular application bootstrapped successfully');
     } catch (error) {
       logError(error, 'Bootstrapping application');

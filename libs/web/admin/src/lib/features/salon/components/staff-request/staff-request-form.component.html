@@ -11,6 +11,8 @@
     <label>Reason:</label>
     <input type="text" formControlName="reason" />
   </div>
-  <div *ngIf="error" class="error">{{ error }}</div>
+  @if (error) {
+    <div class="error">{{ error }}</div>
+  }
   <button type="submit" [disabled]="submitting || form.invalid">Submit Leave Request</button>
 </form>

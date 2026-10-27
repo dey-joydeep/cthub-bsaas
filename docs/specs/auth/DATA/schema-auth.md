@@ -12,6 +12,7 @@
 - **PasswordReset**: id, userId, tokenHash, expiresAt, usedAt.
 
 Indexes:
+
 - unique(email), unique(credentialId), unique(jti). TTL/cleanup jobs for expired rows.
 
 ## Social Accounts (Customer)

@@ -14,11 +14,25 @@ import {
   BranchProfile,
   BranchProfileInput,
   PagedEnvelope,
+  PagedItems,
   ResponseEnvelope,
   SalonBusiness,
   SalonBusinessInput,
   WeeklyHoursInput,
 } from './models/salon-owner-settings.models';
+
+export interface RequestHttpOptions {
+  readonly headers?: HttpHeaders;
+  readonly params?: HttpParams;
+}
+
+export interface CredentialedHttpOptions extends RequestHttpOptions {
+  readonly withCredentials: true;
+}
+
+export interface IdempotencyHttpOptions extends RequestHttpOptions {
+  readonly headers: HttpHeaders;
+}
 
 @Injectable({ providedIn: 'root' })
 export class SalonOwnerSettingsApi {
@@ -76,25 +90,23 @@ export class SalonOwnerSettingsApi {
     return this.put(`/branches/${branchId}/policy`, input);
   }
 
-  private get<T>(path: string, options?: { params?: HttpParams }): Observable<T> {
+  private get<T>(path: string, options?: RequestHttpOptions): Observable<T> {
     return this.http
       .get<ResponseEnvelope<T>>(`${this.baseUrl}${path}`, this.withCredentials(options))
       .pipe(map((response) => response.data));
   }
 
   private getPaged<T>(path: string, params?: HttpParams): Observable<PagedEnvelope<T>> {
-    return this.http
-      .get<ResponseEnvelope<{ items: readonly T[] }>>(`${this.baseUrl}${path}`, this.withCredentials({ params }))
-      .pipe(
-        map((response) => ({
-          items: response.data.items,
-          page: {
-            page: response.meta?.page ?? 1,
-            pageSize: response.meta?.pageSize ?? response.data.items.length,
-            total: response.meta?.total ?? response.data.items.length,
-          },
-        })),
-      );
+    return this.http.get<ResponseEnvelope<PagedItems<T>>>(`${this.baseUrl}${path}`, this.withCredentials({ params })).pipe(
+      map((response) => ({
+        items: response.data.items,
+        page: {
+          page: response.meta?.page ?? 1,
+          pageSize: response.meta?.pageSize ?? response.data.items.length,
+          total: response.meta?.total ?? response.data.items.length,
+        },
+      })),
+    );
   }
 
   private getAllPages<T>(path: string, baseParams: HttpParams, pageSize: number): Observable<PagedEnvelope<T>> {
@@ -121,7 +133,7 @@ export class SalonOwnerSettingsApi {
     );
   }
 
-  private post<T>(path: string, body: unknown, options?: { headers?: HttpHeaders }): Observable<T> {
+  private post<T>(path: string, body: unknown, options?: RequestHttpOptions): Observable<T> {
     return this.http
       .post<ResponseEnvelope<T>>(`${this.baseUrl}${path}`, body, this.withCredentials(options))
       .pipe(map((response) => response.data));
@@ -139,18 +151,14 @@ export class SalonOwnerSettingsApi {
       .pipe(map((response) => response.data));
   }
 
-  private withCredentials(options?: { headers?: HttpHeaders; params?: HttpParams }): {
-    headers?: HttpHeaders;
-    params?: HttpParams;
-    withCredentials: true;
-  } {
+  private withCredentials(options?: RequestHttpOptions): CredentialedHttpOptions {
     return {
       ...options,
       withCredentials: true,
     };
   }
 
-  private createIdempotencyOptions(): { headers: HttpHeaders } {
+  private createIdempotencyOptions(): IdempotencyHttpOptions {
     return {
       headers: new HttpHeaders({
         'Idempotency-Key': this.createIdempotencyKey(),

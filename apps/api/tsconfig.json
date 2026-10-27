@@ -8,7 +8,8 @@
     "emitDecoratorMetadata": true,
     "composite": true,
     "incremental": true,
-    "preserveSymlinks": true // Important for monorepo setups
+    "preserveSymlinks": true,
+    "ignoreDeprecations": "6.0" // Important for monorepo setups
   },
   "include": ["src/**/*.ts"],
   "references": [

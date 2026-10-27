@@ -2,16 +2,19 @@ import { WebAuthnSimpleAdapter } from './webauthn.simplewebauthn.adapter';
 import { ConfigService } from '@cthub-bsaas/server-core';
 import { PrismaService } from '@cthub-bsaas/server-data-access';
 import type { ChallengeStore } from './challenge.store';
-import type { RegistrationResponseJSON, AuthenticationResponseJSON } from '@simplewebauthn/types';
+import type { RegistrationResponseJSON, AuthenticationResponseJSON } from '@simplewebauthn/server';
 
 jest.mock('@simplewebauthn/server', () => ({
   generateRegistrationOptions: jest.fn().mockResolvedValue({ challenge: 'reg-chal' }),
   verifyRegistrationResponse: jest.fn().mockResolvedValue({
     verified: true,
     registrationInfo: {
-      credentialID: Buffer.from('cred-1'),
-      credentialPublicKey: Buffer.from('pk'),
-      counter: 0,
+      credential: {
+        id: 'Y3JlZC0x',
+        publicKey: Buffer.from('pk'),
+        counter: 0,
+        transports: undefined,
+      },
       credentialDeviceType: 'singleDevice',
       credentialBackedUp: false,
     },
@@ -22,12 +25,13 @@ jest.mock('@simplewebauthn/server', () => ({
 
 describe('WebAuthnSimpleAdapter', () => {
   const cfg = {
-    get: (k: string) => ({
-      AUTH_COOKIE_DOMAIN: 'localhost',
-      CORS_ORIGINS: 'http://localhost:4200',
-      APP_NAME: 'TestApp',
-      WEB_AUTHN_CHALLENGE_TTL: '300',
-    }[k]),
+    get: (k: string) =>
+      ({
+        AUTH_COOKIE_DOMAIN: 'localhost',
+        CORS_ORIGINS: 'http://localhost:4200',
+        APP_NAME: 'TestApp',
+        WEB_AUTHN_CHALLENGE_TTL: '300',
+      })[k],
     auth: { jwtAccessSecret: 'secret', jwtExpiresIn: '1h' },
     cors: { origins: ['http://localhost:4200'] },
   } as unknown as ConfigService;

@@ -4,10 +4,11 @@
     "declaration": true,
     "declarationMap": true,
     "inlineSources": true,
-    "types": [],
+    "types": ["@angular/localize"],
     "skipLibCheck": true,
     "isolatedModules": true,
-    "useDefineForClassFields": true
+    "useDefineForClassFields": true,
+    "ignoreDeprecations": "6.0"
   },
   "angularCompilerOptions": {
     "compilationMode": "partial"

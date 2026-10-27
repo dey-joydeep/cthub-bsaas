@@ -7,7 +7,6 @@ import type { ContextType, HttpArgumentsHost } from '@nestjs/common/interfaces';
 import { GlobalExceptionFilter } from './global-exception.filter';
 import { ErrorService, NormalizedError } from '../errors/error.service';
 
-
 interface ErrorResponseBody {
   success: false;
   message: string;

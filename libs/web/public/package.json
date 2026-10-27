@@ -2,9 +2,12 @@
   "name": "@cthub-bsaas/web-public",
   "version": "0.0.1",
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "peerDependencies": {
-    "@angular/common": "^20.1.0",
-    "@angular/core": "^20.1.0"
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0"
   },
   "sideEffects": false
 }

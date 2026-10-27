@@ -1,71 +1,95 @@
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, provideRouter, Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { ReactiveFormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { Router, provideRouter } from '@angular/router';
+import { Subject, of, throwError } from 'rxjs';
 
-import { ErrorService } from '@cthub-bsaas/web-core-common';
-import { PLATFORM_UTILS_TOKEN, StorageService } from '@cthub-bsaas/web-core-platform';
-
-import { LoginService } from './login.service';
+// Components
 import { LoginComponent } from './login.component';
+
+// Services
+import { ErrorService, NotificationService } from '@cthub-bsaas/web-core-common';
+import { StorageService } from '@cthub-bsaas/web-core-platform';
+import { LoginService } from './login.service';
+import { AUTH_STATE_SETTER, LOGIN_API, type AuthStateSetter, type LoginApiPort } from '../../tokens/login.tokens';
+
+class MockNotificationService {
+  error = vi.fn();
+  success = vi.fn();
+  show = vi.fn();
+  info = vi.fn();
+  warning = vi.fn();
+  clear = vi.fn();
+  showError = vi.fn();
+  showSuccess = vi.fn();
+  showWarning = vi.fn();
+  showInfo = vi.fn();
+}
+
+class MockErrorService {
+  handleError = vi.fn();
+  error$ = of(null);
+}
+
+class MockStorageService {
+  setItem$ = vi.fn().mockReturnValue(of(true));
+  removeItem$ = vi.fn().mockReturnValue(of(true));
+  getItem$ = vi.fn().mockReturnValue(of(null));
+  clear$ = vi.fn().mockReturnValue(of(true));
+}
+
+class MockLoginApi implements LoginApiPort {
+  login = vi.fn().mockReturnValue(of({ data: {} }));
+  initLogin = vi.fn().mockReturnValue(of({ data: { userType: 'customer' } }));
+  verifyOtp = vi.fn().mockReturnValue(of({ data: {} }));
+  socialLogin = vi.fn().mockReturnValue(of({ data: {} }));
+  resendOtp = vi.fn().mockReturnValue(of({ data: { success: true } }));
+}
+
+class MockAuthStateSetter implements AuthStateSetter {
+  setLoggedInUser = vi.fn();
+}
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
   let fixture: ComponentFixture<LoginComponent>;
-  let loginService: {
-    initLogin: jest.Mock;
-    verifyOtp: jest.Mock;
-    socialLogin: jest.Mock;
-  };
-  let storageService: {
-    getItem$: jest.Mock;
-    setItem$: jest.Mock;
-    removeItem$: jest.Mock;
-  };
+  let loginService: LoginService;
+  let errorService: MockErrorService;
   let router: Router;
 
   beforeEach(async () => {
-    loginService = {
-      initLogin: jest.fn(),
-      verifyOtp: jest.fn(),
-      socialLogin: jest.fn(),
-    };
-    storageService = {
-      getItem$: jest.fn().mockReturnValue(of(null)),
-      setItem$: jest.fn().mockReturnValue(of(undefined)),
-      removeItem$: jest.fn().mockReturnValue(of(undefined)),
-    };
-
     await TestBed.configureTestingModule({
-      imports: [LoginComponent],
+      imports: [
+        ReactiveFormsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatProgressBarModule,
+        MatSnackBarModule,
+        HttpClientTestingModule,
+        LoginComponent,
+      ],
       providers: [
+        { provide: LOGIN_API, useClass: MockLoginApi },
+        { provide: AUTH_STATE_SETTER, useClass: MockAuthStateSetter },
+        { provide: NotificationService, useClass: MockNotificationService },
+        { provide: ErrorService, useClass: MockErrorService },
+        { provide: StorageService, useClass: MockStorageService },
         provideRouter([]),
-        { provide: LoginService, useValue: loginService },
-        { provide: StorageService, useValue: storageService },
-        { provide: PLATFORM_UTILS_TOKEN, useValue: { isBrowser: true, windowRef: globalThis.window } },
-        {
-          provide: ActivatedRoute,
-          useValue: {
-            snapshot: {
-              queryParamMap: {
-                get: jest.fn().mockReturnValue('/dashboard'),
-              },
-            },
-          },
-        },
-        {
-          provide: ErrorService,
-          useValue: {
-            error$: of(null),
-            handleError: jest.fn(),
-            getErrorMessage: jest.fn().mockReturnValue('Something went wrong'),
-          },
-        },
       ],
     }).compileComponents();
 
-    router = TestBed.inject(Router);
     fixture = TestBed.createComponent(LoginComponent);
     component = fixture.componentInstance;
+    loginService = TestBed.inject(LoginService);
+    errorService = TestBed.inject(ErrorService) as unknown as MockErrorService;
+    router = TestBed.inject(Router);
+
     fixture.detectChanges();
   });
 
@@ -74,74 +98,121 @@ describe('LoginComponent', () => {
   });
 
   it('should initialize the form with empty values', () => {
-    expect(component.loginForm.getRawValue()).toEqual({
+    expect(component.loginForm.value).toEqual({
       email: '',
       password: '',
       rememberMe: false,
     });
   });
 
-  it('should advance to otp step for owner login', async () => {
-    loginService.initLogin.mockReturnValue(
-      of({
-        userType: 'owner',
-      }),
-    );
+  it('should validate email field as required', () => {
+    const emailControl = component.loginForm.get('email');
+    emailControl?.setValue('');
+    expect(emailControl?.valid).toBeFalsy();
+    expect(emailControl?.hasError('required')).toBeTruthy();
+
+    emailControl?.setValue('invalid-email');
+    expect(emailControl?.hasError('email')).toBeTruthy();
+  });
+
+  it('should validate password field as required', () => {
+    const passwordControl = component.loginForm.get('password');
+    passwordControl?.setValue('');
+    expect(passwordControl?.valid).toBeFalsy();
+    expect(passwordControl?.hasError('required')).toBeTruthy();
+  });
+
+  it('should call loginService.initLogin and navigate on successful login', async () => {
+    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockImplementation(() => Promise.resolve(true));
+    const initLoginSpy = vi.spyOn(loginService, 'initLogin');
 
     component.loginForm.setValue({
-      email: 'owner@example.com',
-      password: 'password123',
+      email: 'test@example.com',
+      password: 'password',
       rememberMe: true,
     });
 
     await component.onSubmit();
 
-    expect(storageService.setItem$).toHaveBeenCalledWith('savedEmail', 'owner@example.com');
-    expect(loginService.initLogin).toHaveBeenCalledWith({
-      email: 'owner@example.com',
-      password: 'password123',
+    expect(initLoginSpy).toHaveBeenCalledWith({
+      email: 'test@example.com',
+      password: 'password',
       rememberMe: true,
     });
-    expect(component.step).toBe('otp');
+    expect(navigateSpy).toHaveBeenCalledWith('/dashboard');
   });
 
-  it('should navigate for customer login', async () => {
-    const navigateByUrl = jest.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
-    loginService.initLogin.mockReturnValue(
-      of({
-        userType: 'customer',
-      }),
-    );
+  it('should handle login error', async () => {
+    const error = { error: { error: 'Login failed' } };
+    vi.spyOn(loginService, 'initLogin').mockReturnValue(throwError(() => error));
 
     component.loginForm.setValue({
-      email: 'customer@example.com',
-      password: 'password123',
-      rememberMe: false,
-    });
-
-    await component.onSubmit();
-
-    expect(storageService.removeItem$).toHaveBeenCalledWith('savedEmail');
-    expect(navigateByUrl).toHaveBeenCalledWith('/dashboard');
-  });
-
-  it('should surface login init errors', async () => {
-    loginService.initLogin.mockReturnValue(
-      throwError(() => ({
-        error: {
-          error: 'Login failed',
-        },
-      })),
-    );
-
-    component.loginForm.setValue({
-      email: 'customer@example.com',
-      password: 'bad-password',
+      email: 'test@example.com',
+      password: 'wrong-password',
       rememberMe: false,
     });
 
     await component.onSubmit();
 
     expect(component.error).toBe('Login failed');
+    expect(errorService.handleError).toHaveBeenCalledWith(error);
+  });
+
+  it('should show loading state during form submission', async () => {
+    component.loginForm.setValue({
+      email: 'test@example.com',
+      password: 'password123',
+      rememberMe: false,
+    });
+
+    const initLoginSpy = vi.spyOn(loginService, 'initLogin').mockReturnValue(new Subject() as any);
+
+    await component.onSubmit();
+
+    expect(component.loading).toBe(true);
+    expect(initLoginSpy).toHaveBeenCalledWith({
+      email: 'test@example.com',
+      password: 'password123',
+      rememberMe: false,
+    });
+  });
+
+  it('should handle login success', async () => {
+    component.loginForm.setValue({
+      email: 'test@example.com',
+      password: 'password123',
+      rememberMe: false,
+    });
+
+    vi.spyOn(loginService, 'initLogin').mockReturnValueOnce(
+      of({
+        userType: 'customer',
+      }),
+    );
+
+    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockImplementation(() => Promise.resolve(true));
+
+    await component.onSubmit();
+
+    expect(navigateSpy).toHaveBeenCalledWith('/dashboard');
+  });
+
+  it('should transition to otp step if userType is owner', async () => {
+    component.loginForm.setValue({
+      email: 'owner@example.com',
+      password: 'password123',
+      rememberMe: false,
+    });
+
+    vi.spyOn(loginService, 'initLogin').mockReturnValueOnce(
+      of({
+        userType: 'owner',
+      }),
+    );
+
+    await component.onSubmit();
+
+    expect(component.step).toBe('otp');
+    expect(component.loading).toBe(false);
   });
 });

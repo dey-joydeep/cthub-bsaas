@@ -37,10 +37,7 @@ describe('SessionsController', () => {
 
     it('propagates errors from revokeSession', async () => {
       (service.revokeSession as unknown as jest.Mock).mockRejectedValueOnce(forced);
-      await expect(
-        controller.revokeSession({ user: { userId: 'u1' } } as { user: { userId: string } }, 'x'),
-      ).rejects.toBe(forced);
+      await expect(controller.revokeSession({ user: { userId: 'u1' } } as { user: { userId: string } }, 'x')).rejects.toBe(forced);
     });
   });
 });
-

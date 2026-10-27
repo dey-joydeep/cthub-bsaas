@@ -127,6 +127,12 @@ legend {
   grid-template-columns: repeat(2, minmax(110px, 1fr));
 }
 
+.interval-error {
+  color: #b91c1c;
+  font-size: 0.875rem;
+  margin: 4px 0;
+}
+
 @media (max-width: 760px) {
   .settings-shell {
     padding: 16px;

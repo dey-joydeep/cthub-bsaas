@@ -1,7 +1,9 @@
 # Partner — Registration — HLD
+
 **Updated:** 2025-09-11
 
 ## Scope & Objectives
+
 This document defines the high‑level design for the **partner registration** screen(s), covering purpose, interaction with backend, and non‑functional needs.
 
 ## Context & Stack
@@ -12,21 +14,24 @@ This document defines the high‑level design for the **partner registration** s
 - Backend: **NestJS 11** (single API), data-access via Prisma
 - Auth storage: HttpOnly cookies (AT/RT), SameSite=Lax, `Secure`; XSRF token for double-submit
 
-
 ## Architecture Overview
+
 - Client: Angular SPA routes under `/partner/auth/*`
 - Major parts: Route component, UI form, AuthHttpService, TelemetryService, i18n, a11y helpers
 - Backend: NestJS `/auth/*` endpoints, cookies for AT/RT, optional WebAuthn
 
 ## Module/Component Breakdown
+
 - Route module `partner/auth/registration` (standalone)
 - Presentational form component(s) + minor UI atoms
 - Services: `AuthHttpService`, `TelemetryService`, `ToastService`
 
 ## User Flows (High‑Level)
+
 - Happy path, invalid input, rate‑limited, server error, network fail
 
 ## External Interfaces
+
 - REST endpoints under `/auth/*`; WebAuthn where applicable
 - Email/OTP providers (server‑side)
 
@@ -38,13 +43,14 @@ This document defines the high‑level design for the **partner registration** s
 - **Observability:** FE telemetry adapters; correlationId propagation; structured logs
 - **Accessibility:** WCAG 2.1 AA targets; keyboard-first design; screen-reader support
 
-
 ## Security Posture
+
 - Cookies: HttpOnly AT/RT; SameSite=Lax; Secure; XSRF double‑submit token
 - Anti‑enumeration on sensitive flows; uniform success responses
 - Rate‑limit sensitive endpoints (5/min IP/email); lockouts on abuse
 
 ## Internationalization
+
 - All strings via i18n keys (en/bn/hi). Avoid hardcoded copy in templates.
 
 ## Accessibility Intent
@@ -54,7 +60,6 @@ This document defines the high‑level design for the **partner registration** s
 - Focus: first invalid control gets focus; focus trap in dialogs; visible focus rings
 - Contrast AA; states not conveyed by color alone
 
-
 ## Performance Notes
 
 - Show lightweight skeletons on critical forms
@@ -62,8 +67,8 @@ This document defines the high‑level design for the **partner registration** s
 - Backoff on 429 with visible countdown; disable submit during cooldown
 - Avoid global store for auth pages; use local signals to keep bundle small
 
-
 ## Analytics & Telemetry
+
 - Provider‑agnostic FE `TelemetryService` (PostHog default; GA4/Segment adapters)
 - Events:
 
@@ -77,7 +82,6 @@ This document defines the high‑level design for the **partner registration** s
 - `auth.email_change_requested|confirmed` { old_domain, new_domain }
 - `auth.password_changed` { strength, had_breach_hint?: boolean }
 
-
 ## Password Policy
 
 - Minimum **8** characters
@@ -85,23 +89,25 @@ This document defines the high‑level design for the **partner registration** s
 - **Strength meter** with hints; client shows soft warnings only
 - **Server is final authority**; may apply additional checks later
 
-
 ## Social Sign‑in / Enterprise IdP
 
-**Customer Social Sign‑in**: Google, Facebook, Apple.  
-- Apple: first‑class on Safari/iOS/macOS; under “More options” elsewhere.  
+**Customer Social Sign‑in**: Google, Facebook, Apple.
+
+- Apple: first‑class on Safari/iOS/macOS; under “More options” elsewhere.
 - Instagram: profile linking only (not an auth provider).
 
 **Admin/Partner**: Consumer OAuth disabled. Future **Enterprise IdP (OIDC/SAML)** may enable SSO at tenant level.
 
+Tenant‑configurable **OIDC/SAML** single sign‑on (future).
 
-Tenant‑configurable **OIDC/SAML** single sign‑on (future).  
-- **UX entry:** secondary action on login  
-- **Config:** enable per-tenant, discovery metadata, allowed domains  
+- **UX entry:** secondary action on login
+- **Config:** enable per-tenant, discovery metadata, allowed domains
 - No implementation now—this defines integration touchpoints.
 
 ## Invite Token States (Owner/Staff)
+
 ### Invite Token States (Owner/Staff)
+
 - **Invalid (400)**: Show neutral message and CTA to request a new invite.
 - **Expired (410)**: Indicate expiry and allow re-request.
 - **Already Consumed (409)**: Inform that the invite has been used and suggest login/recovery.

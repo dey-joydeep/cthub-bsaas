@@ -36,7 +36,7 @@ export class ReviewService {
       },
     };
 
-    return review as ReviewResponseDto;
+    return review;
   }
 
   /**
@@ -70,7 +70,7 @@ export class ReviewService {
     ];
 
     return {
-      data: reviews as ReviewResponseDto[],
+      data: reviews,
       total: 1, // In a real implementation, this would be the total count
     };
   }
@@ -145,6 +145,6 @@ export class ReviewService {
       },
     };
 
-    return review as ReviewResponseDto;
+    return review;
   }
 }

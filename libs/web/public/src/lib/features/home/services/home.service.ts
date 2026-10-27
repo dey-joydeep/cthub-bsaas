@@ -1,7 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-// Import environment from the correct path
 import { environment } from '@cthub-bsaas/web-config/environments/customer/environment';
 
 // Import interfaces from the models file
@@ -14,8 +13,7 @@ export type { IHomePageData, ISalonDto, IServiceDto, ITestimonialDto, ICityDto }
 })
 export class HomeService {
   private apiUrl = `${environment.apiUrl}/home`;
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   /**
    * Fetches all home page data in a single request

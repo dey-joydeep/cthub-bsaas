@@ -9,14 +9,14 @@ Integrations owns provider configuration, provider adapters, webhook entry point
 
 ## Provider Port Pattern
 
-| Port | Example adapters |
-| --- | --- |
-| `PaymentProviderPort` | Razorpay, Stripe, manual UPI reference. |
-| `MessageProviderPort` | WhatsApp, SMS. |
-| `EmailProviderPort` | SMTP, transactional email provider. |
-| `MapProviderPort` | Maps/geocoding provider. |
-| `CalendarExportPort` | ICS export, calendar deep links. |
-| `IdentityProviderPort` | OAuth/OIDC providers. |
+| Port                   | Example adapters                        |
+| ---------------------- | --------------------------------------- |
+| `PaymentProviderPort`  | Razorpay, Stripe, manual UPI reference. |
+| `MessageProviderPort`  | WhatsApp, SMS.                          |
+| `EmailProviderPort`    | SMTP, transactional email provider.     |
+| `MapProviderPort`      | Maps/geocoding provider.                |
+| `CalendarExportPort`   | ICS export, calendar deep links.        |
+| `IdentityProviderPort` | OAuth/OIDC providers.                   |
 
 ## Diagram
 

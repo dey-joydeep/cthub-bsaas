@@ -1,10 +1,9 @@
-﻿import { PlatformUtils, PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
-import { Component, inject, PLATFORM_ID, OnInit } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
+import { Component, inject, PLATFORM_ID, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
 import { Salon } from '../../models/salon.model';
 import { SalonServiceItem } from '../../models/salon-service-item.model';
 import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
@@ -13,9 +12,10 @@ import type { PlatformUtils } from '@cthub-bsaas/web-core-platform';
 @Component({
   selector: 'app-salon-search',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, TranslateModule, SafeUrlPipe],
+  imports: [RouterModule, FormsModule, SafeUrlPipe],
   templateUrl: './salon-search.component.html',
-  styleUrls: ['./salon-search.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./salon-search.component.css'],
 })
 export class SalonSearchComponent implements OnInit {
   salons: Salon[] = [];
@@ -39,9 +39,8 @@ export class SalonSearchComponent implements OnInit {
 
   private readonly platformUtils = inject<PlatformUtils>(PLATFORM_UTILS_TOKEN);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly http = inject(HttpClient);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
-
-  constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     this.fetchServices();
@@ -139,14 +138,12 @@ export class SalonSearchComponent implements OnInit {
     if (!this.salons || !this.salons.length) return '';
     // Center the map on the first salon or average location
     const center = this.salons[0];
-    // Markers: up to 10 salons for URL length
-    const markers = this.salons
-      .slice(0, 10)
-      .map((salon) => `${salon.latitude},${salon.longitude}`)
-      .join('|');
+    // const markers = this.salons
+    //   .slice(0, 10)
+    //   .map((salon) => `${salon.latitude},${salon.longitude}`)
+    //   .join('|');
     // Google Maps embed with multiple markers (static map for privacy)
     return `https://www.google.com/maps/embed/v1/view?key=YOUR_GOOGLE_MAPS_API_KEY&center=${center.latitude},${center.longitude}&zoom=12&maptype=roadmap`;
     // For production, consider using a proper map component or backend-generated map with markers
   }
 }
-

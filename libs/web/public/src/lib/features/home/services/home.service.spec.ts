@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { HomeService } from './home.service';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { environment } from '@cthub-bsaas/web-config/environments/customer/environment';
-import { IHomePageData, ICityDto } from '../model/home.models';
+import { of, throwError } from 'rxjs';
+import { IHomePageData, ICityDto } from './home.models';
 
 describe('HomeService', () => {
   let service: HomeService;
   let httpMock: HttpTestingController;
-  const apiBaseUrl = `${environment.apiUrl}/home`;
+  const apiBaseUrl = 'http://localhost:3000/api/home';
 
   beforeEach(() => {
     TestBed.configureTestingModule({

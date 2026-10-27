@@ -19,7 +19,7 @@ Root instructions define global safety, workflow, and repository conventions. Sc
 
 ## Startup Checklist
 
-1. Use the project root: `E:\workspace\cthub-bsaas` on Windows or `~/workspace/cthub-bsaas` on Linux.
+1. Use the actual local checkout directory as your project root.
 2. Prefer MCP tools over raw shell when they exist.
 3. Keep approvals `on-request` unless the user changes it.
 4. Confirm runtime environment before commands that depend on OS, shell, Node, npm, database, or network state.
@@ -106,6 +106,7 @@ Keep specs and implementation aligned. Cross-link PRs to relevant user stories a
 - TypeScript strict.
 - ES modules.
 - Prettier/ESLint formatting.
+- Mandatory post-edit check: whenever an agent finishes modifying or creating files, it MUST run `npx prettier --write <files>` and `npx eslint --fix <files>` on the touched files. While staged-level checks allow warnings to pass, the AI agent MUST explicitly report any warnings or non-fatal lint issues to the user in its summary. Never silently ignore warnings.
 - 2-space indent.
 - Single quotes.
 - File names: `kebab-case.ts`.

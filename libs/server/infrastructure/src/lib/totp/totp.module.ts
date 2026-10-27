@@ -9,23 +9,23 @@ import { TotpOtplibAdapter } from './totp.otplib.adapter';
  * Infrastructure module that registers the TOTP adapter implementation.
  */
 @Module({
-    imports: [PrismaModule, EncryptionModule],
-    providers: [
-        // Port implementation for TOTP
-        {
-            provide: TOTP_PORT,
-            useClass: TotpOtplibAdapter,
-        },
-        // Dependencies required by the adapter
-        {
-            provide: USER_REPOSITORY,
-            useClass: UserRepository,
-        },
-        {
-            provide: CREDENTIAL_TOTP_REPOSITORY,
-            useClass: CredentialTotpRepository,
-        },
-    ],
-    exports: [TOTP_PORT],
+  imports: [PrismaModule, EncryptionModule],
+  providers: [
+    // Port implementation for TOTP
+    {
+      provide: TOTP_PORT,
+      useClass: TotpOtplibAdapter,
+    },
+    // Dependencies required by the adapter
+    {
+      provide: USER_REPOSITORY,
+      useClass: UserRepository,
+    },
+    {
+      provide: CREDENTIAL_TOTP_REPOSITORY,
+      useClass: CredentialTotpRepository,
+    },
+  ],
+  exports: [TOTP_PORT],
 })
 export class TotpModule {}

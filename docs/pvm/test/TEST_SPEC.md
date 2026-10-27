@@ -354,7 +354,7 @@ Verifies that the script can generate an initial HTML report for the root projec
 
 ```powershell
 # Navigate to project root
-cd e:\workspace\cthub-bsaas
+cd <repository-root>
 
 # Run all tests
 .\bsaas-docs\pvm\test\run-tests.ps1

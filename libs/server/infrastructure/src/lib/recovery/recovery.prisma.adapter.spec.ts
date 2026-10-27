@@ -61,9 +61,7 @@ describe('RecoveryCodesPrismaAdapter', () => {
   });
 
   it('returns false when no codes match', async () => {
-    findManyMock.mockResolvedValueOnce([
-      { id: 1, userId: 'u1', codeHash: 'HASHED-x', usedAt: null as Date | null },
-    ]);
+    findManyMock.mockResolvedValueOnce([{ id: 1, userId: 'u1', codeHash: 'HASHED-x', usedAt: null as Date | null }]);
     const adapter = new RecoveryCodesPrismaAdapter(prisma);
     const ok = await adapter.verifyAndConsume('u1', 'nope');
     expect(ok).toBe(false);

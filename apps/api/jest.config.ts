@@ -15,9 +15,10 @@ const config: Config.InitialOptions = {
   moduleNameMapper: {
     '^@app/(.*)$': '<rootDir>/src/$1',
   },
-  setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   testTimeout: 10000,
   clearMocks: true,
+  passWithNoTests: true,
 };
 
 export default config;

@@ -38,7 +38,7 @@ describe('StaffManagementService', () => {
   it('should approve staff', () => {
     const staff = { ...staffList[1], approved: true };
     service.approveStaff(salonId, staff.id).subscribe((result) => {
-      expect(result.approved).toBeTrue();
+      expect(result.approved).toBe(true);
     });
     const req = httpMock.expectOne(`/api/salons/${salonId}/staff/${staff.id}/approve`);
     expect(req.request.method).toBe('POST');
@@ -48,7 +48,7 @@ describe('StaffManagementService', () => {
   it('should revoke staff', () => {
     const staff = { ...staffList[0], approved: false };
     service.revokeStaff(salonId, staff.id).subscribe((result) => {
-      expect(result.approved).toBeFalse();
+      expect(result.approved).toBe(false);
     });
     const req = httpMock.expectOne(`/api/salons/${salonId}/staff/${staff.id}/revoke`);
     expect(req.request.method).toBe('POST');

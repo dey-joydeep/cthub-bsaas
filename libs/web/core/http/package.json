@@ -3,9 +3,12 @@
   "version": "0.0.1",
   "sideEffects": false,
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "peerDependencies": {
-    "@angular/core": "^20.0.0",
-    "@angular/common": "^20.0.0",
+    "@angular/core": "^22.0.0",
+    "@angular/common": "^22.0.0",
     "rxjs": "^7.8.0"
   }
 }

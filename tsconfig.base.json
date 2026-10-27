@@ -13,6 +13,7 @@
     "allowJs": false,
     "moduleDetection": "force",
     "strict": true,
+    "skipLibCheck": true,
     "moduleResolution": "node",
     "paths": {
       "@app/*": ["apps/api/src/*"],
@@ -32,10 +33,8 @@
       "@cthub-bsaas/server-testing-utils": ["libs/server/server-testing-utils/src/index.ts"],
       "@cthub-bsaas/server-testing-utils/*": ["dist/libs/server/server-testing-utils/*", "libs/server/server-testing-utils/src/*"],
       "@cthub-bsaas/shared": ["libs/shared/src/index.ts"],
-      "@cthub-bsaas/shared/*": ["dist/libs/shared/*", "libs/shared/src/*"],
-      "@cthub-bsaas/shared/components/*": ["libs/shared/src/lib/components/*"],
-      "@cthub-bsaas/shared/enums/*": ["libs/shared/src/lib/enums/*"],
       "@cthub-bsaas/shared/models/*": ["libs/shared/src/lib/models/*"],
+      "@cthub-bsaas/shared/*": ["libs/shared/src/lib/*", "libs/shared/src/*", "dist/libs/shared/*"],
       "@cthub-bsaas/web-admin": ["libs/web/admin/src/index.ts"],
       "@cthub-bsaas/web-admin/*": ["libs/web/admin/src/*"],
       "@cthub-bsaas/web-admin/auth": ["libs/web/admin/src/lib/features/auth/index.ts"],
@@ -65,14 +64,16 @@
       "@cthub-bsaas/web-ui/*": ["libs/web/ui/src/*", "dist/libs/web/ui/*"],
       "chart.js/dist/types/utils": ["node_modules/chart.js/dist/types/utils.d.ts"]
     },
-    "types": ["node"],
+    "types": ["node", "@angular/localize"],
     "experimentalDecorators": true,
     "sourceMap": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
     "noImplicitReturns": true,
     "noImplicitAny": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "noUncheckedSideEffectImports": false,
+    "ignoreDeprecations": "6.0"
   },
   "exclude": ["node_modules", "dist"],
   "angularCompilerOptions": {

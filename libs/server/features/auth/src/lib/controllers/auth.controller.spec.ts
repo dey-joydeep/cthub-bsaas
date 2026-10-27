@@ -8,10 +8,7 @@ import type { JwtService } from '@nestjs/jwt';
 
 describe('AuthController (core endpoints)', () => {
   let controller: AuthController;
-  let service: jest.Mocked<Pick<
-    AuthService,
-    'signIn' | 'signInWithTotp' | 'refreshToken' | 'logout'
-  >>;
+  let service: jest.Mocked<Pick<AuthService, 'signIn' | 'signInWithTotp' | 'refreshToken' | 'logout'>>;
   let cookies: jest.Mocked<Pick<AuthCookiesService, 'issue' | 'rotateOnRefresh' | 'clear'>>;
   let jwt: Pick<JwtService, 'decode'>;
   let decodeMock: jest.Mock;
@@ -19,11 +16,10 @@ describe('AuthController (core endpoints)', () => {
   const createLoginDto = (overrides: Partial<LoginDto> = {}): LoginDto =>
     Object.assign(new LoginDto(), { email: 'e@example.com', password: 'Password#1', ...overrides });
 
-  const createRefreshDto = (overrides: Partial<RefreshTokenDto> = {}): RefreshTokenDto =>
-    Object.assign(new RefreshTokenDto(), overrides);
+  const createRefreshDto = (overrides: Partial<RefreshTokenDto> = {}): RefreshTokenDto => Object.assign(new RefreshTokenDto(), overrides);
 
   const reqWithCookie = (cookieHeader?: string): ExpressRequest =>
-    ({ headers: cookieHeader ? { cookie: cookieHeader } : {} } as unknown as ExpressRequest);
+    ({ headers: cookieHeader ? { cookie: cookieHeader } : {} }) as unknown as ExpressRequest;
 
   beforeEach(() => {
     service = {
@@ -137,9 +133,7 @@ describe('AuthController (core endpoints)', () => {
   });
 
   it('refresh rejects when both cookie and body tokens are provided', async () => {
-    await expect(
-      controller.refresh(createRefreshDto({ refreshToken: 'from-body' }), reqWithCookie('bsaas_rt=cookie')),
-    ).rejects.toThrow();
+    await expect(controller.refresh(createRefreshDto({ refreshToken: 'from-body' }), reqWithCookie('bsaas_rt=cookie'))).rejects.toThrow();
     expect(cookies.rotateOnRefresh).not.toHaveBeenCalled();
   });
 

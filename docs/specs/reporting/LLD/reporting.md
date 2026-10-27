@@ -5,15 +5,15 @@
 
 ## Queries And Commands
 
-| Operation | Type | Notes |
-| --- | --- | --- |
-| `getFinancialReport` | Query | Finalized financial records only. |
-| `getAppointmentReport` | Query | Appointment status and time buckets. |
-| `getStaffPerformanceReport` | Query | Staff service/revenue/utilization. |
-| `getCustomerRetentionReport` | Query | Segments and retention periods. |
-| `getInventoryReport` | Query | Stock ledger and branch filters. |
-| `createReportExport` | Command | Async export job for large data. |
-| `getReportExportStatus` | Query | Export job state and download readiness. |
+| Operation                    | Type    | Notes                                    |
+| ---------------------------- | ------- | ---------------------------------------- |
+| `getFinancialReport`         | Query   | Finalized financial records only.        |
+| `getAppointmentReport`       | Query   | Appointment status and time buckets.     |
+| `getStaffPerformanceReport`  | Query   | Staff service/revenue/utilization.       |
+| `getCustomerRetentionReport` | Query   | Segments and retention periods.          |
+| `getInventoryReport`         | Query   | Stock ledger and branch filters.         |
+| `createReportExport`         | Command | Async export job for large data.         |
+| `getReportExportStatus`      | Query   | Export job state and download readiness. |
 
 ## Freshness Rules
 

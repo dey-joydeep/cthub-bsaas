@@ -1,7 +1,8 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
+    "ignoreDeprecations": "6.0"
   },
   "files": [],
   "include": [],
@@ -17,14 +18,16 @@
     { "path": "libs/server/infrastructure/tsconfig.lib.json" },
     { "path": "libs/server/features/auth/tsconfig.lib.json" },
     { "path": "libs/shared/tsconfig.lib.json" },
-    { "path": "libs/web/admin/auth/tsconfig.lib.json" },
+    { "path": "libs/web/admin/tsconfig.lib.json" },
     { "path": "libs/web/config/tsconfig.lib.json" },
     { "path": "libs/web/core/auth/tsconfig.lib.json" },
+    { "path": "libs/web/core/common/tsconfig.lib.json" },
     { "path": "libs/web/core/http/tsconfig.lib.json" },
+    { "path": "libs/web/core/platform/tsconfig.lib.json" },
     { "path": "libs/web/core/testing/tsconfig.lib.json" },
-    { "path": "libs/web/customer/auth/tsconfig.lib.json" },
-    { "path": "libs/web/partner/auth/tsconfig.lib.json" },
+    { "path": "libs/web/customer/tsconfig.lib.json" },
+    { "path": "libs/web/partner/tsconfig.lib.json" },
+    { "path": "libs/web/public/tsconfig.lib.json" },
     { "path": "libs/web/ui/tsconfig.lib.json" }
   ]
 }
-

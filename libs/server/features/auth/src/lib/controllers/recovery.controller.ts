@@ -1,4 +1,15 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Request, UseGuards, UseInterceptors, Inject, BadRequestException } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Request,
+  UseGuards,
+  UseInterceptors,
+  Inject,
+  BadRequestException,
+} from '@nestjs/common';
 import { CsrfGuard, JwtAuthGuard, JwtOptionalAuthGuard, ResponseEnvelopeInterceptor } from '@cthub-bsaas/server-core';
 import { VerifyRecoveryDto } from '../dto/verify-recovery.dto';
 import { RECOVERY_CODES_PORT, RecoveryCodesPort } from '@cthub-bsaas/server-contracts-auth';
@@ -38,4 +49,3 @@ export class RecoveryController {
     });
   }
 }
-

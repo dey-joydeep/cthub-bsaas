@@ -14,13 +14,19 @@ export interface ResponseEnvelope<T> {
   readonly meta?: ResponseEnvelopeMeta;
 }
 
+export interface PageInfo {
+  readonly page: number;
+  readonly pageSize: number;
+  readonly total: number;
+}
+
+export interface PagedItems<T> {
+  readonly items: readonly T[];
+}
+
 export interface PagedEnvelope<T> {
   readonly items: readonly T[];
-  readonly page: {
-    readonly page: number;
-    readonly pageSize: number;
-    readonly total: number;
-  };
+  readonly page: PageInfo;
 }
 
 export interface SalonOwnerAddress {
@@ -30,6 +36,13 @@ export interface SalonOwnerAddress {
   readonly state: string;
   readonly postalCode: string;
   readonly country: string;
+}
+
+export interface LoadBusinessesOptions {
+  readonly selectBusinessId?: string;
+  readonly preserveBranchId?: string;
+  readonly expectedBranchEditorVersion?: number;
+  readonly isNewBusiness?: boolean;
 }
 
 export interface SalonBusinessInput {
@@ -99,6 +112,20 @@ export interface BranchHolidayInput {
   readonly closed: boolean;
   readonly reason?: string;
   readonly intervals?: readonly TimeInterval[];
+}
+
+export interface HolidayFormValue {
+  readonly date: string;
+  readonly closed: boolean;
+  readonly reason: string;
+  readonly start: string;
+  readonly end: string;
+}
+
+export interface HolidayIntervalValidationValue {
+  readonly closed?: boolean;
+  readonly start?: string;
+  readonly end?: string;
 }
 
 export interface BranchPolicyInput {

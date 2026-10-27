@@ -5,26 +5,25 @@
 
   <header class="settings-header">
     <div>
-      <h1>{{ branchOnlyMode() ? 'Branch settings' : 'Business settings' }}</h1>
-      <p>
-        {{
-          branchOnlyMode()
-            ? 'Manage branch profile, hours, holidays, and booking policy.'
-            : 'Manage business profile, branch profile, hours, holidays, and booking policy.'
-        }}
-      </p>
+      @if (branchOnlyMode()) {
+        <h1 i18n="@@SALON_OWNER_SETTINGS.TITLE_BRANCH">Branch settings</h1>
+        <p i18n="@@SALON_OWNER_SETTINGS.DESC_BRANCH">Manage branch profile, hours, holidays, and booking policy.</p>
+      } @else {
+        <h1 i18n="@@SALON_OWNER_SETTINGS.TITLE_BUSINESS">Business settings</h1>
+        <p i18n="@@SALON_OWNER_SETTINGS.DESC_BUSINESS">Manage business profile, branch profile, hours, holidays, and booking policy.</p>
+      }
     </div>
     <div class="header-actions">
       @if (canCreateBusiness()) {
         <button mat-stroked-button type="button" (click)="newBusiness()">
           <mat-icon>storefront</mat-icon>
-          Business
+          <ng-container i18n="@@SALON_OWNER_SETTINGS.BTN_NEW_BUSINESS">Business</ng-container>
         </button>
       }
       @if (canCreateBranch()) {
         <button mat-stroked-button type="button" (click)="newBranch()">
           <mat-icon>add_business</mat-icon>
-          Branch
+          <ng-container i18n="@@SALON_OWNER_SETTINGS.BTN_NEW_BRANCH">Branch</ng-container>
         </button>
       }
     </div>
@@ -39,52 +38,60 @@
 
   <mat-tab-group>
     @if (!branchOnlyMode()) {
-      <mat-tab label="Business">
+      <mat-tab label="Business" i18n-label="@@SALON_OWNER_SETTINGS.TAB_BUSINESS">
         <div class="tab-grid">
           <mat-card>
             <mat-card-header>
-              <mat-card-title>Business profile</mat-card-title>
+              <mat-card-title i18n="@@SALON_OWNER_SETTINGS.CARD_TITLE_BUSINESS_PROFILE">Business profile</mat-card-title>
             </mat-card-header>
             <mat-card-content>
               <form [formGroup]="businessForm" class="form-grid" (ngSubmit)="saveBusiness()">
                 <mat-form-field appearance="outline">
-                  <mat-label>Display name</mat-label>
+                  <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_DISPLAY_NAME">Display name</mat-label>
                   <input matInput formControlName="displayName" />
+                  @if (businessForm.controls.displayName.hasError('required') || businessForm.controls.displayName.hasError('minlength')) {
+                    <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_DISPLAY_NAME_REQUIRED"> Display name is required (min 2 characters). </mat-error>
+                  } @else if (businessForm.controls.displayName.hasError('maxlength')) {
+                    <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_DISPLAY_NAME_MAX"> Display name cannot exceed 120 characters. </mat-error>
+                  }
                 </mat-form-field>
                 <mat-form-field appearance="outline">
-                  <mat-label>Legal name</mat-label>
+                  <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_LEGAL_NAME">Legal name</mat-label>
                   <input matInput formControlName="legalName" />
+                  @if (businessForm.controls.legalName.hasError('required') || businessForm.controls.legalName.hasError('minlength')) {
+                    <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_LEGAL_NAME_REQUIRED"> Legal name is required (min 2 characters). </mat-error>
+                  } @else if (businessForm.controls.legalName.hasError('maxlength')) {
+                    <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_LEGAL_NAME_MAX"> Legal name cannot exceed 160 characters. </mat-error>
+                  }
                 </mat-form-field>
                 <mat-form-field appearance="outline">
-                  <mat-label>Status</mat-label>
+                  <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_STATUS">Status</mat-label>
                   <mat-select formControlName="status">
-                    <mat-option value="ACTIVE">Active</mat-option>
-                    <mat-option value="INACTIVE">Inactive</mat-option>
+                    <mat-option value="ACTIVE" i18n="@@SALON_OWNER_SETTINGS.STATUS_ACTIVE">Active</mat-option>
+                    <mat-option value="INACTIVE" i18n="@@SALON_OWNER_SETTINGS.STATUS_INACTIVE">Inactive</mat-option>
                   </mat-select>
+                  @if (businessForm.controls.status.hasError('required')) {
+                    <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_STATUS_REQUIRED">Status is required.</mat-error>
+                  }
                 </mat-form-field>
-                <button mat-flat-button type="submit" [disabled]="saving()">Save business</button>
+                <button mat-flat-button type="submit" [disabled]="saving()" i18n="@@SALON_OWNER_SETTINGS.BTN_SAVE_BUSINESS">Save business</button>
               </form>
             </mat-card-content>
           </mat-card>
 
           <mat-card>
             <mat-card-header>
-              <mat-card-title>Businesses</mat-card-title>
+              <mat-card-title i18n="@@SALON_OWNER_SETTINGS.CARD_TITLE_BUSINESSES">Businesses</mat-card-title>
             </mat-card-header>
             <mat-card-content>
               <div class="list">
                 @for (business of businesses(); track business.id) {
-                  <button
-                    type="button"
-                    class="list-row"
-                    [class.selected]="selectedBusiness()?.id === business.id"
-                    (click)="selectBusiness(business)"
-                  >
+                  <button type="button" class="list-row" [class.selected]="selectedBusiness()?.id === business.id" (click)="selectBusiness(business)">
                     <span>{{ business.displayName }}</span>
                     <small>{{ business.status }}</small>
                   </button>
                 } @empty {
-                  <p class="empty">Create the first business profile to start branch setup.</p>
+                  <p class="empty" i18n="@@SALON_OWNER_SETTINGS.EMPTY_BUSINESSES">Create the first business profile to start branch setup.</p>
                 }
               </div>
             </mat-card-content>
@@ -93,80 +100,128 @@
       </mat-tab>
     }
 
-    <mat-tab label="Branches" [disabled]="!canAccessBranches()">
+    <mat-tab label="Branches" i18n-label="@@SALON_OWNER_SETTINGS.TAB_BRANCHES" [disabled]="!canAccessBranches()">
       <div class="tab-grid">
         <mat-card>
           <mat-card-header>
-            <mat-card-title>Branch profile</mat-card-title>
+            <mat-card-title i18n="@@SALON_OWNER_SETTINGS.CARD_TITLE_BRANCH_PROFILE">Branch profile</mat-card-title>
           </mat-card-header>
           <mat-card-content>
             <form [formGroup]="branchForm" class="form-grid" (ngSubmit)="saveBranch()">
               <mat-form-field appearance="outline">
-                <mat-label>Name</mat-label>
+                <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_BRANCH_NAME">Name</mat-label>
                 <input matInput formControlName="name" />
+                @if (branchForm.controls.name.hasError('required') || branchForm.controls.name.hasError('minlength')) {
+                  <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_BRANCH_NAME_REQUIRED"> Branch name is required (min 2 characters). </mat-error>
+                } @else if (branchForm.controls.name.hasError('maxlength')) {
+                  <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_BRANCH_NAME_MAX"> Branch name cannot exceed 120 characters. </mat-error>
+                }
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Phone</mat-label>
+                <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_PHONE">Phone</mat-label>
                 <input matInput formControlName="phone" />
+                @if (branchForm.controls.phone.hasError('maxlength')) {
+                  <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_PHONE_MAX"> Phone number cannot exceed 30 characters. </mat-error>
+                }
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Email</mat-label>
+                <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_EMAIL">Email</mat-label>
                 <input matInput formControlName="email" />
+                @if (branchForm.controls.email.hasError('email')) {
+                  <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_EMAIL_INVALID">Enter a valid email address.</mat-error>
+                }
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Timezone</mat-label>
+                <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_TIMEZONE">Timezone</mat-label>
                 <input matInput formControlName="timezone" />
+                @if (branchForm.controls.timezone.hasError('required') || branchForm.controls.timezone.hasError('timezone')) {
+                  <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_TIMEZONE_INVALID"> Enter a valid IANA timezone (e.g. Asia/Tokyo). </mat-error>
+                }
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Currency</mat-label>
+                <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_CURRENCY">Currency</mat-label>
                 <input matInput formControlName="currency" />
+                @if (branchForm.controls.currency.hasError('required') || branchForm.controls.currency.hasError('currency')) {
+                  <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_CURRENCY_INVALID"> Enter a valid 3-letter currency code (e.g. JPY, USD). </mat-error>
+                }
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Status</mat-label>
+                <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_STATUS">Status</mat-label>
                 <mat-select formControlName="status">
-                  <mat-option value="ACTIVE">Active</mat-option>
-                  <mat-option value="INACTIVE">Inactive</mat-option>
+                  <mat-option value="ACTIVE" i18n="@@SALON_OWNER_SETTINGS.STATUS_ACTIVE">Active</mat-option>
+                  <mat-option value="INACTIVE" i18n="@@SALON_OWNER_SETTINGS.STATUS_INACTIVE">Inactive</mat-option>
                 </mat-select>
+                @if (branchForm.controls.status.hasError('required')) {
+                  <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_STATUS_REQUIRED">Status is required.</mat-error>
+                }
               </mat-form-field>
 
               <fieldset formGroupName="address">
-                <legend>Address</legend>
+                <legend i18n="@@SALON_OWNER_SETTINGS.LEGEND_ADDRESS">Address</legend>
                 <mat-form-field appearance="outline">
-                  <mat-label>Line 1</mat-label>
+                  <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_ADDRESS_LINE1">Line 1</mat-label>
                   <input matInput formControlName="line1" />
+                  @if (branchForm.controls.address.controls.line1.hasError('required') || branchForm.controls.address.controls.line1.hasError('minlength')) {
+                    <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_ADDRESS_LINE1_REQUIRED"> Address line 1 is required. </mat-error>
+                  } @else if (branchForm.controls.address.controls.line1.hasError('maxlength')) {
+                    <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_ADDRESS_LINE1_MAX"> Address line 1 cannot exceed 160 characters. </mat-error>
+                  }
                 </mat-form-field>
                 <mat-form-field appearance="outline">
-                  <mat-label>Line 2</mat-label>
+                  <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_ADDRESS_LINE2">Line 2</mat-label>
                   <input matInput formControlName="line2" />
+                  @if (branchForm.controls.address.controls.line2.hasError('maxlength')) {
+                    <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_ADDRESS_LINE2_MAX"> Address line 2 cannot exceed 160 characters. </mat-error>
+                  }
                 </mat-form-field>
                 <mat-form-field appearance="outline">
-                  <mat-label>City</mat-label>
+                  <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_ADDRESS_CITY">City</mat-label>
                   <input matInput formControlName="city" />
+                  @if (branchForm.controls.address.controls.city.hasError('required') || branchForm.controls.address.controls.city.hasError('minlength')) {
+                    <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_ADDRESS_CITY_REQUIRED">City is required.</mat-error>
+                  } @else if (branchForm.controls.address.controls.city.hasError('maxlength')) {
+                    <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_ADDRESS_CITY_MAX"> City cannot exceed 80 characters. </mat-error>
+                  }
                 </mat-form-field>
                 <mat-form-field appearance="outline">
-                  <mat-label>State</mat-label>
+                  <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_ADDRESS_STATE">State</mat-label>
                   <input matInput formControlName="state" />
+                  @if (branchForm.controls.address.controls.state.hasError('required') || branchForm.controls.address.controls.state.hasError('minlength')) {
+                    <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_ADDRESS_STATE_REQUIRED">State is required.</mat-error>
+                  } @else if (branchForm.controls.address.controls.state.hasError('maxlength')) {
+                    <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_ADDRESS_STATE_MAX"> State cannot exceed 80 characters. </mat-error>
+                  }
                 </mat-form-field>
                 <mat-form-field appearance="outline">
-                  <mat-label>Postal code</mat-label>
+                  <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_ADDRESS_POSTAL_CODE">Postal code</mat-label>
                   <input matInput formControlName="postalCode" />
+                  @if (branchForm.controls.address.controls.postalCode.hasError('required') || branchForm.controls.address.controls.postalCode.hasError('minlength')) {
+                    <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_ADDRESS_POSTAL_CODE_REQUIRED"> Postal code is required. </mat-error>
+                  } @else if (branchForm.controls.address.controls.postalCode.hasError('maxlength')) {
+                    <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_ADDRESS_POSTAL_CODE_MAX"> Postal code cannot exceed 20 characters. </mat-error>
+                  }
                 </mat-form-field>
                 <mat-form-field appearance="outline">
-                  <mat-label>Country</mat-label>
+                  <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_ADDRESS_COUNTRY">Country</mat-label>
                   <input matInput formControlName="country" />
+                  @if (
+                    branchForm.controls.address.controls.country.hasError('required') ||
+                    branchForm.controls.address.controls.country.hasError('minlength') ||
+                    branchForm.controls.address.controls.country.hasError('maxlength')
+                  ) {
+                    <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_ADDRESS_COUNTRY_INVALID"> Enter a valid 2-letter country code (e.g. JP). </mat-error>
+                  }
                 </mat-form-field>
               </fieldset>
 
-              <button mat-flat-button type="submit" [disabled]="saving()">
-                Save branch
-              </button>
+              <button mat-flat-button type="submit" [disabled]="saving()" i18n="@@SALON_OWNER_SETTINGS.BTN_SAVE_BRANCH">Save branch</button>
             </form>
           </mat-card-content>
         </mat-card>
 
         <mat-card>
           <mat-card-header>
-            <mat-card-title>Branch list</mat-card-title>
+            <mat-card-title i18n="@@SALON_OWNER_SETTINGS.CARD_TITLE_BRANCH_LIST">Branch list</mat-card-title>
           </mat-card-header>
           <mat-card-content>
             <div class="list">
@@ -176,7 +231,7 @@
                   <small>{{ branch.status }} / {{ branch.timezone }} / {{ branch.currency }}</small>
                 </button>
               } @empty {
-                <p class="empty">No branches are configured for this business.</p>
+                <p class="empty" i18n="@@SALON_OWNER_SETTINGS.EMPTY_BRANCHES">No branches are configured for this business.</p>
               }
             </div>
           </mat-card-content>
@@ -184,42 +239,60 @@
       </div>
     </mat-tab>
 
-    <mat-tab label="Hours" [disabled]="!hasBranch() || !branchSettingsLoaded()">
+    <mat-tab label="Hours" i18n-label="@@SALON_OWNER_SETTINGS.TAB_HOURS" [disabled]="!hasBranch() || !branchSettingsLoaded()">
       <mat-card>
         <mat-card-header>
-          <mat-card-title>Weekly hours</mat-card-title>
+          <mat-card-title i18n="@@SALON_OWNER_SETTINGS.CARD_TITLE_WEEKLY_HOURS">Weekly hours</mat-card-title>
         </mat-card-header>
         <mat-card-content>
           <form [formGroup]="hoursForm" class="hours-form" (ngSubmit)="saveHours()">
             <mat-form-field appearance="outline">
-              <mat-label>Timezone</mat-label>
+              <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_TIMEZONE">Timezone</mat-label>
               <input matInput formControlName="timezone" readonly />
+              @if (hoursForm.controls.timezone.hasError('branchTimezone')) {
+                <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_HOURS_BRANCH_TIMEZONE"> Weekly hours must use the selected branch timezone. </mat-error>
+              }
             </mat-form-field>
             <div formArrayName="days" class="days">
               @for (day of dayForms.controls; track $index; let dayIndex = $index) {
                 <div [formGroupName]="dayIndex" class="day-row">
                   <strong>{{ weekdays[dayIndex] }}</strong>
-                  <mat-slide-toggle formControlName="open" (change)="onDayOpenToggle(dayIndex)">Open</mat-slide-toggle>
+                  <mat-slide-toggle formControlName="open" (change)="onDayOpenToggle(dayIndex)" i18n="@@SALON_OWNER_SETTINGS.TOGGLE_OPEN"> Open </mat-slide-toggle>
                   @if (day.get('open')?.value) {
                     <div formArrayName="intervals" class="intervals">
-                      @for (_ of getDayIntervals(dayIndex).controls; track $index; let intervalIndex = $index) {
+                      @for (interval of getDayIntervals(dayIndex).controls; track $index; let intervalIndex = $index) {
                         <div [formGroupName]="intervalIndex" class="interval-row">
                           <mat-form-field appearance="outline">
-                            <mat-label>Start</mat-label>
+                            <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_START">Start</mat-label>
                             <input matInput formControlName="start" />
+                            @if (interval.get('start')?.hasError('required') || interval.get('start')?.hasError('pattern')) {
+                              <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_TIME_FORMAT"> Enter a valid time in HH:mm format. </mat-error>
+                            }
                           </mat-form-field>
                           <mat-form-field appearance="outline">
-                            <mat-label>End</mat-label>
+                            <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_END">End</mat-label>
                             <input matInput formControlName="end" />
+                            @if (interval.get('end')?.hasError('required') || interval.get('end')?.hasError('pattern')) {
+                              <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_TIME_FORMAT"> Enter a valid time in HH:mm format. </mat-error>
+                            }
                           </mat-form-field>
-                          <button mat-icon-button type="button" aria-label="Remove interval" (click)="removeInterval(dayIndex, intervalIndex)">
+                          <button mat-icon-button type="button" aria-label="Remove interval" i18n-aria-label="@@SALON_OWNER_SETTINGS.ARIA_REMOVE_INTERVAL" (click)="removeInterval(dayIndex, intervalIndex)">
                             <mat-icon>remove_circle</mat-icon>
                           </button>
                         </div>
                       }
+                      @if (day.get('intervals')?.touched && day.get('intervals')?.errors) {
+                        <p class="interval-error" role="alert">
+                          @if (day.get('intervals')?.errors?.['intervalOrder']) {
+                            <ng-container i18n="@@SALON_OWNER_SETTINGS.ERROR_INTERVAL_ORDER"> Interval start time must be before end time. </ng-container>
+                          } @else if (day.get('intervals')?.errors?.['intervalOverlap']) {
+                            <ng-container i18n="@@SALON_OWNER_SETTINGS.ERROR_INTERVAL_OVERLAP"> Intervals must not overlap. </ng-container>
+                          }
+                        </p>
+                      }
                       <button mat-stroked-button type="button" (click)="addInterval(dayIndex)">
                         <mat-icon>add</mat-icon>
-                        Interval
+                        <ng-container i18n="@@SALON_OWNER_SETTINGS.BTN_ADD_INTERVAL">Interval</ng-container>
                       </button>
                     </div>
                   }
@@ -227,20 +300,20 @@
               }
             </div>
             @if (hoursConflictRequiresAcknowledgement()) {
-              <mat-checkbox formControlName="acknowledgeExistingAppointmentsOutsideHours">
+              <mat-checkbox formControlName="acknowledgeExistingAppointmentsOutsideHours" i18n="@@SALON_OWNER_SETTINGS.CHECKBOX_ACKNOWLEDGE_HOURS">
                 Confirm this change even if future appointments fall outside the updated hours.
               </mat-checkbox>
             }
-            <button mat-flat-button type="submit" [disabled]="saving() || !branchSettingsLoaded()">Save hours</button>
+            <button mat-flat-button type="submit" [disabled]="saving() || !branchSettingsLoaded()" i18n="@@SALON_OWNER_SETTINGS.BTN_SAVE_HOURS">Save hours</button>
           </form>
         </mat-card-content>
       </mat-card>
     </mat-tab>
 
-    <mat-tab label="Holiday" [disabled]="!hasBranch() || !branchSettingsLoaded()">
+    <mat-tab label="Holiday" i18n-label="@@SALON_OWNER_SETTINGS.TAB_HOLIDAY" [disabled]="!hasBranch() || !branchSettingsLoaded()">
       <mat-card>
         <mat-card-header>
-          <mat-card-title>Holiday or special day</mat-card-title>
+          <mat-card-title i18n="@@SALON_OWNER_SETTINGS.CARD_TITLE_HOLIDAY">Holiday or special day</mat-card-title>
         </mat-card-header>
         <mat-card-content>
           <form [formGroup]="holidayForm" class="form-grid" (ngSubmit)="saveHoliday()">
@@ -249,59 +322,87 @@
                 <button type="button" class="list-row" (click)="selectHoliday(holiday)">
                   <span>{{ holiday.date }}</span>
                   <small>
-                    {{ holiday.closed ? 'Closed' : 'Open' }}
+                    @if (holiday.closed) {
+                      <ng-container i18n="@@SALON_OWNER_SETTINGS.STATUS_CLOSED">Closed</ng-container>
+                    } @else {
+                      <ng-container i18n="@@SALON_OWNER_SETTINGS.STATUS_OPEN">Open</ng-container>
+                    }
                     @if (holiday.reason) {
                       / {{ holiday.reason }}
                     }
                   </small>
                 </button>
               } @empty {
-                <p class="empty">No special-day overrides are configured for this branch.</p>
+                <p class="empty" i18n="@@SALON_OWNER_SETTINGS.EMPTY_HOLIDAYS">No special-day overrides are configured for this branch.</p>
               }
             </div>
             <mat-form-field appearance="outline">
-              <mat-label>Date</mat-label>
+              <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_DATE">Date</mat-label>
               <input matInput type="date" formControlName="date" />
+              @if (holidayForm.controls.date.hasError('required')) {
+                <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_DATE_REQUIRED">Date is required.</mat-error>
+              }
             </mat-form-field>
-            <mat-slide-toggle formControlName="closed">Closed</mat-slide-toggle>
+            <mat-slide-toggle formControlName="closed" i18n="@@SALON_OWNER_SETTINGS.TOGGLE_CLOSED"> Closed </mat-slide-toggle>
             <mat-form-field appearance="outline">
-              <mat-label>Reason</mat-label>
+              <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_REASON">Reason</mat-label>
               <input matInput formControlName="reason" />
+              @if (holidayForm.controls.reason.hasError('maxlength')) {
+                <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_REASON_MAX">Reason cannot exceed 160 characters.</mat-error>
+              }
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>Open start</mat-label>
+              <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_OPEN_START">Open start</mat-label>
               <input matInput formControlName="start" />
+              @if (holidayForm.controls.start.hasError('required') || holidayForm.controls.start.hasError('pattern')) {
+                <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_TIME_FORMAT">Enter a valid time in HH:mm format.</mat-error>
+              }
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>Open end</mat-label>
+              <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_OPEN_END">Open end</mat-label>
               <input matInput formControlName="end" />
+              @if (holidayForm.controls.end.hasError('required') || holidayForm.controls.end.hasError('pattern')) {
+                <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_TIME_FORMAT">Enter a valid time in HH:mm format.</mat-error>
+              }
             </mat-form-field>
-            <button mat-flat-button type="submit" [disabled]="saving() || !branchSettingsLoaded()">Save holiday</button>
+            @if (holidayForm.errors?.['intervalOrder']) {
+              <p class="interval-error" role="alert" i18n="@@SALON_OWNER_SETTINGS.ERROR_HOLIDAY_INTERVAL_ORDER">Holiday open hours must start before they end.</p>
+            }
+            <button mat-flat-button type="submit" [disabled]="saving() || !branchSettingsLoaded()" i18n="@@SALON_OWNER_SETTINGS.BTN_SAVE_HOLIDAY">Save holiday</button>
           </form>
         </mat-card-content>
       </mat-card>
     </mat-tab>
 
-    <mat-tab label="Policy" [disabled]="!hasBranch() || !branchSettingsLoaded()">
+    <mat-tab label="Policy" i18n-label="@@SALON_OWNER_SETTINGS.TAB_POLICY" [disabled]="!hasBranch() || !branchSettingsLoaded()">
       <mat-card>
         <mat-card-header>
-          <mat-card-title>Booking policy</mat-card-title>
+          <mat-card-title i18n="@@SALON_OWNER_SETTINGS.CARD_TITLE_BOOKING_POLICY">Booking policy</mat-card-title>
         </mat-card-header>
         <mat-card-content>
           <form [formGroup]="policyForm" class="form-grid" (ngSubmit)="savePolicy()">
             <mat-form-field appearance="outline">
-              <mat-label>Booking lead minutes</mat-label>
+              <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_BOOKING_LEAD">Booking lead minutes</mat-label>
               <input matInput type="number" formControlName="bookingLeadMinutes" />
+              @if (policyForm.controls.bookingLeadMinutes.hasError('required') || policyForm.controls.bookingLeadMinutes.hasError('integerRange')) {
+                <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_BOOKING_LEAD_INTEGER"> Booking lead minutes must be a non-negative whole number. </mat-error>
+              }
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>Cancellation cutoff minutes</mat-label>
+              <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_CANCELLATION_CUTOFF"> Cancellation cutoff minutes </mat-label>
               <input matInput type="number" formControlName="cancellationCutoffMinutes" />
+              @if (policyForm.controls.cancellationCutoffMinutes.hasError('required') || policyForm.controls.cancellationCutoffMinutes.hasError('integerRange')) {
+                <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_CANCELLATION_CUTOFF_INTEGER"> Cancellation cutoff minutes must be a non-negative whole number. </mat-error>
+              }
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>No-show grace minutes</mat-label>
+              <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_NO_SHOW_GRACE">No-show grace minutes</mat-label>
               <input matInput type="number" formControlName="noShowGraceMinutes" />
+              @if (policyForm.controls.noShowGraceMinutes.hasError('required') || policyForm.controls.noShowGraceMinutes.hasError('integerRange')) {
+                <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_NO_SHOW_GRACE_INTEGER"> No-show grace minutes must be a non-negative whole number. </mat-error>
+              }
             </mat-form-field>
-            <button mat-flat-button type="submit" [disabled]="saving() || !branchSettingsLoaded()">Save policy</button>
+            <button mat-flat-button type="submit" [disabled]="saving() || !branchSettingsLoaded()" i18n="@@SALON_OWNER_SETTINGS.BTN_SAVE_POLICY">Save policy</button>
           </form>
         </mat-card-content>
       </mat-card>

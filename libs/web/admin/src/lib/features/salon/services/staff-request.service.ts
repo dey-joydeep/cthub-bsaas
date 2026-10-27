@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -37,8 +37,7 @@ export interface StaffRequest {
 @Injectable({ providedIn: 'root' })
 export class StaffRequestService {
   private baseUrl = '/api/staff-requests';
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   createLeaveRequest(payload: CreateLeaveRequestPayload): Observable<StaffRequest> {
     return this.http.post<StaffRequest>(`${this.baseUrl}/leave`, payload);

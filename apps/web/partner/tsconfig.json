@@ -1,38 +1,42 @@
 {
-    "extends": "../../../tsconfig.base.json",
-    "compilerOptions": {
-        "outDir": "../../../dist/apps/web/partner",
-        "baseUrl": ".",
-        "paths": {
-            "@env/*": ["src/environments/*"],
-            "@app/*": ["src/app/*"],
-            "@shared/*": ["../../../libs/shared/src/*"],
-            "@cthub-bsaas/web-ui": ["../../../libs/web/ui/src/index.ts"],
-            "@cthub-bsaas/web-ui/*": ["../../../libs/web/ui/src/*"],
-            "@cthub-bsaas/web-partner": ["../../../libs/web/partner/src/index.ts"],
-            "@cthub-bsaas/web-partner/*": ["../../../libs/web/partner/src/*"],
-            "@cthub-bsaas/web-partner/auth": ["../../../libs/web/partner/src/lib/features/auth/index.ts"],
-            "@cthub-bsaas/shared": ["../../../libs/shared/src/index.ts"],
-            "@cthub-bsaas/shared/models/*": ["../../../libs/shared/src/lib/models/*"],
-            "@cthub-bsaas/shared/*": ["../../../libs/shared/src/*"],
-            "@cthub-bsaas/web-config": ["../../../libs/web/config/src/index.ts"],
-            "@cthub-bsaas/web-config/environments/*": ["../../../libs/web/config/src/environments/*"],
-            "@cthub-bsaas/web-core/auth": ["../../../libs/web/core/auth/src/index.ts"],
-            "@cthub-bsaas/web-core-auth": ["../../../libs/web/core/auth/src/index.ts"],
-            "@cthub-bsaas/web-core/http": ["../../../libs/web/core/http/src/index.ts"],
-            "@cthub-bsaas/web-core-http": ["../../../libs/web/core/http/src/index.ts"],
-            "@cthub-bsaas/web-core/testing": ["../../../libs/web/core/testing/src/index.ts"],
-            "@cthub-bsaas/web-core-common": ["../../../libs/web/core/common/src/index.ts"],
-            "@cthub-bsaas/web-core-platform": ["../../../libs/web/core/platform/src/index.ts"],
-            "chart.js/dist/types/utils": ["../../../node_modules/chart.js/dist/types/utils.d.ts"]
-        },
-        "types": ["node"],
-        "esModuleInterop": true
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/apps/web/partner",
+    "baseUrl": ".",
+    "paths": {
+      "@env/*": ["src/environments/*"],
+      "@app/*": ["src/app/*"],
+      "@shared/*": ["../../../libs/shared/src/*"],
+      "@cthub-bsaas/web-ui": ["../../../libs/web/ui/src/index.ts"],
+      "@cthub-bsaas/web-ui/*": ["../../../libs/web/ui/src/*"],
+      "@cthub-bsaas/web-partner": ["../../../libs/web/partner/src/index.ts"],
+      "@cthub-bsaas/web-partner/*": ["../../../libs/web/partner/src/*"],
+      "@cthub-bsaas/web-partner/auth": ["../../../libs/web/partner/src/lib/features/auth/index.ts"],
+      "@cthub-bsaas/shared": ["../../../libs/shared/src/index.ts"],
+      "@cthub-bsaas/shared/models/*": ["../../../libs/shared/src/lib/models/*"],
+      "@cthub-bsaas/shared/*": ["../../../libs/shared/src/*"],
+      "@cthub-bsaas/web-config": ["../../../libs/web/config/src/index.ts"],
+      "@cthub-bsaas/web-config/environments/*": ["../../../libs/web/config/src/environments/*"],
+      "@cthub-bsaas/web-core/auth": ["../../../libs/web/core/auth/src/index.ts"],
+      "@cthub-bsaas/web-core-auth": ["../../../libs/web/core/auth/src/index.ts"],
+      "@cthub-bsaas/web-core/http": ["../../../libs/web/core/http/src/index.ts"],
+      "@cthub-bsaas/web-core-http": ["../../../libs/web/core/http/src/index.ts"],
+      "@cthub-bsaas/web-core/testing": ["../../../libs/web/core/testing/src/index.ts"],
+      "@cthub-bsaas/web-core-common": ["../../../libs/web/core/common/src/index.ts"],
+      "@cthub-bsaas/web-core-platform": ["../../../libs/web/core/platform/src/index.ts"],
+      "chart.js/dist/types/utils": ["../../../node_modules/chart.js/dist/types/utils.d.ts"]
     },
-    "angularCompilerOptions": {
-        "enableI18nLegacyMessageIdFormat": false,
-        "strictInjectionParameters": true,
-        "strictInputAccessModifiers": true,
-        "strictTemplates": true
-    }
+    "types": ["node"],
+    "esModuleInterop": true,
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "ignoreDeprecations": "6.0",
+    "rootDir": "../../.."
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  }
 }

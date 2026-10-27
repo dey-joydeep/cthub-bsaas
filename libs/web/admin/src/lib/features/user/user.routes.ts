@@ -1,18 +1,16 @@
 import { Routes } from '@angular/router';
 import { authGuard } from '@cthub-bsaas/web-core-auth';
-import { UserComponent } from './user.component';
-import { ProfileSettingsComponent } from './profile-settings.component';
 
 export const USER_ROUTES: Routes = [
   {
     path: '',
-    component: UserComponent,
+    loadComponent: () => import('./user.component').then((m) => m.UserComponent),
     canActivate: [authGuard],
     title: 'User Management',
   },
   {
     path: 'profile',
-    component: ProfileSettingsComponent,
+    loadComponent: () => import('./profile-settings.component').then((m) => m.ProfileSettingsComponent),
     canActivate: [authGuard],
     title: 'Profile Settings',
   },

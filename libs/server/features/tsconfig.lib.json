@@ -1,15 +1,16 @@
 {
-    "extends": "../../../tsconfig.base.json",
-    "compilerOptions": {
-        "composite": true,
-        "outDir": "../../../dist/libs/server/features",
-        "declaration": true,
-        "types": ["node"],
-        "isolatedModules": false,
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "useDefineForClassFields": false
-    },
-    "include": ["src/**/*.ts"],
-    "exclude": ["**/*.spec.ts", "**/*.test.ts"]
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "../../../dist/libs/server/features",
+    "declaration": true,
+    "types": ["node"],
+    "isolatedModules": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "useDefineForClassFields": false,
+    "ignoreDeprecations": "6.0"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["**/*.spec.ts", "**/*.test.ts"]
 }

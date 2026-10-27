@@ -1,6 +1,6 @@
-import { CommonModule } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatNativeDateModule } from '@angular/material/core';
@@ -12,8 +12,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { Router } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
-import { CurrentUserService } from '../../../../../core/auth/services/current-user.service';
+import { CurrentUserService } from '@cthub-bsaas/web-core-auth';
 import { CreateAppointmentParams } from '../../../../../models/appointment-params.model';
 import { Salon } from '../../../models/salon.model';
 import { Service } from '../../../models/service.model';
@@ -24,7 +23,7 @@ import { Staff } from '../../../models/staff.model';
   standalone: true,
   imports: [
     // Angular modules
-    CommonModule,
+    DatePipe,
     ReactiveFormsModule,
 
     // Material modules
@@ -37,12 +36,9 @@ import { Staff } from '../../../models/staff.model';
     MatProgressBarModule,
     MatProgressSpinnerModule,
     MatSelectModule,
-
-    // Third-party modules
-    TranslateModule,
   ],
   templateUrl: './create-appointment.component.html',
-  styleUrls: ['./create-appointment.component.scss'],
+  styleUrls: ['./create-appointment.component.css'],
 })
 export class CreateAppointmentComponent implements OnInit {
   appointmentForm: FormGroup;
@@ -54,13 +50,12 @@ export class CreateAppointmentComponent implements OnInit {
   error: string | null = null;
   success: string | null = null;
   userId: string | null = null;
+  private readonly http = inject(HttpClient);
+  private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
+  private readonly currentUserService = inject(CurrentUserService);
 
-  constructor(
-    private http: HttpClient,
-    private fb: FormBuilder,
-    private router: Router,
-    @Inject(CurrentUserService) private currentUserService: CurrentUserService,
-  ) {
+  constructor() {
     this.appointmentForm = this.fb.group({
       salonId: ['', Validators.required],
       serviceId: ['', Validators.required],

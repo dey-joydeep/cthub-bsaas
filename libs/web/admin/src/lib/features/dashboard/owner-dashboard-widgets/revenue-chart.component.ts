@@ -1,5 +1,5 @@
-import { Component, Input, inject, signal, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal, OnInit, input } from '@angular/core';
+
 import { ChartData, ChartOptions, ChartType } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { MatCardModule } from '@angular/material/card';
@@ -15,7 +15,6 @@ import { MatTooltipModule } from '@angular/material/tooltip';
   selector: 'app-revenue-chart',
   standalone: true,
   imports: [
-    CommonModule,
     BaseChartDirective,
     MatCardModule,
     MatProgressBarModule,
@@ -27,10 +26,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatSnackBarModule,
   ],
   templateUrl: './revenue-chart.component.html',
-  styleUrls: ['./revenue-chart.component.scss'],
+  styleUrls: ['./revenue-chart.component.css'],
 })
 export class RevenueChartComponent implements OnInit {
-  @Input() tenantId = '';
+  tenantId = input('');
   private snackBar = inject(MatSnackBar);
   private dashboardService = inject(DashboardApiService);
 
@@ -109,7 +108,7 @@ export class RevenueChartComponent implements OnInit {
 
   // Load revenue data from API
   loadRevenueData(): void {
-    if (!this.tenantId) {
+    if (!this.tenantId()) {
       this.chartError.set('Tenant ID is required');
       return;
     }
@@ -135,7 +134,7 @@ export class RevenueChartComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err: Error) => {
-        const errorMessage = err?.message || 'Failed to load revenue data';
+        const errorMessage = err?.message || $localize`:@@DASHBOARD.REVENUE.ERROR_LOADING:Failed to load revenue data`;
         this.chartError.set(errorMessage);
         this.loading.set(false);
         this.showError(errorMessage);

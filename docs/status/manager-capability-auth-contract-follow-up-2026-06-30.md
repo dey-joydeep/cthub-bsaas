@@ -3,7 +3,11 @@
 **Date:** 2026-06-30  
 **Related PR:** [#44 feat: add salon owner settings screens](https://github.com/dey-joydeep/cthub-bsaas/pull/44)  
 **Related review thread:** [Gate branch settings to manager-capable staff](https://github.com/dey-joydeep/cthub-bsaas/pull/44#discussion_r3487973670)  
+<<<<<<< HEAD
 **Status:** Implemented on branch `feature/manager-capability-auth-contract` (ready for PR review)
+=======
+**Status:** Follow-up design and implementation task  
+>>>>>>> origin/feature/web-salon-owner-settings
 
 ## Purpose
 
@@ -143,6 +147,7 @@ After the separate task is implemented:
   - remain with the forbidden UX and close the thread by pointing to the follow-up auth-contract change
 
 Do not claim that the original thread is fully fixed until the route/menu capability question is actually resolved.
+<<<<<<< HEAD
 
 ## Implementation Summary
 
@@ -180,3 +185,5 @@ Implemented on branch `feature/manager-capability-auth-contract`:
    - All tests passing in `web-lib-partner` (57/57 tests across 2 suites).
    - All tests passing in `web-app-partner` (8/8 tests across 2 suites).
    - All tests passing in `server-feature-salon-owner` (93/93 tests across 3 suites).
+=======
+>>>>>>> origin/feature/web-salon-owner-settings

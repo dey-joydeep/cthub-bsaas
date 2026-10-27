@@ -1,11 +1,11 @@
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpContext } from '@angular/common/http';
-import { Inject, Injectable, Optional, PLATFORM_ID } from '@angular/core';
-import { BehaviorSubject, Observable, firstValueFrom, of } from 'rxjs';
+import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { BehaviorSubject, Observable, catchError, firstValueFrom, of } from 'rxjs';
 
 import { StorageService } from '@cthub-bsaas/web-core-platform';
 import { BYPASS_ERROR_INTERCEPTOR } from '@cthub-bsaas/web-core-common';
-import type { AuthStatePort } from '@cthub-bsaas/web-core/auth';
+import type { AuthStatePort } from '@cthub-bsaas/web-core-auth';
 import { hasManagerCapability } from '@cthub-bsaas/shared';
 import type { PartnerAuthUser } from '../models/auth.models';
 
@@ -15,6 +15,10 @@ export class AuthService implements AuthStatePort {
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
   private readonly TOKEN_EXPIRY_KEY = 'token_expiry';
   private readonly USER_KEY = 'current_user';
+
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly storage = inject(StorageService);
+  private readonly http = inject(HttpClient, { optional: true });
 
   private readonly isBrowser: boolean;
   private currentUserSubject = new BehaviorSubject<PartnerAuthUser | null>(null);
@@ -26,11 +30,7 @@ export class AuthService implements AuthStatePort {
   private authGeneration = 0;
   private inFlightHydration: Promise<PartnerAuthUser | null> | null = null;
 
-  constructor(
-    @Inject(PLATFORM_ID) private readonly platformId: object,
-    private readonly storage: StorageService,
-    @Optional() @Inject(HttpClient) private readonly http?: HttpClient,
-  ) {
+  constructor() {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
       this.initialize();
@@ -226,7 +226,10 @@ export class AuthService implements AuthStatePort {
           canManageBranches = payload['canManageBranches'];
         }
         if (!roles && Array.isArray(payload['roles'])) {
-          roles = (payload['roles'] as unknown[]).map(String);
+          roles = payload['roles'] as string[];
+        }
+        if (!role && typeof payload['role'] === 'string') {
+          role = payload['role'];
         }
       }
     }
@@ -252,16 +255,16 @@ export class AuthService implements AuthStatePort {
       canManageBranches,
     };
 
-    return {
-      ...candidate,
-      canManageBranches: candidate.canManageBranches ?? hasManagerCapability(candidate),
-    };
+    if (candidate.canManageBranches === undefined) {
+      candidate.canManageBranches = hasManagerCapability(candidate);
+    }
+
+    return candidate;
   }
 
   private getToken(): Observable<string | null> {
     if (!this.isBrowser) return of(null);
-    const token = this.storage.getItem<string>(this.TOKEN_KEY, null);
-    return of(typeof token === 'string' ? token : null);
+    return this.storage.getItem$<string>(this.TOKEN_KEY).pipe(catchError(() => of(null)));
   }
 
   private decodeTokenPayload(token: string | null | undefined): Record<string, unknown> | null {

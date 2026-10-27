@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { PortfolioItem } from './models/portfolio.model';
@@ -6,8 +6,7 @@ import { PortfolioItem } from './models/portfolio.model';
 @Injectable({ providedIn: 'root' })
 export class PortfolioService {
   private apiUrl = '/api/portfolio';
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   getPortfolioItems(tenantId: string): Observable<PortfolioItem[]> {
     return this.http.get<PortfolioItem[]>(`${this.apiUrl}?tenant_id=${tenantId}`);

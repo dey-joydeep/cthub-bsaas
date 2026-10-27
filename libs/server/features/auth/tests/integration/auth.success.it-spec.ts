@@ -914,9 +914,9 @@ describe('AuthController (Integration) - success flows', () => {
       expect(startRes.body.success).toBe(true);
     });
 
-    it('extractUserId handles fallback id and missing user branches', () => {
-      const extractor = (harness.app.get(WebauthnController) as unknown as { extractUserId: (u?: AuthenticatedUser) => string | undefined })
-        .extractUserId;
+    it('extractUserId handles fallback id and missing user branches', async () => {
+      const controller = await harness.app.resolve(WebauthnController);
+      const extractor = (controller as unknown as { extractUserId: (u?: AuthenticatedUser) => string | undefined }).extractUserId;
       expect(extractor(undefined)).toBeUndefined();
       expect(extractor({ id: 'fallback-id' } as unknown as AuthenticatedUser)).toBe('fallback-id');
       expect(extractor({ id: '' } as unknown as AuthenticatedUser)).toBeUndefined();
@@ -929,6 +929,7 @@ describe('AuthController (Integration) - success flows', () => {
       let controllerContext: ContextId;
 
       const buildJwtUser = (overrides: Partial<JwtUserContext> = {}): JwtUserContext => ({
+        id: 'user-1',
         userId: 'user-1',
         email: 'user@example.com',
         roles: [UserRole.CUSTOMER],

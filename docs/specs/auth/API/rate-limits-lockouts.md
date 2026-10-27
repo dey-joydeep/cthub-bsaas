@@ -1,12 +1,15 @@
 # Rate Limits And Lockouts (Auth)
+
 Updated: 2026-05-02
 
 ## Principles
+
 - Uniform responses where needed to avoid account enumeration.
 - `Retry-After` is present on `429`; frontend must honor the countdown.
 - Current Auth OpenAPI uses `429` for throttling.
 
 ## Current Endpoint Groups
+
 - `POST /auth/login`: credential attempts by IP + email.
 - `POST /auth/login/totp`: TOTP challenge attempts by temporary challenge/user.
 - `POST /auth/password/forgot`: password reset request by IP + email.
@@ -20,6 +23,7 @@ Updated: 2026-05-02
 - `POST /auth/webauthn/login/finish`: WebAuthn login finish by challenge.
 
 ## Suggested Limits
+
 Exact limits may be environment-configured, but the frontend contract is stable:
 
 - On throttle, server returns `429`.

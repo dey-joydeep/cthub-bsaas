@@ -3,4 +3,4 @@ version = 1
 name = "cthub-bsaas"
 
 [setup]
-script = ""
+script = "node .codex/environments/setup.mjs"
