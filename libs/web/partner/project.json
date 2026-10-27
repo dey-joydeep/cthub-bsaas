@@ -22,17 +22,9 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": [
-          "libs/web/partner/src/index.ts",
-          "libs/web/partner/src/lib/features/auth/**/*.ts",
-          "libs/web/partner/src/lib/features/auth/**/*.html",
-          "libs/web/partner/src/lib/features/auth/**/*.css",
-          "libs/web/partner/src/lib/features/salon-owner-settings/**/*.ts",
-          "libs/web/partner/src/lib/features/salon-owner-settings/**/*.html",
-          "libs/web/partner/src/lib/features/salon-owner-settings/**/*.css"
-        ]
+        "cwd": "{projectRoot}",
+        "command": "eslint src/index.ts src/lib/features/auth/**/*.ts src/lib/features/auth/**/*.html src/lib/features/salon-owner-settings/**/*.ts src/lib/features/salon-owner-settings/**/*.html"
       }
     },
     "type-check": {

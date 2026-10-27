@@ -1,5 +1,5 @@
 import { DatePipe, CurrencyPipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -46,6 +46,7 @@ import { ProductSale } from './models/product-sales-widget.model';
     ReactiveFormsModule,
   ],
   templateUrl: './product-sales-widget.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./product-sales-widget.component.css'],
 })
 export class ProductSalesWidgetComponent extends AbstractBaseComponent implements OnInit {

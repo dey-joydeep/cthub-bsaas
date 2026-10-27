@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'admin-subscriptions',
@@ -10,6 +10,7 @@ import { Component } from '@angular/core';
       <p>Reporting for subscribers will appear here once implemented.</p>
     </section>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
       .feature-placeholder {

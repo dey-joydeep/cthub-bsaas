@@ -1,5 +1,5 @@
 import { CurrencyPipe, DecimalPipe } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,6 +15,7 @@ import { DashboardStats } from './models/customer-stats-widget.model';
   standalone: true,
   imports: [CurrencyPipe, DecimalPipe, MatCardModule, MatIconModule, MatProgressSpinnerModule, MatButtonModule, MatTooltipModule],
   templateUrl: './customer-stats-widget.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./customer-stats-widget.component.css'],
 })
 export class CustomerStatsWidgetComponent extends AbstractBaseComponent {

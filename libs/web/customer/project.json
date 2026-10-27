@@ -22,14 +22,9 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": [
-          "libs/web/customer/src/index.ts",
-          "libs/web/customer/src/lib/features/auth/**/*.ts",
-          "libs/web/customer/src/lib/features/auth/**/*.html",
-          "libs/web/customer/src/lib/features/auth/**/*.css"
-        ]
+        "cwd": "{projectRoot}",
+        "command": "eslint src/index.ts src/lib/features/auth/**/*.ts src/lib/features/auth/**/*.html"
       }
     },
     "type-check": {

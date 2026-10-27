@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, FormControl, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { MatStepperModule } from '@angular/material/stepper';
@@ -44,6 +44,7 @@ import { AppointmentStatus } from '@cthub-bsaas/shared';
   ],
   templateUrl: './appointment-reschedule.component.html',
   styleUrls: ['./appointment-reschedule.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: DatePipe, useClass: DatePipe }],
 })
 export class AppointmentRescheduleComponent implements OnInit, OnDestroy {

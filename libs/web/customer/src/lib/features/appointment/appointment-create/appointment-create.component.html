@@ -161,7 +161,7 @@
                     <mat-card-title>{{ getSelectedService()?.name }}</mat-card-title>
                     <mat-card-subtitle>
                       {{ getSelectedService()?.duration }} <ng-container i18n="@@COMMON.MINUTES">minutes</ng-container> •
-                      {{ getSelectedService()?.price | currency }}
+                      {{ $safeNavigationMigration(getSelectedService()?.price) | currency }}
                     </mat-card-subtitle>
                   </mat-card-header>
 
@@ -179,7 +179,7 @@
                       <div>
                         <div class="detail-label"><ng-container i18n="@@APPOINTMENT.DATE">Date</ng-container></div>
                         <div class="detail-value">
-                          {{ dateTimeFormGroup.get('date')?.value | date: 'fullDate' }}
+                          {{ $safeNavigationMigration(dateTimeFormGroup.get('date')?.value) | date: 'fullDate' }}
                         </div>
                       </div>
                     </div>

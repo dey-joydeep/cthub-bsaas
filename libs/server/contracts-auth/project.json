@@ -24,13 +24,16 @@
       }
     },
     "test": {
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "executor": "@nx/jest:jest",
       "options": {
         "passWithNoTests": true,
-        "jestConfig": "libs/server/contracts-auth/jest.config.ts",
-        "codeCoverage": true,
-        "coverageReporters": ["text", "lcov"]
+        "coverageReporters": ["text", "lcov"],
+        "coverage": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "coverage": true
+        }
       }
     }
   }

@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,6 +10,7 @@ import type { DashboardStats } from './models/stats-widget.model';
   standalone: true,
   imports: [CurrencyPipe, MatCardModule, MatIconModule],
   templateUrl: './stats-widget.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./stats-widget.component.css'],
 })
 export class StatsWidgetComponent extends AbstractBaseComponent {

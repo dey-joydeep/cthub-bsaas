@@ -19,6 +19,40 @@
         "testTargetName": "test",
         "testMode": "run"
       }
+    },
+    {
+      "plugin": "@nx/jest/plugin",
+      "options": {
+        "targetName": "test"
+      },
+      "include": [
+        "apps/api/**/*",
+        "libs/server/contracts-auth/**/*",
+        "libs/server/contracts-platform/**/*",
+        "libs/server/core/**/*",
+        "libs/server/data-access/**/*",
+        "libs/server/features/appointment/**/*",
+        "libs/server/features/auth/**/*",
+        "libs/server/features/dashboard/**/*",
+        "libs/server/features/portfolio/**/*",
+        "libs/server/features/**/*",
+        "libs/server/features/review/**/*",
+        "libs/server/features/salon/**/*",
+        "libs/server/features/salon-owner/**/*",
+        "libs/server/features/salon-staff-request/**/*",
+        "libs/server/features/social/**/*",
+        "libs/server/features/theme/**/*",
+        "libs/server/features/user/**/*",
+        "libs/server/infrastructure/**/*",
+        "libs/shared/**/*"
+      ]
+    },
+    {
+      "plugin": "@nx/jest/plugin",
+      "options": {
+        "targetName": "e2e"
+      },
+      "include": ["apps/e2e/api/**/*"]
     }
   ],
   "targetDefaults": {
@@ -29,37 +63,17 @@
     },
     "test": {
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.cjs"],
-      "cache": true
-    },
-    "lint": {
-      "inputs": ["default", "{workspaceRoot}/eslint.config.js", "{workspaceRoot}/eslint.base.js"],
-      "cache": true
-    },
-    "@nx/jest:jest": {
-      "cache": true,
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.cjs"],
       "options": {
         "passWithNoTests": true
       },
       "configurations": {
         "ci": {
-          "ci": true,
-          "codeCoverage": true
+          "coverage": true
         }
-      }
+      },
+      "cache": true
     },
-    "@nx/angular:application": {
-      "options": {
-        "buildLibsFromSource": true
-      }
-    },
-    "@nx/angular:dev-server": {
-      "options": {
-        "buildLibsFromSource": true
-      }
-    },
-    "@nx/eslint:lint": {
-      "cache": true,
+    "lint": {
       "inputs": [
         "default",
         "^default",
@@ -67,7 +81,19 @@
         "{workspaceRoot}/eslint.base.js",
         "{workspaceRoot}/.eslintrc.json",
         "{workspaceRoot}/tools/eslint-rules/**/*"
-      ]
+      ],
+      "cache": true
+    },
+    "@nx/angular:application": {
+      "options": {
+        "buildLibsFromSource": true
+      },
+      "cache": true
+    },
+    "@nx/angular:dev-server": {
+      "options": {
+        "buildLibsFromSource": true
+      }
     },
     "e2e": {
       "cache": true
@@ -86,10 +112,6 @@
       "cache": true,
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
-    },
-    "@nx/vitest:test": {
-      "cache": true,
-      "inputs": ["default", "^production"]
     }
   },
   "namedInputs": {
@@ -165,5 +187,8 @@
       "preVersionCommand": "npx nx run-many -t build"
     }
   },
-  "analytics": false
+  "analytics": false,
+  "affected": {
+    "legacy": true
+  }
 }

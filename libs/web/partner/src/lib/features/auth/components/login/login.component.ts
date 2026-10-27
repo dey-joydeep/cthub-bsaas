@@ -1,6 +1,6 @@
 // Core
 import { isPlatformBrowser } from '@angular/common';
-import { Component, OnDestroy, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
@@ -43,6 +43,7 @@ import type { InitLoginResponse, PartnerAuthUser } from '../../models/auth.model
   ],
   selector: 'app-login',
   templateUrl: './login.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./login.component.css'],
 })
 export class LoginComponent extends AbstractBaseComponent implements OnInit, OnDestroy {
