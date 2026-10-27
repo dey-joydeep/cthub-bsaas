@@ -660,7 +660,7 @@ describe('SalonOwnerSettingsComponent', () => {
     expect(api.replaceBranchHours).not.toHaveBeenCalled();
   });
 
-  it('does not submit weekly-hours values outside the HH:MM range', () => {
+  it('does not submit weekly-hours values outside the HH:MM range', async () => {
     const component = fixture.componentInstance as unknown as SettingsComponentHarness & {
       dayForms: {
         at(index: number): {
@@ -672,10 +672,19 @@ describe('SalonOwnerSettingsComponent', () => {
     };
     api.replaceBranchHours.mockClear();
 
+    const tabs = Array.from(fixture.nativeElement.querySelectorAll('[role="tab"]')) as HTMLElement[];
+    tabs.find((tab) => tab.textContent?.includes('Hours'))?.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
     component.dayForms.at(1).get('intervals').at(0).patchValue({ start: '9:00', end: '25:99' });
     component.saveHours();
+    fixture.detectChanges();
 
     expect(api.replaceBranchHours).not.toHaveBeenCalled();
+    const errorElements = Array.from(fixture.nativeElement.querySelectorAll('mat-error')) as HTMLElement[];
+    const errorTexts = errorElements.map((el) => el.textContent?.trim());
+    expect(errorTexts).toContain('Enter a valid time in HH:mm format.');
   });
 
   it('does not submit weekly-hours values with reversed or overlapping intervals', () => {

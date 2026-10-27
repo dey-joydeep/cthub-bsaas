@@ -260,15 +260,21 @@
                   <mat-slide-toggle formControlName="open" (change)="onDayOpenToggle(dayIndex)" i18n="@@SALON_OWNER_SETTINGS.TOGGLE_OPEN"> Open </mat-slide-toggle>
                   @if (day.get('open')?.value) {
                     <div formArrayName="intervals" class="intervals">
-                      @for (_ of getDayIntervals(dayIndex).controls; track $index; let intervalIndex = $index) {
+                      @for (interval of getDayIntervals(dayIndex).controls; track $index; let intervalIndex = $index) {
                         <div [formGroupName]="intervalIndex" class="interval-row">
                           <mat-form-field appearance="outline">
                             <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_START">Start</mat-label>
                             <input matInput formControlName="start" />
+                            @if (interval.get('start')?.hasError('required') || interval.get('start')?.hasError('pattern')) {
+                              <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_TIME_FORMAT"> Enter a valid time in HH:mm format. </mat-error>
+                            }
                           </mat-form-field>
                           <mat-form-field appearance="outline">
                             <mat-label i18n="@@SALON_OWNER_SETTINGS.LABEL_END">End</mat-label>
                             <input matInput formControlName="end" />
+                            @if (interval.get('end')?.hasError('required') || interval.get('end')?.hasError('pattern')) {
+                              <mat-error i18n="@@SALON_OWNER_SETTINGS.ERROR_TIME_FORMAT"> Enter a valid time in HH:mm format. </mat-error>
+                            }
                           </mat-form-field>
                           <button mat-icon-button type="button" aria-label="Remove interval" i18n-aria-label="@@SALON_OWNER_SETTINGS.ARIA_REMOVE_INTERVAL" (click)="removeInterval(dayIndex, intervalIndex)">
                             <mat-icon>remove_circle</mat-icon>
