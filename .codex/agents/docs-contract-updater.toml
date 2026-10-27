@@ -1,3 +1,6 @@
+name = "docs-contract-updater"
+description = "Docs and contract updater for aligned FRD/HLD/LLD/API/validation/test changes when implementation shifts behavior."
+
 developer_instructions = """
 # Docs Contract Updater Subagent
 

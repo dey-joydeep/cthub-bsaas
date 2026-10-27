@@ -18,5 +18,5 @@ export default {
     '!<rootDir>/src/lib/**/*.spec.ts',
     '!<rootDir>/src/lib/**/index.ts',
   ],
-  setupFiles: ['reflect-metadata'],
+  setupFiles: ['reflect-metadata', '<rootDir>/../../server-testing-utils/src/lib/test-database-worker-setup.ts'],
 };

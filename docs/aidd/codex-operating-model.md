@@ -2,20 +2,21 @@
 
 **Status:** Current operating guide
 
-This document defines how OpenAI Codex is used for AI-driven development in this repository.
+This document defines how Codex participates in the shared [AI-driven development life cycle](development-lifecycle.md). The life-cycle document owns the product goal, stage sequence, role routing, and release gates.
 
 ## Scope
 
-Codex is the primary AIDD agent for this project. New AIDD process changes should be expressed first through:
+Codex owns independent code and contract review and all security checks. It may also implement or assist other stages when appropriate. Antigravity is the default executor for bulk PO-to-release preparation work. New process changes should be expressed through:
 
-- `AGENTS.md` and nested `AGENTS.md` files
-- `docs/aidd/*`
+- `AGENTS.md` and nested `AGENTS.md` files for shared constraints
+- `docs/aidd/*` for the shared life cycle and Codex playbooks
+- `.agents/AGENTS.md` and `.agents/agents/*` for Antigravity execution
 - `.codex/agents/*`
 - `.codex/environments/*`
 - `.codex/prompts/*`
 - `.codex/config.toml` only when project-level Codex configuration is required
 
-Do not add other assistant-specific instruction files as part of Codex AIDD setup unless explicitly requested.
+Keep tool-specific instructions limited to capabilities and commands that differ between Codex and Antigravity. Do not duplicate product or architecture policy across both sets of files.
 
 ## Default AIDD rule
 
@@ -53,12 +54,13 @@ Codex should not rely on stale memory when the repository contains the answer.
 
 ## Standard AIDD flow
 
-Use this flow for all new tasks:
+Use the PO-to-release stages and gates in [development-lifecycle.md](development-lifecycle.md). Within a Codex task, use this focused path:
 
 ```text
 Requirement / issue
   -> classify as new task or continuation fix
   -> read root AGENTS.md, nearest scoped AGENTS.md, and docs/aidd/README.md
+  -> identify the product outcome, acceptance criteria, and existing issue when applicable
   -> inspect existing docs and code
   -> identify impacted apps/libs/contracts/schema/tests/docs
   -> plan the smallest safe change using the project-wide implementation slicing plan when applicable
@@ -66,20 +68,22 @@ Requirement / issue
   -> implement or document
   -> add or update tests when behavior changes
   -> run targeted Nx or documentation validation
+  -> obtain independent Codex review and Codex security assessment when proposed for merge
   -> summarize result and risks
 ```
 
 ## Task classes
 
-| Task class             | Codex behavior                                                                                                  |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Documentation-only     | Update docs, keep examples consistent, no code changes unless requested.                                        |
-| Design/spec            | Update HLD/LLD/API/test-plan first; avoid implementation changes unless requested.                              |
-| New bug/error fix      | Treat as a new AIDD task: inspect docs/code, identify scope, patch minimally, add regression test where useful. |
-| Continuation fix       | Patch the validation error produced inside the current active task; preserve the original AIDD trace.           |
-| Feature implementation | Work from user story plus FRD/FNRD/HLD/LLD/API/validation/test docs; update missing specs before code changes.  |
-| Refactor               | Preserve behavior, keep public API stable, run tests around touched projects.                                   |
-| Review                 | Report correctness, security, architecture, tests, and maintainability risks before proposing changes.          |
+| Task class             | Codex behavior                                                                                                                    |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Documentation-only     | Update docs, keep examples consistent, no code changes unless requested.                                                          |
+| Design/spec            | Update HLD/LLD/API/test-plan first; avoid implementation changes unless requested.                                                |
+| New bug/error fix      | Treat as a new AIDD task: inspect docs/code, identify scope, patch minimally, add regression test where useful.                   |
+| Continuation fix       | Patch the validation error produced inside the current active task; preserve the original AIDD trace.                             |
+| Feature implementation | Work from user story plus FRD/FNRD/HLD/LLD/API/validation/test docs; update missing specs before code changes.                    |
+| Refactor               | Preserve behavior, keep public API stable, run tests around touched projects.                                                     |
+| Review                 | Independently report correctness, architecture, contracts, tests, documentation, and maintainability risks. Codex owns this gate. |
+| Security check         | Independently inspect security properties; use two separate Codex assessments for critical security decisions.                    |
 
 ## Design documentation expectations
 

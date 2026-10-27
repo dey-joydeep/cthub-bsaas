@@ -1,3 +1,6 @@
+name = "docs-traceability-reviewer"
+description = "Documentation traceability reviewer for user story to FRD/FNRD/HLD/LLD/API/VALIDATION/WEB/TEST alignment and visual artifact source-of-truth rules."
+
 developer_instructions = """
 # Docs Traceability Reviewer Subagent
 
