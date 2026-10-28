@@ -80,10 +80,12 @@
             <mat-icon>person</mat-icon>
             <span>Profile</span>
           </button>
-          <button mat-menu-item routerLink="/settings" routerLinkActive="active">
-            <mat-icon>settings</mat-icon>
-            <span>Settings</span>
-          </button>
+          @if (settingsRoute) {
+            <button mat-menu-item [routerLink]="settingsRoute" routerLinkActive="active">
+              <mat-icon>settings</mat-icon>
+              <span>Settings</span>
+            </button>
+          }
           <mat-divider />
           <button mat-menu-item (click)="onLogout()">
             <mat-icon>logout</mat-icon>

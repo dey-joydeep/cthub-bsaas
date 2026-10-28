@@ -25,9 +25,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     roles: string[];
     sessionId: string;
     tenantId?: string;
+    managedBranchIds?: string[];
+    canManageBranches?: boolean;
     iat: number;
     exp: number;
   }): JwtUserContext {
+    const isOwnerOrAdmin = payload.roles.some((r) => {
+      const lower = String(r).toLowerCase();
+      return lower === 'owner' || lower === 'admin';
+    });
+    const canManageBranches =
+      payload.canManageBranches ??
+      (isOwnerOrAdmin || (Array.isArray(payload.managedBranchIds) && payload.managedBranchIds.length > 0));
+
     return {
       id: payload.sub,
       userId: payload.sub,
@@ -35,6 +45,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       roles: payload.roles,
       sessionId: payload.sessionId,
       tenantId: payload.tenantId,
+      managedBranchIds: payload.managedBranchIds,
+      canManageBranches,
     };
   }
 }

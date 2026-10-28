@@ -38,7 +38,51 @@ describe('JwtStrategy', () => {
       roles: ['customer'],
       sessionId: 'sess-1',
       tenantId: 'tenant-1',
+      managedBranchIds: undefined,
+      canManageBranches: false,
     });
+  });
+
+  it('validate populates canManageBranches for manager staff and owners', () => {
+    const cfg = createConfig();
+    const strat = new JwtStrategy(cfg);
+
+    const staffResult = strat.validate({
+      sub: 'uid-staff',
+      email: 'staff@example.com',
+      roles: ['staff'],
+      sessionId: 'sess-2',
+      tenantId: 'tenant-1',
+      managedBranchIds: ['branch-1'],
+      iat: 1,
+      exp: 2,
+    });
+    expect(staffResult.canManageBranches).toBe(true);
+    expect(staffResult.managedBranchIds).toEqual(['branch-1']);
+
+    const ownerResult = strat.validate({
+      sub: 'uid-owner',
+      email: 'owner@example.com',
+      roles: ['OWNER'],
+      sessionId: 'sess-3',
+      tenantId: 'tenant-1',
+      iat: 1,
+      exp: 2,
+    });
+    expect(ownerResult.canManageBranches).toBe(true);
+
+    const explicitFalse = strat.validate({
+      sub: 'uid-explicit-false',
+      email: 'staff@example.com',
+      roles: ['staff'],
+      sessionId: 'sess-4',
+      tenantId: 'tenant-1',
+      canManageBranches: false,
+      managedBranchIds: ['branch-1'],
+      iat: 1,
+      exp: 2,
+    });
+    expect(explicitFalse.canManageBranches).toBe(false);
   });
 
   it('extracts token from bsaas_at cookie first', () => {

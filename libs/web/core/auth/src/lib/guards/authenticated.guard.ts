@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, CanMatchFn, Router } from '@angular/router';
+import { CanActivateFn, CanMatchFn, Router, UrlSegment } from '@angular/router';
 import { map, take } from 'rxjs/operators';
 import { CURRENT_USER } from '../interfaces/current-user.port';
 
@@ -27,12 +27,25 @@ export const authenticatedGuard: CanActivateFn = (_route, state) => {
   );
 };
 
-export const authCanMatch: CanMatchFn = () => {
+function buildAttemptedUrl(segments: UrlSegment[]): string {
+  const segmentPath = segments.map((segment) => segment.path).join('/');
+  return segmentPath.length > 0 ? `/${segmentPath}` : '/';
+}
+
+export const authCanMatch: CanMatchFn = (_route, segments) => {
   const currentUserService = inject(CURRENT_USER);
   const router = inject(Router);
 
   return currentUserService.isAuthenticated$.pipe(
     take(1),
-    map((isAuthenticated) => (isAuthenticated ? true : router.createUrlTree(['/auth/login']))),
+    map((isAuthenticated) => {
+      if (isAuthenticated) {
+        return true;
+      }
+
+      const attemptedUrl = buildAttemptedUrl(segments);
+      currentUserService.redirectUrl = attemptedUrl;
+      return router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: attemptedUrl } });
+    }),
   );
 };

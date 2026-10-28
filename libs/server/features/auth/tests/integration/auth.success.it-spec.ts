@@ -261,6 +261,7 @@ describe('AuthController (Integration) - success flows', () => {
     });
 
     cleanupTasks.push(async () => {
+      await harness.prisma.salonTenantStaff.deleteMany({ where: { salonId: salon.id } });
       await harness.prisma.registrationLink.deleteMany({ where: { salonId: salon.id } });
       await harness.prisma.staffInvite.deleteMany({ where: { salonId: salon.id } });
       await harness.prisma.salon.deleteMany({ where: { id: salon.id } });
@@ -432,6 +433,100 @@ describe('AuthController (Integration) - success flows', () => {
           .expect(201);
         expect(res.body.data).toEqual({ next: 'mfa' });
         expect(res.headers['set-cookie']).toBeUndefined();
+      });
+
+      it('issues access token with manager capability for staff with active manager assignment', async () => {
+        const fixture = await createSalonFixture();
+        const staff = await harness.registerUser({
+          roles: [UserRole.STAFF],
+          email: `staff-mgr-${randomUUID()}@example.com`,
+          registrationStatus: RegistrationStatus.COMPLETED,
+        });
+
+        await harness.prisma.salonTenantStaff.create({
+          data: {
+            userId: staff.id,
+            salonId: fixture.salonId,
+            position: 'Branch Manager',
+            isActive: true,
+          },
+        });
+
+        const res = await loginRequest(staff.email, 'password').expect(200);
+        const cookies = harness.expectCookies(harness.toCookiesArray(res.headers['set-cookie']), { requireAuth: true });
+        const accessToken = harness.extractCookieValue(cookies, 'bsaas_at');
+        expect(accessToken).toBeDefined();
+
+        const payload = await harness.jwtService.verifyAsync<{
+          managedBranchIds?: string[];
+          canManageBranches?: boolean;
+          roles: string[];
+        }>(accessToken!, {
+          secret: configService.auth.jwtAccessSecret,
+        });
+
+        expect(payload.managedBranchIds).toEqual([fixture.salonId]);
+        expect(payload.canManageBranches).toBe(true);
+
+        expect(res.body.data.user).toBeDefined();
+        expect(res.body.data.user.canManageBranches).toBe(true);
+        expect(res.body.data.user.managedBranchIds).toEqual([fixture.salonId]);
+
+        const meRes = await harness
+          .withAuth(request(harness.app.getHttpServer()).get('/auth/me'), cookies)
+          .expect(200);
+
+        expect(meRes.body.data).toEqual(expect.objectContaining({
+          id: staff.id,
+          email: staff.email,
+          roles: expect.arrayContaining(['STAFF']),
+          canManageBranches: true,
+          managedBranchIds: [fixture.salonId],
+        }));
+      });
+
+      it('withholds manager capability for staff without manager position', async () => {
+        const fixture = await createSalonFixture();
+        const staff = await harness.registerUser({
+          roles: [UserRole.STAFF],
+          email: `staff-stylist-${randomUUID()}@example.com`,
+          registrationStatus: RegistrationStatus.COMPLETED,
+        });
+
+        await harness.prisma.salonTenantStaff.create({
+          data: {
+            userId: staff.id,
+            salonId: fixture.salonId,
+            position: 'Stylist',
+            isActive: true,
+          },
+        });
+
+        const res = await loginRequest(staff.email, 'password').expect(200);
+        const cookies = harness.expectCookies(harness.toCookiesArray(res.headers['set-cookie']), { requireAuth: true });
+        const accessToken = harness.extractCookieValue(cookies, 'bsaas_at');
+        expect(accessToken).toBeDefined();
+
+        const payload = await harness.jwtService.verifyAsync<{
+          managedBranchIds?: string[];
+          canManageBranches?: boolean;
+          roles: string[];
+        }>(accessToken!, {
+          secret: configService.auth.jwtAccessSecret,
+        });
+
+        expect(payload.managedBranchIds ?? []).toEqual([]);
+        expect(payload.canManageBranches).toBe(false);
+
+        expect(res.body.data.user).toBeDefined();
+        expect(res.body.data.user.canManageBranches).toBe(false);
+
+        const meRes = await harness
+          .withAuth(request(harness.app.getHttpServer()).get('/auth/me'), cookies)
+          .expect(200);
+
+        expect(meRes.body.data.canManageBranches).toBe(false);
+        expect(meRes.body.data.managedBranchIds).toBeUndefined();
       });
     });
   });

@@ -22,9 +22,10 @@ export class LoginService {
   initLogin(credentials: LoginCredentials): Observable<InitLoginResponse> {
     return this.api.initLogin(credentials).pipe(
       map((res) => {
-        if (!res.success) throw new Error(res.error || 'Login initialization failed');
+        if (!res.success || !res.data) throw new Error(res.error || 'Failed to initialize login');
         return res.data;
       }),
+      catchError((err) => this.forwardError(err)),
     );
   }
 
@@ -60,10 +61,13 @@ export class LoginService {
   }
 
   private handleAuthResponse(res: ApiResponse<AuthResponse>): PartnerAuthUser {
-    if (!res.success || !res.data) {
+    if (!res.success) {
       throw new Error(res.error || 'Authentication failed');
     }
-    const user = res.data.user as PartnerAuthUser;
+    const data = res.data as Record<string, unknown> | undefined;
+    const source =
+      data && typeof data === 'object' && 'user' in data && data['user'] ? (data['user'] as Record<string, unknown>) : (data ?? {});
+    const user = { ...source } as PartnerAuthUser;
     this.authState.setLoggedInUser(user);
     return user;
   }
