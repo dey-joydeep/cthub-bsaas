@@ -4,6 +4,8 @@
 
 Use the narrowest command that validates the change.
 
+Use the [change scope and validation matrix](change-hygiene.md) to select checks by changed area. For PRs, `npm run aidd:format:changed -- <base-ref> <head-ref>` checks supported changed files while respecting `.prettierignore`. For uncommitted work, use `npm run aidd:format:changed -- --worktree`; format only the paths it reports.
+
 ## Project discovery
 
 ```powershell

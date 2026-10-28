@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { PrismaClient, Role } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { bindTestDatabaseTarget } from '@cthub-bsaas/server-core';
 
 /**
  * Jest global setup for server integration tests.
@@ -14,18 +15,19 @@ import * as bcrypt from 'bcryptjs';
  */
 export default async function globalSetup() {
   dotenv({ path: resolve(process.cwd(), '.env.test') });
+  const target = bindTestDatabaseTarget();
 
   const schemaPath = resolve(process.cwd(), 'libs/server/data-access/prisma/schema.prisma');
   const push = spawnSync('npx', ['prisma', 'db', 'push', '--skip-generate', '--accept-data-loss', '--schema', schemaPath], {
     stdio: 'inherit',
-    env: process.env,
+    env: { ...process.env, DATABASE_URL: target.url },
     shell: process.platform === 'win32',
   });
   if (push.status !== 0) {
     throw new Error('Failed to push Prisma schema for tests');
   }
 
-  const prisma = new PrismaClient();
+  const prisma = new PrismaClient({ datasources: { db: { url: target.url } } });
   const email = 'it-user@example.com';
   const password = 'P@ssw0rd!';
   const passwordHash = await bcrypt.hash(password, 10);

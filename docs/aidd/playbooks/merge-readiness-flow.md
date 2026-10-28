@@ -29,10 +29,15 @@ Do not edit. First produce:
 ## Merge readiness criteria
 
 - PR scope is clear and limited.
+- Changed files satisfy the [change scope and validation matrix](../change-hygiene.md).
 - Relevant root and scoped `AGENTS.md` instructions were checked.
 - Relevant docs/specs are aligned.
 - No unrelated formatting or file moves.
 - Validation is run or explicitly deferred with a reason.
+- QA evidence and independent Codex review are present; applicable Codex security findings are resolved or dispositioned.
+- The final Codex whole-PR review and any approval name the current committed head and target base; a later commit requires a new final review.
+- The live PR passes `npm run aidd:premerge -- <PR-number>`; usage-limit messages and stale receipts do not count.
+- The release owner verifies QA and applicable security evidence separately from the automation check.
 - Risks and follow-ups are visible.
 - The branch is up to date or merge conflicts are understood.
 
@@ -61,6 +66,13 @@ Run the AIDD checks when the verification scripts are present in the checked-out
 npm run aidd:check
 npm run aidd:assets
 npm run aidd:links
+npm run aidd:instruction-drift
+```
+
+For an open PR, check live automated evidence after the final push and review:
+
+```powershell
+npm run aidd:premerge -- <PR-number>
 ```
 
 If the AIDD verification scripts are not present yet, skip those commands and state that the branch does not include them.

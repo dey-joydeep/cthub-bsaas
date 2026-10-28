@@ -4,6 +4,8 @@
 
 Use this checklist when Codex reviews its own changes, reviews a pull request, or prepares a completion report.
 
+For a merge gate, the Codex reviewer must be independent of the implementer. Security checks are owned by Codex; critical security decisions require a second independent Codex assessment. See [development-lifecycle.md](development-lifecycle.md).
+
 ## Scope and traceability
 
 - [ ] The change matches the requested scope.
@@ -12,6 +14,7 @@ Use this checklist when Codex reviews its own changes, reviews a pull request, o
 - [ ] Design/spec documents were updated when behavior or contracts changed.
 - [ ] Implementation changes follow `docs/specs/project-wide/IMPLEMENTATION/implementation-slicing.md` when the work belongs to the project-wide roadmap.
 - [ ] API changes align with the owning OpenAPI file and endpoint map.
+- [ ] Check the actual producer and consumer for changes that cross an API or session boundary.
 - [ ] No unrelated files were reformatted or moved.
 
 ## Architecture
@@ -49,6 +52,8 @@ Use this checklist when Codex reviews its own changes, reviews a pull request, o
 
 - [ ] Unit tests were added or updated for changed logic.
 - [ ] Integration tests were added or updated for API/database behavior when relevant.
+- [ ] Permission and SSR tests exercise the actual behavior claimed.
+- [ ] CI scripts preserve command failures and provision their test services.
 - [ ] Validation commands were run or explicitly reported as not run.
 - [ ] Test coverage thresholds were not weakened.
 - [ ] No tests were skipped just to pass CI.

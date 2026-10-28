@@ -1,0 +1,76 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { assessPrAutomationEvidence } from './check-pr-automation-evidence.mjs';
+
+const head = 'a'.repeat(40);
+const base = 'b'.repeat(40);
+const pr = {
+  state: 'OPEN',
+  isDraft: false,
+  headRefOid: head,
+  baseRefOid: base,
+  baseRefName: 'main',
+  statusCheckRollup: [{ __typename: 'CheckRun', workflowName: 'CI/CD', name: 'Main Workflow', status: 'COMPLETED', conclusion: 'SUCCESS' }],
+};
+const comment = {
+  user: { login: 'chatgpt-codex-connector[bot]' },
+  updated_at: '2026-10-28T00:00:00Z',
+  body: `<!-- codex-review-state:v1 {"code_review":{"commit_sha":"${head}","has_unresolved_findings":false,"status":"completed"}} -->`,
+};
+
+test('current green PR with resolved review passes the automation evidence check', () => {
+  assert.deepEqual(assessPrAutomationEvidence(pr, [comment], [{ isResolved: true }]), []);
+});
+
+test('a later head commit invalidates a previous review', () => {
+  assert.match(assessPrAutomationEvidence({ ...pr, headRefOid: 'c'.repeat(40) }, [comment], [])[0], /stale/);
+});
+
+test('a stacked PR must target the release branch after its dependency merges', () => {
+  const errors = assessPrAutomationEvidence({ ...pr, baseRefName: 'feature/parent' }, [comment], [], 'main');
+  assert.match(errors[0], /retarget to main/);
+});
+
+test('failed checks and unresolved threads fail closed', () => {
+  const errors = assessPrAutomationEvidence(
+    { ...pr, statusCheckRollup: [{ name: 'Main Workflow', status: 'COMPLETED', conclusion: 'FAILURE' }] },
+    [comment],
+    [{ isResolved: false }],
+  );
+  assert.equal(errors.length, 3);
+  assert.ok(errors.some((error) => /Required Main Workflow/.test(error)));
+  assert.ok(errors.some((error) => /CI check Main Workflow/.test(error)));
+  assert.ok(errors.some((error) => /review thread/.test(error)));
+});
+
+test('an incidental green status cannot replace the required CI workflow', () => {
+  const errors = assessPrAutomationEvidence(
+    { ...pr, statusCheckRollup: [{ name: 'external', status: 'COMPLETED', conclusion: 'SUCCESS' }] },
+    [comment],
+    [],
+  );
+  assert.match(errors[0], /Required Main Workflow/);
+});
+
+test('a different workflow cannot impersonate the required check name', () => {
+  const errors = assessPrAutomationEvidence(
+    { ...pr, statusCheckRollup: [{ ...pr.statusCheckRollup[0], workflowName: 'Other Workflow' }] },
+    [comment],
+    [],
+  );
+  assert.match(errors[0], /Required Main Workflow/);
+});
+
+test('successful commit status contexts are accepted and pending ones are rejected', () => {
+  const status = { __typename: 'StatusContext', context: 'external', state: 'SUCCESS' };
+  assert.deepEqual(assessPrAutomationEvidence({ ...pr, statusCheckRollup: [...pr.statusCheckRollup, status] }, [comment], []), []);
+  assert.match(
+    assessPrAutomationEvidence({ ...pr, statusCheckRollup: [...pr.statusCheckRollup, { ...status, state: 'PENDING' }] }, [comment], [])[0],
+    /CI check external is PENDING/,
+  );
+});
+
+test('a usage-limit message or user-authored marker is not review evidence', () => {
+  assert.match(assessPrAutomationEvidence(pr, [{ ...comment, body: 'You have reached your Codex usage limits' }], [])[0], /No Codex/);
+  assert.match(assessPrAutomationEvidence(pr, [{ ...comment, user: { login: 'author' } }], [])[0], /No Codex/);
+});

@@ -1,0 +1,19 @@
+services:
+  database:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: bsaas_test
+      POSTGRES_PASSWORD: test_db_password
+      POSTGRES_DB: bsaas_test
+    ports:
+      - '55432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U bsaas_test -d bsaas_test']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - test_database_data:/var/lib/postgresql/data
+
+volumes:
+  test_database_data:

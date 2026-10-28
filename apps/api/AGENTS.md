@@ -26,3 +26,4 @@ Read this file before working under `apps/api/**`.
 
 - For Auth-affecting app wiring, run Auth UT/IT where practical.
 - Run OpenAPI route parity after changing Auth controllers or route registration.
+- Use a local running API for HTTP smoke checks when it adds evidence beyond automated tests. Start only the services needed and report unavailable prerequisites.
