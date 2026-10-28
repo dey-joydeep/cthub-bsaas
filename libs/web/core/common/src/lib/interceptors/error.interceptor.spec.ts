@@ -2,17 +2,18 @@ import { Injector, runInInjectionContext } from '@angular/core';
 import { HttpContext, HttpErrorResponse, type HttpHandler, HttpHeaders, HttpRequest } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { firstValueFrom, throwError } from 'rxjs';
+import { vi, type Mock } from 'vitest';
 import { NotificationService } from '../services/notification.service';
 import { BYPASS_ERROR_INTERCEPTOR, ErrorInterceptor } from './error.interceptor';
 
 describe('ErrorInterceptor', () => {
   let interceptor: ErrorInterceptor;
-  let notificationServiceMock: { showError: jest.Mock };
-  let routerMock: { navigate: jest.Mock };
+  let notificationServiceMock: { showError: Mock };
+  let routerMock: { navigate: Mock };
 
   beforeEach(() => {
-    notificationServiceMock = { showError: jest.fn() };
-    routerMock = { navigate: jest.fn().mockResolvedValue(true) };
+    notificationServiceMock = { showError: vi.fn() };
+    routerMock = { navigate: vi.fn().mockResolvedValue(true) };
 
     const injector = Injector.create({
       providers: [
