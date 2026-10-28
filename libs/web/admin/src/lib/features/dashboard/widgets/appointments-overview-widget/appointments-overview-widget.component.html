@@ -164,7 +164,7 @@
                           </mat-icon>
                           {{ appointment.title || 'Appointment' }}
                         </h3>
-                        <span class="appointment-status" [ngClass]="'status-' + appointment.status.toLowerCase()">
+                        <span class="appointment-status" [class]="'status-' + appointment.status.toLowerCase()">
                           {{ getStatusBadge(appointment.status).text }}
                         </span>
                       </div>
@@ -196,7 +196,7 @@
                         <mat-menu #statusMenu="matMenu">
                           @for (status of statusOptions; track status) {
                             <button mat-menu-item [disabled]="status.value === appointment.status || status.value === 'ALL'" (click)="onStatusChange(appointment, status.value)">
-                              <mat-icon [ngClass]="'status-' + status.value.toLowerCase()">
+                              <mat-icon [class]="'status-' + status.value.toLowerCase()">
                                 {{ getStatusIcon(status.value) }}
                               </mat-icon>
                               <span
@@ -242,7 +242,7 @@
                     <div class="recent-appointment-details">
                       <div class="recent-appointment-header">
                         <h4>{{ appointment.title || 'Appointment' }}</h4>
-                        <span class="status-badge" [ngClass]="'status-' + appointment.status.toLowerCase()">
+                        <span class="status-badge" [class]="'status-' + appointment.status.toLowerCase()">
                           {{ getStatusBadge(appointment.status).text }}
                         </span>
                       </div>

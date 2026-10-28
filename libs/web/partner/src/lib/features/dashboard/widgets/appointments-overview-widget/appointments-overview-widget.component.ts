@@ -1,4 +1,4 @@
-import { DatePipe, CurrencyPipe, SlicePipe, formatDate, NgClass } from '@angular/common';
+import { DatePipe, CurrencyPipe, SlicePipe, formatDate } from '@angular/common';
 import { AfterViewInit, ChangeDetectionStrategy, Component, OnDestroy, OnInit, viewChild, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -61,7 +61,6 @@ import { AppointmentsOverviewWidgetService } from './appointments-overview-widge
     MatDividerModule,
     MatListModule,
     MatDialogModule,
-    NgClass,
   ],
   templateUrl: './appointments-overview-widget.component.html',
   styleUrls: ['./appointments-overview-widget.component.css'],
@@ -418,7 +417,11 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
    * Get the appropriate icon for an appointment based on its status and date
    */
   getAppointmentIcon(appointment: Appointment): string {
-    if (this.isPast(appointment.endTime) && appointment.status !== 'COMPLETED' && appointment.status !== 'CANCELLED') {
+    if (
+      this.isPast(appointment.endTime) &&
+      appointment.status !== AppointmentStatus.COMPLETED &&
+      appointment.status !== AppointmentStatus.CANCELLED
+    ) {
       return 'warning'; // Missed appointment
     }
 

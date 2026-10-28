@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { TitleCasePipe, NgClass } from '@angular/common';
+import { TitleCasePipe } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -32,7 +32,6 @@ interface User {
     MatInputModule,
     MatPaginatorModule,
     MatSortModule,
-    NgClass,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -67,7 +66,7 @@ interface User {
             <td mat-cell *matCellDef="let user">
               <span
                 class="px-2 py-1 rounded-full text-xs"
-                [ngClass]="{
+                [class]="{
                   'bg-blue-100 text-blue-800': user.role === 'admin',
                   'bg-purple-100 text-purple-800': user.role === 'salon_owner',
                   'bg-gray-100 text-gray-800': user.role === 'customer',
@@ -84,7 +83,7 @@ interface User {
             <td mat-cell *matCellDef="let user">
               <span
                 class="px-2 py-1 rounded-full text-xs"
-                [ngClass]="{
+                [class]="{
                   'bg-green-100 text-green-800': user.status === 'active',
                   'bg-yellow-100 text-yellow-800': user.status === 'pending',
                   'bg-red-100 text-red-800': user.status === 'suspended',

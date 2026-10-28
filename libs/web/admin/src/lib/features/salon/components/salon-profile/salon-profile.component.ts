@@ -1,5 +1,5 @@
 import { DatePipe, CurrencyPipe } from '@angular/common';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -26,7 +26,7 @@ import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
 @Component({
   selector: 'app-salon-profile',
   standalone: true,
-  imports: [DatePipe, CurrencyPipe, HttpClientModule, SafeUrlPipe, FormsModule],
+  imports: [DatePipe, CurrencyPipe, SafeUrlPipe, FormsModule],
   templateUrl: './salon-profile.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./salon-profile.component.css'],
