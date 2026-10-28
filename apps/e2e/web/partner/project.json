@@ -9,12 +9,13 @@
     "e2e": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": [
-          {
-            "command": "echo Web Partner E2E: scaffolding in place; tests TBD"
-          }
-        ],
-        "parallel": false
+        "command": "playwright test -c apps/e2e/web/partner/playwright.config.ts"
+      }
+    },
+    "type-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsc -p apps/e2e/web/partner/tsconfig.json --noEmit"
       }
     },
     "lint": {

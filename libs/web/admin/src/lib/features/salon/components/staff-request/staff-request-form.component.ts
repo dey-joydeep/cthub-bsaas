@@ -1,4 +1,4 @@
-import { Component, output, input, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, output, input, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { StaffRequestService, CreateLeaveRequestPayload } from '../../services/staff-request.service';
 
@@ -8,6 +8,7 @@ import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
 @Component({
   selector: 'app-staff-request-form',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule],
   templateUrl: './staff-request-form.component.html',
 })

@@ -1,12 +1,12 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { DatePipe, NgClass } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [DatePipe, MatCardModule, MatIconModule, NgClass],
+  imports: [DatePipe, MatCardModule, MatIconModule],
   template: `
     <div class="p-6">
       <h2 class="text-2xl font-bold mb-6">Admin Dashboard</h2>
@@ -66,7 +66,7 @@ import { MatIconModule } from '@angular/material/icon';
             <div class="space-y-4">
               @for (activity of recentActivities; track activity) {
                 <div class="flex items-start">
-                  <mat-icon class="mr-3 mt-1" [ngClass]="getActivityIconClass(activity.type)">
+                  <mat-icon class="mr-3 mt-1" [class]="getActivityIconClass(activity.type)">
                     {{ getActivityIcon(activity.type) }}
                   </mat-icon>
                   <div>

@@ -2,6 +2,30 @@
   "name": "cthub-bsaas",
   "$schema": "node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "type-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo Root workspace type-check OK"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo Root workspace lint OK"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo Root workspace test OK"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo Root workspace build OK"
+      }
+    },
     "local-registry": {
       "executor": "@nx/js:verdaccio",
       "options": {

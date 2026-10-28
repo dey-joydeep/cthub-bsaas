@@ -1,5 +1,13 @@
-import { HttpHandlerFn, HttpInterceptorFn, HttpRequest, provideHttpClient, withFetch, withInterceptors, withXhr } from '@angular/common/http';
-import { APP_ID, ApplicationConfig, EnvironmentProviders, isDevMode, mergeApplicationConfig, PLATFORM_ID, Provider } from '@angular/core';
+import {
+  HttpHandlerFn,
+  HttpInterceptorFn,
+  HttpRequest,
+  provideHttpClient,
+  withFetch,
+  withInterceptors,
+  withXhr,
+} from '@angular/common/http';
+import { ApplicationConfig, EnvironmentProviders, isDevMode, mergeApplicationConfig, PLATFORM_ID, Provider } from '@angular/core';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { provideServerRendering, ɵSERVER_CONTEXT as SERVER_CONTEXT } from '@angular/platform-server';
 import { ErrorService, loadingInterceptor } from '@cthub-bsaas/web-core-common';
@@ -77,11 +85,13 @@ const serverProviders: (Provider | EnvironmentProviders)[] = [
   { provide: 'RESPONSE', useValue: null },
   { provide: 'Dd', useValue: null },
   { provide: PLATFORM_ID, useValue: 'server' },
-  { provide: APP_ID, useValue: 'server-app' },
   { provide: SERVER_CONTEXT, useValue: 'ssr' },
   { provide: MAT_DATE_LOCALE, useValue: 'en-US' },
 
-  provideHttpClient(withXhr(), withInterceptors([ssrInterceptor, loadingInterceptor, (req: HttpRequest<unknown>, next: HttpHandlerFn) => next(req)])),
+  provideHttpClient(
+    withXhr(),
+    withInterceptors([ssrInterceptor, loadingInterceptor, (req: HttpRequest<unknown>, next: HttpHandlerFn) => next(req)]),
+  ),
 
   { provide: 'SSR', useValue: true },
   { provide: 'BROWSER', useValue: false },

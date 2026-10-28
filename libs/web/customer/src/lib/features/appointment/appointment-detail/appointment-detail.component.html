@@ -21,7 +21,7 @@
           </div>
           <mat-card-title><ng-container i18n="@@APPOINTMENT.APPOINTMENT_DETAILS">Appointment Details</ng-container> #{{ appointment.id }}</mat-card-title>
           <mat-card-subtitle>
-            <span [ngClass]="getStatusClass(appointment.status)">
+            <span [class]="getStatusClass(appointment.status)">
               {{ getStatusText(appointment.status) }}
             </span>
           </mat-card-subtitle>

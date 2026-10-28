@@ -1,10 +1,9 @@
-import { PlatformUtils, PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
-import { Component, OnInit, PLATFORM_ID, Type, input, model, inject } from '@angular/core';
+import { PLATFORM_UTILS_TOKEN, type PlatformUtils } from '@cthub-bsaas/web-core-platform';
+import { Component, OnInit, PLATFORM_ID, input, model, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TopSalonsService as SalonService } from './top-salons.service';
 import { ISalonDto } from './model/top-salons.model';
-import type { PlatformUtils } from '@cthub-bsaas/web-core-platform';
 
 // Extend ISalonDto with any additional properties needed for this component
 export type Salon = ISalonDto & {
@@ -60,7 +59,7 @@ export class TopSalonsComponent implements OnInit {
           (pos: GeolocationPosition) => {
             this.fetchTopSalons(pos.coords.latitude, pos.coords.longitude);
           },
-          (err: GeolocationPositionError) => {
+          (_err: GeolocationPositionError) => {
             this.locationDenied = true;
             this.fetchTopSalons();
           },

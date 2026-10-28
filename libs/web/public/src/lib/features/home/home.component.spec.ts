@@ -153,7 +153,10 @@ describe('HomeComponent', () => {
     component.ngOnInit();
     expect(component.loading).toBe(false);
     expect(component.error).toBe('Failed to load data. Please try again later.');
-    expect(snackBarSpy).toHaveBeenCalledWith('Failed to load data. Please try again later.', 'Dismiss', { duration: 5000 });
+    expect(snackBarSpy).toHaveBeenCalledWith('Failed to load data. Please try again later.', 'Dismiss', {
+      duration: 5000,
+      panelClass: ['error-snackbar'],
+    });
   });
 
   it('should format price correctly', () => {

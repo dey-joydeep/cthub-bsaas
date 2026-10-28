@@ -1,4 +1,3 @@
-import { NgClass } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -27,7 +26,6 @@ import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.
     MatProgressSpinnerModule,
     MatDialogModule,
     MatSnackBarModule,
-    NgClass,
   ],
   templateUrl: './appointment-detail.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

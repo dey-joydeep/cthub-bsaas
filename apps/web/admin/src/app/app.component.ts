@@ -13,8 +13,8 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { Subscription } from 'rxjs';
 import { AuthService } from '@cthub-bsaas/web-admin/auth';
 
-import { CURRENT_USER } from '@cthub-bsaas/web-core/auth';
-import type { CurrentUserPort, CurrentUserMin } from '@cthub-bsaas/web-core/auth';
+import { CURRENT_USER } from '@cthub-bsaas/web-core-auth';
+import type { CurrentUserPort, CurrentUserMin } from '@cthub-bsaas/web-core-auth';
 
 type AdminAppUser = CurrentUserMin & {
   readonly firstName?: string;

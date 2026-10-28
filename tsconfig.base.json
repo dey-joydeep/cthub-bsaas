@@ -51,8 +51,6 @@
       "@cthub-bsaas/web-core-platform/*": ["libs/web/core/platform/src/*", "dist/libs/web/core/platform/*"],
       "@cthub-bsaas/web-core-testing": ["libs/web/core/testing/src/index.ts"],
       "@cthub-bsaas/web-core-testing/*": ["libs/web/core/testing/src/*", "dist/libs/web/core/testing/*"],
-      "@cthub-bsaas/web-core/auth": ["libs/web/core/auth/src/index.ts"],
-      "@cthub-bsaas/web-core/auth/*": ["libs/web/core/auth/src/*", "dist/libs/web/core/auth/*"],
       "@cthub-bsaas/web-customer": ["libs/web/customer/src/index.ts"],
       "@cthub-bsaas/web-customer/*": ["libs/web/customer/src/*"],
       "@cthub-bsaas/web-customer/auth": ["libs/web/customer/src/lib/features/auth/index.ts"],
@@ -80,6 +78,11 @@
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
-    "strictTemplates": true
+    "strictStandalone": true,
+    "strictTemplates": true,
+    "typeCheckHostBindings": true,
+    "extendedDiagnostics": {
+      "defaultCategory": "error"
+    }
   }
 }

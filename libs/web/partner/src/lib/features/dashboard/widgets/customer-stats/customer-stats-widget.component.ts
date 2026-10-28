@@ -1,5 +1,5 @@
 import { CurrencyPipe, DecimalPipe } from '@angular/common';
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,7 +19,7 @@ import { DashboardStats } from './models/customer-stats-widget.model';
   styleUrls: ['./customer-stats-widget.component.css'],
 })
 export class CustomerStatsWidgetComponent extends AbstractBaseComponent {
-  stats: DashboardStats = {
+  readonly statsSignal = signal<DashboardStats>({
     totalCustomers: 0,
     totalAppointments: 0,
     totalRevenue: 0,
@@ -27,7 +27,14 @@ export class CustomerStatsWidgetComponent extends AbstractBaseComponent {
     count: 0,
     newCustomers: 0,
     returningCustomers: 0,
-  };
+  });
+
+  get stats(): DashboardStats {
+    return this.statsSignal();
+  }
+  set stats(value: DashboardStats) {
+    this.statsSignal.set(value);
+  }
 
   private statsSubscription?: Subscription;
   private readonly customerStatsWidgetService = inject(CustomerStatsWidgetService);

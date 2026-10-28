@@ -45,7 +45,12 @@
           "apps/web/admin/src/styles.css"
         ],
         "scripts": [],
-        "browser": "apps/web/admin/src/main.ts"
+        "browser": "apps/web/admin/src/main.ts",
+        "server": "apps/web/admin/src/main.server.ts",
+        "prerender": false,
+        "ssr": {
+          "entry": "apps/web/admin/src/server.ts"
+        }
       },
       "configurations": {
         "production": {
@@ -70,7 +75,7 @@
       "defaultConfiguration": "development",
       "options": {
         "buildTarget": "web-app-admin:build:development",
-        "port": 4200,
+        "port": 4202,
         "host": "localhost"
       },
       "configurations": {

@@ -1,5 +1,6 @@
 import nx from '@nx/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
 
 export default [
   // Ensure TS files are parsed with @typescript-eslint/parser in VSCode (flat config)
@@ -13,12 +14,18 @@ export default [
         sourceType: 'module',
       },
     },
-    plugins: { '@nx': nx },
+    plugins: {
+      '@nx': nx,
+      '@typescript-eslint': tsPlugin,
+    },
     rules: {},
   },
   // Test-only relaxations (main boundary rules live in eslint.base.js)
   {
     files: ['**/*.spec.ts', '**/*.test.ts'],
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+    },
     rules: {
       '@typescript-eslint/require-await': 'warn',
       '@typescript-eslint/no-floating-promises': 'warn',

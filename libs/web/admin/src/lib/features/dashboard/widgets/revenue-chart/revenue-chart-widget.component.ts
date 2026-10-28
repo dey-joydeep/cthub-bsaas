@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, inject, viewChild, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 
 import { BaseChartDirective } from 'ng2-charts';
@@ -27,7 +27,13 @@ export class RevenueChartWidgetComponent implements OnInit, OnDestroy {
 
   // Chart configuration
   public chartType = 'line' as const;
-  public revenueData: RevenueData[] = [];
+  readonly revenueDataSignal = signal<RevenueData[]>([]);
+  get revenueData(): RevenueData[] {
+    return this.revenueDataSignal();
+  }
+  set revenueData(val: RevenueData[]) {
+    this.revenueDataSignal.set(val);
+  }
   public isLoading = true;
   public error: string | null = null;
 

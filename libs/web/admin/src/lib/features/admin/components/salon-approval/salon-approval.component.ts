@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { DatePipe, TitleCasePipe, NgClass } from '@angular/common';
+import { DatePipe, TitleCasePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -34,7 +34,6 @@ interface Salon {
     MatChipsModule,
     MatMenuModule,
     MatChipListbox,
-    NgClass,
   ],
   template: `
     <div class="p-6">
@@ -95,10 +94,13 @@ interface Salon {
             <div class="absolute top-2 right-2">
               <span
                 class="px-2 py-1 rounded-full text-xs"
-                [ngClass]="{
-                  'bg-yellow-100 text-yellow-800': salon.status === 'pending',
-                  'bg-green-100 text-green-800': salon.status === 'approved',
-                  'bg-red-100 text-red-800': salon.status === 'rejected',
+                [class]="{
+                  'bg-yellow-100': salon.status === 'pending',
+                  'text-yellow-800': salon.status === 'pending',
+                  'bg-green-100': salon.status === 'approved',
+                  'text-green-800': salon.status === 'approved',
+                  'bg-red-100': salon.status === 'rejected',
+                  'text-red-800': salon.status === 'rejected',
                 }"
               >
                 {{ salon.status | titlecase }}

@@ -1,6 +1,6 @@
 // Core
 import { isPlatformBrowser } from '@angular/common';
-import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, ChangeDetectionStrategy, signal, computed } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
@@ -62,17 +62,80 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
   // Form state
   loginForm: FormGroup;
   otpForm: FormGroup;
-  step: 'credentials' | 'otp' = 'credentials';
-  hidePassword = true;
-  isSubmitting = false;
+  readonly stepSignal = signal<'credentials' | 'otp'>('credentials');
+  get step(): 'credentials' | 'otp' {
+    return this.stepSignal();
+  }
+  set step(val: 'credentials' | 'otp') {
+    this.stepSignal.set(val);
+  }
 
-  // OTP related state
-  showOtpForm = false;
-  resendCountdown = 0;
-  resendDisabled = false;
-  countdown = 30;
-  email = '';
-  userType: 'owner' | 'staff' | 'customer' | null = null;
+  readonly hidePasswordSignal = signal(true);
+  get hidePassword(): boolean {
+    return this.hidePasswordSignal();
+  }
+  set hidePassword(val: boolean) {
+    this.hidePasswordSignal.set(val);
+  }
+
+  readonly isSubmittingSignal = signal(false);
+  get isSubmitting(): boolean {
+    return this.isSubmittingSignal();
+  }
+  set isSubmitting(val: boolean) {
+    this.isSubmittingSignal.set(val);
+  }
+
+  readonly showOtpFormSignal = signal(false);
+  get showOtpForm(): boolean {
+    return this.showOtpFormSignal();
+  }
+  set showOtpForm(val: boolean) {
+    this.showOtpFormSignal.set(val);
+  }
+
+  readonly resendCountdownSignal = signal(0);
+  get resendCountdown(): number {
+    return this.resendCountdownSignal();
+  }
+  set resendCountdown(val: number) {
+    this.resendCountdownSignal.set(val);
+  }
+
+  readonly resendDisabledSignal = signal(false);
+  get resendDisabled(): boolean {
+    return this.resendDisabledSignal();
+  }
+  set resendDisabled(val: boolean) {
+    this.resendDisabledSignal.set(val);
+  }
+
+  readonly countdownSignal = signal(30);
+  get countdown(): number {
+    return this.countdownSignal();
+  }
+  set countdown(val: number) {
+    this.countdownSignal.set(val);
+  }
+
+  readonly emailSignal = signal('');
+  get email(): string {
+    return this.emailSignal();
+  }
+  set email(val: string) {
+    this.emailSignal.set(val);
+  }
+
+  readonly userTypeSignal = signal<'owner' | 'staff' | 'customer' | null>(null);
+  get userType(): 'owner' | 'staff' | 'customer' | null {
+    return this.userTypeSignal();
+  }
+  set userType(val: 'owner' | 'staff' | 'customer' | null) {
+    this.userTypeSignal.set(val);
+  }
+
+  readonly isOtpStep = computed(() => this.stepSignal() === 'otp');
+  readonly canResendOtp = computed(() => !this.resendDisabledSignal() && this.resendCountdownSignal() <= 0);
 
   // Private state
   private resendTimer: any;

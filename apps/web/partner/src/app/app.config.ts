@@ -11,6 +11,7 @@ import {
 import { DOCUMENT } from '@angular/common';
 import { ApplicationConfig, ErrorHandler, importProvidersFrom, inject, provideAppInitializer } from '@angular/core';
 import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
+import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { PreloadAllModules, provideRouter, withComponentInputBinding, withPreloading } from '@angular/router';
 import { of } from 'rxjs';
@@ -79,6 +80,9 @@ const partnerApiXsrfInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>,
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideClientHydration(withEventReplay()),
+    // PLATFORM_UTILS_TOKEN is provided in web-config at root; no extra providers needed here.
+
     provideRouter(routes, withPreloading(PreloadAllModules), withComponentInputBinding()),
     provideHttpClient(
       withInterceptorsFromDi(),

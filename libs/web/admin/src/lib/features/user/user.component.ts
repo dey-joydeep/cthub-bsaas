@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
-import { CurrentUserService } from '@cthub-bsaas/web-core/auth';
+import { CurrentUserService } from '@cthub-bsaas/web-core-auth';
 import { UserService, UserStats } from './user.service';
 
 @Component({
