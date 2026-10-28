@@ -43,12 +43,19 @@ Use this checklist when Codex reviews its own changes, reviews a pull request, o
 - [ ] No secrets or credentials were added.
 - [ ] Sensitive data is not logged.
 - [ ] Validation and authorization were not bypassed.
+- [ ] Producer-Consumer Parity: Any new claim, capability, or user-context property consumed by guards/UI has an active, verified production producer (database query, token generator, or API payload).
 - [ ] User-facing errors do not leak internal details.
+
+## Dependencies and packages
+
+- [ ] Match engines in `package.json` and `.nvmrc`.
+- [ ] Package installation: NEVER EVER use `--legacy-peer-deps` when installing or updating packages; resolve peer dependency conflicts cleanly.
 
 ## Tests and validation
 
 - [ ] Unit tests were added or updated for changed logic.
 - [ ] Integration tests were added or updated for API/database behavior when relevant.
+- [ ] Full-Slice Token Test: Real token generation or auth sign-in pipeline is tested to confirm newly added claims/capabilities are emitted in production.
 - [ ] Validation commands were run or explicitly reported as not run.
 - [ ] Test coverage thresholds were not weakened.
 - [ ] No tests were skipped just to pass CI.

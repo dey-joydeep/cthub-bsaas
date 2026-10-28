@@ -12,6 +12,7 @@
     "src/lib/partner.routes.ts",
     "src/lib/features/appointment/**/*.ts",
     "src/lib/features/auth/**/*.ts",
+    "src/lib/features/salon-owner-settings/**/*.ts",
     "src/**/*.d.ts"
   ],
   "exclude": [

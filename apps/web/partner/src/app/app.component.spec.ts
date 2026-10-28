@@ -52,7 +52,7 @@ describe('AppComponent', () => {
 
   afterEach(() => {
     // Reset spies on localStorage to prevent duplicate spyOn errors
-    if ((localStorage.getItem as any).calls) {
+    if ((localStorage.getItem as any)?.calls) {
       (localStorage.getItem as any).calls.reset();
     }
   });
@@ -87,5 +87,55 @@ describe('AppComponent', () => {
     const getItemSpy = vi.spyOn(localStorage, 'getItem');
     getItemSpy.mockReturnValue('token');
     getItemSpy.mockReturnValue(null);
+  });
+
+  it('routes manager-capable staff settings entry to the branch settings screen', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+
+    app.currentUser = {
+      id: 'staff-1',
+      roles: ['staff'],
+      managedBranchIds: ['branch-1'],
+    };
+
+    expect(app.canManageBranches).toBe(true);
+    expect(app.settingsRoute).toBe('/owner/branches');
+  });
+
+  it('suppresses settings route for non-manager staff', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+
+    app.currentUser = {
+      id: 'staff-2',
+      roles: ['staff'],
+      managedBranchIds: [],
+    };
+
+    expect(app.canManageBranches).toBe(false);
+    expect(app.settingsRoute).toBeNull();
+  });
+
+  it('routes owner settings entry to the settings screen', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+
+    app.currentUser = {
+      id: 'owner-1',
+      roles: ['owner'],
+    };
+
+    expect(app.canManageBranches).toBe(true);
+    expect(app.settingsRoute).toBe('/settings');
+  });
+
+  it('routes owner-staff settings entry to the full owner settings screen', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+
+    app.currentUser = { id: 'owner-staff-1', roles: ['staff', 'owner'] };
+
+    expect(app.settingsRoute).toBe('/settings');
   });
 });

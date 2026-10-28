@@ -39,7 +39,10 @@ export interface ApiResponse<T = unknown> {
 export interface PartnerAuthUser extends BaseAuthUser {
   readonly email: string;
   readonly name: string;
-  readonly role: string;
+  readonly role?: string;
+  readonly roles?: readonly string[];
+  readonly managedBranchIds?: readonly string[];
+  readonly canManageBranches?: boolean;
   readonly accessToken?: string;
   readonly refreshToken?: string;
   readonly expiresIn?: number;

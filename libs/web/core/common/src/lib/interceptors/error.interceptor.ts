@@ -1,9 +1,11 @@
-import { HttpErrorResponse, HttpHandler, HttpInterceptor, HttpRequest, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { HttpContextToken, HttpErrorResponse, HttpHandler, HttpInterceptor, HttpRequest, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { Injectable, Provider, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError } from 'rxjs/operators';
 import { NotificationService } from '../services/notification.service';
 import { throwError } from 'rxjs';
+
+export const BYPASS_ERROR_INTERCEPTOR = new HttpContextToken<boolean>(() => false);
 
 @Injectable({ providedIn: 'root' })
 export class ErrorInterceptor implements HttpInterceptor {
@@ -11,6 +13,10 @@ export class ErrorInterceptor implements HttpInterceptor {
   private readonly router = inject(Router);
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler) {
+    if (req.context.get(BYPASS_ERROR_INTERCEPTOR) || req.headers.has('x-silent-auth')) {
+      return next.handle(req);
+    }
+
     return next.handle(req).pipe(
       catchError((error: HttpErrorResponse) => {
         if (error.status === 0) {

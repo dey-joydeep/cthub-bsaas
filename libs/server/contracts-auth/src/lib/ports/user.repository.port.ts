@@ -1,13 +1,11 @@
 import type { User } from '@prisma/client';
 
 /**
- * @public
- * Injection token for {@link IUserRepository}.
+ * Injection token for IUserRepository.
  */
 export const USER_REPOSITORY = 'USER_REPOSITORY';
 
 /**
- * @public
  * Read/write access to user entities.
  */
 export interface IUserRepository {
@@ -23,6 +21,12 @@ export interface IUserRepository {
    * @returns {Promise<(User & { roles: { role: { name: string } }[] }) | null>} User or null.
    */
   findByEmail(email: string): Promise<(User & { roles: { role: { name: string } }[] }) | null>;
+  /**
+   * Find managed branch IDs for a user holding an active branch manager assignment.
+   * @param {string} userId - User id.
+   * @returns {Promise<string[]>} Array of unique managed branch IDs.
+   */
+  findManagedBranchIds?(userId: string): Promise<string[]>;
   /**
    * Create a new user.
    * @param {Omit<User, 'id' | 'createdAt' | 'updatedAt'>} data - Creation payload.

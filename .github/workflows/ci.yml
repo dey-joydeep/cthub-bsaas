@@ -91,7 +91,7 @@ jobs:
       - name: Server lint + coverage
         run: |
           npx nx run-many -t lint -p server-core,server-data-access,server-feature-auth,server-feature-salon-owner --parallel=3
-          npx nx run-many -t test -p server-core,server-data-access,server-feature-auth,server-feature-salon-owner --code-coverage --parallel=1
+          npx nx run-many -t test -p server-core,server-data-access,server-feature-auth,server-feature-salon-owner --coverage --parallel=1
 
       - name: Server build
         run: npx nx run-many -t build -p server-core,server-data-access,server-feature-auth,server-feature-salon-owner,api --parallel=3

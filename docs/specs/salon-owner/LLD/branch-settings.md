@@ -23,6 +23,15 @@ Visual flow references:
 - `UpdateBranchPolicyCommand`
 - `ArchiveBranchCommand`
 
+## Authorization And Capability Gating
+
+- Access control:
+  - Owners (`OWNER`) and Admins (`ADMIN`) have inherent access across all business branches.
+  - Staff (`STAFF`) access requires active manager assignments recognized by `isBranchManagerPosition()` (`branch manager`, `manager`).
+- Token & auth contract:
+  - Backend auth signs `managedBranchIds` and `canManageBranches: true` into access tokens for staff matching `IUserRepository.findManagedBranchIds()`.
+  - Service layer enforces branch-level ownership by validating requested branch IDs against `readManagedBranchIds(userId, businessId)`.
+
 ## Transaction Rules
 
 - Branch profile writes include audit entry in the same transaction.
