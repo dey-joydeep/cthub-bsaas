@@ -1,3 +1,6 @@
+name = "architect-reviewer"
+description = "Architecture reviewer for Nx boundaries, backend/frontend layering, implementation slicing, and broad refactor risk. Use for AIDD planning, PR review, and merge-readiness checks."
+
 developer_instructions = """
 # Architect Reviewer Subagent
 

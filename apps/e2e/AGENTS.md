@@ -26,6 +26,7 @@ E2E projects live at app level:
 - Use deterministic data setup and cleanup.
 - Mock external IO where sensible unless the test explicitly validates an integration boundary.
 - For browser tests, prefer robust locators and accessible roles.
+- Use Playwright traces or browser tooling to diagnose failures when available. Confirm test data and cleanup use the intended isolated test environment, and report environment failures separately from product defects.
 
 ## Auth E2E Note
 

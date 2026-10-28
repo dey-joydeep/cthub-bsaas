@@ -1,3 +1,6 @@
+name = "security-reviewer"
+description = "Security reviewer for auth, authorization, scope isolation, CSRF, cookies, sessions, tokens, validation, sensitive logging, and frontend storage risks."
+
 developer_instructions = """
 # Security Reviewer Subagent
 

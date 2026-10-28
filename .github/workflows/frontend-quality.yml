@@ -68,24 +68,19 @@ jobs:
       - name: Build frontend dependency declarations
         shell: bash
         run: |
+          set -euo pipefail
           filter_frontend_projects() {
-            grep -E '^(web-.*|shared)$' | grep -Ev -- '-e2e$' || true
+            awk '/^(web-.*|shared)$/ && !/-e2e$/'
           }
 
           if [ "${{ github.event_name }}" = "schedule" ]; then
-            FRONTEND_PROJECTS="$(
-              {
-                npx nx show projects --withTarget=lint
-                npx nx show projects --withTarget=test
-              } | filter_frontend_projects | sort -u
-            )"
+            LINT_PROJECTS="$(npx nx show projects --withTarget=lint)"
+            TEST_PROJECTS="$(npx nx show projects --withTarget=test)"
+            FRONTEND_PROJECTS="$(printf '%s\n%s\n' "$LINT_PROJECTS" "$TEST_PROJECTS" | filter_frontend_projects | sort -u)"
           else
-            FRONTEND_PROJECTS="$(
-              {
-                npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=lint
-                npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=test
-              } | filter_frontend_projects | sort -u
-            )"
+            LINT_PROJECTS="$(npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=lint)"
+            TEST_PROJECTS="$(npx nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --withTarget=test)"
+            FRONTEND_PROJECTS="$(printf '%s\n%s\n' "$LINT_PROJECTS" "$TEST_PROJECTS" | filter_frontend_projects | sort -u)"
           fi
 
           if echo "$FRONTEND_PROJECTS" | grep -Eq '^(web-lib-admin|web-lib-customer|web-lib-partner)$'; then
@@ -99,11 +94,12 @@ jobs:
       - name: Run quality checks
         shell: bash
         run: |
+          set -euo pipefail
           filter_frontend_projects() {
             # Keep this workflow scoped to web apps/libs/shared. E2E projects are
             # validated by E2E-specific checks and should not be pulled in by
             # the broad web-* project-name prefix.
-            grep -E '^(web-.*|shared)$' | grep -Ev -- '-e2e$' || true
+            awk '/^(web-.*|shared)$/ && !/-e2e$/'
           }
 
           if [ "${{ github.event_name }}" = "schedule" ]; then

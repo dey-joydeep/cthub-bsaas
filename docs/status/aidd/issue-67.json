@@ -1,0 +1,558 @@
+{
+  "version": 1,
+  "task": "issue-67",
+  "goal": "Advance the AIDD lifecycle and recovery workflow",
+  "issue": "67",
+  "branch": "chore/aidd-lifecycle-overhaul",
+  "base": "main",
+  "createdAt": "2026-10-27T02:09:13.266Z",
+  "exportedAt": "2026-10-28T13:59:45.740Z",
+  "exportedHead": "22faba5673c233c5185da46b85dd839e51227dda",
+  "units": [
+    {
+      "definition": {
+        "id": "agent-adapters",
+        "kind": "verification",
+        "owner": "codex-root",
+        "paths": [
+          "docs/aidd/agent-activation.md",
+          "docs/aidd/README.md",
+          "scripts/aidd/check-aidd-setup.mjs",
+          ".codex/config.toml",
+          ".codex/agents",
+          "scripts/aidd/run-agy-agent.mjs"
+        ],
+        "dependsOn": ["shared-agent-instructions"],
+        "acceptance": "Provider role profiles have portable metadata, documented activation, and one shared policy source"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Revalidated the AIDD task after adding instruction drift detection, a read-only PR automation evidence check, CI exit-status handling, and agent obligations for broad and cross-layer changes. Two independent Codex reviewers found three premerge-check gaps; all were addressed and rechecked. Existing database and recovery behavior was not changed.",
+          "remainingPaths": [],
+          "evidence": [
+            "scripts/aidd/check-instruction-drift.mjs",
+            "scripts/aidd/check-pr-automation-evidence.mjs",
+            "docs/aidd/development-lifecycle.md",
+            ".github/workflows/frontend-quality.yml"
+          ],
+          "commands": [
+            { "command": "npm run aidd:instruction-drift", "exitCode": 0 },
+            { "command": "npm run aidd:instruction-drift:test", "exitCode": 0 },
+            { "command": "npm run aidd:premerge:test", "exitCode": 0 },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:assets", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "npm run aidd:format:changed -- --worktree", "exitCode": 0 },
+            {
+              "command": "npx eslint --max-warnings 0 scripts/aidd/check-aidd-setup.mjs scripts/aidd/check-instruction-drift.mjs scripts/aidd/check-instruction-drift.test.mjs scripts/aidd/check-pr-automation-evidence.mjs scripts/aidd/check-pr-automation-evidence.test.mjs",
+              "exitCode": 0
+            },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": [
+            {
+              "summary": "Independent Codex reviews found missing required CI identification, PR-read race, and unverified base scope; the first two are fixed and the base scope is explicitly reserved for manual verification.",
+              "disposition": "closed"
+            }
+          ]
+        },
+        "source": {
+          "fingerprint": "dc45691921eb44bb2ff5f016e6509e74d84b22bd8e55b7ae18ac544a48c7cd5c",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda",
+          "base": "22faba5673c233c5185da46b85dd839e51227dda",
+          "baseTip": "1b4cca5c47269e6990b75b672a7531d87125ff35"
+        }
+      }
+    },
+    {
+      "definition": {
+        "id": "change-hygiene",
+        "kind": "implementation",
+        "owner": "codex-root",
+        "paths": [
+          "AGENTS.md",
+          "docs/AGENTS.md",
+          "docs/aidd/change-hygiene.md",
+          "docs/aidd/README.md",
+          "docs/aidd/codex-validation-commands.md",
+          "docs/aidd/playbooks/new-task-flow.md",
+          "docs/aidd/playbooks/merge-readiness-flow.md",
+          ".gitignore",
+          ".lintstagedrc",
+          ".husky/pre-commit",
+          ".husky/pre-push",
+          ".github/workflows/ci.yml",
+          ".github/PULL_REQUEST_TEMPLATE/aidd-implementation.md",
+          ".github/pull_request_template.md",
+          "package.json",
+          "scripts/aidd/check-changed-format.mjs",
+          "scripts/aidd/check-changed-format.test.mjs",
+          "scripts/aidd/check-aidd-setup.mjs"
+        ],
+        "dependsOn": ["recovery-mechanism"],
+        "acceptance": "Changed-file formatting, scoped linting, inclusion rules, and AIDD PR gates are documented and validated"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Revalidated the AIDD task after adding instruction drift detection, a read-only PR automation evidence check, CI exit-status handling, and agent obligations for broad and cross-layer changes. Two independent Codex reviewers found three premerge-check gaps; all were addressed and rechecked. Existing database and recovery behavior was not changed.",
+          "remainingPaths": [],
+          "evidence": [
+            "scripts/aidd/check-instruction-drift.mjs",
+            "scripts/aidd/check-pr-automation-evidence.mjs",
+            "docs/aidd/development-lifecycle.md",
+            ".github/workflows/frontend-quality.yml"
+          ],
+          "commands": [
+            { "command": "npm run aidd:instruction-drift", "exitCode": 0 },
+            { "command": "npm run aidd:instruction-drift:test", "exitCode": 0 },
+            { "command": "npm run aidd:premerge:test", "exitCode": 0 },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:assets", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "npm run aidd:format:changed -- --worktree", "exitCode": 0 },
+            {
+              "command": "npx eslint --max-warnings 0 scripts/aidd/check-aidd-setup.mjs scripts/aidd/check-instruction-drift.mjs scripts/aidd/check-instruction-drift.test.mjs scripts/aidd/check-pr-automation-evidence.mjs scripts/aidd/check-pr-automation-evidence.test.mjs",
+              "exitCode": 0
+            },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": [
+            {
+              "summary": "Independent Codex reviews found missing required CI identification, PR-read race, and unverified base scope; the first two are fixed and the base scope is explicitly reserved for manual verification.",
+              "disposition": "closed"
+            }
+          ]
+        },
+        "source": {
+          "fingerprint": "998b7d54c647f30990816799e064c68f91d779a9da42fb382d96ec86a029312a",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda"
+        }
+      }
+    },
+    {
+      "definition": {
+        "id": "database-safety",
+        "kind": "implementation",
+        "owner": "codex-root",
+        "paths": [
+          "AGENTS.md",
+          "libs/server/AGENTS.md",
+          "docs/aidd/database-access-policy.md",
+          "docs/aidd/change-hygiene.md",
+          "docs/aidd/development-lifecycle.md",
+          "docs/aidd/README.md",
+          "docs/useful-commands/prisma-commands.md",
+          ".agents/agents/database-architect.md",
+          ".codex/agents/database-reviewer.toml",
+          ".codex/config.toml",
+          "libs/server/core/src/index.ts",
+          "libs/server/core/src/config/test-database-target.ts",
+          "libs/server/data-access/test/setup/prismaTestClient.ts",
+          "libs/server/server-testing-utils/project.json",
+          "libs/server/server-testing-utils/src/lib/global-setup.ts",
+          "libs/server/server-testing-utils/src/lib/global-teardown.ts",
+          "libs/server/server-testing-utils/src/lib/test-database-worker-setup.ts",
+          "libs/server/features",
+          "scripts/aidd/test-database-target.test.mjs",
+          "scripts/aidd/check-aidd-setup.mjs",
+          "package.json",
+          ".github/workflows/ci.yml"
+        ],
+        "dependsOn": ["recovery-mechanism"],
+        "acceptance": "Automated tests bind only a validated test database, and DBA ownership and environment profiles are documented"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Revalidated the AIDD task after adding instruction drift detection, a read-only PR automation evidence check, CI exit-status handling, and agent obligations for broad and cross-layer changes. Two independent Codex reviewers found three premerge-check gaps; all were addressed and rechecked. Existing database and recovery behavior was not changed.",
+          "remainingPaths": [],
+          "evidence": [
+            "scripts/aidd/check-instruction-drift.mjs",
+            "scripts/aidd/check-pr-automation-evidence.mjs",
+            "docs/aidd/development-lifecycle.md",
+            ".github/workflows/frontend-quality.yml"
+          ],
+          "commands": [
+            { "command": "npm run aidd:instruction-drift", "exitCode": 0 },
+            { "command": "npm run aidd:instruction-drift:test", "exitCode": 0 },
+            { "command": "npm run aidd:premerge:test", "exitCode": 0 },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:assets", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "npm run aidd:format:changed -- --worktree", "exitCode": 0 },
+            {
+              "command": "npx eslint --max-warnings 0 scripts/aidd/check-aidd-setup.mjs scripts/aidd/check-instruction-drift.mjs scripts/aidd/check-instruction-drift.test.mjs scripts/aidd/check-pr-automation-evidence.mjs scripts/aidd/check-pr-automation-evidence.test.mjs",
+              "exitCode": 0
+            },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": [
+            {
+              "summary": "Independent Codex reviews found missing required CI identification, PR-read race, and unverified base scope; the first two are fixed and the base scope is explicitly reserved for manual verification.",
+              "disposition": "closed"
+            }
+          ]
+        },
+        "source": {
+          "fingerprint": "f0c881e4f7828368fa078c7a7fb15693831b6893768b7060c1980a39da8b456a",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda"
+        }
+      }
+    },
+    {
+      "definition": {
+        "id": "hook-install",
+        "kind": "verification",
+        "owner": "codex-root",
+        "paths": [".husky/install.mjs"],
+        "dependsOn": ["change-hygiene"],
+        "acceptance": "Hook installation skips production and CI while local development installs the pre-commit hook"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Revalidated shared AIDD and recovery rules after the database guard and instruction consolidation. No live database command was run. Nx project discovery is unavailable because the local @nx/vitest plugin cannot resolve.",
+          "remainingPaths": [],
+          "evidence": ["docs/aidd/README.md", "docs/aidd/autonomous-recovery.md", "docs/status/aidd/README.md"],
+          "commands": [
+            { "command": "npm run aidd:ledger:test", "exitCode": 0 },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "npm run aidd:assets", "exitCode": 0 },
+            { "command": "npm run aidd:format:changed -- --worktree", "exitCode": 0 },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": []
+        },
+        "source": {
+          "fingerprint": "9104087308c3877a5ad6e73c9b945bdeefa3cc34d7bf9e73dc20800a6870f666",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda",
+          "base": "22faba5673c233c5185da46b85dd839e51227dda",
+          "baseTip": "1b4cca5c47269e6990b75b672a7531d87125ff35"
+        }
+      }
+    },
+    {
+      "definition": {
+        "id": "independent-review",
+        "kind": "review",
+        "owner": "codex-independent",
+        "paths": ["."],
+        "dependsOn": ["recovery-mechanism"],
+        "acceptance": "Final whole-PR Codex review passes at a clean committed head"
+      },
+      "status": "pending",
+      "lastType": null,
+      "checkpoint": null
+    },
+    {
+      "definition": {
+        "id": "pr-behavior-guards",
+        "kind": "implementation",
+        "owner": "codex-root",
+        "paths": [
+          "AGENTS.md",
+          "package.json",
+          ".github/workflows/ci.yml",
+          ".github/workflows/frontend-quality.yml",
+          ".github/pull_request_template.md",
+          ".github/PULL_REQUEST_TEMPLATE/aidd-implementation.md",
+          "docs/aidd/development-lifecycle.md",
+          "docs/aidd/change-hygiene.md",
+          "docs/aidd/codex-review-checklist.md",
+          "docs/aidd/playbooks/merge-readiness-flow.md",
+          "scripts/aidd/check-aidd-setup.mjs",
+          "scripts/aidd/check-instruction-drift.mjs",
+          "scripts/aidd/check-instruction-drift.test.mjs",
+          "scripts/aidd/check-pr-automation-evidence.mjs",
+          "scripts/aidd/check-pr-automation-evidence.test.mjs"
+        ],
+        "dependsOn": ["recovery-mechanism"],
+        "acceptance": "Instruction drift and PR automation evidence fail closed, CI preserves failures, and agent obligations are documented"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Revalidated the AIDD task after adding instruction drift detection, a read-only PR automation evidence check, CI exit-status handling, and agent obligations for broad and cross-layer changes. Two independent Codex reviewers found three premerge-check gaps; all were addressed and rechecked. Existing database and recovery behavior was not changed.",
+          "remainingPaths": [],
+          "evidence": [
+            "scripts/aidd/check-instruction-drift.mjs",
+            "scripts/aidd/check-pr-automation-evidence.mjs",
+            "docs/aidd/development-lifecycle.md",
+            ".github/workflows/frontend-quality.yml"
+          ],
+          "commands": [
+            { "command": "npm run aidd:instruction-drift", "exitCode": 0 },
+            { "command": "npm run aidd:instruction-drift:test", "exitCode": 0 },
+            { "command": "npm run aidd:premerge:test", "exitCode": 0 },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:assets", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "npm run aidd:format:changed -- --worktree", "exitCode": 0 },
+            {
+              "command": "npx eslint --max-warnings 0 scripts/aidd/check-aidd-setup.mjs scripts/aidd/check-instruction-drift.mjs scripts/aidd/check-instruction-drift.test.mjs scripts/aidd/check-pr-automation-evidence.mjs scripts/aidd/check-pr-automation-evidence.test.mjs",
+              "exitCode": 0
+            },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": [
+            {
+              "summary": "Independent Codex reviews found missing required CI identification, PR-read race, and unverified base scope; the first two are fixed and the base scope is explicitly reserved for manual verification.",
+              "disposition": "closed"
+            }
+          ]
+        },
+        "source": {
+          "fingerprint": "454f544d15685467170fe88b3f9891480281c4ecfcefbdf6c8d0403e770419cd",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda"
+        }
+      }
+    },
+    {
+      "definition": {
+        "id": "recovery-mechanism",
+        "kind": "implementation",
+        "owner": "codex-root",
+        "paths": [
+          "scripts/aidd/agent-work-ledger.mjs",
+          "scripts/aidd/agent-work-ledger.test.mjs",
+          "docs/aidd/autonomous-recovery.md",
+          "package.json",
+          "AGENTS.md",
+          ".agents/AGENTS.md",
+          "docs/aidd/development-lifecycle.md",
+          "docs/aidd/README.md",
+          "docs/aidd/playbooks/local-codex-startup.md",
+          "docs/aidd/playbooks/new-task-flow.md",
+          "scripts/aidd/check-aidd-setup.mjs"
+        ],
+        "dependsOn": [],
+        "acceptance": "Recovery ledger handles interruption and stale evidence with passing targeted tests"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Revalidated the AIDD task after adding instruction drift detection, a read-only PR automation evidence check, CI exit-status handling, and agent obligations for broad and cross-layer changes. Two independent Codex reviewers found three premerge-check gaps; all were addressed and rechecked. Existing database and recovery behavior was not changed.",
+          "remainingPaths": [],
+          "evidence": [
+            "scripts/aidd/check-instruction-drift.mjs",
+            "scripts/aidd/check-pr-automation-evidence.mjs",
+            "docs/aidd/development-lifecycle.md",
+            ".github/workflows/frontend-quality.yml"
+          ],
+          "commands": [
+            { "command": "npm run aidd:instruction-drift", "exitCode": 0 },
+            { "command": "npm run aidd:instruction-drift:test", "exitCode": 0 },
+            { "command": "npm run aidd:premerge:test", "exitCode": 0 },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:assets", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "npm run aidd:format:changed -- --worktree", "exitCode": 0 },
+            {
+              "command": "npx eslint --max-warnings 0 scripts/aidd/check-aidd-setup.mjs scripts/aidd/check-instruction-drift.mjs scripts/aidd/check-instruction-drift.test.mjs scripts/aidd/check-pr-automation-evidence.mjs scripts/aidd/check-pr-automation-evidence.test.mjs",
+              "exitCode": 0
+            },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": [
+            {
+              "summary": "Independent Codex reviews found missing required CI identification, PR-read race, and unverified base scope; the first two are fixed and the base scope is explicitly reserved for manual verification.",
+              "disposition": "closed"
+            }
+          ]
+        },
+        "source": {
+          "fingerprint": "117cfbad8311f3c6babfeee37aa244d6d5a4a8dd377a0a0c2f83a9ae341e1cbb",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda"
+        }
+      }
+    },
+    {
+      "definition": {
+        "id": "shared-agent-instructions",
+        "kind": "implementation",
+        "owner": "codex-root",
+        "paths": [
+          "AGENTS.md",
+          ".agents/AGENTS.md",
+          "apps/api/AGENTS.md",
+          "apps/e2e/AGENTS.md",
+          "libs/server/AGENTS.md",
+          "libs/web/AGENTS.md",
+          "docs/aidd/README.md",
+          "docs/aidd/codex-operating-model.md",
+          "scripts/aidd/check-aidd-setup.mjs",
+          ".github/workflows/ci.yml",
+          "GEMINI.md",
+          "apps/api/GEMINI.md",
+          "apps/e2e/GEMINI.md",
+          "docs/GEMINI.md",
+          "libs/server/GEMINI.md",
+          "libs/server/features/auth/GEMINI.md",
+          "libs/shared/GEMINI.md",
+          "libs/web/GEMINI.md"
+        ],
+        "dependsOn": ["recovery-mechanism"],
+        "acceptance": "Codex and Antigravity use shared scoped AGENTS instructions without duplicate GEMINI files"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Revalidated the AIDD task after adding instruction drift detection, a read-only PR automation evidence check, CI exit-status handling, and agent obligations for broad and cross-layer changes. Two independent Codex reviewers found three premerge-check gaps; all were addressed and rechecked. Existing database and recovery behavior was not changed.",
+          "remainingPaths": [],
+          "evidence": [
+            "scripts/aidd/check-instruction-drift.mjs",
+            "scripts/aidd/check-pr-automation-evidence.mjs",
+            "docs/aidd/development-lifecycle.md",
+            ".github/workflows/frontend-quality.yml"
+          ],
+          "commands": [
+            { "command": "npm run aidd:instruction-drift", "exitCode": 0 },
+            { "command": "npm run aidd:instruction-drift:test", "exitCode": 0 },
+            { "command": "npm run aidd:premerge:test", "exitCode": 0 },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:assets", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "npm run aidd:format:changed -- --worktree", "exitCode": 0 },
+            {
+              "command": "npx eslint --max-warnings 0 scripts/aidd/check-aidd-setup.mjs scripts/aidd/check-instruction-drift.mjs scripts/aidd/check-instruction-drift.test.mjs scripts/aidd/check-pr-automation-evidence.mjs scripts/aidd/check-pr-automation-evidence.test.mjs",
+              "exitCode": 0
+            },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": [
+            {
+              "summary": "Independent Codex reviews found missing required CI identification, PR-read race, and unverified base scope; the first two are fixed and the base scope is explicitly reserved for manual verification.",
+              "disposition": "closed"
+            }
+          ]
+        },
+        "source": {
+          "fingerprint": "dbab76178330671ecd4f61b27ab8527c93f30d38b970764e34f3ddc83b43c5d7",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda"
+        }
+      }
+    },
+    {
+      "definition": {
+        "id": "source-checkpoint",
+        "kind": "implementation",
+        "owner": "codex-root",
+        "paths": [
+          "scripts/aidd/source-checkpoint.mjs",
+          "scripts/aidd/source-checkpoint.test.mjs",
+          "docs/aidd/autonomous-recovery.md",
+          "AGENTS.md",
+          "package.json"
+        ],
+        "dependsOn": ["recovery-mechanism"],
+        "acceptance": "Private source checkpoint restores an unpushed branch and uncommitted source without changing the working branch or index"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Revalidated the AIDD task after adding instruction drift detection, a read-only PR automation evidence check, CI exit-status handling, and agent obligations for broad and cross-layer changes. Two independent Codex reviewers found three premerge-check gaps; all were addressed and rechecked. Existing database and recovery behavior was not changed.",
+          "remainingPaths": [],
+          "evidence": [
+            "scripts/aidd/check-instruction-drift.mjs",
+            "scripts/aidd/check-pr-automation-evidence.mjs",
+            "docs/aidd/development-lifecycle.md",
+            ".github/workflows/frontend-quality.yml"
+          ],
+          "commands": [
+            { "command": "npm run aidd:instruction-drift", "exitCode": 0 },
+            { "command": "npm run aidd:instruction-drift:test", "exitCode": 0 },
+            { "command": "npm run aidd:premerge:test", "exitCode": 0 },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:assets", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "npm run aidd:format:changed -- --worktree", "exitCode": 0 },
+            {
+              "command": "npx eslint --max-warnings 0 scripts/aidd/check-aidd-setup.mjs scripts/aidd/check-instruction-drift.mjs scripts/aidd/check-instruction-drift.test.mjs scripts/aidd/check-pr-automation-evidence.mjs scripts/aidd/check-pr-automation-evidence.test.mjs",
+              "exitCode": 0
+            },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": [
+            {
+              "summary": "Independent Codex reviews found missing required CI identification, PR-read race, and unverified base scope; the first two are fixed and the base scope is explicitly reserved for manual verification.",
+              "disposition": "closed"
+            }
+          ]
+        },
+        "source": {
+          "fingerprint": "be1470ed08c5b80e8de1dd4d1386c88e39356f860ba2b3e40f4b80a217d2582b",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda"
+        }
+      }
+    },
+    {
+      "definition": {
+        "id": "test-db-isolation",
+        "kind": "verification",
+        "owner": "codex-root",
+        "paths": [
+          ".env.test",
+          "docker-compose.test.yml",
+          ".github/workflows/ci.yml",
+          "libs/server/core/src/config/test-database-target.ts",
+          "scripts/aidd/test-database-target.test.mjs",
+          "docs/aidd/database-access-policy.md",
+          "AGENTS.md"
+        ],
+        "dependsOn": ["database-safety"],
+        "acceptance": "Local and CI tests use an isolated test-only PostgreSQL target and dedicated test-named account"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Revalidated the AIDD task after adding instruction drift detection, a read-only PR automation evidence check, CI exit-status handling, and agent obligations for broad and cross-layer changes. Two independent Codex reviewers found three premerge-check gaps; all were addressed and rechecked. Existing database and recovery behavior was not changed.",
+          "remainingPaths": [],
+          "evidence": [
+            "scripts/aidd/check-instruction-drift.mjs",
+            "scripts/aidd/check-pr-automation-evidence.mjs",
+            "docs/aidd/development-lifecycle.md",
+            ".github/workflows/frontend-quality.yml"
+          ],
+          "commands": [
+            { "command": "npm run aidd:instruction-drift", "exitCode": 0 },
+            { "command": "npm run aidd:instruction-drift:test", "exitCode": 0 },
+            { "command": "npm run aidd:premerge:test", "exitCode": 0 },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:assets", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "npm run aidd:format:changed -- --worktree", "exitCode": 0 },
+            {
+              "command": "npx eslint --max-warnings 0 scripts/aidd/check-aidd-setup.mjs scripts/aidd/check-instruction-drift.mjs scripts/aidd/check-instruction-drift.test.mjs scripts/aidd/check-pr-automation-evidence.mjs scripts/aidd/check-pr-automation-evidence.test.mjs",
+              "exitCode": 0
+            },
+            { "command": "git diff --check", "exitCode": 0 }
+          ],
+          "findings": [
+            {
+              "summary": "Independent Codex reviews found missing required CI identification, PR-read race, and unverified base scope; the first two are fixed and the base scope is explicitly reserved for manual verification.",
+              "disposition": "closed"
+            }
+          ]
+        },
+        "source": {
+          "fingerprint": "f1f4ea2e3c47a384f98dbe45925d59e11e1ac66fe7cbfd52b7b46701b037ebde",
+          "head": "22faba5673c233c5185da46b85dd839e51227dda",
+          "base": "22faba5673c233c5185da46b85dd839e51227dda",
+          "baseTip": "1b4cca5c47269e6990b75b672a7531d87125ff35"
+        }
+      }
+    }
+  ]
+}

@@ -1,12 +1,14 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { execSync } from 'child_process';
+import { bindTestDatabaseTarget, type TestDatabaseTarget } from '@cthub-bsaas/server-core';
 
 class TestPrismaClient extends PrismaClient {
   private static instance: TestPrismaClient | null = null;
   private isTestEnvironment: boolean;
 
-  private constructor() {
+  private constructor(target: TestDatabaseTarget) {
     super({
+      datasources: { db: { url: target.url } },
       log: process.env.NODE_ENV === 'test' ? ['error'] : ['query', 'info', 'warn', 'error'],
       errorFormat: 'pretty',
     });
@@ -22,6 +24,7 @@ class TestPrismaClient extends PrismaClient {
 
   public static getInstance(): TestPrismaClient {
     if (!TestPrismaClient.instance) {
+      const target = bindTestDatabaseTarget();
       if (process.env.NODE_ENV === 'test') {
         // Reset the test database before the first test run
         execSync('npx prisma migrate reset --force --skip-seed', {
@@ -33,7 +36,7 @@ class TestPrismaClient extends PrismaClient {
         });
       }
 
-      TestPrismaClient.instance = new TestPrismaClient();
+      TestPrismaClient.instance = new TestPrismaClient(target);
     }
     return TestPrismaClient.instance;
   }
@@ -60,13 +63,6 @@ class TestPrismaClient extends PrismaClient {
     await this.$disconnect();
     TestPrismaClient.instance = null as unknown as TestPrismaClient;
   }
-}
-
-// Ensure we're using a test database URL in test environment
-if (process.env.NODE_ENV === 'test' && !process.env.TEST_DATABASE_URL) {
-  const dbUrl = new URL(process.env.DATABASE_URL || '');
-  dbUrl.pathname = `${dbUrl.pathname}_test`;
-  process.env.TEST_DATABASE_URL = dbUrl.toString();
 }
 
 const prisma = TestPrismaClient.getInstance();

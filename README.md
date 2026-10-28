@@ -2,7 +2,15 @@
 
 [![Nx](https://img.shields.io/badge/powered%20by-nx-143055?style=flat-square&logo=nx&logoColor=white)](https://nx.dev)
 
-A modern, scalable beauty salon management platform built with Nx, Angular, and NestJS.
+A scalable SaaS platform for beauty salons, built with Nx, Angular, and NestJS.
+
+## Product Goal
+
+Build a platform that helps beauty salons run their business and can scale from a single branch to multiple businesses and branches. Salon operations are the first product area: settings, staff, services, customers, appointments, billing, inventory, and an owner dashboard. Public discovery, the customer app, and platform administration extend that foundation in later slices.
+
+The first release goal is an operationally credible single-branch salon. The [Salon Owner release scope](docs/us/salon-owner/release-scope.md) defines the MVP boundary; the [product stories](docs/us/README.md) and [current specs](docs/specs/README.md) define feature behavior. Product success measures belong in each work item's acceptance criteria rather than being inferred from implementation activity.
+
+Development follows the [AI-driven development life cycle](docs/aidd/development-lifecycle.md), with specialist agents owning bounded stages and independent Codex review and security gates.
 
 ## 🏗️ Project Structure
 
@@ -39,18 +47,18 @@ cthub-bsaas/
 
 ### Prerequisites
 
-- Node.js 20+
-- npm 10+
+- Node.js 24 (see `package.json` engines)
+- npm 9+
 - Docker 24.0+ (for local development)
 - Git 2.40+
-- Nx CLI (recommended): `npm install -g nx`
+- Use the workspace Nx CLI through npm; a global Nx installation is not required.
 
 ### Getting Started
 
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/your-org/cthub-bsaas.git
+   git clone https://github.com/dey-joydeep/cthub-bsaas.git
    cd cthub-bsaas
    ```
 

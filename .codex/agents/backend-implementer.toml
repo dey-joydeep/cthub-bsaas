@@ -1,3 +1,6 @@
+name = "backend-implementer"
+description = "Backend implementation helper for approved NestJS and Prisma work within existing specs and boundaries."
+
 developer_instructions = """
 # Backend Implementer Subagent
 
