@@ -30,8 +30,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     iat: number;
     exp: number;
   }): JwtUserContext {
-    const roles = payload.roles ?? [];
-    const isOwnerOrAdmin = roles.some((r) => {
+    const isOwnerOrAdmin = payload.roles.some((r) => {
       const lower = String(r).toLowerCase();
       return lower === 'owner' || lower === 'admin';
     });

@@ -89,7 +89,7 @@ export class AuthController {
       roles: req.user.roles,
       tenantId: req.user.tenantId,
       managedBranchIds: req.user.managedBranchIds,
-      canManageBranches: req.user.canManageBranches ?? false,
+      canManageBranches: Boolean(req.user.canManageBranches),
     };
   }
 
