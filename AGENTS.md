@@ -2,7 +2,7 @@
 
 ## How To Use These Instructions
 
-Agents normally work from the repository root. Before working in a scoped area, read the nearest relevant instruction file manually:
+These guidelines apply to AI coding assistants and human developers. Work from the repository root, and read the nearest relevant instruction file before working in a scoped area:
 
 | Work area                      | Read this first                                                     |
 | ------------------------------ | ------------------------------------------------------------------- |
@@ -68,16 +68,21 @@ A lighter path is allowed only for a continuation fix inside the same active tas
 - Windows shell: prefer PowerShell Core (`pwsh`) when available.
 - Use `Get-Content` instead of `sed` for quick file reads on Windows.
 - Use forward slashes in Nx targets; PowerShell accepts them.
+- Server integration tests require the isolated test database configured through `.env.test` or an approved `TEST_DATABASE_URL`.
+
+## Dependencies And Package Installation
+
 - Match engines in `package.json` and `.nvmrc`.
 - Node and npm must be compatible with the repo before running builds/tests.
 - Server integration tests require the isolated database in `docker-compose.test.yml` with `.env.test`, or an explicitly approved `TEST_DATABASE_URL`; never use a general Prisma `.env` file as their target.
 - Database operations follow `docs/aidd/database-access-policy.md`. Automated tests use only a validated test target; database tools do not bypass profile and authorization rules.
+- **NEVER EVER use `--legacy-peer-deps`** when installing or updating any package. Peer dependency conflicts must be resolved cleanly by matching compatible package versions in `package.json`, never bypassed, forced, or silenced with `--legacy-peer-deps`.
 
 ## Project Snapshot
 
-- Monorepo: Nx 23.
+- Monorepo: Nx 24.
 - Backend: NestJS 11.
-- Frontend: Angular 21, standalone + SSR, Angular Material v3, Tailwind v4.
+- Frontend: Angular 22, standalone + SSR, Angular Material v3, Tailwind v4.
 - Tests: Jest 30 and Vitest 4; inspect the affected project's test target before choosing a command.
 - Apps: backend API under `apps/api`; Angular runnable wrappers under `apps/web/**`; E2E under `apps/e2e/**`.
 - Libraries: main implementation lives under `libs/**`.
@@ -129,6 +134,12 @@ Follow the [AIDD change scope and validation matrix](docs/aidd/change-hygiene.md
 - Prefer UUIDv4 string IDs and clear domain aliases where helpful.
 - Centralize mappers in `*-mappers.ts`.
 - Mappers must omit secrets and internal-only fields by default.
+
+## Authorization And Capability Contracts
+
+- **Full-Slice Implementation**: When introducing or enforcing any authorization capability, claim, or user-context property, implement the complete vertical slice from database/repository to consumer.
+- **Producer-Consumer Parity**: Never gate a consumer (guard, UI route, or API handler) on an optional field without verifying or implementing its active production producer (database query, token generator in `AuthService`, and session hydration).
+- **No Mock-Only Validation**: Unit tests using hand-crafted mock user objects with pre-populated capabilities are insufficient on their own; at least one integration test must verify that the actual sign-in or token-generation pipeline produces those claims.
 
 ## Git And Commits
 

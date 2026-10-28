@@ -6,7 +6,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { vi } from 'vitest';
 import { of } from 'rxjs';
-import { CURRENT_USER, CurrentUserService } from '@cthub-bsaas/web-core/auth';
+import { CURRENT_USER, CurrentUserService } from '@cthub-bsaas/web-core-auth';
 import { AuthService } from '@cthub-bsaas/web-customer/auth';
 import { MatSnackBar } from '@angular/material/snack-bar';
 

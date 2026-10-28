@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Router, RouterStateSnapshot, ActivatedRouteSnapshot, UrlTree } from '@angular/router';
 import { of, isObservable, firstValueFrom } from 'rxjs';
-import { authGuard, CurrentUserService, CURRENT_USER } from '@cthub-bsaas/web-core/auth';
+import { authGuard, CurrentUserService, CURRENT_USER } from '@cthub-bsaas/web-core-auth';
 
 class MockRouter {
   navigate = vi.fn();

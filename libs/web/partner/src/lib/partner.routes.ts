@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from '@cthub-bsaas/web-core/auth';
+import { authGuard } from '@cthub-bsaas/web-core-auth';
 
 export const PARTNER_ROUTES: Routes = [
   {

@@ -10,7 +10,7 @@ export class SalonSearchService {
   private readonly http = inject(HttpClient);
 
   searchSalons(params: HttpParams): Observable<{ salons: Salon[]; total: number }> {
-    return this.http.get<{ salons: Salon[]; total: number }>('/api/salons', { params }).pipe(catchError((err) => this.handleError(err)));
+    return this.http.get<{ salons: Salon[]; total: number }>(this.apiUrl, { params }).pipe(catchError((err) => this.handleError(err)));
   }
 
   getServices(): Observable<SalonServiceItem[]> {

@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatNativeDateModule } from '@angular/material/core';
@@ -13,7 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { Router } from '@angular/router';
 import { CurrentUserService } from '@cthub-bsaas/web-core-auth';
-import { CreateAppointmentParams } from '../../../../../models/appointment-params.model';
+import { CreateAppointmentParams } from '../../../models/appointment-params.model';
 import { Salon } from '../../../models/salon.model';
 import { Service } from '../../../models/service.model';
 import { Staff } from '../../../models/staff.model';
@@ -21,6 +21,7 @@ import { Staff } from '../../../models/staff.model';
 @Component({
   selector: 'app-create-appointment',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     // Angular modules
     DatePipe,
@@ -126,7 +127,7 @@ export class CreateAppointmentComponent implements OnInit {
     if (this.appointmentForm.invalid || !this.userId) return;
     this.loading = true;
     this.error = null;
-    const { salonId, serviceId, staffId, startTime, notes, status } = this.appointmentForm.value;
+    const { salonId, serviceId, staffId, startTime, notes } = this.appointmentForm.value;
     if (!salonId || !serviceId || !startTime) {
       this.loading = false;
       this.error = 'Salon, service, and start time are required.';
@@ -142,6 +143,7 @@ export class CreateAppointmentComponent implements OnInit {
       salonId: salonId as string,
       serviceId: serviceId as string,
       staffId: staffId as string,
+      appointmentDate: startDate,
       startTime: startDate.toISOString(),
       endTime: endTime,
       notes: notes as string | undefined,

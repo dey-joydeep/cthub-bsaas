@@ -22,9 +22,9 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": ["libs/web/public/src/index.ts", "libs/web/public/src/lib/public.routes.ts"]
+        "cwd": "{projectRoot}",
+        "command": "eslint src/index.ts src/lib/public.routes.ts"
       }
     },
     "type-check": {

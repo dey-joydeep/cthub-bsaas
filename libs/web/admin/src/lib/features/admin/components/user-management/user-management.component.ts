@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { TitleCasePipe, NgClass } from '@angular/common';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { TitleCasePipe } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -32,8 +32,8 @@ interface User {
     MatInputModule,
     MatPaginatorModule,
     MatSortModule,
-    NgClass,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="p-6">
       <h2 class="text-2xl font-bold mb-6">User Management</h2>
@@ -66,10 +66,13 @@ interface User {
             <td mat-cell *matCellDef="let user">
               <span
                 class="px-2 py-1 rounded-full text-xs"
-                [ngClass]="{
-                  'bg-blue-100 text-blue-800': user.role === 'admin',
-                  'bg-purple-100 text-purple-800': user.role === 'salon_owner',
-                  'bg-gray-100 text-gray-800': user.role === 'customer',
+                [class]="{
+                  'bg-blue-100': user.role === 'admin',
+                  'text-blue-800': user.role === 'admin',
+                  'bg-purple-100': user.role === 'salon_owner',
+                  'text-purple-800': user.role === 'salon_owner',
+                  'bg-gray-100': user.role === 'customer',
+                  'text-gray-800': user.role === 'customer',
                 }"
               >
                 {{ user.role | titlecase }}
@@ -83,10 +86,13 @@ interface User {
             <td mat-cell *matCellDef="let user">
               <span
                 class="px-2 py-1 rounded-full text-xs"
-                [ngClass]="{
-                  'bg-green-100 text-green-800': user.status === 'active',
-                  'bg-yellow-100 text-yellow-800': user.status === 'pending',
-                  'bg-red-100 text-red-800': user.status === 'suspended',
+                [class]="{
+                  'bg-green-100': user.status === 'active',
+                  'text-green-800': user.status === 'active',
+                  'bg-yellow-100': user.status === 'pending',
+                  'text-yellow-800': user.status === 'pending',
+                  'bg-red-100': user.status === 'suspended',
+                  'text-red-800': user.status === 'suspended',
                 }"
               >
                 {{ user.status | titlecase }}

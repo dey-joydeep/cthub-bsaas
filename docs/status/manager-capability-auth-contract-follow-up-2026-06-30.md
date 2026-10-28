@@ -3,7 +3,11 @@
 **Date:** 2026-06-30  
 **Related PR:** [#44 feat: add salon owner settings screens](https://github.com/dey-joydeep/cthub-bsaas/pull/44)  
 **Related review thread:** [Gate branch settings to manager-capable staff](https://github.com/dey-joydeep/cthub-bsaas/pull/44#discussion_r3487973670)  
+<<<<<<< HEAD
+**Status:** Implemented on branch `feature/manager-capability-auth-contract` (ready for PR review)
+=======
 **Status:** Follow-up design and implementation task  
+>>>>>>> origin/feature/web-salon-owner-settings
 
 ## Purpose
 
@@ -143,3 +147,43 @@ After the separate task is implemented:
   - remain with the forbidden UX and close the thread by pointing to the follow-up auth-contract change
 
 Do not claim that the original thread is fully fixed until the route/menu capability question is actually resolved.
+<<<<<<< HEAD
+
+## Implementation Summary
+
+Implemented on branch `feature/manager-capability-auth-contract`:
+
+1. **Shared Contract (`libs/shared`)**:
+   - Added `isBranchManagerPosition()` and `hasManagerCapability()` in `libs/shared/src/lib/utils/manager-capability.util.ts`.
+   - Enhanced `hasManagerCapability()` to verify the user has the `STAFF` role before allowing branch list fallback, and respect explicit `canManageBranches: false`.
+   - Added `managedBranchIds?: string[]` and `canManageBranches?: boolean` to `AuthenticatedUser` in `libs/shared/src/lib/types/user.types.ts`.
+   - Replaced duplicate local branch manager position check in `libs/server/features/salon-owner/src/lib/services/salon-owner-settings.service.ts` with shared utility.
+
+2. **Backend Auth Contract Pipeline (`libs/server/contracts-auth`, `libs/server/data-access`, `libs/server/features/auth`)**:
+   - Added `findManagedBranchIds(userId: string): Promise<string[]>` to `IUserRepository` port and `UserRepository` implementation. Queries `salonTenantStaff` where `isActive = true`, filtering with `isBranchManagerPosition()`.
+   - In `AuthService.generateTokens()`, for staff users, queries active manager assignments and signs access tokens containing `managedBranchIds` and `canManageBranches: true`.
+   - In `JwtStrategy.validate()`, propagates `managedBranchIds` and `canManageBranches` into `JwtUserContext`.
+
+3. **Web Core Auth (`libs/web/core/auth`)**:
+   - Added `roles?: readonly string[]`, `managedBranchIds?: readonly string[]`, and `canManageBranches?: boolean` to `CurrentUserMin` and `BaseAuthUser`.
+   - Updated `roleGuard` to defensively extract role strings from object-formatted roles (`{ name: 'staff' }`), support `redirectUrl` configuration, and enforce `requireManagerCapability`.
+   - Exported `managerCapabilityGuard` for dedicated capability checks.
+
+4. **Web Partner & App (`libs/web/partner`, `apps/web/partner`)**:
+   - Extended `PartnerAuthUser` with `managedBranchIds` and `canManageBranches`.
+   - Updated `AuthService.setLoggedInUser()` and `initializeAuthState()` to decode `managedBranchIds` and `canManageBranches` from token claims when not present in input payload.
+   - Gated `/owner/branches` in `apps/web/partner/src/app/app.routes.ts` with `requireManagerCapability: true` and `redirectUrl: '/unauthorized'`.
+   - Added `UnauthorizedComponent` registered at `/unauthorized` to present a clean access-restricted message instead of bouncing to login.
+   - Updated `apps/web/partner/src/app/app.component.ts` to use case-normalized `hasRole('admin')` for `isAdmin`, and allow `ADMIN` in `owner/settings` route data.
+   - Gated Settings navigation: owners and admins route to `/settings`, manager-capable staff route to `/owner/branches`, and non-manager staff have Settings hidden.
+
+5. **Automated Verification**:
+   - All tests passing in `shared` (11/11 tests, 100% coverage).
+   - All tests passing in `server-data-access` (54/54 tests, 100% coverage).
+   - All tests passing in `server-feature-auth` (unit tests and jwt strategy).
+   - All tests passing in `web-core-auth` (15/15 tests across 3 suites).
+   - All tests passing in `web-lib-partner` (57/57 tests across 2 suites).
+   - All tests passing in `web-app-partner` (8/8 tests across 2 suites).
+   - All tests passing in `server-feature-salon-owner` (93/93 tests across 3 suites).
+=======
+>>>>>>> origin/feature/web-salon-owner-settings

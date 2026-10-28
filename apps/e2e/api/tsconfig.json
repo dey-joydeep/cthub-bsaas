@@ -3,7 +3,9 @@
   "compilerOptions": {
     "outDir": "../../../dist/out-tsc",
     "types": ["node", "jest"],
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "ignoreDeprecations": "6.0",
+    "rootDir": "."
   },
   "include": ["jest.config.ts", "src/**/*.ts"]
 }

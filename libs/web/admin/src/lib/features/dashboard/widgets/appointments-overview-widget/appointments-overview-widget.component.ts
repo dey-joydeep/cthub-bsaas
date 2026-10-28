@@ -1,12 +1,12 @@
-import { DatePipe, CurrencyPipe, SlicePipe, formatDate, NgClass } from '@angular/common';
-import { AfterViewInit, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { DatePipe, CurrencyPipe, SlicePipe, formatDate } from '@angular/common';
+import { AfterViewInit, ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject, signal, viewChild } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatNativeDateModule, MatOptionModule } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -33,6 +33,7 @@ import { AppointmentsOverviewWidgetService } from './appointments-overview-widge
 @Component({
   selector: 'app-appointments-overview-widget',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
     CurrencyPipe,
@@ -60,7 +61,6 @@ import { AppointmentsOverviewWidgetService } from './appointments-overview-widge
     MatDividerModule,
     MatListModule,
     MatDialogModule,
-    NgClass,
   ],
   templateUrl: './appointments-overview-widget.component.html',
   styleUrls: ['./appointments-overview-widget.component.css'],
@@ -69,13 +69,32 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
   sort = viewChild<MatSort>(MatSort);
 
   // Data
-  overview: AppointmentsOverview | null = null;
+  readonly overviewSignal = signal<AppointmentsOverview | null>(null);
+  get overview(): AppointmentsOverview | null {
+    return this.overviewSignal();
+  }
+  set overview(val: AppointmentsOverview | null) {
+    this.overviewSignal.set(val);
+  }
   dataSource = new MatTableDataSource<Appointment>([]);
   displayedColumns: string[] = ['title', 'customerName', 'staffName', 'serviceName', 'startTime', 'duration', 'status', 'actions'];
 
   // Loading & error states
-  isLoading = true;
-  error: string | null = null;
+  readonly isLoadingSignal = signal(true);
+  get isLoading(): boolean {
+    return this.isLoadingSignal();
+  }
+  set isLoading(val: boolean) {
+    this.isLoadingSignal.set(val);
+  }
+
+  readonly errorSignal = signal<string | null>(null);
+  get error(): string | null {
+    return this.errorSignal();
+  }
+  set error(val: string | null) {
+    this.errorSignal.set(val);
+  }
 
   // Pagination
   pageIndex = 0;
@@ -91,7 +110,6 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
   });
   private readonly appointmentsOverviewWidgetService = inject(AppointmentsOverviewWidgetService);
   private readonly snackBar = inject(MatSnackBar);
-  private readonly dialog = inject(MatDialog);
   // Status filter
   statusFilter = new FormControl<AppointmentStatus | 'ALL'>('ALL');
   statusOptions = [
@@ -129,7 +147,10 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
   }
 
   ngAfterViewInit(): void {
-    this.dataSource.sort = this.sort;
+    const sortInstance = this.sort();
+    if (sortInstance) {
+      this.dataSource.sort = sortInstance;
+    }
   }
 
   ngOnDestroy(): void {
@@ -257,7 +278,7 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
    */
   getStatusBadge(status: AppointmentStatus): StatusBadgeConfig {
     // Convert string 'PENDING' to AppointmentStatus.PENDING if needed
-    const statusValue = status === 'PENDING' ? AppointmentStatus.PENDING : status;
+    const statusValue = status === AppointmentStatus.PENDING ? AppointmentStatus.PENDING : status;
 
     const badges: Record<AppointmentStatus, StatusBadgeConfig> = {
       [AppointmentStatus.PENDING]: {
@@ -293,7 +314,7 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
     };
 
     return (
-      badges[statusValue as AppointmentStatus] || {
+      badges[statusValue] || {
         text: statusValue,
         class: 'status-unknown',
         icon: 'help',
@@ -399,7 +420,11 @@ export class AppointmentsOverviewWidgetComponent implements OnInit, OnDestroy, A
    * Get the appropriate icon for an appointment based on its status and date
    */
   getAppointmentIcon(appointment: Appointment): string {
-    if (this.isPast(appointment.endTime) && appointment.status !== 'COMPLETED' && appointment.status !== 'CANCELLED') {
+    if (
+      this.isPast(appointment.endTime) &&
+      appointment.status !== AppointmentStatus.COMPLETED &&
+      appointment.status !== AppointmentStatus.CANCELLED
+    ) {
       return 'warning'; // Missed appointment
     }
 

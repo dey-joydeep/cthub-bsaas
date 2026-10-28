@@ -3,7 +3,8 @@
   "compilerOptions": {
     "module": "preserve",
     "moduleResolution": "bundler",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "ignoreDeprecations": "6.0"
   },
   "files": [],
   "references": [{ "path": "./tsconfig.lib.json" }, { "path": "./tsconfig.spec.json" }]

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Salon } from './model/top-salons.model';
 
@@ -14,7 +14,7 @@ export class TopSalonsService {
     if (latitude !== undefined && longitude !== undefined) {
       params = { lat: latitude, lng: longitude };
     }
-    return this.http.get<Salon[]>('/api/salons/top', { params }).pipe(catchError((err) => this.handleError(err)));
+    return this.http.get<Salon[]>(`${this.apiUrl}/top`, { params }).pipe(catchError((err) => this.handleError(err)));
   }
 
   private handleError(error: any) {

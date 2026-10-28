@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
@@ -122,6 +122,7 @@ class AuthService {
     FormsModule,
   ],
   templateUrl: './header.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: [], // Using inline styles for now
 })
 export class HeaderComponent implements OnInit, OnDestroy {

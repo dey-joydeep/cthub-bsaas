@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma, User } from '@prisma/client';
+import { isBranchManagerPosition } from '@cthub-bsaas/shared';
 import { PrismaService } from '../prisma.service';
 import { IUserRepository } from '@cthub-bsaas/server-contracts-auth';
 
 /**
- * @public
- * Prisma-backed implementation of {@link IUserRepository}.
+ * Concrete Prisma-backed user repository.
  */
 @Injectable()
 export class UserRepository implements IUserRepository {
@@ -43,6 +43,28 @@ export class UserRepository implements IUserRepository {
         },
       },
     });
+  }
+
+  /**
+   * @inheritdoc
+   */
+  async findManagedBranchIds(userId: string): Promise<string[]> {
+    const staffAssignments = await this.prisma.salonTenantStaff.findMany({
+      where: {
+        userId,
+        isActive: true,
+      },
+      select: {
+        salonId: true,
+        position: true,
+      },
+    });
+
+    const managedBranchIds = staffAssignments
+      .filter((assignment) => isBranchManagerPosition(assignment.position))
+      .map((assignment) => assignment.salonId);
+
+    return [...new Set(managedBranchIds)];
   }
 
   /**

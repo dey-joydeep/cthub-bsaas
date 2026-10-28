@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
 
 import {
   FormBuilder,
@@ -41,6 +41,7 @@ interface ResetPasswordForm {
   standalone: true,
   imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressBarModule],
   templateUrl: './forgot-password.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./forgot-password.component.css'],
 })
 export class ForgotPasswordComponent {
@@ -50,11 +51,45 @@ export class ForgotPasswordComponent {
   forgotForm: FormGroup<ForgotPasswordForm>;
   otpForm: FormGroup<OtpForm>;
   resetForm: FormGroup<ResetPasswordForm>;
-  loading = false;
-  error: string | null = null;
-  success: string | null = null;
-  step: 'email' | 'otp' | 'reset' | 'success' = 'email';
-  email = '';
+  readonly loadingSignal = signal(false);
+  get loading(): boolean {
+    return this.loadingSignal();
+  }
+  set loading(val: boolean) {
+    this.loadingSignal.set(val);
+  }
+
+  readonly errorSignal = signal<string | null>(null);
+  get error(): string | null {
+    return this.errorSignal();
+  }
+  set error(val: string | null) {
+    this.errorSignal.set(val);
+  }
+
+  readonly successSignal = signal<string | null>(null);
+  get success(): string | null {
+    return this.successSignal();
+  }
+  set success(val: string | null) {
+    this.successSignal.set(val);
+  }
+
+  readonly stepSignal = signal<'email' | 'otp' | 'reset' | 'success'>('email');
+  get step(): 'email' | 'otp' | 'reset' | 'success' {
+    return this.stepSignal();
+  }
+  set step(val: 'email' | 'otp' | 'reset' | 'success') {
+    this.stepSignal.set(val);
+  }
+
+  readonly emailSignal = signal('');
+  get email(): string {
+    return this.emailSignal();
+  }
+  set email(val: string) {
+    this.emailSignal.set(val);
+  }
 
   constructor() {
     // Initialize Forgot Password Form

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -14,6 +14,7 @@ import { CurrentUserService } from '@cthub-bsaas/web-core-auth';
   standalone: true,
   imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressBarModule, MatIconModule],
   templateUrl: './profile-settings.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./profile-settings.component.css'],
 })
 export class ProfileSettingsComponent implements OnInit {

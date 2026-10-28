@@ -7,7 +7,36 @@
     "types": ["@angular/localize"],
     "skipLibCheck": true,
     "isolatedModules": true,
-    "useDefineForClassFields": true
+    "useDefineForClassFields": true,
+    "ignoreDeprecations": "6.0",
+    "paths": {
+      "@cthub-bsaas/shared": ["libs/shared/src/index.ts"],
+      "@cthub-bsaas/shared/models/*": ["libs/shared/src/lib/models/*"],
+      "@cthub-bsaas/shared/*": ["libs/shared/src/lib/*", "libs/shared/src/*", "dist/libs/shared/*"],
+      "@cthub-bsaas/web-config": ["libs/web/config/src/index.ts"],
+      "@cthub-bsaas/web-config/*": ["libs/web/config/src/*"],
+      "@cthub-bsaas/web-config/environments/*": ["libs/web/config/src/environments/*"],
+      "@cthub-bsaas/web-core-auth": ["libs/web/core/auth/src/index.ts", "dist/libs/web/core/auth"],
+      "@cthub-bsaas/web-core-auth/*": ["libs/web/core/auth/src/*", "dist/libs/web/core/auth/*"],
+      "@cthub-bsaas/web-core-common": ["libs/web/core/common/src/index.ts", "dist/libs/web/core/common"],
+      "@cthub-bsaas/web-core-common/*": ["libs/web/core/common/src/*", "dist/libs/web/core/common/*"],
+      "@cthub-bsaas/web-core-http": ["libs/web/core/http/src/index.ts", "dist/libs/web/core/http"],
+      "@cthub-bsaas/web-core-http/*": ["libs/web/core/http/src/*", "dist/libs/web/core/http/*"],
+      "@cthub-bsaas/web-core-platform": ["libs/web/core/platform/src/index.ts", "dist/libs/web/core/platform"],
+      "@cthub-bsaas/web-core-platform/*": ["libs/web/core/platform/src/*", "dist/libs/web/core/platform/*"],
+      "@cthub-bsaas/web-core-testing": ["libs/web/core/testing/src/index.ts", "dist/libs/web/core/testing"],
+      "@cthub-bsaas/web-core-testing/*": ["libs/web/core/testing/src/*", "dist/libs/web/core/testing/*"],
+      "@cthub-bsaas/web-ui": ["libs/web/ui/src/index.ts", "dist/libs/web/ui"],
+      "@cthub-bsaas/web-ui/*": ["libs/web/ui/src/*", "dist/libs/web/ui/*"],
+      "@cthub-bsaas/web-public": ["libs/web/public/src/index.ts"],
+      "@cthub-bsaas/web-admin": ["libs/web/admin/src/index.ts"],
+      "@cthub-bsaas/web-admin/*": ["libs/web/admin/src/*"],
+      "@cthub-bsaas/web-customer": ["libs/web/customer/src/index.ts"],
+      "@cthub-bsaas/web-customer/*": ["libs/web/customer/src/*"],
+      "@cthub-bsaas/web-partner": ["libs/web/partner/src/index.ts"],
+      "@cthub-bsaas/web-partner/*": ["libs/web/partner/src/*"],
+      "chart.js/dist/types/utils": ["node_modules/chart.js/dist/types/utils.d.ts"]
+    }
   },
   "angularCompilerOptions": {
     "compilationMode": "partial"

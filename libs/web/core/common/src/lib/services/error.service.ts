@@ -28,9 +28,25 @@ export class ErrorService {
   handleError(error: unknown, context: string = 'App'): void {
     console.error(`[${context}] Error:`, error);
 
+    let message = 'An unknown error occurred';
+    if (typeof error === 'object' && error !== null) {
+      const errObj = error as Record<string, unknown>;
+      const innerErr = errObj['error'];
+      if (typeof innerErr === 'object' && innerErr !== null) {
+        const innerErrObj = innerErr as Record<string, unknown>;
+        if (typeof innerErrObj['error'] === 'string') {
+          message = innerErrObj['error'];
+        } else if (typeof innerErrObj['message'] === 'string') {
+          message = innerErrObj['message'];
+        }
+      } else if (typeof errObj['message'] === 'string') {
+        message = errObj['message'];
+      }
+    }
+
     let errorState: ErrorState = {
       type: ErrorType.UNKNOWN,
-      message: 'An unknown error occurred',
+      message,
       timestamp: new Date(),
     };
 

@@ -19,7 +19,7 @@ export const authGuard: CanActivateFn = (route, state) => {
     map((user) => {
       if (user) {
         // Role-based authorization (optional via route data)
-        if (requiredRoles && !requiredRoles.includes(user.role)) {
+        if (requiredRoles && (!user.role || !requiredRoles.includes(user.role))) {
           return router.createUrlTree(['/']);
         }
 

@@ -2,5 +2,9 @@
   "name": "@cthub-bsaas/web-config",
   "version": "0.0.1",
   "sideEffects": false,
-  "type": "module"
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./environments/*": "./src/environments/*"
+  }
 }

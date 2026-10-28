@@ -9,6 +9,7 @@
     "build": {
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/libs/web/partner"],
+      "dependsOn": ["^build"],
       "defaultConfiguration": "production",
       "options": {
         "project": "libs/web/partner/ng-package.json",
@@ -22,14 +23,9 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": [
-          "libs/web/partner/src/index.ts",
-          "libs/web/partner/src/lib/features/auth/**/*.ts",
-          "libs/web/partner/src/lib/features/auth/**/*.html",
-          "libs/web/partner/src/lib/features/auth/**/*.css"
-        ]
+        "cwd": "{projectRoot}",
+        "command": "eslint src/index.ts src/lib/features/auth/**/*.ts src/lib/features/auth/**/*.html src/lib/features/salon-owner-settings/**/*.ts src/lib/features/salon-owner-settings/**/*.html"
       }
     },
     "type-check": {

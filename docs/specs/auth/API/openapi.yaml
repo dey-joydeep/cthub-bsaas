@@ -56,6 +56,28 @@ components:
           type: string
           minLength: 8
       required: [email, password]
+    AuthUserSummary:
+      type: object
+      description: Authenticated user profile and capabilities summary
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+        roles:
+          type: array
+          items:
+            type: string
+        tenantId:
+          type: string
+        managedBranchIds:
+          type: array
+          items:
+            type: string
+        canManageBranches:
+          type: boolean
+      required: [id, email, roles, canManageBranches]
     RefreshDto:
       type: object
       description: Optional body token used only if cookie `bsaas_rt` is absent.
@@ -202,6 +224,24 @@ paths:
               description: Cooldown in seconds
               schema:
                 type: integer
+  /auth/me:
+    get:
+      summary: Get current authenticated user profile and capabilities
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Current user profile and capabilities
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUserSummary'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
   /auth/refresh:
     post:
       summary: Rotate refresh token and issue new access token

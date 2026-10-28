@@ -3,6 +3,17 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "sourceRoot": "apps/web/customer/src",
+  "i18n": {
+    "sourceLocale": "en-US",
+    "locales": {
+      "bn": {
+        "translation": "apps/web/customer/src/locale/messages.bn.xlf"
+      },
+      "ja": {
+        "translation": "apps/web/customer/src/locale/messages.ja.xlf"
+      }
+    }
+  },
   "tags": ["platform:web", "scope:web", "type:app"],
   "targets": {
     "build": {
@@ -34,7 +45,12 @@
           "apps/web/customer/src/styles.css"
         ],
         "scripts": [],
-        "browser": "apps/web/customer/src/main.ts"
+        "browser": "apps/web/customer/src/main.ts",
+        "server": "apps/web/customer/src/main.server.ts",
+        "prerender": false,
+        "ssr": {
+          "entry": "apps/web/customer/src/server.ts"
+        }
       },
       "configurations": {
         "production": {
@@ -69,12 +85,22 @@
         "development": {
           "buildTarget": "web-app-customer:build:development"
         }
+      },
+      "readyWhen": {
+        "signal": true
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/eslint.config.js",
+        "{workspaceRoot}/eslint.base.js",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/tools/eslint-rules/**/*"
+      ],
       "options": {
-        "lintFilePatterns": ["{projectRoot}/src/**/*.ts", "{projectRoot}/src/**/*.html"]
+        "args": ["src/**/*.ts", "src/**/*.html"]
       }
     },
     "extract-i18n": {
@@ -84,17 +110,6 @@
         "format": "xlf2",
         "outputPath": "apps/web/customer/src/locale",
         "outFile": "messages.xlf"
-      }
-    }
-  },
-  "i18n": {
-    "sourceLocale": "en-US",
-    "locales": {
-      "bn": {
-        "translation": "apps/web/customer/src/locale/messages.bn.xlf"
-      },
-      "ja": {
-        "translation": "apps/web/customer/src/locale/messages.ja.xlf"
       }
     }
   }

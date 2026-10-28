@@ -1,5 +1,6 @@
 import { config as dotenv } from 'dotenv';
 import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { PrismaClient, Role } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
@@ -14,10 +15,17 @@ import { bindTestDatabaseTarget } from '@cthub-bsaas/server-core';
  * Excluded from build via tsconfig to avoid shipping test helpers.
  */
 export default async function globalSetup() {
-  dotenv({ path: resolve(process.cwd(), '.env.test') });
-  const target = bindTestDatabaseTarget();
+  const root =
+    process.env['NX_WORKSPACE_ROOT'] && existsSync(resolve(process.env['NX_WORKSPACE_ROOT'], '.env.test'))
+      ? process.env['NX_WORKSPACE_ROOT']
+      : existsSync(resolve(process.cwd(), '.env.test'))
+        ? process.cwd()
+        : resolve(__dirname, '../../../../../');
 
-  const schemaPath = resolve(process.cwd(), 'libs/server/data-access/prisma/schema.prisma');
+  dotenv({ path: resolve(root, '.env.test') });
+  const target = bindTestDatabaseTarget(process.env, root);
+
+  const schemaPath = resolve(root, 'libs/server/data-access/prisma/schema.prisma');
   const push = spawnSync('npx', ['prisma', 'db', 'push', '--skip-generate', '--accept-data-loss', '--schema', schemaPath], {
     stdio: 'inherit',
     env: { ...process.env, DATABASE_URL: target.url },

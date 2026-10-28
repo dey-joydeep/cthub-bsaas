@@ -1,6 +1,6 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { AbstractBaseComponent } from '@cthub-bsaas/web-core-common';
-import { CurrentUserService } from '@cthub-bsaas/web-core/auth';
+import { CurrentUserService } from '@cthub-bsaas/web-core-auth';
 import { UserService, UserStats } from './user.service';
 
 @Component({
@@ -8,6 +8,7 @@ import { UserService, UserStats } from './user.service';
   standalone: true,
   imports: [],
   templateUrl: './user.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./user.component.css'],
 })
 export class UserComponent extends AbstractBaseComponent implements OnInit {

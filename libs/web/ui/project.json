@@ -7,9 +7,16 @@
   "tags": ["platform:web", "scope:web", "type:lib", "type:ui"],
   "targets": {
     "lint": {
-      "executor": "@nx/eslint:lint",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/eslint.config.js",
+        "{workspaceRoot}/eslint.base.js",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/tools/eslint-rules/**/*"
+      ],
       "options": {
-        "lintFilePatterns": ["libs/web/ui/src/**/*.ts", "libs/web/ui/src/**/*.html", "libs/web/ui/src/**/*.css"]
+        "args": ["src/**/*.ts", "src/**/*.html"]
       }
     },
     "type-check": {

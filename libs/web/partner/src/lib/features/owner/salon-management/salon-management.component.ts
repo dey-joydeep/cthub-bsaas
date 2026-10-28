@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -58,6 +58,7 @@ import { MatTabsModule } from '@angular/material/tabs';
       </mat-tab-group>
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
       .management-container {

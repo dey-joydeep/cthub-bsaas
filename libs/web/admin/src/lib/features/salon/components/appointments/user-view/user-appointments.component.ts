@@ -1,8 +1,8 @@
-import { DatePipe, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { CurrentUserService } from '../../../../../core/auth/services/current-user.service';
+import { CurrentUserService } from '@cthub-bsaas/web-core-auth';
 import { Appointment } from '../../../models/appointment.model';
 
 interface AppointmentWithDetails extends Omit<Appointment, 'startTime' | 'endTime' | 'salon' | 'service' | 'staff'> {
@@ -29,7 +29,8 @@ interface AppointmentWithDetails extends Omit<Appointment, 'startTime' | 'endTim
 @Component({
   selector: 'app-user-appointments',
   standalone: true,
-  imports: [DatePipe, RouterModule, DatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [DatePipe, RouterModule],
   templateUrl: './user-appointments.component.html',
   styleUrls: ['./user-appointments.component.css'],
 })

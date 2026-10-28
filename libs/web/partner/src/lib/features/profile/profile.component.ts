@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -8,8 +8,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { CURRENT_USER } from '@cthub-bsaas/web-core/auth';
-import type { CurrentUserPort } from '@cthub-bsaas/web-core/auth';
+import { CURRENT_USER } from '@cthub-bsaas/web-core-auth';
+import type { CurrentUserPort } from '@cthub-bsaas/web-core-auth';
 import { Subscription } from 'rxjs';
 
 type MaybeUser = {
@@ -35,6 +35,7 @@ type MaybeUser = {
     MatIconModule,
   ],
   templateUrl: './profile.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./profile.component.css'],
 })
 export class ProfileComponent implements OnInit, OnDestroy {

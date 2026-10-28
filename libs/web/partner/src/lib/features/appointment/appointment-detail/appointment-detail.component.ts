@@ -1,5 +1,4 @@
-import { NgClass } from '@angular/common';
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -27,9 +26,9 @@ import { AppointmentStatus } from '@cthub-bsaas/shared/enums/appointment-status.
     MatProgressSpinnerModule,
     MatDialogModule,
     MatSnackBarModule,
-    NgClass,
   ],
   templateUrl: './appointment-detail.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./appointment-detail.component.css'],
 })
 export class AppointmentDetailComponent implements OnInit, OnDestroy {

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
@@ -13,8 +13,8 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { Subscription } from 'rxjs';
 import { AuthService } from '@cthub-bsaas/web-admin/auth';
 
-import { CURRENT_USER } from '@cthub-bsaas/web-core/auth';
-import type { CurrentUserPort, CurrentUserMin } from '@cthub-bsaas/web-core/auth';
+import { CURRENT_USER } from '@cthub-bsaas/web-core-auth';
+import type { CurrentUserPort, CurrentUserMin } from '@cthub-bsaas/web-core-auth';
 
 type AdminAppUser = CurrentUserMin & {
   readonly firstName?: string;
@@ -43,6 +43,7 @@ type AdminAppUser = CurrentUserMin & {
     MatSnackBarModule,
   ],
   templateUrl: './app.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit, OnDestroy {

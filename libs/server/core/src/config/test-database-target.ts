@@ -9,8 +9,8 @@ export interface TestDatabaseTarget {
 
 const localHosts = new Set(['localhost', '127.0.0.1', '[::1]']);
 
-function fixtureDatabaseUrl(): string | undefined {
-  const file = readFileSync(resolve(process.cwd(), '.env.test'), 'utf8');
+function fixtureDatabaseUrl(workspaceRoot: string): string | undefined {
+  const file = readFileSync(resolve(workspaceRoot, '.env.test'), 'utf8');
   const line = file.split(/\r?\n/).find((entry) => /^DATABASE_URL\s*=/.test(entry));
   if (!line) return undefined;
   const value = line.slice(line.indexOf('=') + 1).trim();
@@ -20,12 +20,12 @@ function fixtureDatabaseUrl(): string | undefined {
   return value.split(/\s+#/, 1)[0]?.trim();
 }
 
-export function resolveTestDatabaseTarget(env: NodeJS.ProcessEnv = process.env): TestDatabaseTarget {
+export function resolveTestDatabaseTarget(env: NodeJS.ProcessEnv = process.env, workspaceRoot = process.cwd()): TestDatabaseTarget {
   if (env.NODE_ENV !== 'test') {
     throw new Error('Database-backed tests require NODE_ENV=test');
   }
 
-  const rawUrl = env.TEST_DATABASE_URL || fixtureDatabaseUrl();
+  const rawUrl = env.TEST_DATABASE_URL || fixtureDatabaseUrl(workspaceRoot);
   if (!rawUrl) {
     throw new Error('A test database URL is required in TEST_DATABASE_URL or .env.test');
   }
@@ -60,8 +60,8 @@ export function resolveTestDatabaseTarget(env: NodeJS.ProcessEnv = process.env):
   return { url: rawUrl, host: parsed.hostname, database };
 }
 
-export function bindTestDatabaseTarget(env: NodeJS.ProcessEnv = process.env): TestDatabaseTarget {
-  const target = resolveTestDatabaseTarget(env);
+export function bindTestDatabaseTarget(env: NodeJS.ProcessEnv = process.env, workspaceRoot = process.cwd()): TestDatabaseTarget {
+  const target = resolveTestDatabaseTarget(env, workspaceRoot);
   env.TEST_DATABASE_URL = target.url;
   env.DATABASE_URL = target.url;
   return target;

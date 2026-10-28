@@ -4,7 +4,7 @@ Read this file before working under `libs/web/**`.
 
 ## Stack
 
-- Angular 21.
+- Angular 22.
 - Standalone components for new code.
 - SSR enabled.
 - Angular Material v3.
