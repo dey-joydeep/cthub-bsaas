@@ -1,5 +1,4 @@
 import {
-  HttpClient,
   HttpHandlerFn,
   HttpInterceptorFn,
   HttpRequest,

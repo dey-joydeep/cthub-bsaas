@@ -1,4 +1,4 @@
-import type { User } from '@cthub-bsaas/server-data-access';
+import type { User } from '@prisma/client';
 
 /**
  * Injection token for IUserRepository.
