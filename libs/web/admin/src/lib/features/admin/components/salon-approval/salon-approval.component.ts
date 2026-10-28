@@ -95,9 +95,12 @@ interface Salon {
               <span
                 class="px-2 py-1 rounded-full text-xs"
                 [class]="{
-                  'bg-yellow-100 text-yellow-800': salon.status === 'pending',
-                  'bg-green-100 text-green-800': salon.status === 'approved',
-                  'bg-red-100 text-red-800': salon.status === 'rejected',
+                  'bg-yellow-100': salon.status === 'pending',
+                  'text-yellow-800': salon.status === 'pending',
+                  'bg-green-100': salon.status === 'approved',
+                  'text-green-800': salon.status === 'approved',
+                  'bg-red-100': salon.status === 'rejected',
+                  'text-red-800': salon.status === 'rejected',
                 }"
               >
                 {{ salon.status | titlecase }}
