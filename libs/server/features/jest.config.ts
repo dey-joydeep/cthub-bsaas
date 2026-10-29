@@ -17,6 +17,12 @@ const config: Config = {
       functions: 100,
       lines: 100,
     },
+    './salon-owner/src/': {
+      statements: 100,
+      branches: 40,
+      functions: 100,
+      lines: 100,
+    },
   },
 };
 
