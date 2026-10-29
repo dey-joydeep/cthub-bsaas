@@ -44,6 +44,18 @@ test('rejects production, staging, and unapproved remote targets', () => {
   }
 });
 
+test('rejects Prisma host query overrides before binding any database URL', () => {
+  for (const url of [
+    'postgresql://bsaas_test:secret@localhost/bsaas_test?host=unapproved.example',
+    'postgresql://bsaas_test:secret@localhost/bsaas_test?HOST=unapproved.example',
+    'postgresql://bsaas_test:secret@localhost/bsaas_test?host=',
+  ]) {
+    const env = { NODE_ENV: 'test', TEST_DATABASE_URL: url, DATABASE_URL: 'unchanged' };
+    assert.throws(() => bindTestDatabaseTarget(env), /must not override its host/);
+    assert.equal(env.DATABASE_URL, 'unchanged');
+  }
+});
+
 test('requires test mode and an explicit allowlist for a remote test host', () => {
   assert.throws(() => resolveTestDatabaseTarget({ NODE_ENV: 'production', TEST_DATABASE_URL: testUrl }));
   const target = resolveTestDatabaseTarget({

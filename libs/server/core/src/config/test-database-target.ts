@@ -36,6 +36,9 @@ export function resolveTestDatabaseTarget(env: NodeJS.ProcessEnv = process.env, 
   } catch {
     throw new Error('The test database URL is invalid');
   }
+  if ([...parsed.searchParams.keys()].some((key) => key.toLowerCase() === 'host')) {
+    throw new Error('The test database URL must not override its host in query parameters');
+  }
   const database = decodeURIComponent(parsed.pathname.slice(1));
   const allowedHosts = new Set([
     ...localHosts,
