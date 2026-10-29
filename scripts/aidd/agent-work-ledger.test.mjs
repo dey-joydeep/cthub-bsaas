@@ -271,6 +271,92 @@ test('final review requires a clean whole-PR boundary and becomes stale after a 
   assert.match(wrongBranch.stderr, /belongs to branch feature/);
 });
 
+test('review cannot approve its own implementation through a QA handoff', (t) => {
+  const cwd = fixture(t);
+  git(cwd, 'switch', '-c', 'feature');
+  writeFileSync(join(cwd, 'src', 'feature.txt'), 'delivered\n');
+  git(cwd, 'add', '.');
+  git(cwd, '-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-m', 'Deliver fixture');
+  success(cwd, 'init', '--task', 'issue-review-owner', '--goal', 'Review independently', '--base', 'main');
+  success(
+    cwd,
+    'add',
+    '--task',
+    'issue-review-owner',
+    '--unit',
+    'build',
+    '--kind',
+    'implementation',
+    '--owner',
+    'codex-dev',
+    '--paths',
+    'src/feature.txt',
+    '--acceptance',
+    'Feature delivered',
+  );
+  success(cwd, 'start', '--task', 'issue-review-owner', '--unit', 'build');
+  success(cwd, 'complete', '--task', 'issue-review-owner', '--unit', 'build', '--report', report(cwd, evidence()));
+  success(
+    cwd,
+    'add',
+    '--task',
+    'issue-review-owner',
+    '--unit',
+    'qa',
+    '--kind',
+    'qa',
+    '--owner',
+    'qa-agent',
+    '--paths',
+    'src/feature.txt',
+    '--depends',
+    'build',
+    '--acceptance',
+    'Feature tested',
+  );
+  success(cwd, 'start', '--task', 'issue-review-owner', '--unit', 'qa');
+  success(cwd, 'complete', '--task', 'issue-review-owner', '--unit', 'qa', '--report', report(cwd, evidence()));
+  const reviewedHead = git(cwd, 'rev-parse', 'HEAD');
+  const reviewedBase = git(cwd, 'merge-base', 'main', 'HEAD');
+  const reviewedBaseTip = git(cwd, 'rev-parse', 'main');
+  for (const [unit, owner] of [
+    ['self-review', 'codex-dev'],
+    ['independent-review', 'codex-reviewer'],
+  ]) {
+    success(
+      cwd,
+      'add',
+      '--task',
+      'issue-review-owner',
+      '--unit',
+      unit,
+      '--kind',
+      'review',
+      '--owner',
+      owner,
+      '--paths',
+      '.',
+      '--depends',
+      'qa',
+      '--acceptance',
+      'Whole PR reviewed independently',
+    );
+    success(cwd, 'start', '--task', 'issue-review-owner', '--unit', unit);
+    const reviewReport = report(
+      cwd,
+      evidence({ review: { reviewer: owner, reviewedBase, reviewedBaseTip, reviewedHead, scope: 'whole-pr', verdict: 'pass' } }),
+    );
+    const result = run(cwd, 'complete', '--task', 'issue-review-owner', '--unit', unit, '--report', reviewReport);
+    if (unit === 'self-review') {
+      assert.equal(result.status, 1);
+      assert.match(result.stderr, /review of their own implementation/);
+    } else {
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(result.state.units.find((entry) => entry.id === unit).status, 'complete');
+    }
+  }
+});
+
 test('failed validation cannot complete a unit and leaves prior progress intact', (t) => {
   const cwd = fixture(t);
   success(cwd, 'init', '--task', 'issue-3', '--goal', 'Validate fixture', '--base', 'main');

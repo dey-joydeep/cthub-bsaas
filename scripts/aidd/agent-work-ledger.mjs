@@ -538,6 +538,20 @@ function add(root, options) {
   return taskState(root, options.task);
 }
 
+function hasOwnedImplementationDependency(root, task, unit) {
+  const pending = [...unit.dependsOn];
+  const visited = new Set();
+  while (pending.length > 0) {
+    const id = pending.pop();
+    if (visited.has(id)) continue;
+    visited.add(id);
+    const upstream = readUnit(root, task, id);
+    if (upstream.kind === 'implementation' && upstream.owner === unit.owner) return true;
+    pending.push(...upstream.dependsOn);
+  }
+  return false;
+}
+
 function act(root, command, options) {
   const taskManifest = manifest(root, options.task);
   const unit = readUnit(root, options.task, identifier(options.unit, 'Unit ID'));
@@ -571,12 +585,7 @@ function act(root, command, options) {
         ) {
           fail('Review completion needs a passing scope and current base/head commits');
         }
-        if (
-          unit.dependsOn.some((dependency) => {
-            const upstream = readUnit(root, options.task, dependency);
-            return upstream.kind === 'implementation' && upstream.owner === unit.owner;
-          })
-        )
+        if (hasOwnedImplementationDependency(root, options.task, unit))
           fail('A reviewer cannot complete review of their own implementation unit');
         if (report.review.scope === 'whole-pr') assertWholePrBoundary(root, taskManifest, unit);
       }
