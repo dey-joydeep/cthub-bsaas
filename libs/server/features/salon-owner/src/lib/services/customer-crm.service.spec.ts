@@ -163,4 +163,48 @@ describe('CustomerCrmService', () => {
     ).resolves.toEqual({ customerId: 'customer-1', smsEnabled: true, emailEnabled: true, whatsappEnabled: false });
     await expect(service.getCustomerVisitHistory({ user: user() }, 'customer-1')).resolves.toMatchObject({ items: [] });
   });
+
+  it('validates pagination, birth date format, missing customers, and update errors', async () => {
+    prisma.salonBusiness.findFirst.mockResolvedValue(business());
+    prisma.salonOwnerCustomer.findMany.mockResolvedValue([customer({ email: null, dateOfBirth: null })]);
+
+    const defaultPage = await service.searchCustomers({ user: user() });
+    expect(defaultPage.page).toEqual({ limit: 25, nextCursor: null, hasMore: false });
+    expect(defaultPage.items[0]).not.toHaveProperty('email');
+    expect(defaultPage.items[0]).not.toHaveProperty('dateOfBirth');
+
+    await expect(service.searchCustomers({ user: user() }, { page: 'abc' })).rejects.toBeInstanceOf(UnprocessableEntityException);
+    await expect(service.searchCustomers({ user: user() }, { page: '0' })).rejects.toBeInstanceOf(UnprocessableEntityException);
+    await expect(
+      service.createCustomer({ user: user() }, { displayName: 'Customer One', phone: '09000000001', dateOfBirth: '1990/01/01' }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    prisma.salonOwnerCustomer.create.mockRejectedValueOnce(new Error('unexpected create error'));
+    await expect(service.createCustomer({ user: user() }, { displayName: 'Customer One', phone: '09000000001' })).rejects.toThrow(
+      'unexpected create error',
+    );
+
+    prisma.salonOwnerCustomer.findFirst.mockResolvedValueOnce(null);
+    await expect(service.getCustomer({ user: user() }, 'missing')).rejects.toBeInstanceOf(NotFoundException);
+
+    prisma.salonOwnerCustomer.findFirst.mockResolvedValue(customer());
+    prisma.salonOwnerCustomer.update.mockResolvedValueOnce(customer({ consentForMarketing: true }));
+    await expect(
+      service.updateCustomer({ user: user() }, 'customer-1', {
+        displayName: 'Customer One',
+        phone: '09000000001',
+        consentForMarketing: true,
+      }),
+    ).resolves.toMatchObject({ consentForMarketing: true });
+
+    prisma.salonOwnerCustomer.update.mockRejectedValueOnce(prismaKnownError('P2002'));
+    await expect(
+      service.updateCustomer({ user: user() }, 'customer-1', { displayName: 'Customer One', phone: '09000000001' }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    prisma.salonOwnerCustomer.update.mockRejectedValueOnce(new Error('unexpected update error'));
+    await expect(
+      service.updateCustomer({ user: user() }, 'customer-1', { displayName: 'Customer One', phone: '09000000001' }),
+    ).rejects.toThrow('unexpected update error');
+  });
 });

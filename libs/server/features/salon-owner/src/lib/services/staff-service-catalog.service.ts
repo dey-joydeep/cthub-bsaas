@@ -1,5 +1,5 @@
 import { ConflictException, ForbiddenException, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
-import { Prisma, SalonOwnerStatus as PrismaSalonOwnerStatus } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 import { PrismaService } from '@cthub-bsaas/server-data-access';
 
@@ -206,7 +206,7 @@ export class StaffServiceCatalogService {
             displayName: trimRequired(input.displayName, 2),
             phone: trimRequired(input.phone),
             email: optionalTrim(input.email),
-            status: input.status as PrismaSalonOwnerStatus,
+            status: input.status,
           },
         });
         await tx.salonOwnerStaffBranch.createMany({
@@ -243,7 +243,7 @@ export class StaffServiceCatalogService {
             displayName: trimRequired(input.displayName, 2),
             phone: trimRequired(input.phone),
             email: optionalTrim(input.email),
-            status: input.status as PrismaSalonOwnerStatus,
+            status: input.status,
           },
         });
         await tx.salonOwnerStaffBranch.deleteMany({ where: { staffId } });
@@ -425,7 +425,7 @@ export class StaffServiceCatalogService {
     return this.mapService(
       await this.prisma.salonOwnerService.update({
         where: { id: serviceId },
-        data: { status: input.status as PrismaSalonOwnerStatus },
+        data: { status: input.status },
         include: serviceInclude,
       }),
     );
@@ -583,7 +583,7 @@ export class StaffServiceCatalogService {
       bufferMinutes: input.bufferMinutes ?? 0,
       basePrice: new Prisma.Decimal(input.basePrice),
       taxRatePercent: new Prisma.Decimal(input.taxRatePercent),
-      status: input.status as PrismaSalonOwnerStatus,
+      status: input.status,
     };
   }
 
