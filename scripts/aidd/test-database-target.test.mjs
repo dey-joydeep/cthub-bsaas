@@ -1,8 +1,22 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { resolve } from 'node:path';
 import { test } from 'node:test';
 import { bindTestDatabaseTarget, resolveTestDatabaseTarget } from '../../libs/server/core/src/config/test-database-target.ts';
 
 const testUrl = 'postgresql://bsaas_test:secret@localhost:55432/bsaas_test?schema=public';
+
+test('Jest global hooks resolve the database guard without test-only package aliases', () => {
+  for (const hook of ['global-setup.ts', 'global-teardown.ts']) {
+    const hookPath = resolve('libs/server/server-testing-utils/src/lib', hook);
+    const source = readFileSync(hookPath, 'utf8');
+    const guardImport = source.match(/import \{ bindTestDatabaseTarget \} from '([^']+)'/);
+    assert.ok(guardImport, `${hook} must import the database guard`);
+    const guard = createRequire(hookPath)(guardImport[1]);
+    assert.equal(guard.bindTestDatabaseTarget, bindTestDatabaseTarget);
+  }
+});
 
 test('binds the same explicit test target for CLI and Prisma clients', () => {
   const env = { NODE_ENV: 'test', DATABASE_URL: 'postgresql://owner:secret@localhost:5432/bsaas', TEST_DATABASE_URL: testUrl };

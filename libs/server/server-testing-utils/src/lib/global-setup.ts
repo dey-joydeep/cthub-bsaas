@@ -4,7 +4,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { PrismaClient, Role } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
-import { bindTestDatabaseTarget } from '@cthub-bsaas/server-core';
+import { bindTestDatabaseTarget } from '../../../core/src/config/test-database-target.ts';
 
 /**
  * Jest global setup for server integration tests.

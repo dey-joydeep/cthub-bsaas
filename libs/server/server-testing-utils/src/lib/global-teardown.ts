@@ -1,7 +1,7 @@
 import { config as dotenv } from 'dotenv';
 import { resolve } from 'node:path';
 import { PrismaClient } from '@prisma/client';
-import { bindTestDatabaseTarget } from '@cthub-bsaas/server-core';
+import { bindTestDatabaseTarget } from '../../../core/src/config/test-database-target.ts';
 
 /**
  * Jest global teardown for server integration tests.
