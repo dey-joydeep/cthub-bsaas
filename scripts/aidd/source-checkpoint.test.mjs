@@ -60,6 +60,7 @@ test('private source checkpoint restores an unpushed branch and uncommitted sour
   git(work, 'commit', '-m', 'initial');
   git(work, 'remote', 'add', 'origin', origin);
   git(work, 'push', 'origin', 'main');
+  git(origin, 'symbolic-ref', 'HEAD', 'refs/heads/main');
   git(work, 'tag', '-a', 'fixture-tag', '-m', 'fixture tag');
   git(work, 'config', 'push.followTags', 'true');
   git(work, 'switch', '-c', 'feature');

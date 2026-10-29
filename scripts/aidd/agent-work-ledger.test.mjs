@@ -22,6 +22,8 @@ function fixture(t) {
   assert.ok(rel && rel !== '..' && !rel.startsWith(`..${sep}`));
   t.after(() => rmSync(cwd, { recursive: true, force: true }));
   git(cwd, 'init', '-b', 'main');
+  git(cwd, 'config', 'user.name', 'Test');
+  git(cwd, 'config', 'user.email', 'test@example.invalid');
   git(cwd, 'config', 'core.autocrlf', 'false');
   writeFileSync(join(cwd, '.gitignore'), 'tmp/\n');
   mkdirSync(join(cwd, 'src'));
