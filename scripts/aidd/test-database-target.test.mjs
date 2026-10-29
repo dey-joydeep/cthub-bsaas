@@ -14,7 +14,9 @@ test('Jest global hooks resolve the database guard without test-only package ali
     const guardImport = source.match(/import \{ bindTestDatabaseTarget \} from '([^']+)'/);
     assert.ok(guardImport, `${hook} must import the database guard`);
     const guard = createRequire(hookPath)(guardImport[1]);
-    assert.equal(guard.bindTestDatabaseTarget, bindTestDatabaseTarget);
+    assert.equal(typeof guard.bindTestDatabaseTarget, 'function');
+    const target = guard.bindTestDatabaseTarget({ NODE_ENV: 'test', TEST_DATABASE_URL: testUrl });
+    assert.equal(target.database, 'bsaas_test');
   }
 });
 
