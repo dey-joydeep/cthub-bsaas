@@ -2,15 +2,15 @@ name: CI/CD
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, 'release/**']
   pull_request:
-    branches: [main, master]
+    branches: [main, 'release/**']
+    types: [opened, synchronize, reopened, edited]
   workflow_dispatch:
 
 # Environment variables for Nx Cloud
 env:
   NX_CLOUD_DISTRIBUTED_EXECUTION: true
-  NX_CLOUD_AUTH_TOKEN: ${{ secrets.NX_CLOUD_AUTH_TOKEN }}
 
 jobs:
   main:
@@ -37,6 +37,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Required for Nx affected commands
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -44,21 +45,18 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Generate Prisma client
-        run: npx prisma generate --schema libs/server/data-access/prisma/schema.prisma
-
       - name: Set Nx affected refs
         shell: bash
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "NX_BASE=origin/${{ github.base_ref }}" >> "$GITHUB_ENV"
+            echo "NX_BASE=$(git merge-base "origin/${{ github.base_ref }}" HEAD)" >> "$GITHUB_ENV"
             echo "NX_HEAD=HEAD" >> "$GITHUB_ENV"
             echo "NX_DAEMON=false" >> "$GITHUB_ENV"
             echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
             echo "NX_CLOUD_DISTRIBUTED_EXECUTION=false" >> "$GITHUB_ENV"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "NX_BASE=HEAD^" >> "$GITHUB_ENV"
+            echo "NX_HEAD=HEAD" >> "$GITHUB_ENV"
           else
             echo "NX_BASE=${{ github.event.before }}" >> "$GITHUB_ENV"
             echo "NX_HEAD=HEAD" >> "$GITHUB_ENV"
@@ -75,6 +73,34 @@ jobs:
           if echo "$DIFF_FILES" | grep -Eq '(^|/)AGENTS\.md$|^(package\.json$|\.gitignore$|\.prettierignore$|\.prettierrc$|docs/aidd/|docs/status/aidd/|scripts/aidd/|libs/server/core/src/config/test-database-target\.ts$|libs/server/server-testing-utils/|\.agents/|\.codex/|\.husky/|\.lintstagedrc$|\.github/workflows/|\.github/PULL_REQUEST_TEMPLATE/|\.github/pull_request_template\.md$)'; then
             echo "aidd=true" >> "$GITHUB_OUTPUT"
           fi
+          if echo "$DIFF_FILES" | grep -Eq '(^|/)package\.json$|^package-lock\.json$|^\.npmrc$'; then
+            echo "dependency=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check branch and tracking issue
+        if: github.event_name == 'pull_request'
+        run: node scripts/aidd/check-branch-policy.mjs --event "$GITHUB_EVENT_PATH"
+
+      - name: Check dependency policy and audit
+        if: steps.change_scope.outputs.dependency == 'true'
+        run: |
+          node scripts/aidd/check-dependency-policy.mjs
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            node scripts/aidd/check-dependency-change.mjs "$NX_BASE" "$NX_HEAD" "$GITHUB_EVENT_PATH"
+          else
+            node scripts/aidd/check-dependency-change.mjs "$NX_BASE" "$NX_HEAD"
+          fi
+          if ! git diff --quiet "$NX_BASE" "$NX_HEAD" -- package-lock.json; then
+            npm audit --audit-level=high
+          fi
+
+      - name: Install dependencies without lifecycle scripts
+        run: |
+          npm ci --ignore-scripts --no-audit --fund=false
+          node scripts/check-versions/node-version.js
+
+      - name: Generate Prisma client
+        run: npx prisma generate --schema libs/server/data-access/prisma/schema.prisma
 
       - name: Check changed-file format and whitespace
         run: |
@@ -93,19 +119,28 @@ jobs:
           npm run aidd:format:test
           npm run aidd:db-guard:test
           npm run aidd:ledger:test
+          npm run deps:policy:test
+          npm run deps:change:test
+          npm run aidd:branch-policy:test
           npx eslint --max-warnings 0 scripts/aidd/*.mjs
 
       - name: Enable Nx Cloud read-only mode
         if: github.event_name != 'pull_request'
         run: npx nx-cloud start-ci-run --distribute-on='5 linux-medium-js' --stop-agents-after='build'
+        env:
+          NX_CLOUD_AUTH_TOKEN: ${{ github.event_name != 'pull_request' && secrets.NX_CLOUD_AUTH_TOKEN || '' }}
 
       - name: Run linting
         if: github.event_name != 'pull_request' || steps.change_scope.outputs.runnable == 'true'
         run: npx nx affected --target=lint --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=ci
+        env:
+          NX_CLOUD_AUTH_TOKEN: ${{ github.event_name != 'pull_request' && secrets.NX_CLOUD_AUTH_TOKEN || '' }}
 
       - name: Run tests
         if: github.event_name != 'pull_request' || steps.change_scope.outputs.runnable == 'true'
         run: npx nx affected --target=test --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=ci
+        env:
+          NX_CLOUD_AUTH_TOKEN: ${{ github.event_name != 'pull_request' && secrets.NX_CLOUD_AUTH_TOKEN || '' }}
 
       - name: OpenAPI parity (auth)
         run: npm run openapi:check:auth
@@ -120,11 +155,15 @@ jobs:
         run: npm run openapi:lint:salon-owner
 
       - name: Server lint + coverage
+        env:
+          NX_CLOUD_AUTH_TOKEN: ${{ github.event_name != 'pull_request' && secrets.NX_CLOUD_AUTH_TOKEN || '' }}
         run: |
           npx nx run-many -t lint -p server-core,server-data-access,server-feature-auth,server-feature-salon-owner --parallel=3
           npx nx run-many -t test -p server-core,server-data-access,server-feature-auth,server-feature-salon-owner --coverage --parallel=1
 
       - name: Server build
+        env:
+          NX_CLOUD_AUTH_TOKEN: ${{ github.event_name != 'pull_request' && secrets.NX_CLOUD_AUTH_TOKEN || '' }}
         run: npx nx run-many -t build -p server-core,server-data-access,server-feature-auth,server-feature-salon-owner,api --parallel=3
 
       - name: Guard hygiene (no Guards in feature libs)
@@ -136,6 +175,8 @@ jobs:
           fi
 
       - name: Run build
+        env:
+          NX_CLOUD_AUTH_TOKEN: ${{ github.event_name != 'pull_request' && secrets.NX_CLOUD_AUTH_TOKEN || '' }}
         if: github.event_name != 'pull_request'
         run: npx nx affected --target=build --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=production
 

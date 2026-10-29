@@ -48,6 +48,7 @@ requiredPath('docs/aidd/development-lifecycle.md');
 requiredPath('docs/aidd/autonomous-recovery.md');
 requiredPath('docs/aidd/change-hygiene.md');
 requiredPath('docs/aidd/database-access-policy.md');
+requiredPath('docs/aidd/dependency-policy.md');
 requiredPath('docs/aidd/agent-activation.md');
 requiredPath('scripts/aidd/test-database-target.test.mjs');
 requiredPath('docs/status/aidd/README.md');
@@ -72,7 +73,12 @@ requiredPath('scripts/aidd/source-checkpoint.mjs');
 requiredPath('scripts/aidd/check-changed-format.mjs');
 requiredPath('scripts/aidd/check-instruction-drift.mjs');
 requiredPath('scripts/aidd/check-pr-automation-evidence.mjs');
+requiredPath('scripts/aidd/check-dependency-policy.mjs');
+requiredPath('scripts/aidd/check-dependency-change.mjs');
+requiredPath('scripts/aidd/check-branch-policy.mjs');
 requiredPath('.husky/pre-commit');
+requiredPath('.husky/pre-push');
+requiredPath('.npmrc');
 requiredPath('.husky/install.mjs');
 requiredPath('.lintstagedrc');
 requiredPath('.github/pull_request_template.md');
@@ -150,6 +156,9 @@ requiredContent('package.json', [
   /"aidd:instruction-drift:test"/,
   /"aidd:premerge"/,
   /"aidd:premerge:test"/,
+  /"deps:policy"/,
+  /"deps:change"/,
+  /"aidd:branch-policy"/,
 ]);
 
 if (warnings.length > 0) {

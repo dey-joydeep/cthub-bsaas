@@ -54,6 +54,13 @@ Real user-path and negative-case evidence for cross-layer changes:
 
 -
 
+## Dependency changes, if applicable
+
+- Dependency owner:
+- Direct dependency reasons (one `- package: reason` line per package):
+- Install scripts reviewed: <!-- comma-separated lockfile paths reported by deps:change -->
+- Audit findings and disposition:
+
 ## Independent Gates
 
 - QA evidence and result:

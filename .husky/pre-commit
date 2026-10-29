@@ -1,2 +1,6 @@
 #!/bin/sh
-npx lint-staged
+npx lint-staged || exit 1
+
+if git diff --cached --name-only | grep -Eq '(^|/)package\.json$|^package-lock\.json$|^\.npmrc$'; then
+  npm run deps:policy -- --staged || exit 1
+fi

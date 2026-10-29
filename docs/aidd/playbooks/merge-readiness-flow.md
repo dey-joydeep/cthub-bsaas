@@ -40,6 +40,8 @@ Do not edit. First produce:
 - The release owner verifies QA and applicable security evidence separately from the automation check.
 - Risks and follow-ups are visible.
 - The branch is up to date or merge conflicts are understood.
+- The source branch name, target, tracking issue, and squash merge method follow the branch policy. Ordinary PRs target `main`; maintenance PRs may target an active `release/vMAJOR.MINOR.PATCH` branch and require a tracked backport to `main`. Stacked PRs are retargeted after their dependencies merge.
+- When dependency manifests or the lockfile change, the PR names the owner, gives a reason per changed direct package, and records review of newly introduced install scripts; dependency CI and the high-severity audit pass.
 
 ## Local commands before merging
 

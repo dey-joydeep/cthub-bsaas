@@ -12,6 +12,13 @@
 - Product outcome and success measure:
 - Acceptance criteria covered:
 
+## Dependency changes, if applicable
+
+- Dependency owner:
+- Direct dependency reasons (one `- package: reason` line per package):
+- Install scripts reviewed: <!-- comma-separated lockfile paths reported by deps:change -->
+- Audit findings and disposition:
+
 ## AIDD Scope
 
 - Task type: <!-- feature / correction / refactor / security / docs -->

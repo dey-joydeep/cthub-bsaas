@@ -72,11 +72,13 @@ A lighter path is allowed only for a continuation fix inside the same active tas
 
 ## Dependencies And Package Installation
 
+- Follow `docs/aidd/dependency-policy.md` for installs, removals, updates, pruning, audits, and PR evidence.
 - Match engines in `package.json` and `.nvmrc`.
 - Node and npm must be compatible with the repo before running builds/tests.
 - Server integration tests require the isolated database in `docker-compose.test.yml` with `.env.test`, or an explicitly approved `TEST_DATABASE_URL`; never use a general Prisma `.env` file as their target.
 - Database operations follow `docs/aidd/database-access-policy.md`. Automated tests use only a validated test target; database tools do not bypass profile and authorization rules.
 - **NEVER EVER use `--legacy-peer-deps`** when installing or updating any package. Peer dependency conflicts must be resolved cleanly by matching compatible package versions in `package.json`, never bypassed, forced, or silenced with `--legacy-peer-deps`.
+- Do not use dependency-changing `--force`, disable the lockfile, or make an unsaved project dependency change. Review new install scripts and run the dependency policy check.
 
 ## Project Snapshot
 
@@ -157,6 +159,7 @@ Follow the [AIDD change scope and validation matrix](docs/aidd/change-hygiene.md
 - Branch naming: `<type>/<short-description>`.
 - Allowed type examples: `feature`, `fix`, `chore`, `docs`, `test`, `refactor`, `style`.
 - Short description: lowercase kebab-case, 50 characters or fewer.
+- `ci/<short-description>` is also allowed. A separately maintained release branch uses `release/vMAJOR.MINOR.PATCH`; release tags use `vMAJOR.MINOR.PATCH`. Follow the merge and issue-link policy in `docs/aidd/development-lifecycle.md`.
 
 ## Security, Secrets, And Config
 

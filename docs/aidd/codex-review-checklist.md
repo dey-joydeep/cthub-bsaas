@@ -53,6 +53,7 @@ For a merge gate, the Codex reviewer must be independent of the implementer. Sec
 
 - [ ] Match engines in `package.json` and `.nvmrc`.
 - [ ] Package installation: NEVER EVER use `--legacy-peer-deps` when installing or updating packages; resolve peer dependency conflicts cleanly.
+- [ ] Dependency changes follow `docs/aidd/dependency-policy.md`: owner and reason per direct package, manifest/lockfile consistency, review of new install scripts, and high-severity audit on lockfile changes.
 
 ## Tests and validation
 

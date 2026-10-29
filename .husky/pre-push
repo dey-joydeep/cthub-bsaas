@@ -1,0 +1,20 @@
+#!/bin/sh
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main|refs/heads/release/*)
+      echo "Direct pushes to integration or release branches violate the PR policy." >&2
+      exit 1
+      ;;
+    refs/heads/*)
+      if [ "$local_sha" != "0000000000000000000000000000000000000000" ]; then
+        node scripts/aidd/check-branch-policy.mjs --branch "${remote_ref#refs/heads/}" || exit 1
+      fi
+      ;;
+    refs/tags/*)
+      if [ "$local_sha" != "0000000000000000000000000000000000000000" ]; then
+        node scripts/aidd/check-branch-policy.mjs --tag "${remote_ref#refs/tags/}" || exit 1
+      fi
+      ;;
+  esac
+done

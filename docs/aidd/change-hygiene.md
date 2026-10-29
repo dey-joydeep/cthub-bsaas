@@ -19,14 +19,15 @@ For a PR spanning multiple product slices or a broad platform migration, record 
 
 ## Checks by changed area
 
-| Changed area                              | Required local check before handoff                                                         | PR gate                                                           |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Supported text files                      | Prettier on touched paths; `git diff --check`                                               | Changed-file Prettier and whitespace checks                       |
-| TypeScript or JavaScript in an Nx project | Owning Nx lint target and narrow meaningful tests; type-check when contracts may change     | Affected Nx lint and test targets                                 |
-| Root scripts outside Nx projects          | Scoped ESLint with zero warnings, relevant script tests, and Prettier                       | Changed-file format plus AIDD script tests when AIDD paths change |
-| Documentation or AIDD instructions        | Prettier on touched docs; link, setup, and asset checks when applicable                     | AIDD checks when AIDD paths change                                |
-| OpenAPI or endpoint contracts             | Owning Redocly lint and route/parity check; aligned contract and spec docs                  | OpenAPI checks                                                    |
-| Prisma schema or migration                | Follow the database access policy; migration status and tests on the isolated test database | Owning project test gate                                          |
+| Changed area                              | Required local check before handoff                                                         | PR gate                                                                  |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Supported text files                      | Prettier on touched paths; `git diff --check`                                               | Changed-file Prettier and whitespace checks                              |
+| TypeScript or JavaScript in an Nx project | Owning Nx lint target and narrow meaningful tests; type-check when contracts may change     | Affected Nx lint and test targets                                        |
+| Root scripts outside Nx projects          | Scoped ESLint with zero warnings, relevant script tests, and Prettier                       | Changed-file format plus AIDD script tests when AIDD paths change        |
+| Documentation or AIDD instructions        | Prettier on touched docs; link, setup, and asset checks when applicable                     | AIDD checks when AIDD paths change                                       |
+| OpenAPI or endpoint contracts             | Owning Redocly lint and route/parity check; aligned contract and spec docs                  | OpenAPI checks                                                           |
+| Prisma schema or migration                | Follow the database access policy; migration status and tests on the isolated test database | Owning project test gate                                                 |
+| Dependency manifest or lockfile           | Follow the [dependency policy](dependency-policy.md), inspect the tree and install scripts  | `npm ci`, dependency policy and change checks, audit on lockfile changes |
 
 Use `npm exec nx` or the repository's `npm run` scripts for Nx targets. Check uncommitted files with `npm run aidd:format:changed -- --worktree`, then use scoped `npx prettier --write <touched-paths>` to fix them. `npm run format` changes the whole repository and is reserved for an explicitly scoped formatting sweep. ESLint applies to code files, not Markdown, JSON, HTML, or CSS. Report warnings and nonfatal issues; a changed-file code lint gate uses zero warnings.
 

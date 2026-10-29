@@ -26,9 +26,13 @@ test('a later head commit invalidates a previous review', () => {
   assert.match(assessPrAutomationEvidence({ ...pr, headRefOid: 'c'.repeat(40) }, [comment], [])[0], /stale/);
 });
 
-test('a stacked PR must target the release branch after its dependency merges', () => {
+test('a stacked PR must target main after its dependency merges', () => {
   const errors = assessPrAutomationEvidence({ ...pr, baseRefName: 'feature/parent' }, [comment], [], 'main');
   assert.match(errors[0], /retarget to main/);
+});
+
+test('a release maintenance PR can target a versioned release branch', () => {
+  assert.deepEqual(assessPrAutomationEvidence({ ...pr, baseRefName: 'release/v1.2.3' }, [comment], [], 'main'), []);
 });
 
 test('failed checks and unresolved threads fail closed', () => {

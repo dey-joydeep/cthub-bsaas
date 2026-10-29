@@ -30,6 +30,20 @@ npm run test:affected
 npm run build:affected
 ```
 
+## Dependency and branch policy validation
+
+For dependency or branch policy changes, run the relevant checks before handoff:
+
+```powershell
+npm run deps:policy
+npm run deps:policy:test
+npm run deps:change:test
+npm run aidd:branch-policy:test
+npm run aidd:premerge:test
+```
+
+Run `npm audit --audit-level=high` when the lockfile changes. The live `npm run aidd:premerge -- <PR-number>` command is required after the final committed PR head and review are available.
+
 ## Full workspace validation
 
 ```powershell

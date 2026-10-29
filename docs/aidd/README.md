@@ -27,6 +27,7 @@ For Antigravity execution, also apply `.agents/AGENTS.md` and the selected `.age
 | --------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | [Development Life Cycle](development-lifecycle.md)        | Shared product-to-release process, roles, routing, and gates.                                 |
 | [Autonomous Recovery](autonomous-recovery.md)             | Local work-unit ledger, checkpoints, interruption recovery, and stale-evidence rules.         |
+| [Dependency Change Policy](dependency-policy.md)          | npm change ownership, forbidden bypasses, lockfile, audit, and install-script review.         |
 | [Change Scope and Validation](change-hygiene.md)          | Inclusion rules and required checks for each changed area.                                    |
 | [Database Access Policy](database-access-policy.md)       | Environment profiles, test isolation, DBA ownership, and migration gates.                     |
 | [Agent Activation](agent-activation.md)                   | How shared roles map to Antigravity and Codex profiles and how coordinators invoke them.      |
@@ -44,6 +45,7 @@ For Antigravity execution, also apply `.agents/AGENTS.md` and the selected `.age
 - `scripts/aidd/agent-work-ledger.mjs` records local checkpoints and exports trackable snapshots under `docs/status/aidd/`.
 - `scripts/aidd/source-checkpoint.mjs` backs up nonignored source on a private recovery ref.
 - `scripts/aidd/check-changed-format.mjs` checks supported files changed by a PR.
+- `scripts/aidd/check-dependency-policy.mjs`, `check-dependency-change.mjs`, and `check-branch-policy.mjs` validate dependency and branch evidence before a PR handoff.
 - `.agents/skills/*` contains reusable Antigravity and Codex workflows where applicable.
 - `.codex/agents/*.toml` contains Codex reviewer and implementation helper agents.
 - `.codex/environments/environment.toml` points at the repo bootstrap command for fresh Codex worktrees.

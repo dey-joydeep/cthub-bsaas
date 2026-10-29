@@ -9,7 +9,11 @@ export function assessPrAutomationEvidence(pr, comments, reviewThreads, expected
   if (pr.state !== 'OPEN' || pr.isDraft) errors.push('PR must be open and ready for review');
   if (!/^[a-f0-9]{40}$/.test(pr.headRefOid ?? '')) errors.push('PR head SHA is unavailable');
   if (!/^[a-f0-9]{40}$/.test(pr.baseRefOid ?? '')) errors.push('PR base SHA is unavailable');
-  if (expectedBase && pr.baseRefName !== expectedBase) {
+  if (
+    expectedBase &&
+    pr.baseRefName !== expectedBase &&
+    !/^release\/v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/.test(pr.baseRefName ?? '')
+  ) {
     errors.push(`PR targets ${pr.baseRefName ?? '(unknown)'}; retarget to ${expectedBase} after its dependent PRs merge`);
   }
 
