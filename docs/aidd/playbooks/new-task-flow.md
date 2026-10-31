@@ -2,7 +2,7 @@
 
 Use this playbook for every new Codex task, including a fresh error-fix request.
 
-The shared [development life cycle](../development-lifecycle.md) determines the product stage, role owner, and gates. Search for an existing issue before creating tracking. A new task does not automatically require a new Epic.
+The shared [development life cycle](../development-lifecycle.md) determines the product stage, role owner, and gates. Search for an existing issue and Project item before creating tracking. Add a trackable issue to the cthub Project with a Status. A new task does not automatically require an Epic or sub-issues: create children only for independent delivery slices with separate acceptance criteria and PRs, such as frontend and backend slices when each can be reviewed on its own.
 
 ## Operator prompt
 
@@ -25,7 +25,7 @@ Do not edit yet. First produce:
 4. implementation or documentation plan
 5. validation commands
 6. risks, assumptions, and open questions
-7. existing issue or proposed standalone issue/Epic decision when the work is trackable
+7. existing issue and Project item or proposed standalone issue/Epic decision when the work is trackable
 ```
 
 ## Required Codex behavior

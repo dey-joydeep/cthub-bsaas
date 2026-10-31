@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "task": "issue-100",
+  "goal": "Prepare PO and QA GitHub App dispatch for the recoverable AIDD lifecycle",
+  "issue": "100",
+  "branch": "chore/aidd-lifecycle-overhaul",
+  "base": "main",
+  "createdAt": "2026-10-31T06:49:08.691Z",
+  "exportedAt": "2026-10-31T06:50:23.563Z",
+  "exportedHead": "797412c2fcc0a1a4ff988d4c243fa0e88049f695",
+  "units": [
+    {
+      "definition": {
+        "id": "bot-dispatch",
+        "kind": "implementation",
+        "owner": "codex-root",
+        "paths": [
+          ".github/workflows/aidd-bot-dispatch.yml",
+          ".github/workflows/ci.yml",
+          "scripts/aidd/bot-dispatch.mjs",
+          "scripts/aidd/bot-dispatch.test.mjs",
+          "scripts/aidd/check-aidd-setup.mjs",
+          "docs/aidd/github-app-identities.md",
+          "docs/aidd/README.md",
+          "docs/aidd/development-lifecycle.md",
+          ".agents/agents/product-owner.md",
+          ".agents/agents/qa-engineer.md",
+          "package.json"
+        ],
+        "dependsOn": [],
+        "acceptance": "Role-scoped dispatch and docs validated; private keys absent; live activation deferred until protected environments"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Prepared bounded PO and QA GitHub App dispatch. Two independent Codex security reviews found the initial PO PR-comment and stale-QA-head gaps; both were corrected and rechecked. Activation awaits protected private environments and keys stored only in their respective environment secrets.",
+          "remainingPaths": [],
+          "evidence": [
+            ".github/workflows/aidd-bot-dispatch.yml",
+            "scripts/aidd/bot-dispatch.mjs",
+            "scripts/aidd/bot-dispatch.test.mjs",
+            "docs/aidd/github-app-identities.md"
+          ],
+          "commands": [
+            { "command": "npm run aidd:bot-dispatch:test", "exitCode": 0 },
+            { "command": "npm run aidd:check", "exitCode": 0 },
+            { "command": "npm run aidd:instruction-drift", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "npm run aidd:assets", "exitCode": 0 },
+            { "command": "npm run aidd:format:changed -- --worktree", "exitCode": 0 },
+            { "command": "npx eslint --max-warnings 0 scripts/aidd/bot-dispatch.mjs scripts/aidd/bot-dispatch.test.mjs", "exitCode": 0 }
+          ],
+          "findings": []
+        },
+        "source": {
+          "fingerprint": "ef7604636afbd83ac63569b0cb00abede302d25aad38d5107b404b02b2a57aa9",
+          "head": "797412c2fcc0a1a4ff988d4c243fa0e88049f695"
+        }
+      }
+    }
+  ]
+}

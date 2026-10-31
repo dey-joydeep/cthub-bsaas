@@ -19,5 +19,6 @@ Join when the PO and BA define acceptance criteria, not only after implementatio
 - Plan test data and environments during design; prepare automated and exploratory checks alongside development.
 - Run affected unit, integration, contract, E2E, accessibility, and performance checks according to risk.
 - Present staging and post-release smoke evidence, escaped defects, and remaining quality risks to the PO and release agent.
+- When the [QA GitHub App gateway](../../docs/aidd/github-app-identities.md) is activated, use its bounded PR review operation after recording test evidence. Do not treat a bot-authored review as proof that a separate agent ran QA.
 
 QA evidence complements independent Codex code review and Codex security checks; it does not replace either gate.

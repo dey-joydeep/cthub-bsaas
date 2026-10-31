@@ -1,0 +1,133 @@
+name: AIDD bot dispatch
+
+on:
+  workflow_dispatch:
+    inputs:
+      role:
+        description: GitHub App identity
+        required: true
+        type: choice
+        options: [po, qa]
+      operation:
+        description: Allowed role operation
+        required: true
+        type: choice
+        options: [verify, issue-create, issue-comment, pr-review]
+      issue_number:
+        description: Issue number for issue-comment
+        required: false
+        type: string
+      pr_number:
+        description: PR number for pr-review
+        required: false
+        type: string
+      expected_head_sha:
+        description: Exact reviewed PR head SHA for pr-review
+        required: false
+        type: string
+      title:
+        description: Issue title for issue-create
+        required: false
+        type: string
+      body:
+        description: Issue body, comment, or review text; do not include secrets
+        required: false
+        type: string
+      review_event:
+        description: QA review decision
+        required: false
+        default: COMMENT
+        type: choice
+        options: [COMMENT, REQUEST_CHANGES]
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require trusted main and a role-owned operation
+        shell: bash
+        env:
+          AIDD_BOT_ROLE: ${{ inputs.role }}
+          AIDD_BOT_OPERATION: ${{ inputs.operation }}
+        run: |
+          test "$GITHUB_REF" = 'refs/heads/main'
+          case "$AIDD_BOT_ROLE:$AIDD_BOT_OPERATION" in
+            po:verify|po:issue-create|po:issue-comment|qa:verify|qa:pr-review) ;;
+            *) echo 'Operation is not allowed for this bot role' >&2; exit 1 ;;
+          esac
+
+  po:
+    needs: guard
+    if: inputs.role == 'po'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: aidd-po
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Mint repository-scoped PO token
+        id: token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3
+        with:
+          client-id: Iv23liJuT4jewFNUqm5s
+          private-key: ${{ secrets.SHEARFLOW_PO_PRIVATE_KEY }}
+          owner: dey-joydeep
+          repositories: cthub-bsaas
+          permission-issues: write
+      - name: Verify PO installation identity
+        env:
+          APP_SLUG: ${{ steps.token.outputs.app-slug }}
+          INSTALLATION_ID: ${{ steps.token.outputs.installation-id }}
+        run: test "$APP_SLUG" = 'shearflow-po' && test "$INSTALLATION_ID" = '177123152'
+      - name: Execute PO operation
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+          AIDD_BOT_ROLE: po
+          AIDD_BOT_OPERATION: ${{ inputs.operation }}
+          AIDD_ISSUE_NUMBER: ${{ inputs.issue_number }}
+          AIDD_TITLE: ${{ inputs.title }}
+          AIDD_BODY: ${{ inputs.body }}
+        run: node scripts/aidd/bot-dispatch.mjs
+
+  qa:
+    needs: guard
+    if: inputs.role == 'qa'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: aidd-qa
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Mint repository-scoped QA token
+        id: token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3
+        with:
+          client-id: Iv23li0HGAiHfiIdTFu6
+          private-key: ${{ secrets.SHEARFLOW_QA_PRIVATE_KEY }}
+          owner: dey-joydeep
+          repositories: cthub-bsaas
+          permission-contents: read
+          permission-pull-requests: write
+      - name: Verify QA installation identity
+        env:
+          APP_SLUG: ${{ steps.token.outputs.app-slug }}
+          INSTALLATION_ID: ${{ steps.token.outputs.installation-id }}
+        run: test "$APP_SLUG" = 'shearflow-qa' && test "$INSTALLATION_ID" = '177125278'
+      - name: Execute QA operation
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+          AIDD_BOT_ROLE: qa
+          AIDD_BOT_OPERATION: ${{ inputs.operation }}
+          AIDD_PR_NUMBER: ${{ inputs.pr_number }}
+          AIDD_EXPECTED_HEAD_SHA: ${{ inputs.expected_head_sha }}
+          AIDD_BODY: ${{ inputs.body }}
+          AIDD_REVIEW_EVENT: ${{ inputs.review_event }}
+        run: node scripts/aidd/bot-dispatch.mjs
