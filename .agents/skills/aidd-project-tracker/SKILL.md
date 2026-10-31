@@ -12,15 +12,37 @@ description: >-
 
 1. Search open and closed GitHub issues for the requested outcome and inspect
    the project board. Reuse a matching issue or Epic.
-2. Use one issue for a standalone change. Its body should state the outcome,
-   acceptance criteria, scope, and validation evidence required. A read-only
-   question, review, or trivial correction needs no new issue.
-3. Use an Epic only when at least two independent delivery slices need their own
-   issue, owner, and acceptance criteria. Do not create an Epic per agent, role,
-   file, or chat.
-4. Record the selected issue number in the work handoff and link it from the PR
-   when a PR is created. Tracking does not authorize a branch, commit, merge, or
-   deployment.
+2. Use one issue for a standalone deliverable. Its body states the outcome,
+   acceptance criteria, scope, and validation evidence. Add it to the private
+   cthub Project with a Status. Preview a new item with:
+
+   ```powershell
+   npm run aidd:track-issue -- --repo dey-joydeep/cthub-bsaas --issue <number> --status Backlog
+   ```
+
+   Repeat with `--apply` to write. Existing field values are retained unless
+   explicitly supplied. A read-only question, review, or trivial correction
+   needs no new issue or board item.
+
+3. Use a parent feature issue (Epic) with sub-issues only when at least two
+   independent delivery slices need separate acceptance criteria and PRs.
+   Frontend and backend may qualify, but do not split automatically by layer,
+   agent, QA stage, file, chat, or internal ledger work unit. One slice normally
+   has one branch and PR; an Epic does not need its own implementation branch.
+4. The coordinator is the sole Project field writer after receiving evidence
+   from the role owner. Verify membership and the resulting field values after
+   every write. The PO owns priority decisions; only the release owner can
+   decide release readiness. A Project Status is a pointer, not gate evidence.
+5. Record the selected issue number in the work handoff and link it from the PR.
+   Tracking does not authorize a branch, commit, merge, or deployment.
+
+The standalone tracker accepts `--status`, `--priority`, `--size`, and `--domain`
+using option names already present on the live board. It reads the existing
+issue and Project before writing, and requires `--apply` for any mutation. The
+read-only `npm run aidd:premerge -- <PR-number>` check verifies that every
+closing issue is on this Project with an In review or Release ready status.
+GitHub CLI credentials need Project access; CI does not receive Project write
+credentials. Do not add the PR as a second board item for the same slice.
 
 ## New Epic initializer
 

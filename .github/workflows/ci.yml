@@ -114,6 +114,7 @@ jobs:
           npm run aidd:instruction-drift
           npm run aidd:instruction-drift:test
           npm run aidd:premerge:test
+          npm run aidd:track-issue:test
           npm run aidd:assets
           npm run aidd:links
           npm run aidd:format:test

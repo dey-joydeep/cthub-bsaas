@@ -41,6 +41,7 @@ Do not edit. First produce:
 - Risks and follow-ups are visible.
 - The branch is up to date or merge conflicts are understood.
 - The source branch name, target, tracking issue, and squash merge method follow the branch policy. Ordinary PRs target `main`; maintenance PRs may target an active `release/vMAJOR.MINOR.PATCH` branch and require a tracked backport to `main`. Stacked PRs are retargeted after their dependencies merge.
+- Every closing tracking issue is on the private cthub Project with In review (or a future Release ready) Status. `npm run aidd:premerge -- <PR-number>` checks this read-only; the coordinator verifies the board and issue evidence before any status update.
 - When dependency manifests or the lockfile change, the PR names the owner, gives a reason per changed direct package, and records review of newly introduced install scripts; dependency CI and the high-severity audit pass.
 
 ## Local commands before merging

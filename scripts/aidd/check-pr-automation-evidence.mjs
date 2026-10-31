@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { assessProjectTracking, projectItemListArgs } from './project-tracking.mjs';
 
 const reviewMarker = /<!-- codex-review-state:v1 (\{[^\n]+\}) -->/;
 
@@ -101,17 +102,27 @@ export function checkPrAutomationEvidence(number) {
     '--repo',
     nameWithOwner,
     '--json',
-    'state,isDraft,headRefOid,baseRefOid,baseRefName,statusCheckRollup',
+    'state,isDraft,headRefOid,baseRefOid,baseRefName,body,statusCheckRollup',
   ];
   const before = JSON.parse(gh(prArgs));
   const commentPages = JSON.parse(gh(['api', '--paginate', '--slurp', `repos/${nameWithOwner}/issues/${number}/comments?per_page=100`]));
   const comments = commentPages.flat();
   const reviewThreads = allReviewThreads(owner, name, number);
+  const project = JSON.parse(gh(projectItemListArgs()));
+  if (project.totalCount > project.items.length) throw new Error('Project item lookup exceeded 1000 items');
   const pr = JSON.parse(gh(prArgs));
-  if (before.headRefOid !== pr.headRefOid || before.baseRefOid !== pr.baseRefOid || before.baseRefName !== pr.baseRefName) {
-    throw new Error('PR head or base changed while evidence was read; rerun the check');
+  if (
+    before.headRefOid !== pr.headRefOid ||
+    before.baseRefOid !== pr.baseRefOid ||
+    before.baseRefName !== pr.baseRefName ||
+    before.body !== pr.body
+  ) {
+    throw new Error('PR head, base, or tracking body changed while evidence was read; rerun the check');
   }
-  const errors = assessPrAutomationEvidence(pr, comments, reviewThreads, defaultBranchRef?.name);
+  const errors = [
+    ...assessPrAutomationEvidence(pr, comments, reviewThreads, defaultBranchRef?.name),
+    ...assessProjectTracking(pr.body, project.items, nameWithOwner),
+  ];
   return {
     repository: nameWithOwner,
     number,
