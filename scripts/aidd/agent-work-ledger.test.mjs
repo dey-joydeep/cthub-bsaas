@@ -201,6 +201,44 @@ test('interruption retains a checkpoint, recovery is idempotent, and changed sou
   assert.deepEqual(state.readyUnits, ['build']);
 });
 
+test('superseding a stale unit requires a completed successor and survives export and import', (t) => {
+  const cwd = fixture(t);
+  success(cwd, 'init', '--task', 'issue-4', '--goal', 'Replace obsolete work', '--base', 'main');
+  for (const unit of ['obsolete', 'replacement']) {
+    success(
+      cwd,
+      'add',
+      '--task',
+      'issue-4',
+      '--unit',
+      unit,
+      '--kind',
+      'implementation',
+      '--owner',
+      'dev',
+      '--paths',
+      'src/feature.txt',
+      '--acceptance',
+      `${unit} done`,
+    );
+  }
+  success(cwd, 'start', '--task', 'issue-4', '--unit', 'obsolete');
+  const finalReport = report(cwd, evidence());
+  success(cwd, 'complete', '--task', 'issue-4', '--unit', 'obsolete', '--report', finalReport);
+  writeFileSync(join(cwd, 'src', 'feature.txt'), 'replacement\n');
+  assert.equal(run(cwd, 'supersede', '--task', 'issue-4', '--unit', 'obsolete', '--by', 'replacement', '--reason', 'Replaced').status, 1);
+  success(cwd, 'start', '--task', 'issue-4', '--unit', 'replacement');
+  success(cwd, 'complete', '--task', 'issue-4', '--unit', 'replacement', '--report', finalReport);
+  const state = success(cwd, 'supersede', '--task', 'issue-4', '--unit', 'obsolete', '--by', 'replacement', '--reason', 'Replaced');
+  assert.equal(state.units.find((unit) => unit.id === 'obsolete').status, 'superseded');
+  assert.deepEqual(state.readyUnits, []);
+  success(cwd, 'export', '--task', 'issue-4');
+  rmSync(join(cwd, 'tmp', 'aidd-ledger', 'issue-4'), { recursive: true, force: true });
+  const imported = success(cwd, 'import', '--task', 'issue-4');
+  assert.equal(imported.units.find((unit) => unit.id === 'obsolete').status, 'superseded');
+  assert.deepEqual(imported.readyUnits, []);
+});
+
 test('final review requires a clean whole-PR boundary and becomes stale after a new commit', (t) => {
   const cwd = fixture(t);
   git(cwd, 'switch', '-c', 'feature');

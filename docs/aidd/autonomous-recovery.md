@@ -56,6 +56,8 @@ npm run aidd:ledger -- status --task issue-67
 
 `recover` marks running units interrupted once, retains their last checkpoint, and prints `readyUnits`. Restart a ready unit with `start`; give its owner the preserved checkpoint and ask it to verify the source before continuing. Do not redispatch completed units. Recovery is idempotent when no new work occurred.
 
+When a completed replacement makes an old pending, interrupted, or stale unit obsolete, record the decision with `supersede --task <id> --unit <old-id> --by <completed-unit-id> --reason <text>`. The successor must be complete on current source. The old unit remains in the audit trail with status `superseded` and is excluded from `readyUnits`, including after snapshot import. Do not use this to skip unfinished work without a validated replacement.
+
 At a meaningful phase handoff, before the final whole-PR review, export the current state:
 
 ```powershell

@@ -40,6 +40,7 @@ npm run deps:policy:test
 npm run deps:change:test
 npm run aidd:branch-policy:test
 npm run aidd:premerge:test
+npm run aidd:track-issue:test
 ```
 
 Run `npm audit --audit-level=high` when the lockfile changes. The live `npm run aidd:premerge -- <PR-number>` command is required after the final committed PR head and review are available.

@@ -32,6 +32,8 @@ AIDD is the default workflow for every new task, including a new error-fix reque
 
 The [AI-driven development life cycle](docs/aidd/development-lifecycle.md) defines the product goal, role ownership, handoffs, and release gates for both Codex and Antigravity. Reuse an existing issue when the work continues it; use one issue for a standalone deliverable and an Epic only for a multi-slice outcome. Independent review and security checks belong to Codex. Antigravity execution requires Gemini 3.8 Flash or stronger; verify the effective model because an agent's `flash` tier does not pin a version.
 
+Add each trackable delivery issue to the private cthub GitHub Project with a Status. A feature needs child issues only for independent delivery slices with their own acceptance criteria and PRs, not for each agent, layer, or internal work unit. The coordinator owns Project field updates; see `docs/aidd/development-lifecycle.md` and `.agents/skills/aidd-project-tracker/SKILL.md`.
+
 For long-running or multi-agent work, use the [AIDD recovery protocol](docs/aidd/autonomous-recovery.md): initialize bounded work units before dispatch, checkpoint each reviewable increment, and recover interrupted units from the local ledger. Publish process state to the private tracking issue and source state to the dedicated private Git ref when progress must survive loss of the checkout. A partial or stale checkpoint is not completion evidence.
 
 For every new task, the active agent must:

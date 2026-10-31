@@ -31,6 +31,7 @@ For Antigravity execution, also apply `.agents/AGENTS.md` and the selected `.age
 | [Change Scope and Validation](change-hygiene.md)          | Inclusion rules and required checks for each changed area.                                    |
 | [Database Access Policy](database-access-policy.md)       | Environment profiles, test isolation, DBA ownership, and migration gates.                     |
 | [Agent Activation](agent-activation.md)                   | How shared roles map to Antigravity and Codex profiles and how coordinators invoke them.      |
+| [GitHub App Identities](github-app-identities.md)         | Registered bot identities, role boundaries, and current activation status.                    |
 | [Codex Operating Model](codex-operating-model.md)         | Repository-specific workflow for analysis, design, implementation, validation, and reporting. |
 | [Codex Task Policy](codex-task-policy.md)                 | Depth, stop conditions, and completion expectations by task type.                             |
 | [Codex Review Checklist](codex-review-checklist.md)       | Checklist for PR reviews and self-review before handoff.                                      |
@@ -46,6 +47,8 @@ For Antigravity execution, also apply `.agents/AGENTS.md` and the selected `.age
 - `scripts/aidd/source-checkpoint.mjs` backs up nonignored source on a private recovery ref.
 - `scripts/aidd/check-changed-format.mjs` checks supported files changed by a PR.
 - `scripts/aidd/check-dependency-policy.mjs`, `check-dependency-change.mjs`, and `check-branch-policy.mjs` validate dependency and branch evidence before a PR handoff.
+- `scripts/aidd/track-issue.mjs` previews or applies standalone issue Project updates; `project-tracking.mjs` supplies the read-only premerge membership gate. The Epic initializer remains under `.agents/skills/aidd-project-tracker/`.
+- The [GitHub App identity guide](github-app-identities.md) records the installed PO and QA Apps. No bot runtime is active yet; agents must not assume their GitHub actions use those identities.
 - `.agents/skills/*` contains reusable Antigravity and Codex workflows where applicable.
 - `.codex/agents/*.toml` contains Codex reviewer and implementation helper agents.
 - `.codex/environments/environment.toml` points at the repo bootstrap command for fresh Codex worktrees.
