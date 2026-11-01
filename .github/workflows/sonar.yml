@@ -37,7 +37,7 @@ jobs:
         with:
           ref: ${{ github.event.inputs.target_branch || github.ref }}
           fetch-depth: 0 # Full history required by SonarQube blame analysis
-          clean: false
+          set-safe-directory: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
