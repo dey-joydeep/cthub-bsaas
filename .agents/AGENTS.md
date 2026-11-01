@@ -31,9 +31,14 @@ creating tracking. Reuse the issue when it already covers the requested outcome
 and record its number in the task handoff.
 
 - Use one issue for a standalone change with acceptance criteria and validation.
-- Use an Epic with sub-issues only when the outcome has at least two independent,
-  reviewable delivery slices. Invoke `aidd-project-tracker` when a new Epic is
-  needed; it previews the plan before any GitHub write.
+- Add every trackable delivery issue to the private cthub Project with a Status.
+  The coordinator owns Project updates and verifies each write.
+- Use a parent feature issue (Epic) with sub-issues only when the outcome has at
+  least two independent, reviewable delivery slices with separate acceptance
+  criteria and PRs. Frontend and backend may be separate slices when they meet
+  that test; agent roles or internal work steps alone do not justify children.
+  Invoke `aidd-project-tracker` when a new Epic is needed; it previews before
+  GitHub writes.
 - Keep a continuation fix under its existing issue or PR. A read-only question,
   review, or trivial correction does not require new tracking.
 - Check for an existing Epic and sub-issues before invoking the initializer. Do

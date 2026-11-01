@@ -22,7 +22,7 @@ import { pathToFileURL } from 'node:url';
 
 const version = 1;
 const kinds = new Set(['implementation', 'qa', 'review', 'review-closure', 'verification', 'handoff']);
-const eventTypes = new Set(['start', 'checkpoint', 'complete', 'interrupt']);
+const eventTypes = new Set(['start', 'checkpoint', 'complete', 'interrupt', 'supersede']);
 let injectedGh = null;
 
 function fail(message) {
@@ -113,6 +113,7 @@ function parse(argv) {
       'checkpoint',
       'complete',
       'interrupt',
+      'supersede',
       'status',
       'recover',
       'export',
@@ -122,7 +123,7 @@ function parse(argv) {
     ].includes(command)
   ) {
     fail(
-      'Usage: npm run aidd:ledger -- <init|add|start|checkpoint|complete|interrupt|status|recover|export|import|publish|restore> --task <id> [options]',
+      'Usage: npm run aidd:ledger -- <init|add|start|checkpoint|complete|interrupt|supersede|status|recover|export|import|publish|restore> --task <id> [options]',
     );
   }
   const options = {};
@@ -141,6 +142,7 @@ function parse(argv) {
     checkpoint: ['task', 'unit', 'report'],
     complete: ['task', 'unit', 'report'],
     interrupt: ['task', 'unit', 'reason'],
+    supersede: ['task', 'unit', 'by', 'reason'],
     status: ['task'],
     recover: ['task'],
     export: ['task'],
@@ -431,6 +433,9 @@ function completionState(root, taskManifest, unit, history) {
   const current = source(root, taskManifest, unit);
   const sourceCurrent = checkpoint?.source?.fingerprint === current.fingerprint;
   if (!last) return { status: 'pending', sourceCurrent: false, checkpoint: null };
+  if (last.type === 'supersede') {
+    return { status: 'superseded', sourceCurrent: false, checkpoint: latestReport(history) ?? null, supersededBy: last.by };
+  }
   if (last.type === 'complete') {
     return { status: sourceCurrent ? 'complete' : 'stale', sourceCurrent, checkpoint: latestReport(history) };
   }
@@ -563,6 +568,15 @@ function act(root, command, options) {
   } else if (command === 'interrupt') {
     if (current.status !== 'running') fail(`Unit ${unit.id} is not running`);
     append(root, options.task, unit.id, 'interrupt', { reason: options.reason?.trim() || 'Agent or session interrupted' });
+  } else if (command === 'supersede') {
+    if (!['stale', 'interrupted', 'pending', 'in-progress'].includes(current.status))
+      fail(`Unit ${unit.id} cannot be superseded from ${current.status}`);
+    const successorId = identifier(options.by, 'Successor unit ID');
+    if (successorId === unit.id) fail('A unit cannot supersede itself');
+    if (state.units.find((entry) => entry.id === successorId)?.status !== 'complete')
+      fail(`Successor unit ${successorId} must be complete and current`);
+    if (!options.reason?.trim()) fail('--reason is required');
+    append(root, options.task, unit.id, 'supersede', { by: successorId, reason: options.reason.trim() });
   } else {
     if (current.status !== 'running' && current.status !== 'in-progress') fail(`Unit ${unit.id} must be started before ${command}`);
     if (!options.report) fail('--report is required');
@@ -617,6 +631,7 @@ async function exportSnapshot(root, task) {
       definition: unit,
       status: state.units.find((entry) => entry.id === unit.id).status,
       lastType: history.at(-1)?.type ?? null,
+      ...(history.at(-1)?.type === 'supersede' ? { supersededBy: history.at(-1).by } : {}),
       checkpoint: checkpoint ? { report: checkpoint.report, source: checkpoint.source } : null,
     };
   });
@@ -703,10 +718,15 @@ function importSnapshot(root, task) {
       fail(`Invalid checkpoint for ${unit.id}`);
     }
     if (entry.lastType === 'complete' && !entry.checkpoint) fail(`Completed unit ${unit.id} has no checkpoint`);
+    if (entry.lastType === 'supersede') identifier(entry.supersededBy, 'Successor unit ID');
     definitions.set(unit.id, unit);
   }
   for (const unit of definitions.values()) {
     for (const dependency of unit.dependsOn) if (!definitions.has(dependency)) fail(`Missing dependency ${dependency}`);
+  }
+  for (const entry of snapshot.units) {
+    if (entry.lastType === 'supersede' && (entry.supersededBy === entry.definition.id || !definitions.has(entry.supersededBy)))
+      fail(`Invalid successor for ${entry.definition.id}`);
   }
   const visited = new Set();
   const visiting = new Set();
@@ -736,6 +756,8 @@ function importSnapshot(root, task) {
     const id = entry.definition.id;
     if (entry.checkpoint) append(root, task, id, 'checkpoint', entry.checkpoint);
     if (entry.lastType === 'complete') append(root, task, id, 'complete', entry.checkpoint);
+    else if (entry.lastType === 'supersede')
+      append(root, task, id, 'supersede', { by: entry.supersededBy, reason: 'Imported superseded unit' });
     else if (entry.lastType !== null) append(root, task, id, 'interrupt', { reason: 'Imported checkpoint; reverify before resuming' });
   }
   saveExportBaseline(root, task);

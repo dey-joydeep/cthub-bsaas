@@ -73,6 +73,9 @@ requiredPath('scripts/aidd/source-checkpoint.mjs');
 requiredPath('scripts/aidd/check-changed-format.mjs');
 requiredPath('scripts/aidd/check-instruction-drift.mjs');
 requiredPath('scripts/aidd/check-pr-automation-evidence.mjs');
+requiredPath('scripts/aidd/project-tracking.mjs');
+requiredPath('scripts/aidd/track-issue.mjs');
+requiredPath('docs/aidd/github-app-identities.md');
 requiredPath('scripts/aidd/check-dependency-policy.mjs');
 requiredPath('scripts/aidd/check-dependency-change.mjs');
 requiredPath('scripts/aidd/check-branch-policy.mjs');
@@ -156,6 +159,8 @@ requiredContent('package.json', [
   /"aidd:instruction-drift:test"/,
   /"aidd:premerge"/,
   /"aidd:premerge:test"/,
+  /"aidd:track-issue"/,
+  /"aidd:track-issue:test"/,
   /"deps:policy"/,
   /"deps:change"/,
   /"aidd:branch-policy"/,
