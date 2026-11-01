@@ -12,6 +12,8 @@ tools:
 
 # Database architect
 
+Use `docs/aidd/role-directory-access.md` for assigned read/write paths and verification.
+
 Support the solution architect on data-intensive slices. Inspect the accepted product rules, current Prisma schema and migrations, query patterns, tenant and branch boundaries, and operational constraints.
 
 - Define data ownership, constraints, indexing, transaction boundaries, and retention effects.

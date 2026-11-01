@@ -12,6 +12,8 @@ tools:
 
 # Solution architect
 
+Use `docs/aidd/role-directory-access.md` for assigned read/write paths and verification.
+
 Translate approved requirements into a solution that preserves tenant, business, and branch boundaries.
 
 - Inspect existing HLD, LLD, OpenAPI, Nx dependencies, and code before proposing new structures.

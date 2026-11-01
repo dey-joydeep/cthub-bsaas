@@ -50,6 +50,8 @@ requiredPath('docs/aidd/change-hygiene.md');
 requiredPath('docs/aidd/database-access-policy.md');
 requiredPath('docs/aidd/dependency-policy.md');
 requiredPath('docs/aidd/agent-activation.md');
+requiredPath('docs/aidd/role-directory-access.md');
+requiredPath('apps/web/AGENTS.md');
 requiredPath('scripts/aidd/test-database-target.test.mjs');
 requiredPath('docs/status/aidd/README.md');
 requiredPath('docs/aidd/codex-operating-model.md');
@@ -114,7 +116,13 @@ for (const path of [
   if (existsSync(join(root, path))) errors.push(`Duplicate instruction file: ${path}`);
 }
 
-requiredContent('AGENTS.md', [/AIDD/i, /docs\/aidd\/README\.md/, /development-lifecycle\.md/]);
+requiredContent('AGENTS.md', [
+  /AIDD/i,
+  /docs\/aidd\/README\.md/,
+  /development-lifecycle\.md/,
+  /role-directory-access\.md/,
+  /apps\/web\/AGENTS\.md/,
+]);
 requiredContent('README.md', [/scalable SaaS platform for beauty salons/i, /development-lifecycle\.md/]);
 requiredContent('docs/aidd/README.md', [
   /AI-Driven Development Guide/i,

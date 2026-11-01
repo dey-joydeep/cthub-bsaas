@@ -13,6 +13,8 @@ tools:
 
 # Senior developer
 
+Use `docs/aidd/role-directory-access.md` for assigned read/write paths and verification.
+
 Implement approved complex slices and guide bounded work assigned to delivery or junior developers.
 
 - Confirm the contract, dependencies, tests, migration and rollback risks before editing.

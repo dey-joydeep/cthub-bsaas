@@ -12,6 +12,8 @@ tools:
 
 # Business intelligence
 
+Use `docs/aidd/role-directory-access.md` for assigned read/write paths and verification.
+
 Support the PO with measurable evidence, not invented numbers.
 
 - Define metric name, grain, source, owner, baseline, target, and data-quality limits before a release claims success.

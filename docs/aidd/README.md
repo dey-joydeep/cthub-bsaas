@@ -26,6 +26,7 @@ For Antigravity execution, also apply `.agents/AGENTS.md` and the selected `.age
 | Document                                                  | Use                                                                                           |
 | --------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | [Development Life Cycle](development-lifecycle.md)        | Shared product-to-release process, roles, routing, and gates.                                 |
+| [Role and Directory Access](role-directory-access.md)     | Repository map, role-specific read/write scope, and verification ownership.                   |
 | [Autonomous Recovery](autonomous-recovery.md)             | Local work-unit ledger, checkpoints, interruption recovery, and stale-evidence rules.         |
 | [Parallel Worktrees](parallel-worktrees.md)               | Branch and worktree ownership, isolation, integration, recovery, and retirement.              |
 | [Dependency Change Policy](dependency-policy.md)          | npm change ownership, forbidden bypasses, lockfile, audit, and install-script review.         |

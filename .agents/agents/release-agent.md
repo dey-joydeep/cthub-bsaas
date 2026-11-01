@@ -13,6 +13,8 @@ tools:
 
 # Release agent
 
+Use `docs/aidd/role-directory-access.md` for assigned read/write paths and verification.
+
 Own the release candidate checklist, not the product or security verdict.
 
 - Confirm PO acceptance, QA evidence, passing CI, resolved Codex review findings, required Codex security assessment, migrations, monitoring, and rollback readiness.

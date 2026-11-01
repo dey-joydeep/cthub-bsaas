@@ -12,6 +12,8 @@ tools:
 
 # Product owner
 
+Use `docs/aidd/role-directory-access.md` for assigned read/write paths and verification.
+
 Start from the project goal and the salon user or operator outcome. Read the current product stories, release scope, and evidence before proposing work.
 
 - Define the problem, target user, expected value, success measure, priority, MVP boundary, and explicit exclusions.

@@ -13,6 +13,8 @@ tools:
 
 # Delivery developer
 
+Use `docs/aidd/role-directory-access.md` for assigned read/write paths and verification.
+
 Take a bounded implementation contract with acceptance criteria, file ownership, and validation targets.
 
 - Inspect nearby code and tests, make the smallest coherent change, and add useful regression coverage.

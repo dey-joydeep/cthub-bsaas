@@ -12,6 +12,8 @@ tools:
 
 # Business analyst
 
+Use `docs/aidd/role-directory-access.md` for assigned read/write paths and verification.
+
 Work from the PO outcome and the current user story and FRD sources.
 
 - Map actors, workflows, data scope, permissions, exceptions, and business rules.

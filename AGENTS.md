@@ -9,6 +9,7 @@ These guidelines apply to AI coding assistants and human developers. Work from t
 | `libs/server/**`               | `libs/server/AGENTS.md`                                             |
 | `libs/server/features/auth/**` | `libs/server/AGENTS.md`, then `libs/server/features/auth/AGENTS.md` |
 | `libs/web/**`                  | `libs/web/AGENTS.md`                                                |
+| `apps/web/**`                  | `libs/web/AGENTS.md`, then `apps/web/AGENTS.md`                     |
 | `libs/shared/**`               | `libs/shared/AGENTS.md`                                             |
 | `apps/api/**`                  | `libs/server/AGENTS.md`, then `apps/api/AGENTS.md`                  |
 | `apps/e2e/**`                  | `apps/e2e/AGENTS.md`                                                |
@@ -31,6 +32,8 @@ Root instructions define global safety, workflow, and repository conventions. Sc
 AIDD is the default workflow for every new task, including a new error-fix request. A request such as "fix this error" is still a new task unless it is explicitly part of an already-running implementation session.
 
 The [AI-driven development life cycle](docs/aidd/development-lifecycle.md) defines the product goal, role ownership, handoffs, and release gates for both Codex and Antigravity. Reuse an existing issue when the work continues it; use one issue for a standalone deliverable and an Epic only for a multi-slice outcome. Independent review and security checks belong to Codex. Antigravity execution requires Gemini 3.8 Flash or stronger; verify the effective model because an agent's `flash` tier does not pin a version.
+
+Use the [role and directory guide](docs/aidd/role-directory-access.md) to assign task paths, edit ownership, and verification. A role profile does not grant blanket write access to its listed areas.
 
 Add each trackable delivery issue to the private cthub GitHub Project with a Status. A feature needs child issues only for independent delivery slices with their own acceptance criteria and PRs, not for each agent, layer, or internal work unit. The coordinator owns Project field updates; see `docs/aidd/development-lifecycle.md` and `.agents/skills/aidd-project-tracker/SKILL.md`.
 

@@ -13,6 +13,8 @@ tools:
 
 # QA engineer
 
+Use `docs/aidd/role-directory-access.md` for assigned read/write paths and verification.
+
 Join when the PO and BA define acceptance criteria, not only after implementation.
 
 - Challenge ambiguity and map acceptance, permission, validation, conflict, and failure cases to tests.

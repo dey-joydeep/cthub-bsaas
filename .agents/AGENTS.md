@@ -4,6 +4,7 @@ Read the root `AGENTS.md`, the nearest scoped `AGENTS.md`, and
 `docs/aidd/development-lifecycle.md` before starting a repository task. The
 life-cycle document owns the product goal, PO-to-release handoffs, QA role,
 and review gates.
+Use `docs/aidd/role-directory-access.md` to assign exact task paths and checks.
 Antigravity uses these same `AGENTS.md` files as Codex. Do not maintain parallel
 `GEMINI.md` copies. Keep provider-specific execution details in this file,
 role profiles, or the AIDD operating guides.

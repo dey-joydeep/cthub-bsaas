@@ -13,6 +13,9 @@ Read this file before working under `docs/**`.
 - Infrastructure planning: `docs/infra-upgrade/**`
 - Shared AI-driven development life cycle and Codex playbooks: `docs/aidd/README.md`
 - Change inclusion and validation rules: `docs/aidd/change-hygiene.md`
+- Role ownership and writable-path assignment: `docs/aidd/role-directory-access.md`
+- Operational notes: `docs/ops/**`; verify an older note against current CI and runtime configuration.
+- Historical database and planning notes: `docs/db/**`, `docs/bk/**`, and `docs/others/**`. They do not override current specs, code, or Prisma migrations.
 
 ## Source Of Truth
 

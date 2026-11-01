@@ -16,6 +16,7 @@ Read first:
 - AGENTS.md
 - every scoped AGENTS.md required for the touched areas
 - docs/aidd/README.md
+- docs/aidd/role-directory-access.md
 - relevant docs/us, docs/specs, docs/quality-standards, and existing implementation files
 
 Do not edit yet. First produce:
@@ -26,6 +27,7 @@ Do not edit yet. First produce:
 5. validation commands
 6. risks, assumptions, and open questions
 7. existing issue and Project item or proposed standalone issue/Epic decision when the work is trackable
+8. assigned writable paths, read targets, and verification owner for each role involved
 ```
 
 ## Required Codex behavior
@@ -34,6 +36,7 @@ Do not edit yet. First produce:
 - Inspect before editing.
 - Prefer the smallest safe change.
 - Apply the [change scope and validation matrix](../change-hygiene.md) when choosing files and checks.
+- Use the [role and directory guide](../role-directory-access.md) to assign exact writable paths and verification before delegating.
 - Load all required scoped instruction files when an area has layered guidance, such as `libs/server/**` plus `libs/server/features/auth/**`.
 - Use Nx commands for project tasks instead of direct tool invocations when Nx targets exist.
 - Keep FRD/FNRD/HLD/LLD/API/VALIDATION/WEB/TEST alignment when behavior or contracts change.

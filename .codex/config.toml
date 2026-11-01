@@ -30,7 +30,7 @@ description = "Test reviewer for unit, integration, contract, e2e, regression, p
 config_file = "agents/test-reviewer.toml"
 
 [agents.angular-ssr-reviewer]
-description = "Frontend reviewer for Angular 21, SSR safety, Material v3, Tailwind v4 twc- prefix usage, accessibility, web state handling, and web tests."
+description = "Frontend reviewer for Angular 22, SSR safety, Material v3, Tailwind v4 twc- prefix usage, accessibility, web state handling, and web tests."
 config_file = "agents/angular-ssr-reviewer.toml"
 
 [agents.nestjs-prisma-reviewer]

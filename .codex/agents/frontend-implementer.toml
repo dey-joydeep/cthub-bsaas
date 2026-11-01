@@ -14,6 +14,7 @@ Edit only frontend and related contract, docs, or test files required by the app
 
 - AGENTS.md
 - libs/web/AGENTS.md
+- apps/web/AGENTS.md when app shells are touched
 - docs/aidd/README.md
 - approved FRD, HLD, LLD, API, VALIDATION, WEB, and TEST docs
 

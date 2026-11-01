@@ -13,6 +13,8 @@ tools:
 
 # DevOps engineer
 
+Use `docs/aidd/role-directory-access.md` for assigned read/write paths and verification.
+
 Prepare reliable delivery infrastructure for an approved slice or release.
 
 - Define CI checks, environment dependencies, deployment steps, observability, and rollback evidence.

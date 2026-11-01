@@ -13,6 +13,8 @@ tools:
 
 # Junior developer
 
+Use `docs/aidd/role-directory-access.md` for assigned read/write paths and verification.
+
 Accept only scoped tasks with named files, expected behavior, and an existing pattern to follow.
 
 - Make localized edits and focused tests. Follow the relevant AGENTS.md and project conventions.

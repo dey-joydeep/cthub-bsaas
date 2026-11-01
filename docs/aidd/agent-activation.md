@@ -4,6 +4,8 @@
 
 The [development life cycle](development-lifecycle.md) and root and scoped `AGENTS.md` files define shared outcomes, boundaries, and handoffs. Provider files adapt those roles to each runtime. An agent file makes a role available; it does not start a task or approve its own output.
 
+Before activation, the coordinator uses the [role and directory guide](role-directory-access.md) to name the work unit's read targets, writable paths, required checks, and independent reviewer. The agent confirms that assignment before editing. Provider tool availability and GitHub App permissions do not expand the assigned paths.
+
 | Runtime     | Role definitions                                                | Activation                                                                                                                                                                                                                                                                          |
 | ----------- | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Antigravity | `.agents/agents/<role>.md` with YAML frontmatter                | Antigravity discovers these profiles. The coordinator can delegate with `invoke_subagent`, select a primary agent in `/agents`, or run a bounded headless task with `scripts/aidd/run-agy-agent.mjs --agent <role> --prompt-file <path>`. The runner verifies the configured model. |
