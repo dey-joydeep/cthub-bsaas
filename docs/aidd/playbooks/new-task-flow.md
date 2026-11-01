@@ -40,6 +40,7 @@ Do not edit yet. First produce:
 - Report validation honestly.
 - When implementing for a PR, hand the result to an independent Codex reviewer; route every security check to Codex.
 - For long-running or multi-agent work, initialize the [AIDD ledger](../autonomous-recovery.md) and bounded units before dispatch; checkpoint progress after each reviewable increment.
+- Before parallel editing, apply the [worktree protocol](../parallel-worktrees.md) to assign a branch, checkout, and path owner to each independent slice.
 
 ## Completion format
 

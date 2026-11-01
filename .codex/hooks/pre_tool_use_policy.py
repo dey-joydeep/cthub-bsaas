@@ -79,6 +79,18 @@ def has_blocked_path_reference(text):
     return any(token_mentions_blocked_path(token) for token in tokenize_command(text))
 
 
+def patch_targets(text):
+    references = re.findall(r'\btools\.([a-zA-Z_]\w*)', text)
+    direct_patch = text.lstrip().startswith('*** Begin Patch')
+    if not direct_patch and (references != ['apply_patch'] or 'tools[' in text):
+        return None
+    expanded = text.replace('\\n', '\n')
+    if '*** Begin Patch' not in expanded or '*** End Patch' not in expanded:
+        return None
+    targets = re.findall(r'^\*\*\* (?:Add|Update|Delete|Move to) File:\s*(.+?)\s*$', expanded, re.MULTILINE)
+    return targets or None
+
+
 def has_rm_rf_variant(command):
     tokens = tokenize_command(command.lower())
     for index, token in enumerate(tokens):
@@ -135,16 +147,20 @@ def main():
     tool_input = payload.get('tool_input') or {}
     text = normalize(collect_text(tool_input))
 
-    if has_blocked_path_reference(text):
+    targets = patch_targets(text)
+    checked_text = ' '.join(targets) if targets is not None else text
+
+    if has_blocked_path_reference(checked_text):
         deny(event_name, 'Repository policy blocks edits or commands touching generated or cache directories.')
         return
 
     command = normalize(tool_input.get('command', '')) if isinstance(tool_input, dict) else text
-    if is_destructive_command(command):
+    command = command or text
+    if targets is None and is_destructive_command(command):
         deny(event_name, 'Repository policy blocks destructive commands without explicit manual handling.')
         return
 
-    warnings = [fragment for fragment in WARN_PATH_FRAGMENTS if fragment in text]
+    warnings = [fragment for fragment in WARN_PATH_FRAGMENTS if fragment in checked_text]
     if warnings:
         warn(event_name, f'Repository policy notice: this action touches high-impact files: {", ".join(warnings)}. Confirm AIDD traceability and validation before completion.')
         return

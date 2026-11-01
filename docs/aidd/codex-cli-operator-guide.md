@@ -96,13 +96,14 @@ Use relevant reviewer agents for architecture, API contract, security, tests, fr
 
 ## Fresh worktree bootstrap
 
-Fresh Codex environments use the repo bootstrap command from `.codex/environments/environment.toml`.
+Apply the [parallel worktree protocol](parallel-worktrees.md) before creating an isolated checkout. Fresh Codex environments use the repo bootstrap command from `.codex/environments/environment.toml`.
 
-The bootstrap currently:
+The bootstrap:
 
 - verifies the repository root
 - reports the Node version
-- runs `npm install` only when `node_modules` is missing
+- requires the lockfile and runs `npm ci --ignore-scripts --no-audit --fund=false` when `node_modules` is absent
+- runs the version check, local hook setup, and native toolchain smoke check explicitly; run Prisma client generation and its check separately when the task needs server builds or tests
 
 Dry-run validation:
 

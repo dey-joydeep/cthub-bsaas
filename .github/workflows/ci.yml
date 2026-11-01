@@ -17,6 +17,8 @@ jobs:
     name: Main Workflow
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      toolchain: ${{ steps.change_scope.outputs.toolchain }}
     services:
       postgres:
         image: postgres:16
@@ -76,6 +78,9 @@ jobs:
           if echo "$DIFF_FILES" | grep -Eq '(^|/)package\.json$|^package-lock\.json$|^\.npmrc$'; then
             echo "dependency=true" >> "$GITHUB_OUTPUT"
           fi
+          if echo "$DIFF_FILES" | grep -Eq '^(package\.json|package-lock\.json|\.npmrc|\.nvmrc|\.github/workflows/ci\.yml|\.codex/environments/setup(\.test)?\.mjs|scripts/aidd/smoke-installed-toolchain\.mjs)$'; then
+            echo "toolchain=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Check branch and tracking issue
         if: github.event_name == 'pull_request'
@@ -102,6 +107,9 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate --schema libs/server/data-access/prisma/schema.prisma
 
+      - name: Verify scripts-disabled toolchain
+        run: node scripts/aidd/smoke-installed-toolchain.mjs --require-prisma-client
+
       - name: Check changed-file format and whitespace
         run: |
           npm run aidd:format:changed -- "$NX_BASE" "$NX_HEAD"
@@ -123,6 +131,8 @@ jobs:
           npm run deps:policy:test
           npm run deps:change:test
           npm run aidd:branch-policy:test
+          node --test .codex/environments/setup.test.mjs
+          python3 -B -m unittest discover -s .codex/hooks -p 'test_*.py'
           npx eslint --max-warnings 0 scripts/aidd/*.mjs
 
       - name: Enable Nx Cloud read-only mode
@@ -187,3 +197,33 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: ./coverage
           fail_ci_if_error: false
+
+  windows-toolchain:
+    name: Windows toolchain smoke
+    needs: main
+    if: needs.main.outputs.toolchain == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Check Windows worktree bootstrap
+        run: node --test .codex/environments/setup.test.mjs
+
+      - name: Install dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --fund=false
+
+      - name: Generate Prisma client
+        run: npx prisma generate --schema libs/server/data-access/prisma/schema.prisma
+
+      - name: Verify native tools and generated client
+        run: node scripts/aidd/smoke-installed-toolchain.mjs --require-prisma-client

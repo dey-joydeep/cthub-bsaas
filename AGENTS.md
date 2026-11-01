@@ -50,6 +50,7 @@ A lighter path is allowed only for a continuation fix inside the same active tas
 ## Safe Filesystem Usage
 
 - Stay inside the repository unless explicitly told otherwise.
+- A sibling Git worktree under the same approved workspace parent is allowed only after the user authorizes its location and any branch creation. Follow `docs/aidd/parallel-worktrees.md`; verify its resolved path before removal.
 - Never call `filesystem.directory_tree` on the repo root.
 - For top-level structure, use a depth-1 listing.
 - Drill down one folder at a time.
@@ -162,6 +163,7 @@ Follow the [AIDD change scope and validation matrix](docs/aidd/change-hygiene.md
 - Allowed type examples: `feature`, `fix`, `chore`, `docs`, `test`, `refactor`, `style`.
 - Short description: lowercase kebab-case, 50 characters or fewer.
 - `ci/<short-description>` is also allowed. A separately maintained release branch uses `release/vMAJOR.MINOR.PATCH`; release tags use `vMAJOR.MINOR.PATCH`. Follow the merge and issue-link policy in `docs/aidd/development-lifecycle.md`.
+- Parallel delivery slices follow `docs/aidd/parallel-worktrees.md`: one branch and worktree per independent slice, with no branch per agent. The coordinator owns integration and Git operations when multiple agents share one slice.
 
 ## Security, Secrets, And Config
 

@@ -12,6 +12,9 @@ and checkpoint bounded work units before handoff. Resume interrupted units from
 the local ledger without treating partial evidence as complete. Publish a
 checkpoint to the private tracking issue when progress must survive this
 checkout.
+For parallel editing, follow `docs/aidd/parallel-worktrees.md`. Give each
+independent delivery slice its own branch and worktree; coordinate agents
+sharing a slice through non-overlapping path ownership and one Git writer.
 
 Antigravity execution requires Gemini 3.8 Flash or a stronger eligible model.
 Verify the effective model before interactive work; a `flash` tier does not

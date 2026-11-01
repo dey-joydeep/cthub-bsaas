@@ -104,6 +104,7 @@
     "openapi:lint:salon-owner": "redocly lint docs/specs/salon-owner/API/openapi.yaml --config .redocly.yaml --max-problems=0",
     "openapi:check:salon-owner": "tsx scripts/openapi-salon-owner-check.ts",
     "aidd:check": "node scripts/aidd/check-aidd-setup.mjs",
+    "aidd:toolchain-smoke": "node scripts/aidd/smoke-installed-toolchain.mjs",
     "aidd:branch-policy": "node scripts/aidd/check-branch-policy.mjs",
     "aidd:branch-policy:test": "node --test scripts/aidd/check-branch-policy.test.mjs",
     "aidd:instruction-drift": "node scripts/aidd/check-instruction-drift.mjs",

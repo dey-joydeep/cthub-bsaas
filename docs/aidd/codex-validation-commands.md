@@ -41,9 +41,10 @@ npm run deps:change:test
 npm run aidd:branch-policy:test
 npm run aidd:premerge:test
 npm run aidd:track-issue:test
+npm run aidd:toolchain-smoke
 ```
 
-Run `npm audit --audit-level=high` when the lockfile changes. The live `npm run aidd:premerge -- <PR-number>` command is required after the final committed PR head and review are available.
+After Prisma client generation, run `node scripts/aidd/smoke-installed-toolchain.mjs --require-prisma-client` for server work. CI runs this on Linux after every clean install and on Windows when dependency or bootstrap files change. Run `npm audit --audit-level=high` when the lockfile changes. The live `npm run aidd:premerge -- <PR-number>` command is required after the final committed PR head and review are available.
 
 ## Full workspace validation
 

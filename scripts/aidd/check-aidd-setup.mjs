@@ -72,6 +72,7 @@ requiredPath('scripts/aidd/agent-work-ledger.mjs');
 requiredPath('scripts/aidd/source-checkpoint.mjs');
 requiredPath('scripts/aidd/check-changed-format.mjs');
 requiredPath('scripts/aidd/check-instruction-drift.mjs');
+requiredPath('scripts/aidd/smoke-installed-toolchain.mjs');
 requiredPath('scripts/aidd/check-pr-automation-evidence.mjs');
 requiredPath('scripts/aidd/project-tracking.mjs');
 requiredPath('scripts/aidd/track-issue.mjs');
