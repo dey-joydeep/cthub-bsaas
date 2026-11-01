@@ -19,10 +19,19 @@ jobs:
     name: SonarQube Scan (Self-Hosted)
     runs-on: self-hosted
     timeout-minutes: 30
-    # Only run if SONAR_TOKEN is configured in repository secrets or runner environment
-    if: ${{ secrets.SONAR_TOKEN != '' }}
 
     steps:
+      # The `secrets` context is not available in job-level `if`, so fail fast here instead.
+      - name: Verify SONAR_TOKEN is configured
+        shell: pwsh
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          if ([string]::IsNullOrEmpty($env:SONAR_TOKEN)) {
+            Write-Error 'SONAR_TOKEN repository secret is not configured.'
+            exit 1
+          }
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
