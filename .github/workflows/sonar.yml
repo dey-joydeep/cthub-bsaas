@@ -46,7 +46,12 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          if (Test-Path node_modules) {
+            npm install --prefer-offline --no-audit
+          } else {
+            npm ci --prefer-offline --no-audit
+          }
 
       - name: Generate Prisma client
         run: npx prisma generate --schema libs/server/data-access/prisma/schema.prisma
