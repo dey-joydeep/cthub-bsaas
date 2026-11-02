@@ -49,3 +49,7 @@ node_modules_*
 vitest.config.*.timestamp* 
 scratch/
 graph.json
+
+# SonarQube
+.scannerwork/
+
