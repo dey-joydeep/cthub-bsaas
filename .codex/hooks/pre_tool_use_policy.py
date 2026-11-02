@@ -79,6 +79,18 @@ def has_blocked_path_reference(text):
     return any(token_mentions_blocked_path(token) for token in tokenize_command(text))
 
 
+def is_comment_only_input(tool_input):
+    if not isinstance(tool_input, dict):
+        return False
+    if set(tool_input) == {'repo_full_name', 'pr_number', 'comment'}:
+        return True
+    code = tool_input.get('code')
+    if not isinstance(code, str) or 'tools[' in code:
+        return False
+    references = re.findall(r'\btools\.([a-zA-Z_]\w*)', code)
+    return bool(references) and set(references) == {'mcp__codex_apps__github_add_comment_to_issue'}
+
+
 def patch_targets(text):
     references = re.findall(r'\btools\.([a-zA-Z_]\w*)', text)
     direct_patch = text.lstrip().startswith('*** Begin Patch')
@@ -150,7 +162,7 @@ def main():
     targets = patch_targets(text)
     checked_text = ' '.join(targets) if targets is not None else text
 
-    if has_blocked_path_reference(checked_text):
+    if not is_comment_only_input(tool_input) and has_blocked_path_reference(checked_text):
         deny(event_name, 'Repository policy blocks edits or commands touching generated or cache directories.')
         return
 

@@ -22,6 +22,19 @@ def decision(tool_input):
 
 
 class PreToolUsePolicyTests(unittest.TestCase):
+    def test_pr_comment_prose_is_not_treated_as_a_cache_path(self):
+        comment = {'repo_full_name': 'owner/repo', 'pr_number': 99, 'comment': 'Please review CI coverage.'}
+        self.assertEqual(decision(comment), {})
+        self.assertEqual(decision({'code': f'await tools.mcp__codex_apps__github_add_comment_to_issue({json.dumps(comment)})'}), {})
+
+    def test_comment_plus_shell_command_keeps_path_guard(self):
+        cache_name = 'node' + '_modules'
+        code = (
+            'await tools.mcp__codex_apps__github_add_comment_to_issue({comment:"CI coverage"}); '
+            f'await tools.exec_command({{cmd:"Remove-Item {cache_name}/bad.js"}})'
+        )
+        self.assertEqual(decision({'code': code})['hookSpecificOutput']['permissionDecision'], 'deny')
+
     def test_patch_content_can_mention_a_cache_directory(self):
         cache_name = 'node' + '_modules'
         patch = (
