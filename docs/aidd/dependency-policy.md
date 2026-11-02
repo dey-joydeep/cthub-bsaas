@@ -23,4 +23,4 @@ Do not use `--legacy-peer-deps`, `--force` or `-f` on dependency changes, `--pac
 
 `--ignore-scripts` and `--no-audit` are allowed for a deliberately scripts-disabled install or a pipeline that performs an explicit later audit and required setup. Persistent `audit=false` in project npm configuration is forbidden. `--omit=dev` is allowed for a production install, not as evidence that the full test toolchain passed. Do not lower a required audit threshold to make a finding disappear. A local or agent npm setting cannot be proven by a repository file scan; the owner checks the effective settings and CI uses a clean runner.
 
-Local hooks give fast feedback but are bypassable. CI checks the committed files. Until private-repository branch protection is enabled, the release owner must refuse merges that fail these checks.
+Local hooks give fast feedback but are bypassable. CI checks the committed files. Until private-repository branch protection is enabled, the release agent must report no-go when these checks fail, and the human owner must withhold merge authorization.

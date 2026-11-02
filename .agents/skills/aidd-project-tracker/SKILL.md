@@ -34,7 +34,9 @@ description: >-
    every write. The PO owns priority decisions; only the release owner can
    decide release readiness. A Project Status is a pointer, not gate evidence.
 5. Record the selected issue number in the work handoff and link it from the PR.
-   Tracking does not authorize a branch, commit, merge, or deployment.
+   Tracking alone does not authorize a new product objective. The user-requested
+   or previously approved work mandate in `docs/aidd/autonomy-and-merge-policy.md`
+   covers its task branch and PR work, but never a merge or deployment.
 
 The standalone tracker accepts `--status`, `--priority`, `--size`, and `--domain`
 using option names already present on the live board. It reads the existing
