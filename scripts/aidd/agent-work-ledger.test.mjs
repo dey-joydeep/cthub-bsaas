@@ -93,6 +93,59 @@ function evidence(overrides = {}) {
   };
 }
 
+test('quota pause preserves the session and checkpoint without redispatching until resumed', (t) => {
+  const cwd = fixture(t);
+  success(cwd, 'init', '--task', 'issue-2', '--goal', 'Review fixture', '--base', 'main');
+  success(
+    cwd,
+    'add',
+    '--task',
+    'issue-2',
+    '--unit',
+    'qa',
+    '--kind',
+    'qa',
+    '--owner',
+    'qa-agent',
+    '--paths',
+    'src/feature.txt',
+    '--acceptance',
+    'QA evidence',
+  );
+  success(cwd, 'start', '--task', 'issue-2', '--unit', 'qa', '--provider', 'codex', '--model', 'gpt-6.1-sol');
+  success(cwd, 'session', '--task', 'issue-2', '--unit', 'qa', '--id', 'session-12345678');
+  const checkpoint = report(cwd, evidence({ remainingPaths: ['src/feature.txt'] }));
+  success(cwd, 'checkpoint', '--task', 'issue-2', '--unit', 'qa', '--report', checkpoint);
+  let state = success(
+    cwd,
+    'quota-pause',
+    '--task',
+    'issue-2',
+    '--unit',
+    'qa',
+    '--reason',
+    'Provider usage limit',
+    '--resume-after',
+    '2026-11-03T00:00:00Z',
+  );
+  assert.equal(state.units[0].status, 'quota-paused');
+  assert.equal(state.units[0].invocation.sessionId, 'session-12345678');
+  assert.equal(state.units[0].checkpoint.remainingPaths[0], 'src/feature.txt');
+  assert.deepEqual(state.readyUnits, []);
+  assert.equal(run(cwd, 'start', '--task', 'issue-2', '--unit', 'qa').status, 1);
+  state = success(cwd, 'recover', '--task', 'issue-2');
+  assert.equal(state.units[0].status, 'quota-paused');
+  const exported = success(cwd, 'export', '--task', 'issue-2');
+  assert.equal(exported.units[0].status, 'quota-paused');
+  rmSync(join(cwd, 'tmp', 'aidd-ledger', 'issue-2'), { recursive: true });
+  state = success(cwd, 'import', '--task', 'issue-2');
+  assert.equal(state.units[0].status, 'quota-paused');
+  assert.equal(state.units[0].invocation.sessionId, 'session-12345678');
+  assert.deepEqual(state.readyUnits, []);
+  state = success(cwd, 'resume', '--task', 'issue-2', '--unit', 'qa');
+  assert.deepEqual(state.readyUnits, ['qa']);
+});
+
 test('interruption retains a checkpoint, recovery is idempotent, and changed source invalidates completion', (t) => {
   const cwd = fixture(t);
   success(cwd, 'init', '--task', 'issue-1', '--goal', 'Deliver fixture', '--base', 'main');
@@ -132,7 +185,7 @@ test('interruption retains a checkpoint, recovery is idempotent, and changed sou
   success(cwd, 'start', '--task', 'issue-1', '--unit', 'build');
   const checkpoint = report(cwd, evidence({ remainingPaths: ['src/feature.txt'] }));
   success(cwd, 'checkpoint', '--task', 'issue-1', '--unit', 'build', '--report', checkpoint);
-  success(cwd, 'start', '--task', 'issue-1', '--unit', 'build');
+  assert.equal(run(cwd, 'start', '--task', 'issue-1', '--unit', 'build').status, 1);
   let state = success(cwd, 'recover', '--task', 'issue-1');
   assert.equal(state.units[0].status, 'interrupted');
   assert.equal(state.units[0].checkpoint.remainingPaths[0], 'src/feature.txt');

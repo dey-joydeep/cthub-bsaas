@@ -56,9 +56,11 @@ npm run aidd:ledger -- recover --task issue-67
 npm run aidd:ledger -- status --task issue-67
 ```
 
-`recover` marks running units interrupted once, retains their last checkpoint, and prints `readyUnits`. Restart a ready unit with `start`; give its owner the preserved checkpoint and ask it to verify the source before continuing. Do not redispatch completed units. Recovery is idempotent when no new work occurred.
+`recover` marks active running or checkpointed units interrupted once, retains their last checkpoint, and prints `readyUnits`. A checkpointed unit remains active until it is interrupted, completed, or quota-paused; it is not eligible for duplicate dispatch. Restart a ready unit with `start`; give its owner the preserved checkpoint and ask it to verify the source before continuing. Do not redispatch completed units. Recovery is idempotent when no new work occurred.
 
-When a completed replacement makes an old pending, interrupted, or stale unit obsolete, record the decision with `supersede --task <id> --unit <old-id> --by <completed-unit-id> --reason <text>`. The successor must be complete on current source. The old unit remains in the audit trail with status `superseded` and is excluded from `readyUnits`, including after snapshot import. Do not use this to skip unfinished work without a validated replacement.
+For provider quota exhaustion, use `quota-pause` instead of `interrupt`. A quota-paused unit is excluded from `readyUnits`, including after `recover`, export, and import. Record a provider session ID when one is available; it is a resume hint, not completion evidence. Only after checking capacity and current source should the coordinator release the unit with `resume`. See [Agent Dispatch and Resume](agent-dispatch-and-resume.md) for the complete sequence.
+
+When a completed replacement makes an old pending, interrupted, stale, or quota-paused unit obsolete, record the decision with `supersede --task <id> --unit <old-id> --by <completed-unit-id> --reason <text>`. The successor must be complete on current source. The old unit remains in the audit trail with status `superseded` and is excluded from `readyUnits`, including after snapshot import. Do not use this to skip unfinished work without a validated replacement.
 
 At a meaningful phase handoff, before the final whole-PR review, export the current state:
 

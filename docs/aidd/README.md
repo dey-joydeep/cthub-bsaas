@@ -30,6 +30,7 @@ For Antigravity execution, also apply `.agents/AGENTS.md` and the selected `.age
 | [Development Life Cycle](development-lifecycle.md)        | Shared product-to-release process, roles, routing, and gates.                                 |
 | [Role and Directory Access](role-directory-access.md)     | Repository map, role-specific read/write scope, and verification ownership.                   |
 | [Autonomous Recovery](autonomous-recovery.md)             | Local work-unit ledger, checkpoints, interruption recovery, and stale-evidence rules.         |
+| [Agent Dispatch and Resume](agent-dispatch-and-resume.md) | Quota-aware dispatch, provider sessions, pause states, and cross-machine handoff.             |
 | [Parallel Worktrees](parallel-worktrees.md)               | Branch and worktree ownership, isolation, integration, recovery, and retirement.              |
 | [Dependency Change Policy](dependency-policy.md)          | npm change ownership, forbidden bypasses, lockfile, audit, and install-script review.         |
 | [Change Scope and Validation](change-hygiene.md)          | Inclusion rules and required checks for each changed area.                                    |
@@ -46,7 +47,7 @@ For Antigravity execution, also apply `.agents/AGENTS.md` and the selected `.age
 ## Repository AIDD Assets
 
 - `.agents/agents/*.md` contains Antigravity delivery-role agents selectable in desktop and CLI or delegable as subagents; `.agents/mcp_config.json` contains portable workspace MCP servers.
-- `scripts/aidd/run-agy-agent.mjs` pins the minimum Antigravity model for automated role execution.
+- `scripts/aidd/run-agy-agent.mjs` pins the minimum Antigravity model for automated role execution, can continue a known conversation, and saves local run output for handoff.
 - `scripts/aidd/agent-work-ledger.mjs` records local checkpoints and exports trackable snapshots under `docs/status/aidd/`.
 - `scripts/aidd/source-checkpoint.mjs` backs up nonignored source on a private recovery ref.
 - `scripts/aidd/check-changed-format.mjs` checks supported files changed by a PR.

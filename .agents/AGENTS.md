@@ -13,6 +13,11 @@ and checkpoint bounded work units before handoff. Resume interrupted units from
 the local ledger without treating partial evidence as complete. Publish a
 checkpoint to the private tracking issue when progress must survive this
 checkout.
+The lead AI agent dispatches bounded work under
+`docs/aidd/agent-dispatch-and-resume.md`. Keep at most two active subagents,
+record provider conversation IDs when available, and pause quota-blocked units
+in the ledger until capacity is checked. Do not retry a quota-blocked agent
+automatically or ask the human owner to manage its subagents.
 For parallel editing, follow `docs/aidd/parallel-worktrees.md`. Give each
 independent delivery slice its own branch and worktree; coordinate agents
 sharing a slice through non-overlapping path ownership and one Git writer.

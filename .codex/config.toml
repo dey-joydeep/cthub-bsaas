@@ -1,6 +1,10 @@
 [features]
 multi_agent = true
 
+[agents]
+# Keep account usage available for required independent review and security work.
+max_concurrent_threads_per_session = 2
+
 [agents.ci-monitor-subagent]
 description = "CI helper for /monitor-ci. Fetches CI status, retrieves fix details, or updates self-healing fixes. Executes one MCP tool call and returns the result."
 config_file = "agents/ci-monitor-subagent.toml"

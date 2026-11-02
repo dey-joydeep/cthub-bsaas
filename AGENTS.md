@@ -39,6 +39,8 @@ Add each trackable delivery issue to the private cthub GitHub Project with a Sta
 
 For long-running or multi-agent work, use the [AIDD recovery protocol](docs/aidd/autonomous-recovery.md): initialize bounded work units before dispatch, checkpoint each reviewable increment, and recover interrupted units from the local ledger. Publish process state to the private tracking issue and source state to the dedicated private Git ref when progress must survive loss of the checkout. A partial or stale checkpoint is not completion evidence.
 
+The lead AI agent coordinates dispatch; the human owner is not the subagent scheduler. Follow [Agent Dispatch and Resume](docs/aidd/agent-dispatch-and-resume.md): cap active subagents, check provider usage before costly work, reserve Codex for required independent reviews, and record quota exhaustion as a paused ledger unit. Do not treat a provider conversation or an expired quota wait as a completed gate.
+
 For every new task, the active agent must:
 
 1. Read this root `AGENTS.md` and the nearest scoped `AGENTS.md` for the touched area.

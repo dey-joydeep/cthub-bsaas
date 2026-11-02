@@ -22,7 +22,7 @@ import { pathToFileURL } from 'node:url';
 
 const version = 1;
 const kinds = new Set(['implementation', 'qa', 'review', 'review-closure', 'verification', 'handoff']);
-const eventTypes = new Set(['start', 'checkpoint', 'complete', 'interrupt', 'supersede']);
+const eventTypes = new Set(['start', 'session', 'checkpoint', 'complete', 'interrupt', 'quota-pause', 'resume', 'supersede']);
 let injectedGh = null;
 
 function fail(message) {
@@ -113,6 +113,9 @@ function parse(argv) {
       'checkpoint',
       'complete',
       'interrupt',
+      'session',
+      'quota-pause',
+      'resume',
       'supersede',
       'status',
       'recover',
@@ -123,7 +126,7 @@ function parse(argv) {
     ].includes(command)
   ) {
     fail(
-      'Usage: npm run aidd:ledger -- <init|add|start|checkpoint|complete|interrupt|supersede|status|recover|export|import|publish|restore> --task <id> [options]',
+      'Usage: npm run aidd:ledger -- <init|add|start|session|checkpoint|complete|interrupt|quota-pause|resume|supersede|status|recover|export|import|publish|restore> --task <id> [options]',
     );
   }
   const options = {};
@@ -138,10 +141,13 @@ function parse(argv) {
   const allowed = {
     init: ['task', 'goal', 'issue', 'base'],
     add: ['task', 'unit', 'kind', 'owner', 'paths', 'depends', 'acceptance'],
-    start: ['task', 'unit'],
+    start: ['task', 'unit', 'provider', 'model'],
+    session: ['task', 'unit', 'id'],
     checkpoint: ['task', 'unit', 'report'],
     complete: ['task', 'unit', 'report'],
     interrupt: ['task', 'unit', 'reason'],
+    'quota-pause': ['task', 'unit', 'reason', 'resume-after'],
+    resume: ['task', 'unit'],
     supersede: ['task', 'unit', 'by', 'reason'],
     status: ['task'],
     recover: ['task'],
@@ -427,6 +433,18 @@ function latestReport(history) {
   return history.findLast((event) => event.report)?.report;
 }
 
+function invocation(history) {
+  const lastStart = history.findLastIndex((event) => event.type === 'start');
+  if (lastStart < 0) return null;
+  const attempt = history.slice(lastStart);
+  const start = attempt[0];
+  const session = attempt.findLast((event) => event.type === 'session');
+  return {
+    ...(start.provider ? { provider: start.provider, model: start.model } : {}),
+    ...(session ? { sessionId: session.sessionId } : {}),
+  };
+}
+
 function completionState(root, taskManifest, unit, history) {
   const last = history.at(-1);
   const checkpoint = history.findLast((event) => event.report);
@@ -446,9 +464,17 @@ function completionState(root, taskManifest, unit, history) {
     };
   }
   return {
-    status: last.type === 'start' ? 'running' : last.type === 'interrupt' ? 'interrupted' : 'in-progress',
+    status: ['start', 'session'].includes(last.type)
+      ? 'running'
+      : last.type === 'quota-pause'
+        ? 'quota-paused'
+        : ['interrupt', 'resume'].includes(last.type)
+          ? 'interrupted'
+          : 'in-progress',
     sourceCurrent,
     checkpoint: latestReport(history) ?? null,
+    ...(invocation(history) ? { invocation: invocation(history) } : {}),
+    ...(last.type === 'quota-pause' ? { quotaPause: { reason: last.reason, resumeAfter: last.resumeAfter ?? null } } : {}),
   };
 }
 
@@ -478,7 +504,7 @@ function taskState(root, task) {
     .filter((unit) => {
       const state = summaries.get(unit.id);
       return (
-        ['pending', 'interrupted', 'stale', 'in-progress'].includes(state.status) &&
+        ['pending', 'interrupted', 'stale'].includes(state.status) &&
         unit.dependsOn.every((dependency) => summaries.get(dependency)?.status === 'complete')
       );
     })
@@ -576,12 +602,38 @@ function act(root, command, options) {
   const current = state.units.find((entry) => entry.id === unit.id);
   if (command === 'start') {
     if (!state.readyUnits.includes(unit.id)) fail(`Unit ${unit.id} is not ready to start`);
-    append(root, options.task, unit.id, 'start', { owner: unit.owner });
+    if (Boolean(options.provider) !== Boolean(options.model)) fail('--provider and --model must be supplied together');
+    if (options.provider && !['codex', 'antigravity'].includes(options.provider)) fail('Unsupported agent provider');
+    if (options.model && !/^[a-zA-Z0-9._-]{1,100}$/.test(options.model)) fail('Invalid model identifier');
+    append(root, options.task, unit.id, 'start', {
+      owner: unit.owner,
+      ...(options.provider ? { provider: options.provider, model: options.model } : {}),
+    });
+  } else if (command === 'session') {
+    if (current.status !== 'running' && current.status !== 'in-progress') fail(`Unit ${unit.id} is not active`);
+    if (!/^[a-zA-Z0-9_-]{8,200}$/.test(options.id ?? '')) fail('Invalid conversation ID');
+    append(root, options.task, unit.id, 'session', { sessionId: options.id });
+  } else if (command === 'quota-pause') {
+    if (current.status !== 'running' && current.status !== 'in-progress') fail(`Unit ${unit.id} is not active`);
+    if (!options.reason?.trim()) fail('--reason is required');
+    if (
+      options['resume-after'] &&
+      (!Number.isFinite(Date.parse(options['resume-after'])) || !/^\d{4}-\d\d-\d\dT/.test(options['resume-after']))
+    ) {
+      fail('--resume-after must be an ISO-8601 timestamp');
+    }
+    append(root, options.task, unit.id, 'quota-pause', {
+      reason: options.reason.trim(),
+      ...(options['resume-after'] ? { resumeAfter: options['resume-after'] } : {}),
+    });
+  } else if (command === 'resume') {
+    if (current.status !== 'quota-paused') fail(`Unit ${unit.id} is not quota-paused`);
+    append(root, options.task, unit.id, 'resume', { reason: 'Coordinator checked capacity and released unit for redispatch' });
   } else if (command === 'interrupt') {
-    if (current.status !== 'running') fail(`Unit ${unit.id} is not running`);
+    if (current.status !== 'running' && current.status !== 'in-progress') fail(`Unit ${unit.id} is not active`);
     append(root, options.task, unit.id, 'interrupt', { reason: options.reason?.trim() || 'Agent or session interrupted' });
   } else if (command === 'supersede') {
-    if (!['stale', 'interrupted', 'pending', 'in-progress'].includes(current.status))
+    if (!['stale', 'interrupted', 'pending', 'in-progress', 'quota-paused'].includes(current.status))
       fail(`Unit ${unit.id} cannot be superseded from ${current.status}`);
     const successorId = identifier(options.by, 'Successor unit ID');
     if (successorId === unit.id) fail('A unit cannot supersede itself');
@@ -634,7 +686,7 @@ function act(root, command, options) {
 function recover(root, task) {
   manifest(root, task);
   const current = taskState(root, task);
-  for (const unit of current.units.filter((entry) => entry.status === 'running')) {
+  for (const unit of current.units.filter((entry) => entry.status === 'running' || entry.status === 'in-progress')) {
     append(root, task, unit.id, 'interrupt', { reason: 'Recovered after interrupted coordinator or agent session' });
   }
   return taskState(root, task);
@@ -649,11 +701,14 @@ async function exportSnapshot(root, task) {
   const entries = units(root, task).map((unit) => {
     const history = events(root, task, unit.id);
     const checkpoint = history.findLast((event) => event.report);
+    const current = state.units.find((entry) => entry.id === unit.id);
     return {
       definition: unit,
-      status: state.units.find((entry) => entry.id === unit.id).status,
+      status: current.status,
       lastType: history.at(-1)?.type ?? null,
       ...(history.at(-1)?.type === 'supersede' ? { supersededBy: history.at(-1).by } : {}),
+      ...(current.invocation ? { invocation: current.invocation } : {}),
+      ...(current.quotaPause ? { quotaPause: current.quotaPause } : {}),
       checkpoint: checkpoint
         ? {
             report: checkpoint.report,
@@ -770,6 +825,23 @@ function importSnapshot(root, task) {
     }
     if (entry.lastType === 'complete' && !entry.checkpoint) fail(`Completed unit ${unit.id} has no checkpoint`);
     if (entry.lastType === 'supersede') identifier(entry.supersededBy, 'Successor unit ID');
+    if (
+      entry.invocation &&
+      (typeof entry.invocation !== 'object' ||
+        (entry.invocation.provider !== undefined && !['codex', 'antigravity'].includes(entry.invocation.provider)) ||
+        (entry.invocation.model !== undefined && !/^[a-zA-Z0-9._-]{1,100}$/.test(entry.invocation.model)) ||
+        (entry.invocation.sessionId !== undefined && !/^[a-zA-Z0-9_-]{8,200}$/.test(entry.invocation.sessionId)))
+    )
+      fail(`Invalid invocation for ${unit.id}`);
+    if (
+      entry.lastType === 'quota-pause' &&
+      (typeof entry.quotaPause?.reason !== 'string' ||
+        !entry.quotaPause.reason.trim() ||
+        (entry.quotaPause.resumeAfter !== null &&
+          entry.quotaPause.resumeAfter !== undefined &&
+          !Number.isFinite(Date.parse(entry.quotaPause.resumeAfter))))
+    )
+      fail(`Invalid quota pause for ${unit.id}`);
     definitions.set(unit.id, unit);
   }
   for (const unit of definitions.values()) {
@@ -809,7 +881,17 @@ function importSnapshot(root, task) {
     if (entry.lastType === 'complete') append(root, task, id, 'complete', entry.checkpoint);
     else if (entry.lastType === 'supersede')
       append(root, task, id, 'supersede', { by: entry.supersededBy, reason: 'Imported superseded unit' });
-    else if (entry.lastType !== null) append(root, task, id, 'interrupt', { reason: 'Imported checkpoint; reverify before resuming' });
+    else if (entry.lastType === 'quota-pause') {
+      append(root, task, id, 'start', {
+        owner: entry.definition.owner,
+        ...(entry.invocation?.provider ? { provider: entry.invocation.provider, model: entry.invocation.model } : {}),
+      });
+      if (entry.invocation?.sessionId) append(root, task, id, 'session', { sessionId: entry.invocation.sessionId });
+      append(root, task, id, 'quota-pause', {
+        reason: entry.quotaPause.reason,
+        ...(entry.quotaPause.resumeAfter ? { resumeAfter: entry.quotaPause.resumeAfter } : {}),
+      });
+    } else if (entry.lastType !== null) append(root, task, id, 'interrupt', { reason: 'Imported checkpoint; reverify before resuming' });
   }
   saveExportBaseline(root, task);
   return taskState(root, task);
