@@ -80,15 +80,7 @@ def has_blocked_path_reference(text):
 
 
 def is_comment_only_input(tool_input):
-    if not isinstance(tool_input, dict):
-        return False
-    if set(tool_input) == {'repo_full_name', 'pr_number', 'comment'}:
-        return True
-    code = tool_input.get('code')
-    if not isinstance(code, str) or 'tools[' in code:
-        return False
-    references = re.findall(r'\btools\.([a-zA-Z_]\w*)', code)
-    return bool(references) and set(references) == {'mcp__codex_apps__github_add_comment_to_issue'}
+    return isinstance(tool_input, dict) and set(tool_input) == {'repo_full_name', 'pr_number', 'comment'}
 
 
 def patch_targets(text):

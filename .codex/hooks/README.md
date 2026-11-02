@@ -18,7 +18,7 @@ Allowed first-stage behavior:
 - block destructive commands that should be handled manually;
 - warn when high-impact files such as `package.json`, lockfiles, or Prisma schema are touched.
 
-For a single `apply_patch` call, inspect patch target paths. Source text may mention a generated directory without editing it. A GitHub PR comment-only call may use words such as “coverage” in prose; it has no filesystem target. Shell commands and mixed tool calls retain the conservative full-input check. Regression tests cover allowed source edits and comments, plus blocked generated-path targets.
+For a single `apply_patch` call, inspect patch target paths. Source text may mention a generated directory without editing it. A direct, structured GitHub PR comment may use words such as “coverage” in prose; a generic script wrapper retains the conservative full-input check. Shell commands and mixed tool calls also retain that check. Regression tests cover allowed source edits and direct comments, plus blocked generated-path targets.
 
 Avoid hooks that auto-edit source code, auto-format unrelated files, or run broad validation without explicit user intent.
 
