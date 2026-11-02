@@ -24,6 +24,7 @@ work/
 
 # Angular
 .angular/
+libs/web/config/src/environments/*/environment.worktree.ts
 
 # Nx specific
 .nx/workspace/
