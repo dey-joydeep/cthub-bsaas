@@ -57,7 +57,7 @@ jobs:
         run: npx prisma generate --schema libs/server/data-access/prisma/schema.prisma
 
       - name: Run tests with coverage
-        run: npm run test:coverage
+        run: npx nx run-many -t test -p server-core,server-data-access,server-feature-auth,server-feature-salon-owner --coverage --parallel=2
 
       - name: Run SonarQube Scan
         run: npm run sonar
