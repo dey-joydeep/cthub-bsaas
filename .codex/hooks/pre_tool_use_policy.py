@@ -91,7 +91,7 @@ def patch_targets(text):
     expanded = text.replace('\\n', '\n')
     if '*** Begin Patch' not in expanded or '*** End Patch' not in expanded:
         return None
-    targets = re.findall(r'^\*\*\* (?:Add|Update|Delete|Move to) File:\s*(.+?)\s*$', expanded, re.MULTILINE)
+    targets = re.findall(r'^\*\*\* (?:(?:Add|Update|Delete) File|Move to):\s*(.+?)\s*$', expanded, re.MULTILINE)
     return targets or None
 
 

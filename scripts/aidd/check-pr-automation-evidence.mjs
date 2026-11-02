@@ -32,8 +32,16 @@ export function assessPrAutomationEvidence(pr, comments, reviewThreads, expected
     errors.push('Required Main Workflow check has not succeeded on this PR head');
   }
   for (const check of checks) {
+    const optionalSkip =
+      check.__typename === 'CheckRun' &&
+      check.workflowName === 'CI/CD' &&
+      check.name === 'Windows toolchain smoke' &&
+      check.status === 'COMPLETED' &&
+      check.conclusion === 'SKIPPED';
     const passed =
-      check.__typename === 'StatusContext' ? check.state === 'SUCCESS' : check.status === 'COMPLETED' && check.conclusion === 'SUCCESS';
+      check.__typename === 'StatusContext'
+        ? check.state === 'SUCCESS'
+        : (check.status === 'COMPLETED' && check.conclusion === 'SUCCESS') || optionalSkip;
     if (!passed) {
       errors.push(
         `CI check ${check.name ?? check.context ?? '(unnamed)'} is ${check.conclusion ?? check.state ?? check.status ?? 'unknown'}`,

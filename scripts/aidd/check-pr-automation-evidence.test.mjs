@@ -74,6 +74,29 @@ test('successful commit status contexts are accepted and pending ones are reject
   );
 });
 
+test('only the intentionally optional Windows smoke check may be skipped', () => {
+  const skipped = {
+    __typename: 'CheckRun',
+    workflowName: 'CI/CD',
+    name: 'Windows toolchain smoke',
+    status: 'COMPLETED',
+    conclusion: 'SKIPPED',
+  };
+  assert.deepEqual(assessPrAutomationEvidence({ ...pr, statusCheckRollup: [...pr.statusCheckRollup, skipped] }, [comment], []), []);
+  const requiredSkip = { ...skipped, name: 'Main Workflow' };
+  assert.ok(
+    assessPrAutomationEvidence({ ...pr, statusCheckRollup: [requiredSkip] }, [comment], []).some((error) =>
+      /Required Main Workflow/.test(error),
+    ),
+  );
+  const otherSkip = { ...skipped, name: 'Frontend Quality' };
+  assert.ok(
+    assessPrAutomationEvidence({ ...pr, statusCheckRollup: [...pr.statusCheckRollup, otherSkip] }, [comment], []).some((error) =>
+      /Frontend Quality/.test(error),
+    ),
+  );
+});
+
 test('a usage-limit message or user-authored marker is not review evidence', () => {
   assert.match(assessPrAutomationEvidence(pr, [{ ...comment, body: 'You have reached your Codex usage limits' }], [])[0], /No Codex/);
   assert.match(assessPrAutomationEvidence(pr, [{ ...comment, user: { login: 'author' } }], [])[0], /No Codex/);

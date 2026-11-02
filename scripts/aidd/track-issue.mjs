@@ -77,23 +77,32 @@ export function trackIssue(options, client = ghJson) {
   const plan = { issue: issue.url, project: project.url, add: !item, changes, applied: options.apply };
   if (!options.apply) return plan;
 
+  const edits = changes.map((change) => {
+    const field = fields.find((entry) => entry.name === change.field);
+    const option = field?.options?.find((entry) => entry.name === change.to);
+    if (!field?.id || !option?.id) throw new Error(`${change.field} field or option ID is unavailable`);
+    return { fieldId: field.id, optionId: option.id };
+  });
+
+  let itemId = item?.id;
   if (!item) {
     const added = client(['project', 'item-add', options.project, '--owner', options.owner, '--url', issue.url, '--format', 'json']);
     if (!added.id) throw new Error('Project item-add returned no ID');
+    itemId = added.id;
   }
-  for (const change of changes) {
+  if (edits.length && !itemId) throw new Error('Project item ID is unavailable');
+  for (const edit of edits) {
     client([
       'project',
       'item-edit',
-      options.project,
-      '--owner',
-      options.owner,
-      '--url',
-      issue.url,
-      '--field',
-      change.field,
-      '--value',
-      change.to,
+      '--id',
+      itemId,
+      '--project-id',
+      project.id,
+      '--field-id',
+      edit.fieldId,
+      '--single-select-option-id',
+      edit.optionId,
       '--format',
       'json',
     ]);

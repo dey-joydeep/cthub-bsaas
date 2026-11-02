@@ -65,6 +65,13 @@ class PreToolUsePolicyTests(unittest.TestCase):
         result = decision({'command': patch})
         self.assertEqual(result['hookSpecificOutput']['permissionDecision'], 'deny')
 
+    def test_patch_move_destination_in_cache_directory_is_denied(self):
+        cache_name = 'node' + '_modules'
+        patch = f'*** Begin Patch\n*** Update File: safe.js\n*** Move to: {cache_name}/bad.js\n@@\n+safe\n*** End Patch'
+        for tool_input in ({'command': patch}, {'code': f'await tools.apply_patch({json.dumps(patch)})'}):
+            result = decision(tool_input)
+            self.assertEqual(result['hookSpecificOutput']['permissionDecision'], 'deny')
+
     def test_command_target_in_cache_directory_is_denied(self):
         cache_name = 'node' + '_modules'
         result = decision({'command': f'Remove-Item {cache_name}/bad.js'})
