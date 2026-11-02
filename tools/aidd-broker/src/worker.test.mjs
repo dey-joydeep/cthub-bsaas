@@ -256,6 +256,121 @@ describe('broker request gate', () => {
   });
 });
 
+describe('one-time grant execution', () => {
+  it('claims once, rejects replay and expiry, and reconciles an ambiguous failure', async () => {
+    const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+    const grants = new Map();
+    const transitions = [];
+    const store = {
+      prepare(sql) {
+        return {
+          bind(...args) {
+            return {
+              async run() {
+                if (sql.startsWith("UPDATE grants SET state = 'running'")) {
+                  const [, id, executor, now] = args;
+                  const grant = grants.get(id);
+                  if (!grant || grant.executor !== executor || grant.state !== 'approved' || grant.expires_at <= now) {
+                    return { meta: { changes: 0 } };
+                  }
+                  grant.state = 'running';
+                  transitions.push(`${id}:running`);
+                  return { meta: { changes: 1 } };
+                }
+                if (sql.startsWith("UPDATE grants SET state = 'succeeded'")) {
+                  const [, , id] = args;
+                  grants.get(id).state = 'succeeded';
+                  transitions.push(`${id}:succeeded`);
+                } else if (sql.startsWith("UPDATE grants SET state = 'needs-reconciliation'")) {
+                  const [, id] = args;
+                  grants.get(id).state = 'needs-reconciliation';
+                  transitions.push(`${id}:needs-reconciliation`);
+                } else {
+                  throw new Error(`Unexpected D1 query: ${sql}`);
+                }
+                return { meta: { changes: 1 } };
+              },
+              async first() {
+                assert.equal(sql, 'SELECT action, input_json FROM grants WHERE id = ?');
+                const grant = grants.get(args[0]);
+                return { action: grant.action, input_json: grant.input_json };
+              },
+            };
+          },
+        };
+      },
+    };
+    const env = {
+      BROKER_ENABLED: 'true',
+      ACCESS_AUD: 'expected',
+      PO_CLIENT_ID: 'po-client',
+      QA_CLIENT_ID: 'qa-client',
+      DEV_CLIENT_ID: 'dev-client',
+      GRANTS: store,
+      PO_PRIVATE_KEY: privateKey.export({ type: 'pkcs1', format: 'pem' }).toString(),
+    };
+    const context = {
+      access: { aud: 'expected', getIdentity: async () => ({ service_token_status: true, service_token_id: 'po-client' }) },
+    };
+    const makeRequest = (id) =>
+      new Request('https://broker.example/v1/execute', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ grantId: id }),
+      });
+    const addGrant = (id, expiresAt) =>
+      grants.set(id, {
+        action: 'po.comment-issue',
+        input_json: JSON.stringify({ issueNumber: 100, body: 'Bounded test' }),
+        executor: 'service:po-client',
+        expires_at: expiresAt,
+        state: 'approved',
+      });
+    const originalFetch = globalThis.fetch;
+    let githubCalls = 0;
+    let failGitHub = false;
+    globalThis.fetch = async (url) => {
+      githubCalls += 1;
+      if (failGitHub) return Response.json({ message: 'upstream unavailable' }, { status: 502 });
+      if (url.endsWith('/access_tokens'))
+        return Response.json({
+          token: 'temporary-test-token',
+          repository_selection: 'selected',
+          repositories: [{ full_name: 'dey-joydeep/cthub-bsaas' }],
+          permissions: { issues: 'write', metadata: 'read' },
+        });
+      if (url.endsWith('/comments')) return Response.json({ id: 8, html_url: 'https://github.com/example/comment/8' });
+      return Response.json({ number: 100 });
+    };
+    try {
+      const now = Math.floor(Date.now() / 1000);
+      const valid = '11111111-1111-4111-8111-111111111111';
+      const expired = '22222222-2222-4222-8222-222222222222';
+      const failed = '33333333-3333-4333-8333-333333333333';
+      addGrant(valid, now + 600);
+      addGrant(expired, now - 1);
+      addGrant(failed, now + 600);
+      const first = await worker.fetch(makeRequest(valid), env, context);
+      assert.equal(first.status, 200);
+      assert.equal((await first.json()).result.id, 8);
+      assert.equal(grants.get(valid).state, 'succeeded');
+      const callsAfterSuccess = githubCalls;
+      assert.equal((await worker.fetch(makeRequest(valid), env, context)).status, 409);
+      assert.equal((await worker.fetch(makeRequest(expired), env, context)).status, 409);
+      assert.equal(githubCalls, callsAfterSuccess);
+      failGitHub = true;
+      assert.equal((await worker.fetch(makeRequest(failed), env, context)).status, 502);
+      assert.equal(grants.get(failed).state, 'needs-reconciliation');
+      const callsAfterFailure = githubCalls;
+      assert.equal((await worker.fetch(makeRequest(failed), env, context)).status, 409);
+      assert.equal(githubCalls, callsAfterFailure);
+      assert.deepEqual(transitions, [`${valid}:running`, `${valid}:succeeded`, `${failed}:running`, `${failed}:needs-reconciliation`]);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+});
+
 describe('GitHub App signing', () => {
   it('signs GitHub RSA private-key PEM without exposing it', async () => {
     const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });

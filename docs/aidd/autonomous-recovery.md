@@ -100,7 +100,10 @@ if ((git rev-parse FETCH_HEAD) -ne $expectedCommit) { throw 'Source checkpoint S
 git switch -c chore/aidd-lifecycle-overhaul 'FETCH_HEAD^1'
 git restore --source FETCH_HEAD --staged --worktree -- .
 git reset
-npm ci
+npm ci --ignore-scripts --no-audit --fund=false
+node scripts/check-versions/node-version.js
+node .husky/install.mjs
+node scripts/aidd/smoke-installed-toolchain.mjs
 npm run aidd:ledger -- import --task issue-67
 npm run aidd:ledger -- status --task issue-67
 ```

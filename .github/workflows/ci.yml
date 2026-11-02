@@ -72,7 +72,7 @@ jobs:
           if echo "$DIFF_FILES" | grep -Eq '^(apps/|libs/|package-lock\.json$|nx\.json$|tsconfig[^/]*\.json$|eslint[^/]*$)'; then
             echo "runnable=true" >> "$GITHUB_OUTPUT"
           fi
-          if echo "$DIFF_FILES" | grep -Eq '(^|/)AGENTS\.md$|^(package\.json$|\.gitignore$|\.prettierignore$|\.prettierrc$|docs/aidd/|docs/status/aidd/|scripts/aidd/|libs/server/core/src/config/test-database-target\.ts$|libs/server/server-testing-utils/|\.agents/|\.codex/|\.husky/|\.lintstagedrc$|\.github/workflows/|\.github/PULL_REQUEST_TEMPLATE/|\.github/pull_request_template\.md$)'; then
+          if echo "$DIFF_FILES" | grep -Eq '(^|/)AGENTS\.md$|^(package\.json$|\.gitignore$|\.prettierignore$|\.prettierrc$|docs/aidd/|docs/status/aidd/|scripts/aidd/|tools/aidd-broker/|libs/server/core/src/config/test-database-target\.ts$|libs/server/server-testing-utils/|\.agents/|\.codex/|\.husky/|\.lintstagedrc$|\.github/workflows/|\.github/PULL_REQUEST_TEMPLATE/|\.github/pull_request_template\.md$)'; then
             echo "aidd=true" >> "$GITHUB_OUTPUT"
           fi
           if echo "$DIFF_FILES" | grep -Eq '(^|/)package\.json$|^package-lock\.json$|^\.npmrc$'; then
@@ -131,9 +131,11 @@ jobs:
           npm run deps:policy:test
           npm run deps:change:test
           npm run aidd:branch-policy:test
+          node --test tools/aidd-broker/src/worker.test.mjs
           node --test .codex/environments/setup.test.mjs
           python3 -B -m unittest discover -s .codex/hooks -p 'test_*.py'
           npx eslint --max-warnings 0 scripts/aidd/*.mjs
+          npx eslint --max-warnings 0 tools/aidd-broker/src/*.mjs
 
       - name: Enable Nx Cloud read-only mode
         if: github.event_name != 'pull_request'
