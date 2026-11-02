@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       target_branch:
-        description: 'Branch to analyze (optional, defaults to current ref)'
+        description: 'Branch to analyze (leave empty to analyze current branch)'
         required: false
-        default: 'main'
+        default: ''
 
 env:
   NODE_VERSION: '24'
@@ -35,9 +35,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.target_branch || github.ref }}
+          ref: ${{ inputs.target_branch || github.ref }}
           fetch-depth: 0 # Full history required by SonarQube blame analysis
           set-safe-directory: false
+          clean: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
