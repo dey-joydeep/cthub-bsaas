@@ -28,6 +28,12 @@ class PreToolUsePolicyTests(unittest.TestCase):
         wrapped = decision({'code': f'await tools.mcp__codex_apps__github_add_comment_to_issue({json.dumps(comment)})'})
         self.assertEqual(wrapped['hookSpecificOutput']['permissionDecision'], 'deny')
 
+    def test_structured_comment_may_describe_a_destructive_command_without_running_it(self):
+        comment = {'repo_full_name': 'owner/repo', 'pr_number': 99, 'comment': 'The guard rejects git reset --hard.'}
+        self.assertEqual(decision(comment), {})
+        wrapped = decision({'code': f'await tools.mcp__codex_apps__github_add_comment_to_issue({json.dumps(comment)})'})
+        self.assertEqual(wrapped['hookSpecificOutput']['permissionDecision'], 'deny')
+
     def test_comment_plus_shell_command_keeps_path_guard(self):
         cache_name = 'node' + '_modules'
         code = (

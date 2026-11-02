@@ -172,7 +172,7 @@ def main():
 
     command = normalize(tool_input.get('command', '')) if isinstance(tool_input, dict) else text
     command = command or text
-    if targets is None and is_destructive_command(command):
+    if not is_comment_only_input(tool_input) and targets is None and is_destructive_command(command):
         deny(event_name, 'Repository policy blocks destructive commands without explicit manual handling.')
         return
 
