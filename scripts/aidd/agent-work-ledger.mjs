@@ -437,7 +437,13 @@ function completionState(root, taskManifest, unit, history) {
     return { status: 'superseded', sourceCurrent: false, checkpoint: latestReport(history) ?? null, supersededBy: last.by };
   }
   if (last.type === 'complete') {
-    return { status: sourceCurrent ? 'complete' : 'stale', sourceCurrent, checkpoint: latestReport(history) };
+    return {
+      status: sourceCurrent ? 'complete' : 'stale',
+      sourceCurrent,
+      checkpoint: latestReport(history),
+      completionRevision: last.completionRevision ?? last.id,
+      dependencyRevisions: last.dependencyRevisions ?? null,
+    };
   }
   return {
     status: last.type === 'start' ? 'running' : last.type === 'interrupt' ? 'interrupted' : 'in-progress',
@@ -456,7 +462,13 @@ function taskState(root, task) {
     changed = false;
     for (const unit of all) {
       const state = summaries.get(unit.id);
-      if (state.status === 'complete' && unit.dependsOn.some((dependency) => summaries.get(dependency)?.status !== 'complete')) {
+      if (
+        state.status === 'complete' &&
+        unit.dependsOn.some((dependency) => {
+          const upstream = summaries.get(dependency);
+          return upstream?.status !== 'complete' || state.dependencyRevisions?.[dependency] !== upstream.completionRevision;
+        })
+      ) {
         state.status = 'stale';
         changed = true;
       }
@@ -604,7 +616,17 @@ function act(root, command, options) {
         if (report.review.scope === 'whole-pr') assertWholePrBoundary(root, taskManifest, unit);
       }
     }
-    append(root, options.task, unit.id, command, { report, source: source(root, taskManifest, unit) });
+    const details = { report, source: source(root, taskManifest, unit) };
+    if (command === 'complete') {
+      if (unit.dependsOn.some((dependency) => state.units.find((entry) => entry.id === dependency)?.status !== 'complete')) {
+        fail('Cannot complete while a dependency is incomplete or stale');
+      }
+      details.completionRevision = randomUUID();
+      details.dependencyRevisions = Object.fromEntries(
+        unit.dependsOn.map((dependency) => [dependency, state.units.find((entry) => entry.id === dependency).completionRevision]),
+      );
+    }
+    append(root, options.task, unit.id, command, details);
   }
   return taskState(root, options.task);
 }
@@ -632,7 +654,18 @@ async function exportSnapshot(root, task) {
       status: state.units.find((entry) => entry.id === unit.id).status,
       lastType: history.at(-1)?.type ?? null,
       ...(history.at(-1)?.type === 'supersede' ? { supersededBy: history.at(-1).by } : {}),
-      checkpoint: checkpoint ? { report: checkpoint.report, source: checkpoint.source } : null,
+      checkpoint: checkpoint
+        ? {
+            report: checkpoint.report,
+            source: checkpoint.source,
+            ...(checkpoint.type === 'complete'
+              ? {
+                  completionRevision: checkpoint.completionRevision ?? checkpoint.id,
+                  dependencyRevisions: checkpoint.dependencyRevisions ?? null,
+                }
+              : {}),
+          }
+        : null,
     };
   });
   const path = snapshotPath(root, task);
@@ -716,6 +749,24 @@ function importSnapshot(root, task) {
     if (entry.lastType !== null && !eventTypes.has(entry.lastType)) fail(`Invalid last event for ${unit.id}`);
     if (entry.checkpoint && (!entry.checkpoint.report || !/^[a-f0-9]{64}$/.test(entry.checkpoint.source?.fingerprint))) {
       fail(`Invalid checkpoint for ${unit.id}`);
+    }
+    if (
+      entry.checkpoint?.completionRevision !== undefined &&
+      (typeof entry.checkpoint.completionRevision !== 'string' || !/^[a-f0-9-]{36}$/.test(entry.checkpoint.completionRevision))
+    ) {
+      fail(`Invalid completion revision for ${unit.id}`);
+    }
+    if (
+      entry.checkpoint?.dependencyRevisions !== undefined &&
+      entry.checkpoint.dependencyRevisions !== null &&
+      (typeof entry.checkpoint.dependencyRevisions !== 'object' ||
+        Array.isArray(entry.checkpoint.dependencyRevisions) ||
+        Object.entries(entry.checkpoint.dependencyRevisions).some(
+          ([dependency, revision]) =>
+            !unit.dependsOn.includes(dependency) || typeof revision !== 'string' || !/^[a-f0-9-]{36}$/.test(revision),
+        ))
+    ) {
+      fail(`Invalid dependency revisions for ${unit.id}`);
     }
     if (entry.lastType === 'complete' && !entry.checkpoint) fail(`Completed unit ${unit.id} has no checkpoint`);
     if (entry.lastType === 'supersede') identifier(entry.supersededBy, 'Successor unit ID');

@@ -50,9 +50,10 @@ and record its number in the task handoff.
 - Check for an existing Epic and sub-issues before invoking the initializer. Do
   not create duplicates to satisfy a process step.
 
-Tracking records the work; it is not permission to create branches, commit,
-merge, deploy, or change product scope. Follow the root repository rules for
-those actions.
+Tracking records the work; an agent-created issue alone does not authorize a
+new product objective. A user-requested or previously approved work item has
+the task-branch authority in `docs/aidd/autonomy-and-merge-policy.md`. It does
+not authorize a merge, deployment, or change of product scope.
 
 ## Post-Edit Validation
 

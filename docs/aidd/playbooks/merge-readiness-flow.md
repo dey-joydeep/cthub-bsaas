@@ -37,7 +37,7 @@ Do not edit. First produce:
 - QA evidence and independent Codex review are present; applicable Codex security findings are resolved or dispositioned.
 - The final Codex whole-PR review and any approval name the current committed head and target base; a later commit requires a new final review.
 - The live PR passes `npm run aidd:premerge -- <PR-number>`; usage-limit messages and stale receipts do not count.
-- The release owner verifies QA and applicable security evidence separately from the automation check.
+- The release agent verifies QA and applicable security evidence separately from the automation check, then reports go/no-go to the user. The user alone authorizes the exact merge; a readiness result does not grant permission to merge.
 - Risks and follow-ups are visible.
 - The branch is up to date or merge conflicts are understood.
 - The source branch name, target, tracking issue, and squash merge method follow the branch policy. Ordinary PRs target `main`; maintenance PRs may target an active `release/vMAJOR.MINOR.PATCH` branch and require a tracked backport to `main`. Stacked PRs are retargeted after their dependencies merge.

@@ -15,7 +15,7 @@ Constraints:
 - Identify the owning OpenAPI contract: auth, salon-owner, project-wide, or a feature-specific future contract.
 - Keep the diff surgical.
 - Do not implement yet.
-- Do not commit unless explicitly requested.
+- Planning alone does not authorize implementation; apply `docs/aidd/autonomy-and-merge-policy.md` when the user requests delivery of the work item.
 
 Please produce:
 1. Current-state findings with file paths.

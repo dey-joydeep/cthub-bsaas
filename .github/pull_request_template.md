@@ -67,6 +67,7 @@ Real user-path and negative-case evidence for cross-layer changes:
 - Independent Codex review link and finding disposition:
 - Reviewer identity, reviewed base/head commits, scope, and verdict:
 - Current-head automated evidence (`npm run aidd:premerge -- <PR-number>`):
+- Human merge decision: Pending until the user explicitly authorizes this PR at the current head.
 - Codex security check link or reason it is not applicable:
 - Critical product or security decision: second independent assessment and resolution, if applicable:
 - Release and rollback evidence, if this PR is a release candidate:

@@ -199,6 +199,23 @@ test('interruption retains a checkpoint, recovery is idempotent, and changed sou
   assert.equal(state.units.find((unit) => unit.id === 'handoff').status, 'stale');
   assert.equal(state.units.find((unit) => unit.id === 'a-final').status, 'stale');
   assert.deepEqual(state.readyUnits, ['build']);
+  success(cwd, 'start', '--task', 'issue-1', '--unit', 'build');
+  state = success(cwd, 'complete', '--task', 'issue-1', '--unit', 'build', '--report', finalReport);
+  assert.equal(state.units.find((unit) => unit.id === 'build').status, 'complete');
+  assert.equal(state.units.find((unit) => unit.id === 'handoff').status, 'stale');
+  assert.equal(state.units.find((unit) => unit.id === 'a-final').status, 'stale');
+  assert.deepEqual(state.readyUnits, ['handoff']);
+  success(cwd, 'export', '--task', 'issue-1');
+  rmSync(join(cwd, 'tmp', 'aidd-ledger', 'issue-1'), { recursive: true, force: true });
+  state = success(cwd, 'import', '--task', 'issue-1');
+  assert.equal(state.units.find((unit) => unit.id === 'handoff').status, 'stale');
+  success(cwd, 'start', '--task', 'issue-1', '--unit', 'handoff');
+  state = success(cwd, 'complete', '--task', 'issue-1', '--unit', 'handoff', '--report', finalReport);
+  assert.equal(state.units.find((unit) => unit.id === 'handoff').status, 'complete');
+  assert.equal(state.units.find((unit) => unit.id === 'a-final').status, 'stale');
+  success(cwd, 'start', '--task', 'issue-1', '--unit', 'a-final');
+  state = success(cwd, 'complete', '--task', 'issue-1', '--unit', 'a-final', '--report', finalReport);
+  assert.equal(state.units.find((unit) => unit.id === 'a-final').status, 'complete');
 });
 
 test('superseding a stale unit requires a completed successor and survives export and import', (t) => {

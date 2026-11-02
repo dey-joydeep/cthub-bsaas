@@ -16,7 +16,7 @@ Use [development-lifecycle.md](development-lifecycle.md) for the shared PO-to-re
 - Preserve existing architecture unless the task is explicitly architectural.
 - Update docs when behavior, contracts, setup, or architecture changes.
 - Report uncertainty honestly.
-- Do not commit unless the user explicitly asks for a commit.
+- For a user-requested or previously approved work item, follow the standing task-branch commit and push mandate in [autonomy and merge policy](autonomy-and-merge-policy.md). Never treat that mandate as merge or release authorization.
 - Search for existing issue tracking before creating new items. Use one issue for a standalone deliverable and an Epic only for a multi-slice outcome.
 - A Codex implementation must receive independent Codex review before merge; all security checks are performed by Codex.
 
@@ -63,7 +63,7 @@ Update or create docs when a change affects any of the following:
 Stop and report before continuing when:
 
 - The repository contradicts the requested change and the correct behavior cannot be determined from available evidence.
-- The next step requires secrets, unavailable services, or an action outside granted permissions.
+- The next step requires secrets, unavailable services, or an action outside the work mandate; record a `Waiting for owner` question and checkpoint as described in the autonomy policy.
 - Validation cannot run in the current environment; report the specific command and reason.
 - The change requires broad refactoring, risks data loss, or changes a public API/schema beyond the accepted scope; prepare a concrete impact assessment and request the required decision.
 

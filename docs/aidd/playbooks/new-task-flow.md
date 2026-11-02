@@ -4,6 +4,8 @@ Use this playbook for every new Codex task, including a fresh error-fix request.
 
 The shared [development life cycle](../development-lifecycle.md) determines the product stage, role owner, and gates. Search for an existing issue and Project item before creating tracking. Add a trackable issue to the cthub Project with a Status. A new task does not automatically require an Epic or sub-issues: create children only for independent delivery slices with separate acceptance criteria and PRs, such as frontend and backend slices when each can be reviewed on its own.
 
+Before delivery work, record whether the mandate came from the user's task request or a previously accepted roadmap item. An agent-created issue is tracking, not authorization for a new product outcome. Under the [autonomy and merge policy](../autonomy-and-merge-policy.md), the accepted mandate covers routine task-branch commits and pushes, while the user retains the merge decision.
+
 ## Operator prompt
 
 ```text

@@ -22,7 +22,7 @@ Root instructions define global safety, workflow, and repository conventions. Sc
 
 1. Use the actual local checkout directory as your project root.
 2. Prefer MCP tools over raw shell when they exist.
-3. Keep approvals `on-request` unless the user changes it.
+3. Keep runtime/tool approvals `on-request` unless the user changes them. Task-branch Git authorization is defined separately below.
 4. Confirm runtime environment before commands that depend on OS, shell, Node, npm, database, or network state.
 5. Check `git status --short` before editing or committing.
 6. Compare checked-out package and Nx configuration with version claims in these instructions. Run `npm run aidd:instruction-drift` for AIDD or platform changes; report any mismatch.
@@ -151,9 +151,10 @@ Follow the [AIDD change scope and validation matrix](docs/aidd/change-hygiene.md
 
 ## Git And Commits
 
-- Do not commit unless the user explicitly instructs you to commit.
-- The user has authorized one standing exception for AIDD recovery: `npm run aidd:source-checkpoint -- apply <task-id>` may create and push a private commit only to `refs/aidd/checkpoints/<task-id>`. It must preserve the current branch and normal index, verify the private remote, and reject likely secrets. This does not authorize normal branch commits, pushes, PR merges, or releases.
-- Commit authorization is scoped to the immediately preceding task only.
+- The user has authorized routine commits and pushes on a task branch for a user-requested or previously approved AIDD work item, including future work items. Record the owning issue, accepted outcome and scope, branch, and assigned writable paths before the first push. An issue created by an agent does not by itself authorize a new product objective.
+- The coordinator may commit and push reviewable increments, open the PR, and fix CI or review findings on that task branch without asking again. Inspect the staged set and validation result before each commit; push only to the verified private repository and the intended task branch. Do not force-push, rewrite shared history, or include unrelated changes or secrets.
+- The separate AIDD recovery authorization remains: `npm run aidd:source-checkpoint -- apply <task-id>` may create and push a private commit only to `refs/aidd/checkpoints/<task-id>`. It must preserve the current branch and normal index, verify the private remote, and reject likely secrets.
+- No agent may merge a PR, push directly to `main` or a release branch, create a release tag, or deploy without the user's explicit instruction for that action. A ready PR is a recommendation, not merge authorization. Follow [autonomy and merge policy](docs/aidd/autonomy-and-merge-policy.md) for decisions and pauses.
 - Before committing, show or inspect the staged set.
 - Do not revert user changes unless explicitly requested.
 - Conventional commits: `feat:`, `fix:`, `chore:`, `refactor:`, `test:`, `docs:`.
@@ -161,7 +162,7 @@ Follow the [AIDD change scope and validation matrix](docs/aidd/change-hygiene.md
 
 ## Branching
 
-- Never create or switch branches without explicit user confirmation.
+- For a user-requested or previously approved AIDD work item, the coordinator may create or switch to its task branch without another prompt after checking the current status, existing branches/worktrees, issue, intended base, and assigned path. Do not switch away from a checkout with uncommitted work unless that work is safely preserved and the owner is known. Other branch changes require explicit user instruction.
 - Branch naming: `<type>/<short-description>`.
 - Allowed type examples: `feature`, `fix`, `chore`, `docs`, `test`, `refactor`, `style`.
 - Short description: lowercase kebab-case, 50 characters or fewer.

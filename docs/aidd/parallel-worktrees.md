@@ -20,9 +20,9 @@ Do not create branches or issues per agent, frontend/backend label, or internal 
 1. Reuse the matching issue and Project item; record acceptance criteria, the slice owner, dependent issues, and the planned PR. Assign a unique task ID for each slice, such as `issue-123`. A parent Epic is not the task ID for all child branches.
 2. Inspect `git worktree list --porcelain`, `git status --short`, the intended branch name, and the remote base. Reuse an existing suitable worktree. Inspect local and remote branches before choosing a new name. Never move an existing checkout or overwrite its uncommitted changes.
 3. Record the branch, owning issue, assigned paths, coordinator, and intended worktree location in the handoff. A local absolute path is machine-specific; the issue, branch, and task ID are the portable identity.
-4. Obtain the user confirmation required by root `AGENTS.md` before creating or switching a branch. A sibling worktree path also needs authorization because it is outside the current checkout. Place it under the approved workspace parent, for example `E:/workspace/cthub-bsaas-wt-issue-123-salon-booking`; never use an OS temp directory or the repository's ignored `tmp/` for a durable worktree.
+4. Confirm the work item has the user-requested or previously approved mandate defined in [autonomy and merge policy](autonomy-and-merge-policy.md). That mandate covers its task branch and a sibling worktree under the already approved workspace parent. A path outside that parent needs explicit authorization. Place it under the approved workspace parent, for example `E:/workspace/cthub-bsaas-wt-issue-123-salon-booking`; never use an OS temp directory or the repository's ignored `tmp/` for a durable worktree.
 
-After that approval, a PowerShell example for a new independent slice is:
+After that mandate check, a PowerShell example for a new independent slice is:
 
 ```powershell
 git fetch origin main
@@ -49,7 +49,7 @@ For server tasks, run the reviewed Prisma client generation separately before se
 - The coordinator gives each writer one bounded ledger unit with explicit paths, acceptance criteria, and dependencies. A writer does not edit another unit's paths without reassignment. Treat `package.json`, `package-lock.json`, Prisma schema and migrations, CI workflows, generated code, and shared contracts as single-owner files. Coordinate broad formatters, installs, code generation, and migrations so they cannot rewrite another stream's work.
 - Each branch runs the narrow checks for its paths. A green check on one branch does not validate another branch or their eventual combined state. Re-run affected checks after integration. QA and independent Codex review examine the current PR head; a new commit or changed base invalidates earlier final review evidence.
 - Automated database tests may use only a validated test target. The default `docker-compose.test.yml` binds port `55432`; parallel worktrees must not run destructive tests against one shared test database. Run those tests sequentially, or provision separate test databases, accounts, and ports that pass the [database guard](database-access-policy.md). Never point a test worktree at local, staging, or production data.
-- Pushes and normal commits follow the root authorization rules. Before a handoff that must survive loss of the machine, export each slice's ledger snapshot, preview and publish its unique private source checkpoint, then publish its process checkpoint to its private issue. A worktree path or an ignored local ledger alone is not portable recovery evidence.
+- Task-branch pushes and normal commits follow the standing work-item mandate and coordinator-only Git ownership. Before a handoff that must survive loss of the machine, export each slice's ledger snapshot, preview and publish its unique private source checkpoint, then publish its process checkpoint to its private issue. A worktree path or an ignored local ledger alone is not portable recovery evidence.
 
 ## Integrate and hand off
 

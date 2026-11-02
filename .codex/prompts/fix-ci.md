@@ -13,7 +13,7 @@ Constraints:
 - Identify the real root cause before changing code.
 - Prefer targeted fixes.
 - Do not weaken tests, lint rules, type safety, or coverage thresholds.
-- Do not commit unless explicitly requested.
+- For an accepted work item, commit and push task-branch fixes under `docs/aidd/autonomy-and-merge-policy.md`; never merge without the user's exact instruction.
 
 Please do:
 1. Summarize the failing command and error.

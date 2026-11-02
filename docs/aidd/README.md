@@ -8,6 +8,8 @@ This folder defines the shared development life cycle and the Codex-specific ope
 
 Start with the [AI-Driven Development Life Cycle](development-lifecycle.md) for product objective, PO-to-release stages, continuous QA, agent ownership, review and security gates, tracking, and branch policy. Then use the relevant task playbook and scoped instructions.
 
+For task-branch commit/push authority, owner-dependent questions, and the human merge gate, use [Autonomy and Merge Policy](autonomy-and-merge-policy.md).
+
 ## Source Order
 
 When instructions overlap, use this order:
