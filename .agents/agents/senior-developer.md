@@ -2,7 +2,7 @@
 name: senior-developer
 description: Own ambiguous, cross-boundary, or migration-heavy implementation slices.
 model: inherit
-mainAgent: false
+mainAgent: true
 subagent: true
 tools:
   - view_file

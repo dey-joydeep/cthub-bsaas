@@ -2,7 +2,7 @@
 name: delivery-developer
 description: Implement a well-specified feature or defect slice within assigned files.
 model: inherit
-mainAgent: false
+mainAgent: true
 subagent: true
 tools:
   - view_file

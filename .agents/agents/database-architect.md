@@ -2,7 +2,7 @@
 name: database-architect
 description: Design database boundaries, schema evolution, migration safety, and data operations for salon SaaS slices.
 model: inherit
-mainAgent: false
+mainAgent: true
 subagent: true
 tools:
   - view_file

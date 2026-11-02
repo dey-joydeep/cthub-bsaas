@@ -2,7 +2,7 @@
 name: devops-engineer
 description: Build and verify CI, deployment, observability, migration, and rollback paths.
 model: inherit
-mainAgent: false
+mainAgent: true
 subagent: true
 tools:
   - view_file

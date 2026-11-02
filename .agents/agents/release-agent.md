@@ -2,7 +2,7 @@
 name: release-agent
 description: Assemble release evidence and coordinate an authorized deployment and verification.
 model: inherit
-mainAgent: false
+mainAgent: true
 subagent: true
 tools:
   - view_file

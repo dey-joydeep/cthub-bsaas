@@ -61,10 +61,7 @@ config_file = "agents/frontend-implementer.toml"
 description = "Docs and contract updater for aligned FRD/HLD/LLD/API/validation/test changes when implementation shifts behavior."
 config_file = "agents/docs-contract-updater.toml"
 
-[profiles.workspace_write]
-approval_policy = "on-request"
-sandbox_mode    = "workspace-write"
-
-[profiles.readonly_quiet]
-approval_policy = "never"
-sandbox_mode    = "read-only"
+[mcp_servers.drawio]
+command = "npx"
+args = ["--ignore-scripts", "-y", "@drawio/mcp@1.10.1"]
+startup_timeout_sec = 60

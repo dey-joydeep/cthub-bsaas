@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = process.cwd();
@@ -61,6 +61,7 @@ requiredPath('docs/aidd/codex-validation-commands.md');
 requiredPath('docs/quality-standards/production-documentation-standard.md');
 requiredPath('docs/quality-standards/visual-collaboration-guideline.md');
 requiredPath('.codex/config.toml');
+requiredPath('.agents/mcp_config.json');
 requiredPath('.codex/prompts');
 requiredPath('.agents/skills');
 requiredPath('.agents/AGENTS.md');
@@ -90,6 +91,9 @@ requiredPath('.lintstagedrc');
 requiredPath('.github/pull_request_template.md');
 
 const codexConfig = readFileSync(join(root, '.codex/config.toml'), 'utf8');
+if (/^\[profiles\./m.test(codexConfig)) {
+  errors.push('Codex ignores profiles in project-local .codex/config.toml; keep them in user configuration');
+}
 for (const match of codexConfig.matchAll(/\[agents\.([^\]]+)\]\s*\r?\ndescription = "([^"]+)"\s*\r?\nconfig_file = "agents\/([^"]+)"/g)) {
   const [, name, description, file] = match;
   const path = `.codex/agents/${file}`;
@@ -100,6 +104,43 @@ for (const match of codexConfig.matchAll(/\[agents\.([^\]]+)\]\s*\r?\ndescriptio
   const content = readFileSync(join(root, path), 'utf8');
   if (!content.includes(`name = "${name}"`) || !content.includes(`description = "${description}"`)) {
     errors.push(`Codex agent metadata differs from registration: ${path}`);
+  }
+}
+
+const antigravityConfig = JSON.parse(readFileSync(join(root, '.agents/mcp_config.json'), 'utf8'));
+const antigravityDrawio = antigravityConfig.mcpServers?.drawio;
+if (JSON.stringify(Object.keys(antigravityConfig.mcpServers ?? {})) !== JSON.stringify(['drawio'])) {
+  errors.push('Repository Antigravity MCP config may contain only the portable draw.io server');
+}
+const codexDrawioBlock = codexConfig.match(/\[mcp_servers\.drawio\]\r?\n([\s\S]*?)(?=\r?\n\[|$)/)?.[1];
+const codexDrawioArgs = codexDrawioBlock?.match(/args\s*=\s*(\[[^\]]*\])/)?.[1];
+if (!codexDrawioArgs) {
+  errors.push('Codex draw.io MCP configuration is missing its argument list');
+} else {
+  const parsedCodexArgs = JSON.parse(codexDrawioArgs);
+  const antigravityArgs = antigravityDrawio?.args;
+  if (
+    antigravityDrawio?.command !== 'npx' ||
+    !codexDrawioBlock.includes('command = "npx"') ||
+    !Array.isArray(antigravityArgs) ||
+    JSON.stringify(antigravityArgs) !== JSON.stringify(parsedCodexArgs) ||
+    !antigravityArgs.includes('--ignore-scripts') ||
+    !antigravityArgs.some((arg) => /^@drawio\/mcp@\d+\.\d+\.\d+$/.test(arg))
+  ) {
+    errors.push('Antigravity and Codex draw.io MCP commands must match, pin a version, and disable install scripts');
+  }
+}
+if (existsSync(join(root, '.gemini/settings.json'))) {
+  errors.push('Legacy .gemini/settings.json is not an Antigravity workspace MCP entry point');
+}
+if (existsSync(join(root, '.gemini/commands/monitor-ci.toml'))) {
+  errors.push('Legacy Gemini monitor-ci command duplicates the shared .agents skill');
+}
+for (const name of readdirSync(join(root, '.agents/agents')).filter((entry) => entry.endsWith('.md'))) {
+  const path = `.agents/agents/${name}`;
+  const profile = readFileSync(join(root, path), 'utf8');
+  if (!profile.includes(`name: ${name.slice(0, -3)}`) || !/^mainAgent: true$/m.test(profile) || !/^subagent: true$/m.test(profile)) {
+    errors.push(`Antigravity role must support desktop/CLI selection and delegation: ${path}`);
   }
 }
 

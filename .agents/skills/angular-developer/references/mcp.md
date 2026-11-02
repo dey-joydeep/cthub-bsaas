@@ -29,67 +29,7 @@ Some tools must be enabled explicitly using the `--experimental-tool` (or `-E`) 
 
 ## Configuration
 
-To use the MCP server, you configure your host environment (IDE or CLI) to run `npx @angular/cli mcp`.
-
-### Antigravity IDE
-
-Create a file named `.antigravity/mcp.json` in your project's root:
-
-```json
-{
-  "mcpServers": {
-    "angular-cli": {
-      "command": "npx",
-      "args": ["-y", "@angular/cli", "mcp"]
-    }
-  }
-}
-```
-
-### Gemini CLI
-
-Create `.gemini/settings.json` in the project root:
-
-```json
-{
-  "mcpServers": {
-    "angular-cli": {
-      "command": "npx",
-      "args": ["-y", "@angular/cli", "mcp"]
-    }
-  }
-}
-```
-
-### Cursor
-
-Create `.cursor/mcp.json` in the project root (or globally at `~/.cursor/mcp.json`):
-
-```json
-{
-  "mcpServers": {
-    "angular-cli": {
-      "command": "npx",
-      "args": ["-y", "@angular/cli", "mcp"]
-    }
-  }
-}
-```
-
-### VS Code
-
-Create `.vscode/mcp.json`:
-
-```json
-{
-  "servers": {
-    "angular-cli": {
-      "command": "npx",
-      "args": ["-y", "@angular/cli", "mcp"]
-    }
-  }
-}
-```
+The Angular CLI MCP is optional for this repository. If a task needs it, review its install behavior and use the pinned workspace Angular CLI package rather than an unversioned `npx -y` download. Add a portable, credential-free Antigravity entry under `.agents/mcp_config.json` and its Codex counterpart under `.codex/config.toml` only when both runtimes benefit. Follow `docs/aidd/mcp-configuration-policy.md` and update the AIDD setup check in the same change. The existing Nx tasks remain the default way to build, lint, and test.
 
 ## Command Options
 
@@ -98,9 +38,3 @@ You can pass arguments to the MCP server in the `args` array of your configurati
 - `--read-only`: Only registers tools that do not modify the project.
 - `--local-only`: Only registers tools that do not require an internet connection.
 - `--experimental-tool` (`-E`): Enables specific experimental tools (e.g., `-E build`, `-E devserver`).
-
-Example for read-only mode with experimental tools enabled:
-
-```json
-"args": ["-y", "@angular/cli", "mcp", "--read-only", "-E", "build", "-E", "test"]
-```

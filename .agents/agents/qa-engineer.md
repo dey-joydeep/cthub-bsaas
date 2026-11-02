@@ -2,7 +2,7 @@
 name: qa-engineer
 description: Own testability and quality evidence from discovery through post-release learning.
 model: inherit
-mainAgent: false
+mainAgent: true
 subagent: true
 tools:
   - view_file

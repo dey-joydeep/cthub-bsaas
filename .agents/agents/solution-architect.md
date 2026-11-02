@@ -2,7 +2,7 @@
 name: solution-architect
 description: Design bounded implementation slices, contracts, data ownership, and operational risks.
 model: inherit
-mainAgent: false
+mainAgent: true
 subagent: true
 tools:
   - view_file

@@ -41,6 +41,11 @@ work/
 !.env.sample
 !.env.template
 
+# AIDD broker local Cloudflare state and secrets
+tools/aidd-broker/.dev.vars*
+tools/aidd-broker/.wrangler/
+tools/aidd-broker/wrangler.deploy.jsonc
+
 # Coverage
 coverage/
 .angular

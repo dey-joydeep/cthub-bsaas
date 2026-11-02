@@ -41,16 +41,16 @@ For Antigravity execution, also apply `.agents/AGENTS.md` and the selected `.age
 | [MCP Configuration Policy](mcp-configuration-policy.md)   | Repository-vs-global MCP configuration split and safety policy.                               |
 | [Codex CLI Operator Guide](codex-cli-operator-guide.md)   | Practical local Codex commands and operator prompts.                                          |
 
-## Repo Codex Assets
+## Repository AIDD Assets
 
-- `.agents/agents/*.md` contains Antigravity delivery-role agents.
+- `.agents/agents/*.md` contains Antigravity delivery-role agents selectable in desktop and CLI or delegable as subagents; `.agents/mcp_config.json` contains portable workspace MCP servers.
 - `scripts/aidd/run-agy-agent.mjs` pins the minimum Antigravity model for automated role execution.
 - `scripts/aidd/agent-work-ledger.mjs` records local checkpoints and exports trackable snapshots under `docs/status/aidd/`.
 - `scripts/aidd/source-checkpoint.mjs` backs up nonignored source on a private recovery ref.
 - `scripts/aidd/check-changed-format.mjs` checks supported files changed by a PR.
 - `scripts/aidd/check-dependency-policy.mjs`, `check-dependency-change.mjs`, and `check-branch-policy.mjs` validate dependency and branch evidence before a PR handoff.
 - `scripts/aidd/track-issue.mjs` previews or applies standalone issue Project updates; `project-tracking.mjs` supplies the read-only premerge membership gate. The Epic initializer remains under `.agents/skills/aidd-project-tracker/`.
-- The [GitHub App identity guide](github-app-identities.md) records the installed PO, QA, and Dev Apps. No bot runtime is active yet; agents must not assume their GitHub actions use those identities.
+- The [GitHub App identity guide](github-app-identities.md) records the installed PO, QA, and Dev Apps. The [Cloudflare broker](../../tools/aidd-broker/README.md) is deployed but disabled; agents must not assume their GitHub actions use those identities.
 - `.agents/skills/*` contains reusable Antigravity and Codex workflows where applicable.
 - `.codex/agents/*.toml` contains Codex reviewer and implementation helper agents.
 - `.codex/environments/environment.toml` points at the repo bootstrap command for fresh Codex worktrees.

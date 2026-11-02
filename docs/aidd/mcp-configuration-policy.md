@@ -15,6 +15,7 @@ The repository may contain only configuration that is safe to commit and useful 
 Allowed in the repository:
 
 - Nx MCP configuration that uses pinned local project dependencies and no secrets.
+- A pinned, credential-free draw.io stdio MCP entry used by this repository's diagram workflow.
 - Project-scoped Codex agents under `.codex/agents/`.
 - Project-scoped Codex prompts under `.codex/prompts/`.
 - Project-scoped Codex hook definitions in `.codex/hooks.json` or `[hooks]` tables in `.codex/config.toml`, with any called scripts under `.codex/hooks/`.
@@ -40,7 +41,7 @@ Keep the following in the developer's user-level Codex configuration unless ther
 - Prisma MCP environment details.
 - Postgres MCP connection details.
 - GitHub MCP token/account details.
-- draw.io or Penpot MCP details.
+- Personal draw.io or Penpot MCP overrides, especially when they need authentication or local paths.
 - Any server requiring authentication, local paths, ports, tokens, or private environment variables.
 
 ## Recommended split for this project
@@ -54,8 +55,12 @@ Keep the following in the developer's user-level Codex configuration unless ther
 | Prisma                  | No                                                      | Yes, with local env                                    |
 | Postgres                | No                                                      | Yes, with DB credentials                               |
 | GitHub                  | No                                                      | Yes, with account/token handled outside repo           |
-| draw.io                 | No                                                      | Yes                                                    |
+| draw.io                 | Yes, pinned stdio tool server without secrets           | Optional personal override                             |
 | Penpot                  | No                                                      | Yes, especially when using local/self-hosted instances |
+
+The Antigravity desktop and CLI workspace MCP entry point is `.agents/mcp_config.json`; `.gemini/settings.json` is a legacy location and must not be used for this repository. The Antigravity and Codex draw.io servers in `.agents/mcp_config.json` and `.codex/config.toml` use the same exact `@drawio/mcp` version and `--ignore-scripts`. Its package declares a best-effort postinstall fetch, which is unnecessary for basic MCP startup and should not run implicitly when an agent starts. Review a version update and its install script in both files. This `npx` tool remains outside the project lockfile; its transitive dependency tree can change, so do not treat it as a fully locked build dependency. Codex loads the project MCP entry only when the project is trusted; refresh or restart the local client after changing MCP configuration.
+
+The removed legacy file contained local database credentials and mutable `npx` packages. Keep Prisma, Postgres, and authenticated Penpot connections in each user's local MCP configuration, verify the selected database profile before use, and never place their credentials or token-bearing URLs in tracked repository files. Treat any credential found in committed history as exposed if reused outside a disposable test setup.
 
 ## Change policy
 

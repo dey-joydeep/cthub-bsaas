@@ -1,0 +1,27 @@
+{
+  "name": "shearflow-aidd-broker",
+  "main": "src/worker.mjs",
+  "compatibility_date": "2026-10-31",
+  "workers_dev": true,
+  "preview_urls": false,
+  "triggers": {
+    "crons": ["0 4 * * *"],
+  },
+  "d1_databases": [
+    {
+      "binding": "GRANTS",
+      "database_name": "shearflow-aidd-grants",
+      "database_id": "03e4fea9-e3e5-4a21-861f-c48836141ad0",
+      "migrations_dir": "migrations",
+    },
+  ],
+  "vars": {
+    "BROKER_ENABLED": "false",
+    "ACCESS_AUD": "473af47d3e1f3000da5a4b3bde762708bb7c8f3c0336805d5b278c9ae45ff749",
+    "ACCESS_ISSUER": "https://soft-dust-b595.cloudflareaccess.com",
+    "PO_CLIENT_ID": "e5394372fb62eba7321d5d5f28016e09.access",
+    "QA_CLIENT_ID": "d40895ec79e4684802908624f62aec10.access",
+    "DEV_CLIENT_ID": "0b223ab6a9da227748e6cfdeb1501c2b.access",
+    "ADMIN_PRINCIPAL": "user:dey.joydeep.cse@gmail.com",
+  },
+}

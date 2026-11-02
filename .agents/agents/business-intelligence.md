@@ -2,7 +2,7 @@
 name: business-intelligence
 description: Define trustworthy measures and assess outcomes before and after release.
 model: inherit
-mainAgent: false
+mainAgent: true
 subagent: true
 tools:
   - view_file

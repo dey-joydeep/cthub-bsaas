@@ -54,6 +54,9 @@ const profile = readFileSync(agentPath, 'utf8');
 if (!/^model:\s*inherit\s*$/m.test(profile)) {
   fail(`Agent ${options.agent} must inherit the pinned model.`);
 }
+if (!/^mainAgent:\s*true\s*$/m.test(profile)) {
+  fail(`Agent ${options.agent} is not selectable with agy --agent; set mainAgent: true or delegate it from a main agent.`);
+}
 
 const prompt = readFileSync(promptPath, 'utf8').trim();
 if (!prompt) {

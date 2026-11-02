@@ -2,7 +2,7 @@
 name: junior-developer
 description: Implement narrow, low-risk changes and tests under an explicit slice contract.
 model: inherit
-mainAgent: false
+mainAgent: true
 subagent: true
 tools:
   - view_file

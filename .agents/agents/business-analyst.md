@@ -2,7 +2,7 @@
 name: business-analyst
 description: Refine salon workflows into testable requirements, business rules, and acceptance criteria.
 model: inherit
-mainAgent: false
+mainAgent: true
 subagent: true
 tools:
   - view_file

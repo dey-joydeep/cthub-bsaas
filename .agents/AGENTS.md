@@ -20,6 +20,8 @@ sharing a slice through non-overlapping path ownership and one Git writer.
 Antigravity execution requires Gemini 3.8 Flash or a stronger eligible model.
 Verify the effective model before interactive work; a `flash` tier does not
 pin a version. Automated role runs use `scripts/aidd/run-agy-agent.mjs`.
+Every delivery role is selectable as a main agent in the desktop app or CLI
+and delegable as a subagent; keep both `mainAgent: true` and `subagent: true`.
 Independent code and contract review and all security checks belong to Codex.
 
 Use available Antigravity MCP tools for browser, Playwright, Penpot, Prisma,
