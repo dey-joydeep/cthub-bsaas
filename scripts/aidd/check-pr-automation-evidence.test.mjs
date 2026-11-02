@@ -82,7 +82,18 @@ test('only the intentionally optional Windows smoke check may be skipped', () =>
     status: 'COMPLETED',
     conclusion: 'SKIPPED',
   };
-  assert.deepEqual(assessPrAutomationEvidence({ ...pr, statusCheckRollup: [...pr.statusCheckRollup, skipped] }, [comment], []), []);
+  const checks = { ...pr, statusCheckRollup: [...pr.statusCheckRollup, skipped] };
+  assert.deepEqual(assessPrAutomationEvidence(checks, [comment], [], 'main', []), []);
+  assert.ok(assessPrAutomationEvidence(checks, [comment], [], 'main', ['package.json']).some((error) => /Windows toolchain/.test(error)));
+  assert.ok(
+    assessPrAutomationEvidence(checks, [comment], [], 'main', ['.github/workflows/ci.yml']).some((error) =>
+      /Windows toolchain/.test(error),
+    ),
+  );
+  assert.ok(assessPrAutomationEvidence(checks, [comment], []).some((error) => /Windows toolchain/.test(error)));
+  assert.ok(
+    assessPrAutomationEvidence(pr, [comment], [], 'main', ['package-lock.json']).some((error) => /Required Windows toolchain/.test(error)),
+  );
   const requiredSkip = { ...skipped, name: 'Main Workflow' };
   assert.ok(
     assessPrAutomationEvidence({ ...pr, statusCheckRollup: [requiredSkip] }, [comment], []).some((error) =>

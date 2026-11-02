@@ -83,12 +83,24 @@ def is_comment_only_input(tool_input):
     return isinstance(tool_input, dict) and set(tool_input) == {'repo_full_name', 'pr_number', 'comment'}
 
 
-def patch_targets(text):
-    references = re.findall(r'\btools\.([a-zA-Z_]\w*)', text)
-    direct_patch = text.lstrip().startswith('*** Begin Patch')
-    if not direct_patch and (references != ['apply_patch'] or 'tools[' in text):
+def patch_targets(tool_input, text):
+    expanded = text
+    if isinstance(tool_input, dict) and isinstance(tool_input.get('code'), str):
+        code = tool_input['code']
+        literal = r'("(?:\\.|[^"\\])*")'
+        patterns = (
+            rf'\s*await\s+tools\.apply_patch\(\s*{literal}\s*\)\s*;?\s*',
+            rf'\s*text\(\s*await\s+tools\.apply_patch\(\s*{literal}\s*\)\s*\)\s*;?\s*',
+        )
+        match = next((match for pattern in patterns if (match := re.fullmatch(pattern, code, re.DOTALL))), None)
+        if not match:
+            return None
+        try:
+            expanded = json.loads(match.group(1))
+        except json.JSONDecodeError:
+            return None
+    elif not text.lstrip().startswith('*** Begin Patch'):
         return None
-    expanded = text.replace('\\n', '\n')
     if '*** Begin Patch' not in expanded or '*** End Patch' not in expanded:
         return None
     targets = re.findall(r'^\*\*\* (?:(?:Add|Update|Delete) File|Move to):\s*(.+?)\s*$', expanded, re.MULTILINE)
@@ -151,7 +163,7 @@ def main():
     tool_input = payload.get('tool_input') or {}
     text = normalize(collect_text(tool_input))
 
-    targets = patch_targets(text)
+    targets = patch_targets(tool_input, text)
     checked_text = ' '.join(targets) if targets is not None else text
 
     if not is_comment_only_input(tool_input) and has_blocked_path_reference(checked_text):

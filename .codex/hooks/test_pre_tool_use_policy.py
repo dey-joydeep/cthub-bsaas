@@ -91,6 +91,18 @@ class PreToolUsePolicyTests(unittest.TestCase):
         result = decision({'code': code})
         self.assertEqual(result['hookSpecificOutput']['permissionDecision'], 'deny')
 
+    def test_patch_exemption_rejects_mixed_aliased_calls(self):
+        cache_name = 'node' + '_modules'
+        patch = '*** Begin Patch\n*** Update File: safe.js\n@@\n+safe\n*** End Patch'
+        code = (
+            'const runner = tools; '
+            f'await tools.apply_patch({json.dumps(patch)}); '
+            f'await runner.exec_command({{cmd:"Get-Content {cache_name}/bad.js"}})'
+        )
+        self.assertEqual(decision({'code': code})['hookSpecificOutput']['permissionDecision'], 'deny')
+        destructive = code.replace(f'Get-Content {cache_name}/bad.js', 'git reset --hard')
+        self.assertEqual(decision({'code': destructive})['hookSpecificOutput']['permissionDecision'], 'deny')
+
     def test_destructive_git_command_is_denied(self):
         result = decision({'command': 'git reset --hard'})
         self.assertEqual(result['hookSpecificOutput']['permissionDecision'], 'deny')

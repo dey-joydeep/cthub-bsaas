@@ -4,8 +4,10 @@ import { pathToFileURL } from 'node:url';
 import { assessProjectTracking, projectItemListArgs } from './project-tracking.mjs';
 
 const reviewMarker = /<!-- codex-review-state:v1 (\{[^\n]+\}) -->/;
+const toolchainPath =
+  /^(?:package\.json|package-lock\.json|\.npmrc|\.nvmrc|\.github\/workflows\/ci\.yml|\.codex\/environments\/setup(?:\.test)?\.mjs|scripts\/aidd\/smoke-installed-toolchain\.mjs)$/;
 
-export function assessPrAutomationEvidence(pr, comments, reviewThreads, expectedBase) {
+export function assessPrAutomationEvidence(pr, comments, reviewThreads, expectedBase, changedFiles) {
   const errors = [];
   if (pr.state !== 'OPEN' || pr.isDraft) errors.push('PR must be open and ready for review');
   if (!/^[a-f0-9]{40}$/.test(pr.headRefOid ?? '')) errors.push('PR head SHA is unavailable');
@@ -31,13 +33,29 @@ export function assessPrAutomationEvidence(pr, comments, reviewThreads, expected
   ) {
     errors.push('Required Main Workflow check has not succeeded on this PR head');
   }
+  const toolchainChanged = Array.isArray(changedFiles) && changedFiles.some((path) => toolchainPath.test(path));
+  if (
+    toolchainChanged &&
+    !checks.some(
+      (check) =>
+        check.__typename === 'CheckRun' &&
+        check.workflowName === 'CI/CD' &&
+        check.name === 'Windows toolchain smoke' &&
+        check.status === 'COMPLETED' &&
+        check.conclusion === 'SUCCESS',
+    )
+  ) {
+    errors.push('Required Windows toolchain smoke check has not succeeded for this toolchain change');
+  }
   for (const check of checks) {
     const optionalSkip =
       check.__typename === 'CheckRun' &&
       check.workflowName === 'CI/CD' &&
       check.name === 'Windows toolchain smoke' &&
       check.status === 'COMPLETED' &&
-      check.conclusion === 'SKIPPED';
+      check.conclusion === 'SKIPPED' &&
+      Array.isArray(changedFiles) &&
+      !toolchainChanged;
     const passed =
       check.__typename === 'StatusContext'
         ? check.state === 'SUCCESS'
@@ -113,6 +131,9 @@ export function checkPrAutomationEvidence(number) {
     'state,isDraft,headRefOid,baseRefOid,baseRefName,body,statusCheckRollup',
   ];
   const before = JSON.parse(gh(prArgs));
+  const changedFiles = gh(['pr', 'diff', String(number), '--repo', nameWithOwner, '--name-only'])
+    .split(/\r?\n/)
+    .filter(Boolean);
   const commentPages = JSON.parse(gh(['api', '--paginate', '--slurp', `repos/${nameWithOwner}/issues/${number}/comments?per_page=100`]));
   const comments = commentPages.flat();
   const reviewThreads = allReviewThreads(owner, name, number);
@@ -128,7 +149,7 @@ export function checkPrAutomationEvidence(number) {
     throw new Error('PR head, base, or tracking body changed while evidence was read; rerun the check');
   }
   const errors = [
-    ...assessPrAutomationEvidence(pr, comments, reviewThreads, defaultBranchRef?.name),
+    ...assessPrAutomationEvidence(pr, comments, reviewThreads, defaultBranchRef?.name, changedFiles),
     ...assessProjectTracking(pr.body, project.items, nameWithOwner),
   ];
   return {
