@@ -10,10 +10,10 @@ from pathlib import Path
 HOOK = Path(__file__).with_name('pre_tool_use_policy.py')
 
 
-def decision(tool_input):
+def decision(tool_input, tool_name='Bash'):
     result = subprocess.run(
         [sys.executable, str(HOOK)],
-        input=json.dumps({'hook_event_name': 'PreToolUse', 'tool_input': tool_input}),
+        input=json.dumps({'hook_event_name': 'PreToolUse', 'tool_name': tool_name, 'tool_input': tool_input}),
         text=True,
         capture_output=True,
         check=True,
@@ -24,15 +24,38 @@ def decision(tool_input):
 class PreToolUsePolicyTests(unittest.TestCase):
     def test_pr_comment_prose_is_not_treated_as_a_cache_path(self):
         comment = {'repo_full_name': 'owner/repo', 'pr_number': 99, 'comment': 'Please review CI coverage, then report.'}
-        self.assertEqual(decision(comment), {})
+        self.assertEqual(decision(comment, 'mcp__codex_apps__github__add_comment_to_issue'), {})
         wrapped = decision({'code': f'await tools.mcp__codex_apps__github_add_comment_to_issue({json.dumps(comment)})'})
         self.assertEqual(wrapped['hookSpecificOutput']['permissionDecision'], 'deny')
 
     def test_structured_comment_may_describe_a_destructive_command_without_running_it(self):
         comment = {'repo_full_name': 'owner/repo', 'pr_number': 99, 'comment': 'The guard rejects git reset --hard.'}
-        self.assertEqual(decision(comment), {})
+        self.assertEqual(decision(comment, 'mcp__codex_apps__github__add_comment_to_issue'), {})
         wrapped = decision({'code': f'await tools.mcp__codex_apps__github_add_comment_to_issue({json.dumps(comment)})'})
         self.assertEqual(wrapped['hookSpecificOutput']['permissionDecision'], 'deny')
+
+    def test_structured_pr_body_is_prose_not_a_filesystem_action(self):
+        update = {
+            'repository_full_name': 'owner/repo',
+            'pr_number': 99,
+            'body': 'CI coverage is green. The guard rejects git reset --hard.',
+        }
+        self.assertEqual(decision(update, 'mcp__codex_apps__github__update_pull_request'), {})
+        wrapped = decision({'code': f'await tools.mcp__codex_apps__github_update_pull_request({json.dumps(update)})'})
+        self.assertEqual(wrapped['hookSpecificOutput']['permissionDecision'], 'deny')
+
+    def test_matching_fields_do_not_exempt_another_tool(self):
+        update = {'repository_full_name': 'owner/repo', 'pr_number': 99, 'body': 'CI coverage is green.'}
+        self.assertEqual(decision(update)['hookSpecificOutput']['permissionDecision'], 'deny')
+
+    def test_pr_text_with_extra_action_field_is_not_exempt(self):
+        update = {
+            'repository_full_name': 'owner/repo',
+            'pr_number': 99,
+            'body': 'CI coverage is green.',
+            'command': 'git reset --hard',
+        }
+        self.assertEqual(decision(update)['hookSpecificOutput']['permissionDecision'], 'deny')
 
     def test_comment_plus_shell_command_keeps_path_guard(self):
         cache_name = 'node' + '_modules'

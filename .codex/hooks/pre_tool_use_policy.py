@@ -79,8 +79,27 @@ def has_blocked_path_reference(text):
     return any(token_mentions_blocked_path(token) for token in tokenize_command(text))
 
 
-def is_comment_only_input(tool_input):
-    return isinstance(tool_input, dict) and set(tool_input) == {'repo_full_name', 'pr_number', 'comment'}
+def is_remote_prose_only_input(tool_name, tool_input):
+    if not isinstance(tool_input, dict):
+        return False
+
+    keys = set(tool_input)
+    comment_keys = {'repo_full_name', 'pr_number', 'comment'}
+    pr_text_keys = {'repository_full_name', 'pr_number', 'body', 'title'}
+    is_comment_tool = tool_name in {
+        'mcp__codex_apps__github__add_comment_to_issue',
+        'mcp__codex_apps__github_add_comment_to_issue',
+    }
+    is_update_tool = tool_name in {
+        'mcp__codex_apps__github__update_pull_request',
+        'mcp__codex_apps__github_update_pull_request',
+    }
+    return (is_comment_tool and keys == comment_keys) or (
+        is_update_tool
+        and {'repository_full_name', 'pr_number'} <= keys
+        and bool(keys & {'body', 'title'})
+        and keys <= pr_text_keys
+    )
 
 
 def patch_targets(tool_input, text):
@@ -166,17 +185,18 @@ def main():
     targets = patch_targets(tool_input, text)
     checked_text = ' '.join(targets) if targets is not None else text
 
-    if not is_comment_only_input(tool_input) and has_blocked_path_reference(checked_text):
+    prose_only = is_remote_prose_only_input(payload.get('tool_name'), tool_input)
+    if not prose_only and has_blocked_path_reference(checked_text):
         deny(event_name, 'Repository policy blocks edits or commands touching generated or cache directories.')
         return
 
     command = normalize(tool_input.get('command', '')) if isinstance(tool_input, dict) else text
     command = command or text
-    if not is_comment_only_input(tool_input) and targets is None and is_destructive_command(command):
+    if not prose_only and targets is None and is_destructive_command(command):
         deny(event_name, 'Repository policy blocks destructive commands without explicit manual handling.')
         return
 
-    warnings = [fragment for fragment in WARN_PATH_FRAGMENTS if fragment in checked_text]
+    warnings = [] if prose_only else [fragment for fragment in WARN_PATH_FRAGMENTS if fragment in checked_text]
     if warnings:
         warn(event_name, f'Repository policy notice: this action touches high-impact files: {", ".join(warnings)}. Confirm AIDD traceability and validation before completion.')
         return
