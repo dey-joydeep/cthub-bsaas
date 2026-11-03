@@ -1,6 +1,7 @@
 """Regression tests for patch-path and command guards."""
 
 import json
+import os
 import subprocess
 import sys
 import unittest
@@ -85,6 +86,23 @@ class PreToolUsePolicyTests(unittest.TestCase):
             check=True,
         )
         self.assertEqual(json.loads(result.stdout)['hookSpecificOutput']['permissionDecision'], 'deny')
+
+    def test_node_launchers_deny_when_python_cannot_start(self):
+        environment = {**os.environ, 'PYTHONHOME': str(HOOK.parent / 'nonexistent-python-home')}
+        for mode in ('antigravity', 'codex'):
+            result = subprocess.run(
+                ['node', str(LAUNCHER), mode],
+                input=json.dumps({'hook_event_name': 'PreToolUse', 'toolCall': {'name': 'run_command', 'args': {'CommandLine': 'git status'}}}),
+                text=True,
+                capture_output=True,
+                check=True,
+                env=environment,
+            )
+            response = json.loads(result.stdout)
+            if mode == 'antigravity':
+                self.assertEqual(response['decision'], 'deny')
+            else:
+                self.assertEqual(response['hookSpecificOutput']['permissionDecision'], 'deny')
 
     def test_pr_comment_prose_is_not_treated_as_a_cache_path(self):
         comment = {'repo_full_name': 'owner/repo', 'pr_number': 99, 'comment': 'Please review CI coverage, then report.'}
