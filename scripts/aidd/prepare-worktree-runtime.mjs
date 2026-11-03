@@ -56,6 +56,7 @@ function main() {
     `Worktree slot ${slot}: API ${ports.api}, customer ${ports.customer}, partner ${ports.partner}, admin ${ports.admin}, standalone SSR ${ports.ssr}.`,
   );
   console.log('Open a separate terminal at this worktree root for each server:');
+  console.log(`  Web SSR: set AIDD_WORKTREE_API_ORIGIN=http://localhost:${ports.api} in each web terminal before serving.`);
   console.log(
     `  API: Set PORT=${ports.api}, CORS_ORIGINS=${origins}, FRONTEND_URLS=${origins}, FRONTEND_URL=http://localhost:${ports.customer}, and a separate local DATABASE_URL; then run npm exec nx -- serve api`,
   );

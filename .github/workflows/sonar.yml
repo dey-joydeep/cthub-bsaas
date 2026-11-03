@@ -54,7 +54,7 @@ jobs:
         run: node scripts/aidd/smoke-installed-toolchain.mjs --require-prisma-client
 
       - name: Run tests with coverage
-        run: npx nx run-many -t test -p server-core,server-data-access,server-feature-auth,server-feature-salon-owner --coverage --parallel=2
+        run: npx nx run-many -t test -p server-core,server-data-access,server-feature-auth,server-feature-salon-owner --coverage --parallel=1
 
       - name: Run SonarQube Scan
         run: npm run sonar

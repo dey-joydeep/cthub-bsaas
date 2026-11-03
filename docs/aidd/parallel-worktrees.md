@@ -56,11 +56,22 @@ node scripts/aidd/prepare-worktree-runtime.mjs --slot 1
 
 Slot `1` uses API `3010`, customer `4210`, partner `4211`, admin `4212`, and standalone SSR `4010`. The command generates ignored `environment.worktree.ts` files for the three web apps and an ignored development proxy under `tmp/aidd-runtime/`. Browser requests to `/api` or `/partner` remain on the web origin and are forwarded to that slot's API, including Auth requests that use cookies. It changes no tracked source or secrets. Re-run it after choosing a different slot. Do not start a second stack until its ports are free. The generated files are local setup, so recreate them in a fresh checkout; they are not recovery checkpoints.
 
-Start each web app needed for the slice from its own terminal in the same worktree:
+Start each web app needed for the slice from its own terminal in the same worktree. Set `AIDD_WORKTREE_API_ORIGIN` in **each** web terminal so server-side rendering resolves local API calls to the same slot. For slot `1`:
 
 ```powershell
+$env:AIDD_WORKTREE_API_ORIGIN = 'http://localhost:3010'
 npm exec nx -- serve web-app-customer --configuration=worktree --port=4210
+```
+
+Repeat that environment assignment in separate terminals for the other apps:
+
+```powershell
+$env:AIDD_WORKTREE_API_ORIGIN = 'http://localhost:3010'
 npm exec nx -- serve web-app-partner --configuration=worktree --port=4211
+```
+
+```powershell
+$env:AIDD_WORKTREE_API_ORIGIN = 'http://localhost:3010'
 npm exec nx -- serve web-app-admin --configuration=worktree --port=4212
 ```
 
@@ -76,7 +87,7 @@ npm exec nx -- serve api
 
 Do not place a database password in a committed file or a copied command transcript. Confirm the profile, host, and database name under [Database Access Policy](database-access-policy.md); never reuse staging or production data. The script does not provision or select a database. Automated tests still use only a validated test database and must not inherit this local development `DATABASE_URL` as their test target.
 
-Ports isolate listeners, not browser cookies: cookies for `localhost` are shared across ports in one browser profile. Use a separate browser profile or isolated browser context for each simultaneous stack, especially for Auth verification. The generated proxy covers browser traffic; server-side rendering may issue HTTP requests directly and must be verified route by route. Do not count a browser smoke check as SSR evidence. A standalone built SSR server defaults to port `4000`; set its `PORT` to the slot's SSR port if running it alongside other stacks. Keep any extra local services, such as email mocks or object storage, on separate ports or run them sequentially. If a port or database cannot be isolated, run the affected integration checks sequentially.
+Ports isolate listeners, not browser cookies: cookies for `localhost` are shared across ports in one browser profile. Use a separate browser profile or isolated browser context for each simultaneous stack, especially for Auth verification. The generated proxy covers browser traffic; the SSR interceptor sends only `/api` and `/partner` requests to the local origin when `AIDD_WORKTREE_API_ORIGIN` is set. It does not forward the incoming browser's cookies to the API; verify authenticated SSR routes separately. A standalone built SSR server defaults to port `4000`; set its `PORT` to the slot's SSR port and keep the same API origin variable if running it alongside other stacks. Keep any extra local services, such as email mocks or object storage, on separate ports or run them sequentially. If a port or database cannot be isolated, run the affected integration checks sequentially.
 
 ## While streams run
 
