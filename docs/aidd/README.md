@@ -47,6 +47,7 @@ For Antigravity execution, also apply `.agents/AGENTS.md` and the selected `.age
 ## Repository AIDD Assets
 
 - `.agents/agents/*.md` contains Antigravity delivery-role agents selectable in desktop and CLI or delegable as subagents; `.agents/mcp_config.json` contains portable workspace MCP servers.
+- `.agents/hooks.json` and `.codex/hooks.json` load provider adapters for the shared pre-tool policy in `scripts/aidd/tool_use_policy.py`.
 - `scripts/aidd/run-agy-agent.mjs` pins the minimum Antigravity model for automated role execution, can continue a known conversation, and saves local run output for handoff.
 - `scripts/aidd/agent-work-ledger.mjs` records local checkpoints and exports trackable snapshots under `docs/status/aidd/`.
 - `scripts/aidd/source-checkpoint.mjs` backs up nonignored source on a private recovery ref.

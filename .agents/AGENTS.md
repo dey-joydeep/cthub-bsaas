@@ -8,6 +8,11 @@ Use `docs/aidd/role-directory-access.md` to assign exact task paths and checks.
 Antigravity uses these same `AGENTS.md` files as Codex. Do not maintain parallel
 `GEMINI.md` copies. Keep provider-specific execution details in this file,
 role profiles, or the AIDD operating guides.
+The workspace `.agents/hooks.json` runs the shared pre-tool policy before
+Antigravity shell commands, background terminal input, and file edits. Verify
+that the hook is loaded in the desktop Customizations > Hooks view or CLI
+`/hooks` after opening this workspace.
+The shared Node launcher denies tool calls if its Python 3 policy adapter cannot run.
 For long-running or multi-agent work, follow `docs/aidd/autonomous-recovery.md`
 and checkpoint bounded work units before handoff. Resume interrupted units from
 the local ledger without treating partial evidence as complete. Publish a

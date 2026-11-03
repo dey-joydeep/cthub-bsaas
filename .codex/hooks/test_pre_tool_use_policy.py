@@ -8,6 +8,8 @@ from pathlib import Path
 
 
 HOOK = Path(__file__).with_name('pre_tool_use_policy.py')
+AGY_HOOK = Path(__file__).resolve().parents[2] / '.agents' / 'hooks' / 'pre_tool_use_policy.py'
+LAUNCHER = AGY_HOOK.parents[2] / 'scripts' / 'aidd' / 'run-tool-use-hook.mjs'
 
 
 def decision(tool_input, tool_name='Bash'):
@@ -21,7 +23,69 @@ def decision(tool_input, tool_name='Bash'):
     return json.loads(result.stdout) if result.stdout.strip() else {}
 
 
+def agy_decision(tool_name, args):
+    result = subprocess.run(
+        [sys.executable, str(AGY_HOOK)],
+        input=json.dumps({'toolCall': {'name': tool_name, 'args': args}}),
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    return json.loads(result.stdout)
+
+
 class PreToolUsePolicyTests(unittest.TestCase):
+    def test_antigravity_command_guard_matches_codex_policy(self):
+        cache_path = 'node' + '_modules/bad.js'
+        self.assertEqual(agy_decision('run_command', {'CommandLine': 'git status'})['decision'], 'allow')
+        self.assertEqual(agy_decision('run_command', {'CommandLine': 'git reset --hard'})['decision'], 'deny')
+        self.assertEqual(agy_decision('run_command', {'CommandLine': f'Remove-Item {cache_path}'})['decision'], 'deny')
+        self.assertEqual(agy_decision('run_command', {'CommandLine': 'Remove-Item src -Recurse -Force'})['decision'], 'deny')
+
+    def test_antigravity_background_terminal_input_uses_command_guard(self):
+        cache_path = 'node' + '_modules/bad.js'
+        self.assertEqual(agy_decision('manage_task', {'Action': 'send_input', 'Input': 'git status'})['decision'], 'allow')
+        self.assertEqual(agy_decision('manage_task', {'Action': 'send_input', 'Input': 'git reset --hard'})['decision'], 'deny')
+        self.assertEqual(agy_decision('manage_task', {'Action': 'send_input', 'Input': f'Remove-Item {cache_path}'})['decision'], 'deny')
+        self.assertEqual(agy_decision('manage_task', {'Action': 'send_input'})['decision'], 'deny')
+        self.assertEqual(agy_decision('manage_task', {'Action': 'status'})['decision'], 'allow')
+
+    def test_antigravity_edit_checks_target_and_not_source_prose(self):
+        cache_path = 'node' + '_modules/bad.js'
+        self.assertEqual(
+            agy_decision('write_to_file', {'TargetFile': 'safe.js', 'CodeContent': f'const path = "{cache_path}";'})['decision'],
+            'allow',
+        )
+        self.assertEqual(agy_decision('write_to_file', {'TargetFile': cache_path, 'CodeContent': 'safe'})['decision'], 'deny')
+        self.assertEqual(agy_decision('replace_file_content', {'TargetFile': cache_path})['decision'], 'deny')
+        self.assertEqual(agy_decision('multi_replace_file_content', {'TargetFile': cache_path})['decision'], 'deny')
+        nested_negation = 'node' + '_modules/!dist/payload.js'
+        self.assertEqual(agy_decision('write_to_file', {'TargetFile': nested_negation})['decision'], 'deny')
+
+    def test_antigravity_does_not_approve_malformed_tool_arguments(self):
+        self.assertEqual(agy_decision('run_command', {})['decision'], 'deny')
+        self.assertEqual(agy_decision('write_to_file', {})['decision'], 'deny')
+
+    def test_antigravity_node_launcher_runs_the_shared_guard(self):
+        result = subprocess.run(
+            ['node', str(LAUNCHER), 'antigravity'],
+            input=json.dumps({'toolCall': {'name': 'run_command', 'args': {'CommandLine': 'git reset --hard'}}}),
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+        self.assertEqual(json.loads(result.stdout)['decision'], 'deny')
+
+    def test_codex_node_launcher_runs_the_shared_guard(self):
+        result = subprocess.run(
+            ['node', str(LAUNCHER), 'codex'],
+            input=json.dumps({'hook_event_name': 'PreToolUse', 'tool_name': 'Bash', 'tool_input': {'command': 'git reset --hard'}}),
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+        self.assertEqual(json.loads(result.stdout)['hookSpecificOutput']['permissionDecision'], 'deny')
+
     def test_pr_comment_prose_is_not_treated_as_a_cache_path(self):
         comment = {'repo_full_name': 'owner/repo', 'pr_number': 99, 'comment': 'Please review CI coverage, then report.'}
         self.assertEqual(decision(comment, 'mcp__codex_apps__github__add_comment_to_issue'), {})
@@ -134,6 +198,10 @@ class PreToolUsePolicyTests(unittest.TestCase):
 
     def test_destructive_git_command_is_denied(self):
         result = decision({'command': 'git reset --hard'})
+        self.assertEqual(result['hookSpecificOutput']['permissionDecision'], 'deny')
+
+    def test_recursive_powershell_delete_is_denied(self):
+        result = decision({'command': 'Remove-Item -LiteralPath src -Recurse -Force'})
         self.assertEqual(result['hookSpecificOutput']['permissionDecision'], 'deny')
 
     def test_wrapped_destructive_git_command_is_denied(self):

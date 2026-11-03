@@ -9,6 +9,8 @@ libs/**/dist/
 
 # Testing
 /coverage-*
+__pycache__/
+*.pyc
 
 # Logs
 logs

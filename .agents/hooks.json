@@ -1,0 +1,16 @@
+{
+  "repository-tool-policy": {
+    "PreToolUse": [
+      {
+        "matcher": "run_command|manage_task|write_to_file|replace_file_content|multi_replace_file_content",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/aidd/run-tool-use-hook.mjs antigravity",
+            "timeout": 25
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -88,7 +88,13 @@ requiredPath('.husky/pre-push');
 requiredPath('.npmrc');
 requiredPath('.husky/install.mjs');
 requiredPath('.lintstagedrc');
+requiredPath('scripts/aidd/tool_use_policy.py');
+requiredPath('.agents/hooks.json');
+requiredPath('.agents/hooks/pre_tool_use_policy.py');
+requiredPath('scripts/aidd/run-tool-use-hook.mjs');
+requiredPath('.codex/hooks/pre_tool_use_policy.py');
 requiredPath('.github/pull_request_template.md');
+requiredContent('.codex/hooks.json', [/run-tool-use-hook\.mjs.*codex/]);
 
 const codexConfig = readFileSync(join(root, '.codex/config.toml'), 'utf8');
 if (/^\[profiles\./m.test(codexConfig)) {
@@ -108,6 +114,17 @@ for (const match of codexConfig.matchAll(/\[agents\.([^\]]+)\]\s*\r?\ndescriptio
 }
 
 const antigravityConfig = JSON.parse(readFileSync(join(root, '.agents/mcp_config.json'), 'utf8'));
+const antigravityHooks = JSON.parse(readFileSync(join(root, '.agents/hooks.json'), 'utf8'));
+const toolPolicyHook = antigravityHooks['repository-tool-policy']?.PreToolUse?.[0];
+if (
+  antigravityHooks['repository-tool-policy']?.enabled === false ||
+  toolPolicyHook?.matcher !== 'run_command|manage_task|write_to_file|replace_file_content|multi_replace_file_content' ||
+  toolPolicyHook.hooks?.[0]?.command !== 'node scripts/aidd/run-tool-use-hook.mjs antigravity' ||
+  !Number.isInteger(toolPolicyHook.hooks?.[0]?.timeout) ||
+  toolPolicyHook.hooks[0].timeout < 20
+) {
+  errors.push('Antigravity must load the shared tool-use policy from .agents/hooks.json');
+}
 const antigravityDrawio = antigravityConfig.mcpServers?.drawio;
 if (JSON.stringify(Object.keys(antigravityConfig.mcpServers ?? {})) !== JSON.stringify(['drawio'])) {
   errors.push('Repository Antigravity MCP config may contain only the portable draw.io server');

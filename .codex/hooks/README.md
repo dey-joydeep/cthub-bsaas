@@ -1,6 +1,6 @@
 # Codex Hooks
 
-This folder contains conservative repository guardrails for Codex.
+This folder contains the Codex adapter for the shared repository tool-use policy in `scripts/aidd/tool_use_policy.py`. Antigravity loads its adapter from `.agents/hooks.json`.
 
 ## Active hooks
 
