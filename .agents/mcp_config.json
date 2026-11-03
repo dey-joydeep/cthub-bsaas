@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "drawio": {
+      "command": "npx",
+      "args": ["--ignore-scripts", "-y", "@drawio/mcp@1.10.1"]
+    }
+  }
+}

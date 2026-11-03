@@ -16,7 +16,7 @@ Constraints:
 - Preserve Nx boundaries and import rules.
 - Prefer the smallest safe diff.
 - Do not move or rename unrelated files.
-- Do not commit unless explicitly requested.
+- For an accepted work item, commit and push reviewable task-branch increments under `docs/aidd/autonomy-and-merge-policy.md`; never merge without the user's exact instruction.
 
 Please do:
 1. Read the referenced LLD/spec plus linked FRD/HLD/API/validation/test docs.

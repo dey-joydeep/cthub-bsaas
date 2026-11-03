@@ -9,6 +9,8 @@ libs/**/dist/
 
 # Testing
 /coverage-*
+__pycache__/
+*.pyc
 
 # Logs
 logs
@@ -24,6 +26,7 @@ work/
 
 # Angular
 .angular/
+libs/web/config/src/environments/*/environment.worktree.ts
 
 # Nx specific
 .nx/workspace/
@@ -36,6 +39,15 @@ work/
 
 # Environment files
 .env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+
+# AIDD broker local Cloudflare state and secrets
+tools/aidd-broker/.dev.vars*
+tools/aidd-broker/.wrangler/
+tools/aidd-broker/wrangler.deploy.jsonc
 
 # Coverage
 coverage/
@@ -46,10 +58,9 @@ coverage/
 .claude/settings.local.json
 node_modules_*
 
-vitest.config.*.timestamp* 
+vitest.config.*.timestamp*
 scratch/
 graph.json
 
 # SonarQube
 .scannerwork/
-

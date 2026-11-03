@@ -4,6 +4,8 @@
 
 Use this checklist when Codex reviews its own changes, reviews a pull request, or prepares a completion report.
 
+For a merge gate, the Codex reviewer must be independent of the implementer. Security checks are owned by Codex; critical security decisions require a second independent Codex assessment. See [development-lifecycle.md](development-lifecycle.md).
+
 ## Scope and traceability
 
 - [ ] The change matches the requested scope.
@@ -12,6 +14,7 @@ Use this checklist when Codex reviews its own changes, reviews a pull request, o
 - [ ] Design/spec documents were updated when behavior or contracts changed.
 - [ ] Implementation changes follow `docs/specs/project-wide/IMPLEMENTATION/implementation-slicing.md` when the work belongs to the project-wide roadmap.
 - [ ] API changes align with the owning OpenAPI file and endpoint map.
+- [ ] Check the actual producer and consumer for changes that cross an API or session boundary.
 - [ ] No unrelated files were reformatted or moved.
 
 ## Architecture
@@ -50,11 +53,14 @@ Use this checklist when Codex reviews its own changes, reviews a pull request, o
 
 - [ ] Match engines in `package.json` and `.nvmrc`.
 - [ ] Package installation: NEVER EVER use `--legacy-peer-deps` when installing or updating packages; resolve peer dependency conflicts cleanly.
+- [ ] Dependency changes follow `docs/aidd/dependency-policy.md`: owner and reason per direct package, manifest/lockfile consistency, review of new install scripts, and high-severity audit on lockfile changes.
 
 ## Tests and validation
 
 - [ ] Unit tests were added or updated for changed logic.
 - [ ] Integration tests were added or updated for API/database behavior when relevant.
+- [ ] Permission and SSR tests exercise the actual behavior claimed.
+- [ ] CI scripts preserve command failures and provision their test services.
 - [ ] Full-Slice Token Test: Real token generation or auth sign-in pipeline is tested to confirm newly added claims/capabilities are emitted in production.
 - [ ] Validation commands were run or explicitly reported as not run.
 - [ ] Test coverage thresholds were not weakened.
@@ -71,5 +77,9 @@ Use this checklist when Codex reviews its own changes, reviews a pull request, o
 
 ## Review thread follow-up
 
-- [ ] After pushing a fix for a review thread, reply in the same thread with the fix summary and mention `@codex` so the reviewer is explicitly notified to verify it.
-- [ ] Use a top-level `@codex review` comment only when requesting a whole-PR re-review instead of thread-specific verification.
+- [ ] Request the initial whole-PR review with a top-level PR comment containing the exact trigger `@codex review`.
+- [ ] Assign each actionable finding to a fixing agent and inspect its fix and validation before requesting a recheck.
+- [ ] After pushing the fix, reply in the original review thread with `@codex review fix`, the fix commit, a short explanation, and validation evidence. This thread-level wording has produced Codex rechecks in this repository; it is an observed behavior, not a separately documented OpenAI command.
+- [ ] Confirm Codex replied with a substantive recheck or a review receipt for the current head. A usage-limit reply, an unanswered mention, or a receipt for an older head does not close the finding. If thread follow-up does not work, request a top-level `@codex review` with links to the outstanding threads.
+- [ ] Resolve the original GitHub thread only after the finding is verified. A Codex agent that made a fix cannot be its sole independent reviewer.
+- [ ] After all actionable findings are closed, request a fresh whole-PR review of the final committed head with a top-level `@codex review` comment.

@@ -11,7 +11,7 @@ import { ApplicationConfig, EnvironmentProviders, isDevMode, mergeApplicationCon
 import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { provideServerRendering, ɵSERVER_CONTEXT as SERVER_CONTEXT } from '@angular/platform-server';
 import { ErrorService, loadingInterceptor } from '@cthub-bsaas/web-core-common';
-import { ssrInterceptor } from '@cthub-bsaas/web-core-platform';
+import { SSR_API_ORIGIN, ssrInterceptor } from '@cthub-bsaas/web-core-platform';
 import { appConfig } from './app.config';
 
 // Server-side interceptors
@@ -50,6 +50,7 @@ const mockWindow = {
 const serverProviders: (Provider | EnvironmentProviders)[] = [
   // Core server providers
   provideServerRendering(),
+  { provide: SSR_API_ORIGIN, useFactory: () => process.env['AIDD_WORKTREE_API_ORIGIN'] ?? null },
   {
     provide: 'ENABLE_DETAILED_ERRORS',
     useValue: isDevMode(),

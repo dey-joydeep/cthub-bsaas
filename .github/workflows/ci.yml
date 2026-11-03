@@ -2,32 +2,34 @@ name: CI/CD
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, 'release/**']
   pull_request:
-    branches: [main, master]
+    branches: [main, 'release/**']
+    types: [opened, synchronize, reopened, edited]
   workflow_dispatch:
 
 # Environment variables for Nx Cloud
 env:
   NX_CLOUD_DISTRIBUTED_EXECUTION: true
-  NX_CLOUD_AUTH_TOKEN: ${{ secrets.NX_CLOUD_AUTH_TOKEN }}
 
 jobs:
   main:
     name: Main Workflow
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      toolchain: ${{ steps.change_scope.outputs.toolchain }}
     services:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: root
+          POSTGRES_USER: bsaas_test
+          POSTGRES_PASSWORD: test_db_password
           POSTGRES_DB: bsaas_test
         ports:
-          - 5432:5432
+          - 55432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres -d bsaas_test"
+          --health-cmd "pg_isready -U bsaas_test -d bsaas_test"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -37,6 +39,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Required for Nx affected commands
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -44,37 +47,116 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Generate Prisma client
-        run: npx prisma generate --schema libs/server/data-access/prisma/schema.prisma
-
       - name: Set Nx affected refs
         shell: bash
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "NX_BASE=origin/${{ github.base_ref }}" >> "$GITHUB_ENV"
+            echo "NX_BASE=$(git merge-base "origin/${{ github.base_ref }}" HEAD)" >> "$GITHUB_ENV"
             echo "NX_HEAD=HEAD" >> "$GITHUB_ENV"
             echo "NX_DAEMON=false" >> "$GITHUB_ENV"
             echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
             echo "NX_CLOUD_DISTRIBUTED_EXECUTION=false" >> "$GITHUB_ENV"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "NX_BASE=HEAD^" >> "$GITHUB_ENV"
+            echo "NX_HEAD=HEAD" >> "$GITHUB_ENV"
           else
             echo "NX_BASE=${{ github.event.before }}" >> "$GITHUB_ENV"
             echo "NX_HEAD=HEAD" >> "$GITHUB_ENV"
           fi
 
+      - name: Detect change areas
+        id: change_scope
+        shell: bash
+        run: |
+          DIFF_FILES="$(git diff --name-only "$NX_BASE" "$NX_HEAD")"
+          if echo "$DIFF_FILES" | grep -Eq '^(apps/|libs/|package-lock\.json$|nx\.json$|tsconfig[^/]*\.json$|eslint[^/]*$)'; then
+            echo "runnable=true" >> "$GITHUB_OUTPUT"
+          fi
+          if echo "$DIFF_FILES" | grep -Eq '(^|/)AGENTS\.md$|^(package\.json$|\.gitignore$|\.prettierignore$|\.prettierrc$|docs/aidd/|docs/status/aidd/|scripts/aidd/|tools/aidd-broker/|libs/server/core/src/config/test-database-target\.ts$|libs/server/server-testing-utils/|\.agents/|\.codex/|\.husky/|\.lintstagedrc$|\.github/workflows/|\.github/PULL_REQUEST_TEMPLATE/|\.github/pull_request_template\.md$)'; then
+            echo "aidd=true" >> "$GITHUB_OUTPUT"
+          fi
+          if echo "$DIFF_FILES" | grep -Eq '(^|/)package\.json$|^package-lock\.json$|^\.npmrc$'; then
+            echo "dependency=true" >> "$GITHUB_OUTPUT"
+          fi
+          if echo "$DIFF_FILES" | grep -Eq '^(package\.json|package-lock\.json|\.npmrc|\.nvmrc|\.github/workflows/ci\.yml|\.codex/environments/setup(\.test)?\.mjs|scripts/aidd/smoke-installed-toolchain\.mjs)$'; then
+            echo "toolchain=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check branch and tracking issue
+        if: github.event_name == 'pull_request'
+        run: node scripts/aidd/check-branch-policy.mjs --event "$GITHUB_EVENT_PATH"
+
+      - name: Check dependency policy and audit
+        if: steps.change_scope.outputs.dependency == 'true'
+        run: |
+          node scripts/aidd/check-dependency-policy.mjs
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            node scripts/aidd/check-dependency-change.mjs "$NX_BASE" "$NX_HEAD" "$GITHUB_EVENT_PATH"
+          else
+            node scripts/aidd/check-dependency-change.mjs "$NX_BASE" "$NX_HEAD"
+          fi
+          if ! git diff --quiet "$NX_BASE" "$NX_HEAD" -- package-lock.json; then
+            npm audit --audit-level=high
+          fi
+
+      - name: Install dependencies without lifecycle scripts
+        run: |
+          npm ci --ignore-scripts --no-audit --fund=false
+          node scripts/check-versions/node-version.js
+
+      - name: Generate Prisma client
+        run: npx prisma generate --schema libs/server/data-access/prisma/schema.prisma
+
+      - name: Verify scripts-disabled toolchain
+        run: node scripts/aidd/smoke-installed-toolchain.mjs --require-prisma-client
+
+      - name: Check changed-file format and whitespace
+        run: |
+          npm run aidd:format:changed -- "$NX_BASE" "$NX_HEAD"
+          git diff --check "$NX_BASE" "$NX_HEAD"
+
+      - name: Check AIDD process assets
+        if: steps.change_scope.outputs.aidd == 'true'
+        run: |
+          npm run aidd:check
+          npm run aidd:instruction-drift
+          npm run aidd:instruction-drift:test
+          npm run aidd:premerge:test
+          npm run aidd:track-issue:test
+          npm run aidd:assets
+          npm run aidd:links
+          npm run aidd:format:test
+          npm run aidd:db-guard:test
+          npm run aidd:ledger:test
+          npm run deps:policy:test
+          npm run deps:change:test
+          npm run aidd:branch-policy:test
+          node --test scripts/aidd/prepare-worktree-runtime.test.mjs
+          node --test tools/aidd-broker/src/worker.test.mjs
+          node --test .codex/environments/setup.test.mjs
+          python3 -B -m unittest discover -s .codex/hooks -p 'test_*.py'
+          npx eslint --max-warnings 0 scripts/aidd/*.mjs
+          npx eslint --max-warnings 0 tools/aidd-broker/src/*.mjs
+
       - name: Enable Nx Cloud read-only mode
         if: github.event_name != 'pull_request'
         run: npx nx-cloud start-ci-run --distribute-on='5 linux-medium-js' --stop-agents-after='build'
+        env:
+          NX_CLOUD_AUTH_TOKEN: ${{ github.event_name != 'pull_request' && secrets.NX_CLOUD_AUTH_TOKEN || '' }}
 
       - name: Run linting
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' || steps.change_scope.outputs.runnable == 'true'
         run: npx nx affected --target=lint --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=ci
+        env:
+          NX_CLOUD_AUTH_TOKEN: ${{ github.event_name != 'pull_request' && secrets.NX_CLOUD_AUTH_TOKEN || '' }}
 
       - name: Run tests
-        if: github.event_name != 'pull_request'
-        run: npx nx affected --target=test --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=ci
+        if: github.event_name != 'pull_request' || steps.change_scope.outputs.runnable == 'true'
+        run: npx nx affected --target=test --base="$NX_BASE" --head="$NX_HEAD" --parallel=1 --configuration=ci
+        env:
+          NX_NO_CLOUD: 'true'
+          NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
+          NX_CLOUD_AUTH_TOKEN: ${{ github.event_name != 'pull_request' && secrets.NX_CLOUD_AUTH_TOKEN || '' }}
 
       - name: OpenAPI parity (auth)
         run: npm run openapi:check:auth
@@ -89,11 +171,17 @@ jobs:
         run: npm run openapi:lint:salon-owner
 
       - name: Server lint + coverage
+        env:
+          NX_NO_CLOUD: 'true'
+          NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
+          NX_CLOUD_AUTH_TOKEN: ${{ github.event_name != 'pull_request' && secrets.NX_CLOUD_AUTH_TOKEN || '' }}
         run: |
           npx nx run-many -t lint -p server-core,server-data-access,server-feature-auth,server-feature-salon-owner --parallel=3
           npx nx run-many -t test -p server-core,server-data-access,server-feature-auth,server-feature-salon-owner --coverage --parallel=1
 
       - name: Server build
+        env:
+          NX_CLOUD_AUTH_TOKEN: ${{ github.event_name != 'pull_request' && secrets.NX_CLOUD_AUTH_TOKEN || '' }}
         run: npx nx run-many -t build -p server-core,server-data-access,server-feature-auth,server-feature-salon-owner,api --parallel=3
 
       - name: Guard hygiene (no Guards in feature libs)
@@ -105,6 +193,8 @@ jobs:
           fi
 
       - name: Run build
+        env:
+          NX_CLOUD_AUTH_TOKEN: ${{ github.event_name != 'pull_request' && secrets.NX_CLOUD_AUTH_TOKEN || '' }}
         if: github.event_name != 'pull_request'
         run: npx nx affected --target=build --base="$NX_BASE" --head="$NX_HEAD" --parallel=3 --configuration=production
 
@@ -114,3 +204,33 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: ./coverage
           fail_ci_if_error: false
+
+  windows-toolchain:
+    name: Windows toolchain smoke
+    needs: main
+    if: needs.main.outputs.toolchain == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Check Windows worktree bootstrap
+        run: node --test .codex/environments/setup.test.mjs
+
+      - name: Install dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --fund=false
+
+      - name: Generate Prisma client
+        run: npx prisma generate --schema libs/server/data-access/prisma/schema.prisma
+
+      - name: Verify native tools and generated client
+        run: node scripts/aidd/smoke-installed-toolchain.mjs --require-prisma-client

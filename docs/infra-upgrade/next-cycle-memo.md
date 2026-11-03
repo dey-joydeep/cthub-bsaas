@@ -21,7 +21,7 @@
 
 ## 2. Completed in This Cycle (2026-10-26 — PR #91)
 
-The infrastructure upgrade cycle was executed on branch `chore/nx24-angular22-upgrade` and merged into `main` via PR #91. Full details are recorded in [`docs/infra-upgrade/20261026-nx24-angular22/migration-report.md`](docs/infra-upgrade/20261026-nx24-angular22/migration-report.md).
+The infrastructure upgrade cycle was executed on branch `chore/nx24-angular22-upgrade` and merged into `main` via PR #91. Full details are recorded in [`docs/infra-upgrade/20261026-nx24-angular22/migration-report.md`](20261026-nx24-angular22/migration-report.md).
 
 ### A. Nx 24 Migration & Deprecation Cleanup
 
@@ -66,7 +66,7 @@ The infrastructure upgrade cycle was executed on branch `chore/nx24-angular22-up
 
 While the tooling and runtime dependencies are upgraded to Nx 24 and Angular 22, the existing codebase contains legacy prototype artifacts that have not yet fully adopted the new infrastructure standards.
 
-This is a **purely technical housekeeping effort** that does not require waiting for new backend business features. A ready-to-run AIDD prompt is preserved in [`docs/infra-upgrade/20261026-nx24-angular22/workspace-adoption-prompt.md`](docs/infra-upgrade/20261026-nx24-angular22/workspace-adoption-prompt.md). It will be executed in the next session as a focused Technical Modernization sprint:
+This is a **purely technical housekeeping effort** that does not require waiting for new backend business features. A ready-to-run AIDD prompt is preserved in [`docs/infra-upgrade/20261026-nx24-angular22/workspace-adoption-prompt.md`](20261026-nx24-angular22/workspace-adoption-prompt.md). It will be executed in the next session as a focused Technical Modernization sprint:
 
 ### A. Current Gaps in Workspace Infra Adoption
 
@@ -127,4 +127,4 @@ flowchart TD
 
 ### C. Product Slices (Feature Implementation Roadmap)
 
-- Implementation of new business domains (Slice 3: Salon Owner Business & Branch Settings, Slice 4: Staff & Services, Slice 5: Customer CRM, Slice 6: Appointments, etc.) will proceed sequentially per [`docs/specs/project-wide/IMPLEMENTATION/implementation-slicing.md`](docs/specs/project-wide/IMPLEMENTATION/implementation-slicing.md) once infra adoption is complete.
+- Implementation of new business domains (Slice 3: Salon Owner Business & Branch Settings, Slice 4: Staff & Services, Slice 5: Customer CRM, Slice 6: Appointments, etc.) will proceed sequentially per [`docs/specs/project-wide/IMPLEMENTATION/implementation-slicing.md`](../specs/project-wide/IMPLEMENTATION/implementation-slicing.md) once infra adoption is complete.

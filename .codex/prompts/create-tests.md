@@ -14,7 +14,7 @@ Constraints:
 - Prefer deterministic tests.
 - Do not weaken coverage thresholds or skip failing tests.
 - Respect server UT/IT split and web test placement conventions.
-- Do not commit unless explicitly requested.
+- For an accepted work item, commit and push task-branch test changes under `docs/aidd/autonomy-and-merge-policy.md`; never merge without the user's exact instruction.
 
 Please do:
 1. Inspect the source file and nearby tests.

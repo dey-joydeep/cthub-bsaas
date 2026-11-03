@@ -1,66 +1,7 @@
-# BsaasFront
+# Admin Web App
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.8.
+This is the runnable Angular and SSR shell for platform administration. Keep reusable UI and feature behavior in `libs/web/**`; read `libs/web/AGENTS.md` and `apps/web/AGENTS.md` before changing this app.
 
-## RBAC & Security
+The Nx project is `web-app-admin`. Read `project.json` for available targets. Common commands from the repository root are `npm exec nx run web-app-admin:serve`, `npm exec nx run web-app-admin:build`, and `npm exec nx run web-app-admin:lint`. App-level browser tests live in `apps/e2e/web/admin/**`; feature unit tests usually belong to the owning library.
 
-- The User Stats feature is only available to users with the `admin` role for their tenant.
-- The UI will automatically hide stats and display a friendly error if you are not an admin.
-- Unauthorized or forbidden API responses (401/403) are handled gracefully in the UI.
-- All role-based and error scenarios are covered by automated frontend tests.
-
-## Development server
-
-To start a local development server, run:
-
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Use the current [web specifications](../../../docs/specs/README.md) and [change validation guide](../../../docs/aidd/change-hygiene.md) for the assigned slice.

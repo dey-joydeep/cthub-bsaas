@@ -4,6 +4,8 @@
 
 Use this guide when operating Codex from the local repository.
 
+The shared [AI-driven development life cycle](development-lifecycle.md) assigns bulk PO-to-release preparation to Antigravity by default and independent review and all security checks to Codex. Select review effort and model capability by risk; critical product decisions require an independent Codex product-spec review, and critical security decisions require two separately tasked Codex assessments.
+
 ## Start session
 
 From the repository root:
@@ -48,7 +50,7 @@ Do not edit yet. First classify the task, identify source-of-truth docs, impacte
 
 This branch ships these repo agents:
 
-- reviewer agents: architecture, API contract, security, tests, Angular SSR, NestJS or Prisma, and docs traceability
+- reviewer agents: product specification, architecture, API contract, security, adversarial security, tests, Angular SSR, NestJS or Prisma, and docs traceability
 - implementation helpers: implementation planner, backend implementer, frontend implementer, and docs or contract updater
 - CI helper: `ci-monitor-subagent`
 
@@ -74,7 +76,7 @@ Keep the diff surgical. Update tests and docs only where behavior or contracts c
 
 ```text
 Use AIDD mode. Review this PR using docs/aidd/codex-review-checklist.md.
-Use relevant reviewer agents if available. Do not edit files.
+Use relevant independent Codex reviewer agents. Route security checks to Codex. Do not edit files during review.
 ```
 
 ### Validation follow-up
@@ -94,13 +96,14 @@ Use relevant reviewer agents for architecture, API contract, security, tests, fr
 
 ## Fresh worktree bootstrap
 
-Fresh Codex environments use the repo bootstrap command from `.codex/environments/environment.toml`.
+Apply the [parallel worktree protocol](parallel-worktrees.md) before creating an isolated checkout. Fresh Codex environments use the repo bootstrap command from `.codex/environments/environment.toml`.
 
-The bootstrap currently:
+The bootstrap:
 
 - verifies the repository root
 - reports the Node version
-- runs `npm install` only when `node_modules` is missing
+- requires the lockfile and runs `npm ci --ignore-scripts --no-audit --fund=false` when `node_modules` is absent
+- runs the version check, local hook setup, and native toolchain smoke check explicitly; run Prisma client generation and its check separately when the task needs server builds or tests
 
 Dry-run validation:
 

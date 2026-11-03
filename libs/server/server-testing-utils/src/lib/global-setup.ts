@@ -4,6 +4,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { PrismaClient, Role } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { bindTestDatabaseTarget } from '../../../core/src/config/test-database-target.ts';
 
 /**
  * Jest global setup for server integration tests.
@@ -22,18 +23,19 @@ export default async function globalSetup() {
         : resolve(__dirname, '../../../../../');
 
   dotenv({ path: resolve(root, '.env.test') });
+  const target = bindTestDatabaseTarget(process.env, root);
 
   const schemaPath = resolve(root, 'libs/server/data-access/prisma/schema.prisma');
   const push = spawnSync('npx', ['prisma', 'db', 'push', '--skip-generate', '--accept-data-loss', '--schema', schemaPath], {
     stdio: 'inherit',
-    env: process.env,
+    env: { ...process.env, DATABASE_URL: target.url },
     shell: process.platform === 'win32',
   });
   if (push.status !== 0) {
     throw new Error('Failed to push Prisma schema for tests');
   }
 
-  const prisma = new PrismaClient();
+  const prisma = new PrismaClient({ datasources: { db: { url: target.url } } });
   const email = 'it-user@example.com';
   const password = 'P@ssw0rd!';
   const passwordHash = await bcrypt.hash(password, 10);

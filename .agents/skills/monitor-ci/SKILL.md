@@ -5,13 +5,13 @@ description: Monitor Nx Cloud CI pipeline and handle self-healing fixes. USE WHE
 
 # Monitor CI Command
 
-You are the orchestrator for monitoring Nx Cloud CI pipeline executions and handling self-healing fixes. You spawn subagents to interact with Nx Cloud, run deterministic decision scripts, and take action based on the results.
+You are the orchestrator for monitoring Nx Cloud CI pipeline executions and handling self-healing fixes. Use a one-call helper when the active runtime provides one, run deterministic decision scripts, and take action based on the results.
+
+The repository's root `AGENTS.md` and AIDD policy govern this skill in both Antigravity and Codex. A monitor request authorizes read-only observation. Do not create an empty commit, commit or push a local fix, or call a state-changing Nx Cloud action (`APPLY`, `REJECT`, `RERUN_ENVIRONMENT_STATE`) without authorization for that specific action in this session. When a proposed action needs authorization, report the exact fix and evidence so the user can decide. A user's earlier authorization for a particular action remains valid within its stated scope.
 
 ## Context
 
-- **Current Branch:** !`git branch --show-current`
-- **Current Commit:** !`git rev-parse --short HEAD`
-- **Remote Status:** !`git status -sb | head -1`
+Read the current branch, commit, and remote status with `git branch --show-current`, `git rev-parse --short HEAD`, and `git status -sb`. These commands work in PowerShell as well as POSIX shells.
 
 ## User Instructions
 
@@ -51,8 +51,8 @@ Before starting the monitoring loop, verify the workspace is connected to Nx Clo
 
 ## Architecture Overview
 
-1. **This skill (orchestrator)**: spawns subagents, runs scripts, prints status, does local coding work
-2. **ci-monitor-subagent (haiku)**: calls one MCP tool (ci_information or update_self_healing_fix), returns structured result, exits
+1. **This skill (orchestrator)**: coordinates one-call MCP reads, runs scripts, prints status, and does local coding work
+2. **One-call helper**: Codex may use its registered `ci-monitor-subagent`; Antigravity may delegate a bounded worker when available. Otherwise the active agent makes exactly one MCP call for that step. Do not assume a provider-specific model or helper exists.
 3. **ci-poll-decide.mjs (deterministic script)**: takes ci_information result + state, returns action + status message
 4. **ci-state-update.mjs (deterministic script)**: manages budget gates, post-action state transitions, and cycle classification
 
@@ -118,18 +118,18 @@ The decision script returns one of the following statuses. This table defines th
 
 **Statuses requiring action** — when handling these in Step 3, read `references/fix-flows.md` for the detailed flow:
 
-| Status                   | Summary                                                                                       |
-| ------------------------ | --------------------------------------------------------------------------------------------- |
-| `fix_auto_apply_skipped` | Fix verified but auto-apply skipped (e.g., loop prevention). Inform user, offer manual apply. |
-| `fix_apply_ready`        | Fix verified (all tasks or e2e-only). Apply via MCP.                                          |
-| `fix_needs_local_verify` | Fix has unverified non-e2e tasks. Run locally, then apply or enhance.                         |
-| `fix_needs_review`       | Fix verification failed/not attempted. Analyze and decide.                                    |
-| `fix_failed`             | Self-healing failed. Fetch heavy data, attempt local fix (gate check first).                  |
-| `no_fix`                 | No fix available. Fetch heavy data, attempt local fix (gate check first) or exit.             |
-| `environment_issue`      | Request environment rerun via MCP (gate check first).                                         |
-| `self_healing_throttled` | Reject old fixes, attempt local fix.                                                          |
-| `no_new_cipe`            | CI Attempt never spawned. Auto-fix workflow or exit with guidance.                            |
-| `cipe_no_tasks`          | CI failed with no tasks. Retry once with empty commit.                                        |
+| Status                   | Summary                                                                                         |
+| ------------------------ | ----------------------------------------------------------------------------------------------- |
+| `fix_auto_apply_skipped` | Fix verified but auto-apply skipped (e.g., loop prevention). Inform user, offer manual apply.   |
+| `fix_apply_ready`        | Fix verified (all tasks or e2e-only). Present the evidence; apply via MCP only when authorized. |
+| `fix_needs_local_verify` | Fix has unverified non-e2e tasks. Run locally, then apply or enhance.                           |
+| `fix_needs_review`       | Fix verification failed/not attempted. Analyze and decide.                                      |
+| `fix_failed`             | Self-healing failed. Fetch heavy data, attempt local fix (gate check first).                    |
+| `no_fix`                 | No fix available. Fetch heavy data, attempt local fix (gate check first) or exit.               |
+| `environment_issue`      | Present rerun evidence; request an environment rerun only when authorized.                      |
+| `self_healing_throttled` | Present old fixes and local-fix options; reject only when authorized.                           |
+| `no_new_cipe`            | CI Attempt never spawned. Auto-fix workflow or exit with guidance.                              |
+| `cipe_no_tasks`          | CI failed with no tasks. Report the evidence; an empty-commit retry needs authorization.        |
 
 **Key rules (always apply):**
 
@@ -163,7 +163,7 @@ prev_failure_classification = null
 
 Repeat until done:
 
-#### 2a. Spawn subagent (FETCH_STATUS)
+#### 2a. Fetch status (FETCH_STATUS)
 
 Determine select fields based on mode:
 
@@ -228,12 +228,12 @@ When decision script returns `action == "done"`:
 
 Several statuses require fetching additional data or calling tools:
 
-- **fix_apply_ready**: Call `update_self_healing_fix` with action `APPLY`
+- **fix_apply_ready**: Call `update_self_healing_fix` with action `APPLY` only when authorized
 - **fix_needs_local_verify**: Call `ci_information` with HEAVY_FIELDS for fix details before local verification
 - **fix_needs_review**: Call `ci_information` with HEAVY_FIELDS → get `suggestedFixDescription`, `suggestedFixSummary`, `taskFailureSummaries`
 - **fix_failed / no_fix**: Call `ci_information` with HEAVY_FIELDS → get `taskFailureSummaries` for local fix context
-- **environment_issue**: Call `update_self_healing_fix` with action `RERUN_ENVIRONMENT_STATE`
-- **self_healing_throttled**: Call `ci_information` with HEAVY_FIELDS → get `selfHealingSkipMessage`; then call `update_self_healing_fix` for each old fix
+- **environment_issue**: Call `update_self_healing_fix` with action `RERUN_ENVIRONMENT_STATE` only when authorized
+- **self_healing_throttled**: Call `ci_information` with HEAVY_FIELDS → get `selfHealingSkipMessage`; present old fixes and request authorization before any `REJECT`
 
 ### Step 3a: Track State for New-CI-Attempt Detection
 
@@ -292,9 +292,8 @@ Users can override default behaviors:
 | Instruction                                      | Effect                                              |
 | ------------------------------------------------ | --------------------------------------------------- |
 | "never auto-apply"                               | Always prompt before applying any fix               |
-| "always ask before git push"                     | Prompt before each push                             |
+| "push the verified fix for this task"            | Permits only the reviewed task-scoped push          |
 | "reject any fix for e2e tasks"                   | Auto-reject if `failedTaskIds` contains e2e         |
-| "apply all fixes regardless of verification"     | Skip verification check, apply everything           |
 | "if confidence < 70, reject"                     | Check confidence field before applying              |
 | "run 'nx affected -t typecheck' before applying" | Add local verification step                         |
 | "auto-fix workflow failures"                     | Attempt lockfile updates on pre-CI-Attempt failures |

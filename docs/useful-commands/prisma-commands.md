@@ -1,5 +1,7 @@
 # Prisma Migration & Database Management Commands
 
+**Historical command reference.** Follow the [current database access policy](../aidd/database-access-policy.md) and [migration rollout policy](../specs/shared/migration-rollout-policy.md) before using any command here. The examples below do not verify their target database and are not an automated test or release procedure.
+
 ## 1. Drop all tables in the database
 
 ```sql

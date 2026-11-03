@@ -7,6 +7,6 @@ export default {
   coverageDirectory: '../../../../coverage/libs/server/features/salon-owner',
   coveragePathIgnorePatterns: ['/node_modules/', '<rootDir>/tests/', '<rootDir>/src/lib/dto/'],
   coverageThreshold: undefined,
-  setupFiles: ['reflect-metadata'],
+  setupFiles: ['reflect-metadata', '<rootDir>/../../server-testing-utils/src/lib/test-database-worker-setup.ts'],
   testMatch: ['<rootDir>/tests/**/*.spec.ts', '<rootDir>/tests/**/*.it-spec.ts'],
 };

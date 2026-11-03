@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = process.cwd();
@@ -42,7 +42,18 @@ function optionalContent(path, patterns) {
 }
 
 requiredPath('AGENTS.md');
+requiredPath('README.md');
 requiredPath('docs/aidd/README.md');
+requiredPath('docs/aidd/development-lifecycle.md');
+requiredPath('docs/aidd/autonomous-recovery.md');
+requiredPath('docs/aidd/change-hygiene.md');
+requiredPath('docs/aidd/database-access-policy.md');
+requiredPath('docs/aidd/dependency-policy.md');
+requiredPath('docs/aidd/agent-activation.md');
+requiredPath('docs/aidd/role-directory-access.md');
+requiredPath('apps/web/AGENTS.md');
+requiredPath('scripts/aidd/test-database-target.test.mjs');
+requiredPath('docs/status/aidd/README.md');
 requiredPath('docs/aidd/codex-operating-model.md');
 requiredPath('docs/aidd/codex-task-policy.md');
 requiredPath('docs/aidd/codex-review-checklist.md');
@@ -50,16 +61,177 @@ requiredPath('docs/aidd/codex-validation-commands.md');
 requiredPath('docs/quality-standards/production-documentation-standard.md');
 requiredPath('docs/quality-standards/visual-collaboration-guideline.md');
 requiredPath('.codex/config.toml');
+requiredPath('.agents/mcp_config.json');
 requiredPath('.codex/prompts');
 requiredPath('.agents/skills');
+requiredPath('.agents/AGENTS.md');
+requiredPath('.agents/agents/product-owner.md');
+requiredPath('.agents/agents/qa-engineer.md');
+requiredPath('.agents/agents/release-agent.md');
+requiredPath('.agents/agents/database-architect.md');
+requiredPath('.codex/agents/database-reviewer.toml');
+requiredPath('scripts/aidd/run-agy-agent.mjs');
+requiredPath('scripts/aidd/agent-work-ledger.mjs');
+requiredPath('scripts/aidd/source-checkpoint.mjs');
+requiredPath('scripts/aidd/check-changed-format.mjs');
+requiredPath('scripts/aidd/check-instruction-drift.mjs');
+requiredPath('scripts/aidd/smoke-installed-toolchain.mjs');
+requiredPath('scripts/aidd/check-pr-automation-evidence.mjs');
+requiredPath('scripts/aidd/project-tracking.mjs');
+requiredPath('scripts/aidd/track-issue.mjs');
+requiredPath('docs/aidd/github-app-identities.md');
+requiredPath('scripts/aidd/check-dependency-policy.mjs');
+requiredPath('scripts/aidd/check-dependency-change.mjs');
+requiredPath('scripts/aidd/check-branch-policy.mjs');
+requiredPath('.husky/pre-commit');
+requiredPath('.husky/pre-push');
+requiredPath('.npmrc');
+requiredPath('.husky/install.mjs');
+requiredPath('.lintstagedrc');
+requiredPath('scripts/aidd/tool_use_policy.py');
+requiredPath('.agents/hooks.json');
+requiredPath('.agents/hooks/pre_tool_use_policy.py');
+requiredPath('scripts/aidd/run-tool-use-hook.mjs');
+requiredPath('.codex/hooks/pre_tool_use_policy.py');
+requiredPath('.github/pull_request_template.md');
+requiredContent('.codex/hooks.json', [/run-tool-use-hook\.mjs.*codex/]);
 
-requiredContent('AGENTS.md', [/AIDD/i, /docs\/aidd\/README\.md/]);
-requiredContent('docs/aidd/README.md', [/Codex AIDD/i, /codex-operating-model\.md/, /codex-task-policy\.md/]);
+const codexConfig = readFileSync(join(root, '.codex/config.toml'), 'utf8');
+if (/^\[profiles\./m.test(codexConfig)) {
+  errors.push('Codex ignores profiles in project-local .codex/config.toml; keep them in user configuration');
+}
+for (const match of codexConfig.matchAll(/\[agents\.([^\]]+)\]\s*\r?\ndescription = "([^"]+)"\s*\r?\nconfig_file = "agents\/([^"]+)"/g)) {
+  const [, name, description, file] = match;
+  const path = `.codex/agents/${file}`;
+  if (!existsSync(join(root, path))) {
+    errors.push(`Missing Codex agent: ${path}`);
+    continue;
+  }
+  const content = readFileSync(join(root, path), 'utf8');
+  if (!content.includes(`name = "${name}"`) || !content.includes(`description = "${description}"`)) {
+    errors.push(`Codex agent metadata differs from registration: ${path}`);
+  }
+}
+
+const antigravityConfig = JSON.parse(readFileSync(join(root, '.agents/mcp_config.json'), 'utf8'));
+const antigravityHooks = JSON.parse(readFileSync(join(root, '.agents/hooks.json'), 'utf8'));
+const toolPolicyHook = antigravityHooks['repository-tool-policy']?.PreToolUse?.[0];
+if (
+  antigravityHooks['repository-tool-policy']?.enabled === false ||
+  toolPolicyHook?.matcher !== 'run_command|manage_task|write_to_file|replace_file_content|multi_replace_file_content' ||
+  toolPolicyHook.hooks?.[0]?.command !== 'node scripts/aidd/run-tool-use-hook.mjs antigravity' ||
+  !Number.isInteger(toolPolicyHook.hooks?.[0]?.timeout) ||
+  toolPolicyHook.hooks[0].timeout < 20
+) {
+  errors.push('Antigravity must load the shared tool-use policy from .agents/hooks.json');
+}
+const antigravityDrawio = antigravityConfig.mcpServers?.drawio;
+if (JSON.stringify(Object.keys(antigravityConfig.mcpServers ?? {})) !== JSON.stringify(['drawio'])) {
+  errors.push('Repository Antigravity MCP config may contain only the portable draw.io server');
+}
+const codexDrawioBlock = codexConfig.match(/\[mcp_servers\.drawio\]\r?\n([\s\S]*?)(?=\r?\n\[|$)/)?.[1];
+const codexDrawioArgs = codexDrawioBlock?.match(/args\s*=\s*(\[[^\]]*\])/)?.[1];
+if (!codexDrawioArgs) {
+  errors.push('Codex draw.io MCP configuration is missing its argument list');
+} else {
+  const parsedCodexArgs = JSON.parse(codexDrawioArgs);
+  const antigravityArgs = antigravityDrawio?.args;
+  if (
+    antigravityDrawio?.command !== 'npx' ||
+    !codexDrawioBlock.includes('command = "npx"') ||
+    !Array.isArray(antigravityArgs) ||
+    JSON.stringify(antigravityArgs) !== JSON.stringify(parsedCodexArgs) ||
+    !antigravityArgs.includes('--ignore-scripts') ||
+    !antigravityArgs.some((arg) => /^@drawio\/mcp@\d+\.\d+\.\d+$/.test(arg))
+  ) {
+    errors.push('Antigravity and Codex draw.io MCP commands must match, pin a version, and disable install scripts');
+  }
+}
+if (existsSync(join(root, '.gemini/settings.json'))) {
+  errors.push('Legacy .gemini/settings.json is not an Antigravity workspace MCP entry point');
+}
+if (existsSync(join(root, '.gemini/commands/monitor-ci.toml'))) {
+  errors.push('Legacy Gemini monitor-ci command duplicates the shared .agents skill');
+}
+for (const name of readdirSync(join(root, '.agents/agents')).filter((entry) => entry.endsWith('.md'))) {
+  const path = `.agents/agents/${name}`;
+  const profile = readFileSync(join(root, path), 'utf8');
+  if (!profile.includes(`name: ${name.slice(0, -3)}`) || !/^mainAgent: true$/m.test(profile) || !/^subagent: true$/m.test(profile)) {
+    errors.push(`Antigravity role must support desktop/CLI selection and delegation: ${path}`);
+  }
+}
+
+for (const path of [
+  'GEMINI.md',
+  'apps/api/GEMINI.md',
+  'apps/e2e/GEMINI.md',
+  'docs/GEMINI.md',
+  'libs/server/GEMINI.md',
+  'libs/server/features/auth/GEMINI.md',
+  'libs/shared/GEMINI.md',
+  'libs/web/GEMINI.md',
+]) {
+  if (existsSync(join(root, path))) errors.push(`Duplicate instruction file: ${path}`);
+}
+
+requiredContent('AGENTS.md', [
+  /AIDD/i,
+  /docs\/aidd\/README\.md/,
+  /development-lifecycle\.md/,
+  /role-directory-access\.md/,
+  /apps\/web\/AGENTS\.md/,
+]);
+requiredContent('README.md', [/scalable SaaS platform for beauty salons/i, /development-lifecycle\.md/]);
+requiredContent('docs/aidd/README.md', [
+  /AI-Driven Development Guide/i,
+  /development-lifecycle\.md/,
+  /codex-task-policy\.md/,
+  /change-hygiene\.md/,
+]);
+requiredContent('docs/aidd/development-lifecycle.md', [
+  /QA participates from requirements through operation/i,
+  /Codex is the required owner/i,
+  /Gemini 3\.8 Flash/i,
+  /Critical security/i,
+]);
+requiredContent('.agents/AGENTS.md', [/Gemini 3\.8 Flash/i, /Codex/i, /development-lifecycle\.md/]);
+requiredContent('.github/pull_request_template.md', [
+  /Tracking issue:/i,
+  /Independent Codex review link/i,
+  /Codex security check link/i,
+  /Base branch and dependent PRs:/i,
+  /Broad-change phase plan and rollback/i,
+  /Real user-path and negative-case evidence/i,
+  /Current-head automated evidence/i,
+]);
+requiredContent('.github/PULL_REQUEST_TEMPLATE/aidd-implementation.md', [
+  /Base branch and dependent PRs:/i,
+  /Real user-path and negative-case evidence/i,
+  /Current-head automated evidence/i,
+]);
 requiredContent('docs/aidd/codex-operating-model.md', [/Standard AIDD flow/i, /FRD\/FNRD\/HLD\/LLD\/API\/validation\/web\/test/i]);
 requiredContent('docs/aidd/codex-task-policy.md', [/New task/i, /Continuation fix/i]);
 requiredContent('docs/aidd/codex-validation-commands.md', [/npx nx/i]);
 requiredContent('docs/aidd/codex-review-checklist.md', [/Scope and traceability/i, /Tests and validation/i]);
 optionalContent('package.json', [/"aidd:check"/, /"aidd:assets"/, /"aidd:links"/]);
+requiredContent('package.json', [
+  /"prepare"\s*:\s*"node \.husky\/install\.mjs"/,
+  /"aidd:ledger"/,
+  /"aidd:ledger:test"/,
+  /"aidd:source-checkpoint"/,
+  /"aidd:format:changed"/,
+  /"aidd:format:test"/,
+  /"aidd:db-guard:test"/,
+  /"aidd:instruction-drift"/,
+  /"aidd:instruction-drift:test"/,
+  /"aidd:premerge"/,
+  /"aidd:premerge:test"/,
+  /"aidd:track-issue"/,
+  /"aidd:track-issue:test"/,
+  /"deps:policy"/,
+  /"deps:change"/,
+  /"aidd:branch-policy"/,
+]);
 
 if (warnings.length > 0) {
   console.warn('AIDD setup warnings:');

@@ -1,45 +1,74 @@
 # CTHub Agent Rules
 
-## Mandatory: Project Tracker Initialization
+Read the root `AGENTS.md`, the nearest scoped `AGENTS.md`, and
+`docs/aidd/development-lifecycle.md` before starting a repository task. The
+life-cycle document owns the product goal, PO-to-release handoffs, QA role,
+and review gates.
+Use `docs/aidd/role-directory-access.md` to assign exact task paths and checks.
+Antigravity uses these same `AGENTS.md` files as Codex. Do not maintain parallel
+`GEMINI.md` copies. Keep provider-specific execution details in this file,
+role profiles, or the AIDD operating guides.
+The workspace `.agents/hooks.json` runs the shared pre-tool policy before
+Antigravity shell commands, background terminal input, and file edits. Verify
+that the hook is loaded in the desktop Customizations > Hooks view or CLI
+`/hooks` after opening this workspace.
+The shared Node launcher denies tool calls if its Python 3 policy adapter cannot run.
+For long-running or multi-agent work, follow `docs/aidd/autonomous-recovery.md`
+and checkpoint bounded work units before handoff. Resume interrupted units from
+the local ledger without treating partial evidence as complete. Publish a
+checkpoint to the private tracking issue when progress must survive this
+checkout.
+The lead AI agent dispatches bounded work under
+`docs/aidd/agent-dispatch-and-resume.md`. Keep at most two active subagents,
+record provider conversation IDs when available, and pause quota-blocked units
+in the ledger until capacity is checked. Do not retry a quota-blocked agent
+automatically or ask the human owner to manage its subagents.
+For parallel editing, follow `docs/aidd/parallel-worktrees.md`. Give each
+independent delivery slice its own branch and worktree; coordinate agents
+sharing a slice through non-overlapping path ownership and one Git writer.
 
-**Before writing any code, documentation, or making any commits for a new
-trackable work item (feature, bug, migration, spike, chore, doc), you MUST:**
+Antigravity execution requires Gemini 3.8 Flash or a stronger eligible model.
+Verify the effective model before interactive work; a `flash` tier does not
+pin a version. Automated role runs use `scripts/aidd/run-agy-agent.mjs`.
+Every delivery role is selectable as a main agent in the desktop app or CLI
+and delegable as a subagent; keep both `mainAgent: true` and `subagent: true`.
+Independent code and contract review and all security checks belong to Codex.
 
-1. Invoke the `aidd-project-tracker` skill.
-2. Gather `EpicTitle`, `EpicBody`, and `SubIssuesJson` from the task context.
-3. Run the appropriate script:
-   - **Windows:** `.agents/skills/aidd-project-tracker/scripts/init-tracker.ps1`
-   - **macOS/Linux:** `.agents/skills/aidd-project-tracker/scripts/init-tracker.sh`
-4. Confirm the Epic, sub-issues, and project board fields are fully populated
-   before proceeding.
+Use available Antigravity MCP tools for browser, Playwright, Penpot, Prisma,
+and Postgres work after verifying each tool's target and access. Tool access
+does not replace the database profile rules in `docs/aidd/database-access-policy.md`.
+Critical product specifications need an independent Codex reviewer; critical
+security decisions need two independently tasked Codex assessments.
 
-**Do NOT skip this step.** A task without an Epic on the project board is
-invisible to the team and violates the AIDD process.
+## Issue-First Tracking
 
-The skill handles everything automatically: Epic creation, sub-issue creation,
-parent-child linking (via GraphQL), project board assignment, and field
-population (Status, Priority, Size, Estimate, Domain, Start date, End date).
+For a trackable change, search the existing issue and project board before
+creating tracking. Reuse the issue when it already covers the requested outcome
+and record its number in the task handoff.
 
-### When NOT to create an Epic
+- Use one issue for a standalone change with acceptance criteria and validation.
+- Add every trackable delivery issue to the private cthub Project with a Status.
+  The coordinator owns Project updates and verifies each write.
+- Use a parent feature issue (Epic) with sub-issues only when the outcome has at
+  least two independent, reviewable delivery slices with separate acceptance
+  criteria and PRs. Frontend and backend may be separate slices when they meet
+  that test; agent roles or internal work steps alone do not justify children.
+  Invoke `aidd-project-tracker` when a new Epic is needed; it previews before
+  GitHub writes.
+- Keep a continuation fix under its existing issue or PR. A read-only question,
+  review, or trivial correction does not require new tracking.
+- Check for an existing Epic and sub-issues before invoking the initializer. Do
+  not create duplicates to satisfy a process step.
 
-- The task is a direct continuation of an already-initialized Epic (just add a
-  sub-issue to the existing one instead).
-- The task is a one-liner fix with no trackable deliverable (e.g., fixing a
-  typo, updating a comment).
+Tracking records the work; an agent-created issue alone does not authorize a
+new product objective. A user-requested or previously approved work item has
+the task-branch authority in `docs/aidd/autonomy-and-merge-policy.md`. It does
+not authorize a merge, deployment, or change of product scope.
 
-## Mandatory: Post-Edit Formatting, Linting, & Warning Reporting
+## Post-Edit Validation
 
-**Whenever an AI agent finishes modifying or creating any code or test files (`.ts`, `.spec.ts`, `.html`, `.css`, `.scss`, etc.), you MUST perform file-level AST validation before completing your turn or asking for commit approval:**
-
-1. **Format edited files:** Run Prettier directly on the touched files:
-   ```powershell
-   npx prettier --write <path/to/edited-file1> <path/to/edited-file2>
-   ```
-2. **Lint edited files:** Run ESLint directly on any touched TypeScript/JavaScript files:
-   ```powershell
-   npx eslint --fix <path/to/edited-file1.ts> <path/to/edited-file2.ts>
-   ```
-3. **Mandatory Warning Reporting:** Inspect the terminal output from ESLint. While warnings will not block staged-level checks or commits, **you MUST explicitly report any warnings or non-fatal lint issues (such as unused variables, deprecated methods, or type assertions) to the user in your response.** Never silently ignore warnings.
+Follow the root `AGENTS.md` post-edit checks for touched files. Report warnings
+and non-fatal lint issues in the completion summary.
 
 ### Reference
 

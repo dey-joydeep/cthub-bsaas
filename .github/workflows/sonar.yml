@@ -5,11 +5,6 @@ on:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      target_branch:
-        description: 'Branch to analyze (leave empty to analyze current branch)'
-        required: false
-        default: ''
 
 env:
   NODE_VERSION: '24'
@@ -17,6 +12,7 @@ env:
 jobs:
   sonar:
     name: SonarQube Scan (Self-Hosted)
+    if: github.ref == 'refs/heads/main'
     runs-on: self-hosted
     timeout-minutes: 30
 
@@ -35,10 +31,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.target_branch || github.ref }}
+          ref: ${{ github.sha }}
           fetch-depth: 0 # Full history required by SonarQube blame analysis
           set-safe-directory: false
-          clean: false
+          clean: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -48,17 +44,17 @@ jobs:
 
       - name: Install dependencies
         run: |
-          if (Test-Path node_modules) {
-            npm install --prefer-offline --no-audit
-          } else {
-            npm ci --prefer-offline --no-audit
-          }
+          npm ci --ignore-scripts --no-audit --fund=false
+          node scripts/check-versions/node-version.js
 
       - name: Generate Prisma client
         run: npx prisma generate --schema libs/server/data-access/prisma/schema.prisma
 
+      - name: Verify scripts-disabled toolchain
+        run: node scripts/aidd/smoke-installed-toolchain.mjs --require-prisma-client
+
       - name: Run tests with coverage
-        run: npx nx run-many -t test -p server-core,server-data-access,server-feature-auth,server-feature-salon-owner --coverage --parallel=2
+        run: npx nx run-many -t test -p server-core,server-data-access,server-feature-auth,server-feature-salon-owner --coverage --parallel=1
 
       - name: Run SonarQube Scan
         run: npm run sonar

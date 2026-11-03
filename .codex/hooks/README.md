@@ -1,6 +1,6 @@
 # Codex Hooks
 
-This folder contains conservative repository guardrails for Codex.
+This folder contains the Codex adapter for the shared repository tool-use policy in `scripts/aidd/tool_use_policy.py`. Antigravity loads its adapter from `.agents/hooks.json`.
 
 ## Active hooks
 
@@ -17,6 +17,8 @@ Allowed first-stage behavior:
 - block clearly unsafe generated or cache paths such as `node_modules/`, `dist/`, `coverage/`, and `.nx/`;
 - block destructive commands that should be handled manually;
 - warn when high-impact files such as `package.json`, lockfiles, or Prisma schema are touched.
+
+For a direct patch or a strict single-call `apply_patch` wrapper with a JSON string literal, inspect patch target paths. Source text may mention a generated directory without editing it. Direct, structured GitHub PR comments and body/title updates may mention these words in prose. The exemption requires the named GitHub tool and an exact prose-only input shape; script wrappers, shell commands, and mixed tool calls retain the conservative full-input check. Regression tests cover allowed source edits and structured GitHub text, plus blocked generated-path targets and mixed calls.
 
 Avoid hooks that auto-edit source code, auto-format unrelated files, or run broad validation without explicit user intent.
 

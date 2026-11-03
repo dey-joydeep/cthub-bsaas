@@ -2,13 +2,14 @@
 
 ## How To Use These Instructions
 
-These guidelines apply universally to all AI coding assistants (Antigravity, Codex, etc.) and human developers. Before working in a scoped area, read the nearest relevant instruction file manually:
+These guidelines apply to AI coding assistants and human developers. Work from the repository root, and read the nearest relevant instruction file before working in a scoped area:
 
 | Work area                      | Read this first                                                     |
 | ------------------------------ | ------------------------------------------------------------------- |
 | `libs/server/**`               | `libs/server/AGENTS.md`                                             |
 | `libs/server/features/auth/**` | `libs/server/AGENTS.md`, then `libs/server/features/auth/AGENTS.md` |
 | `libs/web/**`                  | `libs/web/AGENTS.md`                                                |
+| `apps/web/**`                  | `libs/web/AGENTS.md`, then `apps/web/AGENTS.md`                     |
 | `libs/shared/**`               | `libs/shared/AGENTS.md`                                             |
 | `apps/api/**`                  | `libs/server/AGENTS.md`, then `apps/api/AGENTS.md`                  |
 | `apps/e2e/**`                  | `apps/e2e/AGENTS.md`                                                |
@@ -21,28 +22,40 @@ Root instructions define global safety, workflow, and repository conventions. Sc
 
 1. Use the actual local checkout directory as your project root.
 2. Prefer MCP tools over raw shell when they exist.
-3. Keep approvals `on-request` unless the user changes it.
+3. Keep runtime/tool approvals `on-request` unless the user changes them. Task-branch Git authorization is defined separately below.
 4. Confirm runtime environment before commands that depend on OS, shell, Node, npm, database, or network state.
 5. Check `git status --short` before editing or committing.
+6. Compare checked-out package and Nx configuration with version claims in these instructions. Run `npm run aidd:instruction-drift` for AIDD or platform changes; report any mismatch.
 
 ## AIDD Default Policy
 
 AIDD is the default workflow for every new task, including a new error-fix request. A request such as "fix this error" is still a new task unless it is explicitly part of an already-running implementation session.
 
-For every new task, Codex must:
+The [AI-driven development life cycle](docs/aidd/development-lifecycle.md) defines the product goal, role ownership, handoffs, and release gates for both Codex and Antigravity. Reuse an existing issue when the work continues it; use one issue for a standalone deliverable and an Epic only for a multi-slice outcome. Independent review and security checks belong to Codex. Antigravity execution requires Gemini 3.8 Flash or stronger; verify the effective model because an agent's `flash` tier does not pin a version.
+
+Use the [role and directory guide](docs/aidd/role-directory-access.md) to assign task paths, edit ownership, and verification. A role profile does not grant blanket write access to its listed areas.
+
+Add each trackable delivery issue to the private cthub GitHub Project with a Status. A feature needs child issues only for independent delivery slices with their own acceptance criteria and PRs, not for each agent, layer, or internal work unit. The coordinator owns Project field updates; see `docs/aidd/development-lifecycle.md` and `.agents/skills/aidd-project-tracker/SKILL.md`.
+
+For long-running or multi-agent work, use the [AIDD recovery protocol](docs/aidd/autonomous-recovery.md): initialize bounded work units before dispatch, checkpoint each reviewable increment, and recover interrupted units from the local ledger. Publish process state to the private tracking issue and source state to the dedicated private Git ref when progress must survive loss of the checkout. A partial or stale checkpoint is not completion evidence.
+
+The lead AI agent coordinates dispatch; the human owner is not the subagent scheduler. Follow [Agent Dispatch and Resume](docs/aidd/agent-dispatch-and-resume.md): cap active subagents, check provider usage before costly work, reserve Codex for required independent reviews, and record quota exhaustion as a paused ledger unit. Do not treat a provider conversation or an expired quota wait as a completed gate.
+
+For every new task, the active agent must:
 
 1. Read this root `AGENTS.md` and the nearest scoped `AGENTS.md` for the touched area.
 2. Read `docs/aidd/README.md` and follow the applicable AIDD guide or prompt template.
-3. Inspect relevant docs and code before editing.
+3. Inspect relevant docs and code before editing, and identify the work item's product outcome and acceptance criteria when applicable.
 4. Produce a short plan before non-trivial edits.
 5. Keep design/spec/API/validation/test documents aligned when behavior or contracts change.
 6. Run the narrowest meaningful validation command, or report exactly why validation was not run.
 
-A lighter path is allowed only for a continuation fix inside the same active task, for example correcting a lint/test/build error produced by the current change. Even then, Codex must preserve the AIDD trace, avoid broad refactors, and report the validation result.
+A lighter path is allowed only for a continuation fix inside the same active task, for example correcting a lint/test/build error produced by the current change. Even then, the agent must preserve the AIDD trace, avoid broad refactors, and report the validation result.
 
 ## Safe Filesystem Usage
 
 - Stay inside the repository unless explicitly told otherwise.
+- A sibling Git worktree under the same approved workspace parent is allowed only after the user authorizes its location and any branch creation. Follow `docs/aidd/parallel-worktrees.md`; verify its resolved path before removal.
 - Never call `filesystem.directory_tree` on the repo root.
 - For top-level structure, use a depth-1 listing.
 - Drill down one folder at a time.
@@ -63,20 +76,24 @@ A lighter path is allowed only for a continuation fix inside the same active tas
 - Windows shell: prefer PowerShell Core (`pwsh`) when available.
 - Use `Get-Content` instead of `sed` for quick file reads on Windows.
 - Use forward slashes in Nx targets; PowerShell accepts them.
-- Server integration tests require the local test database from `.env.test` or `libs/server/data-access/prisma/.env`.
+- Server integration tests require the isolated test database configured through `.env.test` or an approved `TEST_DATABASE_URL`.
 
 ## Dependencies And Package Installation
 
+- Follow `docs/aidd/dependency-policy.md` for installs, removals, updates, pruning, audits, and PR evidence.
 - Match engines in `package.json` and `.nvmrc`.
 - Node and npm must be compatible with the repo before running builds/tests.
+- Server integration tests require the isolated database in `docker-compose.test.yml` with `.env.test`, or an explicitly approved `TEST_DATABASE_URL`; never use a general Prisma `.env` file as their target.
+- Database operations follow `docs/aidd/database-access-policy.md`. Automated tests use only a validated test target; database tools do not bypass profile and authorization rules.
 - **NEVER EVER use `--legacy-peer-deps`** when installing or updating any package. Peer dependency conflicts must be resolved cleanly by matching compatible package versions in `package.json`, never bypassed, forced, or silenced with `--legacy-peer-deps`.
+- Do not use dependency-changing `--force`, disable the lockfile, or make an unsaved project dependency change. Review new install scripts and run the dependency policy check.
 
 ## Project Snapshot
 
-- Monorepo: Nx 21.
+- Monorepo: Nx 24.
 - Backend: NestJS 11.
-- Frontend: Angular 20, standalone + SSR, Angular Material v3, Tailwind v4.
-- Tests: Jest 29 for current server and web tests.
+- Frontend: Angular 22, standalone + SSR, Angular Material v3, Tailwind v4.
+- Tests: Jest 30 and Vitest 4; inspect the affected project's test target before choosing a command.
 - Apps: backend API under `apps/api`; Angular runnable wrappers under `apps/web/**`; E2E under `apps/e2e/**`.
 - Libraries: main implementation lives under `libs/**`.
 - TypeScript path aliases are defined in `tsconfig.base.json`.
@@ -103,10 +120,12 @@ Keep specs and implementation aligned. Cross-link PRs to relevant user stories a
 
 ## Coding Style
 
+Follow the [AIDD change scope and validation matrix](docs/aidd/change-hygiene.md) for inclusion, exclusion, and checks by changed area.
+
 - TypeScript strict.
 - ES modules.
 - Prettier/ESLint formatting.
-- Mandatory post-edit check: whenever an agent finishes modifying or creating files, it MUST run `npx prettier --write <files>` and `npx eslint --fix <files>` on the touched files. While staged-level checks allow warnings to pass, the AI agent MUST explicitly report any warnings or non-fatal lint issues to the user in its summary. Never silently ignore warnings.
+- Post-edit checks: format touched files supported by Prettier. Lint touched TypeScript/JavaScript files with the affected Nx lint target or scoped ESLint when needed. Report warnings and non-fatal lint issues explicitly; do not silently ignore them.
 - 2-space indent.
 - Single quotes.
 - File names: `kebab-case.ts`.
@@ -134,8 +153,10 @@ Keep specs and implementation aligned. Cross-link PRs to relevant user stories a
 
 ## Git And Commits
 
-- Do not commit unless the user explicitly instructs you to commit.
-- Commit authorization is scoped to the immediately preceding task only.
+- The user has authorized routine commits and pushes on a task branch for a user-requested or previously approved AIDD work item, including future work items. Record the owning issue, accepted outcome and scope, branch, and assigned writable paths before the first push. An issue created by an agent does not by itself authorize a new product objective.
+- The coordinator may commit and push reviewable increments, open the PR, and fix CI or review findings on that task branch without asking again. Inspect the staged set and validation result before each commit; push only to the verified private repository and the intended task branch. Do not force-push, rewrite shared history, or include unrelated changes or secrets.
+- The separate AIDD recovery authorization remains: `npm run aidd:source-checkpoint -- apply <task-id>` may create and push a private commit only to `refs/aidd/checkpoints/<task-id>`. It must preserve the current branch and normal index, verify the private remote, and reject likely secrets.
+- No agent may merge a PR, push directly to `main` or a release branch, create a release tag, or deploy without the user's explicit instruction for that action. A ready PR is a recommendation, not merge authorization. Follow [autonomy and merge policy](docs/aidd/autonomy-and-merge-policy.md) for decisions and pauses.
 - Before committing, show or inspect the staged set.
 - Do not revert user changes unless explicitly requested.
 - Conventional commits: `feat:`, `fix:`, `chore:`, `refactor:`, `test:`, `docs:`.
@@ -143,10 +164,12 @@ Keep specs and implementation aligned. Cross-link PRs to relevant user stories a
 
 ## Branching
 
-- Never create or switch branches without explicit user confirmation.
+- For a user-requested or previously approved AIDD work item, the coordinator may create or switch to its task branch without another prompt after checking the current status, existing branches/worktrees, issue, intended base, and assigned path. Do not switch away from a checkout with uncommitted work unless that work is safely preserved and the owner is known. Other branch changes require explicit user instruction.
 - Branch naming: `<type>/<short-description>`.
 - Allowed type examples: `feature`, `fix`, `chore`, `docs`, `test`, `refactor`, `style`.
 - Short description: lowercase kebab-case, 50 characters or fewer.
+- `ci/<short-description>` is also allowed. A separately maintained release branch uses `release/vMAJOR.MINOR.PATCH`; release tags use `vMAJOR.MINOR.PATCH`. Follow the merge and issue-link policy in `docs/aidd/development-lifecycle.md`.
+- Parallel delivery slices follow `docs/aidd/parallel-worktrees.md`: one branch and worktree per independent slice, with no branch per agent. The coordinator owns integration and Git operations when multiple agents share one slice.
 
 ## Security, Secrets, And Config
 

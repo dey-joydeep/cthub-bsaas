@@ -2,6 +2,10 @@
 
 Use this playbook for every new Codex task, including a fresh error-fix request.
 
+The shared [development life cycle](../development-lifecycle.md) determines the product stage, role owner, and gates. Search for an existing issue and Project item before creating tracking. Add a trackable issue to the cthub Project with a Status. A new task does not automatically require an Epic or sub-issues: create children only for independent delivery slices with separate acceptance criteria and PRs, such as frontend and backend slices when each can be reviewed on its own.
+
+Before delivery work, record whether the mandate came from the user's task request or a previously accepted roadmap item. An agent-created issue is tracking, not authorization for a new product outcome. Under the [autonomy and merge policy](../autonomy-and-merge-policy.md), the accepted mandate covers routine task-branch commits and pushes, while the user retains the merge decision.
+
 ## Operator prompt
 
 ```text
@@ -14,6 +18,7 @@ Read first:
 - AGENTS.md
 - every scoped AGENTS.md required for the touched areas
 - docs/aidd/README.md
+- docs/aidd/role-directory-access.md
 - relevant docs/us, docs/specs, docs/quality-standards, and existing implementation files
 
 Do not edit yet. First produce:
@@ -23,6 +28,8 @@ Do not edit yet. First produce:
 4. implementation or documentation plan
 5. validation commands
 6. risks, assumptions, and open questions
+7. existing issue and Project item or proposed standalone issue/Epic decision when the work is trackable
+8. assigned writable paths, read targets, and verification owner for each role involved
 ```
 
 ## Required Codex behavior
@@ -30,10 +37,15 @@ Do not edit yet. First produce:
 - Treat short requests such as `fix this error` as new tasks unless they are continuation fixes inside an already-running task.
 - Inspect before editing.
 - Prefer the smallest safe change.
+- Apply the [change scope and validation matrix](../change-hygiene.md) when choosing files and checks.
+- Use the [role and directory guide](../role-directory-access.md) to assign exact writable paths and verification before delegating.
 - Load all required scoped instruction files when an area has layered guidance, such as `libs/server/**` plus `libs/server/features/auth/**`.
 - Use Nx commands for project tasks instead of direct tool invocations when Nx targets exist.
 - Keep FRD/FNRD/HLD/LLD/API/VALIDATION/WEB/TEST alignment when behavior or contracts change.
 - Report validation honestly.
+- When implementing for a PR, hand the result to an independent Codex reviewer; route every security check to Codex.
+- For long-running or multi-agent work, initialize the [AIDD ledger](../autonomous-recovery.md) and bounded units before dispatch; checkpoint progress after each reviewable increment.
+- Before parallel editing, apply the [worktree protocol](../parallel-worktrees.md) to assign a branch, checkout, and path owner to each independent slice.
 
 ## Completion format
 

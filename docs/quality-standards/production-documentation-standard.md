@@ -42,9 +42,9 @@ A document is incomplete when it only says what screens or modules exist. It mus
 - test expectations;
 - non-functional constraints.
 
-## Required Agent Roleplay
+## Required Perspectives And Independent Review
 
-When creating or reviewing requirements/design docs, the agent must intentionally switch roles. Each role catches a different class of gaps.
+Requirements and design work must consider the following perspectives. The author may use the table as a completeness checklist, but one agent simulating several roles is not an independent review. Critical product specifications and architecture decisions require a second, independently tasked Codex reviewer under the [AI-driven development life cycle](../aidd/development-lifecycle.md).
 
 | Role               | Question to answer                                                                     | Required output                                                                    |
 | ------------------ | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |

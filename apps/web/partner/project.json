@@ -67,6 +67,17 @@
           "optimization": false,
           "sourceMap": true,
           "extractLicenses": false
+        },
+        "worktree": {
+          "optimization": false,
+          "sourceMap": true,
+          "extractLicenses": false,
+          "fileReplacements": [
+            {
+              "replace": "libs/web/config/src/environments/partner/environment.ts",
+              "with": "libs/web/config/src/environments/partner/environment.worktree.ts"
+            }
+          ]
         }
       }
     },
@@ -84,6 +95,10 @@
         },
         "development": {
           "buildTarget": "web-app-partner:build:development"
+        },
+        "worktree": {
+          "buildTarget": "web-app-partner:build:worktree",
+          "proxyConfig": "tmp/aidd-runtime/proxy.conf.json"
         }
       },
       "readyWhen": {

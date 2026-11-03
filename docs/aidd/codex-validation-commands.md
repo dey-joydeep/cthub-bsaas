@@ -4,6 +4,8 @@
 
 Use the narrowest command that validates the change.
 
+Use the [change scope and validation matrix](change-hygiene.md) to select checks by changed area. For PRs, `npm run aidd:format:changed -- <base-ref> <head-ref>` checks supported changed files while respecting `.prettierignore`. For uncommitted work, use `npm run aidd:format:changed -- --worktree`; format only the paths it reports.
+
 ## Project discovery
 
 ```powershell
@@ -27,6 +29,22 @@ npm run lint:affected
 npm run test:affected
 npm run build:affected
 ```
+
+## Dependency and branch policy validation
+
+For dependency or branch policy changes, run the relevant checks before handoff:
+
+```powershell
+npm run deps:policy
+npm run deps:policy:test
+npm run deps:change:test
+npm run aidd:branch-policy:test
+npm run aidd:premerge:test
+npm run aidd:track-issue:test
+npm run aidd:toolchain-smoke
+```
+
+After Prisma client generation, run `node scripts/aidd/smoke-installed-toolchain.mjs --require-prisma-client` for server work. CI runs this on Linux after every clean install and on Windows when dependency or bootstrap files change. Run `npm audit --audit-level=high` when the lockfile changes. The live `npm run aidd:premerge -- <PR-number>` command is required after the final committed PR head and review are available.
 
 ## Full workspace validation
 
