@@ -36,8 +36,9 @@ test('preparation writes only local web environment overrides for the chosen slo
       assert.equal(readFileSync(join(directory, 'environment.ts'), 'utf8'), 'tracked source');
     }
     const proxy = JSON.parse(readFileSync(join(root, 'tmp', 'aidd-runtime', 'proxy.conf.json'), 'utf8'));
-    assert.equal(proxy['/api'].target, 'http://localhost:3020');
-    assert.equal(proxy['/partner'].target, 'http://localhost:3020');
+    assert.deepEqual(Object.keys(proxy).sort(), ['/api/**', '/partner/**']);
+    assert.equal(proxy['/api/**'].target, 'http://localhost:3020');
+    assert.equal(proxy['/partner/**'].target, 'http://localhost:3020');
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

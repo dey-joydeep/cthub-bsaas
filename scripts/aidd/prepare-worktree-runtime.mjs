@@ -33,8 +33,8 @@ export function prepareWorktreeRuntime(root, slot) {
   const proxyDirectory = join(root, 'tmp', 'aidd-runtime');
   mkdirSync(proxyDirectory, { recursive: true });
   const proxy = {
-    '/api': { target: `http://localhost:${ports.api}`, secure: false },
-    '/partner': { target: `http://localhost:${ports.api}`, secure: false },
+    '/api/**': { target: `http://localhost:${ports.api}`, secure: false },
+    '/partner/**': { target: `http://localhost:${ports.api}`, secure: false },
   };
   writeFileSync(join(proxyDirectory, 'proxy.conf.json'), `${JSON.stringify(proxy, null, 2)}\n`, {
     encoding: 'utf8',
