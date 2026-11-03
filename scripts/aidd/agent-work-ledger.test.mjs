@@ -146,6 +146,44 @@ test('quota pause preserves the session and checkpoint without redispatching unt
   assert.deepEqual(state.readyUnits, ['qa']);
 });
 
+test('imported interruption preserves the provider conversation for continuation', (t) => {
+  const cwd = fixture(t);
+  success(cwd, 'init', '--task', 'issue-3', '--goal', 'Recover interrupted work', '--base', 'main');
+  success(
+    cwd,
+    'add',
+    '--task',
+    'issue-3',
+    '--unit',
+    'build',
+    '--kind',
+    'implementation',
+    '--owner',
+    'agy-dev',
+    '--paths',
+    'src/feature.txt',
+    '--acceptance',
+    'Recover the provider session',
+  );
+  success(cwd, 'start', '--task', 'issue-3', '--unit', 'build', '--provider', 'antigravity', '--model', 'gemini-3.8-flash');
+  success(cwd, 'session', '--task', 'issue-3', '--unit', 'build', '--id', 'conversation-12345678');
+  const checkpoint = report(cwd, evidence({ remainingPaths: ['src/feature.txt'] }));
+  success(cwd, 'checkpoint', '--task', 'issue-3', '--unit', 'build', '--report', checkpoint);
+  success(cwd, 'interrupt', '--task', 'issue-3', '--unit', 'build');
+  success(cwd, 'export', '--task', 'issue-3');
+  rmSync(join(cwd, 'tmp', 'aidd-ledger', 'issue-3'), { recursive: true });
+  const imported = success(cwd, 'import', '--task', 'issue-3');
+  assert.equal(imported.units[0].status, 'interrupted');
+  assert.deepEqual(imported.units[0].invocation, {
+    provider: 'antigravity',
+    model: 'gemini-3.8-flash',
+    sessionId: 'conversation-12345678',
+  });
+  assert.equal(imported.units[0].checkpoint.remainingPaths[0], 'src/feature.txt');
+  const exportedAgain = success(cwd, 'export', '--task', 'issue-3');
+  assert.deepEqual(exportedAgain.units[0].invocation, imported.units[0].invocation);
+});
+
 test('interruption retains a checkpoint, recovery is idempotent, and changed source invalidates completion', (t) => {
   const cwd = fixture(t);
   success(cwd, 'init', '--task', 'issue-1', '--goal', 'Deliver fixture', '--base', 'main');

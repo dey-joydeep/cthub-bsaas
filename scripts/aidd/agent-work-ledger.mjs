@@ -878,15 +878,17 @@ function importSnapshot(root, task) {
   for (const entry of snapshot.units) {
     const id = entry.definition.id;
     if (entry.checkpoint) append(root, task, id, 'checkpoint', entry.checkpoint);
-    if (entry.lastType === 'complete') append(root, task, id, 'complete', entry.checkpoint);
-    else if (entry.lastType === 'supersede')
-      append(root, task, id, 'supersede', { by: entry.supersededBy, reason: 'Imported superseded unit' });
-    else if (entry.lastType === 'quota-pause') {
+    if (entry.lastType !== null && !['complete', 'supersede'].includes(entry.lastType)) {
       append(root, task, id, 'start', {
         owner: entry.definition.owner,
         ...(entry.invocation?.provider ? { provider: entry.invocation.provider, model: entry.invocation.model } : {}),
       });
       if (entry.invocation?.sessionId) append(root, task, id, 'session', { sessionId: entry.invocation.sessionId });
+    }
+    if (entry.lastType === 'complete') append(root, task, id, 'complete', entry.checkpoint);
+    else if (entry.lastType === 'supersede')
+      append(root, task, id, 'supersede', { by: entry.supersededBy, reason: 'Imported superseded unit' });
+    else if (entry.lastType === 'quota-pause') {
       append(root, task, id, 'quota-pause', {
         reason: entry.quotaPause.reason,
         ...(entry.quotaPause.resumeAfter ? { resumeAfter: entry.quotaPause.resumeAfter } : {}),
