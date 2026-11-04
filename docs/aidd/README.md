@@ -25,24 +25,25 @@ For Antigravity execution, also apply `.agents/AGENTS.md` and the selected `.age
 
 ## Documents
 
-| Document                                                  | Use                                                                                           |
-| --------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| [Development Life Cycle](development-lifecycle.md)        | Shared product-to-release process, roles, routing, and gates.                                 |
-| [Role and Directory Access](role-directory-access.md)     | Repository map, role-specific read/write scope, and verification ownership.                   |
-| [Autonomous Recovery](autonomous-recovery.md)             | Local work-unit ledger, checkpoints, interruption recovery, and stale-evidence rules.         |
-| [Agent Dispatch and Resume](agent-dispatch-and-resume.md) | Quota-aware dispatch, provider sessions, pause states, and cross-machine handoff.             |
-| [Parallel Worktrees](parallel-worktrees.md)               | Branch and worktree ownership, isolation, integration, recovery, and retirement.              |
-| [Dependency Change Policy](dependency-policy.md)          | npm change ownership, forbidden bypasses, lockfile, audit, and install-script review.         |
-| [Change Scope and Validation](change-hygiene.md)          | Inclusion rules and required checks for each changed area.                                    |
-| [Database Access Policy](database-access-policy.md)       | Environment profiles, test isolation, DBA ownership, and migration gates.                     |
-| [Agent Activation](agent-activation.md)                   | How shared roles map to Antigravity and Codex profiles and how coordinators invoke them.      |
-| [GitHub App Identities](github-app-identities.md)         | Registered bot identities, role boundaries, and current activation status.                    |
-| [Codex Operating Model](codex-operating-model.md)         | Repository-specific workflow for analysis, design, implementation, validation, and reporting. |
-| [Codex Task Policy](codex-task-policy.md)                 | Depth, stop conditions, and completion expectations by task type.                             |
-| [Codex Review Checklist](codex-review-checklist.md)       | Checklist for PR reviews and self-review before handoff.                                      |
-| [Codex Validation Commands](codex-validation-commands.md) | Current validation commands and reporting rules.                                              |
-| [MCP Configuration Policy](mcp-configuration-policy.md)   | Repository-vs-global MCP configuration split and safety policy.                               |
-| [Codex CLI Operator Guide](codex-cli-operator-guide.md)   | Practical local Codex commands and operator prompts.                                          |
+| Document                                                        | Use                                                                                           |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| [Development Life Cycle](development-lifecycle.md)              | Shared product-to-release process, roles, routing, and gates.                                 |
+| [Role and Directory Access](role-directory-access.md)           | Repository map, role-specific read/write scope, and verification ownership.                   |
+| [Autonomous Recovery](autonomous-recovery.md)                   | Local work-unit ledger, checkpoints, interruption recovery, and stale-evidence rules.         |
+| [Agent Dispatch and Resume](agent-dispatch-and-resume.md)       | Quota-aware dispatch, provider sessions, pause states, and cross-machine handoff.             |
+| [Parallel Worktrees](parallel-worktrees.md)                     | Branch and worktree ownership, isolation, integration, recovery, and retirement.              |
+| [Dependency Change Policy](dependency-policy.md)                | npm change ownership, forbidden bypasses, lockfile, audit, and install-script review.         |
+| [Change Scope and Validation](change-hygiene.md)                | Inclusion rules and required checks for each changed area.                                    |
+| [Database Access Policy](database-access-policy.md)             | Environment profiles, test isolation, DBA ownership, and migration gates.                     |
+| [Backend Reliability Evidence](backend-reliability-evidence.md) | PostgreSQL contention proof, capacity profiles, and CPU-work decisions.                       |
+| [Agent Activation](agent-activation.md)                         | How shared roles map to Antigravity and Codex profiles and how coordinators invoke them.      |
+| [GitHub App Identities](github-app-identities.md)               | Registered bot identities, role boundaries, and current activation status.                    |
+| [Codex Operating Model](codex-operating-model.md)               | Repository-specific workflow for analysis, design, implementation, validation, and reporting. |
+| [Codex Task Policy](codex-task-policy.md)                       | Depth, stop conditions, and completion expectations by task type.                             |
+| [Codex Review Checklist](codex-review-checklist.md)             | Checklist for PR reviews and self-review before handoff.                                      |
+| [Codex Validation Commands](codex-validation-commands.md)       | Current validation commands and reporting rules.                                              |
+| [MCP Configuration Policy](mcp-configuration-policy.md)         | Repository-vs-global MCP configuration split and safety policy.                               |
+| [Codex CLI Operator Guide](codex-cli-operator-guide.md)         | Practical local Codex commands and operator prompts.                                          |
 
 ## Repository AIDD Assets
 

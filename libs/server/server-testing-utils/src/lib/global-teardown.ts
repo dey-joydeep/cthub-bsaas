@@ -15,7 +15,6 @@ export default async function globalTeardown() {
   const target = bindTestDatabaseTarget();
   const prisma = new PrismaClient({ datasources: { db: { url: target.url } } });
   const email = 'it-user@example.com';
-  const roleNames = ['admin', 'owner', 'staff', 'customer'];
   const tenantEmail = 'it-tenant@example.com';
 
   try {
@@ -30,15 +29,8 @@ export default async function globalTeardown() {
       await prisma.user.delete({ where: { id: user.id } });
     }
 
-    // Remove seeded roles (detach any lingering links just in case)
-    const roles = await prisma.role.findMany({ where: { name: { in: roleNames } } });
-    const roleIds = roles.map((r) => r.id);
-    if (roleIds.length) {
-      await prisma.userRole.deleteMany({ where: { roleId: { in: roleIds } } });
-      await prisma.role.deleteMany({ where: { id: { in: roleIds } } });
-    }
-
-    // Remove the seeded tenant
+    // Roles are shared master data; deleting them would remove links owned by other test fixtures.
+    // Remove the seeded tenant.
     const tenant = await prisma.salonTenant.findUnique({ where: { email: tenantEmail } });
     if (tenant) {
       await prisma.salonTenant.delete({ where: { id: tenant.id } });
