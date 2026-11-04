@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
+import { resolve } from 'node:path';
 import { monitorEventLoopDelay, performance } from 'node:perf_hooks';
 import { PrismaClient } from '@prisma/client';
 import { bindTestDatabaseTarget } from '../../libs/server/core/src/config/test-database-target.ts';
@@ -23,6 +25,14 @@ async function main() {
   const sampleCount = positiveInteger('AIDD_PROBE_REQUESTS', 200, 5000);
   const concurrency = positiveInteger('AIDD_PROBE_CONCURRENCY', 10, 100);
   const fixtureCount = positiveInteger('AIDD_PROBE_BUSINESSES', 1000, 10000);
+  const schema = resolve('libs/server/data-access/prisma/schema.prisma');
+  const command = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+  const migration = spawnSync(command, ['prisma', 'migrate', 'deploy', '--schema', schema], {
+    stdio: 'inherit',
+    env: { ...process.env, DATABASE_URL: target.url },
+    shell: process.platform === 'win32',
+  });
+  if (migration.status !== 0) throw new Error('Failed to migrate the validated test database');
   const prisma = new PrismaClient({ datasources: { db: { url: target.url } } });
   const runId = randomUUID();
   let tenantId;

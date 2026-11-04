@@ -16,7 +16,7 @@ The current representative check is `salon-owner-settings.database.it-spec.ts`. 
 
 Record the endpoint or service operation, fixture size, concurrency, sample count, hardware, Node version, database host/profile, p50/p95/p99 latency, throughput, error rate, event-loop delay, and event-loop utilization. Record a baseline and compare a changed implementation under the same profile. A local measurement is diagnostic; it is not a production SLO or a substitute for a staged HTTP test.
 
-The local read-path probe uses only the validated test database and cleans up its generated tenant, user, and businesses. From the repository root in PowerShell, with the test PostgreSQL service running:
+The local read-path probe uses only the validated test database, applies versioned migrations, and cleans up its generated tenant, user, and businesses. From the repository root in PowerShell, with the test PostgreSQL service running:
 
 ```powershell
 $env:NODE_ENV = 'test'
@@ -28,7 +28,7 @@ node --import tsx scripts/aidd/salon-owner-capacity-probe.mjs
 
 The probe repeats the `SalonOwnerSettingsService.listBusinesses` database query pair against PostgreSQL. It does not measure service mapping, HTTP middleware, authentication, browser rendering, or network transit. Those need a separate staged API profile with test data and a recorded endpoint contract. Do not run load or fixture creation against local, staging, or production databases under the test profile.
 
-CI runs a small smoke profile of this probe when salon-owner code, its Prisma schema, or the probe itself changes. That run verifies the test database guard, fixture creation, measurement path, and cleanup. Its latency numbers are not a release performance result; QA must run the accepted staged HTTP workload in [NFR-PERF-05](../specs/salon-owner/FNRD/non-functional-requirements.md) for each delivered front-desk read flow.
+CI runs the salon-owner PostgreSQL integration configuration and a small smoke profile of this probe when salon-owner code, its Prisma schema, or the probe itself changes. These runs verify the test database guard, migrations, concurrency behavior, fixture creation, measurement path, and cleanup. Probe latency numbers are not a release performance result; QA must run the accepted staged HTTP workload in [NFR-PERF-05](../specs/salon-owner/FNRD/non-functional-requirements.md) for each delivered front-desk read flow.
 
 ## CPU work and event loop
 
