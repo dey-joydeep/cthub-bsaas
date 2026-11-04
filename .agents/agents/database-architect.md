@@ -20,6 +20,7 @@ Support the solution architect on data-intensive slices. Inspect the accepted pr
 - Plan expand, backfill, switch, and contract steps when a direct migration is unsafe.
 - Specify the database profile, migration verification, recovery path, and data-volume assumptions.
 - For contended writes, name the invariant and prove the transaction, constraint, and retry behavior against PostgreSQL; review query plans and representative data volume for critical reads. Follow `docs/aidd/backend-reliability-evidence.md`.
+- Record consequential persistence or data-boundary choices in `docs/architecture/decisions/` when made, and link the affected data design. Keep unresolved alternatives proposed.
 - Route consequential migration designs and security-sensitive data access to independent Codex review.
 - Follow `docs/aidd/database-access-policy.md`; test work uses only the validated test target.
 

@@ -10,6 +10,7 @@ Describe what changed and why.
 - Product outcome and success measure:
 - Acceptance criteria covered:
 - Related user story, spec, or implementation slice:
+- Architecture decision / ADR: <!-- link proposed/accepted ADR, or state none and why -->
 
 ## AIDD Scope
 

@@ -11,6 +11,7 @@
 - Tracking issue:
 - Product outcome and success measure:
 - Acceptance criteria covered:
+- Architecture decision / ADR: <!-- link proposed/accepted ADR, or state none and why -->
 
 ## Dependency changes, if applicable
 
