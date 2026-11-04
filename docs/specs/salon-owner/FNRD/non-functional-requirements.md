@@ -57,7 +57,21 @@ Define non-functional requirements that must be reflected in implementation, tes
 | NFR-OBS-03     | Domain events must be serializable and traceable by correlation ID.                                                                                                                   |
 | NFR-OBS-04     | Release evidence must include the measured API latency and error profile, database workload, and event-loop health for critical paths; alert thresholds follow the accepted baseline. |
 
-The budgets in NFR-PERF-05 are provisional product targets, not a claim that the current implementation meets them. See [Backend Reliability Evidence](../../../aidd/backend-reliability-evidence.md) for test profile, measurement method, and ownership. Booking, payment, and stock flows require real database concurrency proof when implemented.
+The budgets in NFR-PERF-05 are proposed product targets, not a claim that the current implementation meets them. They become release gates for each delivered flow only after PO and QA accept the workload profile below and staging HTTP evidence exists. A database query probe alone cannot satisfy them.
+
+### Proposed interactive workload profile
+
+| Dimension            | Profile to accept before the affected flow is released                                                                                                                                                                                                   |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Operations           | Branch slot search, customer search, and appointment day board. Record the exact authenticated HTTP method and route from the approved API contract when each operation is implemented; do not substitute a database query or a different route.         |
+| Fixture              | One active tenant with one busy branch, at least 20 staff, 5,000 customers, and 10,000 appointments spanning 30 days, with a realistic mix of booked, completed, cancelled, and blocked slots. Record seed version and branch/date filter.               |
+| Clients and duration | 20 concurrent authenticated clients, 2-minute warm-up, then at least 10 minutes and 1,000 successful samples per operation. Measure each operation separately with a repeatable request mix and record request rate.                                     |
+| Environment          | Staging deployment with the intended Node, database, network topology, and resource limits. Record versions, region, instance sizes, database profile, and whether traffic crosses the public edge. Reuse the same profile for before/after comparisons. |
+| Acceptance           | Per operation, p95 <= 500 ms, p99 <= 1,000 ms, HTTP error rate <= 0.1%, and no unexpected 5xx. Count timeouts as errors. Record p50, throughput, event-loop delay and utilization, database load, and the raw result artifact.                           |
+
+PO and QA may revise the proposed fixture and budgets before accepting the profile; record that decision in the relevant specification and issue. A flow cannot be marked performance-ready with an unapproved profile or missing staged HTTP result. See [Backend Reliability Evidence](../../../aidd/backend-reliability-evidence.md) for measurement ownership.
+
+Booking, payment, and stock flows each require real PostgreSQL concurrency proof before their own release. The full operational-core MVP includes all three, so it cannot be declared ready until all three proofs and their other release gates pass. This PR does not provide those future-flow proofs.
 
 ## Accessibility And SSR
 

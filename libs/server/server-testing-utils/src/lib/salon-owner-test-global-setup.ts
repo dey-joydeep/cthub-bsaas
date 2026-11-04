@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { PrismaClient } from '@prisma/client';
-import { bindTestDatabaseTarget } from '@cthub-bsaas/server-core';
+import { bindTestDatabaseTarget } from '../../../core/src/config/test-database-target.ts';
 
 function findWorkspaceRoot(): string {
   let directory = process.cwd();
