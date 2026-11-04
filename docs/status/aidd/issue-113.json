@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "task": "issue-113",
+  "goal": "Deliver task-scoped PO QA Dev bot writes with verified attribution",
+  "issue": "113",
+  "branch": "chore/aidd-task-scoped-bots",
+  "base": "main",
+  "createdAt": "2026-11-04T13:08:33.226Z",
+  "exportedAt": "2026-11-04T13:11:30.026Z",
+  "exportedHead": "e4d0c07d916e005b9a604c973e09b35dc5253836",
+  "units": [
+    {
+      "definition": {
+        "id": "broker-implementation",
+        "kind": "implementation",
+        "owner": "codex-coordinator",
+        "paths": ["tools/aidd-broker", "scripts/aidd", "docs/aidd", "AGENTS.md", ".agents/AGENTS.md"],
+        "dependsOn": [],
+        "acceptance": "Task mandate source, client, docs and tests ready for independent review"
+      },
+      "status": "complete",
+      "lastType": "complete",
+      "checkpoint": {
+        "report": {
+          "summary": "Implemented task-scoped broker mandates, role client, actor verification, recovery, and aligned AIDD guidance; source remains undeployed.",
+          "remainingPaths": [],
+          "evidence": [
+            "tools/aidd-broker/src/worker.mjs",
+            "tools/aidd-broker/src/worker.test.mjs",
+            "scripts/aidd/broker-client.mjs",
+            "tools/aidd-broker/migrations/0002_task_mandates.sql"
+          ],
+          "commands": [
+            { "command": "node --test tools/aidd-broker/src/worker.test.mjs scripts/aidd/broker-client.test.mjs", "exitCode": 0 },
+            {
+              "command": "npx eslint tools/aidd-broker/src/worker.mjs tools/aidd-broker/src/worker.test.mjs scripts/aidd/broker-client.mjs scripts/aidd/broker-client.test.mjs scripts/aidd/broker-commit-state.mjs --max-warnings 0",
+              "exitCode": 0
+            },
+            {
+              "command": "npm run aidd:check && npm run aidd:assets && npm run aidd:instruction-drift && npm run aidd:links",
+              "exitCode": 0
+            }
+          ],
+          "findings": []
+        },
+        "source": {
+          "fingerprint": "6866d4cf62207eed133d7d0eb8319b793ca3031a29798f3141e5907adaa37ef9",
+          "head": "e4d0c07d916e005b9a604c973e09b35dc5253836"
+        },
+        "completionRevision": "a708401a-d9cf-41a7-9c91-40b6f7242f33",
+        "dependencyRevisions": {}
+      }
+    }
+  ]
+}

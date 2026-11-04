@@ -8,6 +8,10 @@ Use `docs/aidd/role-directory-access.md` to assign exact task paths and checks.
 Antigravity uses these same `AGENTS.md` files as Codex. Do not maintain parallel
 `GEMINI.md` copies. Keep provider-specific execution details in this file,
 role profiles, or the AIDD operating guides.
+Before a GitHub write assigned to a PO, QA, or Dev App, read
+`docs/aidd/github-app-identities.md` and use the broker client when activated.
+Verify the actual GitHub actor. Never guess an App name or silently fall back
+to the local `gh` account when bot dispatch is unavailable.
 The workspace `.agents/hooks.json` runs the shared pre-tool policy before
 Antigravity shell commands, background terminal input, and file edits. Verify
 that the hook is loaded in the desktop Customizations > Hooks view or CLI
