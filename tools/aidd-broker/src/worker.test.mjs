@@ -694,12 +694,19 @@ describe('GitHub writes', () => {
     globalThis.fetch = async (url, options) => {
       calls.push({ url, body: options.body && JSON.parse(options.body) });
       if (url.endsWith('/access_tokens')) {
+        const requested = JSON.parse(options.body).permissions;
         return Response.json({
           token: 'temporary-test-token',
           repository_selection: 'selected',
           repositories: [{ full_name: 'dey-joydeep/cthub-bsaas' }],
-          permissions: { pull_requests: 'write', metadata: 'read' },
+          permissions: { ...requested, metadata: 'read' },
         });
+      }
+      if (url.endsWith('/git/ref/heads/feature/salon-calendar')) {
+        if (calls.find((call) => call.url.endsWith('/access_tokens')).body.permissions.contents !== 'read') {
+          return Response.json({ message: 'Resource not accessible by integration' }, { status: 403 });
+        }
+        return Response.json({ ref: 'refs/heads/feature/salon-calendar', object: { sha: 'a'.repeat(40) } });
       }
       if (url.endsWith('/reviews'))
         return Response.json({
@@ -708,7 +715,12 @@ describe('GitHub writes', () => {
           commit_id: 'a'.repeat(40),
           user: { login: 'shearflow-qa[bot]' },
         });
-      return Response.json({ state: 'open', head: { sha: 'a'.repeat(40) } });
+      return Response.json({
+        state: 'open',
+        body: 'Closes #100',
+        head: { sha: 'a'.repeat(40), ref: 'feature/salon-calendar', repo: { full_name: 'dey-joydeep/cthub-bsaas' } },
+        base: { ref: 'main', repo: { full_name: 'dey-joydeep/cthub-bsaas' } },
+      });
     };
     try {
       const result = await perform(
@@ -717,11 +729,23 @@ describe('GitHub writes', () => {
         {
           QA_PRIVATE_KEY: privateKey.export({ type: 'pkcs1', format: 'pem' }).toString(),
         },
+        {
+          issue_number: 100,
+          branch: 'feature/salon-calendar',
+          state: 'active',
+          expires_at: Math.floor(Date.now() / 1000) + 600,
+          allowed_paths_json: '[]',
+        },
       );
       assert.equal(result.headOid, 'a'.repeat(40));
       assert.equal(JSON.stringify(result).includes('temporary-test-token'), false);
       assert.equal(calls.find((call) => call.url.endsWith('/reviews')).body.commit_id, 'a'.repeat(40));
       assert.equal(calls.filter((call) => call.url.endsWith('/pulls/99')).length, 2);
+      assert.equal(calls.filter((call) => call.url.endsWith('/git/ref/heads/feature/salon-calendar')).length, 1);
+      assert.deepEqual(calls.find((call) => call.url.endsWith('/access_tokens')).body.permissions, {
+        pull_requests: 'write',
+        contents: 'read',
+      });
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -737,7 +761,7 @@ describe('GitHub writes', () => {
           token: 'temporary-test-token',
           repository_selection: 'selected',
           repositories: [{ full_name: 'dey-joydeep/cthub-bsaas' }],
-          permissions: { pull_requests: 'write', metadata: 'read' },
+          permissions: { pull_requests: 'write', contents: 'read', metadata: 'read' },
         });
       if (url.endsWith('/reviews') && options.method === 'POST') posted = true;
       return Response.json({

@@ -348,7 +348,7 @@ async function installationToken(role, action, input, env) {
     action === 'po.create-issue' || action === 'po.comment-issue'
       ? { issues: 'write' }
       : action === 'qa.review-pr'
-        ? { pull_requests: 'write' }
+        ? { pull_requests: 'write', contents: 'read' }
         : action === 'dev.create-pr'
           ? { pull_requests: 'write', contents: 'read' }
           : action === 'dev.commit-workflow'
