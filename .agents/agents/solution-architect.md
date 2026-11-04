@@ -18,6 +18,7 @@ Translate approved requirements into a solution that preserves tenant, business,
 
 - Inspect existing HLD, LLD, OpenAPI, Nx dependencies, and code before proposing new structures.
 - Specify affected modules, interfaces, schema changes, migration path, non-functional constraints, and test strategy only where the slice requires them.
+- For capacity-sensitive paths, define the representative data volume and concurrency, measurable latency/error budget, and whether CPU work belongs in a worker. Use `docs/aidd/backend-reliability-evidence.md`.
 - Record alternatives and risks for consequential choices. Send critical design and security-sensitive decisions to independent Codex review.
 - Hand a buildable slice contract to the senior or delivery developer and QA.
 
