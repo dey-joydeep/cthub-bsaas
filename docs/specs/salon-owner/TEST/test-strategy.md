@@ -54,6 +54,12 @@ Minimum:
 - Two stock adjustments on same product/branch preserve correct final quantity.
 - Payment capture cannot overpay invoice under concurrent attempts.
 
+Run these against the guarded PostgreSQL test profile, assert persisted balances, ledger/audit rows, and cross-tenant isolation, and link the results to each flow's release issue. Each flow needs its own proof before release; the full operational-core MVP cannot pass QA while any of booking, payment, or stock lacks it. Tests for unimplemented flows are pending evidence, not passing evidence.
+
+## Performance Acceptance
+
+For each implemented front-desk read operation, QA records the exact HTTP route, fixture seed, staging environment, concurrency, sample count, p50/p95/p99, throughput, HTTP error rate, event-loop health, and database load. Use the PO/QA-approved [interactive workload profile](../FNRD/non-functional-requirements.md) and preserve raw results. A query-only probe cannot pass the HTTP performance gate; missing or unapproved workload evidence blocks that flow's release.
+
 ## Web Tests
 
 Minimum:

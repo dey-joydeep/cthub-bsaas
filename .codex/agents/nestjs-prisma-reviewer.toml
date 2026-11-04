@@ -24,6 +24,7 @@ Review only. Do not edit files.
 - Thin controllers and service/use-case ownership.
 - Repository and data-access boundaries.
 - Prisma schema, migration, transaction, cascade, and N+1 risks.
+- For critical writes, inspect the deployed constraint or migration and real PostgreSQL contention evidence; for expensive reads or CPU work, inspect the measured workload and event-loop impact in `docs/aidd/backend-reliability-evidence.md`.
 - DTO validation, response envelopes, error codes, and i18n keys.
 - Server test coverage and integration-test setup.
 

@@ -373,27 +373,24 @@ export class SalonOwnerSettingsService {
     const requestHash = hashIdempotencyPayload(input);
 
     try {
-      const business = await this.prisma.$transaction(
-        async (tx: TransactionClient) => {
-          const replayed = await this.findIdempotentBusinessReplay(tx, context, tenantId, requestHash);
-          if (replayed) {
-            return replayed;
-          }
+      const business = await this.runSerializableTransaction(async (tx: TransactionClient) => {
+        const replayed = await this.findIdempotentBusinessReplay(tx, context, tenantId, requestHash);
+        if (replayed) {
+          return replayed;
+        }
 
-          const created = await tx.salonBusiness.create({
-            data: {
-              tenantId,
-              displayName: trimRequired(input.displayName, 2),
-              legalName: trimRequired(input.legalName, 2),
-              status: input.status,
-            },
-          });
-          await this.recordIdempotentCreate(tx, context, tenantId, 'salon_owner.business.create.idempotency', requestHash, created.id);
-          await this.createAuditEvent(tx, context, tenantId, 'salon_owner.business.create', created.id);
-          return created;
-        },
-        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-      );
+        const created = await tx.salonBusiness.create({
+          data: {
+            tenantId,
+            displayName: trimRequired(input.displayName, 2),
+            legalName: trimRequired(input.legalName, 2),
+            status: input.status,
+          },
+        });
+        await this.recordIdempotentCreate(tx, context, tenantId, 'salon_owner.business.create.idempotency', requestHash, created.id);
+        await this.createAuditEvent(tx, context, tenantId, 'salon_owner.business.create', created.id);
+        return created;
+      });
       return this.mapBusiness(business);
     } catch (error) {
       const replayed = await this.findIdempotentBusinessReplay(this.prisma, context, tenantId, requestHash);
@@ -676,10 +673,7 @@ export class SalonOwnerSettingsService {
       async (tx: TransactionClient) => {
         const branch = await tx.salonBranch.findFirst({
           where: {
-            AND: [
-              { id: branchId },
-              ...(managedBranchIds ? [{ id: { in: managedBranchIds } }] : []),
-            ],
+            AND: [{ id: branchId }, ...(managedBranchIds ? [{ id: { in: managedBranchIds } }] : [])],
             business: { tenantId: this.tenantScopeFilter(tenantIds) },
           },
           include: {
@@ -980,10 +974,7 @@ export class SalonOwnerSettingsService {
     const managedBranchIds = await this.readManagedBranchIds(context, tenantIds);
     const branch = await this.prisma.salonBranch.findFirst({
       where: {
-        AND: [
-          { id: branchId },
-          ...(managedBranchIds ? [{ id: { in: managedBranchIds } }] : []),
-        ],
+        AND: [{ id: branchId }, ...(managedBranchIds ? [{ id: { in: managedBranchIds } }] : [])],
         business: { tenantId: this.tenantScopeFilter(tenantIds) },
       },
     });
