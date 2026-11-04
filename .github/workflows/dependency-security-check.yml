@@ -1,6 +1,14 @@
 name: Dependency Security Check
 
 on:
+  pull_request:
+    paths:
+      - 'package-lock.json'
+  push:
+    branches:
+      - main
+    paths:
+      - 'package-lock.json'
   workflow_dispatch:
     inputs:
       target_branch:
@@ -30,9 +38,9 @@ jobs:
       contents: read
       security-events: write
     with:
-      ref: ${{ inputs.target_branch }}
+      ref: ${{ inputs.target_branch || github.sha }}
       upload-sarif: false
-      fail-on-vuln: ${{ inputs.fail_on_vuln == 'true' }}
+      fail-on-vuln: ${{ inputs.fail_on_vuln != 'false' }}
       scan-args: |-
         --recursive
         ./
