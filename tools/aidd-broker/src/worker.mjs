@@ -740,8 +740,6 @@ export default {
         if (actor !== `service:${env[ACCESS_CLIENT_ID[role]]}` || !executorClientIds(env)) {
           return fail('Role identity required', 403);
         }
-        const mandate = await env.GRANTS.prepare('SELECT * FROM task_mandates WHERE id = ?').bind(id).first();
-        validateMandateAction(mandate, body.action, body.input);
         const requestHash = base64url(
           new Uint8Array(
             await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify({ action: body.action, input: body.input }))),
@@ -756,6 +754,8 @@ export default {
           if (existing.request_hash !== requestHash || existing.executor !== actor) return fail('Idempotency request mismatch', 409);
           return reusedGrant(existing, id, body.action);
         }
+        const mandate = await env.GRANTS.prepare('SELECT * FROM task_mandates WHERE id = ?').bind(id).first();
+        validateMandateAction(mandate, body.action, body.input);
         const grantId = crypto.randomUUID();
         const expires = Math.min(Math.floor(Date.now() / 1000) + 600, mandate.expires_at);
         const insert = env.GRANTS.prepare(

@@ -172,7 +172,13 @@ describe('task mandates', () => {
                 if (sql.startsWith('SELECT id, request_hash, executor, state, result_json FROM grants')) {
                   const grant = [...grants.entries()].find(([, value]) => value.mandateId === args[0] && value.requestId === args[1]);
                   return grant
-                    ? { id: grant[0], request_hash: grant[1].requestHash, executor: grant[1].executor, state: 'approved' }
+                    ? {
+                        id: grant[0],
+                        request_hash: grant[1].requestHash,
+                        executor: grant[1].executor,
+                        state: grant[1].state ?? 'approved',
+                        result_json: grant[1].resultJson ?? null,
+                      }
                     : null;
                 }
                 throw new Error(`Unexpected select: ${sql}`);
@@ -246,6 +252,7 @@ describe('task mandates', () => {
     };
     const context = (identity) => ({ access: { aud: 'expected', getIdentity: async () => identity } });
     const admin = context({ email: 'owner@example.com' });
+    const po = context({ service_token_status: true, service_token_id: 'po-client' });
     const dev = context({ service_token_status: true, service_token_id: 'dev-client' });
     const qa = context({ service_token_status: true, service_token_id: 'qa-client' });
     const post = (path, body, browser = false) =>
@@ -275,6 +282,33 @@ describe('task mandates', () => {
     assert.equal(grants.get(grant.id).mandateId, id);
     const reused = await worker.fetch(post('/v1/task-grants', firstInput), env, dev);
     assert.equal((await reused.json()).id, grant.id);
+    const issueMandateId = crypto.randomUUID();
+    mandates.set(issueMandateId, { ...mandates.get(id), id: issueMandateId, issue_number: 222 });
+    const issueRequest = { ...task('po.create-issue', { title: 'Calendar issue', body: 'Tracked work' }), mandateId: issueMandateId };
+    const issueRequestHash = Buffer.from(
+      await crypto.subtle.digest(
+        'SHA-256',
+        new TextEncoder().encode(JSON.stringify({ action: issueRequest.action, input: issueRequest.input })),
+      ),
+    ).toString('base64url');
+    const issueGrantId = crypto.randomUUID();
+    grants.set(issueGrantId, {
+      mandateId: issueMandateId,
+      requestId: issueRequest.requestId,
+      requestHash: issueRequestHash,
+      executor: 'service:po-client',
+      state: 'succeeded',
+      resultJson: JSON.stringify({ number: 222, actor: 'shearflow-po[bot]' }),
+    });
+    const recoveredIssue = await worker.fetch(post('/v1/task-grants', issueRequest), env, po);
+    assert.equal(recoveredIssue.status, 200);
+    assert.deepEqual((await recoveredIssue.json()).result, { number: 222, actor: 'shearflow-po[bot]' });
+    mandates.get(issueMandateId).state = 'revoked';
+    assert.equal((await worker.fetch(post('/v1/task-grants', issueRequest), env, po)).status, 200);
+    assert.equal(
+      (await worker.fetch(post('/v1/task-grants', { ...issueRequest, input: { title: 'Changed', body: 'Tracked work' } }), env, po)).status,
+      409,
+    );
     for (let index = 0; index < 3; index += 1) {
       assert.equal((await worker.fetch(post('/v1/task-grants', task('dev.commit', commit)), env, dev)).status, 201);
     }

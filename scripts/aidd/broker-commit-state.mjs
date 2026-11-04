@@ -78,6 +78,12 @@ async function sync() {
   if (JSON.stringify(staged) !== JSON.stringify(input.files.map((file) => file.path))) {
     throw new Error('Staged paths changed since broker commit');
   }
+  for (const file of input.files) {
+    const prepared = Buffer.from(file.contents, 'utf8');
+    if (!gitBytes('show', `:${file.path}`).equals(prepared)) {
+      throw new Error(`Staged contents changed since broker commit: ${file.path}`);
+    }
+  }
   git('fetch', 'origin', `refs/heads/${branch}`);
   if (git('rev-parse', 'FETCH_HEAD') !== receipt.oid) throw new Error('Remote branch head differs from broker receipt');
   const author = execFileSync('gh', ['api', `repos/dey-joydeep/cthub-bsaas/commits/${receipt.oid}`, '--jq', '.author.login'], {
