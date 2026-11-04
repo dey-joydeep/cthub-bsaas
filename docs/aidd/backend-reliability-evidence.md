@@ -28,6 +28,8 @@ node --import tsx scripts/aidd/salon-owner-capacity-probe.mjs
 
 The probe repeats the `SalonOwnerSettingsService.listBusinesses` database query pair against PostgreSQL. It does not measure service mapping, HTTP middleware, authentication, browser rendering, or network transit. Those need a separate staged API profile with test data and a recorded endpoint contract. Do not run load or fixture creation against local, staging, or production databases under the test profile.
 
+CI runs a small smoke profile of this probe when salon-owner code, its Prisma schema, or the probe itself changes. That run verifies the test database guard, fixture creation, measurement path, and cleanup. Its latency numbers are not a release performance result; QA must run the accepted staged HTTP workload in [NFR-PERF-05](../specs/salon-owner/FNRD/non-functional-requirements.md) for each delivered front-desk read flow.
+
 ## CPU work and event loop
 
 Before adding image processing, report generation, bulk imports, cryptography, or other potentially long CPU work to an API handler, the developer estimates input size and measures event-loop delay under representative concurrency. Keep bounded, small work in the request path only when the measured latency and delay budget hold. Move long work to a worker process or queue with idempotent jobs, bounded concurrency, retry/dead-letter behavior, and traceable status. The database architect reviews any new job state and transaction boundary; DevOps reviews worker capacity and failure recovery; QA tests retry, duplicate delivery, and cancellation where applicable.
