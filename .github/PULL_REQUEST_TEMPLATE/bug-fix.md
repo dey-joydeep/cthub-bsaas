@@ -21,6 +21,8 @@
 
 <!-- Link issue, failing command, log, PR comment, or relevant spec. -->
 
+- Architecture decision / ADR: <!-- link proposed/accepted ADR, or state none and why -->
+
 ## Fix Impact
 
 | Area                   | Impact                   | Notes |
