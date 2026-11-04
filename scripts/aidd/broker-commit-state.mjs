@@ -44,7 +44,7 @@ async function prepare() {
     const bytes = gitBytes('show', `:${path}`);
     if (bytes.byteLength > 150000) throw new Error(`Staged file too large: ${path}`);
     if (bytes.includes(0)) throw new Error(`Binary staged file forbidden: ${path}`);
-    return { path, contents: new TextDecoder('utf-8', { fatal: true }).decode(bytes) };
+    return { path, contents: new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes) };
   });
   const input = {
     issueNumber: Number(option('issue')),
