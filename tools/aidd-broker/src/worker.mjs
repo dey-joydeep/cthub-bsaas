@@ -1,3 +1,5 @@
+import { ownerCss, ownerHtml, ownerJs } from './owner-ui.mjs';
+
 const REPOSITORY = 'dey-joydeep/cthub-bsaas';
 const APPS = {
   po: { id: '5552057', installation: '177123152', key: 'PO_PRIVATE_KEY' },
@@ -642,6 +644,30 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.pathname === '/health' && request.method === 'GET') return json({ enabled: env.BROKER_ENABLED === 'true' });
+    if (request.method === 'GET' && ['/owner', '/owner.js', '/owner.css'].includes(url.pathname)) {
+      if ((await principal(request, ctx, env)) !== env.ADMIN_PRINCIPAL || !env.ADMIN_PRINCIPAL) return fail('Admin required', 403);
+      const headers = {
+        'cache-control': 'no-store',
+        'x-content-type-options': 'nosniff',
+        'referrer-policy': 'no-referrer',
+      };
+      if (url.pathname === '/owner') {
+        return new Response(ownerHtml(), {
+          headers: {
+            ...headers,
+            'content-type': 'text/html; charset=utf-8',
+            'content-security-policy':
+              "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'",
+          },
+        });
+      }
+      return new Response(url.pathname === '/owner.js' ? ownerJs : ownerCss, {
+        headers: {
+          ...headers,
+          'content-type': url.pathname === '/owner.js' ? 'text/javascript; charset=utf-8' : 'text/css; charset=utf-8',
+        },
+      });
+    }
     if (url.pathname === '/v1/whoami' && request.method === 'GET') {
       const actor = await principal(request, ctx, env);
       if (!actor) return fail('Access required', 403);

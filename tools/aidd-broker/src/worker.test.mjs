@@ -477,6 +477,22 @@ describe('broker request gate', () => {
     assert.deepEqual(await response.json(), { principal: 'user:operator@example.com', admin: true, enabled: false });
   });
 
+  it('serves the owner page only to the verified administrator while writes remain disabled', async () => {
+    const env = { BROKER_ENABLED: 'false', ACCESS_AUD: 'expected', ADMIN_PRINCIPAL: 'user:owner@example.com' };
+    const request = new Request('https://broker.example/owner');
+    const admin = { access: { aud: 'expected', getIdentity: async () => ({ email: 'owner@example.com' }) } };
+    const other = { access: { aud: 'expected', getIdentity: async () => ({ email: 'other@example.com' }) } };
+    const response = await worker.fetch(request, env, admin);
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get('content-security-policy'), /frame-ancestors 'none'/);
+    assert.match(await response.text(), /Shearflow task approval/);
+    assert.equal((await worker.fetch(request, env, other)).status, 403);
+    assert.equal((await worker.fetch(request, env, {})).status, 403);
+    assert.equal((await worker.fetch(new Request('https://broker.example/owner.js'), env, other)).status, 403);
+    assert.equal((await worker.fetch(new Request('https://broker.example/owner.css'), env, admin)).status, 200);
+    assert.equal((await worker.fetch(new Request('https://broker.example/v1/mandates', { method: 'POST' }), env, admin)).status, 503);
+  });
+
   it('rejects a body exceeding the byte limit without Content-Length', async () => {
     const env = { BROKER_ENABLED: 'true', ACCESS_AUD: 'expected', ADMIN_PRINCIPAL: 'user:operator@example.com', GRANTS: {} };
     const ctx = { access: { aud: 'expected', getIdentity: async () => ({ email: 'operator@example.com' }) } };
