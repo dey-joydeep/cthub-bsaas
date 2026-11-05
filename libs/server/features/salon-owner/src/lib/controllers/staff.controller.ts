@@ -1,4 +1,17 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Put, Query, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Put,
+  Query,
+  UseInterceptors,
+  VERSION_NEUTRAL,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, ResponseEnvelopeInterceptor } from '@cthub-bsaas/server-core';
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
@@ -16,7 +29,7 @@ import { StaffServiceCatalogService } from '../services/staff-service-catalog.se
 
 @ApiTags('Staff')
 @UseInterceptors(ResponseEnvelopeInterceptor)
-@Controller('partner/staff')
+@Controller({ path: 'partner/staff', version: VERSION_NEUTRAL })
 export class StaffController {
   constructor(private readonly catalog: StaffServiceCatalogService) {}
 

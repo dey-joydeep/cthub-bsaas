@@ -1,3 +1,5 @@
+import { INTERCEPTORS_METADATA } from '@nestjs/common/constants';
+import { ResponseEnvelopeInterceptor } from '@cthub-bsaas/server-core';
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 
 import { CustomerCrmController } from './customer-crm.controller';
@@ -18,6 +20,10 @@ function serviceMock() {
 }
 
 describe('CustomerCrmController', () => {
+  it('wraps customer CRM responses in the API envelope', () => {
+    expect(Reflect.getMetadata(INTERCEPTORS_METADATA, CustomerCrmController)).toContain(ResponseEnvelopeInterceptor);
+  });
+
   it('delegates customer CRM routes to the service with authenticated context', async () => {
     const service = serviceMock();
     const controller = new CustomerCrmController(service as unknown as CustomerCrmService);

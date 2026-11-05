@@ -1,13 +1,14 @@
-import { Body, Controller, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Put, Query, UseInterceptors, VERSION_NEUTRAL } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CurrentUser } from '@cthub-bsaas/server-core';
+import { CurrentUser, ResponseEnvelopeInterceptor } from '@cthub-bsaas/server-core';
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 
 import { CommunicationPreferencesInputDto, CustomerInputDto, CustomerNoteInputDto } from '../dto/customer-crm.dto';
 import { CustomerCrmService } from '../services/customer-crm.service';
 
 @ApiTags('Customers')
-@Controller('partner/customers')
+@UseInterceptors(ResponseEnvelopeInterceptor)
+@Controller({ path: 'partner/customers', version: VERSION_NEUTRAL })
 export class CustomerCrmController {
   constructor(private readonly customers: CustomerCrmService) {}
 
