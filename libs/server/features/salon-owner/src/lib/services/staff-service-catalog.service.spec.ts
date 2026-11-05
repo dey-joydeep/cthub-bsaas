@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { ConflictException, ForbiddenException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
@@ -101,6 +102,7 @@ function prismaKnownError(code: string): Prisma.PrismaClientKnownRequestError {
 }
 
 function createPrismaMock() {
+  const transactionMock = jest.fn();
   const prisma = {
     salonBusiness: {
       findFirst: jest.fn(),
@@ -149,8 +151,9 @@ function createPrismaMock() {
       createMany: jest.fn(),
       deleteMany: jest.fn(),
     },
-    $transaction: jest.fn(async (callback: (tx: unknown) => unknown) => callback(prisma)),
+    $transaction: transactionMock,
   };
+  transactionMock.mockImplementation((callback: (tx: unknown) => unknown) => Promise.resolve(callback(prisma)));
   return prisma;
 }
 
