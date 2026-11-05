@@ -6,6 +6,7 @@ Read this file before working under `docs/**`.
 
 - User stories: `docs/us/<feature>`
 - Technical specs/design/API contracts: `docs/specs/<feature>`
+- Architectural decisions and their rationale: `docs/architecture/decisions/`
 - Production documentation standard: `docs/quality-standards/production-documentation-standard.md`
 - Visual collaboration standard: `docs/quality-standards/visual-collaboration-guideline.md`
 - Auth API contract: `docs/specs/auth/API/openapi.yaml`
@@ -22,6 +23,7 @@ Read this file before working under `docs/**`.
 - For new production-ready feature docs, follow `docs/quality-standards/production-documentation-standard.md`.
 - For Penpot wireframes or draw.io/diagrams.net diagrams, follow `docs/quality-standards/visual-collaboration-guideline.md`.
 - OpenAPI files are the source of truth for external HTTP contracts.
+- Accepted ADRs record why consequential technical choices were made; HLD/LLD, OpenAPI, schema, and code describe current behavior. Follow the [ADR register](architecture/decisions/README.md) and link affected specs when accepting or superseding a decision.
 - Specs must reflect current implementation unless explicitly marked as future planning.
 - Status docs must not contradict active specs or implementation.
 - When docs are stale, update or remove stale language rather than adding another conflicting note.

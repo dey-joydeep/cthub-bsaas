@@ -72,6 +72,9 @@ jobs:
           if echo "$DIFF_FILES" | grep -Eq '^(apps/|libs/|package-lock\.json$|nx\.json$|tsconfig[^/]*\.json$|eslint[^/]*$)'; then
             echo "runnable=true" >> "$GITHUB_OUTPUT"
           fi
+          if echo "$DIFF_FILES" | grep -Eq '^(libs/server/features/salon-owner/|libs/server/server-testing-utils/|libs/server/data-access/prisma/|libs/server/core/src/config/test-database-target\.ts$|scripts/aidd/salon-owner-capacity-probe\.mjs$)'; then
+            echo "salon_owner_probe=true" >> "$GITHUB_OUTPUT"
+          fi
           if echo "$DIFF_FILES" | grep -Eq '(^|/)AGENTS\.md$|^(package\.json$|\.gitignore$|\.prettierignore$|\.prettierrc$|docs/aidd/|docs/status/aidd/|scripts/aidd/|tools/aidd-broker/|libs/server/core/src/config/test-database-target\.ts$|libs/server/server-testing-utils/|\.agents/|\.codex/|\.husky/|\.lintstagedrc$|\.github/workflows/|\.github/PULL_REQUEST_TEMPLATE/|\.github/pull_request_template\.md$)'; then
             echo "aidd=true" >> "$GITHUB_OUTPUT"
           fi
@@ -157,6 +160,23 @@ jobs:
           NX_NO_CLOUD: 'true'
           NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
           NX_CLOUD_AUTH_TOKEN: ${{ github.event_name != 'pull_request' && secrets.NX_CLOUD_AUTH_TOKEN || '' }}
+
+      - name: Run salon-owner PostgreSQL integration tests
+        if: steps.change_scope.outputs.salon_owner_probe == 'true'
+        run: npx nx run server-feature-salon-owner:test:it
+        env:
+          NODE_ENV: test
+          NX_NO_CLOUD: 'true'
+          NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
+
+      - name: Smoke test salon-owner capacity probe on test DB
+        if: steps.change_scope.outputs.salon_owner_probe == 'true'
+        run: node --import tsx scripts/aidd/salon-owner-capacity-probe.mjs
+        env:
+          NODE_ENV: test
+          AIDD_PROBE_BUSINESSES: '100'
+          AIDD_PROBE_REQUESTS: '50'
+          AIDD_PROBE_CONCURRENCY: '5'
 
       - name: OpenAPI parity (auth)
         run: npm run openapi:check:auth

@@ -20,6 +20,7 @@ Join when the PO and BA define acceptance criteria, not only after implementatio
 - Challenge ambiguity and map acceptance, permission, validation, conflict, and failure cases to tests.
 - Plan test data and environments during design; prepare automated and exploratory checks alongside development.
 - Run affected unit, integration, contract, E2E, accessibility, and performance checks according to risk.
+- Require real test-database concurrency and tenant-isolation evidence for critical writes; record workload, latency percentiles, throughput, errors, and event-loop impact for critical reads. Use `docs/aidd/backend-reliability-evidence.md` and mark unavailable checks as not run.
 - Present staging and post-release smoke evidence, escaped defects, and remaining quality risks to the PO and release agent.
 
 QA evidence complements independent Codex code review and Codex security checks; it does not replace either gate.

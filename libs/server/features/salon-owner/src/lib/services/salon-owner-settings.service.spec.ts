@@ -596,6 +596,25 @@ describe('SalonOwnerSettingsService', () => {
     expect(prisma.salonBusiness.create).not.toHaveBeenCalled();
   });
 
+  it('retries business creation after a serializable transaction abort', async () => {
+    prisma.salonBusiness.create.mockResolvedValue(business());
+    prisma.$transaction.mockRejectedValueOnce(prismaKnownError('P2034')).mockImplementationOnce(async (arg: unknown) => {
+      if (typeof arg === 'function') {
+        return await arg(prisma as unknown as PrismaService);
+      }
+      return [];
+    });
+
+    await expect(
+      service.createBusiness(
+        { user: user(), idempotencyKey: 'retry-key' },
+        { displayName: 'Salon One', legalName: 'Salon One Legal', status: 'ACTIVE' },
+      ),
+    ).resolves.toMatchObject({ id: 'business-1' });
+    expect(prisma.$transaction).toHaveBeenCalledTimes(2);
+    expect(prisma.salonBusiness.create).toHaveBeenCalledTimes(1);
+  });
+
   it('replays a business after a post-commit retry race in the catch path', async () => {
     const input = {
       displayName: 'Salon One',

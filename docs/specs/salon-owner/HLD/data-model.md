@@ -3,6 +3,8 @@
 **Date:** 2026-05-11
 **Status:** Implementation baseline
 
+The tenant, business, and branch scope decision is documented in [ADR-0004](../../../architecture/decisions/0004-tenant-business-branch-scope.md). This HLD defines the data design and its transitional implementation limits.
+
 ## Purpose
 
 Define the MVP data model at a high level. This is not a Prisma migration yet; it guides schema design and LLD.

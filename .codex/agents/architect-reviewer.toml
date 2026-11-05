@@ -26,6 +26,7 @@ Review only. Do not edit files.
 - Whether the change follows the approved implementation slice.
 - Whether broad refactoring is being introduced without need.
 - Whether layered scoped instructions were all loaded before review.
+- Whether consequential technology or architecture decisions have a linked ADR with alternatives, evidence, consequences, and a status consistent with the implementation. A proposed ADR must not be treated as an accepted baseline.
 
 ## Output
 

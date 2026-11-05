@@ -55,6 +55,8 @@ The infrastructure upgrade cycle was executed on branch `chore/nx24-angular22-up
 
 ### A. Database ORM Strategy: Retain Prisma ORM as Primary Standard
 
+The retained strategy is also indexed in [ADR-0003](../architecture/decisions/0003-prisma-persistence-strategy.md).
+
 - **Why Prisma Remains Our Standard:** Prisma is a **100% stateless data mapper and query builder**. It maintains no identity map or first-level cache, never throws lazy loading exceptions, and returns plain TypeScript objects (POJOs).
 - **Mandate for Complex Queries (10–15% of workloads):** For complex reporting, aggregations, window functions, or multi-table CTEs, **do not abandon Prisma or introduce secondary ORMs.** Instead:
   1. Use Prisma's native SQL escape hatches: **`$queryRaw`** and **`TypedSql`**.

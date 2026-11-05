@@ -21,11 +21,11 @@ function fixtureDatabaseUrl(workspaceRoot: string): string | undefined {
 }
 
 export function resolveTestDatabaseTarget(env: NodeJS.ProcessEnv = process.env, workspaceRoot = process.cwd()): TestDatabaseTarget {
-  if (env.NODE_ENV !== 'test') {
+  if (env['NODE_ENV'] !== 'test') {
     throw new Error('Database-backed tests require NODE_ENV=test');
   }
 
-  const rawUrl = env.TEST_DATABASE_URL || fixtureDatabaseUrl(workspaceRoot);
+  const rawUrl = env['TEST_DATABASE_URL'] || fixtureDatabaseUrl(workspaceRoot);
   if (!rawUrl) {
     throw new Error('A test database URL is required in TEST_DATABASE_URL or .env.test');
   }
@@ -42,7 +42,7 @@ export function resolveTestDatabaseTarget(env: NodeJS.ProcessEnv = process.env, 
   const database = decodeURIComponent(parsed.pathname.slice(1));
   const allowedHosts = new Set([
     ...localHosts,
-    ...(env.TEST_DATABASE_ALLOWED_HOSTS ?? '')
+    ...(env['TEST_DATABASE_ALLOWED_HOSTS'] ?? '')
       .split(',')
       .map((host) => host.trim().toLowerCase())
       .filter(Boolean),
@@ -65,7 +65,7 @@ export function resolveTestDatabaseTarget(env: NodeJS.ProcessEnv = process.env, 
 
 export function bindTestDatabaseTarget(env: NodeJS.ProcessEnv = process.env, workspaceRoot = process.cwd()): TestDatabaseTarget {
   const target = resolveTestDatabaseTarget(env, workspaceRoot);
-  env.TEST_DATABASE_URL = target.url;
-  env.DATABASE_URL = target.url;
+  env['TEST_DATABASE_URL'] = target.url;
+  env['DATABASE_URL'] = target.url;
   return target;
 }
