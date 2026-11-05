@@ -526,10 +526,28 @@ components:
                       pattern: "^\\d{2}:\\d{2}$"
     StaffLeaveBlockInput:
       type: object
-      required: [branchId, startsAt, endsAt, reason]
+      required: [startsAt, endsAt, reason]
       properties:
         branchId:
           $ref: '#/components/schemas/Uuid'
+        startsAt:
+          $ref: '#/components/schemas/IsoDateTime'
+        endsAt:
+          $ref: '#/components/schemas/IsoDateTime'
+        reason:
+          type: string
+          maxLength: 160
+    StaffLeaveBlock:
+      type: object
+      required: [id, staffId, startsAt, endsAt, reason]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        staffId:
+          $ref: '#/components/schemas/Uuid'
+        branchId:
+          $ref: '#/components/schemas/Uuid'
+          nullable: true
         startsAt:
           $ref: '#/components/schemas/IsoDateTime'
         endsAt:
@@ -1220,6 +1238,7 @@ paths:
       tags: [Staff]
       operationId: listStaff
       parameters:
+        - $ref: '#/components/parameters/BusinessIdQuery'
         - $ref: '#/components/parameters/BranchIdQuery'
         - $ref: '#/components/parameters/SearchQuery'
         - $ref: '#/components/parameters/PageQuery'
@@ -1350,6 +1369,30 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /partner/staff/{staffId}/leave-blocks:
+    get:
+      tags: [Staff]
+      operationId: listStaffLeaveBlocks
+      parameters:
+        - name: staffId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: from
+          in: query
+          schema:
+            $ref: '#/components/schemas/IsoDateTime'
+        - name: to
+          in: query
+          schema:
+            $ref: '#/components/schemas/IsoDateTime'
+      responses:
+        '200':
+          description: Staff leave blocks.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedEnvelope'
     post:
       tags: [Staff]
       operationId: createStaffLeaveBlock
@@ -1368,6 +1411,28 @@ paths:
       responses:
         '201':
           description: Staff leave block created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/staff/{staffId}/leave-blocks/{leaveBlockId}:
+    delete:
+      tags: [Staff]
+      operationId: deleteStaffLeaveBlock
+      parameters:
+        - name: staffId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: leaveBlockId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Staff leave block removed.
           content:
             application/json:
               schema:

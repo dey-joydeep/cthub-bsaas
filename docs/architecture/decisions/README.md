@@ -23,9 +23,10 @@ An ADR does not authorize a task, migration, merge, or deployment. The linked is
 
 ## Index
 
-| ID                                              | Topic                                         | Status            | Owner                            |
-| ----------------------------------------------- | --------------------------------------------- | ----------------- | -------------------------------- |
-| [0001](0001-backend-framework-selection.md)     | Backend framework: NestJS or Java/Spring Boot | Proposed          | Solution architect               |
-| [0002](0002-current-application-composition.md) | Nx workspace and application boundaries       | Recorded baseline | Solution architect               |
-| [0003](0003-prisma-persistence-strategy.md)     | Prisma as the primary persistence tool        | Recorded baseline | Database architect               |
-| [0004](0004-tenant-business-branch-scope.md)    | Tenant, business, and branch scope            | Recorded baseline | Solution and database architects |
+| ID                                                         | Topic                                                 | Status            | Owner                            |
+| ---------------------------------------------------------- | ----------------------------------------------------- | ----------------- | -------------------------------- |
+| [0001](0001-backend-framework-selection.md)                | Backend framework: NestJS or Java/Spring Boot         | Proposed          | Solution architect               |
+| [0002](0002-current-application-composition.md)            | Nx workspace and application boundaries               | Recorded baseline | Solution architect               |
+| [0003](0003-prisma-persistence-strategy.md)                | Prisma as the primary persistence tool                | Recorded baseline | Database architect               |
+| [0004](0004-tenant-business-branch-scope.md)               | Tenant, business, and branch scope                    | Recorded baseline | Solution and database architects |
+| [0005](0005-canonical-staff-skills-and-leave-lifecycle.md) | Canonical staff skills and leave lifecycle in Slice 4 | Accepted          | Solution and database architects |

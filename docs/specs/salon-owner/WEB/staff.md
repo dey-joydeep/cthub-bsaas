@@ -20,6 +20,7 @@
 - `StaffBranchAssignmentPanel`
 - `StaffSkillMatrix`
 - `StaffScheduleEditor`
+- `StaffLeaveBlockManager`
 - `StaffInvitationPanel`
 
 ## State And Data
@@ -27,17 +28,20 @@
 - Directory supports status, branch, role, and skill filters.
 - Profile edit uses tabbed sections with independent save operations.
 - Invitation state is loaded separately from staff profile state.
+- Leave block state displays active and upcoming leave with cancellation actions and optional branch scope.
 
 ## Controls And Validation
 
 - Exact control behavior is defined in [Staff Validation](../VALIDATION/staff-validation.md).
 - Role and branch controls hide options outside the actor permission scope.
 - Schedule conflicts returned by the API are rendered next to the affected interval.
+- Leave controls allow selecting "All Branches" (personal leave) or a specific branch for the absence window.
 
 ## Error Handling
 
 - Duplicate email errors attach to email.
 - Permission errors show an inline banner in the role section.
+- Removing the final business owner triggers an inline 409 error banner preventing submit.
 - Schedule conflict responses preserve the draft schedule and expose affected appointment count.
 
 ## Accessibility
