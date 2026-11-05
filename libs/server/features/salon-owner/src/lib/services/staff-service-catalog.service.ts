@@ -10,6 +10,7 @@ import {
   StaffEligibilityInputDto,
   StaffInputDto,
   StaffLeaveBlockInputDto,
+  StaffLeaveBlockQueryDto,
   StaffListQueryDto,
   StaffRolesInputDto,
   StaffShiftDayDto,
@@ -24,6 +25,7 @@ import {
   StaffModel,
   StaffShiftDayModel,
   StaffShiftModel,
+  SuccessResult,
 } from '../models/staff-service-catalog.models';
 
 const validationMessage = COMMON_MESSAGE_KEYS.ERROR.VALIDATION;
@@ -32,13 +34,14 @@ const notFoundMessage = COMMON_MESSAGE_KEYS.ERROR.NOT_FOUND;
 const duplicateStaffMessage = 'error.staff.profile.duplicate';
 const duplicateCategoryMessage = 'error.service.category.duplicate';
 const duplicateServiceMessage = 'error.service.duplicate';
+const finalOwnerConflictMessage = 'error.staff.owner.final_required';
 
 const staffInclude = {
   branches: true,
   skills: true,
 } as const;
 const serviceInclude = {
-  eligibleStaff: true,
+  skills: true,
 } as const;
 
 type BusinessRecord = Awaited<ReturnType<PrismaService['salonBusiness']['findFirst']>>;
@@ -157,7 +160,10 @@ export class StaffServiceCatalogService {
 
   async listStaff(context: SalonOwnerRequestContext, options: StaffListQueryDto = {}): Promise<PagedResult<StaffModel>> {
     const tenantId = this.requireTenantId(context);
-    const { branchId } = options;
+    const { branchId, businessId } = options;
+    if (businessId) {
+      await this.resolveBusinessInScope(context, businessId);
+    }
     if (branchId) {
       await this.findBranchInScope(context, branchId);
     }
@@ -166,7 +172,7 @@ export class StaffServiceCatalogService {
     const page = options.page ?? 1;
     const pageSize = options.pageSize ?? 50;
     const where: Prisma.SalonOwnerStaffWhereInput = {
-      business: { tenantId },
+      business: { tenantId, ...(businessId ? { id: businessId } : {}) },
       ...(branchId ? { branches: { some: { branchId } } } : {}),
       ...(query
         ? {
@@ -235,6 +241,19 @@ export class StaffServiceCatalogService {
       throw new ForbiddenException(forbiddenMessage);
     }
 
+    if (current.roles.includes('OWNER') && current.status === 'ACTIVE' && input.status === 'INACTIVE') {
+      const remainingOwnerCount = await this.prisma.salonOwnerStaff.count({
+        where: {
+          businessId: current.businessId,
+          status: 'ACTIVE',
+          roles: { has: 'OWNER' },
+        },
+      });
+      if (remainingOwnerCount <= 1) {
+        throw new ConflictException(finalOwnerConflictMessage);
+      }
+    }
+
     try {
       const staff = await this.prisma.$transaction(async (tx) => {
         await tx.salonOwnerStaff.update({
@@ -262,10 +281,25 @@ export class StaffServiceCatalogService {
   }
 
   async replaceStaffRoles(context: SalonOwnerRequestContext, staffId: string, input: StaffRolesInputDto): Promise<StaffModel> {
-    await this.findStaffInScope(context, staffId);
+    const current = await this.findStaffInScope(context, staffId);
+    const updatedRoles = unique(input.roles);
+
+    if (current.roles.includes('OWNER') && !updatedRoles.includes('OWNER')) {
+      const remainingOwnerCount = await this.prisma.salonOwnerStaff.count({
+        where: {
+          businessId: current.businessId,
+          status: 'ACTIVE',
+          roles: { has: 'OWNER' },
+        },
+      });
+      if (remainingOwnerCount <= 1) {
+        throw new ConflictException(finalOwnerConflictMessage);
+      }
+    }
+
     const staff = await this.prisma.salonOwnerStaff.update({
       where: { id: staffId },
-      data: { roles: unique(input.roles) },
+      data: { roles: updatedRoles },
       include: staffInclude,
     });
     return this.mapStaff(staff);
@@ -310,28 +344,83 @@ export class StaffServiceCatalogService {
     return { staffId, branchId: shift.branchId, timezone: shift.timezone, days };
   }
 
+  async listStaffLeaveBlocks(
+    context: SalonOwnerRequestContext,
+    staffId: string,
+    query: StaffLeaveBlockQueryDto = {},
+  ): Promise<PagedResult<StaffLeaveBlockModel>> {
+    await this.findStaffInScope(context, staffId);
+
+    const fromDate = query.from ? new Date(query.from) : undefined;
+    const toDate = query.to ? new Date(query.to) : undefined;
+
+    if (fromDate && Number.isNaN(fromDate.getTime())) {
+      throw new UnprocessableEntityException(validationMessage);
+    }
+    if (toDate && Number.isNaN(toDate.getTime())) {
+      throw new UnprocessableEntityException(validationMessage);
+    }
+    if (fromDate && toDate && fromDate > toDate) {
+      throw new UnprocessableEntityException(validationMessage);
+    }
+
+    const where: Prisma.SalonOwnerStaffLeaveBlockWhereInput = {
+      staffId,
+      ...(fromDate ? { endsAt: { gte: fromDate } } : {}),
+      ...(toDate ? { startsAt: { lte: toDate } } : {}),
+    };
+
+    const blocks = await this.prisma.salonOwnerStaffLeaveBlock.findMany({
+      where,
+      orderBy: { startsAt: 'asc' },
+    });
+
+    return this.page(blocks.map((block) => this.mapLeaveBlock(block)));
+  }
+
   async createStaffLeaveBlock(
     context: SalonOwnerRequestContext,
     staffId: string,
     input: StaffLeaveBlockInputDto,
   ): Promise<StaffLeaveBlockModel> {
     const staff = await this.findStaffInScope(context, staffId);
-    const branch = await this.findBranchInScope(context, input.branchId);
-    if (branch.businessId !== staff.businessId || !staff.branches.some((assigned) => assigned.branchId === branch.id)) {
-      throw new ForbiddenException(forbiddenMessage);
+    let branchId: string | null = null;
+    if (input.branchId) {
+      const branch = await this.findBranchInScope(context, input.branchId);
+      if (branch.businessId !== staff.businessId || !staff.branches.some((assigned) => assigned.branchId === branch.id)) {
+        throw new ForbiddenException(forbiddenMessage);
+      }
+      branchId = branch.id;
     }
 
     const startsAt = new Date(input.startsAt);
     const endsAt = new Date(input.endsAt);
-    if (!(startsAt < endsAt)) {
+    if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime()) || !(startsAt < endsAt)) {
       throw new UnprocessableEntityException(validationMessage);
     }
 
     return this.mapLeaveBlock(
       await this.prisma.salonOwnerStaffLeaveBlock.create({
-        data: { staffId, branchId: branch.id, startsAt, endsAt, reason: trimRequired(input.reason) },
+        data: { staffId, branchId, startsAt, endsAt, reason: trimRequired(input.reason) },
       }),
     );
+  }
+
+  async deleteStaffLeaveBlock(context: SalonOwnerRequestContext, staffId: string, leaveBlockId: string): Promise<SuccessResult> {
+    const staff = await this.findStaffInScope(context, staffId);
+
+    const block = await this.prisma.salonOwnerStaffLeaveBlock.findFirst({
+      where: { id: leaveBlockId, staffId: staff.id },
+    });
+    if (!block) {
+      throw new NotFoundException(notFoundMessage);
+    }
+
+    await this.prisma.salonOwnerStaffLeaveBlock.delete({
+      where: { id: leaveBlockId },
+    });
+
+    return { success: true };
   }
 
   async listServiceCategories(context: SalonOwnerRequestContext, businessId?: string): Promise<PagedResult<ServiceCategoryModel>> {
@@ -440,10 +529,10 @@ export class StaffServiceCatalogService {
     await this.assertStaffInBusiness(service.businessId, input.staffIds);
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      await tx.salonOwnerServiceStaffEligibility.deleteMany({ where: { serviceId } });
+      await tx.salonOwnerStaffSkill.deleteMany({ where: { serviceId } });
       const staffIds = unique(input.staffIds);
       if (staffIds.length > 0) {
-        await tx.salonOwnerServiceStaffEligibility.createMany({
+        await tx.salonOwnerStaffSkill.createMany({
           data: staffIds.map((staffId) => ({ serviceId, staffId })),
         });
       }
@@ -631,7 +720,7 @@ export class StaffServiceCatalogService {
       basePrice: decimalToString(service.basePrice),
       taxRatePercent: decimalToString(service.taxRatePercent),
       status: service.status,
-      eligibleStaffIds: service.eligibleStaff.map((staff) => staff.staffId).sort(),
+      eligibleStaffIds: (service.skills ?? []).map((skill) => skill.staffId).sort(),
     };
   }
 

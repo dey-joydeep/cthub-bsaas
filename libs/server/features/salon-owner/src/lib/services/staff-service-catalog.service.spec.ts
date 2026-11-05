@@ -87,7 +87,7 @@ function serviceRecord(overrides: Record<string, unknown> = {}) {
     basePrice: new Prisma.Decimal('35.00'),
     taxRatePercent: new Prisma.Decimal('10.00'),
     status: 'ACTIVE',
-    eligibleStaff: [],
+    skills: [],
     createdAt: now,
     updatedAt: now,
     ...overrides,
@@ -133,6 +133,9 @@ function createPrismaMock() {
     },
     salonOwnerStaffLeaveBlock: {
       create: jest.fn(),
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      delete: jest.fn(),
     },
     salonOwnerServiceCategory: {
       findMany: jest.fn(),
@@ -146,10 +149,6 @@ function createPrismaMock() {
       update: jest.fn(),
       count: jest.fn(),
       findUniqueOrThrow: jest.fn(),
-    },
-    salonOwnerServiceStaffEligibility: {
-      createMany: jest.fn(),
-      deleteMany: jest.fn(),
     },
     $transaction: transactionMock,
   };
@@ -310,6 +309,132 @@ describe('StaffServiceCatalogService', () => {
     ).resolves.toMatchObject({ id: 'leave-1', reason: 'Personal' });
   });
 
+  it('manages staff leave block lifecycle with filtering and deletion', async () => {
+    prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff());
+    prisma.salonBranch.findFirst.mockResolvedValue(branch());
+    prisma.salonOwnerStaffLeaveBlock.create.mockResolvedValue({
+      id: 'leave-global',
+      staffId: 'staff-1',
+      branchId: null,
+      startsAt: new Date('2026-06-01T00:00:00.000Z'),
+      endsAt: new Date('2026-06-05T00:00:00.000Z'),
+      reason: 'Vacation',
+      createdAt: now,
+    });
+    prisma.salonOwnerStaffLeaveBlock.findMany.mockResolvedValue([
+      {
+        id: 'leave-global',
+        staffId: 'staff-1',
+        branchId: null,
+        startsAt: new Date('2026-06-01T00:00:00.000Z'),
+        endsAt: new Date('2026-06-05T00:00:00.000Z'),
+        reason: 'Vacation',
+        createdAt: now,
+      },
+    ]);
+    prisma.salonOwnerStaffLeaveBlock.findFirst.mockResolvedValue({
+      id: 'leave-global',
+      staffId: 'staff-1',
+    });
+    prisma.salonOwnerStaffLeaveBlock.delete.mockResolvedValue({ id: 'leave-global' });
+
+    // Global leave creation (null branchId)
+    await expect(
+      service.createStaffLeaveBlock({ user: user() }, 'staff-1', {
+        startsAt: '2026-06-01T00:00:00.000Z',
+        endsAt: '2026-06-05T00:00:00.000Z',
+        reason: 'Vacation',
+      }),
+    ).resolves.toMatchObject({ id: 'leave-global', branchId: null, reason: 'Vacation' });
+
+    // List leave blocks with from/to query
+    await expect(
+      service.listStaffLeaveBlocks({ user: user() }, 'staff-1', {
+        from: '2026-06-01T00:00:00.000Z',
+        to: '2026-06-30T23:59:59.000Z',
+      }),
+    ).resolves.toMatchObject({
+      items: [{ id: 'leave-global', branchId: null }],
+    });
+
+    // Delete leave block
+    await expect(service.deleteStaffLeaveBlock({ user: user() }, 'staff-1', 'leave-global')).resolves.toEqual({
+      success: true,
+    });
+  });
+
+  it('rejects invalid leave block query parameters and missing delete targets', async () => {
+    prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff());
+
+    await expect(service.listStaffLeaveBlocks({ user: user() }, 'staff-1', { from: 'invalid-date' })).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+
+    await expect(service.listStaffLeaveBlocks({ user: user() }, 'staff-1', { to: 'invalid-date' })).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+
+    await expect(
+      service.listStaffLeaveBlocks({ user: user() }, 'staff-1', {
+        from: '2026-07-01T00:00:00.000Z',
+        to: '2026-06-01T00:00:00.000Z',
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    prisma.salonOwnerStaffLeaveBlock.findFirst.mockResolvedValue(null);
+    await expect(service.deleteStaffLeaveBlock({ user: user() }, 'staff-1', 'missing-leave')).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('enforces BR-ST-11 final owner protection on role changes and deactivations', async () => {
+    const ownerStaff = staff({ roles: ['OWNER'], status: 'ACTIVE' });
+    prisma.salonOwnerStaff.findFirst.mockResolvedValue(ownerStaff);
+    prisma.salonOwnerStaff.count.mockResolvedValue(1); // Only 1 active owner
+
+    // Attempting to remove OWNER role when only 1 active owner exists
+    await expect(service.replaceStaffRoles({ user: user() }, 'staff-1', { roles: ['STYLIST'] })).rejects.toBeInstanceOf(ConflictException);
+
+    // Attempting to deactivate the only active owner
+    prisma.salonBranch.findMany.mockResolvedValue([branch()]);
+    await expect(
+      service.updateStaff({ user: user() }, 'staff-1', {
+        branchIds: ['branch-1'],
+        displayName: 'Stylist One',
+        phone: '09000000001',
+        status: 'INACTIVE',
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    // When another active owner exists (count = 2), removal and deactivation succeed
+    prisma.salonOwnerStaff.count.mockResolvedValue(2);
+    prisma.salonOwnerStaff.update.mockResolvedValue(staff({ roles: ['STYLIST'] }));
+    await expect(service.replaceStaffRoles({ user: user() }, 'staff-1', { roles: ['STYLIST'] })).resolves.toMatchObject({
+      roles: ['STYLIST'],
+    });
+
+    prisma.salonOwnerStaff.findUniqueOrThrow.mockResolvedValue(staff({ status: 'INACTIVE' }));
+    await expect(
+      service.updateStaff({ user: user() }, 'staff-1', {
+        branchIds: ['branch-1'],
+        displayName: 'Stylist One',
+        phone: '09000000001',
+        status: 'INACTIVE',
+      }),
+    ).resolves.toMatchObject({ status: 'INACTIVE' });
+  });
+
+  it('filters staff list by businessId when provided', async () => {
+    prisma.salonBusiness.findFirst.mockResolvedValue(business({ id: 'business-1' }));
+    prisma.salonOwnerStaff.count.mockResolvedValue(1);
+    prisma.salonOwnerStaff.findMany.mockResolvedValue([staff()]);
+
+    await expect(service.listStaff({ user: user() }, { businessId: 'business-1' })).resolves.toMatchObject({
+      items: [{ id: 'staff-1' }],
+    });
+
+    prisma.salonBusiness.findFirst.mockResolvedValue(null);
+    await expect(service.listStaff({ user: user() }, { businessId: 'missing-business' })).rejects.toBeInstanceOf(NotFoundException);
+  });
+
   it('rejects invalid shift and leave intervals', async () => {
     prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff());
     prisma.salonBranch.findFirst.mockResolvedValue(branch());
@@ -455,7 +580,7 @@ describe('StaffServiceCatalogService', () => {
     prisma.salonOwnerService.findFirst.mockResolvedValue(serviceRecord());
     prisma.salonOwnerStaff.count.mockResolvedValue(1);
     prisma.salonOwnerService.findUniqueOrThrow.mockResolvedValue(
-      serviceRecord({ eligibleStaff: [{ serviceId: 'service-1', staffId: 'staff-1' }] }),
+      serviceRecord({ skills: [{ serviceId: 'service-1', staffId: 'staff-1' }] }),
     );
 
     await expect(service.listServices({ user: user() }, { categoryId: 'category-1' })).resolves.toMatchObject({

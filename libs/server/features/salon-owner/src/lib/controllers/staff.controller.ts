@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Put, Query, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Put, Query, UseInterceptors } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, ResponseEnvelopeInterceptor } from '@cthub-bsaas/server-core';
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
@@ -6,6 +6,7 @@ import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 import {
   StaffInputDto,
   StaffLeaveBlockInputDto,
+  StaffLeaveBlockQueryDto,
   StaffListQueryDto,
   StaffRolesInputDto,
   StaffShiftInputDto,
@@ -73,6 +74,16 @@ export class StaffController {
     return this.catalog.replaceStaffShifts({ user }, staffId, body);
   }
 
+  @Get(':staffId/leave-blocks')
+  @ApiOperation({ operationId: 'listStaffLeaveBlocks' })
+  listStaffLeaveBlocks(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('staffId', new ParseUUIDPipe()) staffId: string,
+    @Query() query: StaffLeaveBlockQueryDto,
+  ) {
+    return this.catalog.listStaffLeaveBlocks({ user }, staffId, query);
+  }
+
   @Post(':staffId/leave-blocks')
   @ApiOperation({ operationId: 'createStaffLeaveBlock' })
   createStaffLeaveBlock(
@@ -81,5 +92,15 @@ export class StaffController {
     @Body() body: StaffLeaveBlockInputDto,
   ) {
     return this.catalog.createStaffLeaveBlock({ user }, staffId, body);
+  }
+
+  @Delete(':staffId/leave-blocks/:leaveBlockId')
+  @ApiOperation({ operationId: 'deleteStaffLeaveBlock' })
+  deleteStaffLeaveBlock(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('staffId', new ParseUUIDPipe()) staffId: string,
+    @Param('leaveBlockId', new ParseUUIDPipe()) leaveBlockId: string,
+  ) {
+    return this.catalog.deleteStaffLeaveBlock({ user }, staffId, leaveBlockId);
   }
 }

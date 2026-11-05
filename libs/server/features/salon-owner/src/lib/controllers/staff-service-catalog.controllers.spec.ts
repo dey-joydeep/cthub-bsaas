@@ -22,7 +22,9 @@ function serviceMock() {
     replaceStaffRoles: jest.fn(),
     replaceStaffSkills: jest.fn(),
     replaceStaffShifts: jest.fn(),
+    listStaffLeaveBlocks: jest.fn(),
     createStaffLeaveBlock: jest.fn(),
+    deleteStaffLeaveBlock: jest.fn(),
     listServiceCategories: jest.fn(),
     createServiceCategory: jest.fn(),
     listServices: jest.fn(),
@@ -53,6 +55,8 @@ describe('Staff and service catalog controllers', () => {
       reason: 'Personal',
     };
 
+    const leaveQuery = { from: '2026-05-01T00:00:00.000Z', to: '2026-05-31T23:59:59.000Z' };
+
     await controller.listStaff(user, query);
     await controller.createStaff(user, staff);
     await controller.getStaff(user, 'staff-1');
@@ -60,7 +64,9 @@ describe('Staff and service catalog controllers', () => {
     await controller.replaceStaffRoles(user, 'staff-1', { roles: ['STYLIST'] });
     await controller.replaceStaffSkills(user, 'staff-1', { serviceIds: ['service-1'] });
     await controller.replaceStaffShifts(user, 'staff-1', shift);
+    await controller.listStaffLeaveBlocks(user, 'staff-1', leaveQuery);
     await controller.createStaffLeaveBlock(user, 'staff-1', leave);
+    await controller.deleteStaffLeaveBlock(user, 'staff-1', 'leave-1');
 
     expect(service.listStaff).toHaveBeenCalledWith({ user }, query);
     expect(service.createStaff).toHaveBeenCalledWith({ user }, staff);
@@ -69,7 +75,9 @@ describe('Staff and service catalog controllers', () => {
     expect(service.replaceStaffRoles).toHaveBeenCalledWith({ user }, 'staff-1', { roles: ['STYLIST'] });
     expect(service.replaceStaffSkills).toHaveBeenCalledWith({ user }, 'staff-1', { serviceIds: ['service-1'] });
     expect(service.replaceStaffShifts).toHaveBeenCalledWith({ user }, 'staff-1', shift);
+    expect(service.listStaffLeaveBlocks).toHaveBeenCalledWith({ user }, 'staff-1', leaveQuery);
     expect(service.createStaffLeaveBlock).toHaveBeenCalledWith({ user }, 'staff-1', leave);
+    expect(service.deleteStaffLeaveBlock).toHaveBeenCalledWith({ user }, 'staff-1', 'leave-1');
   });
 
   it('delegates service catalog routes with route parameters and authenticated context', async () => {

@@ -92,8 +92,9 @@ export class StaffShiftInputDto {
 }
 
 export class StaffLeaveBlockInputDto {
+  @IsOptional()
   @IsUUID()
-  branchId!: string;
+  branchId?: string;
 
   @IsISO8601()
   @Matches(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/)
@@ -108,7 +109,21 @@ export class StaffLeaveBlockInputDto {
   reason!: string;
 }
 
+export class StaffLeaveBlockQueryDto {
+  @IsOptional()
+  @IsISO8601()
+  from?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  to?: string;
+}
+
 export class StaffListQueryDto {
+  @IsOptional()
+  @IsUUID()
+  businessId?: string;
+
   @IsOptional()
   @IsUUID()
   branchId?: string;

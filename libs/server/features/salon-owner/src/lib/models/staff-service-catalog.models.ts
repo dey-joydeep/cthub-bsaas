@@ -30,10 +30,14 @@ export interface StaffShiftModel {
 export interface StaffLeaveBlockModel {
   readonly id: string;
   readonly staffId: string;
-  readonly branchId: string;
+  readonly branchId: string | null;
   readonly startsAt: string;
   readonly endsAt: string;
   readonly reason: string;
+}
+
+export interface SuccessResult {
+  readonly success: boolean;
 }
 
 export interface ServiceCategoryModel {
