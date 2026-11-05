@@ -6,6 +6,8 @@ The shared [development life cycle](../development-lifecycle.md) determines the 
 
 Before delivery work, record whether the mandate came from the user's task request or a previously accepted roadmap item. An agent-created issue is tracking, not authorization for a new product outcome. Under the [autonomy and merge policy](../autonomy-and-merge-policy.md), the accepted mandate covers routine task-branch commits and pushes, while the user retains the merge decision.
 
+When task-scoped bot dispatch is activated, obtain the owner's bounded broker mandate once at the initial product decision. Record its ID, issue, branch, allowed paths, action limits, and expiry in the handoff without recording a TOTP code or role token. PO creates the issue through its App if the mandate starts without an issue number. Dev commits and opens the task PR through its App, and QA records its review under the exact PR head. The [broker client](../../../tools/aidd-broker/README.md) is shared by Antigravity and Codex desktop/CLI. If a bot-owned write cannot use it, record a blocked unit and continue independent work; do not silently use the owner's `gh` account.
+
 ## Operator prompt
 
 ```text

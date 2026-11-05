@@ -33,6 +33,8 @@ AIDD is the default workflow for every new task, including a new error-fix reque
 
 The [AI-driven development life cycle](docs/aidd/development-lifecycle.md) defines the product goal, role ownership, handoffs, and release gates for both Codex and Antigravity. Reuse an existing issue when the work continues it; use one issue for a standalone deliverable and an Epic only for a multi-slice outcome. Independent review and security checks belong to Codex. Antigravity execution requires Gemini 3.8 Flash or stronger; verify the effective model because an agent's `flash` tier does not pin a version.
 
+For GitHub writes assigned to the PO, QA, or Dev App, follow the [GitHub App identity guide](docs/aidd/github-app-identities.md). Verify the registered App name and the resulting GitHub actor; never infer a bot name from the repository name. Once task-scoped bot dispatch is activated, use its broker for bot-owned writes. If it is unavailable, record a blocker and continue independent work; do not silently use the owner's `gh` session as a fallback. A bot account identifies the writer, not an independent approval.
+
 Record consequential technology and architecture decisions when they are made using the [ADR register](docs/architecture/decisions/README.md). A proposed ADR is not an accepted decision; reconcile affected specs and obtain required independent review before acceptance.
 
 Use the [role and directory guide](docs/aidd/role-directory-access.md) to assign task paths, edit ownership, and verification. A role profile does not grant blanket write access to its listed areas.
