@@ -58,6 +58,8 @@ These capabilities are useful but should not block the operational core.
 
 ## Release Guardrails
 
+- Before releasing appointment booking, payment capture, or stock adjustment, QA must verify its concurrency invariant against the isolated PostgreSQL test database and retain the persisted-state evidence. The full operational-core MVP includes all three proofs; unfinished flows cannot be counted as passed.
+- Before releasing a front-desk read flow, PO and QA must accept its staged HTTP workload and review measured latency and error evidence against [NFR-PERF-05](../../specs/salon-owner/FNRD/non-functional-requirements.md). A local database probe is diagnostic evidence only.
 - Do not build marketing automation before consent and customer CRM foundations exist.
 - Do not build commission payouts before POS finalization and refund rules are stable.
 - Do not build advanced inventory before stock movement ledger rules are agreed.

@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "task": "issue-110",
+  "goal": "Prove backend data integrity and runtime capacity with repeatable evidence",
+  "issue": "110",
+  "branch": "chore/backend-reliability-evidence",
+  "base": "main",
+  "createdAt": "2026-11-04T03:55:01.142Z",
+  "exportedAt": "2026-11-04T04:59:36.897Z",
+  "exportedHead": "35b12f4b0a3814d9af8ee450ab3104da9e0d24db",
+  "units": [
+    {
+      "definition": {
+        "id": "implementation",
+        "kind": "implementation",
+        "owner": "coordinator",
+        "paths": [".agents", ".codex", "docs", "libs/server", "scripts/aidd"],
+        "dependsOn": [],
+        "acceptance": "Guarded PostgreSQL proof, capacity probe, aligned role and NFR guidance, and targeted validation"
+      },
+      "status": "in-progress",
+      "lastType": "checkpoint",
+      "invocation": {},
+      "checkpoint": {
+        "report": {
+          "summary": "Implemented guarded migration-backed PostgreSQL tests with an overlapping-transaction barrier, a test-only query capacity probe, and backend reliability role and NFR guidance. CI database validation is pending because local Docker did not respond.",
+          "remainingPaths": ["libs/server/features/salon-owner/tests/integration/salon-owner-settings.database.it-spec.ts"],
+          "evidence": [
+            "docs/aidd/backend-reliability-evidence.md",
+            "libs/server/features/salon-owner/tests/integration/salon-owner-settings.database.it-spec.ts",
+            "libs/server/features/salon-owner/tests/integration/salon-owner-test-global-setup.ts"
+          ],
+          "commands": [
+            { "command": "npm run aidd:db-guard:test", "exitCode": 0 },
+            { "command": "npm run aidd:links", "exitCode": 0 },
+            { "command": "npm run aidd:instruction-drift", "exitCode": 0 },
+            { "command": "npm exec nx run server-feature-salon-owner:type-check", "exitCode": 0 },
+            { "command": "npm exec nx lint server-feature-salon-owner", "exitCode": 0 },
+            { "command": "npm exec nx test server-feature-salon-owner --configuration=ut", "exitCode": 0 }
+          ],
+          "findings": [
+            {
+              "summary": "Migration-backed PostgreSQL integration and capacity probe need CI or a working isolated local test database.",
+              "disposition": "open"
+            }
+          ]
+        },
+        "source": {
+          "fingerprint": "b1f8577609c27f9bf6bbaa9983c61e2504c351fe9d183a0862a7879ce4542299",
+          "head": "35b12f4b0a3814d9af8ee450ab3104da9e0d24db"
+        }
+      }
+    }
+  ]
+}

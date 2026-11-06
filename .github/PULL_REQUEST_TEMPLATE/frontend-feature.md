@@ -15,6 +15,8 @@
 
 <!-- Link user story, FRD/FNRD/HLD/LLD/API/VALIDATION/WEB/TEST docs. -->
 
+- Architecture decision / ADR: <!-- link proposed/accepted ADR, or state none and why -->
+
 ## Frontend Impact
 
 | Area                   | Impact                   | Notes |

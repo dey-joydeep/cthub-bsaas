@@ -49,6 +49,8 @@ Out of MVP but planned as extension points:
 
 Use the existing Nx/NestJS/Angular monorepo structure:
 
+The current application boundaries are recorded in [ADR-0002](../../../architecture/decisions/0002-current-application-composition.md), the Prisma strategy in [ADR-0003](../../../architecture/decisions/0003-prisma-persistence-strategy.md), and the tenant/business/branch scope in [ADR-0004](../../../architecture/decisions/0004-tenant-business-branch-scope.md). The backend framework question is being evaluated in [ADR-0001](../../../architecture/decisions/0001-backend-framework-selection.md). Its proposed status does not change this HLD's current NestJS baseline.
+
 - Backend feature libraries under `libs/server/features/**`.
 - Backend contracts/ports under `libs/server/contracts-*`.
 - Concrete persistence/adapters under `libs/server/infrastructure`.

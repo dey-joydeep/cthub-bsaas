@@ -15,6 +15,8 @@
 
 <!-- Link the authoritative source docs or explain the new source. -->
 
+- Architecture decision / ADR: <!-- link proposed/accepted ADR, or state none and why -->
+
 ## Documentation Chain Impact
 
 | Layer               | Impact                   | Notes |

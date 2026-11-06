@@ -23,6 +23,8 @@ Review only. Do not edit files.
 - Regression coverage for defects.
 - Permission, validation, conflict, edge-case, and negative-path coverage.
 - Determinism and isolation of tests.
+- Real PostgreSQL contention, idempotency, and cross-tenant proof for critical writes; mocked service or Prisma tests alone are insufficient.
+- Reproducible workload and latency/error/event-loop evidence for critical backend capacity claims, using `docs/aidd/backend-reliability-evidence.md`.
 - Whether validation commands match affected Nx projects.
 - Whether coverage thresholds or skips were weakened.
 

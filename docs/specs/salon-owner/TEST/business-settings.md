@@ -12,6 +12,7 @@
 - Cross-business route ID is rejected.
 - Registration duplicate returns conflict.
 - Audit row and event payload include correlation ID.
+- For the implemented salon-owner settings service, a migration-backed PostgreSQL test checks that the idempotency partial index exists, an owner cannot read another tenant's business, concurrent same-key requests persist one business and audit record even with different names, and a changed payload conflicts. The changed-payload test synchronizes both transactions after their replay reads to exercise the unique-index race. These service tests do not verify sign-in claim production or HTTP guard routing.
 
 ## Web Tests
 

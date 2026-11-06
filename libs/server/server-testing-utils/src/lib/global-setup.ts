@@ -9,7 +9,7 @@ import { bindTestDatabaseTarget } from '../../../core/src/config/test-database-t
 /**
  * Jest global setup for server integration tests.
  * - Loads `.env.test`
- * - Syncs Prisma schema to the test DB (db push)
+ * - Applies versioned migrations to the test DB
  * - Seeds baseline roles, a tenant, and a test user used across ITs
  *
  * Excluded from build via tsconfig to avoid shipping test helpers.
@@ -26,13 +26,13 @@ export default async function globalSetup() {
   const target = bindTestDatabaseTarget(process.env, root);
 
   const schemaPath = resolve(root, 'libs/server/data-access/prisma/schema.prisma');
-  const push = spawnSync('npx', ['prisma', 'db', 'push', '--skip-generate', '--accept-data-loss', '--schema', schemaPath], {
+  const push = spawnSync('npx', ['prisma', 'migrate', 'deploy', '--schema', schemaPath], {
     stdio: 'inherit',
     env: { ...process.env, DATABASE_URL: target.url },
     shell: process.platform === 'win32',
   });
   if (push.status !== 0) {
-    throw new Error('Failed to push Prisma schema for tests');
+    throw new Error('Failed to apply Prisma migrations to the test database');
   }
 
   const prisma = new PrismaClient({ datasources: { db: { url: target.url } } });

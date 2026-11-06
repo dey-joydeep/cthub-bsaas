@@ -56,6 +56,7 @@ For database-backed integration tests:
 - Use `afterEach` to remove per-test data and dependent rows.
 - Use `afterAll` to remove master data.
 - Use unique emails or IDs, for example with `randomUUID()`.
+- For critical tenant-scoped or contended writes, add a real PostgreSQL integration test and follow `docs/aidd/backend-reliability-evidence.md`; mocked Prisma tests alone do not prove concurrency.
 - Shared test helpers belong under `libs/server/core/src/testing/`.
 - Prefer typed mocks such as `Pick<Port, 'method'>`; keep `any` local and narrow if unavoidable.
 
@@ -73,6 +74,7 @@ For database-backed integration tests:
 - Plan schema transitions and recovery before editing. Use read-only query plans for performance investigation by default; run `EXPLAIN ANALYZE` only after checking the target and query effects.
 - Fallback to Prisma CLI only when MCP is unavailable.
 - Use meaningful migrations.
+- Measure representative query latency and event-loop impact before adding expensive request-path work. Follow `docs/aidd/backend-reliability-evidence.md` for capacity evidence and worker decisions.
 - Keep schema and migrations in the server data-access area.
 - Do not rely on test-only encryption/JWT fallback behavior in production.
 

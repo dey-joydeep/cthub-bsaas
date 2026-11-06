@@ -33,6 +33,8 @@ AIDD is the default workflow for every new task, including a new error-fix reque
 
 The [AI-driven development life cycle](docs/aidd/development-lifecycle.md) defines the product goal, role ownership, handoffs, and release gates for both Codex and Antigravity. Reuse an existing issue when the work continues it; use one issue for a standalone deliverable and an Epic only for a multi-slice outcome. Independent review and security checks belong to Codex. Antigravity execution requires Gemini 3.8 Flash or stronger; verify the effective model because an agent's `flash` tier does not pin a version.
 
+Record consequential technology and architecture decisions when they are made using the [ADR register](docs/architecture/decisions/README.md). A proposed ADR is not an accepted decision; reconcile affected specs and obtain required independent review before acceptance.
+
 Use the [role and directory guide](docs/aidd/role-directory-access.md) to assign task paths, edit ownership, and verification. A role profile does not grant blanket write access to its listed areas.
 
 Add each trackable delivery issue to the private cthub GitHub Project with a Status. A feature needs child issues only for independent delivery slices with their own acceptance criteria and PRs, not for each agent, layer, or internal work unit. The coordinator owns Project field updates; see `docs/aidd/development-lifecycle.md` and `.agents/skills/aidd-project-tracker/SKILL.md`.
