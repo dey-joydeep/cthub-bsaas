@@ -5,6 +5,7 @@ import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 import { SalonOwnerSettingsApi } from '../salon-owner-settings/salon-owner-settings.api';
+import { StaffLeaveBlock } from './models/staff-service-catalog.models';
 import { StaffServiceCatalogApi } from './staff-service-catalog.api';
 import { StaffServiceCatalogComponent } from './staff-service-catalog.component';
 
@@ -293,5 +294,341 @@ describe('StaffServiceCatalogComponent', () => {
     );
     component.saveRoles();
     expect(component.error()).toBe('Cannot deactivate or remove the OWNER role from the last active owner of the business.');
+  });
+});
+
+describe('StaffServiceCatalogComponent - Full Workflow Testing with Realistic Dummy Data', () => {
+  let dummyFixture: ComponentFixture<StaffServiceCatalogComponent>;
+  let dummyComponent: StaffServiceCatalogComponent;
+
+  const dummyBranches = [
+    {
+      id: 'branch-tokyo-shibuya',
+      businessId: 'biz-lumiere',
+      name: 'Tokyo Shibuya Flagship',
+      timezone: 'Asia/Tokyo',
+      currency: 'JPY',
+      address: { line1: '1-2-3 Shibuya', city: 'Tokyo', state: 'Tokyo', postalCode: '150-0002', country: 'JP' },
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 'branch-osaka-namba',
+      businessId: 'biz-lumiere',
+      name: 'Osaka Namba Studio',
+      timezone: 'Asia/Tokyo',
+      currency: 'JPY',
+      address: { line1: '4-5-6 Namba', city: 'Osaka', state: 'Osaka', postalCode: '542-0076', country: 'JP' },
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  ];
+
+  const dummyStaff = [
+    {
+      id: 'staff-elena-owner',
+      branchIds: ['branch-tokyo-shibuya', 'branch-osaka-namba'],
+      displayName: 'Elena Vance (Owner)',
+      phone: '+81-90-1111-2222',
+      email: 'elena@lumiere-salon.jp',
+      status: 'ACTIVE' as const,
+      roles: ['OWNER'],
+      skillServiceIds: ['svc-precision-cut', 'svc-balayage'],
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 'staff-kenji-manager',
+      branchIds: ['branch-tokyo-shibuya'],
+      displayName: 'Kenji Sato (Branch Manager)',
+      phone: '+81-90-3333-4444',
+      email: 'kenji@lumiere-salon.jp',
+      status: 'ACTIVE' as const,
+      roles: ['MANAGER', 'STYLIST'],
+      skillServiceIds: ['svc-precision-cut'],
+      createdAt: '2026-01-02T00:00:00.000Z',
+      updatedAt: '2026-01-02T00:00:00.000Z',
+    },
+    {
+      id: 'staff-yuki-stylist',
+      branchIds: ['branch-osaka-namba'],
+      displayName: 'Yuki Tanaka (Senior Stylist)',
+      phone: '+81-90-5555-6666',
+      email: 'yuki@lumiere-salon.jp',
+      status: 'ACTIVE' as const,
+      roles: ['STYLIST'],
+      skillServiceIds: ['svc-balayage'],
+      createdAt: '2026-01-03T00:00:00.000Z',
+      updatedAt: '2026-01-03T00:00:00.000Z',
+    },
+  ];
+
+  let dummyLeaveBlocksState: Record<string, StaffLeaveBlock[]> = {};
+
+  const dummyCategories = [
+    { id: 'cat-cuts', name: 'Precision Cuts & Styling', sortOrder: 1 },
+    { id: 'cat-color', name: 'Color & Treatments', sortOrder: 2 },
+  ];
+
+  const dummyServices = [
+    {
+      id: 'svc-precision-cut',
+      categoryId: 'cat-cuts',
+      name: 'Precision Master Haircut & Style',
+      durationMinutes: 60,
+      bufferMinutes: 10,
+      basePrice: '85.00',
+      taxRatePercent: '10.00',
+      status: 'ACTIVE' as const,
+      eligibleStaffIds: ['staff-elena-owner', 'staff-kenji-manager'],
+    },
+    {
+      id: 'svc-balayage',
+      categoryId: 'cat-color',
+      name: 'Full Balayage Master Color',
+      durationMinutes: 180,
+      bufferMinutes: 15,
+      basePrice: '250.00',
+      taxRatePercent: '10.00',
+      status: 'ACTIVE' as const,
+      eligibleStaffIds: ['staff-elena-owner', 'staff-yuki-stylist'],
+    },
+  ];
+
+  const routeStub = {
+    snapshot: { data: {} as Record<string, string> },
+    parent: { snapshot: { data: {} as Record<string, string> } },
+  };
+  const settingsApi = {
+    listBranches: vi.fn(),
+  };
+  const catalogApi = {
+    listStaff: vi.fn(),
+    createStaff: vi.fn(),
+    updateStaff: vi.fn(),
+    replaceStaffRoles: vi.fn(),
+    replaceStaffSkills: vi.fn(),
+    replaceStaffShifts: vi.fn(),
+    listStaffLeaveBlocks: vi.fn(),
+    createStaffLeaveBlock: vi.fn(),
+    deleteStaffLeaveBlock: vi.fn(),
+    listServiceCategories: vi.fn(),
+    createServiceCategory: vi.fn(),
+    listServices: vi.fn(),
+    createService: vi.fn(),
+    updateService: vi.fn(),
+    updateServiceStatus: vi.fn(),
+    replaceServiceStaffEligibility: vi.fn(),
+  };
+
+  beforeEach(async () => {
+    dummyLeaveBlocksState = {
+      'staff-elena-owner': [
+        {
+          id: 'leave-elena-global',
+          businessId: 'biz-lumiere',
+          staffId: 'staff-elena-owner',
+          branchId: null,
+          startsAt: '2026-07-01T09:00:00.000Z',
+          endsAt: '2026-07-07T18:00:00.000Z',
+          reason: 'Global Beauty Expo in Paris',
+          createdAt: '2026-01-10T00:00:00.000Z',
+          updatedAt: '2026-01-10T00:00:00.000Z',
+        },
+      ],
+      'staff-kenji-manager': [
+        {
+          id: 'leave-kenji-shibuya',
+          businessId: 'biz-lumiere',
+          staffId: 'staff-kenji-manager',
+          branchId: 'branch-tokyo-shibuya',
+          startsAt: '2026-06-15T10:00:00.000Z',
+          endsAt: '2026-06-15T15:00:00.000Z',
+          reason: 'Tokyo Equipment Maintenance',
+          createdAt: '2026-01-11T00:00:00.000Z',
+          updatedAt: '2026-01-11T00:00:00.000Z',
+        },
+      ],
+      'staff-yuki-stylist': [],
+    };
+
+    settingsApi.listBranches.mockReturnValue(of({ items: dummyBranches, page: { limit: 10, nextCursor: null, hasMore: false } }));
+    catalogApi.listStaff.mockReturnValue(of({ items: dummyStaff, page: { limit: 10, nextCursor: null, hasMore: false } }));
+    catalogApi.listServiceCategories.mockReturnValue(of({ items: dummyCategories, page: { limit: 10, nextCursor: null, hasMore: false } }));
+    catalogApi.listServices.mockReturnValue(of({ items: dummyServices, page: { limit: 10, nextCursor: null, hasMore: false } }));
+
+    catalogApi.listStaffLeaveBlocks.mockImplementation((staffId: string) => {
+      const items = dummyLeaveBlocksState[staffId] ?? [];
+      return of({ items, page: { limit: 10, nextCursor: null, hasMore: false } });
+    });
+
+    catalogApi.createStaffLeaveBlock.mockImplementation(
+      (staffId: string, input: { branchId?: string | null; startsAt: string; endsAt: string; reason: string }) => {
+        const newBlock: StaffLeaveBlock = {
+          id: `leave-new-${Date.now()}`,
+          businessId: 'biz-lumiere',
+          staffId,
+          branchId: input.branchId ?? null,
+          startsAt: input.startsAt,
+          endsAt: input.endsAt,
+          reason: input.reason,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        dummyLeaveBlocksState[staffId] = [...(dummyLeaveBlocksState[staffId] ?? []), newBlock];
+        return of(newBlock);
+      },
+    );
+
+    catalogApi.deleteStaffLeaveBlock.mockImplementation((staffId: string, leaveBlockId: string) => {
+      dummyLeaveBlocksState[staffId] = (dummyLeaveBlocksState[staffId] ?? []).filter((b) => b.id !== leaveBlockId);
+      return of({ success: true });
+    });
+
+    await TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [NoopAnimationsModule, StaffServiceCatalogComponent],
+      providers: [
+        { provide: SalonOwnerSettingsApi, useValue: settingsApi },
+        { provide: StaffServiceCatalogApi, useValue: catalogApi },
+        { provide: ActivatedRoute, useValue: routeStub },
+      ],
+    }).compileComponents();
+
+    dummyFixture = TestBed.createComponent(StaffServiceCatalogComponent);
+    dummyFixture.detectChanges();
+    dummyComponent = dummyFixture.componentInstance;
+  });
+
+  it('renders multi-branch salon state and Elena Vance with her salon-wide leave block', () => {
+    const text = dummyFixture.nativeElement.textContent;
+    expect(text).toContain('Elena Vance (Owner)');
+    expect(text).toContain('Kenji Sato (Branch Manager)');
+    expect(text).toContain('Yuki Tanaka (Senior Stylist)');
+
+    const internal = dummyComponent as unknown as {
+      selectedStaff: () => (typeof dummyStaff)[0] | null;
+      leaveBlocks: () => readonly StaffLeaveBlock[];
+      leaveBranchScope: (branchId: string | null) => string;
+    };
+    expect(internal.selectedStaff()?.id).toBe('staff-elena-owner');
+    expect(internal.leaveBlocks().length).toBe(1);
+    expect(internal.leaveBlocks()[0].reason).toBe('Global Beauty Expo in Paris');
+    expect(internal.leaveBranchScope(internal.leaveBlocks()[0].branchId)).toBe('All Branches');
+  });
+
+  it('switches staff to Kenji Sato and displays his Tokyo branch-specific leave', () => {
+    const internal = dummyComponent as unknown as {
+      selectStaff: (member: (typeof dummyStaff)[0]) => void;
+      selectedStaff: () => (typeof dummyStaff)[0] | null;
+      leaveBlocks: () => readonly StaffLeaveBlock[];
+      leaveBranchScope: (branchId: string | null) => string;
+    };
+
+    internal.selectStaff(dummyStaff[1]);
+    dummyFixture.detectChanges();
+
+    expect(internal.selectedStaff()?.displayName).toBe('Kenji Sato (Branch Manager)');
+    expect(internal.leaveBlocks().length).toBe(1);
+    expect(internal.leaveBlocks()[0].reason).toBe('Tokyo Equipment Maintenance');
+    expect(internal.leaveBranchScope(internal.leaveBlocks()[0].branchId)).toBe('Tokyo Shibuya Flagship');
+  });
+
+  it('switches staff to Yuki Tanaka who starts with no leave blocks', () => {
+    const internal = dummyComponent as unknown as {
+      selectStaff: (member: (typeof dummyStaff)[0]) => void;
+      leaveBlocks: () => readonly StaffLeaveBlock[];
+    };
+
+    internal.selectStaff(dummyStaff[2]);
+    dummyFixture.detectChanges();
+
+    expect(internal.leaveBlocks().length).toBe(0);
+    expect(dummyFixture.nativeElement.textContent).toContain('No active leave blocks scheduled for this staff member.');
+  });
+
+  it('creates a new salon-wide vacation for Yuki Tanaka and updates active leave blocks', () => {
+    const internal = dummyComponent as unknown as {
+      selectStaff: (member: (typeof dummyStaff)[0]) => void;
+      leaveForm: { patchValue: (value: Record<string, unknown>) => void };
+      saveLeave: () => void;
+      leaveBlocks: () => readonly StaffLeaveBlock[];
+      leaveBranchScope: (branchId: string | null) => string;
+    };
+
+    internal.selectStaff(dummyStaff[2]);
+    dummyFixture.detectChanges();
+
+    internal.leaveForm.patchValue({
+      branchId: null,
+      startsAt: '2026-08-01T09:00',
+      endsAt: '2026-08-05T18:00',
+      reason: 'Annual Summer Vacation',
+    });
+
+    internal.saveLeave();
+    dummyFixture.detectChanges();
+
+    expect(catalogApi.createStaffLeaveBlock).toHaveBeenCalledWith('staff-yuki-stylist', {
+      branchId: null,
+      startsAt: new Date('2026-08-01T09:00').toISOString(),
+      endsAt: new Date('2026-08-05T18:00').toISOString(),
+      reason: 'Annual Summer Vacation',
+    });
+
+    expect(internal.leaveBlocks().length).toBe(1);
+    expect(internal.leaveBlocks()[0].reason).toBe('Annual Summer Vacation');
+    expect(internal.leaveBranchScope(internal.leaveBlocks()[0].branchId)).toBe('All Branches');
+  });
+
+  it('deletes Elena Vance global leave block and updates leave list', () => {
+    const internal = dummyComponent as unknown as {
+      deleteLeave: (leaveBlockId: string) => void;
+      leaveBlocks: () => readonly StaffLeaveBlock[];
+    };
+
+    expect(internal.leaveBlocks().length).toBe(1);
+
+    internal.deleteLeave('leave-elena-global');
+    dummyFixture.detectChanges();
+
+    expect(catalogApi.deleteStaffLeaveBlock).toHaveBeenCalledWith('staff-elena-owner', 'leave-elena-global');
+    expect(internal.leaveBlocks().length).toBe(0);
+  });
+
+  it('enforces BR-ST-11 owner protection when deactivating sole active owner Elena', () => {
+    const internal = dummyComponent as unknown as {
+      staffForm: { patchValue: (value: Record<string, unknown>) => void };
+      saveStaff: () => void;
+      roleForm: { patchValue: (value: Record<string, unknown>) => void };
+      saveRoles: () => void;
+      error: () => string | null;
+    };
+
+    catalogApi.updateStaff.mockReturnValue(
+      throwError(() => ({
+        status: 409,
+        error: { message: 'Cannot deactivate or remove the OWNER role from the last active owner of the business.' },
+      })),
+    );
+
+    internal.staffForm.patchValue({ status: 'INACTIVE' });
+    internal.saveStaff();
+    dummyFixture.detectChanges();
+
+    expect(internal.error()).toBe('Cannot deactivate or remove the OWNER role from the last active owner of the business.');
+
+    catalogApi.replaceStaffRoles.mockReturnValue(
+      throwError(() => ({
+        status: 409,
+        error: { message: 'Cannot deactivate or remove the OWNER role from the last active owner of the business.' },
+      })),
+    );
+
+    internal.roleForm.patchValue({ roles: ['STYLIST'] });
+    internal.saveRoles();
+    dummyFixture.detectChanges();
+
+    expect(internal.error()).toBe('Cannot deactivate or remove the OWNER role from the last active owner of the business.');
   });
 });
