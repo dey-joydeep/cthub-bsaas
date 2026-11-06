@@ -25,7 +25,7 @@
     "lint": {
       "options": {
         "cwd": "{projectRoot}",
-        "command": "eslint src/index.ts src/lib/features/auth/**/*.ts src/lib/features/auth/**/*.html src/lib/features/salon-owner-settings/**/*.ts src/lib/features/salon-owner-settings/**/*.html src/lib/features/staff-service-catalog/**/*.ts src/lib/features/staff-service-catalog/**/*.html"
+        "command": "eslint src/index.ts src/lib/features/auth/**/*.ts src/lib/features/auth/**/*.html src/lib/features/salon-owner-settings/**/*.ts src/lib/features/salon-owner-settings/**/*.html src/lib/features/staff-service-catalog/**/*.ts src/lib/features/staff-service-catalog/**/*.html src/lib/features/customer-crm/**/*.ts src/lib/features/customer-crm/**/*.html src/lib/features/appointment-scheduling/**/*.ts src/lib/features/appointment-scheduling/**/*.html"
       }
     },
     "type-check": {

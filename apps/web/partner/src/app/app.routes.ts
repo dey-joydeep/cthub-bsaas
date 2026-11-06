@@ -36,6 +36,14 @@ export const routes: Routes = [
     data: { catalogTab: 'services' },
     loadChildren: () => import('@cthub-bsaas/web-partner').then((m) => m.STAFF_SERVICE_CATALOG_ROUTES),
   },
+  {
+    path: 'owner/customers',
+    loadChildren: () => import('@cthub-bsaas/web-partner').then((m) => m.CUSTOMER_CRM_ROUTES),
+  },
+  {
+    path: 'owner/appointments',
+    loadChildren: () => import('@cthub-bsaas/web-partner').then((m) => m.APPOINTMENT_SCHEDULING_ROUTES),
+  },
   { path: '', loadChildren: () => import('@cthub-bsaas/web-partner').then((m) => m.PARTNER_ROUTES) },
   { path: '**', redirectTo: '' },
 ];
