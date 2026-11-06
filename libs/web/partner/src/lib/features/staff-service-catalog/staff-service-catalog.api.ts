@@ -14,7 +14,9 @@ import {
   Staff,
   StaffEligibilityInput,
   StaffInput,
+  StaffLeaveBlock,
   StaffLeaveBlockInput,
+  StaffLeaveBlockPage,
   StaffPage,
   StaffRolesInput,
   StaffShiftInput,
@@ -53,9 +55,22 @@ export class StaffServiceCatalogApi {
       .pipe(map((response) => response.data));
   }
 
-  createStaffLeaveBlock(staffId: string, input: StaffLeaveBlockInput): Observable<StaffLeaveBlockInput> {
+  listStaffLeaveBlocks(staffId: string, branchId?: string): Observable<StaffLeaveBlockPage> {
+    const params = branchId ? new HttpParams().set('branchId', branchId) : undefined;
     return this.http
-      .post<ApiEnvelope<StaffLeaveBlockInput>>(`${this.baseUrl}/staff/${staffId}/leave-blocks`, input)
+      .get<ApiEnvelope<StaffLeaveBlockPage>>(`${this.baseUrl}/staff/${staffId}/leave-blocks`, { params })
+      .pipe(map((response) => response.data));
+  }
+
+  createStaffLeaveBlock(staffId: string, input: StaffLeaveBlockInput): Observable<StaffLeaveBlock> {
+    return this.http
+      .post<ApiEnvelope<StaffLeaveBlock>>(`${this.baseUrl}/staff/${staffId}/leave-blocks`, input)
+      .pipe(map((response) => response.data));
+  }
+
+  deleteStaffLeaveBlock(staffId: string, leaveBlockId: string): Observable<{ success: boolean }> {
+    return this.http
+      .delete<ApiEnvelope<{ success: boolean }>>(`${this.baseUrl}/staff/${staffId}/leave-blocks/${leaveBlockId}`)
       .pipe(map((response) => response.data));
   }
 

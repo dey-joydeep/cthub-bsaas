@@ -54,7 +54,7 @@
         <button mat-button [matMenuTriggerFor]="userMenu" class="user-menu-trigger">
           <mat-icon>account_circle</mat-icon>
           @if (currentUser?.firstName || currentUser?.lastName) {
-            <span class="user-name"> {{ currentUser?.firstName }} {{ currentUser?.lastName }} </span>
+            <span class="user-name"> {{ currentUser.firstName }} {{ currentUser.lastName }} </span>
           }
         </button>
         <mat-menu #userMenu="matMenu" class="user-dropdown">

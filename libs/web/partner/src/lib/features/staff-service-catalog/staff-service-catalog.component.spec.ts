@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 import { SalonOwnerSettingsApi } from '../salon-owner-settings/salon-owner-settings.api';
@@ -24,7 +24,9 @@ describe('StaffServiceCatalogComponent', () => {
     replaceStaffRoles: vi.fn(),
     replaceStaffSkills: vi.fn(),
     replaceStaffShifts: vi.fn(),
+    listStaffLeaveBlocks: vi.fn(),
     createStaffLeaveBlock: vi.fn(),
+    deleteStaffLeaveBlock: vi.fn(),
     listServiceCategories: vi.fn(),
     createServiceCategory: vi.fn(),
     listServices: vi.fn(),
@@ -93,7 +95,38 @@ describe('StaffServiceCatalogComponent', () => {
     );
     catalogApi.replaceStaffRoles.mockReturnValue(of({ id: 'staff-1', roles: ['STYLIST'] }));
     catalogApi.replaceServiceStaffEligibility.mockReturnValue(of({ id: 'service-1', eligibleStaffIds: ['staff-1'] }));
-    catalogApi.createStaffLeaveBlock.mockReturnValue(of({ id: 'leave-1' }));
+    catalogApi.listStaffLeaveBlocks.mockReturnValue(
+      of({
+        items: [
+          {
+            id: 'leave-1',
+            businessId: 'business-1',
+            staffId: 'staff-1',
+            branchId: 'branch-1',
+            startsAt: '2026-05-26T09:30:00.000Z',
+            endsAt: '2026-05-26T10:30:00.000Z',
+            reason: 'Personal',
+            createdAt: '2026-05-26T00:00:00.000Z',
+            updatedAt: '2026-05-26T00:00:00.000Z',
+          },
+        ],
+        page: { limit: 10, nextCursor: null, hasMore: false },
+      }),
+    );
+    catalogApi.createStaffLeaveBlock.mockReturnValue(
+      of({
+        id: 'leave-1',
+        businessId: 'business-1',
+        staffId: 'staff-1',
+        branchId: 'branch-1',
+        startsAt: '2026-05-26T09:30:00.000Z',
+        endsAt: '2026-05-26T10:30:00.000Z',
+        reason: 'Personal',
+        createdAt: '2026-05-26T00:00:00.000Z',
+        updatedAt: '2026-05-26T00:00:00.000Z',
+      }),
+    );
+    catalogApi.deleteStaffLeaveBlock.mockReturnValue(of({ success: true }));
     catalogApi.updateServiceStatus.mockReturnValue(
       of({
         id: 'service-1',
@@ -185,5 +218,80 @@ describe('StaffServiceCatalogComponent', () => {
     component.setServiceStatus('INACTIVE');
 
     expect(component.serviceForm.controls.status.value).toBe('INACTIVE');
+  });
+
+  it('loads leave blocks when staff is selected', () => {
+    expect(catalogApi.listStaffLeaveBlocks).toHaveBeenCalledWith('staff-1');
+    const component = fixture.componentInstance as unknown as {
+      leaveBlocks: () => readonly { id: string; reason: string }[];
+    };
+    expect(component.leaveBlocks().length).toBe(1);
+    expect(component.leaveBlocks()[0].reason).toBe('Personal');
+    expect(fixture.nativeElement.textContent).toContain('Personal');
+  });
+
+  it('creates a salon-wide leave block with null branchId and reloads leave list', () => {
+    const component = fixture.componentInstance as unknown as {
+      leaveForm: { patchValue: (value: Record<string, unknown>) => void };
+      saveLeave: () => void;
+    };
+    catalogApi.listStaffLeaveBlocks.mockClear();
+
+    component.leaveForm.patchValue({
+      branchId: null,
+      startsAt: '2026-06-01T09:00',
+      endsAt: '2026-06-01T17:00',
+      reason: 'Salon-wide vacation',
+    });
+
+    component.saveLeave();
+
+    expect(catalogApi.createStaffLeaveBlock).toHaveBeenCalledWith('staff-1', {
+      branchId: null,
+      startsAt: new Date('2026-06-01T09:00').toISOString(),
+      endsAt: new Date('2026-06-01T17:00').toISOString(),
+      reason: 'Salon-wide vacation',
+    });
+    expect(catalogApi.listStaffLeaveBlocks).toHaveBeenCalledWith('staff-1');
+  });
+
+  it('deletes a leave block, resets message, and refreshes the leave blocks list', () => {
+    const component = fixture.componentInstance as unknown as {
+      deleteLeave: (leaveBlockId: string) => void;
+      message: () => string | null;
+    };
+    catalogApi.listStaffLeaveBlocks.mockClear();
+
+    component.deleteLeave('leave-1');
+
+    expect(catalogApi.deleteStaffLeaveBlock).toHaveBeenCalledWith('staff-1', 'leave-1');
+    expect(catalogApi.listStaffLeaveBlocks).toHaveBeenCalledWith('staff-1');
+    expect(component.message()).toBeNull();
+  });
+
+  it('displays a 409 conflict error when deactivating or removing OWNER role from the last active owner', () => {
+    const component = fixture.componentInstance as unknown as {
+      saveStaff: () => void;
+      saveRoles: () => void;
+      error: () => string | null;
+    };
+
+    catalogApi.updateStaff.mockReturnValue(
+      throwError(() => ({
+        status: 409,
+        error: { message: 'Cannot deactivate or remove the OWNER role from the last active owner of the business.' },
+      })),
+    );
+    component.saveStaff();
+    expect(component.error()).toBe('Cannot deactivate or remove the OWNER role from the last active owner of the business.');
+
+    catalogApi.replaceStaffRoles.mockReturnValue(
+      throwError(() => ({
+        status: 409,
+        error: { message: 'Cannot deactivate or remove the OWNER role from the last active owner of the business.' },
+      })),
+    );
+    component.saveRoles();
+    expect(component.error()).toBe('Cannot deactivate or remove the OWNER role from the last active owner of the business.');
   });
 });

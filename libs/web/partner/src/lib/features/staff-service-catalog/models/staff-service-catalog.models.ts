@@ -40,10 +40,30 @@ export interface StaffShiftInput {
 }
 
 export interface StaffLeaveBlockInput {
-  readonly branchId: string;
+  readonly branchId?: string | null;
   readonly startsAt: string;
   readonly endsAt: string;
   readonly reason: string;
+}
+
+export interface StaffLeaveBlock {
+  readonly id: string;
+  readonly businessId: string;
+  readonly staffId: string;
+  readonly branchId: string | null;
+  readonly startsAt: string;
+  readonly endsAt: string;
+  readonly reason: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export type StaffLeaveBlockPage = PagedEnvelope<StaffLeaveBlock>;
+
+export interface StaffLeaveBlockQuery {
+  readonly branchId?: string;
+  readonly from?: string;
+  readonly to?: string;
 }
 
 export interface ServiceCategoryInput {

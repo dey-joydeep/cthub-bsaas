@@ -21,10 +21,10 @@
   </header>
 
   @if (message()) {
-    <p class="status status-ok">{{ message() }}</p>
+    <p class="status status-ok" role="status">{{ message() }}</p>
   }
   @if (error()) {
-    <p class="status status-error">{{ error() }}</p>
+    <p class="status status-error" role="alert">{{ error() }}</p>
   }
 
   <mat-tab-group [selectedIndex]="selectedTabIndex()" (selectedIndexChange)="selectedTabIndex.set($event)">
@@ -162,6 +162,7 @@
               <mat-form-field appearance="outline">
                 <mat-label>Branch</mat-label>
                 <mat-select formControlName="branchId">
+                  <mat-option [value]="null">All Branches (Full Salon)</mat-option>
                   @for (branch of branches(); track branch.id) {
                     <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
                   }
@@ -181,6 +182,31 @@
               </mat-form-field>
               <button mat-flat-button type="submit" [disabled]="saving() || !selectedStaff()">Create leave</button>
             </form>
+
+            <div class="leave-blocks-section">
+              <h3>Active leave blocks</h3>
+              @if (loadingLeave()) {
+                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+              }
+              <div class="leave-list">
+                @for (block of leaveBlocks(); track block.id) {
+                  <div class="leave-row">
+                    <div class="leave-info">
+                      <span class="leave-dates">{{ formatLeaveRange(block.startsAt, block.endsAt) }}</span>
+                      <div class="leave-meta">
+                        <span class="leave-scope">{{ leaveBranchScope(block.branchId) }}</span>
+                        <span class="leave-reason">{{ block.reason }}</span>
+                      </div>
+                    </div>
+                    <button mat-icon-button type="button" color="warn" [disabled]="saving()" (click)="deleteLeave(block.id)" aria-label="Delete leave block">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                } @empty {
+                  <p class="empty">No active leave blocks scheduled for this staff member.</p>
+                }
+              </div>
+            </div>
           </mat-card-content>
         </mat-card>
       </div>
