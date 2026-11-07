@@ -11,7 +11,8 @@ import type {
   StaffLeaveBlock,
   StaffShiftInput,
 } from '../features/staff-service-catalog/models/staff-service-catalog.models';
-import { partnerDevMockInterceptor, resetPartnerDevMockState } from './partner-dev-mock.interceptor';
+import { environment } from '@cthub-bsaas/web-config/environments/partner/environment';
+import { isPartnerDevMockEnabled, partnerDevMockInterceptor, resetPartnerDevMockState } from './partner-dev-mock.interceptor';
 
 describe('partnerDevMockInterceptor', () => {
   let http: HttpClient;
@@ -189,5 +190,21 @@ describe('partnerDevMockInterceptor', () => {
       }),
     );
     expect(updatedStatus.data.status).toBe('INACTIVE');
+  });
+
+  describe('isPartnerDevMockEnabled safeguards', () => {
+    it('strictly returns false when environment.production is true, even if query param mock=true is passed', () => {
+      const origProd = environment.production;
+      try {
+        (environment as { production: boolean }).production = true;
+        expect(isPartnerDevMockEnabled()).toBe(false);
+      } finally {
+        (environment as { production: boolean }).production = origProd;
+      }
+    });
+
+    it('returns true by default in development mode', () => {
+      expect(isPartnerDevMockEnabled()).toBe(true);
+    });
   });
 });

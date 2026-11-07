@@ -80,6 +80,13 @@ const partnerApiXsrfInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>,
   );
 };
 
+const appInterceptors: HttpInterceptorFn[] = [
+  ...(!environment.production ? [partnerDevMockInterceptor] : []),
+  partnerApiXsrfInterceptor,
+  loadingInterceptor,
+  ssrInterceptor,
+];
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideClientHydration(withEventReplay()),
@@ -92,7 +99,7 @@ export const appConfig: ApplicationConfig = {
         cookieName: 'XSRF-TOKEN',
         headerName: 'X-XSRF-TOKEN',
       }),
-      withInterceptors([partnerDevMockInterceptor, partnerApiXsrfInterceptor, loadingInterceptor, ssrInterceptor]),
+      withInterceptors(appInterceptors),
       withFetch(),
     ),
     { provide: PARTNER_API_BASE_URL, useValue: partnerApiBaseUrl },

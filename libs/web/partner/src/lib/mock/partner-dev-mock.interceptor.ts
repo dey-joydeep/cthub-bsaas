@@ -28,6 +28,11 @@ export function resetPartnerDevMockState(): void {
 }
 
 export function isPartnerDevMockEnabled(): boolean {
+  // Absolute production safeguard: never allow mock mode in production builds under any circumstances
+  if (environment.production) {
+    return false;
+  }
+
   if (typeof window !== 'undefined') {
     const searchParams = new URLSearchParams(window.location.search);
     const mockParam = searchParams.get('mock');
@@ -43,7 +48,7 @@ export function isPartnerDevMockEnabled(): boolean {
     }
   }
 
-  return !environment.production;
+  return true;
 }
 
 function okResponse<T>(data: T): Observable<HttpResponse<ResponseEnvelope<T>>> {
