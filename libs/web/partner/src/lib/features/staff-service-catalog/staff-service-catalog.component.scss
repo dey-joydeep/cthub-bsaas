@@ -1,0 +1,435 @@
+.catalog-shell {
+  display: grid;
+  gap: 16px;
+  margin: 0 auto;
+  max-width: 1400px;
+  padding: 16px;
+}
+
+.catalog-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+
+  h1 {
+    color: #0f172a;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  p {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin: 2px 0 0;
+  }
+}
+
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.card-header-icon {
+  align-items: center;
+  color: #3b82f6;
+  display: flex;
+  font-size: 24px;
+  height: 24px;
+  justify-content: center;
+  margin-right: 12px;
+  width: 24px;
+}
+
+.tab-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1.2fr);
+  padding: 12px 0;
+}
+
+.schedule-grid {
+  padding-top: 0;
+}
+
+.form-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.col-span-full {
+  grid-column: 1 / -1;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.compact-form {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.subforms {
+  border-top: 1px solid #f1f5f9;
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+}
+
+.subform-heading {
+  color: #475569;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin: 6px 0 2px;
+  text-transform: uppercase;
+}
+
+.role-guide-panel {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 10px 12px;
+}
+
+.role-guide-header {
+  align-items: center;
+  color: #334155;
+  display: flex;
+  gap: 6px;
+
+  .guide-icon {
+    color: #2563eb;
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+
+  .guide-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+}
+
+.role-cards-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.role-summary-card {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+}
+
+.role-card-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.role-name-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.role-display-name {
+  color: #0f172a;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.role-code-badge {
+  background: #e0f2fe;
+  border-radius: 4px;
+  color: #0369a1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 1px 5px;
+}
+
+.role-system-badge {
+  background: #f1f5f9;
+  border-radius: 4px;
+  color: #64748b;
+  font-size: 0.6875rem;
+  padding: 1px 5px;
+}
+
+.role-description {
+  color: #475569;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.role-permissions-list {
+  display: grid;
+  gap: 4px;
+  margin-top: 2px;
+
+  .permissions-label {
+    color: #64748b;
+    font-size: 0.6875rem;
+    font-weight: 500;
+  }
+}
+
+.permission-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.permission-pill {
+  align-items: center;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 4px;
+  color: #065f46;
+  display: inline-flex;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  gap: 2px;
+  padding: 2px 6px;
+
+  .perm-check {
+    font-size: 12px;
+    height: 12px;
+    width: 12px;
+  }
+}
+
+.permission-pill-empty {
+  color: #94a3b8;
+  font-size: 0.6875rem;
+  font-style: italic;
+}
+
+.list {
+  display: grid;
+  gap: 6px;
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.list-row {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 8px 12px;
+  text-align: left;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+  }
+
+  &.selected {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    box-shadow: inset 3px 0 0 #2563eb;
+  }
+
+  .list-row-main {
+    display: grid;
+    gap: 2px;
+  }
+
+  .list-row-roles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 3px;
+  }
+
+  .staff-role-chip {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    color: #475569;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: 1px 5px;
+  }
+
+  .list-row-title {
+    color: #1e293b;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .list-row-subtitle {
+    color: #64748b;
+    font-size: 0.75rem;
+  }
+
+  .list-row-aside {
+    align-items: flex-end;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    small {
+      color: #64748b;
+      font-size: 0.6875rem;
+    }
+  }
+}
+
+.status-actions {
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+}
+
+.leave-blocks-section {
+  border-top: 1px solid #f1f5f9;
+  margin-top: 16px;
+  padding-top: 12px;
+}
+
+.leave-list {
+  display: grid;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.leave-row {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+
+  .leave-info {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .leave-meta {
+    align-items: center;
+    color: #64748b;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 0.75rem;
+    gap: 8px;
+  }
+
+  .leave-reason {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.empty {
+  color: #94a3b8;
+  font-size: 0.8125rem;
+  margin: 8px 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+
+  span {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    color: #475569;
+    font-size: 0.75rem;
+    padding: 3px 10px;
+  }
+}
+
+.category-form {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) 140px auto;
+}
+
+.mt-3 {
+  margin-top: 16px;
+}
+
+/* Tablet & Mobile Layouts */
+@media (max-width: 1024px) {
+  .tab-grid {
+    grid-template-columns: minmax(0, 1.4fr) minmax(260px, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .catalog-shell {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .catalog-header {
+    align-items: stretch;
+    display: grid;
+    gap: 8px;
+  }
+
+  .tab-grid,
+  .form-grid,
+  .compact-form,
+  .category-form {
+    grid-template-columns: 1fr;
+  }
+
+  .col-span-full {
+    grid-column: 1;
+  }
+
+  .compact-form,
+  .category-form {
+    button {
+      justify-self: stretch;
+    }
+  }
+
+  .leave-row {
+    .leave-reason {
+      max-width: 140px;
+    }
+  }
+}

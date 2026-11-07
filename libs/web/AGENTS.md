@@ -68,3 +68,11 @@ Read this file before working under `libs/web/**`.
 - E2E belongs under app-level projects in `apps/e2e/**`.
 - For visible changes, inspect the affected route when an app can run. Check console errors, hydration, responsive layout, keyboard access, and changed states; preserve browser evidence for QA.
 - When implementing an existing design, use its source or checked-in spec. Report an unavailable design source rather than guessing precise tokens.
+
+## Dev Tooling And Mock Isolation
+
+- Never compile or activate dev-only mock interceptors, debug tools, or bypass utilities in production builds.
+- User-controlled inputs (`URLSearchParams`, `localStorage`, request headers, cookies) must NEVER be used to activate mock data, debug logging, or role bypasses in production.
+- The check `if (environment.production) return false;` must always be the very first line of defense in any dev utility, before checking any query parameters or storage.
+- Dev-only interceptors and test providers must be conditionally registered in `withInterceptors` or `providers` using `!environment.production ? [devInterceptor] : []`. They must never be registered unconditionally in production pipelines.
+- Every dev-only mock or debug utility must include an automated negative unit test proving it strictly evaluates to `false` when `environment.production === true`.

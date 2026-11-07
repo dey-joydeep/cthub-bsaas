@@ -29,3 +29,4 @@ An ADR does not authorize a task, migration, merge, or deployment. The linked is
 | [0002](0002-current-application-composition.md) | Nx workspace and application boundaries       | Recorded baseline | Solution architect               |
 | [0003](0003-prisma-persistence-strategy.md)     | Prisma as the primary persistence tool        | Recorded baseline | Database architect               |
 | [0004](0004-tenant-business-branch-scope.md)    | Tenant, business, and branch scope            | Recorded baseline | Solution and database architects |
+| [0005](0005-database-driven-role-master-and-semi-master.md) | Database-driven role master and semi-master | Accepted          | Solution and database architects |

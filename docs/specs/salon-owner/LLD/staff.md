@@ -12,6 +12,10 @@ Visual flow reference:
 - `StaffScheduleRepositoryPort`
 - `StaffInvitationPort`
 - `AppointmentConflictPort`
+- `RoleManagementController`
+- `RoleService`
+- `BusinessRoleRepositoryPort`
+- `PermissionRepositoryPort`
 
 ## Commands And Queries
 
@@ -23,6 +27,20 @@ Visual flow reference:
 - `UpdateStaffSkillsCommand`
 - `UpdateStaffScheduleCommand`
 - `ArchiveStaffMemberCommand`
+- `ListBusinessRolesQuery`
+- `CreateBusinessRoleCommand`
+- `UpdateBusinessRoleCommand`
+- `DeleteBusinessRoleCommand`
+- `ListSystemPermissionsQuery`
+
+## Persistence Models (ADR-0005)
+
+- `PermissionMaster`: System capability definitions (`code`, `name`, `description`, `category`).
+- `RoleMaster`: Global preset templates (`code`, `defaultName`, `description`, `isSystemRole`).
+- `RoleMasterPermission`: Join table linking default presets to capability codes.
+- `BusinessRole`: Salon business-scoped semi-master (`id`, `businessId`, `roleCode`, `name`, `description`, `isSystemDefault`, `isActive`).
+- `BusinessRolePermission`: Business-specific mapping of role to capability codes.
+- `StaffRoleAssignment`: Links `Staff` to assigned `BusinessRole` records.
 
 ## Transaction Rules
 

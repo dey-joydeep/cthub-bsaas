@@ -26,6 +26,16 @@ export const routes: Routes = [
     },
     loadChildren: () => import('@cthub-bsaas/web-partner').then((m) => m.SALON_OWNER_SETTINGS_ROUTES),
   },
+  {
+    path: 'owner/staff',
+    data: { catalogTab: 'staff' },
+    loadChildren: () => import('@cthub-bsaas/web-partner').then((m) => m.STAFF_SERVICE_CATALOG_ROUTES),
+  },
+  {
+    path: 'owner/services',
+    data: { catalogTab: 'services' },
+    loadChildren: () => import('@cthub-bsaas/web-partner').then((m) => m.STAFF_SERVICE_CATALOG_ROUTES),
+  },
   { path: '', loadChildren: () => import('@cthub-bsaas/web-partner').then((m) => m.PARTNER_ROUTES) },
   { path: '**', redirectTo: '' },
 ];

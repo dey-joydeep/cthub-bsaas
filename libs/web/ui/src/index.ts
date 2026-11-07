@@ -5,3 +5,5 @@ export * from './lib/models/date-range.model';
 export * from './lib/enums/day-of-week.enum';
 export * from './lib/models/location.model';
 export * from './lib/pipes/safe-url.pipe';
+export * from './lib/pipes/date-range.pipe';
+export * from './lib/date-range/date-range.component';

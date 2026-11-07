@@ -69,3 +69,14 @@ Define role permissions and scope rules for Salon Owner MVP implementation.
 - Service Staff can update only assigned appointment status and permitted notes.
 - Accountant can read financial records but cannot mutate invoices or payments in MVP.
 - Permission checks must be enforced server-side even when UI hides actions.
+
+## Master and Business Semi-Master Architecture (ADR-0005)
+
+As defined in [ADR-0005](../../architecture/decisions/0005-database-driven-role-master-and-semi-master.md):
+1. **Global Presets (`RoleMaster` & `PermissionMaster`):** The capability rows in this matrix define the platform's `PermissionMaster` catalog. The default columns define the system `RoleMaster` presets seeded to new businesses on onboarding.
+2. **Business Semi-Master (`BusinessRole`):** Each `SalonBusiness` holds its own active role records. Businesses can:
+   - Rename role display names (e.g., *"Stylist"* &rarr; *"Senior Colorist"*, *"Barber"*);
+   - Add custom descriptions defining what each role means within that salon's operations;
+   - Deactivate presets not required by their operational model (e.g., hiding *"Inventory Manager"* in a solo salon);
+   - Add custom roles composed of selected capabilities from the `PermissionMaster` catalog.
+3. **Owner Protection Invariant (`BR-ST-06.1`):** A business must retain at least one active user with the `OWNER` role; the last active owner's role cannot be removed or deactivated.
