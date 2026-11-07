@@ -33,6 +33,7 @@ import {
   REGISTER_API,
   type RegisterApiPort,
 } from '@cthub-bsaas/web-partner/auth';
+import { partnerDevMockInterceptor } from '@cthub-bsaas/web-partner';
 import { routes } from './app.routes';
 
 function createPartnerApiBaseUrl(apiUrl: string): string {
@@ -91,7 +92,7 @@ export const appConfig: ApplicationConfig = {
         cookieName: 'XSRF-TOKEN',
         headerName: 'X-XSRF-TOKEN',
       }),
-      withInterceptors([partnerApiXsrfInterceptor, loadingInterceptor, ssrInterceptor]),
+      withInterceptors([partnerDevMockInterceptor, partnerApiXsrfInterceptor, loadingInterceptor, ssrInterceptor]),
       withFetch(),
     ),
     { provide: PARTNER_API_BASE_URL, useValue: partnerApiBaseUrl },
