@@ -4,6 +4,33 @@ export type StaffRole = 'OWNER' | 'MANAGER' | 'RECEPTIONIST' | 'STYLIST' | 'CASH
 export type StaffStatus = SalonBusinessStatus;
 export type ServiceStatus = SalonBusinessStatus;
 
+export interface BusinessRole {
+  readonly id: string;
+  readonly businessId: string;
+  readonly roleCode?: string | null;
+  readonly name: string;
+  readonly description?: string | null;
+  readonly permissions: readonly string[];
+  readonly isSystemDefault: boolean;
+  readonly isActive: boolean;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface BusinessRoleInput {
+  readonly name: string;
+  readonly description?: string;
+  readonly permissions: readonly string[];
+  readonly isActive?: boolean;
+}
+
+export interface PermissionItem {
+  readonly code: string;
+  readonly name: string;
+  readonly category: string;
+  readonly description: string;
+}
+
 export interface StaffInput {
   readonly branchIds: readonly string[];
   readonly displayName: string;
@@ -14,6 +41,7 @@ export interface StaffInput {
 
 export interface Staff extends StaffInput {
   readonly id: string;
+  readonly roleIds?: readonly string[];
   readonly roles: readonly string[];
   readonly skillServiceIds: readonly string[];
   readonly createdAt: string;
@@ -21,6 +49,7 @@ export interface Staff extends StaffInput {
 }
 
 export interface StaffRolesInput {
+  readonly roleIds?: readonly string[];
   readonly roles: readonly string[];
 }
 

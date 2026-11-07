@@ -80,14 +80,56 @@
               <form [formGroup]="roleForm" class="compact-form" (ngSubmit)="saveRoles()">
                 <mat-form-field appearance="outline">
                   <mat-label>Roles</mat-label>
-                  <mat-select formControlName="roles" multiple id="staffRolesSelect">
-                    @for (role of staffRoles; track role) {
-                      <mat-option [value]="role">{{ role }}</mat-option>
+                  <mat-select formControlName="roleIds" multiple id="staffRolesSelect">
+                    @for (role of roles(); track role.id) {
+                      <mat-option [value]="role.id">{{ role.name }}</mat-option>
                     }
                   </mat-select>
                 </mat-form-field>
                 <button mat-stroked-button type="submit" [disabled]="saving() || !selectedStaff()">Save roles</button>
               </form>
+
+              @if (selectedRolesSummary().length > 0) {
+                <div class="role-guide-panel">
+                  <div class="role-guide-header">
+                    <mat-icon class="guide-icon">shield</mat-icon>
+                    <span class="guide-title">Assigned Roles & Capabilities</span>
+                  </div>
+                  <div class="role-cards-grid">
+                    @for (role of selectedRolesSummary(); track role.id) {
+                      <div class="role-summary-card">
+                        <div class="role-card-header">
+                          <div class="role-name-row">
+                            <span class="role-display-name">{{ role.name }}</span>
+                            @if (role.roleCode) {
+                              <span class="role-code-badge">{{ role.roleCode }}</span>
+                            }
+                            @if (role.isSystemDefault) {
+                              <span class="role-system-badge">System</span>
+                            }
+                          </div>
+                        </div>
+                        @if (role.description) {
+                          <p class="role-description">{{ role.description }}</p>
+                        }
+                        <div class="role-permissions-list">
+                          <span class="permissions-label">Granted capabilities:</span>
+                          <div class="permission-pills">
+                            @for (permCode of role.permissions; track permCode) {
+                              <span class="permission-pill" [title]="getPermissionDescription(permCode)">
+                                <mat-icon class="perm-check">check</mat-icon>
+                                {{ getPermissionName(permCode) }}
+                              </span>
+                            } @empty {
+                              <span class="permission-pill-empty">Standard operational privileges</span>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
 
               <h3 class="subform-heading">Assigned Skills</h3>
               <form [formGroup]="skillForm" class="compact-form" (ngSubmit)="saveSkills()">
@@ -117,6 +159,11 @@
                   <div class="list-row-main">
                     <span class="list-row-title">{{ member.displayName }}</span>
                     <small class="list-row-subtitle">{{ member.email }}</small>
+                    <div class="list-row-roles">
+                      @for (role of memberStaffRoles(member); track role) {
+                        <span class="staff-role-chip">{{ role }}</span>
+                      }
+                    </div>
                   </div>
                   <div class="list-row-aside">
                     <span class="salon-pill" [class.salon-pill-brand]="member.status === 'ACTIVE'" [class.salon-pill-neutral]="member.status !== 'ACTIVE'">

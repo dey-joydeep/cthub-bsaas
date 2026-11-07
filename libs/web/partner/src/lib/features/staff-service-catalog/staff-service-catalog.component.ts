@@ -18,7 +18,16 @@ import { DateRangeComponent } from '@cthub-bsaas/web-ui';
 
 import { BranchProfile } from '../salon-owner-settings/models/salon-owner-settings.models';
 import { SalonOwnerSettingsApi } from '../salon-owner-settings/salon-owner-settings.api';
-import { Service, ServiceCategory, Staff, StaffInput, StaffLeaveBlock, StaffRole } from './models/staff-service-catalog.models';
+import {
+  BusinessRole,
+  PermissionItem,
+  Service,
+  ServiceCategory,
+  Staff,
+  StaffInput,
+  StaffLeaveBlock,
+  StaffRole,
+} from './models/staff-service-catalog.models';
 import { StaffServiceCatalogApi } from './staff-service-catalog.api';
 
 const staffRoles: readonly StaffRole[] = ['OWNER', 'MANAGER', 'RECEPTIONIST', 'STYLIST', 'CASHIER', 'INVENTORY_MANAGER'];
@@ -62,6 +71,13 @@ export class StaffServiceCatalogComponent {
   protected readonly error = signal<string | null>(null);
   protected readonly branches = signal<readonly BranchProfile[]>([]);
   protected readonly staff = signal<readonly Staff[]>([]);
+  protected readonly roles = signal<readonly BusinessRole[]>([]);
+  protected readonly permissions = signal<readonly PermissionItem[]>([]);
+  protected readonly selectedRoleIds = signal<readonly string[]>([]);
+  protected readonly selectedRolesSummary = computed(() => {
+    const ids = this.selectedRoleIds();
+    return this.roles().filter((r) => ids.includes(r.id));
+  });
   protected readonly leaveBlocks = signal<readonly StaffLeaveBlock[]>([]);
   protected readonly categories = signal<readonly ServiceCategory[]>([]);
   protected readonly services = signal<readonly Service[]>([]);
@@ -81,6 +97,7 @@ export class StaffServiceCatalogComponent {
   });
 
   protected readonly roleForm = this.fb.nonNullable.group({
+    roleIds: this.fb.nonNullable.control<string[]>([]),
     roles: this.fb.nonNullable.control<string[]>(['STYLIST'], Validators.required),
   });
 
@@ -123,6 +140,24 @@ export class StaffServiceCatalogComponent {
   });
 
   constructor() {
+    this.roleForm.controls.roleIds.valueChanges.subscribe((ids) => {
+      this.selectedRoleIds.set(ids);
+      const mappedRoles = this.roles()
+        .filter((r) => ids.includes(r.id) && r.roleCode)
+        .map((r) => r.roleCode as string);
+      if (mappedRoles.length > 0) {
+        this.roleForm.controls.roles.setValue(mappedRoles, { emitEvent: false });
+      }
+    });
+    this.roleForm.controls.roles.valueChanges.subscribe((roles) => {
+      const mappedIds = this.roles()
+        .filter((r) => r.roleCode && roles.includes(r.roleCode))
+        .map((r) => r.id);
+      if (mappedIds.length > 0 && JSON.stringify(mappedIds) !== JSON.stringify(this.selectedRoleIds())) {
+        this.selectedRoleIds.set(mappedIds);
+        this.roleForm.controls.roleIds.setValue(mappedIds, { emitEvent: false });
+      }
+    });
     this.loadCatalog();
   }
 
@@ -135,7 +170,19 @@ export class StaffServiceCatalogComponent {
       email: member.email ?? '',
       status: member.status,
     });
-    this.roleForm.reset({ roles: [...member.roles] });
+    let initialRoleIds: string[] = [];
+    if (member.roleIds && member.roleIds.length > 0) {
+      initialRoleIds = [...member.roleIds];
+    } else if (member.roles && member.roles.length > 0) {
+      initialRoleIds = this.roles()
+        .filter((r) => r.roleCode && member.roles.includes(r.roleCode))
+        .map((r) => r.id);
+    }
+    this.selectedRoleIds.set(initialRoleIds);
+    this.roleForm.reset({
+      roleIds: initialRoleIds,
+      roles: [...member.roles],
+    });
     this.skillForm.reset({ serviceIds: [...member.skillServiceIds] });
     this.shiftForm.patchValue({ branchId: member.branchIds[0] ?? '', timezone: this.branchTimezone(member.branchIds[0]) });
     this.leaveForm.reset({
@@ -158,7 +205,13 @@ export class StaffServiceCatalogComponent {
       email: '',
       status: 'ACTIVE',
     });
-    this.roleForm.reset({ roles: ['STYLIST'] });
+    const defaultStylist = this.roles().find((r) => r.roleCode === 'STYLIST')?.id;
+    const defaultRoleIds = defaultStylist ? [defaultStylist] : (this.roles()[0] ? [this.roles()[0].id] : []);
+    this.selectedRoleIds.set(defaultRoleIds);
+    this.roleForm.reset({
+      roleIds: defaultRoleIds,
+      roles: ['STYLIST'],
+    });
     this.skillForm.reset({ serviceIds: [] });
     this.shiftForm.patchValue({ branchId: firstBranch?.id ?? '', timezone: firstBranch?.timezone ?? 'Asia/Tokyo' });
     this.leaveForm.reset({
@@ -211,9 +264,20 @@ export class StaffServiceCatalogComponent {
       this.error.set('Select staff before saving roles.');
       return;
     }
+    const roleIds = this.roleForm.controls.roleIds.value;
+    const selectedRoleObjects = this.roles().filter((r) => roleIds.includes(r.id));
+    const roleCodes = selectedRoleObjects.map((r) => r.roleCode ?? r.name);
+    const effectiveRoles = roleCodes.length > 0 ? roleCodes : this.roleForm.controls.roles.value;
+
     this.persist(
-      this.catalogApi.replaceStaffRoles(member.id, this.roleForm.getRawValue()),
-      (updated) => this.selectedStaff.set(updated),
+      this.catalogApi.replaceStaffRoles(member.id, {
+        roleIds: roleIds.length > 0 ? roleIds : undefined,
+        roles: effectiveRoles,
+      }),
+      (updated) => {
+        this.selectedStaff.set(updated);
+        this.staff.set(this.staff().map((m) => (m.id === updated.id ? updated : m)));
+      },
       'Catalog saved.',
       OWNER_PROTECTION_ERROR,
     );
@@ -376,6 +440,24 @@ export class StaffServiceCatalogComponent {
     return this.categories().find((category) => category.id === categoryId)?.name ?? categoryId;
   }
 
+  protected getPermissionName(code: string): string {
+    return this.permissions().find((p) => p.code === code)?.name ?? code;
+  }
+
+  protected getPermissionDescription(code: string): string {
+    return this.permissions().find((p) => p.code === code)?.description ?? '';
+  }
+
+  protected memberStaffRoles(member: Staff): readonly string[] {
+    if (member.roleIds && member.roleIds.length > 0) {
+      const names = this.roles()
+        .filter((r) => member.roleIds?.includes(r.id))
+        .map((r) => r.name);
+      if (names.length > 0) return names;
+    }
+    return member.roles;
+  }
+
   private normalizeStaffInput(): StaffInput {
     const value = this.staffForm.getRawValue();
     return {
@@ -405,12 +487,16 @@ export class StaffServiceCatalogComponent {
     forkJoin({
       branches: this.settingsApi.listBranches(),
       staff: this.catalogApi.listStaff(),
+      roles: this.catalogApi.listRoles(),
+      permissions: this.catalogApi.listPermissions(),
       categories: this.catalogApi.listServiceCategories(),
       services: this.catalogApi.listServices(),
     }).subscribe({
-      next: ({ branches, staff, categories, services }) => {
+      next: ({ branches, staff, roles, permissions, categories, services }) => {
         this.branches.set(branches.items);
         this.staff.set(staff.items);
+        this.roles.set(roles.items);
+        this.permissions.set(permissions);
         this.categories.set(categories.items);
         this.services.set(services.items);
         const selectedStaff = staff.items.find((member) => member.id === selectStaffId) ?? staff.items[0] ?? null;

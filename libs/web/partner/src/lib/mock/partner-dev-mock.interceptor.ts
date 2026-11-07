@@ -5,6 +5,8 @@ import { delay } from 'rxjs/operators';
 import { environment } from '@cthub-bsaas/web-config/environments/partner/environment';
 import type { ResponseEnvelope, PagedEnvelope } from '../features/salon-owner-settings/models/salon-owner-settings.models';
 import type {
+  BusinessRole,
+  BusinessRoleInput,
   Service,
   ServiceCategory,
   ServiceCategoryInput,
@@ -111,6 +113,71 @@ export const partnerDevMockInterceptor: HttpInterceptorFn = (req: HttpRequest<un
     }
   }
 
+  // 3a. Permissions Master (/permissions)
+  if (url.endsWith('/permissions') || url.includes('/permissions?')) {
+    if (method === 'GET') {
+      return okResponse(mockState.permissions);
+    }
+  }
+
+  // 3b. Business Roles Master & Semi-Master (/roles)
+  const roleSingleMatch = url.match(/\/roles\/([^/?#]+)$/);
+  if (roleSingleMatch) {
+    const roleId = roleSingleMatch[1];
+    const target = mockState.roles.find((r) => r.id === roleId);
+
+    if (method === 'PUT') {
+      if (!target) return errorResponse(404, 'Role not found');
+      const input = req.body as BusinessRoleInput;
+      const updated: BusinessRole = {
+        ...target,
+        name: input.name,
+        description: input.description ?? target.description,
+        permissions: [...input.permissions],
+        isActive: input.isActive ?? target.isActive,
+        updatedAt: new Date().toISOString(),
+      };
+      mockState.roles = mockState.roles.map((r) => (r.id === roleId ? updated : r));
+      return okResponse(updated);
+    }
+
+    if (method === 'DELETE') {
+      if (!target) return errorResponse(404, 'Role not found');
+      if (target.isSystemDefault) {
+        return errorResponse(409, 'System default roles cannot be deleted.');
+      }
+      mockState.roles = mockState.roles.filter((r) => r.id !== roleId);
+      return okResponse({ success: true });
+    }
+  }
+
+  if (url.endsWith('/roles') || url.includes('/roles?')) {
+    if (method === 'GET') {
+      const includeInactive = getParam('includeInactive') === 'true';
+      const items = includeInactive ? mockState.roles : mockState.roles.filter((r) => r.isActive);
+      return pagedResponse(items);
+    }
+
+    if (method === 'POST') {
+      const input = req.body as BusinessRoleInput;
+      const now = new Date().toISOString();
+      const newRole: BusinessRole = {
+        id: `role-${Date.now()}`,
+        businessId: 'biz-tokyo-1',
+        roleCode: null,
+        name: input.name,
+        description: input.description ?? null,
+        permissions: [...input.permissions],
+        isSystemDefault: false,
+        isActive: input.isActive ?? true,
+        createdAt: now,
+        updatedAt: now,
+      };
+      mockState.roles = [...mockState.roles, newRole];
+      return okResponse(newRole);
+    }
+  }
+
   // 4. Staff Leave Blocks (Sub-resource of staff: /staff/:staffId/leave-blocks)
   const leaveBlockMatch = url.match(/\/staff\/([^/]+)\/leave-blocks(?:\/([^/?#]+))?/);
   if (leaveBlockMatch) {
@@ -154,15 +221,33 @@ export const partnerDevMockInterceptor: HttpInterceptorFn = (req: HttpRequest<un
     const target = mockState.staff.find((m) => m.id === staffId);
     if (!target) return errorResponse(404, 'Staff not found');
 
-    const isCurrentActiveOwner = target.roles.includes('OWNER') && target.status === 'ACTIVE';
-    const otherActiveOwners = mockState.staff.filter((m) => m.id !== staffId && m.roles.includes('OWNER') && m.status === 'ACTIVE');
-    if (isCurrentActiveOwner && otherActiveOwners.length === 0 && !input.roles.includes('OWNER')) {
+    // Reconcile roleIds and roles
+    let resolvedRoleIds = input.roleIds ? [...input.roleIds] : [];
+    let resolvedRoles = input.roles ? [...input.roles] : [];
+
+    if (resolvedRoleIds.length > 0 && resolvedRoles.length === 0) {
+      resolvedRoles = mockState.roles
+        .filter((r) => resolvedRoleIds.includes(r.id) && r.roleCode)
+        .map((r) => r.roleCode as string);
+    } else if (resolvedRoles.length > 0 && resolvedRoleIds.length === 0) {
+      resolvedRoleIds = mockState.roles
+        .filter((r) => r.roleCode && resolvedRoles.includes(r.roleCode))
+        .map((r) => r.id);
+    }
+
+    const isCurrentActiveOwner = (target.roles.includes('OWNER') || target.roleIds?.includes('role-owner')) && target.status === 'ACTIVE';
+    const otherActiveOwners = mockState.staff.filter(
+      (m) => m.id !== staffId && (m.roles.includes('OWNER') || m.roleIds?.includes('role-owner')) && m.status === 'ACTIVE',
+    );
+    const removesOwner = !resolvedRoles.includes('OWNER') && !resolvedRoleIds.includes('role-owner');
+    if (isCurrentActiveOwner && otherActiveOwners.length === 0 && removesOwner) {
       return errorResponse(409, 'Cannot deactivate or remove the OWNER role from the last active owner of the business.');
     }
 
     const updated: Staff = {
       ...target,
-      roles: [...input.roles],
+      roleIds: resolvedRoleIds,
+      roles: resolvedRoles,
       updatedAt: new Date().toISOString(),
     };
     mockState.staff = mockState.staff.map((m) => (m.id === staffId ? updated : m));
@@ -244,6 +329,7 @@ export const partnerDevMockInterceptor: HttpInterceptorFn = (req: HttpRequest<un
         email: input.email,
         status: input.status,
         branchIds: [...input.branchIds],
+        roleIds: ['role-stylist'],
         roles: ['STYLIST'],
         skillServiceIds: [],
         createdAt: now,

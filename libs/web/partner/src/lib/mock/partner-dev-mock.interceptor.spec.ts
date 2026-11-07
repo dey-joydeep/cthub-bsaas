@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { ResponseEnvelope, PagedEnvelope, BranchProfile } from '../features/salon-owner-settings/models/salon-owner-settings.models';
 import type {
+  BusinessRole,
+  PermissionItem,
   Service,
   ServiceCategory,
   Staff,
@@ -117,6 +119,76 @@ describe('partnerDevMockInterceptor', () => {
     );
     expect(res.success).toBe(true);
     expect(res.data.roles).toEqual(['STYLIST', 'RECEPTIONIST']);
+
+    // Updating roles using dynamic roleIds resolves both roleIds and roles
+    const resRoleIds = await firstValueFrom(
+      http.put<ResponseEnvelope<Staff>>('/api/partner/staff/staff-sarah/roles', {
+        roleIds: ['role-stylist', 'role-cashier'],
+        roles: [],
+      }),
+    );
+    expect(resRoleIds.success).toBe(true);
+    expect(resRoleIds.data.roleIds).toEqual(['role-stylist', 'role-cashier']);
+    expect(resRoleIds.data.roles).toEqual(['STYLIST', 'CASHIER']);
+  });
+
+  it('manages business roles and permissions master (ADR-0005)', async () => {
+    // 1. List permissions
+    const permRes = await firstValueFrom(
+      http.get<ResponseEnvelope<PermissionItem[]>>('/api/partner/permissions'),
+    );
+    expect(permRes.success).toBe(true);
+    expect(permRes.data.length).toBeGreaterThanOrEqual(10);
+    expect(permRes.data.some((p) => p.code === 'staff.roles.manage')).toBe(true);
+
+    // 2. List roles
+    const rolesRes = await firstValueFrom(
+      http.get<ResponseEnvelope<PagedEnvelope<BusinessRole>>>('/api/partner/roles'),
+    );
+    expect(rolesRes.success).toBe(true);
+    expect(rolesRes.data.items.length).toBe(6);
+    const ownerRole = rolesRes.data.items.find((r) => r.roleCode === 'OWNER');
+    expect(ownerRole).toBeDefined();
+    expect(ownerRole?.isSystemDefault).toBe(true);
+
+    // 3. Create a custom business role
+    const createdRole = await firstValueFrom(
+      http.post<ResponseEnvelope<BusinessRole>>('/api/partner/roles', {
+        name: 'Senior Color Specialist',
+        description: 'Advanced hair colorist with stock adjustment permissions',
+        permissions: ['appointments.assigned.manage', 'inventory.stock.manage'],
+      }),
+    );
+    expect(createdRole.success).toBe(true);
+    expect(createdRole.data.name).toBe('Senior Color Specialist');
+    expect(createdRole.data.isSystemDefault).toBe(false);
+
+    // 4. Update the custom role
+    const updatedRole = await firstValueFrom(
+      http.put<ResponseEnvelope<BusinessRole>>(`/api/partner/roles/${createdRole.data.id}`, {
+        name: 'Lead Color Director',
+        permissions: ['appointments.assigned.manage', 'inventory.stock.manage', 'catalog.manage'],
+      }),
+    );
+    expect(updatedRole.data.name).toBe('Lead Color Director');
+    expect(updatedRole.data.permissions).toContain('catalog.manage');
+
+    // 5. Delete the custom role
+    const deletedRole = await firstValueFrom(
+      http.delete<ResponseEnvelope<{ success: boolean }>>(`/api/partner/roles/${createdRole.data.id}`),
+    );
+    expect(deletedRole.data.success).toBe(true);
+
+    // 6. Attempting to delete system default role fails with 409
+    let deleteDefaultErr: HttpErrorResponse | null = null;
+    try {
+      await firstValueFrom(
+        http.delete<ResponseEnvelope<{ success: boolean }>>(`/api/partner/roles/${ownerRole!.id}`),
+      );
+    } catch (err) {
+      deleteDefaultErr = err as HttpErrorResponse;
+    }
+    expect(deleteDefaultErr?.status).toBe(409);
   });
 
   it('updates staff skills and shifts', async () => {

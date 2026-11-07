@@ -20,6 +20,8 @@ describe('StaffServiceCatalogComponent', () => {
   };
   const catalogApi = {
     listStaff: vi.fn(),
+    listRoles: vi.fn(),
+    listPermissions: vi.fn(),
     createStaff: vi.fn(),
     updateStaff: vi.fn(),
     replaceStaffRoles: vi.fn(),
@@ -93,6 +95,43 @@ describe('StaffServiceCatalogComponent', () => {
         ],
         page: { limit: 1, nextCursor: null, hasMore: false },
       }),
+    );
+    catalogApi.listRoles.mockReturnValue(
+      of({
+        items: [
+          {
+            id: 'role-stylist',
+            businessId: 'business-1',
+            roleCode: 'STYLIST',
+            name: 'Stylist & Hair Artist',
+            description: 'Hair styling and treatments',
+            permissions: ['appointments.assigned.manage'],
+            isSystemDefault: true,
+            isActive: true,
+            createdAt: '2026-05-26T00:00:00.000Z',
+            updatedAt: '2026-05-26T00:00:00.000Z',
+          },
+          {
+            id: 'role-owner',
+            businessId: 'business-1',
+            roleCode: 'OWNER',
+            name: 'Owner & General Manager',
+            description: 'Full administrative access',
+            permissions: ['salon.business.manage'],
+            isSystemDefault: true,
+            isActive: true,
+            createdAt: '2026-05-26T00:00:00.000Z',
+            updatedAt: '2026-05-26T00:00:00.000Z',
+          },
+        ],
+        page: { limit: 10, nextCursor: null, hasMore: false },
+      }),
+    );
+    catalogApi.listPermissions.mockReturnValue(
+      of([
+        { code: 'appointments.assigned.manage', name: 'Assigned Appointments', category: 'Appointments', description: 'Manage chair appointments' },
+        { code: 'salon.business.manage', name: 'Manage Business', category: 'Settings', description: 'Manage business settings' },
+      ]),
     );
     catalogApi.replaceStaffRoles.mockReturnValue(of({ id: 'staff-1', roles: ['STYLIST'] }));
     catalogApi.replaceServiceStaffEligibility.mockReturnValue(of({ id: 'service-1', eligibleStaffIds: ['staff-1'] }));
@@ -169,7 +208,14 @@ describe('StaffServiceCatalogComponent', () => {
     const component = fixture.componentInstance as unknown as { saveRoles: () => void };
     component.saveRoles();
 
-    expect(catalogApi.replaceStaffRoles).toHaveBeenCalledWith('staff-1', { roles: ['STYLIST'] });
+    expect(catalogApi.replaceStaffRoles).toHaveBeenCalledWith('staff-1', { roleIds: ['role-stylist'], roles: ['STYLIST'] });
+  });
+
+  it('displays dynamic business roles and capabilities guide for selected staff', () => {
+    expect(catalogApi.listRoles).toHaveBeenCalled();
+    expect(catalogApi.listPermissions).toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain('Stylist & Hair Artist');
+    expect(fixture.nativeElement.textContent).toContain('Assigned Appointments');
   });
 
   it('saves selected service eligibility', () => {
@@ -404,6 +450,8 @@ describe('StaffServiceCatalogComponent - Full Workflow Testing with Realistic Du
   };
   const catalogApi = {
     listStaff: vi.fn(),
+    listRoles: vi.fn(),
+    listPermissions: vi.fn(),
     createStaff: vi.fn(),
     updateStaff: vi.fn(),
     replaceStaffRoles: vi.fn(),
@@ -456,6 +504,56 @@ describe('StaffServiceCatalogComponent - Full Workflow Testing with Realistic Du
     catalogApi.listStaff.mockReturnValue(of({ items: dummyStaff, page: { limit: 10, nextCursor: null, hasMore: false } }));
     catalogApi.listServiceCategories.mockReturnValue(of({ items: dummyCategories, page: { limit: 10, nextCursor: null, hasMore: false } }));
     catalogApi.listServices.mockReturnValue(of({ items: dummyServices, page: { limit: 10, nextCursor: null, hasMore: false } }));
+    catalogApi.listRoles.mockReturnValue(
+      of({
+        items: [
+          {
+            id: 'role-owner',
+            businessId: 'biz-lumiere',
+            roleCode: 'OWNER',
+            name: 'Owner & General Manager',
+            description: 'Full salon authority',
+            permissions: ['salon.business.manage'],
+            isSystemDefault: true,
+            isActive: true,
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: '2026-01-01T00:00:00.000Z',
+          },
+          {
+            id: 'role-manager',
+            businessId: 'biz-lumiere',
+            roleCode: 'MANAGER',
+            name: 'Branch Manager',
+            description: 'Operations management',
+            permissions: ['salon.branch.manage'],
+            isSystemDefault: true,
+            isActive: true,
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: '2026-01-01T00:00:00.000Z',
+          },
+          {
+            id: 'role-stylist',
+            businessId: 'biz-lumiere',
+            roleCode: 'STYLIST',
+            name: 'Stylist & Hair Artist',
+            description: 'Hair service delivery',
+            permissions: ['appointments.assigned.manage'],
+            isSystemDefault: true,
+            isActive: true,
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: '2026-01-01T00:00:00.000Z',
+          },
+        ],
+        page: { limit: 10, nextCursor: null, hasMore: false },
+      }),
+    );
+    catalogApi.listPermissions.mockReturnValue(
+      of([
+        { code: 'salon.business.manage', name: 'Manage Business', category: 'Settings', description: 'Business settings' },
+        { code: 'salon.branch.manage', name: 'Manage Branches', category: 'Settings', description: 'Branch settings' },
+        { code: 'appointments.assigned.manage', name: 'Assigned Bookings', category: 'Appointments', description: 'Chair bookings' },
+      ]),
+    );
 
     catalogApi.listStaffLeaveBlocks.mockImplementation((staffId: string) => {
       const items = dummyLeaveBlocksState[staffId] ?? [];

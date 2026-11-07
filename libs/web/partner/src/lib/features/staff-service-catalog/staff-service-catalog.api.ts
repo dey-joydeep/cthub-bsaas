@@ -2,8 +2,11 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
-import type { ResponseEnvelope as ApiEnvelope } from '../salon-owner-settings/models/salon-owner-settings.models';
+import type { ResponseEnvelope as ApiEnvelope, PagedEnvelope } from '../salon-owner-settings/models/salon-owner-settings.models';
 import {
+  BusinessRole,
+  BusinessRoleInput,
+  PermissionItem,
   Service,
   ServiceCategory,
   ServiceCategoryInput,
@@ -27,6 +30,27 @@ import {
 export class StaffServiceCatalogApi {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/partner';
+
+  listRoles(includeInactive = false): Observable<PagedEnvelope<BusinessRole>> {
+    const params = includeInactive ? new HttpParams().set('includeInactive', 'true') : undefined;
+    return this.http.get<ApiEnvelope<PagedEnvelope<BusinessRole>>>(`${this.baseUrl}/roles`, { params }).pipe(map((response) => response.data));
+  }
+
+  createRole(input: BusinessRoleInput): Observable<BusinessRole> {
+    return this.http.post<ApiEnvelope<BusinessRole>>(`${this.baseUrl}/roles`, input).pipe(map((response) => response.data));
+  }
+
+  updateRole(roleId: string, input: BusinessRoleInput): Observable<BusinessRole> {
+    return this.http.put<ApiEnvelope<BusinessRole>>(`${this.baseUrl}/roles/${roleId}`, input).pipe(map((response) => response.data));
+  }
+
+  deleteRole(roleId: string): Observable<{ success: boolean }> {
+    return this.http.delete<ApiEnvelope<{ success: boolean }>>(`${this.baseUrl}/roles/${roleId}`).pipe(map((response) => response.data));
+  }
+
+  listPermissions(): Observable<PermissionItem[]> {
+    return this.http.get<ApiEnvelope<PermissionItem[]>>(`${this.baseUrl}/permissions`).pipe(map((response) => response.data));
+  }
 
   listStaff(branchId?: string): Observable<StaffPage> {
     const params = branchId ? new HttpParams().set('branchId', branchId) : undefined;

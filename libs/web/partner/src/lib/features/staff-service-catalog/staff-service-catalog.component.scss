@@ -95,6 +95,138 @@
   text-transform: uppercase;
 }
 
+.role-guide-panel {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 10px 12px;
+}
+
+.role-guide-header {
+  align-items: center;
+  color: #334155;
+  display: flex;
+  gap: 6px;
+
+  .guide-icon {
+    color: #2563eb;
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+
+  .guide-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+}
+
+.role-cards-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.role-summary-card {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+}
+
+.role-card-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.role-name-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.role-display-name {
+  color: #0f172a;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.role-code-badge {
+  background: #e0f2fe;
+  border-radius: 4px;
+  color: #0369a1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 1px 5px;
+}
+
+.role-system-badge {
+  background: #f1f5f9;
+  border-radius: 4px;
+  color: #64748b;
+  font-size: 0.6875rem;
+  padding: 1px 5px;
+}
+
+.role-description {
+  color: #475569;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.role-permissions-list {
+  display: grid;
+  gap: 4px;
+  margin-top: 2px;
+
+  .permissions-label {
+    color: #64748b;
+    font-size: 0.6875rem;
+    font-weight: 500;
+  }
+}
+
+.permission-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.permission-pill {
+  align-items: center;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 4px;
+  color: #065f46;
+  display: inline-flex;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  gap: 2px;
+  padding: 2px 6px;
+
+  .perm-check {
+    font-size: 12px;
+    height: 12px;
+    width: 12px;
+  }
+}
+
+.permission-pill-empty {
+  color: #94a3b8;
+  font-size: 0.6875rem;
+  font-style: italic;
+}
+
 .list {
   display: grid;
   gap: 6px;
@@ -129,6 +261,23 @@
   .list-row-main {
     display: grid;
     gap: 2px;
+  }
+
+  .list-row-roles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 3px;
+  }
+
+  .staff-role-chip {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    color: #475569;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: 1px 5px;
   }
 
   .list-row-title {
