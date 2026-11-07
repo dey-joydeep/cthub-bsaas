@@ -33,6 +33,10 @@ Define staff profile, role, skill, shift, and leave requirements.
 - Staff role changes must audit old roles and new roles.
 - Staff with insufficient skill must not be assigned to a service unless an authorized override is recorded.
 - MVP leave handling is manager-entered leave or blocked time. Staff self-service leave request/approval workflow is not implementation scope until this FRD, validation, API, and test pack explicitly adds `PENDING`, `APPROVED`, `REJECTED`, and `CANCELLED` approval states.
+- `BR-ST-06.1`: Cannot deactivate or remove the OWNER role from the last active owner of the business.
+- `BR-ST-12`: Staff roles are assigned from active `BusinessRole` records belonging to the same salon business (see [ADR-0005](../../architecture/decisions/0005-database-driven-role-master-and-semi-master.md)). Role assignments persist the business role IDs.
+- `BR-ST-13`: A `BusinessRole` cannot be deleted or deactivated if active staff members are currently assigned to it.
+- `BR-ST-14`: Businesses may customize role display names, descriptions, and active status, and define custom roles composed of system capabilities.
 
 ## Implementation References
 

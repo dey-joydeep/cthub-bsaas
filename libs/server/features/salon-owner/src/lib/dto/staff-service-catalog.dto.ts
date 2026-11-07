@@ -1,7 +1,8 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
+  IsBoolean,
   IsEmail,
   IsIn,
   IsInt,
@@ -44,10 +45,43 @@ export class StaffInputDto {
 }
 
 export class StaffRolesInputDto {
+  @IsOptional()
+  @IsArray()
+  @IsUUID(undefined, { each: true })
+  roleIds?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  roles?: string[];
+}
+
+export class BusinessRoleInputDto {
+  @IsString()
+  @Matches(/\S/)
+  @Length(2, 60)
+  name!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  description?: string;
+
   @IsArray()
   @ArrayMinSize(1)
-  @IsIn(staffRoleValues, { each: true })
-  roles!: string[];
+  @IsString({ each: true })
+  permissions!: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+}
+
+export class BusinessRoleQueryDto {
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  includeInactive?: boolean;
 }
 
 export class StaffSkillsInputDto {

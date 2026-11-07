@@ -2,6 +2,8 @@ import { INTERCEPTORS_METADATA } from '@nestjs/common/constants';
 import { ResponseEnvelopeInterceptor } from '@cthub-bsaas/server-core';
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 
+import { PermissionsController } from './permissions.controller';
+import { RolesController } from './roles.controller';
 import { ServiceCatalogController } from './service-catalog.controller';
 import { StaffController } from './staff.controller';
 import type { StaffServiceCatalogService } from '../services/staff-service-catalog.service';
@@ -25,6 +27,11 @@ function serviceMock() {
     listStaffLeaveBlocks: jest.fn(),
     createStaffLeaveBlock: jest.fn(),
     deleteStaffLeaveBlock: jest.fn(),
+    listBusinessRoles: jest.fn(),
+    createBusinessRole: jest.fn(),
+    updateBusinessRole: jest.fn(),
+    deleteBusinessRole: jest.fn(),
+    listSystemPermissions: jest.fn(),
     listServiceCategories: jest.fn(),
     createServiceCategory: jest.fn(),
     listServices: jest.fn(),
@@ -40,6 +47,8 @@ describe('Staff and service catalog controllers', () => {
   it('wraps staff and service catalog responses in the API envelope', () => {
     expect(Reflect.getMetadata(INTERCEPTORS_METADATA, StaffController)).toContain(ResponseEnvelopeInterceptor);
     expect(Reflect.getMetadata(INTERCEPTORS_METADATA, ServiceCatalogController)).toContain(ResponseEnvelopeInterceptor);
+    expect(Reflect.getMetadata(INTERCEPTORS_METADATA, RolesController)).toContain(ResponseEnvelopeInterceptor);
+    expect(Reflect.getMetadata(INTERCEPTORS_METADATA, PermissionsController)).toContain(ResponseEnvelopeInterceptor);
   });
 
   it('delegates staff routes with route parameters and authenticated context', async () => {
@@ -110,5 +119,36 @@ describe('Staff and service catalog controllers', () => {
     expect(service.updateService).toHaveBeenCalledWith({ user }, 'service-1', serviceInput);
     expect(service.updateServiceStatus).toHaveBeenCalledWith({ user }, 'service-1', { status: 'INACTIVE' });
     expect(service.replaceServiceStaffEligibility).toHaveBeenCalledWith({ user }, 'service-1', { staffIds: ['staff-1'] });
+  });
+
+  it('delegates roles routes with route parameters and authenticated context', async () => {
+    const service = serviceMock();
+    const controller = new RolesController(service as unknown as StaffServiceCatalogService);
+    const query = { includeInactive: true };
+    const roleInput = {
+      name: 'Senior Stylist',
+      description: 'Experienced stylist',
+      permissions: ['appointment.create', 'appointment.view'],
+      isActive: true,
+    };
+
+    await controller.listBusinessRoles(user, query);
+    await controller.createBusinessRole(user, roleInput);
+    await controller.updateBusinessRole(user, '11111111-1111-4111-8111-111111111111', roleInput);
+    await controller.deleteBusinessRole(user, '11111111-1111-4111-8111-111111111111');
+
+    expect(service.listBusinessRoles).toHaveBeenCalledWith({ user }, query);
+    expect(service.createBusinessRole).toHaveBeenCalledWith({ user }, roleInput);
+    expect(service.updateBusinessRole).toHaveBeenCalledWith({ user }, '11111111-1111-4111-8111-111111111111', roleInput);
+    expect(service.deleteBusinessRole).toHaveBeenCalledWith({ user }, '11111111-1111-4111-8111-111111111111');
+  });
+
+  it('delegates permissions routes', async () => {
+    const service = serviceMock();
+    const controller = new PermissionsController(service as unknown as StaffServiceCatalogService);
+
+    await controller.listSystemPermissions();
+
+    expect(service.listSystemPermissions).toHaveBeenCalled();
   });
 });

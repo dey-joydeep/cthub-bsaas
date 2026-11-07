@@ -91,6 +91,7 @@ model SalonBusiness {
   status      SalonOwnerStatus            @default(ACTIVE)
   branches    SalonBranch[]
   staff       SalonOwnerStaff[]
+  roles       BusinessRole[]
   categories  SalonOwnerServiceCategory[]
   services    SalonOwnerService[]
   customers   SalonOwnerCustomer[]
@@ -136,9 +137,10 @@ model SalonOwnerStaff {
   displayName String                      @map("display_name")
   phone       String
   email       String?
-  status      SalonOwnerStatus            @default(ACTIVE)
-  roles       String[]                    @default([])
-  branches    SalonOwnerStaffBranch[]
+  status          SalonOwnerStatus            @default(ACTIVE)
+  roles           String[]                    @default([])
+  roleAssignments StaffRoleAssignment[]
+  branches        SalonOwnerStaffBranch[]
   skills      SalonOwnerStaffSkill[]
   shifts      SalonOwnerStaffShift[]
   leaveBlocks SalonOwnerStaffLeaveBlock[]
@@ -1300,3 +1302,84 @@ model AuditEvent {
   @@index([action, ts])
   @@map("audit_event")
 }
+
+// ADR-0005: Database-Driven Role Master and Business Semi-Master
+
+model PermissionMaster {
+  code                String                   @id
+  name                String
+  category            String
+  description         String
+  rolePermissions     RoleMasterPermission[]
+  businessPermissions BusinessRolePermission[]
+  createdAt           DateTime                 @default(now()) @map("created_at")
+  updatedAt           DateTime                 @updatedAt @map("updated_at")
+
+  @@map("permission_master")
+}
+
+model RoleMaster {
+  code         String                 @id
+  defaultName  String                 @map("default_name")
+  description  String
+  isSystemRole Boolean                @default(true) @map("is_system_role")
+  permissions  RoleMasterPermission[]
+  createdAt    DateTime               @default(now()) @map("created_at")
+  updatedAt    DateTime               @updatedAt @map("updated_at")
+
+  @@map("role_master")
+}
+
+model RoleMasterPermission {
+  roleCode       String           @map("role_code")
+  role           RoleMaster       @relation(fields: [roleCode], references: [code], onDelete: Cascade)
+  permissionCode String           @map("permission_code")
+  permission     PermissionMaster @relation(fields: [permissionCode], references: [code], onDelete: Cascade)
+
+  @@id([roleCode, permissionCode])
+  @@index([permissionCode])
+  @@map("role_master_permission")
+}
+
+model BusinessRole {
+  id               String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId       String                   @map("business_id") @db.Uuid
+  business         SalonBusiness            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  roleCode         String?                  @map("role_code")
+  name             String
+  description      String?
+  isSystemDefault  Boolean                  @default(false) @map("is_system_default")
+  isActive         Boolean                  @default(true) @map("is_active")
+  permissions      BusinessRolePermission[]
+  staffAssignments StaffRoleAssignment[]
+  createdAt        DateTime                 @default(now()) @map("created_at")
+  updatedAt        DateTime                 @updatedAt @map("updated_at")
+
+  @@unique([businessId, name])
+  @@index([businessId, isActive])
+  @@map("business_role")
+}
+
+model BusinessRolePermission {
+  businessRoleId String           @map("business_role_id") @db.Uuid
+  businessRole   BusinessRole     @relation(fields: [businessRoleId], references: [id], onDelete: Cascade)
+  permissionCode String           @map("permission_code")
+  permission     PermissionMaster @relation(fields: [permissionCode], references: [code], onDelete: Cascade)
+
+  @@id([businessRoleId, permissionCode])
+  @@index([permissionCode])
+  @@map("business_role_permission")
+}
+
+model StaffRoleAssignment {
+  staffId        String          @map("staff_id") @db.Uuid
+  staff          SalonOwnerStaff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  businessRoleId String          @map("business_role_id") @db.Uuid
+  businessRole   BusinessRole    @relation(fields: [businessRoleId], references: [id], onDelete: Cascade)
+  createdAt      DateTime        @default(now()) @map("created_at")
+
+  @@id([staffId, businessRoleId])
+  @@index([businessRoleId])
+  @@map("staff_role_assignment")
+}
+

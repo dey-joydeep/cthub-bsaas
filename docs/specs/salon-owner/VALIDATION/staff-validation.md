@@ -37,13 +37,32 @@ Create/edit differences:
 | Context   | `tenantId`, `salonBusinessId`, `staffId` |
 | Operation | `replaceStaffRoles`                      |
 
-| Field   | Control        | Default       | Enabled when                 | Client validation       | Backend validation                                       | Error key                   |
-| ------- | -------------- | ------------- | ---------------------------- | ----------------------- | -------------------------------------------------------- | --------------------------- |
-| `roles` | checkbox group | current roles | actor can manage staff roles | at least one enum value | roles valid; actor cannot grant role above own authority | `error.staff.roles.invalid` |
+| Field     | Control                  | Default       | Enabled when                 | Client validation            | Backend validation                                                                   | Error key                   |
+| --------- | ------------------------ | ------------- | ---------------------------- | ---------------------------- | ------------------------------------------------------------------------------------ | --------------------------- |
+| `roleIds` | multi-select / checkbox  | current roles | actor can manage staff roles | at least one active role     | every role belongs to business and is active; actor cannot grant above own authority | `error.staff.roles.invalid` |
+| `roles`   | legacy string alias list | current roles | actor can manage staff roles | mirrors `roleIds` resolution | resolved against business roles; backward compatibility                              | `error.staff.roles.invalid` |
 
 Conflict behavior:
 
 - Removing the final owner role in a business returns `409` with `error.staff.roles.final_owner`.
+- Deleting or deactivating a business role assigned to active staff returns `409` with `error.business.roles.in_use`.
+
+## Business Role Management Form
+
+| Property  | Value                                      |
+| --------- | ------------------------------------------ |
+| Screen ID | `business.roles`                           |
+| Form ID   | `business.roles.upsert`                    |
+| Actors    | Owner                                      |
+| Context   | `tenantId`, `salonBusinessId`              |
+| Operation | `createBusinessRole`, `updateBusinessRole` |
+
+| Field         | Control         | Default         | Enabled when | Client validation     | Backend validation                               | Error key                            |
+| ------------- | --------------- | --------------- | ------------ | --------------------- | ------------------------------------------------ | ------------------------------------ |
+| `name`        | text input      | current / empty | Owner only   | required; 2-60 chars  | required; unique within business; trimmed        | `error.business.role.name.invalid`   |
+| `description` | text input      | empty           | Owner only   | max 255 chars         | max 255 chars                                    | `error.business.role.desc.invalid`   |
+| `permissions` | checkbox group  | empty / preset  | Owner only   | at least 1 permission | valid codes from `PermissionMaster`              | `error.business.role.perm.invalid`   |
+| `isActive`    | toggle / select | `true`          | Owner only   | boolean               | cannot deactivate last owner role or in-use role | `error.business.role.status.invalid` |
 
 ## Staff Skills Form
 

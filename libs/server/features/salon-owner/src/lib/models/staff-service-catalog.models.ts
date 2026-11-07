@@ -10,9 +10,30 @@ export interface StaffModel {
   readonly email?: string;
   readonly status: SalonOwnerStatus;
   readonly roles: readonly string[];
+  readonly roleIds: readonly string[];
   readonly skillServiceIds: readonly string[];
   readonly createdAt: string;
   readonly updatedAt: string;
+}
+
+export interface BusinessRoleModel {
+  readonly id: string;
+  readonly businessId: string;
+  readonly roleCode: string | null;
+  readonly name: string;
+  readonly description: string | null;
+  readonly permissions: readonly string[];
+  readonly isSystemDefault: boolean;
+  readonly isActive: boolean;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface PermissionItemModel {
+  readonly code: string;
+  readonly name: string;
+  readonly category: string;
+  readonly description: string;
 }
 
 export interface StaffShiftDayModel {

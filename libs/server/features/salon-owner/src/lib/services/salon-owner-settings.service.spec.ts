@@ -240,6 +240,35 @@ function createPrismaMock() {
     salonTenantStaff: {
       findMany: jest.fn(),
     },
+    roleMaster: {
+      findMany: jest.fn().mockResolvedValue([
+        {
+          code: 'OWNER',
+          defaultName: 'Owner',
+          description: 'Owner role',
+          isSystemRole: true,
+          permissions: [{ roleCode: 'OWNER', permissionCode: 'appointment.create' }],
+        },
+      ]),
+      upsert: jest.fn().mockResolvedValue({}),
+    },
+    roleMasterPermission: {
+      upsert: jest.fn().mockResolvedValue({}),
+    },
+    permissionMaster: {
+      upsert: jest.fn().mockResolvedValue({}),
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    businessRole: {
+      create: jest.fn().mockResolvedValue({ id: 'business-role-1' }),
+      findMany: jest.fn().mockResolvedValue([]),
+      findFirst: jest.fn(),
+      upsert: jest.fn().mockResolvedValue({ id: 'business-role-1' }),
+    },
+    businessRolePermission: {
+      createMany: jest.fn().mockResolvedValue({ count: 0 }),
+      upsert: jest.fn().mockResolvedValue({}),
+    },
     $queryRaw: jest.fn(),
     $transaction: jest.fn(),
   };

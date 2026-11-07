@@ -4,6 +4,8 @@ import { COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 import { PrismaService } from '@cthub-bsaas/server-data-access';
 
 import {
+  BusinessRoleInputDto,
+  BusinessRoleQueryDto,
   ServiceCategoryInputDto,
   ServiceInputDto,
   ServiceStatusInputDto,
@@ -19,6 +21,8 @@ import {
 } from '../dto/staff-service-catalog.dto';
 import { PagedResult, SalonOwnerRequestContext, TimeIntervalModel } from '../models/salon-owner-settings.models';
 import {
+  BusinessRoleModel,
+  PermissionItemModel,
   ServiceCategoryModel,
   ServiceModel,
   StaffLeaveBlockModel,
@@ -35,10 +39,20 @@ const duplicateStaffMessage = 'error.staff.profile.duplicate';
 const duplicateCategoryMessage = 'error.service.category.duplicate';
 const duplicateServiceMessage = 'error.service.duplicate';
 const finalOwnerConflictMessage = 'error.staff.owner.final_required';
+const finalOwnerRoleConflictMessage = 'error.staff.roles.final_owner';
+const duplicateRoleMessage = 'error.business.role.name.duplicate';
+const inUseRoleMessage = 'error.business.roles.in_use';
+const invalidRolesMessage = 'error.staff.roles.invalid';
+const invalidRolePermissionsMessage = 'error.business.role.perm.invalid';
 
 const staffInclude = {
   branches: true,
   skills: true,
+  roleAssignments: {
+    include: {
+      businessRole: true,
+    },
+  },
 } as const;
 const serviceInclude = {
   skills: true,
@@ -241,12 +255,15 @@ export class StaffServiceCatalogService {
       throw new ForbiddenException(forbiddenMessage);
     }
 
-    if (current.roles.includes('OWNER') && current.status === 'ACTIVE' && input.status === 'INACTIVE') {
+    const isCurrentOwner =
+      current.roles.includes('OWNER') || (current.roleAssignments ?? []).some((ra) => ra.businessRole.roleCode === 'OWNER');
+
+    if (isCurrentOwner && current.status === 'ACTIVE' && input.status === 'INACTIVE') {
       const remainingOwnerCount = await this.prisma.salonOwnerStaff.count({
         where: {
           businessId: current.businessId,
           status: 'ACTIVE',
-          roles: { has: 'OWNER' },
+          OR: [{ roleAssignments: { some: { businessRole: { roleCode: 'OWNER' } } } }, { roles: { has: 'OWNER' } }],
         },
       });
       if (remainingOwnerCount <= 1) {
@@ -282,27 +299,286 @@ export class StaffServiceCatalogService {
 
   async replaceStaffRoles(context: SalonOwnerRequestContext, staffId: string, input: StaffRolesInputDto): Promise<StaffModel> {
     const current = await this.findStaffInScope(context, staffId);
-    const updatedRoles = unique(input.roles);
 
-    if (current.roles.includes('OWNER') && !updatedRoles.includes('OWNER')) {
+    const rawRoleIds = input.roleIds ? unique(input.roleIds) : [];
+    const rawRoles = input.roles ? unique(input.roles) : [];
+
+    let targetRoles: Awaited<ReturnType<PrismaService['businessRole']['findMany']>> = [];
+
+    if (rawRoleIds.length > 0) {
+      targetRoles = await this.prisma.businessRole.findMany({
+        where: {
+          id: { in: rawRoleIds },
+          businessId: current.businessId,
+          isActive: true,
+        },
+      });
+      if (targetRoles.length !== rawRoleIds.length) {
+        throw new UnprocessableEntityException(invalidRolesMessage);
+      }
+    } else if (rawRoles.length > 0) {
+      targetRoles = await this.prisma.businessRole.findMany({
+        where: {
+          businessId: current.businessId,
+          isActive: true,
+          OR: [{ roleCode: { in: rawRoles } }, { name: { in: rawRoles } }],
+        },
+      });
+      if (targetRoles.length !== rawRoles.length) {
+        throw new UnprocessableEntityException(invalidRolesMessage);
+      }
+    } else {
+      throw new UnprocessableEntityException(invalidRolesMessage);
+    }
+
+    const isCurrentOwner =
+      current.roles.includes('OWNER') || (current.roleAssignments ?? []).some((ra) => ra.businessRole.roleCode === 'OWNER');
+
+    const willBeOwner = targetRoles.some((role) => role.roleCode === 'OWNER');
+
+    if (isCurrentOwner && !willBeOwner && current.status === 'ACTIVE') {
       const remainingOwnerCount = await this.prisma.salonOwnerStaff.count({
         where: {
           businessId: current.businessId,
           status: 'ACTIVE',
-          roles: { has: 'OWNER' },
+          OR: [{ roleAssignments: { some: { businessRole: { roleCode: 'OWNER' } } } }, { roles: { has: 'OWNER' } }],
         },
       });
       if (remainingOwnerCount <= 1) {
-        throw new ConflictException(finalOwnerConflictMessage);
+        throw new ConflictException(finalOwnerRoleConflictMessage);
       }
     }
 
-    const staff = await this.prisma.salonOwnerStaff.update({
-      where: { id: staffId },
-      data: { roles: updatedRoles },
-      include: staffInclude,
+    const staff = await this.prisma.$transaction(async (tx) => {
+      await tx.staffRoleAssignment.deleteMany({ where: { staffId } });
+      await tx.staffRoleAssignment.createMany({
+        data: targetRoles.map((role) => ({ staffId, businessRoleId: role.id })),
+      });
+      return tx.salonOwnerStaff.update({
+        where: { id: staffId },
+        data: {
+          roles: targetRoles.map((role) => role.roleCode ?? role.name),
+        },
+        include: staffInclude,
+      });
     });
+
     return this.mapStaff(staff);
+  }
+
+  async listBusinessRoles(context: SalonOwnerRequestContext, query?: BusinessRoleQueryDto): Promise<BusinessRoleModel[]> {
+    const business = await this.resolveBusinessInScope(context);
+    const roles = await this.prisma.businessRole.findMany({
+      where: {
+        businessId: business.id,
+        ...(query?.includeInactive ? {} : { isActive: true }),
+      },
+      include: {
+        permissions: true,
+      },
+      orderBy: [{ isSystemDefault: 'desc' }, { createdAt: 'asc' }],
+    });
+
+    return roles.map((role) => this.mapBusinessRole(role));
+  }
+
+  async createBusinessRole(context: SalonOwnerRequestContext, input: BusinessRoleInputDto): Promise<BusinessRoleModel> {
+    const business = await this.resolveBusinessInScope(context);
+    const name = trimRequired(input.name, 2);
+    const description = optionalTrim(input.description);
+
+    const permissions = unique(input.permissions);
+    if (permissions.length === 0) {
+      throw new UnprocessableEntityException(invalidRolePermissionsMessage);
+    }
+
+    const validPerms = await this.prisma.permissionMaster.findMany({
+      where: { code: { in: permissions } },
+      select: { code: true },
+    });
+    const validCodeSet = new Set(validPerms.map((p) => p.code));
+    if (permissions.some((code) => !validCodeSet.has(code))) {
+      throw new UnprocessableEntityException(invalidRolePermissionsMessage);
+    }
+
+    const existing = await this.prisma.businessRole.findFirst({
+      where: {
+        businessId: business.id,
+        name: { equals: name, mode: 'insensitive' },
+      },
+    });
+    if (existing) {
+      throw new ConflictException(duplicateRoleMessage);
+    }
+
+    try {
+      const created = await this.prisma.$transaction(async (tx) => {
+        const role = await tx.businessRole.create({
+          data: {
+            businessId: business.id,
+            name,
+            description,
+            isSystemDefault: false,
+            isActive: input.isActive ?? true,
+          },
+        });
+
+        await tx.businessRolePermission.createMany({
+          data: permissions.map((code) => ({
+            businessRoleId: role.id,
+            permissionCode: code,
+          })),
+        });
+
+        return tx.businessRole.findUniqueOrThrow({
+          where: { id: role.id },
+          include: { permissions: true },
+        });
+      });
+
+      return this.mapBusinessRole(created);
+    } catch (error) {
+      if (isDuplicate(error)) {
+        throw new ConflictException(duplicateRoleMessage);
+      }
+      throw error;
+    }
+  }
+
+  async updateBusinessRole(context: SalonOwnerRequestContext, roleId: string, input: BusinessRoleInputDto): Promise<BusinessRoleModel> {
+    const business = await this.resolveBusinessInScope(context);
+    const role = await this.prisma.businessRole.findFirst({
+      where: { id: roleId, businessId: business.id },
+      include: { permissions: true },
+    });
+    if (!role) {
+      throw new NotFoundException(notFoundMessage);
+    }
+
+    const name = trimRequired(input.name, 2);
+    const description = optionalTrim(input.description);
+
+    if (role.name.toLowerCase() !== name.toLowerCase()) {
+      const duplicate = await this.prisma.businessRole.findFirst({
+        where: {
+          businessId: business.id,
+          id: { not: roleId },
+          name: { equals: name, mode: 'insensitive' },
+        },
+      });
+      if (duplicate) {
+        throw new ConflictException(duplicateRoleMessage);
+      }
+    }
+
+    const permissions = unique(input.permissions);
+    if (permissions.length === 0) {
+      throw new UnprocessableEntityException(invalidRolePermissionsMessage);
+    }
+
+    const validPerms = await this.prisma.permissionMaster.findMany({
+      where: { code: { in: permissions } },
+      select: { code: true },
+    });
+    const validCodeSet = new Set(validPerms.map((p) => p.code));
+    if (permissions.some((code) => !validCodeSet.has(code))) {
+      throw new UnprocessableEntityException(invalidRolePermissionsMessage);
+    }
+
+    const targetIsActive = input.isActive ?? role.isActive;
+    if (role.isActive && !targetIsActive) {
+      if (role.roleCode === 'OWNER') {
+        throw new ConflictException(finalOwnerRoleConflictMessage);
+      }
+      const assignedCount = await this.prisma.staffRoleAssignment.count({
+        where: {
+          businessRoleId: roleId,
+          staff: { status: 'ACTIVE' },
+        },
+      });
+      if (assignedCount > 0) {
+        throw new ConflictException(inUseRoleMessage);
+      }
+    }
+
+    try {
+      const updated = await this.prisma.$transaction(async (tx) => {
+        await tx.businessRole.update({
+          where: { id: roleId },
+          data: {
+            name,
+            description,
+            isActive: targetIsActive,
+          },
+        });
+
+        await tx.businessRolePermission.deleteMany({
+          where: { businessRoleId: roleId },
+        });
+
+        await tx.businessRolePermission.createMany({
+          data: permissions.map((code) => ({
+            businessRoleId: roleId,
+            permissionCode: code,
+          })),
+        });
+
+        return tx.businessRole.findUniqueOrThrow({
+          where: { id: roleId },
+          include: { permissions: true },
+        });
+      });
+
+      return this.mapBusinessRole(updated);
+    } catch (error) {
+      if (isDuplicate(error)) {
+        throw new ConflictException(duplicateRoleMessage);
+      }
+      throw error;
+    }
+  }
+
+  async deleteBusinessRole(context: SalonOwnerRequestContext, roleId: string): Promise<SuccessResult> {
+    const business = await this.resolveBusinessInScope(context);
+    const role = await this.prisma.businessRole.findFirst({
+      where: { id: roleId, businessId: business.id },
+    });
+    if (!role) {
+      throw new NotFoundException(notFoundMessage);
+    }
+
+    if (role.roleCode === 'OWNER') {
+      throw new ConflictException(finalOwnerRoleConflictMessage);
+    }
+
+    const assignedCount = await this.prisma.staffRoleAssignment.count({
+      where: {
+        businessRoleId: roleId,
+        staff: { status: 'ACTIVE' },
+      },
+    });
+    if (assignedCount > 0) {
+      throw new ConflictException(inUseRoleMessage);
+    }
+
+    await this.prisma.businessRole.update({
+      where: { id: roleId },
+      data: { isActive: false },
+    });
+
+    return { success: true };
+  }
+
+  async listSystemPermissions(): Promise<PermissionItemModel[]> {
+    const permissions = await this.prisma.permissionMaster.findMany({
+      orderBy: [{ category: 'asc' }, { code: 'asc' }],
+    });
+    return permissions.map((p) => ({
+      code: p.code,
+      name: p.name,
+      category: p.category,
+      description: p.description,
+    }));
   }
 
   async replaceStaffSkills(context: SalonOwnerRequestContext, staffId: string, input: StaffSkillsInputDto): Promise<StaffModel> {
@@ -677,6 +953,11 @@ export class StaffServiceCatalogService {
   }
 
   private mapStaff(staff: StaffRecord): StaffModel {
+    const roleAssignments = staff.roleAssignments ?? [];
+    const assignedRoleIds = roleAssignments.map((ra) => ra.businessRoleId);
+    const assignedRoleNames = roleAssignments.map((ra) => ra.businessRole.roleCode ?? ra.businessRole.name);
+    const effectiveRoles = assignedRoleNames.length > 0 ? assignedRoleNames : staff.roles;
+
     return {
       id: staff.id,
       branchIds: staff.branches.map((branch) => branch.branchId).sort(),
@@ -684,10 +965,26 @@ export class StaffServiceCatalogService {
       phone: staff.phone,
       ...(staff.email ? { email: staff.email } : {}),
       status: staff.status,
-      roles: staff.roles,
+      roles: effectiveRoles,
+      roleIds: assignedRoleIds,
       skillServiceIds: staff.skills.map((skill) => skill.serviceId).sort(),
       createdAt: toIso(staff.createdAt),
       updatedAt: toIso(staff.updatedAt),
+    };
+  }
+
+  private mapBusinessRole(role: Prisma.BusinessRoleGetPayload<{ include: { permissions: true } }>): BusinessRoleModel {
+    return {
+      id: role.id,
+      businessId: role.businessId,
+      roleCode: role.roleCode,
+      name: role.name,
+      description: role.description,
+      permissions: role.permissions.map((p) => p.permissionCode).sort(),
+      isSystemDefault: role.isSystemDefault,
+      isActive: role.isActive,
+      createdAt: toIso(role.createdAt),
+      updatedAt: toIso(role.updatedAt),
     };
   }
 

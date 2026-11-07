@@ -150,6 +150,26 @@ function createPrismaMock() {
       count: jest.fn(),
       findUniqueOrThrow: jest.fn(),
     },
+    businessRole: {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      findUniqueOrThrow: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      count: jest.fn(),
+    },
+    businessRolePermission: {
+      createMany: jest.fn(),
+      deleteMany: jest.fn(),
+    },
+    permissionMaster: {
+      findMany: jest.fn(),
+    },
+    staffRoleAssignment: {
+      deleteMany: jest.fn(),
+      createMany: jest.fn(),
+      count: jest.fn(),
+    },
     $transaction: transactionMock,
   };
   transactionMock.mockImplementation((callback: (tx: unknown) => unknown) => Promise.resolve(callback(prisma)));
@@ -163,6 +183,28 @@ describe('StaffServiceCatalogService', () => {
   beforeEach(() => {
     prisma = createPrismaMock();
     service = new StaffServiceCatalogService(prisma as unknown as PrismaService);
+
+    prisma.businessRole.findMany.mockResolvedValue([
+      {
+        id: 'role-stylist-1',
+        businessId: 'business-1',
+        roleCode: 'STYLIST',
+        name: 'Stylist',
+        description: 'Stylist role',
+        isSystemDefault: true,
+        isActive: true,
+        permissions: [{ permissionCode: 'appointment.view' }],
+        createdAt: now,
+        updatedAt: now,
+      },
+    ]);
+    prisma.permissionMaster.findMany.mockResolvedValue([
+      { code: 'appointment.create', name: 'Create appointments', category: 'Appointments', description: 'desc' },
+      { code: 'appointment.view', name: 'View appointments', category: 'Appointments', description: 'desc' },
+    ]);
+    prisma.staffRoleAssignment.deleteMany.mockResolvedValue({ count: 0 });
+    prisma.staffRoleAssignment.createMany.mockResolvedValue({ count: 1 });
+    prisma.staffRoleAssignment.count.mockResolvedValue(0);
   });
 
   it('lists staff by authenticated tenant and optional branch', async () => {
@@ -802,5 +844,270 @@ describe('StaffServiceCatalogService', () => {
 
     prisma.salonOwnerService.findFirst.mockResolvedValueOnce(null);
     await expect(service.getService({ user: user() }, 'missing-service')).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('manages business roles and system permissions with validation and invariants', async () => {
+    prisma.salonBusiness.findMany.mockResolvedValue([business()]);
+    prisma.permissionMaster.findMany.mockResolvedValue([
+      { code: 'appointment.create', name: 'Create appointments', category: 'Appointments', description: 'desc' },
+      { code: 'appointment.view', name: 'View appointments', category: 'Appointments', description: 'desc' },
+    ]);
+
+    // listSystemPermissions
+    const permissions = await service.listSystemPermissions();
+    expect(permissions).toHaveLength(2);
+    expect(permissions[0]).toEqual({
+      code: 'appointment.create',
+      name: 'Create appointments',
+      category: 'Appointments',
+      description: 'desc',
+    });
+
+    // listBusinessRoles with default query (active only)
+    const mockRole = {
+      id: 'role-1',
+      businessId: 'business-1',
+      roleCode: 'CUSTOM',
+      name: 'Colorist',
+      description: 'Colorist role',
+      isSystemDefault: false,
+      isActive: true,
+      permissions: [{ permissionCode: 'appointment.create' }],
+      createdAt: now,
+      updatedAt: now,
+    };
+    prisma.businessRole.findMany.mockResolvedValue([mockRole]);
+    const roles = await service.listBusinessRoles({ user: user() });
+    expect(roles).toHaveLength(1);
+    expect(roles[0]).toMatchObject({ name: 'Colorist', permissions: ['appointment.create'] });
+    expect(prisma.businessRole.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ isActive: true }),
+      }),
+    );
+
+    // listBusinessRoles with includeInactive
+    await service.listBusinessRoles({ user: user() }, { includeInactive: true });
+    expect(prisma.businessRole.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ businessId: 'business-1' }),
+      }),
+    );
+
+    // createBusinessRole success
+    prisma.businessRole.findFirst.mockResolvedValue(null);
+    prisma.businessRole.create.mockResolvedValue(mockRole);
+    prisma.businessRole.findUniqueOrThrow.mockResolvedValue(mockRole);
+    const createdRole = await service.createBusinessRole(
+      { user: user() },
+      {
+        name: 'Colorist',
+        description: 'Colorist role',
+        permissions: ['appointment.create'],
+        isActive: true,
+      },
+    );
+    expect(createdRole).toMatchObject({ name: 'Colorist' });
+
+    // createBusinessRole validation errors
+    await expect(service.createBusinessRole({ user: user() }, { name: ' ', permissions: ['appointment.create'] })).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+
+    await expect(service.createBusinessRole({ user: user() }, { name: 'Colorist', permissions: [] })).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+
+    // invalid permissions (not in permissionMaster)
+    prisma.permissionMaster.findMany.mockResolvedValueOnce([]);
+    await expect(service.createBusinessRole({ user: user() }, { name: 'Colorist', permissions: ['invalid.perm'] })).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+
+    // duplicate name conflict
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole);
+    await expect(
+      service.createBusinessRole({ user: user() }, { name: 'Colorist', permissions: ['appointment.create'] }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    // P2002 duplicate error during create
+    prisma.businessRole.findFirst.mockResolvedValueOnce(null);
+    prisma.businessRole.create.mockRejectedValueOnce(prismaKnownError('P2002'));
+    await expect(
+      service.createBusinessRole({ user: user() }, { name: 'Colorist', permissions: ['appointment.create'] }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    // unexpected error during create
+    prisma.businessRole.findFirst.mockResolvedValueOnce(null);
+    prisma.businessRole.create.mockRejectedValueOnce(new Error('unexpected create error'));
+    await expect(service.createBusinessRole({ user: user() }, { name: 'Colorist', permissions: ['appointment.create'] })).rejects.toThrow(
+      'unexpected create error',
+    );
+
+    // updateBusinessRole not found
+    prisma.businessRole.findFirst.mockResolvedValueOnce(null);
+    await expect(
+      service.updateBusinessRole({ user: user() }, 'missing-role', { name: 'Updated', permissions: ['appointment.create'] }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    // updateBusinessRole name collision
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole).mockResolvedValueOnce({ ...mockRole, id: 'role-2', name: 'Duplicate' });
+    await expect(
+      service.updateBusinessRole({ user: user() }, 'role-1', { name: 'Duplicate', permissions: ['appointment.create'] }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    // updateBusinessRole invalid permissions
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole);
+    await expect(service.updateBusinessRole({ user: user() }, 'role-1', { name: 'Colorist', permissions: [] })).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole);
+    prisma.permissionMaster.findMany.mockResolvedValueOnce([]);
+    await expect(
+      service.updateBusinessRole({ user: user() }, 'role-1', { name: 'Colorist', permissions: ['invalid.perm'] }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    // updateBusinessRole BR-ST-06.1: cannot deactivate OWNER role
+    const ownerRole = { ...mockRole, roleCode: 'OWNER', name: 'Owner' };
+    prisma.businessRole.findFirst.mockResolvedValueOnce(ownerRole);
+    await expect(
+      service.updateBusinessRole({ user: user() }, 'role-1', { name: 'Owner', permissions: ['appointment.create'], isActive: false }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    // updateBusinessRole BR-ST-13: cannot deactivate in-use role
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole);
+    prisma.staffRoleAssignment.count.mockResolvedValueOnce(1);
+    await expect(
+      service.updateBusinessRole({ user: user() }, 'role-1', { name: 'Colorist', permissions: ['appointment.create'], isActive: false }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    // updateBusinessRole success
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole);
+    prisma.businessRole.update.mockResolvedValue(mockRole);
+    prisma.businessRole.findUniqueOrThrow.mockResolvedValue(mockRole);
+    const updatedRole = await service.updateBusinessRole({ user: user() }, 'role-1', {
+      name: 'Colorist',
+      description: 'Updated description',
+      permissions: ['appointment.create'],
+      isActive: true,
+    });
+    expect(updatedRole).toMatchObject({ name: 'Colorist' });
+
+    // updateBusinessRole P2002 duplicate
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole);
+    prisma.businessRole.update.mockRejectedValueOnce(prismaKnownError('P2002'));
+    await expect(
+      service.updateBusinessRole({ user: user() }, 'role-1', { name: 'Colorist', permissions: ['appointment.create'] }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    // updateBusinessRole unexpected error
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole);
+    prisma.businessRole.update.mockRejectedValueOnce(new Error('unexpected update error'));
+    await expect(
+      service.updateBusinessRole({ user: user() }, 'role-1', { name: 'Colorist', permissions: ['appointment.create'] }),
+    ).rejects.toThrow('unexpected update error');
+
+    // deleteBusinessRole not found
+    prisma.businessRole.findFirst.mockResolvedValueOnce(null);
+    await expect(service.deleteBusinessRole({ user: user() }, 'missing-role')).rejects.toBeInstanceOf(NotFoundException);
+
+    // deleteBusinessRole cannot delete OWNER role
+    prisma.businessRole.findFirst.mockResolvedValueOnce(ownerRole);
+    await expect(service.deleteBusinessRole({ user: user() }, 'role-owner')).rejects.toBeInstanceOf(ConflictException);
+
+    // deleteBusinessRole cannot delete in-use role
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole);
+    prisma.staffRoleAssignment.count.mockResolvedValueOnce(2);
+    await expect(service.deleteBusinessRole({ user: user() }, 'role-1')).rejects.toBeInstanceOf(ConflictException);
+
+    // deleteBusinessRole success
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole);
+    prisma.staffRoleAssignment.count.mockResolvedValueOnce(0);
+    const deleteResult = await service.deleteBusinessRole({ user: user() }, 'role-1');
+    expect(deleteResult).toEqual({ success: true });
+    expect(prisma.businessRole.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'role-1' }, data: { isActive: false } }),
+    );
+  });
+
+  it('handles replaceStaffRoles with roleIds, validation, and mappings', async () => {
+    const activeStaff = staff({ roles: ['STYLIST'], status: 'ACTIVE' });
+    prisma.salonOwnerStaff.findFirst.mockResolvedValue(activeStaff);
+
+    const mockRole = {
+      id: '11111111-1111-4111-8111-111111111111',
+      businessId: 'business-1',
+      roleCode: 'STYLIST',
+      name: 'Stylist',
+      description: null,
+      isSystemDefault: true,
+      isActive: true,
+      permissions: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    // replaceStaffRoles with roleIds
+    prisma.businessRole.findMany.mockResolvedValueOnce([mockRole]);
+    prisma.salonOwnerStaff.update.mockResolvedValue({
+      ...activeStaff,
+      roleAssignments: [{ staffId: 'staff-1', businessRoleId: mockRole.id, businessRole: mockRole }],
+    });
+    const result = await service.replaceStaffRoles({ user: user() }, 'staff-1', {
+      roleIds: [mockRole.id],
+    });
+    expect(result.roleIds).toEqual([mockRole.id]);
+    expect(result.roles).toEqual(['STYLIST']);
+
+    // replaceStaffRoles with roleIds where not found in business
+    prisma.businessRole.findMany.mockResolvedValueOnce([]);
+    await expect(service.replaceStaffRoles({ user: user() }, 'staff-1', { roleIds: ['missing-role-id'] })).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+
+    // replaceStaffRoles with roles where not found
+    prisma.businessRole.findMany.mockResolvedValueOnce([]);
+    await expect(service.replaceStaffRoles({ user: user() }, 'staff-1', { roles: ['MISSING_ROLE'] })).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+
+    // replaceStaffRoles with empty input (neither roleIds nor roles)
+    await expect(service.replaceStaffRoles({ user: user() }, 'staff-1', {})).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    // mapStaff with roleAssignments where businessRole has no roleCode (uses name)
+    const customRole = { ...mockRole, roleCode: null, name: 'Lead Colorist' };
+    prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce({
+      ...activeStaff,
+      roleAssignments: [{ staffId: 'staff-1', businessRoleId: customRole.id, businessRole: customRole }],
+    });
+    const staffWithCustom = await service.getStaff({ user: user() }, 'staff-1');
+    expect(staffWithCustom.roles).toEqual(['Lead Colorist']);
+    expect(staffWithCustom.roleIds).toEqual([customRole.id]);
+
+    // BR-ST-06.1 when owner status is derived from roleAssignments instead of legacy roles array
+    const assignedOwnerStaff = {
+      ...activeStaff,
+      roles: [],
+      roleAssignments: [{ staffId: 'staff-1', businessRoleId: 'owner-role-id', businessRole: { roleCode: 'OWNER', name: 'Owner' } }],
+    };
+    prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(assignedOwnerStaff);
+    prisma.salonBranch.findMany.mockResolvedValueOnce([branch()]);
+    prisma.salonOwnerStaff.count.mockResolvedValueOnce(1); // final owner
+    await expect(
+      service.updateStaff({ user: user() }, 'staff-1', {
+        branchIds: ['branch-1'],
+        displayName: 'Owner Staff',
+        phone: '09000000001',
+        status: 'INACTIVE',
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(assignedOwnerStaff);
+    prisma.businessRole.findMany.mockResolvedValueOnce([mockRole]); // role without OWNER
+    prisma.salonOwnerStaff.count.mockResolvedValueOnce(1); // final owner
+    await expect(service.replaceStaffRoles({ user: user() }, 'staff-1', { roleIds: [mockRole.id] })).rejects.toBeInstanceOf(
+      ConflictException,
+    );
   });
 });
