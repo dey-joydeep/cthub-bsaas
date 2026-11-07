@@ -1123,6 +1123,8 @@ async function main() {
       maxDiscount: 2000,
       minPurchase: 5000,
       usageLimit: 100,
+      validFrom: new Date('2026-01-01T00:00:00Z'),
+      validTo: new Date('2027-12-31T23:59:59Z'),
     },
   });
 
@@ -1138,6 +1140,8 @@ async function main() {
       discountType: 'FIXED',
       minPurchase: 4000,
       usageLimit: 50,
+      validFrom: new Date('2026-01-01T00:00:00Z'),
+      validTo: new Date('2027-12-31T23:59:59Z'),
     },
   });
 

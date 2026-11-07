@@ -87,14 +87,16 @@
       "options": {
         "buildTarget": "web-app-partner:build:development",
         "port": 4201,
-        "host": "localhost"
+        "host": "localhost",
+        "proxyConfig": "apps/web/partner/proxy.conf.json"
       },
       "configurations": {
         "production": {
           "buildTarget": "web-app-partner:build:production"
         },
         "development": {
-          "buildTarget": "web-app-partner:build:development"
+          "buildTarget": "web-app-partner:build:development",
+          "proxyConfig": "apps/web/partner/proxy.conf.json"
         },
         "worktree": {
           "buildTarget": "web-app-partner:build:worktree",

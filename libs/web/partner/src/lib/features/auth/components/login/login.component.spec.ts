@@ -6,7 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
 import { LoginComponent } from './login.component';
@@ -172,5 +172,33 @@ describe('LoginComponent', () => {
       otp: '123456',
       type: 'login',
     });
+  });
+
+  it('should call loginService.login and navigate directly when login is supported', async () => {
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigateByUrl');
+    (loginService as any).login = vi.fn().mockReturnValue(
+      of({
+        id: '1',
+        email: 'owner@example.com',
+        name: 'Test Owner',
+        roles: ['OWNER'],
+      }),
+    );
+
+    component.loginForm.setValue({
+      email: 'owner@example.com',
+      password: 'password123',
+      rememberMe: false,
+    });
+
+    await component.onSubmit();
+
+    expect((loginService as any).login).toHaveBeenCalledWith({
+      email: 'owner@example.com',
+      password: 'password123',
+      rememberMe: false,
+    });
+    expect(navigateSpy).toHaveBeenCalled();
   });
 });

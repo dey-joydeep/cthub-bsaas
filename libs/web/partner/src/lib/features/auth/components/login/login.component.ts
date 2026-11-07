@@ -263,6 +263,52 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
       }
     }
 
+    if (typeof this.loginService.login === 'function') {
+      this.loginService
+        .login(this.loginForm.value)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (user: PartnerAuthUser) => {
+            this.loading = false;
+            if (this.isBrowser && user?.accessToken) {
+              firstValueFrom(this.storageService.setItem$('access_token', user.accessToken)).catch(() => {});
+            }
+            const target = this.returnUrl && this.returnUrl !== '/dashboard' ? this.returnUrl : '/owner/staff';
+            this.router.navigateByUrl(target);
+          },
+          error: (error: any) => {
+            if (typeof this.loginService.initLogin === 'function') {
+              this.loginService
+                .initLogin(this.loginForm.value)
+                .pipe(takeUntil(this.destroy$))
+                .subscribe({
+                  next: (res: InitLoginResponse) => {
+                    this.userType = res.userType;
+                    if (res.userType === 'owner' || res.userType === 'staff') {
+                      this.step = 'otp';
+                      this.loading = false;
+                    } else {
+                      this.loading = false;
+                      this.error = 'Unknown user type';
+                    }
+                  },
+                  error: (initErr: any) => {
+                    this.loading = false;
+                    this.error = error?.error?.message || error?.message || initErr?.error?.error || 'Login failed';
+                    this.errorService.handleError(error || initErr);
+                  },
+                });
+              return;
+            }
+
+            this.loading = false;
+            this.error = error?.error?.message || error?.message || 'Login failed';
+            this.errorService.handleError(error);
+          },
+        });
+      return;
+    }
+
     this.loginService
       .initLogin(this.loginForm.value)
       .pipe(takeUntil(this.destroy$))

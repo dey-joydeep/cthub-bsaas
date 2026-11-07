@@ -1,6 +1,12 @@
 import 'reflect-metadata';
 import { ConfigService, CorrelationIdMiddleware, LoggerService } from '@cthub-bsaas/server-core';
-import { ClassSerializerInterceptor, Logger, ValidationPipe, VersioningType } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  Logger,
+  ValidationPipe,
+  VERSION_NEUTRAL,
+  VersioningType,
+} from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -135,7 +141,7 @@ async function bootstrap(): Promise<void> {
   // API versioning
   app.enableVersioning({
     type: VersioningType.URI,
-    defaultVersion: '1',
+    defaultVersion: [VERSION_NEUTRAL, '1'],
   });
 
   // Swagger documentation
