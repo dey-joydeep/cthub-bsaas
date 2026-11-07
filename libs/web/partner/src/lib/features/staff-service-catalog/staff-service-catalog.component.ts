@@ -253,7 +253,8 @@ export class StaffServiceCatalogComponent {
         this.selectedStaff.set(member);
         this.loadCatalog(member.id);
       },
-      'Catalog saved.',
+      'Staff profile saved.',
+      'Staff profile could not be saved.',
       OWNER_PROTECTION_ERROR,
     );
   }
@@ -278,7 +279,8 @@ export class StaffServiceCatalogComponent {
         this.selectedStaff.set(updated);
         this.staff.set(this.staff().map((m) => (m.id === updated.id ? updated : m)));
       },
-      'Catalog saved.',
+      'Staff roles saved.',
+      'Staff roles could not be saved.',
       OWNER_PROTECTION_ERROR,
     );
   }
@@ -289,7 +291,12 @@ export class StaffServiceCatalogComponent {
       this.error.set('Select staff before saving skills.');
       return;
     }
-    this.persist(this.catalogApi.replaceStaffSkills(member.id, this.skillForm.getRawValue()), (updated) => this.selectedStaff.set(updated));
+    this.persist(
+      this.catalogApi.replaceStaffSkills(member.id, this.skillForm.getRawValue()),
+      (updated) => this.selectedStaff.set(updated),
+      'Staff skills saved.',
+      'Staff skills could not be saved.',
+    );
   }
 
   protected saveShift(): void {
@@ -305,6 +312,9 @@ export class StaffServiceCatalogComponent {
         timezone: value.timezone,
         days: [{ dayOfWeek: value.dayOfWeek, intervals: [{ start: value.start, end: value.end }] }],
       }),
+      undefined,
+      'Weekly shift saved.',
+      'Weekly shift could not be saved.',
     );
   }
 
@@ -327,6 +337,8 @@ export class StaffServiceCatalogComponent {
         this.leaveForm.patchValue({ startsAt: '', endsAt: '', reason: '' });
         this.loadLeaveBlocks(member.id);
       },
+      'Leave block scheduled.',
+      'Leave block could not be scheduled.',
     );
   }
 
@@ -341,6 +353,7 @@ export class StaffServiceCatalogComponent {
         this.loadLeaveBlocks(member.id);
       },
       null,
+      'Leave block could not be removed.',
     );
   }
 
@@ -349,7 +362,12 @@ export class StaffServiceCatalogComponent {
       this.categoryForm.markAllAsTouched();
       return;
     }
-    this.persist(this.catalogApi.createServiceCategory(this.categoryForm.getRawValue()), () => this.loadCatalog());
+    this.persist(
+      this.catalogApi.createServiceCategory(this.categoryForm.getRawValue()),
+      () => this.loadCatalog(),
+      'Service category created.',
+      'Service category could not be created.',
+    );
   }
 
   protected selectService(service: Service): void {
@@ -389,10 +407,15 @@ export class StaffServiceCatalogComponent {
     const selected = this.selectedService();
     const input = this.serviceForm.getRawValue();
     const request = selected ? this.catalogApi.updateService(selected.id, input) : this.catalogApi.createService(input);
-    this.persist(request, (service) => {
-      this.selectedService.set(service);
-      this.loadCatalog(undefined, service.id);
-    });
+    this.persist(
+      request,
+      (service) => {
+        this.selectedService.set(service);
+        this.loadCatalog(undefined, service.id);
+      },
+      'Service saved.',
+      'Service could not be saved.',
+    );
   }
 
   protected saveEligibility(): void {
@@ -401,8 +424,11 @@ export class StaffServiceCatalogComponent {
       this.error.set('Select a service before saving eligibility.');
       return;
     }
-    this.persist(this.catalogApi.replaceServiceStaffEligibility(service.id, this.eligibilityForm.getRawValue()), (updated) =>
-      this.selectedService.set(updated),
+    this.persist(
+      this.catalogApi.replaceServiceStaffEligibility(service.id, this.eligibilityForm.getRawValue()),
+      (updated) => this.selectedService.set(updated),
+      'Staff eligibility saved.',
+      'Staff eligibility could not be saved.',
     );
   }
 
@@ -412,10 +438,15 @@ export class StaffServiceCatalogComponent {
       this.error.set('Select a service before changing status.');
       return;
     }
-    this.persist(this.catalogApi.updateServiceStatus(service.id, { status }), (updated) => {
-      this.selectedService.set(updated);
-      this.serviceForm.patchValue({ status: updated.status });
-    });
+    this.persist(
+      this.catalogApi.updateServiceStatus(service.id, { status }),
+      (updated) => {
+        this.selectedService.set(updated);
+        this.serviceForm.patchValue({ status: updated.status });
+      },
+      'Service status updated.',
+      'Service status could not be updated.',
+    );
   }
 
   protected branchName(branchId: string): string {
@@ -523,7 +554,8 @@ export class StaffServiceCatalogComponent {
   private persist<T>(
     request: Observable<T>,
     onSuccess?: (value: T) => void,
-    successMessage: string | null = 'Catalog saved.',
+    successMessage: string | null = 'Changes saved.',
+    errorMessage = 'Changes could not be saved.',
     conflictMessage?: string,
   ): void {
     this.saving.set(true);
@@ -539,7 +571,7 @@ export class StaffServiceCatalogComponent {
         if ((err as { status?: number })?.status === 409) {
           this.error.set(conflictMessage ?? (err as { error?: { message?: string } })?.error?.message ?? OWNER_PROTECTION_ERROR);
         } else {
-          this.error.set('Catalog could not be saved.');
+          this.error.set(errorMessage);
         }
         this.saving.set(false);
       },
