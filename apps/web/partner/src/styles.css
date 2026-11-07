@@ -180,58 +180,48 @@ img {
   max-width: 100%;
   height: auto;
 }
-/* Basic form styling & Compact density */
+/* Basic form styling */
 form {
   mat-form-field {
     width: 100%;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
 }
 
-/* Compact Angular Material Form Field styling */
-.mat-mdc-form-field {
-  --mat-form-field-container-vertical-padding: 6px;
-  font-size: 0.875rem;
-}
-
-.mat-mdc-text-field-wrapper.mdc-text-field--outlined .mat-mdc-form-field-infix {
-  padding-top: 8px !important;
-  padding-bottom: 8px !important;
-  min-height: 42px !important;
-}
-
-.mat-mdc-form-field-subscript-wrapper {
-  font-size: 0.75rem;
-}
-
-/* Compact Card styling */
+/* Card styling */
 mat-card.mat-mdc-card {
   border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 10px;
+  border-radius: 12px;
   background-color: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: box-shadow 0.2s ease;
 }
 
 mat-card-header.mat-mdc-card-header {
-  padding: 12px 14px 6px;
+  padding: 14px 16px 8px;
+  display: flex;
+  align-items: center;
 }
 
 mat-card-title.mat-mdc-card-title {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 600;
-  color: #1e293b;
+  color: #0f172a;
+  letter-spacing: -0.01em;
 }
 
 mat-card-content.mat-mdc-card-content {
-  padding: 10px 14px 14px;
+  padding: 12px 16px 16px;
 }
 
-/* Basic button styling */
-button[mat-button],
-button[mat-raised-button],
-button[mat-stroked-button],
-button[mat-flat-button] {
-  margin: 4px;
+/* Button styling inside forms and cards */
+form button[mat-button],
+form button[mat-raised-button],
+form button[mat-stroked-button],
+form button[mat-flat-button] {
+  margin: 0;
   font-weight: 500;
 }
 
