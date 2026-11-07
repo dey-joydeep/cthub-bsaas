@@ -14,6 +14,8 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { ActivatedRoute } from '@angular/router';
 import { Observable, forkJoin } from 'rxjs';
 
+import { DateRangeComponent } from '@cthub-bsaas/web-ui';
+
 import { BranchProfile } from '../salon-owner-settings/models/salon-owner-settings.models';
 import { SalonOwnerSettingsApi } from '../salon-owner-settings/salon-owner-settings.api';
 import { Service, ServiceCategory, Staff, StaffInput, StaffLeaveBlock, StaffRole } from './models/staff-service-catalog.models';
@@ -39,6 +41,7 @@ const OWNER_PROTECTION_ERROR = 'Cannot deactivate or remove the OWNER role from 
     MatProgressBarModule,
     MatSelectModule,
     MatTabsModule,
+    DateRangeComponent,
   ],
   templateUrl: './staff-service-catalog.component.html',
   styleUrls: ['./staff-service-catalog.component.scss'],

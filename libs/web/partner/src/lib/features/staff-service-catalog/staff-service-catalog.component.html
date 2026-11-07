@@ -198,7 +198,7 @@
                 @for (block of leaveBlocks(); track block.id) {
                   <div class="leave-row salon-row">
                     <div class="leave-info">
-                      <span class="leave-dates">{{ block.startsAt | date: 'short' }} – {{ block.endsAt | date: 'short' }}</span>
+                      <lib-date-range [start]="block.startsAt" [end]="block.endsAt" class="leave-dates"></lib-date-range>
                       <div class="leave-meta">
                         <span class="leave-scope salon-pill" [class.salon-pill-accent]="!block.branchId" [class.salon-pill-neutral]="block.branchId">
                           {{ leaveBranchScope(block.branchId) }}
