@@ -144,7 +144,8 @@ body {
   height: 100%;
   margin: 0;
   font-family: Roboto, 'Helvetica Neue', sans-serif;
-  background-color: #f5f5f5;
+  background-color: #f8f7f5;
+  color: #1e293b;
 }
 /* Basic typography */
 h1,
@@ -154,7 +155,8 @@ h4,
 h5,
 h6 {
   margin: 8px 0;
-  font-weight: 400;
+  font-weight: 500;
+  color: #0f172a;
 }
 /* Layout */
 .app-container {
@@ -178,27 +180,148 @@ img {
   max-width: 100%;
   height: auto;
 }
-/* Basic form styling */
+/* Basic form styling & Compact density */
 form {
   mat-form-field {
     width: 100%;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
 }
+
+/* Compact Angular Material Form Field styling */
+.mat-mdc-form-field {
+  --mat-form-field-container-vertical-padding: 6px;
+  font-size: 0.875rem;
+}
+
+.mat-mdc-text-field-wrapper.mdc-text-field--outlined .mat-mdc-form-field-infix {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+  min-height: 42px !important;
+}
+
+.mat-mdc-form-field-subscript-wrapper {
+  font-size: 0.75rem;
+}
+
+/* Compact Card styling */
+mat-card.mat-mdc-card {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+mat-card-header.mat-mdc-card-header {
+  padding: 12px 14px 6px;
+}
+
+mat-card-title.mat-mdc-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+mat-card-content.mat-mdc-card-content {
+  padding: 10px 14px 14px;
+}
+
 /* Basic button styling */
 button[mat-button],
 button[mat-raised-button],
-button[mat-stroked-button] {
-  margin: 8px;
+button[mat-stroked-button],
+button[mat-flat-button] {
+  margin: 4px;
+  font-weight: 500;
 }
-/* Card styling */
-mat-card {
-  margin: 8px;
-}
+
 /* Table styling */
 mat-table {
   width: 100%;
 }
+
+/* Global Salon Interactive Row Utilities */
+.salon-row {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  transition: all 0.15s ease-in-out;
+
+  &:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+  }
+
+  &.selected {
+    background: #f0f7ff;
+    border-color: #3b82f6;
+    box-shadow: inset 3px 0 0 #2563eb;
+  }
+}
+
+/* Global Status & Scope Pills */
+.salon-pill {
+  align-items: center;
+  border-radius: 9999px;
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.25;
+  padding: 2px 8px;
+}
+
+.salon-pill-neutral {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.salon-pill-brand {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+}
+
+.salon-pill-accent {
+  background-color: #fef3c7;
+  border: 1px solid #fde68a;
+  color: #b45309;
+}
+
+/* Global Status Banners */
+.salon-banner {
+  align-items: center;
+  border-radius: 6px;
+  display: flex;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+}
+
+.salon-banner-error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.salon-banner-success {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+/* Touch accessibility on mobile */
+@media (max-width: 768px) {
+  button[mat-icon-button] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
 /* Responsive utilities */
 @media (max-width: 599px) {
   .hide-xs {

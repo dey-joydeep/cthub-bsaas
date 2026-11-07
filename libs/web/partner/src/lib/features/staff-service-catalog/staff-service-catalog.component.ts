@@ -362,10 +362,11 @@ export class StaffServiceCatalogComponent {
   protected formatLeaveRange(startsAt: string, endsAt: string): string {
     const start = new Date(startsAt);
     const end = new Date(endsAt);
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const format = (d: Date) =>
-      `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    return `${format(start)} - ${format(end)}`;
+    const formatter = new Intl.DateTimeFormat(undefined, {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    });
+    return `${formatter.format(start)} – ${formatter.format(end)}`;
   }
 
   protected categoryName(categoryId: string): string {

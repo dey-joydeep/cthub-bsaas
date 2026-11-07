@@ -21,10 +21,16 @@
   </header>
 
   @if (message()) {
-    <p class="status status-ok" role="status">{{ message() }}</p>
+    <div class="salon-banner salon-banner-success status status-ok" role="status">
+      <mat-icon>check_circle</mat-icon>
+      <span>{{ message() }}</span>
+    </div>
   }
   @if (error()) {
-    <p class="status status-error" role="alert">{{ error() }}</p>
+    <div class="salon-banner salon-banner-error status status-error" role="alert">
+      <mat-icon>warning</mat-icon>
+      <span>{{ error() }}</span>
+    </div>
   }
 
   <mat-tab-group [selectedIndex]="selectedTabIndex()" (selectedIndexChange)="selectedTabIndex.set($event)">
@@ -190,11 +196,13 @@
               }
               <div class="leave-list">
                 @for (block of leaveBlocks(); track block.id) {
-                  <div class="leave-row">
+                  <div class="leave-row salon-row">
                     <div class="leave-info">
-                      <span class="leave-dates">{{ formatLeaveRange(block.startsAt, block.endsAt) }}</span>
+                      <span class="leave-dates">{{ block.startsAt | date: 'short' }} – {{ block.endsAt | date: 'short' }}</span>
                       <div class="leave-meta">
-                        <span class="leave-scope">{{ leaveBranchScope(block.branchId) }}</span>
+                        <span class="leave-scope salon-pill" [class.salon-pill-accent]="!block.branchId" [class.salon-pill-neutral]="block.branchId">
+                          {{ leaveBranchScope(block.branchId) }}
+                        </span>
                         <span class="leave-reason">{{ block.reason }}</span>
                       </div>
                     </div>
