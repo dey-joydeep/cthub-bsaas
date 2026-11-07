@@ -83,15 +83,20 @@ model SalonTenant {
 }
 
 model SalonBusiness {
-  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenantId    String           @map("tenant_id") @db.Uuid
-  tenant      SalonTenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  displayName String           @map("display_name")
-  legalName   String           @map("legal_name")
-  status      SalonOwnerStatus @default(ACTIVE)
+  id          String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String                      @map("tenant_id") @db.Uuid
+  tenant      SalonTenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  displayName String                      @map("display_name")
+  legalName   String                      @map("legal_name")
+  status      SalonOwnerStatus            @default(ACTIVE)
   branches    SalonBranch[]
-  createdAt   DateTime         @default(now()) @map("created_at")
-  updatedAt   DateTime         @updatedAt @map("updated_at")
+  staff       SalonOwnerStaff[]
+  roles       BusinessRole[]
+  categories  SalonOwnerServiceCategory[]
+  services    SalonOwnerService[]
+  customers   SalonOwnerCustomer[]
+  createdAt   DateTime                    @default(now()) @map("created_at")
+  updatedAt   DateTime                    @updatedAt @map("updated_at")
 
   @@unique([tenantId, displayName])
   @@index([tenantId, status])
@@ -99,27 +104,177 @@ model SalonBusiness {
 }
 
 model SalonBranch {
-  id         String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  businessId String               @map("business_id") @db.Uuid
-  business   SalonBusiness        @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  name       String
-  phone      String?
-  email      String?
-  timezone   String
-  currency   String
-  currencyLockedAt DateTime?      @map("currency_locked_at")
-  status     SalonOwnerStatus     @default(ACTIVE)
-  address    Json                 @db.JsonB
-  hours      SalonBranchHours[]
-  holidays   SalonBranchHoliday[]
-  policy     SalonBranchPolicy?
-  createdAt  DateTime             @default(now()) @map("created_at")
-  updatedAt  DateTime             @updatedAt @map("updated_at")
+  id               String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId       String                      @map("business_id") @db.Uuid
+  business         SalonBusiness               @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name             String
+  phone            String?
+  email            String?
+  timezone         String
+  currency         String
+  currencyLockedAt DateTime?                   @map("currency_locked_at")
+  status           SalonOwnerStatus            @default(ACTIVE)
+  address          Json                        @db.JsonB
+  hours            SalonBranchHours[]
+  holidays         SalonBranchHoliday[]
+  policy           SalonBranchPolicy?
+  staff            SalonOwnerStaffBranch[]
+  shifts           SalonOwnerStaffShift[]
+  leaveBlocks      SalonOwnerStaffLeaveBlock[]
+  createdAt        DateTime                    @default(now()) @map("created_at")
+  updatedAt        DateTime                    @updatedAt @map("updated_at")
 
   @@unique([businessId, name])
   @@index([businessId])
   @@index([businessId, status])
   @@map("salon_branch")
+}
+
+model SalonOwnerStaff {
+  id          String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId  String                      @map("business_id") @db.Uuid
+  business    SalonBusiness               @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  displayName String                      @map("display_name")
+  phone       String
+  email       String?
+  status          SalonOwnerStatus            @default(ACTIVE)
+  roles           String[]                    @default([])
+  roleAssignments StaffRoleAssignment[]
+  branches        SalonOwnerStaffBranch[]
+  skills      SalonOwnerStaffSkill[]
+  shifts      SalonOwnerStaffShift[]
+  leaveBlocks SalonOwnerStaffLeaveBlock[]
+  createdAt   DateTime                    @default(now()) @map("created_at")
+  updatedAt   DateTime                    @updatedAt @map("updated_at")
+
+  @@unique([businessId, phone])
+  @@index([businessId, status])
+  @@map("salon_owner_staff")
+}
+
+model SalonOwnerStaffBranch {
+  staffId  String          @map("staff_id") @db.Uuid
+  branchId String          @map("branch_id") @db.Uuid
+  staff    SalonOwnerStaff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  branch   SalonBranch     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@id([staffId, branchId])
+  @@index([branchId])
+  @@map("salon_owner_staff_branch")
+}
+
+model SalonOwnerStaffSkill {
+  staffId   String            @map("staff_id") @db.Uuid
+  serviceId String            @map("service_id") @db.Uuid
+  staff     SalonOwnerStaff   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  service   SalonOwnerService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([staffId, serviceId])
+  @@index([serviceId])
+  @@map("salon_owner_staff_skill")
+}
+
+model SalonOwnerStaffShift {
+  id        String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  staffId   String          @map("staff_id") @db.Uuid
+  branchId  String          @map("branch_id") @db.Uuid
+  staff     SalonOwnerStaff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  branch    SalonBranch     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  timezone  String
+  days      Json            @db.JsonB
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+
+  @@unique([staffId, branchId])
+  @@index([branchId])
+  @@map("salon_owner_staff_shift")
+}
+
+model SalonOwnerStaffLeaveBlock {
+  id        String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  staffId   String          @map("staff_id") @db.Uuid
+  branchId  String?         @map("branch_id") @db.Uuid
+  staff     SalonOwnerStaff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  branch    SalonBranch?    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  startsAt  DateTime        @map("starts_at")
+  endsAt    DateTime        @map("ends_at")
+  reason    String
+  createdAt DateTime        @default(now()) @map("created_at")
+
+  @@index([staffId, startsAt, endsAt])
+  @@index([branchId, startsAt, endsAt])
+  @@map("salon_owner_staff_leave_block")
+}
+
+model SalonOwnerServiceCategory {
+  id         String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId String              @map("business_id") @db.Uuid
+  business   SalonBusiness       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name       String
+  sortOrder  Int                 @map("sort_order")
+  services   SalonOwnerService[]
+  createdAt  DateTime            @default(now()) @map("created_at")
+  updatedAt  DateTime            @updatedAt @map("updated_at")
+
+  @@unique([businessId, name])
+  @@index([businessId, sortOrder])
+  @@map("salon_owner_service_category")
+}
+
+model SalonOwnerService {
+  id              String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId      String                    @map("business_id") @db.Uuid
+  business        SalonBusiness             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  categoryId      String                    @map("category_id") @db.Uuid
+  category        SalonOwnerServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  name            String
+  durationMinutes Int                       @map("duration_minutes")
+  bufferMinutes   Int                       @default(0) @map("buffer_minutes")
+  basePrice       Decimal                   @map("base_price") @db.Decimal(10, 2)
+  taxRatePercent  Decimal                   @map("tax_rate_percent") @db.Decimal(5, 2)
+  status          SalonOwnerStatus          @default(ACTIVE)
+  skills          SalonOwnerStaffSkill[]
+  createdAt       DateTime                  @default(now()) @map("created_at")
+  updatedAt       DateTime                  @updatedAt @map("updated_at")
+
+  @@unique([businessId, categoryId, name])
+  @@index([businessId, status])
+  @@index([categoryId])
+  @@map("salon_owner_service")
+}
+
+model SalonOwnerCustomer {
+  id                  String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId          String                   @map("business_id") @db.Uuid
+  business            SalonBusiness            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  displayName         String                   @map("display_name")
+  phone               String
+  email               String?
+  dateOfBirth         DateTime?                @map("date_of_birth") @db.Date
+  consentForMarketing Boolean                  @default(false) @map("consent_for_marketing")
+  smsEnabled          Boolean                  @default(false) @map("sms_enabled")
+  emailEnabled        Boolean                  @default(false) @map("email_enabled")
+  whatsappEnabled     Boolean                  @default(false) @map("whatsapp_enabled")
+  notes               SalonOwnerCustomerNote[]
+  createdAt           DateTime                 @default(now()) @map("created_at")
+  updatedAt           DateTime                 @updatedAt @map("updated_at")
+
+  @@unique([businessId, phone])
+  @@index([businessId, displayName])
+  @@index([businessId, email])
+  @@map("salon_owner_customer")
+}
+
+model SalonOwnerCustomerNote {
+  id         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customerId String             @map("customer_id") @db.Uuid
+  customer   SalonOwnerCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  body       String
+  visibility String
+  createdAt  DateTime           @default(now()) @map("created_at")
+
+  @@index([customerId, createdAt])
+  @@map("salon_owner_customer_note")
 }
 
 model SalonBranchHours {
@@ -697,9 +852,9 @@ model City {
   updatedAt         DateTime          @updatedAt @map("updated_at")
   businessAddresses BusinessAddress[]
 
+  @@unique([countryId, stateId, name])
   @@index([stateId])
   @@index([countryId])
-  @@unique([countryId, stateId, name])
   @@map("city")
 }
 
@@ -1147,3 +1302,84 @@ model AuditEvent {
   @@index([action, ts])
   @@map("audit_event")
 }
+
+// ADR-0005: Database-Driven Role Master and Business Semi-Master
+
+model PermissionMaster {
+  code                String                   @id
+  name                String
+  category            String
+  description         String
+  rolePermissions     RoleMasterPermission[]
+  businessPermissions BusinessRolePermission[]
+  createdAt           DateTime                 @default(now()) @map("created_at")
+  updatedAt           DateTime                 @updatedAt @map("updated_at")
+
+  @@map("permission_master")
+}
+
+model RoleMaster {
+  code         String                 @id
+  defaultName  String                 @map("default_name")
+  description  String
+  isSystemRole Boolean                @default(true) @map("is_system_role")
+  permissions  RoleMasterPermission[]
+  createdAt    DateTime               @default(now()) @map("created_at")
+  updatedAt    DateTime               @updatedAt @map("updated_at")
+
+  @@map("role_master")
+}
+
+model RoleMasterPermission {
+  roleCode       String           @map("role_code")
+  role           RoleMaster       @relation(fields: [roleCode], references: [code], onDelete: Cascade)
+  permissionCode String           @map("permission_code")
+  permission     PermissionMaster @relation(fields: [permissionCode], references: [code], onDelete: Cascade)
+
+  @@id([roleCode, permissionCode])
+  @@index([permissionCode])
+  @@map("role_master_permission")
+}
+
+model BusinessRole {
+  id               String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId       String                   @map("business_id") @db.Uuid
+  business         SalonBusiness            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  roleCode         String?                  @map("role_code")
+  name             String
+  description      String?
+  isSystemDefault  Boolean                  @default(false) @map("is_system_default")
+  isActive         Boolean                  @default(true) @map("is_active")
+  permissions      BusinessRolePermission[]
+  staffAssignments StaffRoleAssignment[]
+  createdAt        DateTime                 @default(now()) @map("created_at")
+  updatedAt        DateTime                 @updatedAt @map("updated_at")
+
+  @@unique([businessId, name])
+  @@index([businessId, isActive])
+  @@map("business_role")
+}
+
+model BusinessRolePermission {
+  businessRoleId String           @map("business_role_id") @db.Uuid
+  businessRole   BusinessRole     @relation(fields: [businessRoleId], references: [id], onDelete: Cascade)
+  permissionCode String           @map("permission_code")
+  permission     PermissionMaster @relation(fields: [permissionCode], references: [code], onDelete: Cascade)
+
+  @@id([businessRoleId, permissionCode])
+  @@index([permissionCode])
+  @@map("business_role_permission")
+}
+
+model StaffRoleAssignment {
+  staffId        String          @map("staff_id") @db.Uuid
+  staff          SalonOwnerStaff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  businessRoleId String          @map("business_role_id") @db.Uuid
+  businessRole   BusinessRole    @relation(fields: [businessRoleId], references: [id], onDelete: Cascade)
+  createdAt      DateTime        @default(now()) @map("created_at")
+
+  @@id([staffId, businessRoleId])
+  @@index([businessRoleId])
+  @@map("staff_role_assignment")
+}
+

@@ -1,2 +1,7 @@
 export * from './lib/server-feature-salon-owner.module';
+export * from './lib/models/customer-crm.models';
 export * from './lib/models/salon-owner-settings.models';
+export * from './lib/models/staff-service-catalog.models';
+export * from './lib/dto/staff-service-catalog.dto';
+export * from './lib/controllers/roles.controller';
+export * from './lib/controllers/permissions.controller';

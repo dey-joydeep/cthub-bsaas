@@ -4,7 +4,14 @@ import request from 'supertest';
 
 import { BranchSettingsController } from '../../src/lib/controllers/branch-settings.controller';
 import { BusinessSettingsController } from '../../src/lib/controllers/business-settings.controller';
+import { CustomerCrmController } from '../../src/lib/controllers/customer-crm.controller';
+import { PermissionsController } from '../../src/lib/controllers/permissions.controller';
+import { RolesController } from '../../src/lib/controllers/roles.controller';
+import { ServiceCatalogController } from '../../src/lib/controllers/service-catalog.controller';
+import { StaffController } from '../../src/lib/controllers/staff.controller';
+import { CustomerCrmService } from '../../src/lib/services/customer-crm.service';
 import { SalonOwnerSettingsService } from '../../src/lib/services/salon-owner-settings.service';
+import { StaffServiceCatalogService } from '../../src/lib/services/staff-service-catalog.service';
 
 describe('Salon owner settings routes', () => {
   const branchId = '11111111-1111-4111-8111-111111111111';
@@ -14,11 +21,35 @@ describe('Salon owner settings routes', () => {
     createBranch: jest.fn(),
     replaceBranchHours: jest.fn(),
   };
+  const catalog = {
+    createStaff: jest.fn(),
+    createService: jest.fn(),
+    listBusinessRoles: jest.fn(),
+    createBusinessRole: jest.fn(),
+    updateBusinessRole: jest.fn(),
+    deleteBusinessRole: jest.fn(),
+    listSystemPermissions: jest.fn(),
+  };
+  const customers = {
+    createCustomer: jest.fn(),
+  };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
-      controllers: [BusinessSettingsController, BranchSettingsController],
-      providers: [{ provide: SalonOwnerSettingsService, useValue: service }],
+      controllers: [
+        BusinessSettingsController,
+        BranchSettingsController,
+        StaffController,
+        RolesController,
+        PermissionsController,
+        ServiceCatalogController,
+        CustomerCrmController,
+      ],
+      providers: [
+        { provide: SalonOwnerSettingsService, useValue: service },
+        { provide: StaffServiceCatalogService, useValue: catalog },
+        { provide: CustomerCrmService, useValue: customers },
+      ],
     }).compile();
 
     app = moduleRef.createNestApplication();
@@ -170,5 +201,78 @@ describe('Salon owner settings routes', () => {
       branchId,
       expect.objectContaining({ timezone: 'Asia/Tokyo' }),
     );
+  });
+
+  it('validates staff payloads before invoking the catalog service', async () => {
+    await request(app.getHttpServer()).post('/partner/staff').send({ branchIds: [], displayName: 'A' }).expect(400);
+    expect(catalog.createStaff).not.toHaveBeenCalled();
+  });
+
+  it('routes valid service catalog requests to the catalog service', async () => {
+    catalog.createService.mockResolvedValue({ id: 'service-1' });
+
+    await request(app.getHttpServer())
+      .post('/partner/services')
+      .send({
+        categoryId: '00000000-0000-4000-8000-000000000001',
+        name: 'Cut',
+        durationMinutes: 45,
+        bufferMinutes: 5,
+        basePrice: '35.00',
+        taxRatePercent: '10.00',
+        status: 'ACTIVE',
+      })
+      .expect(201);
+
+    expect(catalog.createService).toHaveBeenCalledWith(
+      { user: expect.objectContaining({ tenantId: 'tenant-1' }) },
+      expect.objectContaining({ name: 'Cut', categoryId: '00000000-0000-4000-8000-000000000001' }),
+    );
+  });
+
+  it('validates customer payloads before invoking the CRM service', async () => {
+    await request(app.getHttpServer()).post('/partner/customers').send({ displayName: 'A' }).expect(400);
+    expect(customers.createCustomer).not.toHaveBeenCalled();
+  });
+
+  it('routes valid customer requests to the CRM service', async () => {
+    customers.createCustomer.mockResolvedValue({ id: 'customer-1' });
+
+    await request(app.getHttpServer())
+      .post('/partner/customers')
+      .send({ displayName: 'Customer One', phone: '09000000001', consentForMarketing: true })
+      .expect(201);
+
+    expect(customers.createCustomer).toHaveBeenCalledWith(
+      { user: expect.objectContaining({ tenantId: 'tenant-1' }) },
+      expect.objectContaining({ displayName: 'Customer One' }),
+    );
+  });
+
+  it('validates business role payloads before invoking catalog service', async () => {
+    await request(app.getHttpServer()).post('/partner/roles').send({ name: 'A', permissions: [] }).expect(400);
+    expect(catalog.createBusinessRole).not.toHaveBeenCalled();
+  });
+
+  it('routes valid business role and permission requests to catalog service', async () => {
+    catalog.createBusinessRole.mockResolvedValue({ id: 'role-1' });
+    catalog.listBusinessRoles.mockResolvedValue([{ id: 'role-1' }]);
+    catalog.listSystemPermissions.mockResolvedValue([{ code: 'appointment.create' }]);
+
+    await request(app.getHttpServer())
+      .post('/partner/roles')
+      .send({ name: 'Colorist', permissions: ['appointment.create'], isActive: true })
+      .expect(201);
+
+    expect(catalog.createBusinessRole).toHaveBeenCalledWith(
+      { user: expect.objectContaining({ tenantId: 'tenant-1' }) },
+      expect.objectContaining({ name: 'Colorist' }),
+    );
+
+    await request(app.getHttpServer()).get('/partner/roles').expect(200);
+    expect(catalog.listBusinessRoles).toHaveBeenCalled();
+
+    await request(app.getHttpServer()).get('/partner/permissions').expect(200);
+    expect(catalog.listSystemPermissions).toHaveBeenCalled();
   });
 });
