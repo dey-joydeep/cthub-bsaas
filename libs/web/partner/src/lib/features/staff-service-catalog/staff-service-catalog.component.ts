@@ -268,6 +268,8 @@ export class StaffServiceCatalogComponent {
   protected saveStaff(): void {
     if (this.staffForm.invalid) {
       this.staffForm.markAllAsTouched();
+      this.message.set(null);
+      this.error.set('Please correct the highlighted fields before saving.');
       return;
     }
 
@@ -329,8 +331,15 @@ export class StaffServiceCatalogComponent {
 
   protected saveShift(): void {
     const member = this.selectedStaff();
-    if (!member || this.shiftForm.invalid) {
-      this.error.set('Select staff and complete the shift form.');
+    if (!member) {
+      this.message.set(null);
+      this.error.set('Select staff before saving shift.');
+      return;
+    }
+    if (this.shiftForm.invalid) {
+      this.shiftForm.markAllAsTouched();
+      this.message.set(null);
+      this.error.set('Please complete the required shift fields before saving.');
       return;
     }
     const value = this.shiftForm.getRawValue();
@@ -349,8 +358,15 @@ export class StaffServiceCatalogComponent {
 
   protected saveLeave(): void {
     const member = this.selectedStaff();
-    if (!member || this.leaveForm.invalid) {
-      this.error.set('Select staff and complete the leave form.');
+    if (!member) {
+      this.message.set(null);
+      this.error.set('Select staff before scheduling leave.');
+      return;
+    }
+    if (this.leaveForm.invalid) {
+      this.leaveForm.markAllAsTouched();
+      this.message.set(null);
+      this.error.set('Please complete the required leave fields before scheduling.');
       return;
     }
     const value = this.leaveForm.getRawValue();
@@ -389,6 +405,8 @@ export class StaffServiceCatalogComponent {
   protected saveCategory(): void {
     if (this.categoryForm.invalid) {
       this.categoryForm.markAllAsTouched();
+      this.message.set(null);
+      this.error.set('Please enter a valid category name and sort order.');
       return;
     }
     this.persist(
@@ -430,6 +448,8 @@ export class StaffServiceCatalogComponent {
   protected saveService(): void {
     if (this.serviceForm.invalid) {
       this.serviceForm.markAllAsTouched();
+      this.message.set(null);
+      this.error.set('Please correct the highlighted fields before saving.');
       return;
     }
 

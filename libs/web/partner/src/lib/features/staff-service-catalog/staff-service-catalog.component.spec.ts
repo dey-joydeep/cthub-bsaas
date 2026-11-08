@@ -356,6 +356,64 @@ describe('StaffServiceCatalogComponent', () => {
     component.saveRoles();
     expect(component.error()).toBe('Cannot deactivate or remove the OWNER role from the last active owner of the business.');
   });
+
+  it('renders mat-error in DOM and displays error banner when submitting invalid staffForm', () => {
+    catalogApi.updateStaff.mockClear();
+    catalogApi.createStaff.mockClear();
+
+    const component = fixture.componentInstance as unknown as {
+      staffForm: { controls: { displayName: { setValue: (val: string) => void }; phone: { setValue: (val: string) => void } } };
+      saveStaff: () => void;
+      error: () => string | null;
+    };
+
+    component.staffForm.controls.displayName.setValue('');
+    component.saveStaff();
+    fixture.detectChanges();
+
+    expect(component.error()).toBe('Please correct the highlighted fields before saving.');
+    expect(catalogApi.updateStaff).not.toHaveBeenCalled();
+    expect(catalogApi.createStaff).not.toHaveBeenCalled();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const errorBanner = compiled.querySelector('.salon-banner-error');
+    expect(errorBanner?.textContent).toContain('Please correct the highlighted fields before saving.');
+
+    const matError = compiled.querySelector('mat-error');
+    expect(matError).not.toBeNull();
+    expect(matError?.textContent).toContain('Display name is required (min 2 characters).');
+  });
+
+  it('renders mat-error in DOM and displays error banner when submitting invalid serviceForm', () => {
+    catalogApi.updateService.mockClear();
+    catalogApi.createService.mockClear();
+
+    routeStub.parent.snapshot.data = { catalogTab: 'services' };
+    const servFixture = TestBed.createComponent(StaffServiceCatalogComponent);
+    servFixture.detectChanges();
+
+    const component = servFixture.componentInstance as unknown as {
+      serviceForm: { controls: { name: { setValue: (val: string) => void } } };
+      saveService: () => void;
+      error: () => string | null;
+    };
+
+    component.serviceForm.controls.name.setValue('');
+    component.saveService();
+    servFixture.detectChanges();
+
+    expect(component.error()).toBe('Please correct the highlighted fields before saving.');
+    expect(catalogApi.updateService).not.toHaveBeenCalled();
+    expect(catalogApi.createService).not.toHaveBeenCalled();
+
+    const compiled = servFixture.nativeElement as HTMLElement;
+    const errorBanner = compiled.querySelector('.salon-banner-error');
+    expect(errorBanner?.textContent).toContain('Please correct the highlighted fields before saving.');
+
+    const matErrors = compiled.querySelectorAll('mat-error');
+    const hasNameError = Array.from(matErrors).some((el) => el.textContent?.includes('Service name is required'));
+    expect(hasNameError).toBe(true);
+  });
 });
 
 describe('StaffServiceCatalogComponent - Full Workflow Testing with Realistic Dummy Data', () => {
