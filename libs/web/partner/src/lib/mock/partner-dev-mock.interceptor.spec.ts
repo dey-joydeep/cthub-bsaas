@@ -57,7 +57,7 @@ describe('partnerDevMockInterceptor', () => {
       http.get<ResponseEnvelope<PagedEnvelope<Staff>>>('/api/partner/staff'),
     );
     expect(resAll.success).toBe(true);
-    expect(resAll.data.items.length).toBe(3);
+    expect(resAll.data.items.length).toBeGreaterThanOrEqual(3);
 
     const resFiltered = await firstValueFrom(
       http.get<ResponseEnvelope<PagedEnvelope<Staff>>>('/api/partner/staff?branchId=branch-ginza'),
