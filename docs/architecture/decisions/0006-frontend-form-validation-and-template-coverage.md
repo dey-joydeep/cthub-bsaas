@@ -73,6 +73,14 @@ To protect Angular AOT template source-mapping for code coverage (per Angular CL
 
 A dedicated mechanical check (`scripts/aidd/check-form-validation.mjs`) is added to the repository's verification pipeline (`npm run aidd:check` and CI). It parses templates and component form definitions to ensure validated controls are paired with `<mat-error>` while ignoring optional unvalidated controls.
 
+### 5. Viewport Invariance & Scroll-Resilient Feedback (Toast + Auto-Scroll + Banner)
+
+When forms span beyond a single viewport requiring scrolling to reach action buttons:
+
+1. **Toast Notification (`MatSnackBar`)**: Floating viewport feedback anchored to the bottom of the screen provides instant status and error confirmation regardless of the user's scroll position.
+2. **Auto-Scroll to First Invalid Control**: When client validation fails, `scrollToFirstInvalidControl()` from `@cthub-bsaas/web-core-common` automatically glides the viewport directly to the first invalid control and focuses it, immediately exposing the red border and `<mat-error>`.
+3. **Phone Number Format Enforcement**: Shared `phoneNumberValidator()` (and `PHONE_NUMBER_PATTERN`) in `@cthub-bsaas/web-core-common` enforces valid international/national phone structures and minimum 9 to 15 digits, strictly rejecting dangling hyphens (e.g. `+81-90-`) and under-digit fragments.
+
 ## Consequences and follow-up
 
 - **Developer & Agent Experience**: Eliminates guesswork. Clear compiler and lint errors guide developers when creating new forms.

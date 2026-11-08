@@ -160,6 +160,8 @@
                     <input matInput formControlName="phone" id="staffPhone" />
                     @if (staffForm.controls.phone.hasError('required')) {
                       <mat-error>Phone number is required.</mat-error>
+                    } @else if (staffForm.controls.phone.hasError('pattern')) {
+                      <mat-error>Enter a valid phone number (e.g. +81-90-1234-5678).</mat-error>
                     } @else if (staffForm.controls.phone.hasError('maxlength')) {
                       <mat-error>Phone number cannot exceed 30 characters.</mat-error>
                     }

@@ -70,7 +70,7 @@ export function extractTsValidators(tsContent, controlName) {
   let match;
   while ((match = pattern.exec(tsContent)) !== null) {
     const chunk = match[0];
-    if (/(?:Validators\s*\.\s*(?:required|min|max|minLength|maxLength|pattern|email)|requiredTrue)/i.test(chunk)) {
+    if (/(?:Validators\s*\.\s*(?:required|min|max|minLength|maxLength|pattern|email)|requiredTrue|phoneNumberValidator)/i.test(chunk)) {
       return true;
     }
   }

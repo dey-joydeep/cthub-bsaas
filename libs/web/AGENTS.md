@@ -63,9 +63,9 @@ Read this file before working under `libs/web/**`.
 - Ensure text does not overflow or overlap on mobile/desktop.
 - Inputs need labels and accessible error descriptions.
 - **3-Tier Form Error Architecture (ADR-0006)**:
-  - _Tier 1 (Client Validation)_: Controls declaring validators (`Validators.required`, `Validators.pattern`, `Validators.minLength`, or HTML `required`) **must** include matching `<mat-error>` elements in HTML. Unvalidated optional fields (e.g. notes, search inputs) do not require `<mat-error>`. On invalid form submission, handlers must invoke `form.markAllAsTouched()` AND set `this.error.set('Please correct the highlighted fields before saving.')`.
+  - _Tier 1 (Client Validation)_: Controls declaring validators (`Validators.required`, `Validators.pattern`, `Validators.minLength`, or HTML `required`) **must** include matching `<mat-error>` elements in HTML. Unvalidated optional fields (e.g. notes, search inputs) do not require `<mat-error>`. Phone inputs must use `phoneNumberValidator()` from `@cthub-bsaas/web-core-common` to enforce E.164/international structure and reject trailing hyphens (e.g. `+81-90-`). On invalid form submission, handlers must invoke `form.markAllAsTouched()`, set `this.error.set('Please correct the highlighted fields before saving.')`, show viewport floating toast via `MatSnackBar`, and invoke `scrollToFirstInvalidControl()` to guarantee viewport visibility.
   - _Tier 2 (Field-Level Server Errors)_: HTTP 422 `{ field, message }` responses must be mapped to controls using `applyServerValidationErrors(form, error)` from `@cthub-bsaas/web-core-common`, rendering dynamically via `<mat-error>{{ control.getError('serverError') }}</mat-error>`.
-  - _Tier 3 (Domain / State Conflicts)_: HTTP 409 / 403 cross-entity conflicts (e.g. last owner protection, overlapping bookings) render in the accessible top alert banner (`role="alert"`), preserving the user's draft form inputs.
+  - _Tier 3 (Domain / State Conflicts)_: HTTP 409 / 403 cross-entity conflicts (e.g. last owner protection, overlapping bookings) render in the accessible top alert banner (`role="alert"`) and floating `MatSnackBar`, preserving the user's draft form inputs.
 - Use keyboard-friendly controls and visible focus states.
 
 ## Testing

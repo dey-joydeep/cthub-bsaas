@@ -11,10 +11,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatOptionModule } from '@angular/material/core';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { ActivatedRoute } from '@angular/router';
 import { Observable, forkJoin } from 'rxjs';
 
+import { phoneNumberValidator, scrollToFirstInvalidControl } from '@cthub-bsaas/web-core-common';
 import { DateRangeComponent } from '@cthub-bsaas/web-ui';
 
 import { BranchProfile } from '../salon-owner-settings/models/salon-owner-settings.models';
@@ -51,6 +53,7 @@ const OWNER_PROTECTION_ERROR = 'Cannot deactivate or remove the OWNER role from 
     MatOptionModule,
     MatProgressBarModule,
     MatSelectModule,
+    MatSnackBarModule,
     MatTabsModule,
     DateRangeComponent,
   ],
@@ -63,6 +66,7 @@ export class StaffServiceCatalogComponent {
   private readonly settingsApi = inject(SalonOwnerSettingsApi);
   private readonly catalogApi = inject(StaffServiceCatalogApi);
   private readonly route = inject(ActivatedRoute);
+  private readonly snackBar = inject(MatSnackBar);
 
   protected readonly staffRoles = staffRoles;
   protected readonly weekdays = weekdays;
@@ -112,7 +116,7 @@ export class StaffServiceCatalogComponent {
   protected readonly staffForm = this.fb.nonNullable.group({
     branchIds: this.fb.nonNullable.control<string[]>([], Validators.required),
     displayName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(120)]],
-    phone: ['', [Validators.required, Validators.maxLength(30)]],
+    phone: ['', [Validators.required, phoneNumberValidator(), Validators.maxLength(30)]],
     email: ['', Validators.email],
     status: this.fb.nonNullable.control<'ACTIVE' | 'INACTIVE'>('ACTIVE', Validators.required),
   });
@@ -268,8 +272,7 @@ export class StaffServiceCatalogComponent {
   protected saveStaff(): void {
     if (this.staffForm.invalid) {
       this.staffForm.markAllAsTouched();
-      this.message.set(null);
-      this.error.set('Please correct the highlighted fields before saving.');
+      this.notifyError('Please correct the highlighted fields before saving.');
       return;
     }
 
@@ -338,8 +341,7 @@ export class StaffServiceCatalogComponent {
     }
     if (this.shiftForm.invalid) {
       this.shiftForm.markAllAsTouched();
-      this.message.set(null);
-      this.error.set('Please complete the required shift fields before saving.');
+      this.notifyError('Please complete the required shift fields before saving.');
       return;
     }
     const value = this.shiftForm.getRawValue();
@@ -365,8 +367,7 @@ export class StaffServiceCatalogComponent {
     }
     if (this.leaveForm.invalid) {
       this.leaveForm.markAllAsTouched();
-      this.message.set(null);
-      this.error.set('Please complete the required leave fields before scheduling.');
+      this.notifyError('Please complete the required leave fields before scheduling.');
       return;
     }
     const value = this.leaveForm.getRawValue();
@@ -405,8 +406,7 @@ export class StaffServiceCatalogComponent {
   protected saveCategory(): void {
     if (this.categoryForm.invalid) {
       this.categoryForm.markAllAsTouched();
-      this.message.set(null);
-      this.error.set('Please enter a valid category name and sort order.');
+      this.notifyError('Please enter a valid category name and sort order.');
       return;
     }
     this.persist(
@@ -448,8 +448,7 @@ export class StaffServiceCatalogComponent {
   protected saveService(): void {
     if (this.serviceForm.invalid) {
       this.serviceForm.markAllAsTouched();
-      this.message.set(null);
-      this.error.set('Please correct the highlighted fields before saving.');
+      this.notifyError('Please correct the highlighted fields before saving.');
       return;
     }
 
@@ -625,6 +624,18 @@ export class StaffServiceCatalogComponent {
     });
   }
 
+  private notifyError(errorMessage: string): void {
+    this.message.set(null);
+    this.error.set(errorMessage);
+    this.snackBar.open(errorMessage, 'Close', {
+      duration: 6000,
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom',
+      panelClass: ['salon-snack-error'],
+    });
+    scrollToFirstInvalidControl();
+  }
+
   private persist<T>(
     request: Observable<T>,
     onSuccess?: (value: T) => void,
@@ -639,14 +650,27 @@ export class StaffServiceCatalogComponent {
       next: (value) => {
         onSuccess?.(value);
         this.message.set(successMessage);
+        if (successMessage) {
+          this.snackBar.open(successMessage, 'Close', {
+            duration: 3500,
+            horizontalPosition: 'center',
+            verticalPosition: 'bottom',
+          });
+        }
         this.saving.set(false);
       },
       error: (err: unknown) => {
+        let errorMsg = errorMessage;
         if ((err as { status?: number })?.status === 409) {
-          this.error.set(conflictMessage ?? (err as { error?: { message?: string } })?.error?.message ?? OWNER_PROTECTION_ERROR);
-        } else {
-          this.error.set(errorMessage);
+          errorMsg = conflictMessage ?? (err as { error?: { message?: string } })?.error?.message ?? OWNER_PROTECTION_ERROR;
         }
+        this.error.set(errorMsg);
+        this.snackBar.open(errorMsg, 'Close', {
+          duration: 6000,
+          horizontalPosition: 'center',
+          verticalPosition: 'bottom',
+          panelClass: ['salon-snack-error'],
+        });
         this.saving.set(false);
       },
     });

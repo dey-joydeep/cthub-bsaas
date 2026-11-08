@@ -384,6 +384,27 @@ describe('StaffServiceCatalogComponent', () => {
     expect(matError?.textContent).toContain('Display name is required (min 2 characters).');
   });
 
+  it('flags incomplete phone number "+81-90-" with pattern error, renders mat-error, and blocks save', () => {
+    catalogApi.updateStaff.mockClear();
+    catalogApi.createStaff.mockClear();
+
+    const component = fixture.componentInstance;
+    component.staffForm.controls.phone.setValue('+81-90-');
+    expect(component.staffForm.controls.phone.hasError('pattern')).toBe(true);
+
+    component.saveStaff();
+    fixture.detectChanges();
+
+    expect(component.error()).toBe('Please correct the highlighted fields before saving.');
+    expect(catalogApi.updateStaff).not.toHaveBeenCalled();
+    expect(catalogApi.createStaff).not.toHaveBeenCalled();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const matErrors = compiled.querySelectorAll('mat-error');
+    const hasPhoneError = Array.from(matErrors).some((el) => el.textContent?.includes('Enter a valid phone number'));
+    expect(hasPhoneError).toBe(true);
+  });
+
   it('renders mat-error in DOM and displays error banner when submitting invalid serviceForm', () => {
     catalogApi.updateService.mockClear();
     catalogApi.createService.mockClear();

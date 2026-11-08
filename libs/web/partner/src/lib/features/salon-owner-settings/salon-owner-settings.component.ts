@@ -18,6 +18,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin, of } from 'rxjs';
 
 import { CURRENT_USER } from '@cthub-bsaas/web-core-auth';
+import { phoneNumberValidator } from '@cthub-bsaas/web-core-common';
 import { UserRole } from '@cthub-bsaas/shared';
 
 import {
@@ -267,7 +268,7 @@ export class SalonOwnerSettingsComponent {
   protected readonly branchForm = this.fb.nonNullable.group({
     businessId: ['', Validators.required],
     name: ['', [trimmedRequired(2), Validators.maxLength(120)]],
-    phone: ['', Validators.maxLength(30)],
+    phone: ['', [phoneNumberValidator(), Validators.maxLength(30)]],
     email: ['', Validators.email],
     timezone: ['Asia/Tokyo', [Validators.required, timezoneValidator()]],
     currency: ['JPY', [Validators.required, currencyValidator()]],

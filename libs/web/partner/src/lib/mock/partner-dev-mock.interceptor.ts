@@ -2,6 +2,7 @@ import { HttpErrorResponse, HttpEvent, HttpHandlerFn, HttpInterceptorFn, HttpReq
 import { Observable, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
+import { PHONE_NUMBER_PATTERN } from '@cthub-bsaas/web-core-common';
 import { environment } from '@cthub-bsaas/web-config/environments/partner/environment';
 import type { ResponseEnvelope, PagedEnvelope } from '../features/salon-owner-settings/models/salon-owner-settings.models';
 import type {
@@ -84,7 +85,10 @@ function errorResponse(status: number, message: string): Observable<never> {
   );
 }
 
-export const partnerDevMockInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> => {
+export const partnerDevMockInterceptor: HttpInterceptorFn = (
+  req: HttpRequest<unknown>,
+  next: HttpHandlerFn,
+): Observable<HttpEvent<unknown>> => {
   if (!isPartnerDevMockEnabled()) {
     return next(req);
   }
@@ -226,13 +230,9 @@ export const partnerDevMockInterceptor: HttpInterceptorFn = (req: HttpRequest<un
     let resolvedRoles = input.roles ? [...input.roles] : [];
 
     if (resolvedRoleIds.length > 0 && resolvedRoles.length === 0) {
-      resolvedRoles = mockState.roles
-        .filter((r) => resolvedRoleIds.includes(r.id) && r.roleCode)
-        .map((r) => r.roleCode as string);
+      resolvedRoles = mockState.roles.filter((r) => resolvedRoleIds.includes(r.id) && r.roleCode).map((r) => r.roleCode as string);
     } else if (resolvedRoles.length > 0 && resolvedRoleIds.length === 0) {
-      resolvedRoleIds = mockState.roles
-        .filter((r) => r.roleCode && resolvedRoles.includes(r.roleCode))
-        .map((r) => r.id);
+      resolvedRoleIds = mockState.roles.filter((r) => r.roleCode && resolvedRoles.includes(r.roleCode)).map((r) => r.id);
     }
 
     const isCurrentActiveOwner = (target.roles.includes('OWNER') || target.roleIds?.includes('role-owner')) && target.status === 'ACTIVE';
@@ -290,6 +290,10 @@ export const partnerDevMockInterceptor: HttpInterceptorFn = (req: HttpRequest<un
       if (!target) return errorResponse(404, 'Staff not found');
       const input = req.body as StaffInput;
 
+      if (input.phone && !PHONE_NUMBER_PATTERN.test(input.phone.trim())) {
+        return errorResponse(422, 'Phone number format is invalid.');
+      }
+
       if (target.roles.includes('OWNER') && target.status === 'ACTIVE' && input.status === 'INACTIVE') {
         const otherActiveOwners = mockState.staff.filter((m) => m.id !== staffId && m.roles.includes('OWNER') && m.status === 'ACTIVE');
         if (otherActiveOwners.length === 0) {
@@ -321,6 +325,11 @@ export const partnerDevMockInterceptor: HttpInterceptorFn = (req: HttpRequest<un
 
     if (method === 'POST') {
       const input = req.body as StaffInput;
+
+      if (input.phone && !PHONE_NUMBER_PATTERN.test(input.phone.trim())) {
+        return errorResponse(422, 'Phone number format is invalid.');
+      }
+
       const now = new Date().toISOString();
       const newStaff: Staff = {
         id: `staff-${Date.now()}`,
