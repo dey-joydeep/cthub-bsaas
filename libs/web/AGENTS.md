@@ -62,6 +62,10 @@ Read this file before working under `libs/web/**`.
 - **Micro-Alignment & Typography/Icon Baseline Invariants**: Any container pairing an icon with text (navigation links, buttons, chips, metadata rows) must strictly use `display: inline-flex; align-items: center; gap: 0.5rem;` (or Tailwind `inline-flex items-center gap-2`). Icons must declare explicit matching dimensions (`font-size: 1.25rem; width: 1.25rem; height: 1.25rem; flex-shrink: 0; line-height: 1;`) to eliminate baseline drift and staggered floating.
 - Ensure text does not overflow or overlap on mobile/desktop.
 - Inputs need labels and accessible error descriptions.
+- **3-Tier Form Error Architecture (ADR-0006)**:
+  - _Tier 1 (Client Validation)_: Controls declaring validators (`Validators.required`, `Validators.pattern`, `Validators.minLength`, or HTML `required`) **must** include matching `<mat-error>` elements in HTML. Unvalidated optional fields (e.g. notes, search inputs) do not require `<mat-error>`. On invalid form submission, handlers must invoke `form.markAllAsTouched()` AND set `this.error.set('Please correct the highlighted fields before saving.')`.
+  - _Tier 2 (Field-Level Server Errors)_: HTTP 422 `{ field, message }` responses must be mapped to controls using `applyServerValidationErrors(form, error)` from `@cthub-bsaas/web-core-common`, rendering dynamically via `<mat-error>{{ control.getError('serverError') }}</mat-error>`.
+  - _Tier 3 (Domain / State Conflicts)_: HTTP 409 / 403 cross-entity conflicts (e.g. last owner protection, overlapping bookings) render in the accessible top alert banner (`role="alert"`), preserving the user's draft form inputs.
 - Use keyboard-friendly controls and visible focus states.
 
 ## Testing
@@ -69,15 +73,18 @@ Read this file before working under `libs/web/**`.
 - Unit tests live under `src/**/*.spec.ts`.
 - Keep tests shallow and deterministic.
 - Use Angular-compatible test utilities.
+- **Mandatory Negative DOM Tests (ADR-0006)**: Every component managing a `FormGroup` must contain automated negative unit tests in its `*.spec.ts` asserting that submitting an invalid form renders `<mat-error>` in the DOM, renders the accessible `.salon-banner-error` alert, and does not invoke the API save method.
+- **Prohibition of `TestBed.overrideComponent` (ADR-0006 & Angular Issue #30127)**: Never use `TestBed.overrideComponent()` in unit tests. Overriding component metadata strips AOT compiler metadata and breaks source-mapping for template code coverage. Mock dependencies via clean Angular DI providers (`{ provide: Service, useValue: mock }`) or standalone dummy imports instead.
+- Run `npm run aidd:form-validation` to mechanically audit form templates and spec files across the workspace.
 - Integration-style web service tests may live under `tests/integration/**/*.it-spec.ts` when meaningful and configured.
 - E2E belongs under app-level projects in `apps/e2e/**`.
 - For visible changes, inspect the affected route when an app can run. Check console errors, hydration, responsive layout, keyboard access, and changed states; preserve browser evidence for QA.
 - **Visual Verification Requirement**: Inspecting the text-only Accessibility Tree or DOM nodes (`take_snapshot`) does NOT substitute for visual verification. Agents must actively review captured rendered screenshots (`take_screenshot`) against the **5-Point Visual Heuristic Audit Checklist** before declaring any UI task complete:
-  1. *Vertical Viewport & Fold*: Is the primary working surface (master list, form, table) visible above the fold on desktop without scrolling? Is the combined header stack $\le 120\text{px}$?
-  2. *Action Deduplication*: Does every primary action have a single logical home without redundant copies in parent banners and child toolbars?
-  3. *Micro-Alignment*: Are all icon-text pairings baseline-centered with `inline-flex items-center` and matching icon bounding boxes?
-  4. *Negative Space & Canvas*: Are horizontal and vertical dead gutters eliminated while preserving readable control widths ($\ge 220\text{px}$)?
-  5. *Contextual Scoping*: Are all visible actions and navigation elements scoped strictly to the active persona and active tab?
+  1. _Vertical Viewport & Fold_: Is the primary working surface (master list, form, table) visible above the fold on desktop without scrolling? Is the combined header stack $\le 120\text{px}$?
+  2. _Action Deduplication_: Does every primary action have a single logical home without redundant copies in parent banners and child toolbars?
+  3. _Micro-Alignment_: Are all icon-text pairings baseline-centered with `inline-flex items-center` and matching icon bounding boxes?
+  4. _Negative Space & Canvas_: Are horizontal and vertical dead gutters eliminated while preserving readable control widths ($\ge 220\text{px}$)?
+  5. _Contextual Scoping_: Are all visible actions and navigation elements scoped strictly to the active persona and active tab?
 - When implementing an existing design, use its source or checked-in spec. Report an unavailable design source rather than guessing precise tokens.
 
 ## Dev Tooling And Mock Isolation

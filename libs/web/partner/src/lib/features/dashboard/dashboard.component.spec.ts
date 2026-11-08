@@ -1,28 +1,13 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { DashboardComponent } from './dashboard.component';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { Component } from '@angular/core';
-import { DashboardService } from './dashboard.service';
 import { of } from 'rxjs';
+import { describe, expect, it, vi } from 'vitest';
+
 import { PLATFORM_UTILS_TOKEN } from '@cthub-bsaas/web-core-platform';
-
-@Component({ selector: 'app-stats-widget', template: '' })
-class StatsWidgetStub {}
-
-@Component({ selector: 'app-subscription-chart', template: '' })
-class BsaasSubscriptionChartStub {}
-
-@Component({ selector: 'app-revenue-chart', template: '' })
-class BsaasRevenueChartStub {}
-
-@Component({ selector: 'app-customer-stats', template: '' })
-class BsaasCustomerStatsStub {}
-
-@Component({ selector: 'app-renewals-list', template: '' })
-class BsaasRenewalsListStub {}
-
-@Component({ selector: 'app-product-sales-chart', template: '' })
-class BsaasProductSalesChartStub {}
+import { DashboardComponent } from './dashboard.component';
+import { DashboardService } from './dashboard.service';
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
@@ -43,23 +28,12 @@ describe('DashboardComponent', () => {
       imports: [DashboardComponent],
       providers: [
         provideAnimations(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
         { provide: DashboardService, useValue: mockDashboardService },
         { provide: PLATFORM_UTILS_TOKEN, useValue: mockPlatformUtils },
       ],
-    })
-      .overrideComponent(DashboardComponent, {
-        set: {
-          imports: [
-            StatsWidgetStub,
-            BsaasSubscriptionChartStub,
-            BsaasRevenueChartStub,
-            BsaasCustomerStatsStub,
-            BsaasRenewalsListStub,
-            BsaasProductSalesChartStub,
-          ],
-        },
-      })
-      .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(DashboardComponent);
     component = fixture.componentInstance;

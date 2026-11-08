@@ -120,6 +120,8 @@
     "aidd:source-checkpoint": "node scripts/aidd/source-checkpoint.mjs",
     "aidd:format:changed": "node scripts/aidd/check-changed-format.mjs",
     "aidd:format:test": "node --test scripts/aidd/check-changed-format.test.mjs",
+    "aidd:form-validation": "node scripts/aidd/check-form-validation.mjs",
+    "aidd:form-validation:test": "node --test scripts/aidd/check-form-validation.test.mjs",
     "aidd:db-guard:test": "node --import tsx --test scripts/aidd/test-database-target.test.mjs",
     "sonar": "sonar-scanner-npm",
     "sonar:branch": "pwsh -NoProfile -Command \"npx sonar-scanner-npm -Dsonar.branch.name=(git branch --show-current)\""
