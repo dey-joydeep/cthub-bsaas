@@ -74,12 +74,12 @@
   padding: 0.75rem 0;
 }
 .header-content {
-  max-width: 1200px;
+  max-width: 1680px;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1.5rem;
+  padding: 0 2rem;
 }
 .logo a {
   font-size: 1.5rem;
@@ -193,8 +193,8 @@
 }
 /* Main content styles */
 .app-content {
-  padding: 1.5rem;
-  max-width: 1200px;
+  padding: 1.25rem 2rem;
+  max-width: 1680px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;

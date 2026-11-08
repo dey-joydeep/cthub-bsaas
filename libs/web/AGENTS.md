@@ -54,7 +54,9 @@ Read this file before working under `libs/web/**`.
 
 - Match existing app/design-system patterns.
 - Use Angular Material and local UI components where available.
-- Avoid marketing-style layouts for operational SaaS surfaces.
+- Avoid marketing-style layouts for operational SaaS surfaces. Operational consoles, master-detail workspaces, and catalog screens must use fluid or high-ceiling responsive containers (`max-width: 1680px` or `100%` with `padding: 1.25rem 2rem`), never narrow centered marketing boxes (`max-width: 1200px`) that leave dead gutters (>20% of desktop viewport).
+- Avoid compounding multi-column grids (e.g., 2-column cards holding 2-column forms). Maintain minimum readable widths: `datetime-local` pickers, select dropdowns, and date-range controls require $\ge 220\text{px}$ minimum to prevent truncation of placeholders (`dd/mm/yyyy --:--`).
+- Master sidebars must maintain $320\text{px}$–$380\text{px}$ width with comfortable vertical rhythm and prevent tight text wrapping on cards.
 - Ensure text does not overflow or overlap on mobile/desktop.
 - Inputs need labels and accessible error descriptions.
 - Use keyboard-friendly controls and visible focus states.
@@ -67,6 +69,7 @@ Read this file before working under `libs/web/**`.
 - Integration-style web service tests may live under `tests/integration/**/*.it-spec.ts` when meaningful and configured.
 - E2E belongs under app-level projects in `apps/e2e/**`.
 - For visible changes, inspect the affected route when an app can run. Check console errors, hydration, responsive layout, keyboard access, and changed states; preserve browser evidence for QA.
+- **Visual Verification Requirement**: Inspecting the text-only Accessibility Tree or DOM nodes (`take_snapshot`) does NOT substitute for visual verification. Agents must actively review the captured rendered screenshot (`take_screenshot`) for viewport utilization, negative space distribution, layout balance, and lack of truncated or squeezed form controls before declaring a UI task complete.
 - When implementing an existing design, use its source or checked-in spec. Report an unavailable design source rather than guessing precise tokens.
 
 ## Dev Tooling And Mock Isolation

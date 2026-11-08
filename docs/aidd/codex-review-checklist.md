@@ -40,6 +40,8 @@ For a merge gate, the Codex reviewer must be independent of the implementer. Sec
 - [ ] Loading, empty, error, validation, and success states are handled.
 - [ ] Shared UI was not duplicated in persona-specific libraries.
 - [ ] Accessibility and keyboard behavior were considered for UI changes.
+- [ ] Canvas & Viewport Ergonomics: Operational SaaS pages use fluid or high-ceiling responsive containers (`max-width: 1680px` or `100%`), avoiding narrow marketing-width bottlenecks (`max-width: 1200px`) that create dead whitespace gutters (>20% of desktop viewport).
+- [ ] Visual Inspection & Input Density: The rendered UI was visually inspected via screenshot on a desktop viewport. No cramped nested grid splits, no awkward line-wrapping on list cards, and form inputs (especially `datetime-local` and dropdowns) meet minimum readable widths ($\ge 220\text{px}$) without truncation or clipping. Text-only DOM accessibility trees do not replace visual screenshot review.
 
 ## Security and privacy
 
