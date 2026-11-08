@@ -3,7 +3,13 @@
 ## Route And Screen
 
 - Route: `/owner/staff`
-- Primary screens: staff directory, staff create/edit, role assignment, branch assignment, schedule, skills.
+- Layout Architecture: **Master-Detail with Sub-Tabs**
+  - **Left Master Sidebar (320px–360px)**: Real-time search input, branch filter chip, `+ New Staff` action button, and scrollable list of staff members (avatar, display name, role chips, active status badge).
+  - **Right Detail Workspace**: Selected staff member header with quick summary chips, hosting **4 specialized sub-tabs**:
+    1. **Profile & HR**: Display name, contact phone/email, active status, branch assignments multi-select, and confidential personal HR expansion panel (legal name, residential address, emergency contact, DOB, employment type, payout method) with a single `Save Profile` button.
+    2. **Roles & Capabilities**: Business role assignment checkboxes, system role badges, and the dynamic Assigned Capabilities Guide shield with a single `Save Roles` button.
+    3. **Services & Skills**: Service qualification catalog checkboxes with a single `Save Skills` button.
+    4. **Schedule & Leave**: Weekly working schedule intervals with auto-inherited branch timezone (displayed as a read-only badge), active leave blocks list, and leave scheduling subform featuring a multi-line `<textarea>` reason field.
 - Wireframes: [Staff Wireframes](../WIREFRAMES/staff.md).
 
 ## User Goals

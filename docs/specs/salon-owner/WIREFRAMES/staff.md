@@ -15,6 +15,16 @@ Define the visual baseline for staff directory, profile editing, role/branch/ski
 - [API Endpoint Map](../API/endpoint-map.md#staff)
 - [Staff Roster Conflict Draw.io](../DIAGRAMS/drawio/staff-roster-conflict-flow.drawio)
 
+## Layout Structure
+
+The operational desktop screen implements a **Master-Detail with Sub-Tabs** layout:
+- **Master Column (Left, 320px–360px)**: Persistent directory panel featuring search, branch filter, `+ New Staff` action, and member selection cards.
+- **Detail Workspace (Right)**: Selected staff overview header and 4 dedicated operational sub-tabs:
+  1. `Profile & HR`: Contact, branch multi-select, and confidential personal HR expansion panel (single `Save Profile` button).
+  2. `Roles & Capabilities`: Role multi-select with dynamic capability guide (single `Save Roles` button).
+  3. `Services & Skills`: Service qualification checkboxes (single `Save Skills` button).
+  4. `Schedule & Leave`: Weekly shift editor (timezone inherited from branch) and leave blocks with `<textarea>` reason.
+
 ## Target Penpot Boards
 
 | Screen state      | Board name                        | Purpose                                              |
