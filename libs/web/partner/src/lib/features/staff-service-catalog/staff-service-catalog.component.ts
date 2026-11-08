@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -43,6 +44,7 @@ const OWNER_PROTECTION_ERROR = 'Cannot deactivate or remove the OWNER role from 
     MatButtonModule,
     MatCardModule,
     MatCheckboxModule,
+    MatExpansionModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
@@ -83,6 +85,22 @@ export class StaffServiceCatalogComponent {
   protected readonly services = signal<readonly Service[]>([]);
   protected readonly selectedStaff = signal<Staff | null>(null);
   protected readonly selectedService = signal<Service | null>(null);
+  protected readonly staffSearchTerm = signal('');
+  protected readonly staffBranchFilter = signal<string>('ALL');
+  protected readonly selectedStaffSubTabIndex = signal(0);
+  protected readonly filteredStaff = computed(() => {
+    const term = this.staffSearchTerm().trim().toLowerCase();
+    const branchFilter = this.staffBranchFilter();
+    return this.staff().filter((member) => {
+      const matchesBranch = branchFilter === 'ALL' || member.branchIds.includes(branchFilter);
+      if (!matchesBranch) return false;
+      if (!term) return true;
+      const matchesName = member.displayName.toLowerCase().includes(term);
+      const matchesEmail = member.email ? member.email.toLowerCase().includes(term) : false;
+      const matchesPhone = member.phone.toLowerCase().includes(term);
+      return matchesName || matchesEmail || matchesPhone;
+    });
+  });
   protected readonly hasBranches = computed(() => this.branches().length > 0);
   protected readonly hasStaff = computed(() => this.staff().length > 0);
   protected readonly hasServices = computed(() => this.services().length > 0);
@@ -158,6 +176,12 @@ export class StaffServiceCatalogComponent {
         this.roleForm.controls.roleIds.setValue(mappedIds, { emitEvent: false });
       }
     });
+    this.shiftForm.controls.branchId.valueChanges.subscribe((branchId) => {
+      if (branchId) {
+        const tz = this.branchTimezone(branchId);
+        this.shiftForm.controls.timezone.setValue(tz, { emitEvent: false });
+      }
+    });
     this.loadCatalog();
   }
 
@@ -206,7 +230,7 @@ export class StaffServiceCatalogComponent {
       status: 'ACTIVE',
     });
     const defaultStylist = this.roles().find((r) => r.roleCode === 'STYLIST')?.id;
-    const defaultRoleIds = defaultStylist ? [defaultStylist] : (this.roles()[0] ? [this.roles()[0].id] : []);
+    const defaultRoleIds = defaultStylist ? [defaultStylist] : this.roles()[0] ? [this.roles()[0].id] : [];
     this.selectedRoleIds.set(defaultRoleIds);
     this.roleForm.reset({
       roleIds: defaultRoleIds,
@@ -220,6 +244,7 @@ export class StaffServiceCatalogComponent {
       endsAt: '',
       reason: '',
     });
+    this.selectedStaffSubTabIndex.set(0);
   }
 
   protected loadLeaveBlocks(staffId: string): void {
@@ -306,10 +331,11 @@ export class StaffServiceCatalogComponent {
       return;
     }
     const value = this.shiftForm.getRawValue();
+    const effectiveTimezone = this.branchTimezone(value.branchId);
     this.persist(
       this.catalogApi.replaceStaffShifts(member.id, {
         branchId: value.branchId,
-        timezone: value.timezone,
+        timezone: effectiveTimezone,
         days: [{ dayOfWeek: value.dayOfWeek, intervals: [{ start: value.start, end: value.end }] }],
       }),
       undefined,
@@ -447,6 +473,31 @@ export class StaffServiceCatalogComponent {
       'Service status updated.',
       'Service status could not be updated.',
     );
+  }
+
+  protected onStaffSearch(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.staffSearchTerm.set(target.value);
+  }
+
+  protected clearStaffSearch(): void {
+    this.staffSearchTerm.set('');
+  }
+
+  protected onStaffBranchFilterChange(branchId: string): void {
+    this.staffBranchFilter.set(branchId);
+  }
+
+  protected getInitials(name: string): string {
+    if (!name) return '??';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  protected staffBranchNames(member: Staff): string {
+    if (!member.branchIds || member.branchIds.length === 0) return 'No branch assigned';
+    return member.branchIds.map((id) => this.branchName(id)).join(', ');
   }
 
   protected branchName(branchId: string): string {

@@ -129,7 +129,12 @@ describe('StaffServiceCatalogComponent', () => {
     );
     catalogApi.listPermissions.mockReturnValue(
       of([
-        { code: 'appointments.assigned.manage', name: 'Assigned Appointments', category: 'Appointments', description: 'Manage chair appointments' },
+        {
+          code: 'appointments.assigned.manage',
+          name: 'Assigned Appointments',
+          category: 'Appointments',
+          description: 'Manage chair appointments',
+        },
         { code: 'salon.business.manage', name: 'Manage Business', category: 'Settings', description: 'Manage business settings' },
       ]),
     );
@@ -212,6 +217,12 @@ describe('StaffServiceCatalogComponent', () => {
   });
 
   it('displays dynamic business roles and capabilities guide for selected staff', () => {
+    const component = fixture.componentInstance as unknown as {
+      selectedStaffSubTabIndex: { set: (idx: number) => void };
+    };
+    component.selectedStaffSubTabIndex.set(1);
+    fixture.detectChanges();
+
     expect(catalogApi.listRoles).toHaveBeenCalled();
     expect(catalogApi.listPermissions).toHaveBeenCalled();
     expect(fixture.nativeElement.textContent).toContain('Stylist & Hair Artist');
@@ -271,7 +282,11 @@ describe('StaffServiceCatalogComponent', () => {
     expect(catalogApi.listStaffLeaveBlocks).toHaveBeenCalledWith('staff-1');
     const component = fixture.componentInstance as unknown as {
       leaveBlocks: () => readonly { id: string; reason: string }[];
+      selectedStaffSubTabIndex: { set: (idx: number) => void };
     };
+    component.selectedStaffSubTabIndex.set(3);
+    fixture.detectChanges();
+
     expect(component.leaveBlocks().length).toBe(1);
     expect(component.leaveBlocks()[0].reason).toBe('Personal');
     expect(fixture.nativeElement.textContent).toContain('Personal');
@@ -636,9 +651,11 @@ describe('StaffServiceCatalogComponent - Full Workflow Testing with Realistic Du
     const internal = dummyComponent as unknown as {
       selectStaff: (member: (typeof dummyStaff)[0]) => void;
       leaveBlocks: () => readonly StaffLeaveBlock[];
+      selectedStaffSubTabIndex: { set: (idx: number) => void };
     };
 
     internal.selectStaff(dummyStaff[2]);
+    internal.selectedStaffSubTabIndex.set(3);
     dummyFixture.detectChanges();
 
     expect(internal.leaveBlocks().length).toBe(0);
@@ -728,5 +745,58 @@ describe('StaffServiceCatalogComponent - Full Workflow Testing with Realistic Du
     dummyFixture.detectChanges();
 
     expect(internal.error()).toBe('Cannot deactivate or remove the OWNER role from the last active owner of the business.');
+  });
+
+  it('filters staff members in master sidebar by search query', () => {
+    const internal = dummyComponent as unknown as {
+      staffSearchTerm: { set: (val: string) => void };
+      filteredStaff: () => typeof dummyStaff;
+    };
+
+    expect(internal.filteredStaff().length).toBe(3);
+
+    internal.staffSearchTerm.set('Kenji');
+    dummyFixture.detectChanges();
+
+    const filtered = internal.filteredStaff();
+    expect(filtered.length).toBe(1);
+    expect(filtered[0].displayName).toBe('Kenji Sato (Branch Manager)');
+
+    internal.staffSearchTerm.set('nonexistent');
+    dummyFixture.detectChanges();
+    expect(internal.filteredStaff().length).toBe(0);
+    expect(dummyFixture.nativeElement.textContent).toContain('No staff members match the selected criteria.');
+  });
+
+  it('filters staff members in master sidebar by branch selection', () => {
+    const internal = dummyComponent as unknown as {
+      staffBranchFilter: { set: (val: string) => void };
+      filteredStaff: () => typeof dummyStaff;
+    };
+
+    internal.staffBranchFilter.set('branch-tokyo-shibuya');
+    dummyFixture.detectChanges();
+
+    const filtered = internal.filteredStaff();
+    expect(filtered.length).toBe(2);
+    expect(filtered.some((m) => m.displayName.includes('Elena'))).toBe(true);
+    expect(filtered.some((m) => m.displayName.includes('Kenji'))).toBe(true);
+    expect(filtered.some((m) => m.displayName.includes('Yuki'))).toBe(false);
+  });
+
+  it('auto-inherits branch timezone when shift branch selection changes', () => {
+    const internal = dummyComponent as unknown as {
+      shiftForm: {
+        controls: {
+          branchId: { setValue: (val: string) => void; value: string };
+          timezone: { value: string };
+        };
+      };
+    };
+
+    internal.shiftForm.controls.branchId.setValue('branch-osaka-namba');
+    dummyFixture.detectChanges();
+
+    expect(internal.shiftForm.controls.timezone.value).toBe('Asia/Tokyo');
   });
 });
