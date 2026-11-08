@@ -100,7 +100,7 @@ describe('AppComponent', () => {
     };
 
     expect(app.canManageBranches).toBe(true);
-    expect(app.settingsRoute).toBe('/owner/branches');
+    expect(app.settingsRoute).toBe('/business/branches');
   });
 
   it('suppresses settings route for non-manager staff', () => {

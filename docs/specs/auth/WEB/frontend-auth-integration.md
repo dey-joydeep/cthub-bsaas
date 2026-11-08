@@ -23,7 +23,7 @@ Backend issues:
 - In addition to user identity and tenant scoping, access tokens signed for staff with active manager positions include `managedBranchIds: string[]` and `canManageBranches: boolean`.
 - For browser clients relying on HttpOnly cookies (`bsaas_at`), `POST /auth/login` and `POST /auth/login/totp` deliver an authenticated `user` payload summary with `canManageBranches` and `managedBranchIds` directly in the response body.
 - A dedicated `GET /auth/me` endpoint allows the frontend auth state (`AuthService`) to hydrate or refresh user capabilities from the active HttpOnly cookie session upon application bootstrap, tab reloads, or storage clearance.
-- Route guards (`roleGuard`) and navigation components use these hydrated capabilities to gate access to branch management features (such as `/owner/branches`) and redirect unauthorized users to `/unauthorized`.
+- Route guards (`roleGuard`) and navigation components use these hydrated capabilities to gate access to branch management features (such as `/business/branches`) and redirect unauthorized users to `/unauthorized`.
 
 ## CSRF/XSRF
 

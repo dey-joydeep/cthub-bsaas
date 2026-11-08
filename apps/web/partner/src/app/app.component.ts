@@ -66,7 +66,7 @@ export class AppComponent implements OnInit, OnDestroy {
       return '/settings';
     }
     if (this.hasRole('staff') && this.canManageBranches) {
-      return '/owner/branches';
+      return '/business/branches';
     }
     return null;
   }

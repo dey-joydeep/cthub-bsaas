@@ -2,7 +2,7 @@
 
 ## Route And Screen
 
-- Route: `/owner/inventory`
+- Route: `/business/inventory`
 - Primary screens: product catalog, stock by branch, purchase intake, adjustment, transfer, low-stock alerts.
 - Wireframes: [Inventory Wireframes](../WIREFRAMES/inventory.md).
 

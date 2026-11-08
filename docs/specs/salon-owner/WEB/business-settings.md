@@ -2,7 +2,7 @@
 
 ## Route And Screen
 
-- Route: `/owner/settings/business`
+- Route: `/business/settings`
 - Primary screen: Business profile and policy settings.
 - Secondary panels: registration, tax, currency, timezone, operational defaults, audit history.
 - Wireframes: [Business Settings Wireframes](../WIREFRAMES/business-settings.md).

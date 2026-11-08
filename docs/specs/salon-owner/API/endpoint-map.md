@@ -110,7 +110,8 @@ This document maps feature specifications to OpenAPI operations. The executable 
 
 ## Dashboard
 
-| Capability       | Method | Path                        | Operation ID          |
-| ---------------- | ------ | --------------------------- | --------------------- |
-| Owner dashboard  | `GET`  | `/partner/dashboard/owner`  | `getOwnerDashboard`   |
-| Dashboard alerts | `GET`  | `/partner/dashboard/alerts` | `listDashboardAlerts` |
+| Capability         | Method | Path                           | Operation ID            |
+| ------------------ | ------ | ------------------------------ | ----------------------- |
+| Business dashboard | `GET`  | `/partner/dashboard/business`  | `getBusinessDashboard`  |
+| Owner dashboard    | `GET`  | `/partner/dashboard/owner`     | `getOwnerDashboard`     |
+| Dashboard alerts   | `GET`  | `/partner/dashboard/alerts`    | `listDashboardAlerts`   |

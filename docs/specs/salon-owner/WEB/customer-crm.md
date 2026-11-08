@@ -2,7 +2,7 @@
 
 ## Route And Screen
 
-- Route: `/owner/customers`
+- Route: `/business/customers`
 - Primary screens: customer search, profile, visit history, notes, consent, duplicate merge.
 - Wireframes: [Customer CRM Wireframes](../WIREFRAMES/customer-crm.md).
 

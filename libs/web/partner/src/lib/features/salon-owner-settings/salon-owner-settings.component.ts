@@ -223,7 +223,8 @@ export class SalonOwnerSettingsComponent {
   private hoursSaveVersion = 0;
   private holidaySaveVersion = 0;
   private policySaveVersion = 0;
-  private readonly branchRouteMode = this.route?.parent?.routeConfig?.path === 'owner/branches';
+  private readonly branchRouteMode =
+    this.route?.parent?.routeConfig?.path === 'business/branches' || this.route?.parent?.routeConfig?.path === 'owner/branches';
   private readonly currentRole = toSignal(this.currentUser?.currentUser$ ?? of(null), {
     initialValue: null,
   });

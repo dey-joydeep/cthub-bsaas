@@ -2,7 +2,7 @@
 
 ## Route And Screen
 
-- Route: `/owner/staff`
+- Route: `/business/staff`
 - Layout Architecture: **Master-Detail with Sub-Tabs**
   - **Left Master Sidebar (320px–360px)**: Real-time search input, branch filter chip, `+ New Staff` action button, and scrollable list of staff members (avatar, display name, role chips, active status badge).
   - **Right Detail Workspace**: Selected staff member header with quick summary chips, hosting **4 specialized sub-tabs**:

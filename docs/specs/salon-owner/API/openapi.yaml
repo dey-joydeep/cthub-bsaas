@@ -2259,10 +2259,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PagedEnvelope'
+  /partner/dashboard/business:
+    get:
+      tags: [Dashboard]
+      operationId: getBusinessDashboard
+      parameters:
+        - $ref: '#/components/parameters/BranchIdQuery'
+        - $ref: '#/components/parameters/DateQuery'
+      responses:
+        '200':
+          description: Business dashboard read model.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
   /partner/dashboard/owner:
     get:
       tags: [Dashboard]
       operationId: getOwnerDashboard
+      deprecated: true
+      description: Legacy alias for /partner/dashboard/business.
       parameters:
         - $ref: '#/components/parameters/BranchIdQuery'
         - $ref: '#/components/parameters/DateQuery'
