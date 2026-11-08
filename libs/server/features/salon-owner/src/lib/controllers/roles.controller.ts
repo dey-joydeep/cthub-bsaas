@@ -4,24 +4,24 @@ import { CurrentUser, ResponseEnvelopeInterceptor } from '@cthub-bsaas/server-co
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 
 import { BusinessRoleInputDto, BusinessRoleQueryDto } from '../dto/staff-service-catalog.dto';
-import { StaffServiceCatalogService } from '../services/staff-service-catalog.service';
+import { StaffService } from '../services/staff.service';
 
 @ApiTags('Roles')
 @UseInterceptors(ResponseEnvelopeInterceptor)
 @Controller({ path: 'partner/roles', version: VERSION_NEUTRAL })
 export class RolesController {
-  constructor(private readonly catalog: StaffServiceCatalogService) {}
+  constructor(private readonly staffService: StaffService) {}
 
   @Get()
   @ApiOperation({ operationId: 'listBusinessRoles' })
   listBusinessRoles(@CurrentUser() user: AuthenticatedUser, @Query() query: BusinessRoleQueryDto) {
-    return this.catalog.listBusinessRoles({ user }, query);
+    return this.staffService.listBusinessRoles({ user }, query);
   }
 
   @Post()
   @ApiOperation({ operationId: 'createBusinessRole' })
   createBusinessRole(@CurrentUser() user: AuthenticatedUser, @Body() body: BusinessRoleInputDto) {
-    return this.catalog.createBusinessRole({ user }, body);
+    return this.staffService.createBusinessRole({ user }, body);
   }
 
   @Put(':roleId')
@@ -31,12 +31,12 @@ export class RolesController {
     @Param('roleId', new ParseUUIDPipe()) roleId: string,
     @Body() body: BusinessRoleInputDto,
   ) {
-    return this.catalog.updateBusinessRole({ user }, roleId, body);
+    return this.staffService.updateBusinessRole({ user }, roleId, body);
   }
 
   @Delete(':roleId')
   @ApiOperation({ operationId: 'deleteBusinessRole' })
   deleteBusinessRole(@CurrentUser() user: AuthenticatedUser, @Param('roleId', new ParseUUIDPipe()) roleId: string) {
-    return this.catalog.deleteBusinessRole({ user }, roleId);
+    return this.staffService.deleteBusinessRole({ user }, roleId);
   }
 }

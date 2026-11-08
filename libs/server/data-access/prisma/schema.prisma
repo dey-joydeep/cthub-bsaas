@@ -121,6 +121,7 @@ model SalonBranch {
   staff            SalonOwnerStaffBranch[]
   shifts           SalonOwnerStaffShift[]
   leaveBlocks      SalonOwnerStaffLeaveBlock[]
+  serviceOverrides SalonOwnerBranchServiceOverride[]
   createdAt        DateTime                    @default(now()) @map("created_at")
   updatedAt        DateTime                    @updatedAt @map("updated_at")
 
@@ -238,6 +239,7 @@ model SalonOwnerService {
   taxRatePercent  Decimal                   @map("tax_rate_percent") @db.Decimal(5, 2)
   status          SalonOwnerStatus          @default(ACTIVE)
   skills          SalonOwnerStaffSkill[]
+  branchOverrides SalonOwnerBranchServiceOverride[]
   createdAt       DateTime                  @default(now()) @map("created_at")
   updatedAt       DateTime                  @updatedAt @map("updated_at")
 
@@ -245,6 +247,24 @@ model SalonOwnerService {
   @@index([businessId, status])
   @@index([categoryId])
   @@map("salon_owner_service")
+}
+
+model SalonOwnerBranchServiceOverride {
+  id                      String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  serviceId               String            @map("service_id") @db.Uuid
+  branchId                String            @map("branch_id") @db.Uuid
+  service                 SalonOwnerService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  branch                  SalonBranch       @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  priceOverride           Decimal?          @map("price_override") @db.Decimal(10, 2)
+  durationOverrideMinutes Int?              @map("duration_override_minutes")
+  visibleOnline           Boolean           @default(true) @map("visible_online")
+  isActive                Boolean           @default(true) @map("is_active")
+  createdAt               DateTime          @default(now()) @map("created_at")
+  updatedAt               DateTime          @updatedAt @map("updated_at")
+
+  @@unique([serviceId, branchId])
+  @@index([branchId])
+  @@map("salon_owner_branch_service_override")
 }
 
 model SalonOwnerCustomer {

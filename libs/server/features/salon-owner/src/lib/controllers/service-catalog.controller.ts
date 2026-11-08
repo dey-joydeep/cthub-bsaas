@@ -4,18 +4,19 @@ import { CurrentUser, ResponseEnvelopeInterceptor } from '@cthub-bsaas/server-co
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 
 import {
+  BranchServiceOverrideInputDto,
   ServiceCategoryInputDto,
   ServiceInputDto,
   ServiceStatusInputDto,
   StaffEligibilityInputDto,
 } from '../dto/staff-service-catalog.dto';
-import { StaffServiceCatalogService } from '../services/staff-service-catalog.service';
+import { ServiceCatalogService } from '../services/service-catalog.service';
 
 @ApiTags('Service Catalog')
 @UseInterceptors(ResponseEnvelopeInterceptor)
 @Controller({ path: 'partner', version: VERSION_NEUTRAL })
 export class ServiceCatalogController {
-  constructor(private readonly catalog: StaffServiceCatalogService) {}
+  constructor(private readonly catalog: ServiceCatalogService) {}
 
   @Get('service-categories')
   @ApiOperation({ operationId: 'listServiceCategories' })
@@ -82,5 +83,16 @@ export class ServiceCatalogController {
     @Body() body: StaffEligibilityInputDto,
   ) {
     return this.catalog.replaceServiceStaffEligibility({ user }, serviceId, body);
+  }
+
+  @Put('services/:serviceId/branches/:branchId')
+  @ApiOperation({ operationId: 'updateBranchServiceOverride' })
+  updateBranchServiceOverride(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('serviceId', new ParseUUIDPipe()) serviceId: string,
+    @Param('branchId', new ParseUUIDPipe()) branchId: string,
+    @Body() body: BranchServiceOverrideInputDto,
+  ) {
+    return this.catalog.updateBranchServiceOverride({ user }, serviceId, branchId, body);
   }
 }

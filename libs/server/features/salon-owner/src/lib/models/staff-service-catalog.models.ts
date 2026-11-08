@@ -79,6 +79,18 @@ export interface ServiceModel {
   readonly eligibleStaffIds: readonly string[];
 }
 
+export interface BranchServiceOverrideModel {
+  readonly id: string;
+  readonly serviceId: string;
+  readonly branchId: string;
+  readonly priceOverride: string | null;
+  readonly durationOverrideMinutes: number | null;
+  readonly visibleOnline: boolean;
+  readonly isActive: boolean;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
 export type StaffGender = 'MALE' | 'FEMALE' | 'NON_BINARY' | 'OTHER';
 export type StaffEmploymentType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACTOR' | 'APPRENTICE';
 export type StaffPayoutMethod = 'BANK_TRANSFER' | 'CASH';

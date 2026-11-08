@@ -411,3 +411,24 @@ export class VerifyStaffIdentityDocumentInputDto {
   @IsString()
   rejectionReason?: string;
 }
+
+export class BranchServiceOverrideInputDto {
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d+(\.\d{1,2})?$/, { message: 'error.service.override.price.invalid' })
+  priceOverride?: string | null;
+
+  @IsOptional()
+  @IsInt()
+  @Min(5, { message: 'error.service.override.duration.invalid' })
+  @Max(720, { message: 'error.service.override.duration.invalid' })
+  durationOverrideMinutes?: number | null;
+
+  @IsOptional()
+  @IsBoolean({ message: 'error.service.override.visibility.invalid' })
+  visibleOnline?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+}

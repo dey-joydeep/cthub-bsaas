@@ -11,7 +11,8 @@ import { ServiceCatalogController } from '../../src/lib/controllers/service-cata
 import { StaffController } from '../../src/lib/controllers/staff.controller';
 import { CustomerCrmService } from '../../src/lib/services/customer-crm.service';
 import { SalonOwnerSettingsService } from '../../src/lib/services/salon-owner-settings.service';
-import { StaffServiceCatalogService } from '../../src/lib/services/staff-service-catalog.service';
+import { ServiceCatalogService } from '../../src/lib/services/service-catalog.service';
+import { StaffService } from '../../src/lib/services/staff.service';
 
 describe('Salon owner settings routes', () => {
   const branchId = '11111111-1111-4111-8111-111111111111';
@@ -53,7 +54,8 @@ describe('Salon owner settings routes', () => {
       ],
       providers: [
         { provide: SalonOwnerSettingsService, useValue: service },
-        { provide: StaffServiceCatalogService, useValue: catalog },
+        { provide: StaffService, useValue: catalog },
+        { provide: ServiceCatalogService, useValue: catalog },
         { provide: CustomerCrmService, useValue: customers },
       ],
     }).compile();

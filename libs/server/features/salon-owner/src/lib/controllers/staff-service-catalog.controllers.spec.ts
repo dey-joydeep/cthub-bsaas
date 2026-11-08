@@ -6,7 +6,8 @@ import { PermissionsController } from './permissions.controller';
 import { RolesController } from './roles.controller';
 import { ServiceCatalogController } from './service-catalog.controller';
 import { StaffController } from './staff.controller';
-import type { StaffServiceCatalogService } from '../services/staff-service-catalog.service';
+import type { ServiceCatalogService } from '../services/service-catalog.service';
+import type { StaffService } from '../services/staff.service';
 
 const user: AuthenticatedUser = {
   id: 'user-1',
@@ -15,7 +16,7 @@ const user: AuthenticatedUser = {
   tenantId: 'tenant-1',
 };
 
-function serviceMock() {
+function staffServiceMock() {
   return {
     listStaff: jest.fn(),
     createStaff: jest.fn(),
@@ -23,6 +24,7 @@ function serviceMock() {
     updateStaff: jest.fn(),
     replaceStaffRoles: jest.fn(),
     replaceStaffSkills: jest.fn(),
+    getStaffShifts: jest.fn(),
     replaceStaffShifts: jest.fn(),
     listStaffLeaveBlocks: jest.fn(),
     createStaffLeaveBlock: jest.fn(),
@@ -38,6 +40,11 @@ function serviceMock() {
     updateBusinessRole: jest.fn(),
     deleteBusinessRole: jest.fn(),
     listSystemPermissions: jest.fn(),
+  };
+}
+
+function serviceCatalogMock() {
+  return {
     listServiceCategories: jest.fn(),
     createServiceCategory: jest.fn(),
     listServices: jest.fn(),
@@ -46,6 +53,7 @@ function serviceMock() {
     updateService: jest.fn(),
     updateServiceStatus: jest.fn(),
     replaceServiceStaffEligibility: jest.fn(),
+    updateBranchServiceOverride: jest.fn(),
   };
 }
 
@@ -58,8 +66,8 @@ describe('Staff and service catalog controllers', () => {
   });
 
   it('delegates staff routes with route parameters and authenticated context', async () => {
-    const service = serviceMock();
-    const controller = new StaffController(service as unknown as StaffServiceCatalogService);
+    const service = staffServiceMock();
+    const controller = new StaffController(service as unknown as StaffService);
     const query = { branchId: 'branch-1', q: 'ann', page: 2, pageSize: 25 };
     const staff = { branchIds: ['branch-1'], displayName: 'Stylist One', phone: '09000000001', status: 'ACTIVE' as const };
     const shift = { branchId: 'branch-1', timezone: 'Asia/Tokyo', days: [] };
@@ -95,6 +103,7 @@ describe('Staff and service catalog controllers', () => {
     await controller.updateStaff(user, '11111111-1111-4111-8111-111111111111', staff);
     await controller.replaceStaffRoles(user, '11111111-1111-4111-8111-111111111111', { roles: ['STYLIST'] });
     await controller.replaceStaffSkills(user, '11111111-1111-4111-8111-111111111111', { serviceIds: ['service-1'] });
+    await controller.getStaffShifts(user, '11111111-1111-4111-8111-111111111111');
     await controller.replaceStaffShifts(user, '11111111-1111-4111-8111-111111111111', shift);
     await controller.listStaffLeaveBlocks(user, '11111111-1111-4111-8111-111111111111', leaveQuery);
     await controller.createStaffLeaveBlock(user, '11111111-1111-4111-8111-111111111111', leave);
@@ -119,6 +128,7 @@ describe('Staff and service catalog controllers', () => {
     expect(service.replaceStaffSkills).toHaveBeenCalledWith({ user }, '11111111-1111-4111-8111-111111111111', {
       serviceIds: ['service-1'],
     });
+    expect(service.getStaffShifts).toHaveBeenCalledWith({ user }, '11111111-1111-4111-8111-111111111111');
     expect(service.replaceStaffShifts).toHaveBeenCalledWith({ user }, '11111111-1111-4111-8111-111111111111', shift);
     expect(service.listStaffLeaveBlocks).toHaveBeenCalledWith({ user }, '11111111-1111-4111-8111-111111111111', leaveQuery);
     expect(service.createStaffLeaveBlock).toHaveBeenCalledWith({ user }, '11111111-1111-4111-8111-111111111111', leave);
@@ -141,8 +151,8 @@ describe('Staff and service catalog controllers', () => {
   });
 
   it('delegates service catalog routes with route parameters and authenticated context', async () => {
-    const service = serviceMock();
-    const controller = new ServiceCatalogController(service as unknown as StaffServiceCatalogService);
+    const service = serviceCatalogMock();
+    const controller = new ServiceCatalogController(service as unknown as ServiceCatalogService);
     const category = { name: 'Hair', sortOrder: 1 };
     const serviceInput = {
       categoryId: 'category-1',
@@ -151,6 +161,12 @@ describe('Staff and service catalog controllers', () => {
       basePrice: '35.00',
       taxRatePercent: '10.00',
       status: 'ACTIVE' as const,
+    };
+    const overrideInput = {
+      priceOverride: '40.00',
+      durationOverrideMinutes: 50,
+      visibleOnline: true,
+      isActive: true,
     };
 
     await controller.listServiceCategories(user, 'business-1');
@@ -161,6 +177,7 @@ describe('Staff and service catalog controllers', () => {
     await controller.updateService(user, 'service-1', serviceInput);
     await controller.updateServiceStatus(user, 'service-1', { status: 'INACTIVE' });
     await controller.replaceServiceStaffEligibility(user, 'service-1', { staffIds: ['staff-1'] });
+    await controller.updateBranchServiceOverride(user, 'service-1', 'branch-1', overrideInput);
 
     expect(service.listServiceCategories).toHaveBeenCalledWith({ user }, 'business-1');
     expect(service.createServiceCategory).toHaveBeenCalledWith({ user }, category);
@@ -170,11 +187,12 @@ describe('Staff and service catalog controllers', () => {
     expect(service.updateService).toHaveBeenCalledWith({ user }, 'service-1', serviceInput);
     expect(service.updateServiceStatus).toHaveBeenCalledWith({ user }, 'service-1', { status: 'INACTIVE' });
     expect(service.replaceServiceStaffEligibility).toHaveBeenCalledWith({ user }, 'service-1', { staffIds: ['staff-1'] });
+    expect(service.updateBranchServiceOverride).toHaveBeenCalledWith({ user }, 'service-1', 'branch-1', overrideInput);
   });
 
   it('delegates roles routes with route parameters and authenticated context', async () => {
-    const service = serviceMock();
-    const controller = new RolesController(service as unknown as StaffServiceCatalogService);
+    const service = staffServiceMock();
+    const controller = new RolesController(service as unknown as StaffService);
     const query = { includeInactive: true };
     const roleInput = {
       name: 'Senior Stylist',
@@ -195,8 +213,8 @@ describe('Staff and service catalog controllers', () => {
   });
 
   it('delegates permissions routes', async () => {
-    const service = serviceMock();
-    const controller = new PermissionsController(service as unknown as StaffServiceCatalogService);
+    const service = staffServiceMock();
+    const controller = new PermissionsController(service as unknown as StaffService);
 
     await controller.listSystemPermissions();
 

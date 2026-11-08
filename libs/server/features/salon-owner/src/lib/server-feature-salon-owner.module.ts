@@ -10,7 +10,8 @@ import { ServiceCatalogController } from './controllers/service-catalog.controll
 import { StaffController } from './controllers/staff.controller';
 import { CustomerCrmService } from './services/customer-crm.service';
 import { SalonOwnerSettingsService } from './services/salon-owner-settings.service';
-import { StaffServiceCatalogService } from './services/staff-service-catalog.service';
+import { ServiceCatalogService } from './services/service-catalog.service';
+import { StaffService } from './services/staff.service';
 
 @Module({
   imports: [PrismaModule],
@@ -23,7 +24,7 @@ import { StaffServiceCatalogService } from './services/staff-service-catalog.ser
     ServiceCatalogController,
     CustomerCrmController,
   ],
-  providers: [SalonOwnerSettingsService, StaffServiceCatalogService, CustomerCrmService],
-  exports: [SalonOwnerSettingsService, StaffServiceCatalogService, CustomerCrmService],
+  providers: [SalonOwnerSettingsService, StaffService, ServiceCatalogService, CustomerCrmService],
+  exports: [SalonOwnerSettingsService, StaffService, ServiceCatalogService, CustomerCrmService],
 })
 export class ServerFeatureSalonOwnerModule {}

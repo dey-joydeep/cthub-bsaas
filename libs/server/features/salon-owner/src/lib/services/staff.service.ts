@@ -6,10 +6,6 @@ import { PrismaService } from '@cthub-bsaas/server-data-access';
 import {
   BusinessRoleInputDto,
   BusinessRoleQueryDto,
-  ServiceCategoryInputDto,
-  ServiceInputDto,
-  ServiceStatusInputDto,
-  StaffEligibilityInputDto,
   StaffIdentityDocumentInputDto,
   StaffInputDto,
   StaffLeaveBlockInputDto,
@@ -33,8 +29,6 @@ import { PagedResult, SalonOwnerRequestContext, TimeIntervalModel } from '../mod
 import {
   BusinessRoleModel,
   PermissionItemModel,
-  ServiceCategoryModel,
-  ServiceModel,
   StaffIdentityDocumentModel,
   StaffLeaveBlockModel,
   StaffModel,
@@ -48,8 +42,6 @@ const validationMessage = COMMON_MESSAGE_KEYS.ERROR.VALIDATION;
 const forbiddenMessage = COMMON_MESSAGE_KEYS.ERROR.FORBIDDEN_SCOPE;
 const notFoundMessage = COMMON_MESSAGE_KEYS.ERROR.NOT_FOUND;
 const duplicateStaffMessage = 'error.staff.profile.duplicate';
-const duplicateCategoryMessage = 'error.service.category.duplicate';
-const duplicateServiceMessage = 'error.service.duplicate';
 const finalOwnerConflictMessage = 'error.staff.owner.final_required';
 const finalOwnerRoleConflictMessage = 'error.staff.roles.final_owner';
 const duplicateRoleMessage = 'error.business.role.name.duplicate';
@@ -66,20 +58,11 @@ const staffInclude = {
     },
   },
 } as const;
-const serviceInclude = {
-  skills: true,
-} as const;
 
-type BusinessRecord = Awaited<ReturnType<PrismaService['salonBusiness']['findFirst']>>;
+type BusinessRecord = Prisma.SalonBusinessGetPayload<object>;
 type BranchRecord = Awaited<ReturnType<PrismaService['salonBranch']['findFirstOrThrow']>>;
 type StaffRecord = Prisma.SalonOwnerStaffGetPayload<{ include: typeof staffInclude }>;
-type ServiceRecord = Prisma.SalonOwnerServiceGetPayload<{ include: typeof serviceInclude }>;
-type ServiceCategoryRecord = Awaited<ReturnType<PrismaService['salonOwnerServiceCategory']['create']>>;
 type StaffLeaveBlockRecord = Awaited<ReturnType<PrismaService['salonOwnerStaffLeaveBlock']['create']>>;
-interface ServiceListOptions {
-  categoryId?: string;
-  businessId?: string;
-}
 
 function trimRequired(value: string, minimumLength = 1): string {
   const trimmed = value.trim();
@@ -167,17 +150,6 @@ function isDuplicate(error: unknown): boolean {
     return error.code === 'P2002';
   }
   return error instanceof Error && error.message === 'A unique constraint was violated';
-}
-
-function decimalToString(value: Prisma.Decimal): string {
-  return value.toFixed(2);
-}
-
-function assertDecimalPrecision(value: string, maxIntegerDigits: number): void {
-  const [integerPart = '', decimalPart = ''] = value.split('.');
-  if (integerPart.length > maxIntegerDigits || decimalPart.length > 2) {
-    throw new UnprocessableEntityException(validationMessage);
-  }
 }
 
 function extractRoleNames(user: AuthenticatedUser): string[] {
@@ -293,40 +265,40 @@ function validatePersonalDetailsInput(input: StaffPersonalDetailsInputDto): void
   }
 
   if (input.emergencyContact) {
-    if (input.emergencyContact.name !== undefined) {
-      const name = input.emergencyContact.name.trim();
-      if (name.length < 2 || name.length > 60) {
-        throw new UnprocessableEntityException('error.staff.personal.emergency.name.invalid');
-      }
+    const { name, relationship, phone } = input.emergencyContact;
+    if (name && (name.trim().length < 2 || name.length > 60)) {
+      throw new UnprocessableEntityException('error.staff.personal.emergency.name.invalid');
     }
-    if (input.emergencyContact.relationship !== undefined && input.emergencyContact.relationship.trim().length > 40) {
-      throw new UnprocessableEntityException('error.staff.personal.emergency.relation.invalid');
+    if (relationship && relationship.length > 40) {
+      throw new UnprocessableEntityException('error.staff.personal.emergency.relationship.invalid');
     }
-    if (input.emergencyContact.phone !== undefined && input.emergencyContact.phone.trim().length > 30) {
+    if (phone && phone.length > 30) {
       throw new UnprocessableEntityException('error.staff.personal.emergency.phone.invalid');
     }
   }
 }
 
-const forbiddenSelfEditFields = [
-  'legalName',
-  'dateOfBirth',
-  'dob',
-  'gender',
-  'employmentType',
-  'hireDate',
-  'terminationDate',
-  'roles',
-  'roleIds',
-  'branchIds',
-  'status',
-  'payoutMethod',
-  'bankDetails',
-];
+function validateSelfContactInput(input: StaffSelfContactInputDto): void {
+  const forbiddenFields = [
+    'legalName',
+    'dateOfBirth',
+    'dob',
+    'gender',
+    'employmentType',
+    'hireDate',
+    'terminationDate',
+    'payoutMethod',
+    'bankDetails',
+    'roles',
+    'roleIds',
+    'branchIds',
+    'status',
+    'displayName',
+    'email',
+  ];
 
-function checkSelfEditForbiddenFields(input: StaffSelfContactInputDto): void {
-  for (const key of forbiddenSelfEditFields) {
-    if (key in input && input[key] !== undefined && input[key] !== null) {
+  for (const field of forbiddenFields) {
+    if (field in input && input[field] !== undefined) {
       throw new ForbiddenException('error.staff.self_edit.forbidden_fields');
     }
   }
@@ -355,7 +327,7 @@ function validateVerifyIdentityDocument(input: VerifyStaffIdentityDocumentInputD
 }
 
 @Injectable()
-export class StaffServiceCatalogService {
+export class StaffService {
   constructor(private readonly prisma: PrismaService) {}
 
   async listStaff(context: SalonOwnerRequestContext, options: StaffListQueryDto = {}): Promise<PagedResult<StaffModel>> {
@@ -368,12 +340,27 @@ export class StaffServiceCatalogService {
       await this.findBranchInScope(context, branchId);
     }
 
+    // Delegated manager scoping
+    const isOwner = isUserOwnerOrAdmin(context.user);
+    if (!isOwner && context.user.managedBranchIds && context.user.managedBranchIds.length > 0) {
+      if (branchId && !context.user.managedBranchIds.includes(branchId)) {
+        throw new ForbiddenException(forbiddenMessage);
+      }
+    }
+
     const query = optionalTrim(options.q);
     const page = options.page ?? 1;
     const pageSize = options.pageSize ?? 50;
+
+    const branchFilter = branchId
+      ? { branches: { some: { branchId } } }
+      : !isOwner && context.user.managedBranchIds && context.user.managedBranchIds.length > 0
+        ? { branches: { some: { branchId: { in: context.user.managedBranchIds } } } }
+        : {};
+
     const where: Prisma.SalonOwnerStaffWhereInput = {
       business: { tenantId, ...(businessId ? { id: businessId } : {}) },
-      ...(branchId ? { branches: { some: { branchId } } } : {}),
+      ...branchFilter,
       ...(query
         ? {
             OR: [
@@ -404,6 +391,14 @@ export class StaffServiceCatalogService {
     const branches = await this.findBranchesInScope(context, input.branchIds);
     const businessId = this.requireSingleBusiness(branches);
 
+    // Delegated manager scoping
+    if (!isUserOwnerOrAdmin(context.user) && context.user.managedBranchIds && context.user.managedBranchIds.length > 0) {
+      const allInScope = input.branchIds.every((id) => context.user.managedBranchIds!.includes(id));
+      if (!allInScope) {
+        throw new ForbiddenException(forbiddenMessage);
+      }
+    }
+
     try {
       const staff = await this.prisma.$transaction(async (tx) => {
         const created = await tx.salonOwnerStaff.create({
@@ -430,36 +425,39 @@ export class StaffServiceCatalogService {
   }
 
   async getStaff(context: SalonOwnerRequestContext, staffId: string): Promise<StaffModel> {
-    return this.mapStaff(await this.findStaffInScope(context, staffId));
+    const staff = await this.findStaffInScope(context, staffId);
+    if (!isUserOwnerOrAdmin(context.user) && context.user.managedBranchIds && context.user.managedBranchIds.length > 0) {
+      const staffBranchIds = staff.branches.map((b) => b.branchId);
+      const hasOverlap = staffBranchIds.some((bId) => context.user.managedBranchIds!.includes(bId));
+      if (!hasOverlap) {
+        throw new ForbiddenException(forbiddenMessage);
+      }
+    }
+    return this.mapStaff(staff);
   }
 
   async updateStaff(context: SalonOwnerRequestContext, staffId: string, input: StaffInputDto): Promise<StaffModel> {
-    const current = await this.findStaffInScope(context, staffId);
+    const existing = await this.findStaffInScope(context, staffId);
     const branches = await this.findBranchesInScope(context, input.branchIds);
-    const businessId = this.requireSingleBusiness(branches);
-    if (businessId !== current.businessId) {
-      throw new ForbiddenException(forbiddenMessage);
-    }
+    this.requireBusinessMatch(branches, existing.businessId);
 
-    const isCurrentOwner =
-      current.roles.includes('OWNER') || (current.roleAssignments ?? []).some((ra) => ra.businessRole.roleCode === 'OWNER');
+    const isOwner =
+      existing.roles.includes('OWNER') ||
+      (existing.roleAssignments ?? []).some(
+        (ra) => ra.businessRole?.roleCode === 'OWNER' || ra.businessRole?.name?.toUpperCase() === 'OWNER',
+      );
 
-    if (isCurrentOwner && current.status === 'ACTIVE' && input.status === 'INACTIVE') {
-      const remainingOwnerCount = await this.prisma.salonOwnerStaff.count({
-        where: {
-          businessId: current.businessId,
-          status: 'ACTIVE',
-          OR: [{ roleAssignments: { some: { businessRole: { roleCode: 'OWNER' } } } }, { roles: { has: 'OWNER' } }],
-        },
-      });
-      if (remainingOwnerCount <= 1) {
-        throw new ConflictException(finalOwnerConflictMessage);
-      }
+    if (isOwner && input.status === 'INACTIVE') {
+      await this.assertRemainingActiveOwner(existing.businessId, staffId);
     }
 
     try {
       const staff = await this.prisma.$transaction(async (tx) => {
-        await tx.salonOwnerStaff.update({
+        await tx.salonOwnerStaffBranch.deleteMany({ where: { staffId } });
+        await tx.salonOwnerStaffBranch.createMany({
+          data: unique(input.branchIds).map((branchId) => ({ staffId, branchId })),
+        });
+        return tx.salonOwnerStaff.update({
           where: { id: staffId },
           data: {
             displayName: trimRequired(input.displayName, 2),
@@ -467,12 +465,8 @@ export class StaffServiceCatalogService {
             email: optionalTrim(input.email),
             status: input.status,
           },
+          include: staffInclude,
         });
-        await tx.salonOwnerStaffBranch.deleteMany({ where: { staffId } });
-        await tx.salonOwnerStaffBranch.createMany({
-          data: unique(input.branchIds).map((branchId) => ({ staffId, branchId })),
-        });
-        return tx.salonOwnerStaff.findUniqueOrThrow({ where: { id: staffId }, include: staffInclude });
       });
       return this.mapStaff(staff);
     } catch (error) {
@@ -484,55 +478,33 @@ export class StaffServiceCatalogService {
   }
 
   async replaceStaffRoles(context: SalonOwnerRequestContext, staffId: string, input: StaffRolesInputDto): Promise<StaffModel> {
-    const current = await this.findStaffInScope(context, staffId);
+    const existing = await this.findStaffInScope(context, staffId);
+    const roleIdentifiers = unique(input.roleIds ?? input.roles ?? []);
 
-    const rawRoleIds = input.roleIds ? unique(input.roleIds) : [];
-    const rawRoles = input.roles ? unique(input.roles) : [];
-
-    let targetRoles: Awaited<ReturnType<PrismaService['businessRole']['findMany']>> = [];
-
-    if (rawRoleIds.length > 0) {
-      targetRoles = await this.prisma.businessRole.findMany({
-        where: {
-          id: { in: rawRoleIds },
-          businessId: current.businessId,
-          isActive: true,
-        },
-      });
-      if (targetRoles.length !== rawRoleIds.length) {
-        throw new UnprocessableEntityException(invalidRolesMessage);
-      }
-    } else if (rawRoles.length > 0) {
-      targetRoles = await this.prisma.businessRole.findMany({
-        where: {
-          businessId: current.businessId,
-          isActive: true,
-          OR: [{ roleCode: { in: rawRoles } }, { name: { in: rawRoles } }],
-        },
-      });
-      if (targetRoles.length !== rawRoles.length) {
-        throw new UnprocessableEntityException(invalidRolesMessage);
-      }
-    } else {
+    if (roleIdentifiers.length === 0) {
       throw new UnprocessableEntityException(invalidRolesMessage);
     }
 
-    const isCurrentOwner =
-      current.roles.includes('OWNER') || (current.roleAssignments ?? []).some((ra) => ra.businessRole.roleCode === 'OWNER');
+    const targetRoles = await this.prisma.businessRole.findMany({
+      where: {
+        businessId: existing.businessId,
+        isActive: true,
+        OR: [{ id: { in: roleIdentifiers } }, { roleCode: { in: roleIdentifiers } }, { name: { in: roleIdentifiers } }],
+      },
+    });
 
-    const willBeOwner = targetRoles.some((role) => role.roleCode === 'OWNER');
+    if (targetRoles.length === 0) {
+      throw new UnprocessableEntityException(invalidRolesMessage);
+    }
 
-    if (isCurrentOwner && !willBeOwner && current.status === 'ACTIVE') {
-      const remainingOwnerCount = await this.prisma.salonOwnerStaff.count({
-        where: {
-          businessId: current.businessId,
-          status: 'ACTIVE',
-          OR: [{ roleAssignments: { some: { businessRole: { roleCode: 'OWNER' } } } }, { roles: { has: 'OWNER' } }],
-        },
-      });
-      if (remainingOwnerCount <= 1) {
-        throw new ConflictException(finalOwnerRoleConflictMessage);
-      }
+    const hasOwner = targetRoles.some((r) => r.roleCode === 'OWNER' || r.name.toUpperCase() === 'OWNER');
+    const wasOwner =
+      (existing.roleAssignments ?? []).some(
+        (ra) => ra.businessRole?.roleCode === 'OWNER' || ra.businessRole?.name?.toUpperCase() === 'OWNER',
+      ) || existing.roles.includes('OWNER');
+
+    if (wasOwner && !hasOwner) {
+      await this.assertRemainingActiveOwner(existing.businessId, staffId);
     }
 
     const staff = await this.prisma.$transaction(async (tx) => {
@@ -560,18 +532,40 @@ export class StaffServiceCatalogService {
         ...(query?.includeInactive ? {} : { isActive: true }),
       },
       include: {
-        permissions: true,
+        permissions: {
+          include: { permission: true },
+        },
       },
-      orderBy: [{ isSystemDefault: 'desc' }, { createdAt: 'asc' }],
+      orderBy: [{ isSystemDefault: 'desc' }, { name: 'asc' }],
     });
 
-    return roles.map((role) => this.mapBusinessRole(role));
+    return roles.map((role) => ({
+      id: role.id,
+      businessId: role.businessId,
+      roleCode: role.roleCode,
+      name: role.name,
+      description: role.description,
+      permissions: role.permissions.map((p) => p.permissionCode),
+      isSystemDefault: role.isSystemDefault,
+      isActive: role.isActive,
+      createdAt: role.createdAt.toISOString(),
+      updatedAt: role.updatedAt.toISOString(),
+    }));
   }
 
   async createBusinessRole(context: SalonOwnerRequestContext, input: BusinessRoleInputDto): Promise<BusinessRoleModel> {
     const business = await this.resolveBusinessInScope(context);
     const name = trimRequired(input.name, 2);
-    const description = optionalTrim(input.description);
+
+    const existing = await this.prisma.businessRole.findFirst({
+      where: {
+        businessId: business.id,
+        name: { equals: name, mode: 'insensitive' },
+      },
+    });
+    if (existing) {
+      throw new ConflictException(duplicateRoleMessage);
+    }
 
     const permissions = unique(input.permissions);
     if (permissions.length === 0) {
@@ -587,23 +581,13 @@ export class StaffServiceCatalogService {
       throw new UnprocessableEntityException(invalidRolePermissionsMessage);
     }
 
-    const existing = await this.prisma.businessRole.findFirst({
-      where: {
-        businessId: business.id,
-        name: { equals: name, mode: 'insensitive' },
-      },
-    });
-    if (existing) {
-      throw new ConflictException(duplicateRoleMessage);
-    }
-
     try {
       const created = await this.prisma.$transaction(async (tx) => {
         const role = await tx.businessRole.create({
           data: {
             businessId: business.id,
             name,
-            description,
+            description: optionalTrim(input.description) ?? null,
             isSystemDefault: false,
             isActive: input.isActive ?? true,
           },
@@ -622,7 +606,18 @@ export class StaffServiceCatalogService {
         });
       });
 
-      return this.mapBusinessRole(created);
+      return {
+        id: created.id,
+        businessId: created.businessId,
+        roleCode: created.roleCode,
+        name: created.name,
+        description: created.description,
+        permissions: created.permissions.map((p) => p.permissionCode),
+        isSystemDefault: created.isSystemDefault,
+        isActive: created.isActive,
+        createdAt: created.createdAt.toISOString(),
+        updatedAt: created.updatedAt.toISOString(),
+      };
     } catch (error) {
       if (isDuplicate(error)) {
         throw new ConflictException(duplicateRoleMessage);
@@ -635,16 +630,13 @@ export class StaffServiceCatalogService {
     const business = await this.resolveBusinessInScope(context);
     const role = await this.prisma.businessRole.findFirst({
       where: { id: roleId, businessId: business.id },
-      include: { permissions: true },
     });
     if (!role) {
       throw new NotFoundException(notFoundMessage);
     }
 
     const name = trimRequired(input.name, 2);
-    const description = optionalTrim(input.description);
-
-    if (role.name.toLowerCase() !== name.toLowerCase()) {
+    if (name.toLowerCase() !== role.name.toLowerCase()) {
       const duplicate = await this.prisma.businessRole.findFirst({
         where: {
           businessId: business.id,
@@ -689,33 +681,38 @@ export class StaffServiceCatalogService {
 
     try {
       const updated = await this.prisma.$transaction(async (tx) => {
-        await tx.businessRole.update({
-          where: { id: roleId },
-          data: {
-            name,
-            description,
-            isActive: targetIsActive,
-          },
-        });
-
         await tx.businessRolePermission.deleteMany({
           where: { businessRoleId: roleId },
         });
-
         await tx.businessRolePermission.createMany({
           data: permissions.map((code) => ({
             businessRoleId: roleId,
             permissionCode: code,
           })),
         });
-
-        return tx.businessRole.findUniqueOrThrow({
+        return tx.businessRole.update({
           where: { id: roleId },
+          data: {
+            name,
+            description: optionalTrim(input.description) ?? null,
+            isActive: targetIsActive,
+          },
           include: { permissions: true },
         });
       });
 
-      return this.mapBusinessRole(updated);
+      return {
+        id: updated.id,
+        businessId: updated.businessId,
+        roleCode: updated.roleCode,
+        name: updated.name,
+        description: updated.description,
+        permissions: updated.permissions.map((p) => p.permissionCode),
+        isSystemDefault: updated.isSystemDefault,
+        isActive: updated.isActive,
+        createdAt: updated.createdAt.toISOString(),
+        updatedAt: updated.updatedAt.toISOString(),
+      };
     } catch (error) {
       if (isDuplicate(error)) {
         throw new ConflictException(duplicateRoleMessage);
@@ -756,10 +753,10 @@ export class StaffServiceCatalogService {
   }
 
   async listSystemPermissions(): Promise<PermissionItemModel[]> {
-    const permissions = await this.prisma.permissionMaster.findMany({
+    const perms = await this.prisma.permissionMaster.findMany({
       orderBy: [{ category: 'asc' }, { code: 'asc' }],
     });
-    return permissions.map((p) => ({
+    return perms.map((p) => ({
       code: p.code,
       name: p.name,
       category: p.category,
@@ -769,11 +766,20 @@ export class StaffServiceCatalogService {
 
   async replaceStaffSkills(context: SalonOwnerRequestContext, staffId: string, input: StaffSkillsInputDto): Promise<StaffModel> {
     const staff = await this.findStaffInScope(context, staffId);
-    await this.assertServicesInBusiness(staff.businessId, input.serviceIds);
+    const serviceIds = unique(input.serviceIds);
+
+    if (serviceIds.length > 0) {
+      const services = await this.prisma.salonOwnerService.findMany({
+        where: { id: { in: serviceIds }, businessId: staff.businessId },
+        select: { id: true },
+      });
+      if (services.length !== serviceIds.length) {
+        throw new NotFoundException(notFoundMessage);
+      }
+    }
 
     const updated = await this.prisma.$transaction(async (tx) => {
       await tx.salonOwnerStaffSkill.deleteMany({ where: { staffId } });
-      const serviceIds = unique(input.serviceIds);
       if (serviceIds.length > 0) {
         await tx.salonOwnerStaffSkill.createMany({
           data: serviceIds.map((serviceId) => ({ staffId, serviceId })),
@@ -785,6 +791,33 @@ export class StaffServiceCatalogService {
     return this.mapStaff(updated);
   }
 
+  async getStaffShifts(context: SalonOwnerRequestContext, staffId: string): Promise<StaffShiftModel> {
+    const staff = await this.findStaffInScope(context, staffId);
+    const shift = await this.prisma.salonOwnerStaffShift.findFirst({
+      where: { staffId },
+    });
+
+    if (!shift) {
+      const primaryBranchId = staff.branches[0]?.branchId ?? '';
+      return { staffId, branchId: primaryBranchId, timezone: 'Asia/Tokyo', days: [] };
+    }
+
+    // Delegated manager scoping
+    if (!isUserOwnerOrAdmin(context.user) && context.user.managedBranchIds && context.user.managedBranchIds.length > 0) {
+      if (!context.user.managedBranchIds.includes(shift.branchId)) {
+        throw new ForbiddenException(forbiddenMessage);
+      }
+    }
+
+    const rawDays = Array.isArray(shift.days) ? (shift.days as unknown as StaffShiftDayDto[]) : [];
+    const days = rawDays.map((day) => ({
+      dayOfWeek: day.dayOfWeek,
+      intervals: Array.isArray(day.intervals) ? day.intervals.map((i) => ({ start: i.start, end: i.end })) : [],
+    }));
+
+    return { staffId, branchId: shift.branchId, timezone: shift.timezone, days };
+  }
+
   async replaceStaffShifts(context: SalonOwnerRequestContext, staffId: string, input: StaffShiftInputDto): Promise<StaffShiftModel> {
     assertTimezone(input.timezone);
     const staff = await this.findStaffInScope(context, staffId);
@@ -794,6 +827,13 @@ export class StaffServiceCatalogService {
     }
     if (input.timezone !== branch.timezone) {
       throw new UnprocessableEntityException(validationMessage);
+    }
+
+    // Delegated manager scoping
+    if (!isUserOwnerOrAdmin(context.user) && context.user.managedBranchIds && context.user.managedBranchIds.length > 0) {
+      if (!context.user.managedBranchIds.includes(branch.id)) {
+        throw new ForbiddenException(forbiddenMessage);
+      }
     }
 
     const days = normalizeShiftDays(input.days);
@@ -846,42 +886,47 @@ export class StaffServiceCatalogService {
     input: StaffLeaveBlockInputDto,
   ): Promise<StaffLeaveBlockModel> {
     const staff = await this.findStaffInScope(context, staffId);
-    let branchId: string | null = null;
     if (input.branchId) {
       const branch = await this.findBranchInScope(context, input.branchId);
       if (branch.businessId !== staff.businessId || !staff.branches.some((assigned) => assigned.branchId === branch.id)) {
         throw new ForbiddenException(forbiddenMessage);
       }
-      branchId = branch.id;
+      if (!isUserOwnerOrAdmin(context.user) && context.user.managedBranchIds && context.user.managedBranchIds.length > 0) {
+        if (!context.user.managedBranchIds.includes(branch.id)) {
+          throw new ForbiddenException(forbiddenMessage);
+        }
+      }
     }
 
     const startsAt = new Date(input.startsAt);
     const endsAt = new Date(input.endsAt);
-    if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime()) || !(startsAt < endsAt)) {
+    if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime()) || startsAt >= endsAt) {
       throw new UnprocessableEntityException(validationMessage);
     }
 
-    return this.mapLeaveBlock(
-      await this.prisma.salonOwnerStaffLeaveBlock.create({
-        data: { staffId, branchId, startsAt, endsAt, reason: trimRequired(input.reason) },
-      }),
-    );
+    const block = await this.prisma.salonOwnerStaffLeaveBlock.create({
+      data: {
+        staffId,
+        branchId: input.branchId,
+        startsAt,
+        endsAt,
+        reason: trimRequired(input.reason),
+      },
+    });
+
+    return this.mapLeaveBlock(block);
   }
 
   async deleteStaffLeaveBlock(context: SalonOwnerRequestContext, staffId: string, leaveBlockId: string): Promise<SuccessResult> {
-    const staff = await this.findStaffInScope(context, staffId);
-
-    const block = await this.prisma.salonOwnerStaffLeaveBlock.findFirst({
-      where: { id: leaveBlockId, staffId: staff.id },
+    await this.findStaffInScope(context, staffId);
+    const existing = await this.prisma.salonOwnerStaffLeaveBlock.findFirst({
+      where: { id: leaveBlockId, staffId },
     });
-    if (!block) {
+    if (!existing) {
       throw new NotFoundException(notFoundMessage);
     }
 
-    await this.prisma.salonOwnerStaffLeaveBlock.delete({
-      where: { id: leaveBlockId },
-    });
-
+    await this.prisma.salonOwnerStaffLeaveBlock.delete({ where: { id: leaveBlockId } });
     return { success: true };
   }
 
@@ -912,7 +957,7 @@ export class StaffServiceCatalogService {
       update: {
         legalName: optionalTrim(input.legalName),
         dateOfBirth: input.dateOfBirth ? new Date(input.dateOfBirth) : null,
-        gender: (input.gender as (typeof staffGenderValues)[number]) ?? null,
+        gender: input.gender ?? null,
         addressLine1: optionalTrim(input.address?.line1),
         addressLine2: optionalTrim(input.address?.line2),
         city: optionalTrim(input.address?.city),
@@ -967,69 +1012,64 @@ export class StaffServiceCatalogService {
 
   async selfUpdateStaffContact(context: SalonOwnerRequestContext, input: StaffSelfContactInputDto): Promise<SuccessResult> {
     const tenantId = this.requireTenantId(context);
-    const user = context.user;
-
-    checkSelfEditForbiddenFields(input);
+    validateSelfContactInput(input);
 
     const staff = await this.prisma.salonOwnerStaff.findFirst({
       where: {
         business: { tenantId },
-        OR: [{ userId: user.id }, { email: { equals: user.email, mode: 'insensitive' } }, { id: user.id }],
+        OR: [{ userId: context.user.id }, { id: context.user.id }, ...(context.user.email ? [{ email: context.user.email }] : [])],
       },
       include: staffInclude,
     });
+
     if (!staff) {
-      throw new NotFoundException('error.staff.profile.not_found');
+      throw new NotFoundException(notFoundMessage);
     }
 
-    if (input.phone) {
-      await this.prisma.salonOwnerStaff.update({
-        where: { id: staff.id },
-        data: { phone: trimRequired(input.phone) },
-      });
-    }
+    await this.prisma.$transaction(async (tx) => {
+      if (input.phone) {
+        await tx.salonOwnerStaff.update({
+          where: { id: staff.id },
+          data: { phone: trimRequired(input.phone) },
+        });
+      }
 
-    if (input.address || input.emergencyContact) {
-      await this.prisma.staffPersonalProfile.upsert({
-        where: { staffId: staff.id },
-        update: {
-          ...(input.address
-            ? {
-                addressLine1: optionalTrim(input.address.line1),
-                addressLine2: optionalTrim(input.address.line2),
-                city: optionalTrim(input.address.city),
-                state: optionalTrim(input.address.state),
-                postalCode: optionalTrim(input.address.postalCode),
-                country: optionalTrim(input.address.country) ?? 'JP',
-              }
-            : {}),
-          ...(input.emergencyContact
-            ? {
-                emergencyContactName: optionalTrim(input.emergencyContact.name),
-                emergencyContactRelationship: optionalTrim(input.emergencyContact.relationship),
-                emergencyContactPhone: optionalTrim(input.emergencyContact.phone),
-              }
-            : {}),
-        },
-        create: {
-          staffId: staff.id,
-          employmentType: 'FULL_TIME',
-          hireDate: new Date(),
-          payoutMethod: 'CASH',
-          addressLine1: optionalTrim(input.address?.line1),
-          addressLine2: optionalTrim(input.address?.line2),
-          city: optionalTrim(input.address?.city),
-          state: optionalTrim(input.address?.state),
-          postalCode: optionalTrim(input.address?.postalCode),
-          country: optionalTrim(input.address?.country) ?? 'JP',
-          emergencyContactName: optionalTrim(input.emergencyContact?.name),
-          emergencyContactRelationship: optionalTrim(input.emergencyContact?.relationship),
-          emergencyContactPhone: optionalTrim(input.emergencyContact?.phone),
-        },
-      });
-    }
+      if (input.address || input.emergencyContact) {
+        await tx.staffPersonalProfile.upsert({
+          where: { staffId: staff.id },
+          update: {
+            ...(input.address?.line1 !== undefined ? { addressLine1: optionalTrim(input.address.line1) } : {}),
+            ...(input.address?.line2 !== undefined ? { addressLine2: optionalTrim(input.address.line2) } : {}),
+            ...(input.address?.city !== undefined ? { city: optionalTrim(input.address.city) } : {}),
+            ...(input.address?.state !== undefined ? { state: optionalTrim(input.address.state) } : {}),
+            ...(input.address?.postalCode !== undefined ? { postalCode: optionalTrim(input.address.postalCode) } : {}),
+            ...(input.address?.country !== undefined ? { country: optionalTrim(input.address.country) ?? 'JP' } : {}),
+            ...(input.emergencyContact?.name !== undefined ? { emergencyContactName: optionalTrim(input.emergencyContact.name) } : {}),
+            ...(input.emergencyContact?.relationship !== undefined
+              ? { emergencyContactRelationship: optionalTrim(input.emergencyContact.relationship) }
+              : {}),
+            ...(input.emergencyContact?.phone !== undefined ? { emergencyContactPhone: optionalTrim(input.emergencyContact.phone) } : {}),
+          },
+          create: {
+            staffId: staff.id,
+            employmentType: 'FULL_TIME',
+            hireDate: staff.createdAt,
+            payoutMethod: 'CASH',
+            addressLine1: optionalTrim(input.address?.line1),
+            addressLine2: optionalTrim(input.address?.line2),
+            city: optionalTrim(input.address?.city),
+            state: optionalTrim(input.address?.state),
+            postalCode: optionalTrim(input.address?.postalCode),
+            country: optionalTrim(input.address?.country) ?? 'JP',
+            emergencyContactName: optionalTrim(input.emergencyContact?.name),
+            emergencyContactRelationship: optionalTrim(input.emergencyContact?.relationship),
+            emergencyContactPhone: optionalTrim(input.emergencyContact?.phone),
+          },
+        });
+      }
+    });
 
-    await this.recordAuditEvent(user.id, user.tenantId, 'StaffSelfContactUpdated', staff.id);
+    await this.recordAuditEvent(context.user.id, context.user.tenantId, 'StaffSelfContactUpdated', staff.id);
     await this.dispatchUpwardChainNotification(staff, 'StaffSelfContactUpdated', 'Staff member updated contact details');
 
     return { success: true };
@@ -1106,125 +1146,6 @@ export class StaffServiceCatalogService {
     return this.mapIdentityDocument(updated);
   }
 
-  async listServiceCategories(context: SalonOwnerRequestContext, businessId?: string): Promise<PagedResult<ServiceCategoryModel>> {
-    const business = await this.resolveBusinessInScope(context, businessId);
-    const categories = await this.prisma.salonOwnerServiceCategory.findMany({
-      where: { businessId: business.id },
-      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
-    });
-    return this.page(categories.map((category) => this.mapCategory(category)));
-  }
-
-  async createServiceCategory(context: SalonOwnerRequestContext, input: ServiceCategoryInputDto): Promise<ServiceCategoryModel> {
-    const business = await this.resolveBusinessInScope(context, input.businessId);
-    try {
-      return this.mapCategory(
-        await this.prisma.salonOwnerServiceCategory.create({
-          data: { businessId: business.id, name: trimRequired(input.name), sortOrder: input.sortOrder },
-        }),
-      );
-    } catch (error) {
-      if (isDuplicate(error)) {
-        throw new ConflictException(duplicateCategoryMessage);
-      }
-      throw error;
-    }
-  }
-
-  async listServices(context: SalonOwnerRequestContext, options: ServiceListOptions = {}): Promise<PagedResult<ServiceModel>> {
-    const { categoryId, businessId } = options;
-    const business = await this.resolveBusinessInScope(context, businessId);
-    if (categoryId) {
-      await this.findCategoryInBusiness(business.id, categoryId);
-    }
-
-    const services = await this.prisma.salonOwnerService.findMany({
-      where: { businessId: business.id, ...(categoryId ? { categoryId } : {}) },
-      include: serviceInclude,
-      orderBy: { createdAt: 'asc' },
-    });
-    return this.page(services.map((service) => this.mapService(service)));
-  }
-
-  async createService(context: SalonOwnerRequestContext, input: ServiceInputDto): Promise<ServiceModel> {
-    const business = await this.resolveBusinessInScope(context, input.businessId);
-    await this.findCategoryInBusiness(business.id, input.categoryId);
-
-    try {
-      return this.mapService(
-        await this.prisma.salonOwnerService.create({
-          data: this.normalizeServiceInput(business.id, input),
-          include: serviceInclude,
-        }),
-      );
-    } catch (error) {
-      if (isDuplicate(error)) {
-        throw new ConflictException(duplicateServiceMessage);
-      }
-      throw error;
-    }
-  }
-
-  async getService(context: SalonOwnerRequestContext, serviceId: string): Promise<ServiceModel> {
-    return this.mapService(await this.findServiceInScope(context, serviceId));
-  }
-
-  async updateService(context: SalonOwnerRequestContext, serviceId: string, input: ServiceInputDto): Promise<ServiceModel> {
-    const current = await this.findServiceInScope(context, serviceId);
-    if (input.businessId && input.businessId !== current.businessId) {
-      throw new ForbiddenException(forbiddenMessage);
-    }
-    await this.findCategoryInBusiness(current.businessId, input.categoryId);
-
-    try {
-      return this.mapService(
-        await this.prisma.salonOwnerService.update({
-          where: { id: serviceId },
-          data: this.normalizeServiceInput(current.businessId, input),
-          include: serviceInclude,
-        }),
-      );
-    } catch (error) {
-      if (isDuplicate(error)) {
-        throw new ConflictException(duplicateServiceMessage);
-      }
-      throw error;
-    }
-  }
-
-  async updateServiceStatus(context: SalonOwnerRequestContext, serviceId: string, input: ServiceStatusInputDto): Promise<ServiceModel> {
-    await this.findServiceInScope(context, serviceId);
-    return this.mapService(
-      await this.prisma.salonOwnerService.update({
-        where: { id: serviceId },
-        data: { status: input.status },
-        include: serviceInclude,
-      }),
-    );
-  }
-
-  async replaceServiceStaffEligibility(
-    context: SalonOwnerRequestContext,
-    serviceId: string,
-    input: StaffEligibilityInputDto,
-  ): Promise<ServiceModel> {
-    const service = await this.findServiceInScope(context, serviceId);
-    await this.assertStaffInBusiness(service.businessId, input.staffIds);
-
-    const updated = await this.prisma.$transaction(async (tx) => {
-      await tx.salonOwnerStaffSkill.deleteMany({ where: { serviceId } });
-      const staffIds = unique(input.staffIds);
-      if (staffIds.length > 0) {
-        await tx.salonOwnerStaffSkill.createMany({
-          data: staffIds.map((staffId) => ({ serviceId, staffId })),
-        });
-      }
-      return tx.salonOwnerService.findUniqueOrThrow({ where: { id: serviceId }, include: serviceInclude });
-    });
-
-    return this.mapService(updated);
-  }
-
   private requireTenantId(context: SalonOwnerRequestContext): string {
     if (!context.user.tenantId) {
       throw new ForbiddenException(forbiddenMessage);
@@ -1232,10 +1153,14 @@ export class StaffServiceCatalogService {
     return context.user.tenantId;
   }
 
-  private async resolveBusinessInScope(context: SalonOwnerRequestContext, businessId?: string): Promise<NonNullable<BusinessRecord>> {
+  private async resolveBusinessInScope(context: SalonOwnerRequestContext, requestedBusinessId?: string): Promise<BusinessRecord> {
     const tenantId = this.requireTenantId(context);
-    if (businessId) {
-      const business = await this.prisma.salonBusiness.findFirst({ where: { id: businessId, tenantId } });
+    const effectiveBusinessId = requestedBusinessId;
+
+    if (effectiveBusinessId) {
+      const business = await this.prisma.salonBusiness.findFirst({
+        where: { id: effectiveBusinessId, tenantId },
+      });
       if (!business) {
         throw new NotFoundException(notFoundMessage);
       }
@@ -1245,13 +1170,9 @@ export class StaffServiceCatalogService {
     const businesses = await this.prisma.salonBusiness.findMany({
       where: { tenantId },
       orderBy: { createdAt: 'asc' },
-      take: 2,
     });
-    if (businesses.length === 0) {
-      throw new NotFoundException(notFoundMessage);
-    }
-    if (businesses.length > 1) {
-      throw new UnprocessableEntityException(validationMessage);
+    if (businesses.length !== 1) {
+      throw new ForbiddenException(forbiddenMessage);
     }
     return businesses[0];
   }
@@ -1294,26 +1215,6 @@ export class StaffServiceCatalogService {
     return staff;
   }
 
-  private async findCategoryInBusiness(businessId: string, categoryId: string): Promise<ServiceCategoryRecord> {
-    const category = await this.prisma.salonOwnerServiceCategory.findFirst({ where: { id: categoryId, businessId } });
-    if (!category) {
-      throw new NotFoundException(notFoundMessage);
-    }
-    return category;
-  }
-
-  private async findServiceInScope(context: SalonOwnerRequestContext, serviceId: string): Promise<ServiceRecord> {
-    const tenantId = this.requireTenantId(context);
-    const service = await this.prisma.salonOwnerService.findFirst({
-      where: { id: serviceId, business: { tenantId } },
-      include: serviceInclude,
-    });
-    if (!service) {
-      throw new NotFoundException(notFoundMessage);
-    }
-    return service;
-  }
-
   private requireSingleBusiness(branches: readonly BranchRecord[]): string {
     const businessIds = unique(branches.map((branch) => branch.businessId));
     if (businessIds.length !== 1) {
@@ -1322,76 +1223,70 @@ export class StaffServiceCatalogService {
     return businessIds[0];
   }
 
-  private async assertServicesInBusiness(businessId: string, serviceIds: readonly string[]): Promise<void> {
-    const ids = unique(serviceIds);
-    if (ids.length === 0) {
-      return;
-    }
-    const count = await this.prisma.salonOwnerService.count({ where: { id: { in: ids }, businessId } });
-    if (count !== ids.length) {
-      throw new NotFoundException(notFoundMessage);
+  private requireBusinessMatch(branches: readonly BranchRecord[], businessId: string): void {
+    if (branches.some((branch) => branch.businessId !== businessId)) {
+      throw new UnprocessableEntityException(validationMessage);
     }
   }
 
-  private async assertStaffInBusiness(businessId: string, staffIds: readonly string[]): Promise<void> {
-    const ids = unique(staffIds);
-    if (ids.length === 0) {
-      return;
-    }
-    const count = await this.prisma.salonOwnerStaff.count({ where: { id: { in: ids }, businessId } });
-    if (count !== ids.length) {
-      throw new NotFoundException(notFoundMessage);
+  private async assertRemainingActiveOwner(businessId: string, currentStaffId: string): Promise<void> {
+    const activeStaff = await this.prisma.salonOwnerStaff.findMany({
+      where: {
+        businessId,
+        status: 'ACTIVE',
+        id: { not: currentStaffId },
+      },
+      include: {
+        roleAssignments: {
+          include: { businessRole: true },
+        },
+      },
+    });
+
+    const hasOtherActiveOwner = (activeStaff ?? []).some(
+      (s) =>
+        (s.roleAssignments ?? []).some((ra) => ra.businessRole?.roleCode === 'OWNER' || ra.businessRole?.name?.toUpperCase() === 'OWNER') ||
+        s.roles.includes('OWNER'),
+    );
+
+    if (!hasOtherActiveOwner) {
+      throw new ConflictException(finalOwnerConflictMessage);
     }
   }
 
-  private normalizeServiceInput(businessId: string, input: ServiceInputDto): Prisma.SalonOwnerServiceUncheckedCreateInput {
-    assertDecimalPrecision(input.basePrice, 8);
-    assertDecimalPrecision(input.taxRatePercent, 3);
-    return {
-      businessId,
-      categoryId: input.categoryId,
-      name: trimRequired(input.name),
-      durationMinutes: input.durationMinutes,
-      bufferMinutes: input.bufferMinutes ?? 0,
-      basePrice: new Prisma.Decimal(input.basePrice),
-      taxRatePercent: new Prisma.Decimal(input.taxRatePercent),
-      status: input.status,
-    };
+  private assertStaffPersonalAccess(user: AuthenticatedUser, staff: StaffRecord, options: { allowSelf: boolean }): void {
+    if (isUserOwnerOrAdmin(user) || Boolean(user['canManageStaffPersonalDetails'])) {
+      return;
+    }
+    const staffBranchIds = (staff.branches ?? []).map((b) => b.branchId);
+    if (isUserAssignedBranchManager(user, staffBranchIds)) {
+      return;
+    }
+    if (options.allowSelf && isUserSelf(user, staff)) {
+      return;
+    }
+    throw new ForbiddenException(forbiddenMessage);
   }
 
   private mapStaff(staff: StaffRecord): StaffModel {
     const roleAssignments = staff.roleAssignments ?? [];
-    const assignedRoleIds = roleAssignments.map((ra) => ra.businessRoleId);
-    const assignedRoleNames = roleAssignments.map((ra) => ra.businessRole.roleCode ?? ra.businessRole.name);
-    const effectiveRoles = assignedRoleNames.length > 0 ? assignedRoleNames : staff.roles;
+    const roleNames =
+      roleAssignments.length > 0 ? roleAssignments.map((ra) => ra.businessRole?.roleCode ?? ra.businessRole?.name ?? '') : staff.roles;
+
+    const roleIds = roleAssignments.map((ra) => ra.businessRoleId);
 
     return {
       id: staff.id,
-      branchIds: staff.branches.map((branch) => branch.branchId).sort(),
       displayName: staff.displayName,
       phone: staff.phone,
-      ...(staff.email ? { email: staff.email } : {}),
+      email: staff.email ?? undefined,
       status: staff.status,
-      roles: effectiveRoles,
-      roleIds: assignedRoleIds,
+      roles: roleNames,
+      roleIds,
+      branchIds: staff.branches.map((branch) => branch.branchId).sort(),
       skillServiceIds: staff.skills.map((skill) => skill.serviceId).sort(),
       createdAt: toIso(staff.createdAt),
       updatedAt: toIso(staff.updatedAt),
-    };
-  }
-
-  private mapBusinessRole(role: Prisma.BusinessRoleGetPayload<{ include: { permissions: true } }>): BusinessRoleModel {
-    return {
-      id: role.id,
-      businessId: role.businessId,
-      roleCode: role.roleCode,
-      name: role.name,
-      description: role.description,
-      permissions: role.permissions.map((p) => p.permissionCode).sort(),
-      isSystemDefault: role.isSystemDefault,
-      isActive: role.isActive,
-      createdAt: toIso(role.createdAt),
-      updatedAt: toIso(role.updatedAt),
     };
   }
 
@@ -1404,42 +1299,6 @@ export class StaffServiceCatalogService {
       endsAt: toIso(block.endsAt),
       reason: block.reason,
     };
-  }
-
-  private mapCategory(category: ServiceCategoryRecord): ServiceCategoryModel {
-    return {
-      id: category.id,
-      name: category.name,
-      sortOrder: category.sortOrder,
-    };
-  }
-
-  private mapService(service: ServiceRecord): ServiceModel {
-    return {
-      id: service.id,
-      categoryId: service.categoryId,
-      name: service.name,
-      durationMinutes: service.durationMinutes,
-      bufferMinutes: service.bufferMinutes,
-      basePrice: decimalToString(service.basePrice),
-      taxRatePercent: decimalToString(service.taxRatePercent),
-      status: service.status,
-      eligibleStaffIds: (service.skills ?? []).map((skill) => skill.staffId).sort(),
-    };
-  }
-
-  private assertStaffPersonalAccess(user: AuthenticatedUser, staff: StaffRecord, options: { allowSelf: boolean }): void {
-    if (isUserOwnerOrAdmin(user)) {
-      return;
-    }
-    const staffBranchIds = (staff.branches ?? []).map((b) => b.branchId);
-    if (isUserAssignedBranchManager(user, staffBranchIds)) {
-      return;
-    }
-    if (options.allowSelf && isUserSelf(user, staff)) {
-      return;
-    }
-    throw new ForbiddenException(forbiddenMessage);
   }
 
   private mapPersonalProfile(

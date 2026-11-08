@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
 import { ConflictException, ForbiddenException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import type { AuthenticatedUser } from '@cthub-bsaas/shared';
+import { AuthenticatedUser, UserRole } from '@cthub-bsaas/shared';
 import type { PrismaService } from '@cthub-bsaas/server-data-access';
 import type { StaffPersonalProfileModel } from '../models/staff-service-catalog.models';
 
-import { StaffServiceCatalogService } from './staff-service-catalog.service';
+import { StaffService } from './staff.service';
 
 const now = new Date('2026-05-26T00:00:00.000Z');
 
@@ -57,37 +57,8 @@ function staff(overrides: Record<string, unknown> = {}) {
     email: 'stylist@example.com',
     status: 'ACTIVE',
     roles: [],
+    roleAssignments: [],
     branches: [{ staffId: 'staff-1', branchId: 'branch-1' }],
-    skills: [],
-    createdAt: now,
-    updatedAt: now,
-    ...overrides,
-  };
-}
-
-function category(overrides: Record<string, unknown> = {}) {
-  return {
-    id: 'category-1',
-    businessId: 'business-1',
-    name: 'Hair',
-    sortOrder: 1,
-    createdAt: now,
-    updatedAt: now,
-    ...overrides,
-  };
-}
-
-function serviceRecord(overrides: Record<string, unknown> = {}) {
-  return {
-    id: 'service-1',
-    businessId: 'business-1',
-    categoryId: 'category-1',
-    name: 'Cut',
-    durationMinutes: 45,
-    bufferMinutes: 5,
-    basePrice: new Prisma.Decimal('35.00'),
-    taxRatePercent: new Prisma.Decimal('10.00'),
-    status: 'ACTIVE',
     skills: [],
     createdAt: now,
     updatedAt: now,
@@ -130,6 +101,7 @@ function createPrismaMock() {
       deleteMany: jest.fn(),
     },
     salonOwnerStaffShift: {
+      findFirst: jest.fn(),
       upsert: jest.fn(),
     },
     salonOwnerStaffLeaveBlock: {
@@ -190,13 +162,13 @@ function createPrismaMock() {
   return prisma;
 }
 
-describe('StaffServiceCatalogService', () => {
+describe('StaffService', () => {
   let prisma: ReturnType<typeof createPrismaMock>;
-  let service: StaffServiceCatalogService;
+  let service: StaffService;
 
   beforeEach(() => {
     prisma = createPrismaMock();
-    service = new StaffServiceCatalogService(prisma as unknown as PrismaService);
+    service = new StaffService(prisma as unknown as PrismaService);
 
     prisma.businessRole.findMany.mockResolvedValue([
       {
@@ -219,6 +191,7 @@ describe('StaffServiceCatalogService', () => {
     prisma.staffRoleAssignment.deleteMany.mockResolvedValue({ count: 0 });
     prisma.staffRoleAssignment.createMany.mockResolvedValue({ count: 1 });
     prisma.staffRoleAssignment.count.mockResolvedValue(0);
+    prisma.salonOwnerService.findMany.mockResolvedValue([{ id: 'service-1' }]);
   });
 
   it('lists staff by authenticated tenant and optional branch', async () => {
@@ -444,6 +417,7 @@ describe('StaffServiceCatalogService', () => {
   it('enforces BR-ST-11 final owner protection on role changes and deactivations', async () => {
     const ownerStaff = staff({ roles: ['OWNER'], status: 'ACTIVE' });
     prisma.salonOwnerStaff.findFirst.mockResolvedValue(ownerStaff);
+    prisma.salonOwnerStaff.findMany.mockResolvedValueOnce([]); // No other active owner
     prisma.salonOwnerStaff.count.mockResolvedValue(1); // Only 1 active owner
 
     // Attempting to remove OWNER role when only 1 active owner exists
@@ -451,6 +425,7 @@ describe('StaffServiceCatalogService', () => {
 
     // Attempting to deactivate the only active owner
     prisma.salonBranch.findMany.mockResolvedValue([branch()]);
+    prisma.salonOwnerStaff.findMany.mockResolvedValueOnce([]);
     await expect(
       service.updateStaff({ user: user() }, 'staff-1', {
         branchIds: ['branch-1'],
@@ -462,11 +437,14 @@ describe('StaffServiceCatalogService', () => {
 
     // When another active owner exists (count = 2), removal and deactivation succeed
     prisma.salonOwnerStaff.count.mockResolvedValue(2);
+    prisma.salonOwnerStaff.findMany.mockResolvedValueOnce([staff({ id: 'owner-2', roles: ['OWNER'] })]);
     prisma.salonOwnerStaff.update.mockResolvedValue(staff({ roles: ['STYLIST'] }));
     await expect(service.replaceStaffRoles({ user: user() }, 'staff-1', { roles: ['STYLIST'] })).resolves.toMatchObject({
       roles: ['STYLIST'],
     });
 
+    prisma.salonOwnerStaff.findMany.mockResolvedValueOnce([staff({ id: 'owner-2', roles: ['OWNER'] })]);
+    prisma.salonOwnerStaff.update.mockResolvedValue(staff({ status: 'INACTIVE' }));
     prisma.salonOwnerStaff.findUniqueOrThrow.mockResolvedValue(staff({ status: 'INACTIVE' }));
     await expect(
       service.updateStaff({ user: user() }, 'staff-1', {
@@ -526,125 +504,165 @@ describe('StaffServiceCatalogService', () => {
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
   });
 
-  it('creates categories and maps duplicates to conflict', async () => {
-    prisma.salonBusiness.findMany.mockResolvedValue([business()]);
-    prisma.salonOwnerServiceCategory.create.mockResolvedValue(category({ name: 'Hair' }));
+  describe('Staff Shifts and Delegated Branch Management', () => {
+    it('returns empty shift defaults when no shift record exists', async () => {
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff({ branches: [{ staffId: 'staff-1', branchId: 'branch-1' }] }));
+      prisma.salonOwnerStaffShift.findFirst.mockResolvedValue(null);
 
-    await expect(service.createServiceCategory({ user: user() }, { name: ' Hair ', sortOrder: 1 })).resolves.toEqual({
-      id: 'category-1',
-      name: 'Hair',
-      sortOrder: 1,
+      const result = await service.getStaffShifts({ user: user() }, 'staff-1');
+      expect(result).toEqual({
+        staffId: 'staff-1',
+        branchId: 'branch-1',
+        timezone: 'Asia/Tokyo',
+        days: [],
+      });
     });
 
-    prisma.salonOwnerServiceCategory.create.mockRejectedValueOnce(prismaKnownError('P2002'));
-    await expect(service.createServiceCategory({ user: user() }, { name: 'Hair', sortOrder: 1 })).rejects.toBeInstanceOf(ConflictException);
-  });
+    it('returns empty branchId when staff has no assigned branches and no shift exists', async () => {
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff({ branches: [] }));
+      prisma.salonOwnerStaffShift.findFirst.mockResolvedValue(null);
 
-  it('lists categories and returns not found when no tenant business exists', async () => {
-    prisma.salonBusiness.findMany.mockResolvedValueOnce([business()]);
-    prisma.salonOwnerServiceCategory.findMany.mockResolvedValue([category()]);
-
-    await expect(service.listServiceCategories({ user: user() })).resolves.toMatchObject({ items: [{ id: 'category-1' }] });
-
-    prisma.salonBusiness.findMany.mockResolvedValueOnce([]);
-    await expect(service.listServiceCategories({ user: user() })).rejects.toBeInstanceOf(NotFoundException);
-  });
-
-  it('requires explicit business scope when multiple businesses exist', async () => {
-    prisma.salonBusiness.findMany.mockResolvedValue([business(), business({ id: 'business-2' })]);
-
-    await expect(service.listServiceCategories({ user: user() })).rejects.toBeInstanceOf(UnprocessableEntityException);
-  });
-
-  it('uses explicit business scope for catalog operations', async () => {
-    prisma.salonBusiness.findFirst.mockResolvedValue(business({ id: 'business-2' }));
-    prisma.salonOwnerServiceCategory.create.mockResolvedValue(category({ businessId: 'business-2', name: 'Hair' }));
-
-    await expect(
-      service.createServiceCategory({ user: user() }, { businessId: 'business-2', name: ' Hair ', sortOrder: 1 }),
-    ).resolves.toMatchObject({ id: 'category-1' });
-
-    expect(prisma.salonBusiness.findFirst).toHaveBeenCalledWith({ where: { id: 'business-2', tenantId: 'tenant-1' } });
-    expect(prisma.salonOwnerServiceCategory.create).toHaveBeenCalledWith({
-      data: { businessId: 'business-2', name: 'Hair', sortOrder: 1 },
+      const result = await service.getStaffShifts({ user: user() }, 'staff-1');
+      expect(result.branchId).toBe('');
     });
-  });
 
-  it('creates, updates, and statuses services under the scoped business', async () => {
-    prisma.salonBusiness.findMany.mockResolvedValue([business()]);
-    prisma.salonOwnerServiceCategory.findFirst.mockResolvedValue(category());
-    prisma.salonOwnerService.create.mockResolvedValue(serviceRecord({ name: 'Trimmed Cut' }));
-    prisma.salonOwnerService.findFirst.mockResolvedValue(serviceRecord());
-    prisma.salonOwnerService.update.mockResolvedValue(serviceRecord({ status: 'INACTIVE' }));
+    it('returns staff shift with mapped days and intervals', async () => {
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff());
+      prisma.salonOwnerStaffShift.findFirst.mockResolvedValue({
+        id: 'shift-1',
+        staffId: 'staff-1',
+        branchId: 'branch-1',
+        timezone: 'Asia/Tokyo',
+        days: [
+          { dayOfWeek: 1, intervals: [{ start: '09:00', end: '17:00' }] },
+          { dayOfWeek: 2, intervals: null },
+        ],
+      });
 
-    const input = {
-      categoryId: 'category-1',
-      name: ' Trimmed Cut ',
-      durationMinutes: 45,
-      bufferMinutes: 5,
-      basePrice: '35',
-      taxRatePercent: '10',
-      status: 'ACTIVE' as const,
-    };
-
-    await expect(service.createService({ user: user() }, input)).resolves.toMatchObject({ name: 'Trimmed Cut', basePrice: '35.00' });
-    await expect(service.updateService({ user: user() }, 'service-1', input)).resolves.toMatchObject({ status: 'INACTIVE' });
-    await expect(service.updateServiceStatus({ user: user() }, 'service-1', { status: 'INACTIVE' })).resolves.toMatchObject({
-      status: 'INACTIVE',
+      const result = await service.getStaffShifts({ user: user() }, 'staff-1');
+      expect(result.days).toHaveLength(2);
+      expect(result.days[0].intervals).toEqual([{ start: '09:00', end: '17:00' }]);
+      expect(result.days[1].intervals).toEqual([]);
     });
-  });
 
-  it('rejects service monetary values that exceed database precision', async () => {
-    prisma.salonBusiness.findMany.mockResolvedValue([business()]);
-    prisma.salonOwnerServiceCategory.findFirst.mockResolvedValue(category());
+    it('handles non-array days in shift record', async () => {
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff());
+      prisma.salonOwnerStaffShift.findFirst.mockResolvedValue({
+        id: 'shift-1',
+        staffId: 'staff-1',
+        branchId: 'branch-1',
+        timezone: 'Asia/Tokyo',
+        days: 'invalid-json' as any,
+      });
 
-    await expect(
-      service.createService(
-        { user: user() },
-        {
-          categoryId: 'category-1',
-          name: 'Cut',
-          durationMinutes: 45,
-          basePrice: '123456789.00',
-          taxRatePercent: '10.00',
-          status: 'ACTIVE',
-        },
-      ),
-    ).rejects.toBeInstanceOf(UnprocessableEntityException);
-  });
-
-  it('rejects service updates scoped to a different business', async () => {
-    prisma.salonOwnerService.findFirst.mockResolvedValue(serviceRecord());
-
-    await expect(
-      service.updateService({ user: user() }, 'service-1', {
-        businessId: 'business-2',
-        categoryId: 'category-1',
-        name: 'Cut',
-        durationMinutes: 45,
-        basePrice: '35.00',
-        taxRatePercent: '10.00',
-        status: 'ACTIVE',
-      }),
-    ).rejects.toBeInstanceOf(ForbiddenException);
-  });
-
-  it('lists services by category and replaces service staff eligibility', async () => {
-    prisma.salonBusiness.findMany.mockResolvedValue([business()]);
-    prisma.salonOwnerServiceCategory.findFirst.mockResolvedValue(category());
-    prisma.salonOwnerService.findMany.mockResolvedValue([serviceRecord()]);
-    prisma.salonOwnerService.findFirst.mockResolvedValue(serviceRecord());
-    prisma.salonOwnerStaff.count.mockResolvedValue(1);
-    prisma.salonOwnerService.findUniqueOrThrow.mockResolvedValue(
-      serviceRecord({ skills: [{ serviceId: 'service-1', staffId: 'staff-1' }] }),
-    );
-
-    await expect(service.listServices({ user: user() }, { categoryId: 'category-1' })).resolves.toMatchObject({
-      items: [{ id: 'service-1' }],
+      const result = await service.getStaffShifts({ user: user() }, 'staff-1');
+      expect(result.days).toEqual([]);
     });
-    await expect(
-      service.replaceServiceStaffEligibility({ user: user() }, 'service-1', { staffIds: ['staff-1', 'staff-1'] }),
-    ).resolves.toMatchObject({ eligibleStaffIds: ['staff-1'] });
+
+    it('allows branch manager to get shifts when branch is in managedBranchIds', async () => {
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff());
+      prisma.salonOwnerStaffShift.findFirst.mockResolvedValue({
+        id: 'shift-1',
+        staffId: 'staff-1',
+        branchId: 'branch-1',
+        timezone: 'Asia/Tokyo',
+        days: [],
+      });
+
+      const managerUser = user({ roles: [UserRole.STAFF], managedBranchIds: ['branch-1'] });
+      const result = await service.getStaffShifts({ user: managerUser }, 'staff-1');
+      expect(result.staffId).toBe('staff-1');
+    });
+
+    it('rejects branch manager from getting shifts for branch outside managedBranchIds', async () => {
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff());
+      prisma.salonOwnerStaffShift.findFirst.mockResolvedValue({
+        id: 'shift-1',
+        staffId: 'staff-1',
+        branchId: 'branch-2',
+        timezone: 'Asia/Tokyo',
+        days: [],
+      });
+
+      const managerUser = user({ roles: [UserRole.STAFF], managedBranchIds: ['branch-1'] });
+      await expect(service.getStaffShifts({ user: managerUser }, 'staff-1')).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('rejects branch manager from replacing shifts for branch outside managedBranchIds', async () => {
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff({ branches: [{ staffId: 'staff-1', branchId: 'branch-2' }] }));
+      prisma.salonBranch.findFirst.mockResolvedValue(branch({ id: 'branch-2' }));
+
+      const managerUser = user({ roles: [UserRole.STAFF], managedBranchIds: ['branch-1'] });
+      await expect(
+        service.replaceStaffShifts({ user: managerUser }, 'staff-1', { branchId: 'branch-2', timezone: 'Asia/Tokyo', days: [] }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('enforces delegated manager scoping on listStaff, createStaff, getStaff, and createStaffLeaveBlock', async () => {
+      const managerUser = user({ roles: [UserRole.STAFF], managedBranchIds: ['branch-1'] });
+
+      // listStaff with out-of-scope branchId
+      prisma.salonBranch.findFirst.mockResolvedValue(branch({ id: 'branch-2' }));
+      await expect(service.listStaff({ user: managerUser }, { branchId: 'branch-2' })).rejects.toBeInstanceOf(ForbiddenException);
+
+      // createStaff with out-of-scope branchId
+      prisma.salonBranch.findMany.mockResolvedValue([branch({ id: 'branch-2' })]);
+      await expect(
+        service.createStaff(
+          { user: managerUser },
+          { branchIds: ['branch-2'], displayName: 'Stylist Out', phone: '09012345678', status: 'ACTIVE' },
+        ),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+
+      // getStaff where staff has no overlapping branch with manager
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff({ branches: [{ staffId: 'staff-1', branchId: 'branch-2' }] }));
+      await expect(service.getStaff({ user: managerUser }, 'staff-1')).rejects.toBeInstanceOf(ForbiddenException);
+
+      // createStaffLeaveBlock where branch is outside manager's scope
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff({ branches: [{ staffId: 'staff-1', branchId: 'branch-2' }] }));
+      prisma.salonBranch.findFirst.mockResolvedValue(branch({ id: 'branch-2' }));
+      await expect(
+        service.createStaffLeaveBlock({ user: managerUser }, 'staff-1', {
+          branchId: 'branch-2',
+          startsAt: '2026-05-26T01:00:00.000Z',
+          endsAt: '2026-05-26T02:00:00.000Z',
+          reason: 'Personal',
+        }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('enforces multiple business resolution and branch business consistency', async () => {
+      // resolveBusinessInScope with multiple businesses and no ID
+      prisma.salonBusiness.findMany.mockResolvedValue([business(), business({ id: 'business-2' })]);
+      await expect(service.listBusinessRoles({ user: user() })).rejects.toBeInstanceOf(ForbiddenException);
+
+      // requireSingleBusiness with multiple businesses
+      prisma.salonBranch.findMany.mockResolvedValue([
+        branch({ id: 'branch-1', businessId: 'business-1' }),
+        branch({ id: 'branch-2', businessId: 'business-2' }),
+      ]);
+      await expect(
+        service.createStaff(
+          { user: user() },
+          { branchIds: ['branch-1', 'branch-2'], displayName: 'Stylist Multi', phone: '09012345678', status: 'ACTIVE' },
+        ),
+      ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+      // assertRemainingActiveOwner when other owner is assigned via roleAssignments
+      const ownerStaff = staff({ roles: ['OWNER'], status: 'ACTIVE' });
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(ownerStaff);
+      prisma.salonOwnerStaff.findMany.mockResolvedValueOnce([
+        staff({
+          id: 'owner-2',
+          roles: [],
+          roleAssignments: [{ staffId: 'owner-2', businessRoleId: 'owner-role-id', businessRole: { roleCode: 'OWNER', name: 'Owner' } }],
+        }),
+      ]);
+      prisma.salonOwnerStaff.update.mockResolvedValue(staff({ roles: ['STYLIST'] }));
+      await expect(service.replaceStaffRoles({ user: user() }, 'staff-1', { roles: ['STYLIST'] })).resolves.toMatchObject({
+        roles: ['STYLIST'],
+      });
+    });
   });
 
   it('covers staff retrieval, updates, empty skill/eligibility replacements, and error branches', async () => {
@@ -659,9 +677,10 @@ describe('StaffServiceCatalogService', () => {
         phone: '09000000001',
         status: 'ACTIVE',
       }),
-    ).rejects.toBeInstanceOf(ForbiddenException);
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
 
     prisma.salonBranch.findMany.mockResolvedValue([branch()]);
+    prisma.salonOwnerStaff.update.mockResolvedValue(staff({ displayName: 'Updated Stylist' }));
     prisma.salonOwnerStaff.findUniqueOrThrow.mockResolvedValue(staff({ displayName: 'Updated Stylist' }));
     await expect(
       service.updateStaff({ user: user() }, 'staff-1', {
@@ -701,21 +720,10 @@ describe('StaffServiceCatalogService', () => {
     ).rejects.toThrow('unexpected staff create error');
 
     await expect(service.replaceStaffSkills({ user: user() }, 'staff-1', { serviceIds: [] })).resolves.toMatchObject({ id: 'staff-1' });
-    prisma.salonOwnerService.count.mockResolvedValueOnce(0);
+    prisma.salonOwnerService.findMany.mockResolvedValueOnce([]);
     await expect(service.replaceStaffSkills({ user: user() }, 'staff-1', { serviceIds: ['missing-service'] })).rejects.toBeInstanceOf(
       NotFoundException,
     );
-
-    prisma.salonOwnerService.findFirst.mockResolvedValue(serviceRecord());
-    prisma.salonOwnerService.findUniqueOrThrow.mockResolvedValue(serviceRecord());
-    await expect(service.getService({ user: user() }, 'service-1')).resolves.toMatchObject({ id: 'service-1' });
-    await expect(service.replaceServiceStaffEligibility({ user: user() }, 'service-1', { staffIds: [] })).resolves.toMatchObject({
-      id: 'service-1',
-    });
-    prisma.salonOwnerStaff.count.mockResolvedValueOnce(0);
-    await expect(
-      service.replaceServiceStaffEligibility({ user: user() }, 'service-1', { staffIds: ['missing-staff'] }),
-    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('covers shift/leave validation and not-found/conflict error branches across catalog operations', async () => {
@@ -804,37 +812,6 @@ describe('StaffServiceCatalogService', () => {
       }),
     ).rejects.toBeInstanceOf(ForbiddenException);
 
-    prisma.salonBusiness.findMany.mockResolvedValue([business()]);
-    prisma.salonOwnerServiceCategory.create.mockRejectedValueOnce(new Error('unexpected category error'));
-    await expect(service.createServiceCategory({ user: user() }, { name: 'Hair', sortOrder: 1 })).rejects.toThrow(
-      'unexpected category error',
-    );
-
-    prisma.salonOwnerServiceCategory.findFirst.mockResolvedValue(category());
-    prisma.salonOwnerService.create.mockRejectedValueOnce(prismaKnownError('P2002'));
-    const serviceInput = {
-      categoryId: 'category-1',
-      name: 'Cut',
-      durationMinutes: 45,
-      basePrice: '35.00',
-      taxRatePercent: '10.00',
-      status: 'ACTIVE' as const,
-    };
-    await expect(service.createService({ user: user() }, serviceInput)).rejects.toBeInstanceOf(ConflictException);
-
-    prisma.salonOwnerService.create.mockRejectedValueOnce(new Error('unexpected service create error'));
-    await expect(service.createService({ user: user() }, serviceInput)).rejects.toThrow('unexpected service create error');
-
-    prisma.salonOwnerService.findFirst.mockResolvedValue(serviceRecord());
-    prisma.salonOwnerService.update.mockRejectedValueOnce(prismaKnownError('P2002'));
-    await expect(service.updateService({ user: user() }, 'service-1', serviceInput)).rejects.toBeInstanceOf(ConflictException);
-
-    prisma.salonOwnerService.update.mockRejectedValueOnce(new Error('unexpected service update error'));
-    await expect(service.updateService({ user: user() }, 'service-1', serviceInput)).rejects.toThrow('unexpected service update error');
-
-    prisma.salonBusiness.findFirst.mockResolvedValueOnce(null);
-    await expect(service.listServiceCategories({ user: user() }, 'missing-business')).rejects.toBeInstanceOf(NotFoundException);
-
     prisma.salonBranch.findFirst.mockResolvedValueOnce(null);
     await expect(service.listStaff({ user: user() }, { branchId: 'missing-branch' })).rejects.toBeInstanceOf(NotFoundException);
 
@@ -852,12 +829,6 @@ describe('StaffServiceCatalogService', () => {
 
     prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(null);
     await expect(service.getStaff({ user: user() }, 'missing-staff')).rejects.toBeInstanceOf(NotFoundException);
-
-    prisma.salonOwnerServiceCategory.findFirst.mockResolvedValueOnce(null);
-    await expect(service.listServices({ user: user() }, { categoryId: 'missing-category' })).rejects.toBeInstanceOf(NotFoundException);
-
-    prisma.salonOwnerService.findFirst.mockResolvedValueOnce(null);
-    await expect(service.getService({ user: user() }, 'missing-service')).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('manages business roles and system permissions with validation and invariants', async () => {
@@ -1107,6 +1078,7 @@ describe('StaffServiceCatalogService', () => {
     };
     prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(assignedOwnerStaff);
     prisma.salonBranch.findMany.mockResolvedValueOnce([branch()]);
+    prisma.salonOwnerStaff.findMany.mockResolvedValueOnce([]); // final owner
     prisma.salonOwnerStaff.count.mockResolvedValueOnce(1); // final owner
     await expect(
       service.updateStaff({ user: user() }, 'staff-1', {
@@ -1119,6 +1091,7 @@ describe('StaffServiceCatalogService', () => {
 
     prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(assignedOwnerStaff);
     prisma.businessRole.findMany.mockResolvedValueOnce([mockRole]); // role without OWNER
+    prisma.salonOwnerStaff.findMany.mockResolvedValueOnce([]); // final owner
     prisma.salonOwnerStaff.count.mockResolvedValueOnce(1); // final owner
     await expect(service.replaceStaffRoles({ user: user() }, 'staff-1', { roleIds: [mockRole.id] })).rejects.toBeInstanceOf(
       ConflictException,
@@ -1126,11 +1099,11 @@ describe('StaffServiceCatalogService', () => {
   });
 
   describe('Staff Personal HR Details and Identity Documents', () => {
-    const ownerUser = user({ roles: ['OWNER'] });
-    const managerUser = user({ id: 'manager-1', roles: ['MANAGER'], managedBranchIds: ['branch-1'] });
-    const otherManagerUser = user({ id: 'manager-2', roles: ['MANAGER'], managedBranchIds: ['branch-99'] });
-    const staffUser = user({ id: 'user-stylist', email: 'stylist@example.com', roles: ['STAFF'] });
-    const otherStaffUser = user({ id: 'user-other', email: 'other@example.com', roles: ['STAFF'] });
+    const ownerUser = user({ roles: [UserRole.OWNER] });
+    const managerUser = user({ id: 'manager-1', roles: [{ id: 1, name: 'MANAGER' }], managedBranchIds: ['branch-1'] });
+    const otherManagerUser = user({ id: 'manager-2', roles: [{ id: 1, name: 'MANAGER' }], managedBranchIds: ['branch-99'] });
+    const staffUser = user({ id: 'user-stylist', email: 'stylist@example.com', roles: [UserRole.STAFF] });
+    const otherStaffUser = user({ id: 'user-other', email: 'other@example.com', roles: [UserRole.STAFF] });
 
     const baseStaff = staff({
       id: 'staff-1',
@@ -1202,7 +1175,7 @@ describe('StaffServiceCatalogService', () => {
         expect(result.staffId).toBe('staff-1');
 
         // Global manager with canManageBranches: true and no specific managedBranchIds
-        const globalManager = user({ id: 'manager-global', roles: ['MANAGER'], canManageBranches: true });
+        const globalManager = user({ id: 'manager-global', roles: [{ id: 1, name: 'MANAGER' }], canManageBranches: true });
         prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
         prisma.staffPersonalProfile.findUnique.mockResolvedValueOnce(mockProfile);
         const globalResult = await service.getStaffPersonalDetails({ user: globalManager }, 'staff-1');
@@ -1739,10 +1712,15 @@ describe('StaffServiceCatalogService', () => {
           rejectionReason: 'Blurry document image',
         });
 
-        const rejected = await service.verifyStaffIdentityDocument({ user: user({ id: 'user-1', roles: ['OWNER'] }) }, 'staff-1', 'doc-1', {
-          verificationStatus: 'REJECTED',
-          rejectionReason: 'Blurry document image',
-        });
+        const rejected = await service.verifyStaffIdentityDocument(
+          { user: user({ id: 'user-1', roles: [UserRole.OWNER] }) },
+          'staff-1',
+          'doc-1',
+          {
+            verificationStatus: 'REJECTED',
+            rejectionReason: 'Blurry document image',
+          },
+        );
         expect(rejected.verificationStatus).toBe('REJECTED');
         expect(rejected.rejectionReason).toBe('Blurry document image');
       });
@@ -1822,7 +1800,7 @@ describe('StaffServiceCatalogService', () => {
         await expect(service.getStaffPersonalDetails({ user: userNoRoles }, 'staff-1')).rejects.toBeInstanceOf(ForbiddenException);
 
         // User with object roles with undefined name
-        const userObjRole = user({ id: 'user-obj', roles: [{ id: 'role-1' }] as unknown as string[] });
+        const userObjRole = user({ id: 'user-obj', roles: [{ id: 1, name: undefined as unknown as string }] });
         prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
         await expect(service.getStaffPersonalDetails({ user: userObjRole }, 'staff-1')).rejects.toBeInstanceOf(ForbiddenException);
 
@@ -1838,7 +1816,12 @@ describe('StaffServiceCatalogService', () => {
         expect(emailSelfDetails.staffId).toBe('staff-1');
 
         // Manager with empty managedBranchIds and canManageBranches false
-        const managerNoScope = user({ id: 'mgr-1', roles: ['BRANCH_MANAGER'], managedBranchIds: [], canManageBranches: false });
+        const managerNoScope = user({
+          id: 'mgr-1',
+          roles: [{ id: 1, name: 'BRANCH_MANAGER' }],
+          managedBranchIds: [],
+          canManageBranches: false,
+        });
         prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
         await expect(service.getStaffPersonalDetails({ user: managerNoScope }, 'staff-1')).rejects.toBeInstanceOf(ForbiddenException);
       });

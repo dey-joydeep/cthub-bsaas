@@ -5,3 +5,7 @@ export * from './lib/models/staff-service-catalog.models';
 export * from './lib/dto/staff-service-catalog.dto';
 export * from './lib/controllers/roles.controller';
 export * from './lib/controllers/permissions.controller';
+export * from './lib/controllers/staff.controller';
+export * from './lib/controllers/service-catalog.controller';
+export * from './lib/services/staff.service';
+export * from './lib/services/service-catalog.service';

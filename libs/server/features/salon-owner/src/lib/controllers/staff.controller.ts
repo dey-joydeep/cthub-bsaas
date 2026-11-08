@@ -29,49 +29,49 @@ import {
   StaffSkillsInputDto,
   VerifyStaffIdentityDocumentInputDto,
 } from '../dto/staff-service-catalog.dto';
-import { StaffServiceCatalogService } from '../services/staff-service-catalog.service';
+import { StaffService } from '../services/staff.service';
 
 @ApiTags('Staff')
 @UseInterceptors(ResponseEnvelopeInterceptor)
 @Controller({ path: 'partner/staff', version: VERSION_NEUTRAL })
 export class StaffController {
-  constructor(private readonly catalog: StaffServiceCatalogService) {}
+  constructor(private readonly staffService: StaffService) {}
 
   @Get()
   @ApiOperation({ operationId: 'listStaff' })
   listStaff(@CurrentUser() user: AuthenticatedUser, @Query() query: StaffListQueryDto) {
-    return this.catalog.listStaff({ user }, query);
+    return this.staffService.listStaff({ user }, query);
   }
 
   @Post()
   @ApiOperation({ operationId: 'createStaff' })
   createStaff(@CurrentUser() user: AuthenticatedUser, @Body() body: StaffInputDto) {
-    return this.catalog.createStaff({ user }, body);
+    return this.staffService.createStaff({ user }, body);
   }
 
   @Put('self/contact')
   @ApiOperation({ operationId: 'selfUpdateStaffContact' })
   selfUpdateStaffContact(@CurrentUser() user: AuthenticatedUser, @Body() body: StaffSelfContactInputDto) {
-    return this.catalog.selfUpdateStaffContact({ user }, body);
+    return this.staffService.selfUpdateStaffContact({ user }, body);
   }
 
   @Get(':staffId')
   @ApiOperation({ operationId: 'getStaff' })
   getStaff(@CurrentUser() user: AuthenticatedUser, @Param('staffId', new ParseUUIDPipe()) staffId: string) {
-    return this.catalog.getStaff({ user }, staffId);
+    return this.staffService.getStaff({ user }, staffId);
   }
 
   @Patch(':staffId')
   @Put(':staffId')
   @ApiOperation({ operationId: 'updateStaff' })
   updateStaff(@CurrentUser() user: AuthenticatedUser, @Param('staffId', new ParseUUIDPipe()) staffId: string, @Body() body: StaffInputDto) {
-    return this.catalog.updateStaff({ user }, staffId, body);
+    return this.staffService.updateStaff({ user }, staffId, body);
   }
 
   @Get(':staffId/personal')
   @ApiOperation({ operationId: 'getStaffPersonalDetails' })
   getStaffPersonalDetails(@CurrentUser() user: AuthenticatedUser, @Param('staffId', new ParseUUIDPipe()) staffId: string) {
-    return this.catalog.getStaffPersonalDetails({ user }, staffId);
+    return this.staffService.getStaffPersonalDetails({ user }, staffId);
   }
 
   @Put(':staffId/personal')
@@ -81,13 +81,13 @@ export class StaffController {
     @Param('staffId', new ParseUUIDPipe()) staffId: string,
     @Body() body: StaffPersonalDetailsInputDto,
   ) {
-    return this.catalog.updateStaffPersonalDetails({ user }, staffId, body);
+    return this.staffService.updateStaffPersonalDetails({ user }, staffId, body);
   }
 
   @Get(':staffId/documents')
   @ApiOperation({ operationId: 'listStaffIdentityDocuments' })
   listStaffIdentityDocuments(@CurrentUser() user: AuthenticatedUser, @Param('staffId', new ParseUUIDPipe()) staffId: string) {
-    return this.catalog.listStaffIdentityDocuments({ user }, staffId);
+    return this.staffService.listStaffIdentityDocuments({ user }, staffId);
   }
 
   @Post(':staffId/documents')
@@ -97,7 +97,7 @@ export class StaffController {
     @Param('staffId', new ParseUUIDPipe()) staffId: string,
     @Body() body: StaffIdentityDocumentInputDto,
   ) {
-    return this.catalog.uploadStaffIdentityDocument({ user }, staffId, body);
+    return this.staffService.uploadStaffIdentityDocument({ user }, staffId, body);
   }
 
   @Put(':staffId/documents/:documentId/verify')
@@ -108,7 +108,7 @@ export class StaffController {
     @Param('documentId', new ParseUUIDPipe()) documentId: string,
     @Body() body: VerifyStaffIdentityDocumentInputDto,
   ) {
-    return this.catalog.verifyStaffIdentityDocument({ user }, staffId, documentId, body);
+    return this.staffService.verifyStaffIdentityDocument({ user }, staffId, documentId, body);
   }
 
   @Put(':staffId/roles')
@@ -118,7 +118,7 @@ export class StaffController {
     @Param('staffId', new ParseUUIDPipe()) staffId: string,
     @Body() body: StaffRolesInputDto,
   ) {
-    return this.catalog.replaceStaffRoles({ user }, staffId, body);
+    return this.staffService.replaceStaffRoles({ user }, staffId, body);
   }
 
   @Put(':staffId/skills')
@@ -128,7 +128,13 @@ export class StaffController {
     @Param('staffId', new ParseUUIDPipe()) staffId: string,
     @Body() body: StaffSkillsInputDto,
   ) {
-    return this.catalog.replaceStaffSkills({ user }, staffId, body);
+    return this.staffService.replaceStaffSkills({ user }, staffId, body);
+  }
+
+  @Get(':staffId/shifts')
+  @ApiOperation({ operationId: 'getStaffShifts' })
+  getStaffShifts(@CurrentUser() user: AuthenticatedUser, @Param('staffId', new ParseUUIDPipe()) staffId: string) {
+    return this.staffService.getStaffShifts({ user }, staffId);
   }
 
   @Put(':staffId/shifts')
@@ -138,7 +144,7 @@ export class StaffController {
     @Param('staffId', new ParseUUIDPipe()) staffId: string,
     @Body() body: StaffShiftInputDto,
   ) {
-    return this.catalog.replaceStaffShifts({ user }, staffId, body);
+    return this.staffService.replaceStaffShifts({ user }, staffId, body);
   }
 
   @Get(':staffId/leave-blocks')
@@ -148,7 +154,7 @@ export class StaffController {
     @Param('staffId', new ParseUUIDPipe()) staffId: string,
     @Query() query: StaffLeaveBlockQueryDto,
   ) {
-    return this.catalog.listStaffLeaveBlocks({ user }, staffId, query);
+    return this.staffService.listStaffLeaveBlocks({ user }, staffId, query);
   }
 
   @Post(':staffId/leave-blocks')
@@ -158,7 +164,7 @@ export class StaffController {
     @Param('staffId', new ParseUUIDPipe()) staffId: string,
     @Body() body: StaffLeaveBlockInputDto,
   ) {
-    return this.catalog.createStaffLeaveBlock({ user }, staffId, body);
+    return this.staffService.createStaffLeaveBlock({ user }, staffId, body);
   }
 
   @Delete(':staffId/leave-blocks/:leaveBlockId')
@@ -168,6 +174,6 @@ export class StaffController {
     @Param('staffId', new ParseUUIDPipe()) staffId: string,
     @Param('leaveBlockId', new ParseUUIDPipe()) leaveBlockId: string,
   ) {
-    return this.catalog.deleteStaffLeaveBlock({ user }, staffId, leaveBlockId);
+    return this.staffService.deleteStaffLeaveBlock({ user }, staffId, leaveBlockId);
   }
 }
