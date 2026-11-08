@@ -33,7 +33,9 @@ export class StaffServiceCatalogApi {
 
   listRoles(includeInactive = false): Observable<PagedEnvelope<BusinessRole>> {
     const params = includeInactive ? new HttpParams().set('includeInactive', 'true') : undefined;
-    return this.http.get<ApiEnvelope<PagedEnvelope<BusinessRole>>>(`${this.baseUrl}/roles`, { params }).pipe(map((response) => response.data));
+    return this.http
+      .get<ApiEnvelope<PagedEnvelope<BusinessRole>>>(`${this.baseUrl}/roles`, { params })
+      .pipe(map((response) => response.data));
   }
 
   createRole(input: BusinessRoleInput): Observable<BusinessRole> {
@@ -52,8 +54,10 @@ export class StaffServiceCatalogApi {
     return this.http.get<ApiEnvelope<PermissionItem[]>>(`${this.baseUrl}/permissions`).pipe(map((response) => response.data));
   }
 
-  listStaff(branchId?: string): Observable<StaffPage> {
-    const params = branchId ? new HttpParams().set('branchId', branchId) : undefined;
+  listStaff(branchId?: string, businessId?: string): Observable<StaffPage> {
+    let params = new HttpParams();
+    if (branchId) params = params.set('branchId', branchId);
+    if (businessId) params = params.set('businessId', businessId);
     return this.http.get<ApiEnvelope<StaffPage>>(`${this.baseUrl}/staff`, { params }).pipe(map((response) => response.data));
   }
 
@@ -98,16 +102,21 @@ export class StaffServiceCatalogApi {
       .pipe(map((response) => response.data));
   }
 
-  listServiceCategories(): Observable<ServiceCategoryPage> {
-    return this.http.get<ApiEnvelope<ServiceCategoryPage>>(`${this.baseUrl}/service-categories`).pipe(map((response) => response.data));
+  listServiceCategories(businessId?: string): Observable<ServiceCategoryPage> {
+    const params = businessId ? new HttpParams().set('businessId', businessId) : undefined;
+    return this.http
+      .get<ApiEnvelope<ServiceCategoryPage>>(`${this.baseUrl}/service-categories`, { params })
+      .pipe(map((response) => response.data));
   }
 
   createServiceCategory(input: ServiceCategoryInput): Observable<ServiceCategory> {
     return this.http.post<ApiEnvelope<ServiceCategory>>(`${this.baseUrl}/service-categories`, input).pipe(map((response) => response.data));
   }
 
-  listServices(categoryId?: string): Observable<ServicePage> {
-    const params = categoryId ? new HttpParams().set('categoryId', categoryId) : undefined;
+  listServices(categoryId?: string, businessId?: string): Observable<ServicePage> {
+    let params = new HttpParams();
+    if (categoryId) params = params.set('categoryId', categoryId);
+    if (businessId) params = params.set('businessId', businessId);
     return this.http.get<ApiEnvelope<ServicePage>>(`${this.baseUrl}/services`, { params }).pipe(map((response) => response.data));
   }
 
