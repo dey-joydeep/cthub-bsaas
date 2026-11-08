@@ -1,6 +1,6 @@
 .catalog-shell {
   display: grid;
-  gap: 16px;
+  gap: 12px;
   margin: 0 auto;
   max-width: 100%;
   padding: 0;
@@ -9,28 +9,33 @@
 .catalog-header {
   align-items: center;
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
   justify-content: space-between;
+  margin-bottom: 2px;
 
-  h1 {
+  .catalog-title {
     color: #0f172a;
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
     margin: 0;
-  }
-
-  p {
-    color: #64748b;
-    font-size: 0.875rem;
-    margin: 2px 0 0;
   }
 }
 
-.header-actions {
+.service-catalog-card-header {
+  align-items: center;
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  justify-content: space-between;
+  width: 100%;
+
+  .card-header-actions {
+    margin-left: auto;
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+  }
 }
 
 .card-header-icon {
@@ -47,9 +52,9 @@
 .staff-workspace-layout {
   align-items: start;
   display: grid;
-  gap: 24px;
+  gap: 20px;
   grid-template-columns: 360px minmax(0, 1fr);
-  padding: 16px 0;
+  padding: 8px 0;
 }
 
 .staff-master-sidebar {

@@ -102,6 +102,15 @@
   padding: 0.5rem 0;
   position: relative;
   transition: color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.main-nav a mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
 }
 .main-nav a:hover,
 .main-nav a.active {
@@ -123,7 +132,7 @@
   gap: 1rem;
 }
 .user-menu-trigger {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
@@ -132,6 +141,12 @@
   &:hover {
     background-color: rgba(0, 0, 0, 0.04);
   }
+}
+.user-menu-trigger mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
 }
 .user-name {
   font-weight: 500;

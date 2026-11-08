@@ -4,20 +4,7 @@
   }
 
   <header class="catalog-header">
-    <div>
-      <h1>Staff and services</h1>
-      <p>Manage staff profiles, branch assignments, skills, schedules, services, categories, and eligibility.</p>
-    </div>
-    <div class="header-actions">
-      <button mat-stroked-button type="button" (click)="newStaff()">
-        <mat-icon>person_add</mat-icon>
-        Staff
-      </button>
-      <button mat-stroked-button type="button" (click)="newService()">
-        <mat-icon>add</mat-icon>
-        Service
-      </button>
-    </div>
+    <h1 class="catalog-title">Staff & Services</h1>
   </header>
 
   @if (message()) {
@@ -509,9 +496,15 @@
         </mat-card>
 
         <mat-card>
-          <mat-card-header>
+          <mat-card-header class="service-catalog-card-header">
             <mat-icon mat-card-avatar class="card-header-icon">view_list</mat-icon>
             <mat-card-title>Service catalog</mat-card-title>
+            <div class="card-header-actions">
+              <button mat-stroked-button type="button" (click)="newService()">
+                <mat-icon>add</mat-icon>
+                <span>Add Service</span>
+              </button>
+            </div>
           </mat-card-header>
           <mat-card-content>
             <div class="list">

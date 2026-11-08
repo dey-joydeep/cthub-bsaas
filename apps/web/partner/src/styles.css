@@ -6,7 +6,7 @@
 /* Layout Structure */
 :root {
   --header-height: 4rem;
-  --content-padding: 1.5rem;
+  --content-padding: 1rem 2rem;
 }
 /* Base Layout */
 body {
