@@ -78,3 +78,66 @@ export interface ServiceModel {
   readonly status: SalonOwnerStatus;
   readonly eligibleStaffIds: readonly string[];
 }
+
+export type StaffGender = 'MALE' | 'FEMALE' | 'NON_BINARY' | 'OTHER';
+export type StaffEmploymentType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACTOR' | 'APPRENTICE';
+export type StaffPayoutMethod = 'BANK_TRANSFER' | 'CASH';
+export type StaffBankAccountType = 'ORDINARY' | 'CURRENT';
+export type StaffDocumentType = 'DRIVERS_LICENSE' | 'RESIDENCE_CARD' | 'PASSPORT' | 'MY_NUMBER_CARD' | 'OTHER';
+export type StaffDocVerificationStatus = 'PENDING_VERIFICATION' | 'VERIFIED' | 'REJECTED';
+
+export interface StaffResidentialAddressModel {
+  readonly line1?: string;
+  readonly line2?: string;
+  readonly city?: string;
+  readonly state?: string;
+  readonly postalCode?: string;
+  readonly country?: string;
+}
+
+export interface StaffEmergencyContactModel {
+  readonly name?: string;
+  readonly relationship?: string;
+  readonly phone?: string;
+}
+
+export interface StaffBankDetailsModel {
+  readonly bankName?: string;
+  readonly branchName?: string;
+  readonly branchCode?: string;
+  readonly accountType?: StaffBankAccountType;
+  readonly accountNumber?: string;
+  readonly accountHolder?: string;
+}
+
+export interface StaffPersonalProfileModel {
+  readonly staffId: string;
+  readonly legalName?: string | null;
+  readonly dateOfBirth?: string | null;
+  readonly gender?: StaffGender | null;
+  readonly address?: StaffResidentialAddressModel;
+  readonly emergencyContact?: StaffEmergencyContactModel;
+  readonly employmentType: StaffEmploymentType;
+  readonly hireDate: string;
+  readonly terminationDate?: string | null;
+  readonly payoutMethod: StaffPayoutMethod;
+  readonly bankDetails?: StaffBankDetailsModel;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface StaffIdentityDocumentModel {
+  readonly id: string;
+  readonly staffId: string;
+  readonly documentType: StaffDocumentType;
+  readonly fileKey: string;
+  readonly mimeType: string;
+  readonly fileSizeBytes: number;
+  readonly verificationStatus: StaffDocVerificationStatus;
+  readonly verifiedByUserId?: string | null;
+  readonly verifiedAt?: string | null;
+  readonly rejectionReason?: string | null;
+  readonly downloadUrl?: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}

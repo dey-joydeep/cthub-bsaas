@@ -589,6 +589,179 @@ components:
         reason:
           type: string
           maxLength: 160
+    StaffGender:
+      type: string
+      enum: [MALE, FEMALE, NON_BINARY, OTHER]
+    StaffEmploymentType:
+      type: string
+      enum: [FULL_TIME, PART_TIME, CONTRACTOR, APPRENTICE]
+    StaffPayoutMethod:
+      type: string
+      enum: [BANK_TRANSFER, CASH]
+    StaffBankAccountType:
+      type: string
+      enum: [ORDINARY, CURRENT]
+    StaffResidentialAddress:
+      type: object
+      properties:
+        line1:
+          type: string
+          maxLength: 120
+        line2:
+          type: string
+          maxLength: 120
+        city:
+          type: string
+          maxLength: 60
+        state:
+          type: string
+          maxLength: 60
+        postalCode:
+          type: string
+        country:
+          type: string
+          default: JP
+    StaffEmergencyContact:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 60
+        relationship:
+          type: string
+          maxLength: 40
+        phone:
+          type: string
+          maxLength: 30
+    StaffBankDetails:
+      type: object
+      properties:
+        bankName:
+          type: string
+          maxLength: 80
+        branchName:
+          type: string
+          maxLength: 80
+        branchCode:
+          type: string
+          maxLength: 20
+        accountType:
+          $ref: '#/components/schemas/StaffBankAccountType'
+        accountNumber:
+          type: string
+        accountHolder:
+          type: string
+          maxLength: 80
+    StaffPersonalDetailsInput:
+      type: object
+      required: [employmentType, hireDate, payoutMethod]
+      properties:
+        legalName:
+          type: string
+          minLength: 2
+          maxLength: 120
+        dateOfBirth:
+          type: string
+          format: date
+        gender:
+          $ref: '#/components/schemas/StaffGender'
+        address:
+          $ref: '#/components/schemas/StaffResidentialAddress'
+        emergencyContact:
+          $ref: '#/components/schemas/StaffEmergencyContact'
+        employmentType:
+          $ref: '#/components/schemas/StaffEmploymentType'
+        hireDate:
+          type: string
+          format: date
+        terminationDate:
+          type: string
+          format: date
+          nullable: true
+        payoutMethod:
+          $ref: '#/components/schemas/StaffPayoutMethod'
+        bankDetails:
+          $ref: '#/components/schemas/StaffBankDetails'
+    StaffPersonalDetailsDto:
+      allOf:
+        - $ref: '#/components/schemas/StaffPersonalDetailsInput'
+        - type: object
+          required: [staffId, createdAt, updatedAt]
+          properties:
+            staffId:
+              $ref: '#/components/schemas/Uuid'
+            createdAt:
+              $ref: '#/components/schemas/IsoDateTime'
+            updatedAt:
+              $ref: '#/components/schemas/IsoDateTime'
+    StaffSelfContactInput:
+      type: object
+      properties:
+        phone:
+          type: string
+          maxLength: 30
+        address:
+          $ref: '#/components/schemas/StaffResidentialAddress'
+        emergencyContact:
+          $ref: '#/components/schemas/StaffEmergencyContact'
+    StaffDocumentType:
+      type: string
+      enum: [DRIVERS_LICENSE, RESIDENCE_CARD, PASSPORT, MY_NUMBER_CARD, OTHER]
+    StaffDocVerificationStatus:
+      type: string
+      enum: [PENDING_VERIFICATION, VERIFIED, REJECTED]
+    StaffIdentityDocumentInput:
+      type: object
+      required: [documentType, fileKey, mimeType, fileSizeBytes]
+      properties:
+        documentType:
+          $ref: '#/components/schemas/StaffDocumentType'
+        fileKey:
+          type: string
+        mimeType:
+          type: string
+          enum: [image/jpeg, image/png, application/pdf]
+        fileSizeBytes:
+          type: integer
+          maximum: 10485760
+    StaffIdentityDocumentDto:
+      allOf:
+        - $ref: '#/components/schemas/StaffIdentityDocumentInput'
+        - type: object
+          required: [id, staffId, verificationStatus, createdAt, updatedAt]
+          properties:
+            id:
+              $ref: '#/components/schemas/Uuid'
+            staffId:
+              $ref: '#/components/schemas/Uuid'
+            verificationStatus:
+              $ref: '#/components/schemas/StaffDocVerificationStatus'
+            verifiedByUserId:
+              $ref: '#/components/schemas/Uuid'
+              nullable: true
+            verifiedAt:
+              $ref: '#/components/schemas/IsoDateTime'
+              nullable: true
+            rejectionReason:
+              type: string
+              nullable: true
+            downloadUrl:
+              type: string
+              format: uri
+            createdAt:
+              $ref: '#/components/schemas/IsoDateTime'
+            updatedAt:
+              $ref: '#/components/schemas/IsoDateTime'
+    VerifyStaffIdentityDocumentInput:
+      type: object
+      required: [verificationStatus]
+      properties:
+        verificationStatus:
+          $ref: '#/components/schemas/StaffDocVerificationStatus'
+        rejectionReason:
+          type: string
+          nullable: true
     ServiceCategoryInput:
       type: object
       required: [name, sortOrder]
@@ -1514,6 +1687,144 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/staff/{staffId}/personal:
+    parameters:
+      - name: staffId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Uuid'
+    get:
+      tags: [Staff]
+      operationId: getStaffPersonalDetails
+      responses:
+        '200':
+          description: Staff personal details retrieved.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/StaffPersonalDetailsDto'
+    put:
+      tags: [Staff]
+      operationId: updateStaffPersonalDetails
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffPersonalDetailsInput'
+      responses:
+        '200':
+          description: Staff personal details updated.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/StaffPersonalDetailsDto'
+  /partner/staff/self/contact:
+    put:
+      tags: [Staff]
+      operationId: selfUpdateStaffContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffSelfContactInput'
+      responses:
+        '200':
+          description: Staff self contact updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+  /partner/staff/{staffId}/documents:
+    parameters:
+      - name: staffId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Uuid'
+    get:
+      tags: [Staff]
+      operationId: listStaffIdentityDocuments
+      responses:
+        '200':
+          description: Staff identity documents listed.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/StaffIdentityDocumentDto'
+    post:
+      tags: [Staff]
+      operationId: uploadStaffIdentityDocument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffIdentityDocumentInput'
+      responses:
+        '201':
+          description: Staff identity document uploaded.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/StaffIdentityDocumentDto'
+  /partner/staff/{staffId}/documents/{documentId}/verify:
+    parameters:
+      - name: staffId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Uuid'
+      - name: documentId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Uuid'
+    put:
+      tags: [Staff]
+      operationId: verifyStaffIdentityDocument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyStaffIdentityDocumentInput'
+      responses:
+        '200':
+          description: Staff identity document verified.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/StaffIdentityDocumentDto'
   /partner/service-categories:
     get:
       tags: [Service Catalog]

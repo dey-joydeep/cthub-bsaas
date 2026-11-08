@@ -17,13 +17,17 @@ import { CurrentUser, ResponseEnvelopeInterceptor } from '@cthub-bsaas/server-co
 import type { AuthenticatedUser } from '@cthub-bsaas/shared';
 
 import {
+  StaffIdentityDocumentInputDto,
   StaffInputDto,
   StaffLeaveBlockInputDto,
   StaffLeaveBlockQueryDto,
   StaffListQueryDto,
+  StaffPersonalDetailsInputDto,
   StaffRolesInputDto,
+  StaffSelfContactInputDto,
   StaffShiftInputDto,
   StaffSkillsInputDto,
+  VerifyStaffIdentityDocumentInputDto,
 } from '../dto/staff-service-catalog.dto';
 import { StaffServiceCatalogService } from '../services/staff-service-catalog.service';
 
@@ -45,6 +49,12 @@ export class StaffController {
     return this.catalog.createStaff({ user }, body);
   }
 
+  @Put('self/contact')
+  @ApiOperation({ operationId: 'selfUpdateStaffContact' })
+  selfUpdateStaffContact(@CurrentUser() user: AuthenticatedUser, @Body() body: StaffSelfContactInputDto) {
+    return this.catalog.selfUpdateStaffContact({ user }, body);
+  }
+
   @Get(':staffId')
   @ApiOperation({ operationId: 'getStaff' })
   getStaff(@CurrentUser() user: AuthenticatedUser, @Param('staffId', new ParseUUIDPipe()) staffId: string) {
@@ -52,9 +62,53 @@ export class StaffController {
   }
 
   @Patch(':staffId')
+  @Put(':staffId')
   @ApiOperation({ operationId: 'updateStaff' })
   updateStaff(@CurrentUser() user: AuthenticatedUser, @Param('staffId', new ParseUUIDPipe()) staffId: string, @Body() body: StaffInputDto) {
     return this.catalog.updateStaff({ user }, staffId, body);
+  }
+
+  @Get(':staffId/personal')
+  @ApiOperation({ operationId: 'getStaffPersonalDetails' })
+  getStaffPersonalDetails(@CurrentUser() user: AuthenticatedUser, @Param('staffId', new ParseUUIDPipe()) staffId: string) {
+    return this.catalog.getStaffPersonalDetails({ user }, staffId);
+  }
+
+  @Put(':staffId/personal')
+  @ApiOperation({ operationId: 'updateStaffPersonalDetails' })
+  updateStaffPersonalDetails(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('staffId', new ParseUUIDPipe()) staffId: string,
+    @Body() body: StaffPersonalDetailsInputDto,
+  ) {
+    return this.catalog.updateStaffPersonalDetails({ user }, staffId, body);
+  }
+
+  @Get(':staffId/documents')
+  @ApiOperation({ operationId: 'listStaffIdentityDocuments' })
+  listStaffIdentityDocuments(@CurrentUser() user: AuthenticatedUser, @Param('staffId', new ParseUUIDPipe()) staffId: string) {
+    return this.catalog.listStaffIdentityDocuments({ user }, staffId);
+  }
+
+  @Post(':staffId/documents')
+  @ApiOperation({ operationId: 'uploadStaffIdentityDocument' })
+  uploadStaffIdentityDocument(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('staffId', new ParseUUIDPipe()) staffId: string,
+    @Body() body: StaffIdentityDocumentInputDto,
+  ) {
+    return this.catalog.uploadStaffIdentityDocument({ user }, staffId, body);
+  }
+
+  @Put(':staffId/documents/:documentId/verify')
+  @ApiOperation({ operationId: 'verifyStaffIdentityDocument' })
+  verifyStaffIdentityDocument(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('staffId', new ParseUUIDPipe()) staffId: string,
+    @Param('documentId', new ParseUUIDPipe()) documentId: string,
+    @Body() body: VerifyStaffIdentityDocumentInputDto,
+  ) {
+    return this.catalog.verifyStaffIdentityDocument({ user }, staffId, documentId, body);
   }
 
   @Put(':staffId/roles')

@@ -35,34 +35,30 @@ Define binding business behavior for the Salon Owner MVP. HLD, LLD, OpenAPI, dat
 
 ## Staff Rules
 
-| Rule ID    | Rule                                                                                                                                                            |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| BR-ST-01   | Staff profile must belong to one salon business.                                                                                                                |
-| BR-ST-02   | Staff can be assigned to one or more branches within the same salon business.                                                                                   |
-| BR-ST-03   | Staff must have an active branch assignment to appear in booking slot search for that branch.                                                                   |
-| BR-ST-04   | Deactivated staff must not authenticate or be assigned to new appointments.                                                                                     |
-| BR-ST-05   | Historical appointments and invoices must retain staff display snapshot after staff deactivation or rename.                                                     |
-| BR-ST-06   | Staff leave and blocked time must make the staff unavailable for overlapping appointment lines.                                                                 |
-| BR-ST-06.1 | Staff leave with null branchId represents business-wide absence (vacation, sickness) blocking all branches; non-null branchId blocks only the specified branch. |
-| BR-ST-06.2 | Active staff leave blocks can be listed and deleted/cancelled by an authorized owner or branch manager.                                                         |
-| BR-ST-07   | Staff role changes must be audited with old roles and new roles.                                                                                                |
-| BR-ST-08   | Staff with insufficient skill must not be assigned to a service unless an owner/manager override is recorded.                                                   |
-| BR-ST-09   | Staff self-service leave requests are outside the MVP unless promoted into the staff FRD with approval states, actor permissions, and notification rules.       |
-| BR-ST-11   | Removing the OWNER role from a staff member must return 409 conflict if no other active staff member possesses the OWNER role within that salon business.       |
+| Rule ID  | Rule                                                                                                                                                      |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| BR-ST-01 | Staff profile must belong to one salon business.                                                                                                          |
+| BR-ST-02 | Staff can be assigned to one or more branches within the same salon business.                                                                             |
+| BR-ST-03 | Staff must have an active branch assignment to appear in booking slot search for that branch.                                                             |
+| BR-ST-04 | Deactivated staff must not authenticate or be assigned to new appointments.                                                                               |
+| BR-ST-05 | Historical appointments and invoices must retain staff display snapshot after staff deactivation or rename.                                               |
+| BR-ST-06 | Staff leave and blocked time must make the staff unavailable for overlapping appointment lines.                                                           |
+| BR-ST-07 | Staff role changes must be audited with old roles and new roles.                                                                                          |
+| BR-ST-08 | Staff with insufficient skill must not be assigned to a service unless an owner/manager override is recorded.                                             |
+| BR-ST-09 | Staff self-service leave requests are outside the MVP unless promoted into the staff FRD with approval states, actor permissions, and notification rules. |
 
 ## Service Catalog Rules
 
-| Rule ID     | Rule                                                                                                                                                                        |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| BR-SVC-01   | Service category and service definitions belong to one salon business.                                                                                                      |
-| BR-SVC-02   | Service duration must be greater than zero.                                                                                                                                 |
-| BR-SVC-03   | Service base price must be zero or greater.                                                                                                                                 |
-| BR-SVC-04   | Inactive services must not be selectable for new bookings or invoice lines.                                                                                                 |
-| BR-SVC-05   | Existing appointment and invoice snapshots must keep the service name, duration, price, and tax context used at creation/finalization time.                                 |
-| BR-SVC-06   | Branch service overrides must override salon business defaults for that branch only.                                                                                        |
-| BR-SVC-07   | Staff eligibility must be enforced during slot search and booking commit.                                                                                                   |
-| BR-SVC-07.1 | Staff-service capability is governed by a single canonical relation (SalonOwnerStaffSkill). Both staff skill and service eligibility APIs synchronize on this single table. |
-| BR-SVC-08   | Service duration changes must not mutate existing appointment line durations.                                                                                               |
+| Rule ID   | Rule                                                                                                                                        |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| BR-SVC-01 | Service category and service definitions belong to one salon business.                                                                      |
+| BR-SVC-02 | Service duration must be greater than zero.                                                                                                 |
+| BR-SVC-03 | Service base price must be zero or greater.                                                                                                 |
+| BR-SVC-04 | Inactive services must not be selectable for new bookings or invoice lines.                                                                 |
+| BR-SVC-05 | Existing appointment and invoice snapshots must keep the service name, duration, price, and tax context used at creation/finalization time. |
+| BR-SVC-06 | Branch service overrides must override salon business defaults for that branch only.                                                        |
+| BR-SVC-07 | Staff eligibility must be enforced during slot search and booking commit.                                                                   |
+| BR-SVC-08 | Service duration changes must not mutate existing appointment line durations.                                                               |
 
 ## Customer CRM Rules
 

@@ -36,6 +36,10 @@ Define the visual baseline for staff directory, profile editing, role/branch/ski
 | Directory       | Select staff              | Profile edit                                    | `getStaff`                                              |
 | Directory       | Create staff              | Profile edit                                    | `createStaff`                                           |
 | Profile edit    | Save role/branches/skills | Profile or conflict                             | `replaceStaffRoles`, `replaceStaffSkills`, update staff |
+| Profile edit    | Expand Personal Details   | Personal details subform loaded                 | `getStaffPersonalDetails`                               |
+| Profile edit    | Save Personal & HR Info   | Personal details saved banner                   | `updateStaffPersonalDetails`                            |
+| Profile edit    | Upload ID Document        | Document pending verification chip              | `uploadStaffIdentityDocument`                           |
+| Self Profile    | Update contact/address    | Contact saved banner & manager notify           | `selfUpdateStaffContact`                                |
 | Schedule edit   | Save schedule             | Profile or conflict dialog                      | `replaceStaffShifts`                                    |
 | Conflict dialog | Resolve appointments      | Appointment calendar filtered to affected staff | appointment search query                                |
 
@@ -46,5 +50,8 @@ Define the visual baseline for staff directory, profile editing, role/branch/ski
 - duplicate email;
 - branch scope forbidden;
 - schedule conflict;
+- personal HR details collapsed vs expanded;
+- document upload pending, verified, and rejected status chips;
+- staff self-service view with locked legal fields and editable contact fields;
 - archived staff readonly history;
 - server error with correlation ID.

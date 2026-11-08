@@ -239,3 +239,175 @@ export class StaffEligibilityInputDto {
   @IsUUID(undefined, { each: true })
   staffIds!: string[];
 }
+
+export const staffGenderValues = ['MALE', 'FEMALE', 'NON_BINARY', 'OTHER'] as const;
+export const staffEmploymentTypeValues = ['FULL_TIME', 'PART_TIME', 'CONTRACTOR', 'APPRENTICE'] as const;
+export const staffPayoutMethodValues = ['BANK_TRANSFER', 'CASH'] as const;
+export const staffBankAccountTypeValues = ['ORDINARY', 'CURRENT'] as const;
+export const staffDocumentTypeValues = ['DRIVERS_LICENSE', 'RESIDENCE_CARD', 'PASSPORT', 'MY_NUMBER_CARD', 'OTHER'] as const;
+export const staffDocVerificationStatusValues = ['PENDING_VERIFICATION', 'VERIFIED', 'REJECTED'] as const;
+
+export class StaffResidentialAddressDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  line1?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  line2?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  state?: string;
+
+  @IsOptional()
+  @IsString()
+  postalCode?: string;
+
+  @IsOptional()
+  @IsString()
+  country?: string;
+}
+
+export class StaffEmergencyContactDto {
+  @IsOptional()
+  @IsString()
+  @Length(2, 60)
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  relationship?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  phone?: string;
+}
+
+export class StaffBankDetailsDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  bankName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  branchName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  branchCode?: string;
+
+  @IsOptional()
+  @IsIn(staffBankAccountTypeValues)
+  accountType?: (typeof staffBankAccountTypeValues)[number];
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{4,10}$/)
+  accountNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  accountHolder?: string;
+}
+
+export class StaffPersonalDetailsInputDto {
+  @IsOptional()
+  @IsString()
+  @Length(2, 120)
+  legalName?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  dateOfBirth?: string;
+
+  @IsOptional()
+  @IsIn(staffGenderValues)
+  gender?: (typeof staffGenderValues)[number];
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => StaffResidentialAddressDto)
+  address?: StaffResidentialAddressDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => StaffEmergencyContactDto)
+  emergencyContact?: StaffEmergencyContactDto;
+
+  @IsIn(staffEmploymentTypeValues)
+  employmentType!: (typeof staffEmploymentTypeValues)[number];
+
+  @IsISO8601()
+  hireDate!: string;
+
+  @IsOptional()
+  @IsISO8601()
+  terminationDate?: string;
+
+  @IsIn(staffPayoutMethodValues)
+  payoutMethod!: (typeof staffPayoutMethodValues)[number];
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => StaffBankDetailsDto)
+  bankDetails?: StaffBankDetailsDto;
+}
+
+export class StaffSelfContactInputDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  phone?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => StaffResidentialAddressDto)
+  address?: StaffResidentialAddressDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => StaffEmergencyContactDto)
+  emergencyContact?: StaffEmergencyContactDto;
+
+  [key: string]: unknown;
+}
+
+export class StaffIdentityDocumentInputDto {
+  @IsIn(staffDocumentTypeValues)
+  documentType!: (typeof staffDocumentTypeValues)[number];
+
+  @IsString()
+  fileKey!: string;
+
+  @IsIn(['image/jpeg', 'image/png', 'application/pdf'])
+  mimeType!: string;
+
+  @IsInt()
+  @Min(1)
+  @Max(10485760) // 10MB
+  fileSizeBytes!: number;
+}
+
+export class VerifyStaffIdentityDocumentInputDto {
+  @IsIn(staffDocVerificationStatusValues)
+  verificationStatus!: (typeof staffDocVerificationStatusValues)[number];
+
+  @IsOptional()
+  @IsString()
+  rejectionReason?: string;
+}

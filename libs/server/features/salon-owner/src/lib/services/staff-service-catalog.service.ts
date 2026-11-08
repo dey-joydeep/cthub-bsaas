@@ -1,6 +1,6 @@
 import { ConflictException, ForbiddenException, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
+import { AuthenticatedUser, COMMON_MESSAGE_KEYS } from '@cthub-bsaas/shared';
 import { PrismaService } from '@cthub-bsaas/server-data-access';
 
 import {
@@ -10,14 +10,24 @@ import {
   ServiceInputDto,
   ServiceStatusInputDto,
   StaffEligibilityInputDto,
+  StaffIdentityDocumentInputDto,
   StaffInputDto,
   StaffLeaveBlockInputDto,
   StaffLeaveBlockQueryDto,
   StaffListQueryDto,
+  StaffPersonalDetailsInputDto,
   StaffRolesInputDto,
+  StaffSelfContactInputDto,
   StaffShiftDayDto,
   StaffShiftInputDto,
   StaffSkillsInputDto,
+  VerifyStaffIdentityDocumentInputDto,
+  staffBankAccountTypeValues,
+  staffDocVerificationStatusValues,
+  staffDocumentTypeValues,
+  staffEmploymentTypeValues,
+  staffGenderValues,
+  staffPayoutMethodValues,
 } from '../dto/staff-service-catalog.dto';
 import { PagedResult, SalonOwnerRequestContext, TimeIntervalModel } from '../models/salon-owner-settings.models';
 import {
@@ -25,8 +35,10 @@ import {
   PermissionItemModel,
   ServiceCategoryModel,
   ServiceModel,
+  StaffIdentityDocumentModel,
   StaffLeaveBlockModel,
   StaffModel,
+  StaffPersonalProfileModel,
   StaffShiftDayModel,
   StaffShiftModel,
   SuccessResult,
@@ -165,6 +177,180 @@ function assertDecimalPrecision(value: string, maxIntegerDigits: number): void {
   const [integerPart = '', decimalPart = ''] = value.split('.');
   if (integerPart.length > maxIntegerDigits || decimalPart.length > 2) {
     throw new UnprocessableEntityException(validationMessage);
+  }
+}
+
+function extractRoleNames(user: AuthenticatedUser): string[] {
+  if (!user.roles) return [];
+  return (user.roles as Array<string | { name?: string }>).map((r) =>
+    typeof r === 'string' ? r.toUpperCase() : (r.name ?? '').toUpperCase(),
+  );
+}
+
+function isUserOwnerOrAdmin(user: AuthenticatedUser): boolean {
+  const roleNames = extractRoleNames(user);
+  return roleNames.includes('OWNER') || roleNames.includes('ADMIN');
+}
+
+function isUserAssignedBranchManager(user: AuthenticatedUser, staffBranchIds: readonly string[]): boolean {
+  const roleNames = extractRoleNames(user);
+  const isManager = roleNames.includes('MANAGER') || roleNames.includes('BRANCH_MANAGER') || Boolean(user.canManageBranches);
+  if (!isManager) return false;
+  if (!user.managedBranchIds || user.managedBranchIds.length === 0) {
+    return Boolean(user.canManageBranches);
+  }
+  return staffBranchIds.some((bId) => user.managedBranchIds!.includes(bId));
+}
+
+function isUserSelf(user: AuthenticatedUser, staff: { id: string; userId?: string | null; email?: string | null }): boolean {
+  if (staff.userId && staff.userId === user.id) return true;
+  if (staff.id === user.id) return true;
+  if (staff.email && user.email && staff.email.toLowerCase() === user.email.toLowerCase()) return true;
+  return false;
+}
+
+function validatePersonalDetailsInput(input: StaffPersonalDetailsInputDto): void {
+  if (input.legalName !== undefined && input.legalName !== null) {
+    const trimmed = input.legalName.trim();
+    if (trimmed.length < 2 || trimmed.length > 120) {
+      throw new UnprocessableEntityException('error.staff.personal.legal_name.invalid');
+    }
+  }
+
+  if (input.dateOfBirth) {
+    const dob = new Date(input.dateOfBirth);
+    if (Number.isNaN(dob.getTime())) {
+      throw new UnprocessableEntityException('error.staff.personal.dob.invalid');
+    }
+    const ageDiff = Date.now() - dob.getTime();
+    const ageYears = ageDiff / (1000 * 60 * 60 * 24 * 365.25);
+    if (dob > new Date() || ageYears < 15) {
+      throw new UnprocessableEntityException('error.staff.personal.dob.invalid');
+    }
+  }
+
+  if (input.gender !== undefined && input.gender !== null) {
+    if (!staffGenderValues.includes(input.gender)) {
+      throw new UnprocessableEntityException('error.staff.personal.gender.invalid');
+    }
+  }
+
+  if (!staffEmploymentTypeValues.includes(input.employmentType)) {
+    throw new UnprocessableEntityException('error.staff.personal.employment_type.invalid');
+  }
+
+  const hire = new Date(input.hireDate);
+  if (Number.isNaN(hire.getTime())) {
+    throw new UnprocessableEntityException('error.staff.personal.hire_date.invalid');
+  }
+
+  if (input.terminationDate) {
+    const term = new Date(input.terminationDate);
+    if (Number.isNaN(term.getTime()) || term <= hire) {
+      throw new UnprocessableEntityException('error.staff.personal.termination_date.invalid');
+    }
+  }
+
+  if (!staffPayoutMethodValues.includes(input.payoutMethod)) {
+    throw new UnprocessableEntityException('error.staff.personal.payout_method.invalid');
+  }
+
+  if (input.payoutMethod === 'BANK_TRANSFER') {
+    const bank = input.bankDetails;
+    if (!bank || !bank.bankName?.trim()) {
+      throw new UnprocessableEntityException('error.staff.personal.bank.name.invalid');
+    }
+    if (!bank.branchName?.trim() && !bank.branchCode?.trim()) {
+      throw new UnprocessableEntityException('error.staff.personal.bank.branch.invalid');
+    }
+    if (!bank.accountType || !staffBankAccountTypeValues.includes(bank.accountType)) {
+      throw new UnprocessableEntityException('error.staff.personal.bank.account_type.invalid');
+    }
+    if (!bank.accountNumber || !/^\d{4,10}$/.test(bank.accountNumber.trim())) {
+      throw new UnprocessableEntityException('error.staff.personal.bank.account_number.invalid');
+    }
+    if (!bank.accountHolder?.trim()) {
+      throw new UnprocessableEntityException('error.staff.personal.bank.account_holder.invalid');
+    }
+  }
+
+  if (input.address) {
+    if (input.address.line1 !== undefined && input.address.line1.trim().length > 120) {
+      throw new UnprocessableEntityException('error.staff.personal.address.line1.invalid');
+    }
+    if (input.address.line2 !== undefined && input.address.line2.trim().length > 120) {
+      throw new UnprocessableEntityException('error.staff.personal.address.line2.invalid');
+    }
+    if (input.address.city !== undefined && input.address.city.trim().length > 60) {
+      throw new UnprocessableEntityException('error.staff.personal.address.city.invalid');
+    }
+    if (input.address.state !== undefined && input.address.state.trim().length > 60) {
+      throw new UnprocessableEntityException('error.staff.personal.address.state.invalid');
+    }
+    if (input.address.postalCode !== undefined && input.address.postalCode.trim().length > 20) {
+      throw new UnprocessableEntityException('error.staff.personal.address.postal_code.invalid');
+    }
+  }
+
+  if (input.emergencyContact) {
+    if (input.emergencyContact.name !== undefined) {
+      const name = input.emergencyContact.name.trim();
+      if (name.length < 2 || name.length > 60) {
+        throw new UnprocessableEntityException('error.staff.personal.emergency.name.invalid');
+      }
+    }
+    if (input.emergencyContact.relationship !== undefined && input.emergencyContact.relationship.trim().length > 40) {
+      throw new UnprocessableEntityException('error.staff.personal.emergency.relation.invalid');
+    }
+    if (input.emergencyContact.phone !== undefined && input.emergencyContact.phone.trim().length > 30) {
+      throw new UnprocessableEntityException('error.staff.personal.emergency.phone.invalid');
+    }
+  }
+}
+
+const forbiddenSelfEditFields = [
+  'legalName',
+  'dateOfBirth',
+  'dob',
+  'gender',
+  'employmentType',
+  'hireDate',
+  'terminationDate',
+  'roles',
+  'roleIds',
+  'branchIds',
+  'status',
+  'payoutMethod',
+  'bankDetails',
+];
+
+function checkSelfEditForbiddenFields(input: StaffSelfContactInputDto): void {
+  for (const key of forbiddenSelfEditFields) {
+    if (key in input && input[key] !== undefined && input[key] !== null) {
+      throw new ForbiddenException('error.staff.self_edit.forbidden_fields');
+    }
+  }
+}
+
+function validateIdentityDocumentUpload(input: StaffIdentityDocumentInputDto): void {
+  if (!staffDocumentTypeValues.includes(input.documentType)) {
+    throw new UnprocessableEntityException('error.staff.document.type.invalid');
+  }
+  const allowedMimes = ['image/jpeg', 'image/png', 'application/pdf'];
+  if (!allowedMimes.includes(input.mimeType)) {
+    throw new UnprocessableEntityException('error.staff.document.file.invalid');
+  }
+  if (!input.fileSizeBytes || input.fileSizeBytes < 1 || input.fileSizeBytes > 10485760) {
+    throw new UnprocessableEntityException('error.staff.document.file.invalid');
+  }
+}
+
+function validateVerifyIdentityDocument(input: VerifyStaffIdentityDocumentInputDto): void {
+  if (!staffDocVerificationStatusValues.includes(input.verificationStatus) || input.verificationStatus === 'PENDING_VERIFICATION') {
+    throw new UnprocessableEntityException('error.staff.document.verification_status.invalid');
+  }
+  if (input.verificationStatus === 'REJECTED' && !input.rejectionReason?.trim()) {
+    throw new UnprocessableEntityException('error.staff.document.rejection_reason.required');
   }
 }
 
@@ -699,6 +885,227 @@ export class StaffServiceCatalogService {
     return { success: true };
   }
 
+  async getStaffPersonalDetails(context: SalonOwnerRequestContext, staffId: string): Promise<StaffPersonalProfileModel> {
+    const staff = await this.findStaffInScope(context, staffId);
+    this.assertStaffPersonalAccess(context.user, staff, { allowSelf: true });
+
+    const profile = await this.prisma.staffPersonalProfile.findUnique({
+      where: { staffId },
+    });
+
+    return this.mapPersonalProfile(staffId, profile, staff.createdAt);
+  }
+
+  async updateStaffPersonalDetails(
+    context: SalonOwnerRequestContext,
+    staffId: string,
+    input: StaffPersonalDetailsInputDto,
+  ): Promise<StaffPersonalProfileModel> {
+    const staff = await this.findStaffInScope(context, staffId);
+    this.assertStaffPersonalAccess(context.user, staff, { allowSelf: false });
+
+    validatePersonalDetailsInput(input);
+
+    const isBank = input.payoutMethod === 'BANK_TRANSFER';
+    const profile = await this.prisma.staffPersonalProfile.upsert({
+      where: { staffId },
+      update: {
+        legalName: optionalTrim(input.legalName),
+        dateOfBirth: input.dateOfBirth ? new Date(input.dateOfBirth) : null,
+        gender: (input.gender as (typeof staffGenderValues)[number]) ?? null,
+        addressLine1: optionalTrim(input.address?.line1),
+        addressLine2: optionalTrim(input.address?.line2),
+        city: optionalTrim(input.address?.city),
+        state: optionalTrim(input.address?.state),
+        postalCode: optionalTrim(input.address?.postalCode),
+        country: optionalTrim(input.address?.country) ?? 'JP',
+        emergencyContactName: optionalTrim(input.emergencyContact?.name),
+        emergencyContactRelationship: optionalTrim(input.emergencyContact?.relationship),
+        emergencyContactPhone: optionalTrim(input.emergencyContact?.phone),
+        employmentType: input.employmentType,
+        hireDate: new Date(input.hireDate),
+        terminationDate: input.terminationDate ? new Date(input.terminationDate) : null,
+        payoutMethod: input.payoutMethod,
+        bankName: isBank ? optionalTrim(input.bankDetails?.bankName) : null,
+        branchName: isBank ? optionalTrim(input.bankDetails?.branchName) : null,
+        branchCode: isBank ? optionalTrim(input.bankDetails?.branchCode) : null,
+        accountType: isBank && input.bankDetails?.accountType ? input.bankDetails.accountType : null,
+        accountNumber: isBank ? optionalTrim(input.bankDetails?.accountNumber) : null,
+        accountHolderName: isBank ? optionalTrim(input.bankDetails?.accountHolder) : null,
+      },
+      create: {
+        staffId,
+        legalName: optionalTrim(input.legalName),
+        dateOfBirth: input.dateOfBirth ? new Date(input.dateOfBirth) : null,
+        gender: input.gender ?? null,
+        addressLine1: optionalTrim(input.address?.line1),
+        addressLine2: optionalTrim(input.address?.line2),
+        city: optionalTrim(input.address?.city),
+        state: optionalTrim(input.address?.state),
+        postalCode: optionalTrim(input.address?.postalCode),
+        country: optionalTrim(input.address?.country) ?? 'JP',
+        emergencyContactName: optionalTrim(input.emergencyContact?.name),
+        emergencyContactRelationship: optionalTrim(input.emergencyContact?.relationship),
+        emergencyContactPhone: optionalTrim(input.emergencyContact?.phone),
+        employmentType: input.employmentType,
+        hireDate: new Date(input.hireDate),
+        terminationDate: input.terminationDate ? new Date(input.terminationDate) : null,
+        payoutMethod: input.payoutMethod,
+        bankName: isBank ? optionalTrim(input.bankDetails?.bankName) : null,
+        branchName: isBank ? optionalTrim(input.bankDetails?.branchName) : null,
+        branchCode: isBank ? optionalTrim(input.bankDetails?.branchCode) : null,
+        accountType: isBank && input.bankDetails?.accountType ? input.bankDetails.accountType : null,
+        accountNumber: isBank ? optionalTrim(input.bankDetails?.accountNumber) : null,
+        accountHolderName: isBank ? optionalTrim(input.bankDetails?.accountHolder) : null,
+      },
+    });
+
+    await this.recordAuditEvent(context.user.id, context.user.tenantId, 'StaffPersonalProfileUpdated', staffId);
+
+    return this.mapPersonalProfile(staffId, profile, staff.createdAt);
+  }
+
+  async selfUpdateStaffContact(context: SalonOwnerRequestContext, input: StaffSelfContactInputDto): Promise<SuccessResult> {
+    const tenantId = this.requireTenantId(context);
+    const user = context.user;
+
+    checkSelfEditForbiddenFields(input);
+
+    const staff = await this.prisma.salonOwnerStaff.findFirst({
+      where: {
+        business: { tenantId },
+        OR: [{ userId: user.id }, { email: { equals: user.email, mode: 'insensitive' } }, { id: user.id }],
+      },
+      include: staffInclude,
+    });
+    if (!staff) {
+      throw new NotFoundException('error.staff.profile.not_found');
+    }
+
+    if (input.phone) {
+      await this.prisma.salonOwnerStaff.update({
+        where: { id: staff.id },
+        data: { phone: trimRequired(input.phone) },
+      });
+    }
+
+    if (input.address || input.emergencyContact) {
+      await this.prisma.staffPersonalProfile.upsert({
+        where: { staffId: staff.id },
+        update: {
+          ...(input.address
+            ? {
+                addressLine1: optionalTrim(input.address.line1),
+                addressLine2: optionalTrim(input.address.line2),
+                city: optionalTrim(input.address.city),
+                state: optionalTrim(input.address.state),
+                postalCode: optionalTrim(input.address.postalCode),
+                country: optionalTrim(input.address.country) ?? 'JP',
+              }
+            : {}),
+          ...(input.emergencyContact
+            ? {
+                emergencyContactName: optionalTrim(input.emergencyContact.name),
+                emergencyContactRelationship: optionalTrim(input.emergencyContact.relationship),
+                emergencyContactPhone: optionalTrim(input.emergencyContact.phone),
+              }
+            : {}),
+        },
+        create: {
+          staffId: staff.id,
+          employmentType: 'FULL_TIME',
+          hireDate: new Date(),
+          payoutMethod: 'CASH',
+          addressLine1: optionalTrim(input.address?.line1),
+          addressLine2: optionalTrim(input.address?.line2),
+          city: optionalTrim(input.address?.city),
+          state: optionalTrim(input.address?.state),
+          postalCode: optionalTrim(input.address?.postalCode),
+          country: optionalTrim(input.address?.country) ?? 'JP',
+          emergencyContactName: optionalTrim(input.emergencyContact?.name),
+          emergencyContactRelationship: optionalTrim(input.emergencyContact?.relationship),
+          emergencyContactPhone: optionalTrim(input.emergencyContact?.phone),
+        },
+      });
+    }
+
+    await this.recordAuditEvent(user.id, user.tenantId, 'StaffSelfContactUpdated', staff.id);
+    await this.dispatchUpwardChainNotification(staff, 'StaffSelfContactUpdated', 'Staff member updated contact details');
+
+    return { success: true };
+  }
+
+  async uploadStaffIdentityDocument(
+    context: SalonOwnerRequestContext,
+    staffId: string,
+    input: StaffIdentityDocumentInputDto,
+  ): Promise<StaffIdentityDocumentModel> {
+    const staff = await this.findStaffInScope(context, staffId);
+    this.assertStaffPersonalAccess(context.user, staff, { allowSelf: true });
+
+    validateIdentityDocumentUpload(input);
+
+    const doc = await this.prisma.staffIdentityDocument.create({
+      data: {
+        staffId,
+        documentType: input.documentType,
+        fileKey: input.fileKey,
+        mimeType: input.mimeType,
+        fileSizeBytes: input.fileSizeBytes,
+        verificationStatus: 'PENDING_VERIFICATION',
+      },
+    });
+
+    await this.recordAuditEvent(context.user.id, context.user.tenantId, 'StaffIdentityDocumentUploaded', doc.id);
+
+    return this.mapIdentityDocument(doc);
+  }
+
+  async listStaffIdentityDocuments(context: SalonOwnerRequestContext, staffId: string): Promise<readonly StaffIdentityDocumentModel[]> {
+    const staff = await this.findStaffInScope(context, staffId);
+    this.assertStaffPersonalAccess(context.user, staff, { allowSelf: true });
+
+    const docs = await this.prisma.staffIdentityDocument.findMany({
+      where: { staffId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return docs.map((doc) => this.mapIdentityDocument(doc));
+  }
+
+  async verifyStaffIdentityDocument(
+    context: SalonOwnerRequestContext,
+    staffId: string,
+    documentId: string,
+    input: VerifyStaffIdentityDocumentInputDto,
+  ): Promise<StaffIdentityDocumentModel> {
+    const staff = await this.findStaffInScope(context, staffId);
+    this.assertStaffPersonalAccess(context.user, staff, { allowSelf: false });
+
+    validateVerifyIdentityDocument(input);
+
+    const existing = await this.prisma.staffIdentityDocument.findFirst({
+      where: { id: documentId, staffId },
+    });
+    if (!existing) {
+      throw new NotFoundException(notFoundMessage);
+    }
+
+    const updated = await this.prisma.staffIdentityDocument.update({
+      where: { id: documentId },
+      data: {
+        verificationStatus: input.verificationStatus,
+        verifiedByUserId: context.user.id,
+        verifiedAt: new Date(),
+        rejectionReason: input.verificationStatus === 'REJECTED' ? input.rejectionReason?.trim() : null,
+      },
+    });
+
+    await this.recordAuditEvent(context.user.id, context.user.tenantId, 'StaffIdentityDocumentVerified', documentId);
+
+    return this.mapIdentityDocument(updated);
+  }
+
   async listServiceCategories(context: SalonOwnerRequestContext, businessId?: string): Promise<PagedResult<ServiceCategoryModel>> {
     const business = await this.resolveBusinessInScope(context, businessId);
     const categories = await this.prisma.salonOwnerServiceCategory.findMany({
@@ -1019,6 +1426,136 @@ export class StaffServiceCatalogService {
       status: service.status,
       eligibleStaffIds: (service.skills ?? []).map((skill) => skill.staffId).sort(),
     };
+  }
+
+  private assertStaffPersonalAccess(user: AuthenticatedUser, staff: StaffRecord, options: { allowSelf: boolean }): void {
+    if (isUserOwnerOrAdmin(user)) {
+      return;
+    }
+    const staffBranchIds = (staff.branches ?? []).map((b) => b.branchId);
+    if (isUserAssignedBranchManager(user, staffBranchIds)) {
+      return;
+    }
+    if (options.allowSelf && isUserSelf(user, staff)) {
+      return;
+    }
+    throw new ForbiddenException(forbiddenMessage);
+  }
+
+  private mapPersonalProfile(
+    staffId: string,
+    profile: Prisma.StaffPersonalProfileGetPayload<object> | null,
+    defaultHireDate?: Date,
+  ): StaffPersonalProfileModel {
+    if (!profile) {
+      return {
+        staffId,
+        legalName: null,
+        dateOfBirth: null,
+        gender: null,
+        employmentType: 'FULL_TIME',
+        hireDate: defaultHireDate ? defaultHireDate.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+        terminationDate: null,
+        payoutMethod: 'CASH',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    }
+
+    const hasAddress = Boolean(profile.addressLine1 || profile.city || profile.state || profile.postalCode);
+    const address = hasAddress
+      ? {
+          line1: profile.addressLine1 ?? undefined,
+          line2: profile.addressLine2 ?? undefined,
+          city: profile.city ?? undefined,
+          state: profile.state ?? undefined,
+          postalCode: profile.postalCode ?? undefined,
+          country: profile.country ?? 'JP',
+        }
+      : undefined;
+
+    const hasEmergency = Boolean(profile.emergencyContactName || profile.emergencyContactPhone);
+    const emergencyContact = hasEmergency
+      ? {
+          name: profile.emergencyContactName ?? undefined,
+          relationship: profile.emergencyContactRelationship ?? undefined,
+          phone: profile.emergencyContactPhone ?? undefined,
+        }
+      : undefined;
+
+    const hasBank = profile.payoutMethod === 'BANK_TRANSFER' && Boolean(profile.bankName || profile.accountNumber);
+    const bankDetails = hasBank
+      ? {
+          bankName: profile.bankName ?? undefined,
+          branchName: profile.branchName ?? undefined,
+          branchCode: profile.branchCode ?? undefined,
+          accountType: (profile.accountType as (typeof staffBankAccountTypeValues)[number]) ?? undefined,
+          accountNumber: profile.accountNumber ?? undefined,
+          accountHolder: profile.accountHolderName ?? undefined,
+        }
+      : undefined;
+
+    return {
+      staffId: profile.staffId,
+      legalName: profile.legalName,
+      dateOfBirth: profile.dateOfBirth ? profile.dateOfBirth.toISOString().slice(0, 10) : null,
+      gender: profile.gender,
+      address,
+      emergencyContact,
+      employmentType: profile.employmentType,
+      hireDate: profile.hireDate.toISOString().slice(0, 10),
+      terminationDate: profile.terminationDate ? profile.terminationDate.toISOString().slice(0, 10) : null,
+      payoutMethod: profile.payoutMethod,
+      bankDetails,
+      createdAt: profile.createdAt.toISOString(),
+      updatedAt: profile.updatedAt.toISOString(),
+    };
+  }
+
+  private mapIdentityDocument(doc: Prisma.StaffIdentityDocumentGetPayload<object>): StaffIdentityDocumentModel {
+    return {
+      id: doc.id,
+      staffId: doc.staffId,
+      documentType: doc.documentType,
+      fileKey: doc.fileKey,
+      mimeType: doc.mimeType,
+      fileSizeBytes: doc.fileSizeBytes,
+      verificationStatus: doc.verificationStatus,
+      verifiedByUserId: doc.verifiedByUserId,
+      verifiedAt: doc.verifiedAt ? doc.verifiedAt.toISOString() : null,
+      rejectionReason: doc.rejectionReason,
+      downloadUrl: `/api/partner/staff/${doc.staffId}/documents/${doc.id}/download?token=mock_signed_token`,
+      createdAt: doc.createdAt.toISOString(),
+      updatedAt: doc.updatedAt.toISOString(),
+    };
+  }
+
+  private async recordAuditEvent(
+    userId: string | undefined,
+    tenantId: string | undefined,
+    action: string,
+    targetId: string,
+    reason?: string,
+  ): Promise<void> {
+    try {
+      await this.prisma.auditEvent.create({
+        data: {
+          userId: userId ?? null,
+          tenantId: tenantId ?? null,
+          action,
+          targetId,
+          reason: reason ?? null,
+        },
+      });
+    } catch (error) {
+      // Non-blocking error handling for audit log writes
+      console.warn(`[AuditEvent] Failed to persist audit event ${action}:`, error);
+    }
+  }
+
+  private async dispatchUpwardChainNotification(staff: StaffRecord, action: string, message: string): Promise<void> {
+    await Promise.resolve();
+    console.log(`[Notification] Upward chain alert dispatched for staff ${staff.displayName} (${staff.id}) on ${action}: ${message}`);
   }
 
   private page<T>(items: readonly T[], pagination?: { page: number; pageSize: number; total: number }): PagedResult<T> {

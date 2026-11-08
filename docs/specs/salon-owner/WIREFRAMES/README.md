@@ -21,17 +21,18 @@ Current connected Penpot file:
 
 ## Wireframe Index
 
-| Feature           | Wireframe doc                                     | Status                |
-| ----------------- | ------------------------------------------------- | --------------------- |
-| Appointment       | [Appointment Calendar](./appointment-calendar.md) | Penpot boards created |
-| POS               | [POS Checkout](./pos-checkout.md)                 | Penpot boards created |
-| Customer CRM      | [Customer CRM](./customer-crm.md)                 | Penpot boards created |
-| Inventory         | [Inventory](./inventory.md)                       | Penpot boards created |
-| Staff             | [Staff](./staff.md)                               | Penpot boards created |
-| Service Catalog   | [Service Catalog](./service-catalog.md)           | Penpot boards created |
-| Branch Settings   | [Branch Settings](./branch-settings.md)           | Penpot boards created |
-| Business Settings | [Business Settings](./business-settings.md)       | Penpot boards created |
-| Dashboard         | [Dashboard](./dashboard.md)                       | Penpot boards created |
+| Feature                   | Wireframe doc                                     | Status                |
+| ------------------------- | ------------------------------------------------- | --------------------- |
+| Appointment               | [Appointment Calendar](./appointment-calendar.md) | Penpot boards created |
+| POS                       | [POS Checkout](./pos-checkout.md)                 | Penpot boards created |
+| Customer CRM              | [Customer CRM](./customer-crm.md)                 | Penpot boards created |
+| Inventory                 | [Inventory](./inventory.md)                       | Penpot boards created |
+| Staff                     | [Staff](./staff.md)                               | Penpot boards created |
+| Service Catalog           | [Service Catalog](./service-catalog.md)           | Penpot boards created |
+| Branch Settings           | [Branch Settings](./branch-settings.md)           | Penpot boards created |
+| Business Settings         | [Business Settings](./business-settings.md)       | Penpot boards created |
+| Dashboard                 | [Dashboard](./dashboard.md)                       | Penpot boards created |
+| Feedback & Alert Patterns | [Feedback and Alerts](./feedback-and-alerts.md)   | Penpot boards created |
 
 ## Penpot Board Naming Standard
 

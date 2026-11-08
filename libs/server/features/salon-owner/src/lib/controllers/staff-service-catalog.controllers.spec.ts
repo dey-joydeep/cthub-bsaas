@@ -27,6 +27,12 @@ function serviceMock() {
     listStaffLeaveBlocks: jest.fn(),
     createStaffLeaveBlock: jest.fn(),
     deleteStaffLeaveBlock: jest.fn(),
+    getStaffPersonalDetails: jest.fn(),
+    updateStaffPersonalDetails: jest.fn(),
+    selfUpdateStaffContact: jest.fn(),
+    uploadStaffIdentityDocument: jest.fn(),
+    listStaffIdentityDocuments: jest.fn(),
+    verifyStaffIdentityDocument: jest.fn(),
     listBusinessRoles: jest.fn(),
     createBusinessRole: jest.fn(),
     updateBusinessRole: jest.fn(),
@@ -65,28 +71,73 @@ describe('Staff and service catalog controllers', () => {
     };
 
     const leaveQuery = { from: '2026-05-01T00:00:00.000Z', to: '2026-05-31T23:59:59.000Z' };
+    const selfContact = { phone: '09000000002', emergencyContact: { name: 'Emergency Contact', phone: '09099990000' } };
+    const personalDetails = {
+      legalName: 'Legal Name',
+      dateOfBirth: '1990-01-01',
+      employmentType: 'FULL_TIME' as const,
+      hireDate: '2022-01-01',
+      payoutMethod: 'CASH' as const,
+    };
+    const documentInput = {
+      documentType: 'DRIVERS_LICENSE' as const,
+      fileKey: 'key-1',
+      mimeType: 'image/jpeg',
+      fileSizeBytes: 1024,
+    };
+    const verifyInput = {
+      verificationStatus: 'VERIFIED' as const,
+    };
 
     await controller.listStaff(user, query);
     await controller.createStaff(user, staff);
-    await controller.getStaff(user, 'staff-1');
-    await controller.updateStaff(user, 'staff-1', staff);
-    await controller.replaceStaffRoles(user, 'staff-1', { roles: ['STYLIST'] });
-    await controller.replaceStaffSkills(user, 'staff-1', { serviceIds: ['service-1'] });
-    await controller.replaceStaffShifts(user, 'staff-1', shift);
-    await controller.listStaffLeaveBlocks(user, 'staff-1', leaveQuery);
-    await controller.createStaffLeaveBlock(user, 'staff-1', leave);
-    await controller.deleteStaffLeaveBlock(user, 'staff-1', 'leave-1');
+    await controller.getStaff(user, '11111111-1111-4111-8111-111111111111');
+    await controller.updateStaff(user, '11111111-1111-4111-8111-111111111111', staff);
+    await controller.replaceStaffRoles(user, '11111111-1111-4111-8111-111111111111', { roles: ['STYLIST'] });
+    await controller.replaceStaffSkills(user, '11111111-1111-4111-8111-111111111111', { serviceIds: ['service-1'] });
+    await controller.replaceStaffShifts(user, '11111111-1111-4111-8111-111111111111', shift);
+    await controller.listStaffLeaveBlocks(user, '11111111-1111-4111-8111-111111111111', leaveQuery);
+    await controller.createStaffLeaveBlock(user, '11111111-1111-4111-8111-111111111111', leave);
+    await controller.deleteStaffLeaveBlock(user, '11111111-1111-4111-8111-111111111111', '22222222-2222-4222-8222-222222222222');
+    await controller.selfUpdateStaffContact(user, selfContact);
+    await controller.getStaffPersonalDetails(user, '11111111-1111-4111-8111-111111111111');
+    await controller.updateStaffPersonalDetails(user, '11111111-1111-4111-8111-111111111111', personalDetails);
+    await controller.listStaffIdentityDocuments(user, '11111111-1111-4111-8111-111111111111');
+    await controller.uploadStaffIdentityDocument(user, '11111111-1111-4111-8111-111111111111', documentInput);
+    await controller.verifyStaffIdentityDocument(
+      user,
+      '11111111-1111-4111-8111-111111111111',
+      '22222222-2222-4222-8222-222222222222',
+      verifyInput,
+    );
 
     expect(service.listStaff).toHaveBeenCalledWith({ user }, query);
     expect(service.createStaff).toHaveBeenCalledWith({ user }, staff);
-    expect(service.getStaff).toHaveBeenCalledWith({ user }, 'staff-1');
-    expect(service.updateStaff).toHaveBeenCalledWith({ user }, 'staff-1', staff);
-    expect(service.replaceStaffRoles).toHaveBeenCalledWith({ user }, 'staff-1', { roles: ['STYLIST'] });
-    expect(service.replaceStaffSkills).toHaveBeenCalledWith({ user }, 'staff-1', { serviceIds: ['service-1'] });
-    expect(service.replaceStaffShifts).toHaveBeenCalledWith({ user }, 'staff-1', shift);
-    expect(service.listStaffLeaveBlocks).toHaveBeenCalledWith({ user }, 'staff-1', leaveQuery);
-    expect(service.createStaffLeaveBlock).toHaveBeenCalledWith({ user }, 'staff-1', leave);
-    expect(service.deleteStaffLeaveBlock).toHaveBeenCalledWith({ user }, 'staff-1', 'leave-1');
+    expect(service.getStaff).toHaveBeenCalledWith({ user }, '11111111-1111-4111-8111-111111111111');
+    expect(service.updateStaff).toHaveBeenCalledWith({ user }, '11111111-1111-4111-8111-111111111111', staff);
+    expect(service.replaceStaffRoles).toHaveBeenCalledWith({ user }, '11111111-1111-4111-8111-111111111111', { roles: ['STYLIST'] });
+    expect(service.replaceStaffSkills).toHaveBeenCalledWith({ user }, '11111111-1111-4111-8111-111111111111', {
+      serviceIds: ['service-1'],
+    });
+    expect(service.replaceStaffShifts).toHaveBeenCalledWith({ user }, '11111111-1111-4111-8111-111111111111', shift);
+    expect(service.listStaffLeaveBlocks).toHaveBeenCalledWith({ user }, '11111111-1111-4111-8111-111111111111', leaveQuery);
+    expect(service.createStaffLeaveBlock).toHaveBeenCalledWith({ user }, '11111111-1111-4111-8111-111111111111', leave);
+    expect(service.deleteStaffLeaveBlock).toHaveBeenCalledWith(
+      { user },
+      '11111111-1111-4111-8111-111111111111',
+      '22222222-2222-4222-8222-222222222222',
+    );
+    expect(service.selfUpdateStaffContact).toHaveBeenCalledWith({ user }, selfContact);
+    expect(service.getStaffPersonalDetails).toHaveBeenCalledWith({ user }, '11111111-1111-4111-8111-111111111111');
+    expect(service.updateStaffPersonalDetails).toHaveBeenCalledWith({ user }, '11111111-1111-4111-8111-111111111111', personalDetails);
+    expect(service.listStaffIdentityDocuments).toHaveBeenCalledWith({ user }, '11111111-1111-4111-8111-111111111111');
+    expect(service.uploadStaffIdentityDocument).toHaveBeenCalledWith({ user }, '11111111-1111-4111-8111-111111111111', documentInput);
+    expect(service.verifyStaffIdentityDocument).toHaveBeenCalledWith(
+      { user },
+      '11111111-1111-4111-8111-111111111111',
+      '22222222-2222-4222-8222-222222222222',
+      verifyInput,
+    );
   });
 
   it('delegates service catalog routes with route parameters and authenticated context', async () => {

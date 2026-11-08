@@ -311,6 +311,78 @@ export async function seedStaffAndCatalog(context: SeedContext, salon: SalonBran
     },
   });
 
+  // 8. Staff Personal Profiles & Identity Documents
+  await prisma.staffPersonalProfile.upsert({
+    where: { staffId: staffElena.id },
+    update: {},
+    create: {
+      staffId: staffElena.id,
+      legalName: 'Elena Vance',
+      dateOfBirth: new Date('1990-05-15'),
+      gender: 'FEMALE',
+      addressLine1: '1-2-3 Shibuya',
+      city: 'Shibuya-ku',
+      state: 'Tokyo',
+      postalCode: '150-0002',
+      country: 'JP',
+      emergencyContactName: 'Marcus Vance',
+      emergencyContactRelationship: 'Spouse',
+      emergencyContactPhone: '+81-90-9999-0001',
+      employmentType: 'FULL_TIME',
+      hireDate: new Date('2020-01-10'),
+      payoutMethod: 'BANK_TRANSFER',
+      bankName: 'Mizuho Bank',
+      branchName: 'Shibuya Branch',
+      branchCode: '210',
+      accountType: 'ORDINARY',
+      accountNumber: '1234567',
+      accountHolderName: 'ELENA VANCE',
+    },
+  });
+
+  await prisma.staffPersonalProfile.upsert({
+    where: { staffId: staffKenji.id },
+    update: {},
+    create: {
+      staffId: staffKenji.id,
+      legalName: 'Kenji Sato',
+      dateOfBirth: new Date('1988-11-20'),
+      gender: 'MALE',
+      addressLine1: '4-5-6 Harajuku',
+      city: 'Shibuya-ku',
+      state: 'Tokyo',
+      postalCode: '150-0001',
+      country: 'JP',
+      emergencyContactName: 'Yoko Sato',
+      emergencyContactRelationship: 'Mother',
+      emergencyContactPhone: '+81-90-9999-0002',
+      employmentType: 'FULL_TIME',
+      hireDate: new Date('2021-03-01'),
+      payoutMethod: 'BANK_TRANSFER',
+      bankName: 'MUFG Bank',
+      branchName: 'Shinjuku Branch',
+      branchCode: '150',
+      accountType: 'ORDINARY',
+      accountNumber: '7654321',
+      accountHolderName: 'KENJI SATO',
+    },
+  });
+
+  await prisma.staffIdentityDocument.upsert({
+    where: { id: '00000000-0000-4000-8000-000000000501' },
+    update: {},
+    create: {
+      id: '00000000-0000-4000-8000-000000000501',
+      staffId: staffElena.id,
+      documentType: 'DRIVERS_LICENSE',
+      fileKey: 'secure/staff/elena-drivers-license.pdf',
+      mimeType: 'application/pdf',
+      fileSizeBytes: 1048576,
+      verificationStatus: 'VERIFIED',
+      verifiedAt: new Date('2020-01-15T10:00:00Z'),
+    },
+  });
+
   console.log('  ✓ Seeded Service Catalog, Staff, Assignments, Skills & Shifts');
 
   return {

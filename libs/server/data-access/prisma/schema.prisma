@@ -131,24 +131,28 @@ model SalonBranch {
 }
 
 model SalonOwnerStaff {
-  id          String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  businessId  String                      @map("business_id") @db.Uuid
-  business    SalonBusiness               @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  displayName String                      @map("display_name")
-  phone       String
-  email       String?
+  id              String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId      String                      @map("business_id") @db.Uuid
+  business        SalonBusiness               @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  userId          String?                     @map("user_id") @db.Uuid
+  displayName     String                      @map("display_name")
+  phone           String
+  email           String?
   status          SalonOwnerStatus            @default(ACTIVE)
   roles           String[]                    @default([])
   roleAssignments StaffRoleAssignment[]
   branches        SalonOwnerStaffBranch[]
-  skills      SalonOwnerStaffSkill[]
-  shifts      SalonOwnerStaffShift[]
-  leaveBlocks SalonOwnerStaffLeaveBlock[]
-  createdAt   DateTime                    @default(now()) @map("created_at")
-  updatedAt   DateTime                    @updatedAt @map("updated_at")
+  skills          SalonOwnerStaffSkill[]
+  shifts          SalonOwnerStaffShift[]
+  leaveBlocks     SalonOwnerStaffLeaveBlock[]
+  personalProfile   StaffPersonalProfile?
+  identityDocuments StaffIdentityDocument[]
+  createdAt       DateTime                    @default(now()) @map("created_at")
+  updatedAt       DateTime                    @updatedAt @map("updated_at")
 
   @@unique([businessId, phone])
   @@index([businessId, status])
+  @@index([userId])
   @@map("salon_owner_staff")
 }
 
@@ -1381,5 +1385,95 @@ model StaffRoleAssignment {
   @@id([staffId, businessRoleId])
   @@index([businessRoleId])
   @@map("staff_role_assignment")
+}
+
+enum StaffGender {
+  MALE
+  FEMALE
+  NON_BINARY
+  OTHER
+}
+
+enum StaffEmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACTOR
+  APPRENTICE
+}
+
+enum StaffPayoutMethod {
+  BANK_TRANSFER
+  CASH
+}
+
+enum StaffBankAccountType {
+  ORDINARY
+  CURRENT
+}
+
+enum StaffDocumentType {
+  DRIVERS_LICENSE
+  RESIDENCE_CARD
+  PASSPORT
+  MY_NUMBER_CARD
+  OTHER
+}
+
+enum StaffDocVerificationStatus {
+  PENDING_VERIFICATION
+  VERIFIED
+  REJECTED
+}
+
+model StaffPersonalProfile {
+  id                        String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  staffId                   String              @unique @map("staff_id") @db.Uuid
+  staff                     SalonOwnerStaff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  legalName                 String?             @map("legal_name")
+  dateOfBirth               DateTime?           @map("date_of_birth") @db.Date
+  gender                    StaffGender?
+  addressLine1              String?             @map("address_line1")
+  addressLine2              String?             @map("address_line2")
+  city                      String?
+  state                     String?
+  postalCode                String?             @map("postal_code")
+  country                   String?             @default("JP")
+  emergencyContactName      String?             @map("emergency_contact_name")
+  emergencyContactRelationship String?          @map("emergency_contact_relationship")
+  emergencyContactPhone     String?             @map("emergency_contact_phone")
+  employmentType            StaffEmploymentType @default(FULL_TIME) @map("employment_type")
+  hireDate                  DateTime            @default(now()) @map("hire_date") @db.Date
+  terminationDate           DateTime?           @map("termination_date") @db.Date
+  payoutMethod              StaffPayoutMethod   @default(CASH) @map("payout_method")
+  bankName                  String?             @map("bank_name")
+  branchName                String?             @map("branch_name")
+  branchCode                String?             @map("branch_code")
+  accountType               StaffBankAccountType? @map("account_type")
+  accountNumber             String?             @map("account_number")
+  accountHolderName         String?             @map("account_holder_name")
+  createdAt                 DateTime            @default(now()) @map("created_at")
+  updatedAt                 DateTime            @updatedAt @map("updated_at")
+
+  @@map("staff_personal_profile")
+}
+
+model StaffIdentityDocument {
+  id                 String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  staffId            String                     @map("staff_id") @db.Uuid
+  staff              SalonOwnerStaff            @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  documentType       StaffDocumentType          @map("document_type")
+  fileKey            String                     @map("file_key")
+  mimeType           String                     @map("mime_type")
+  fileSizeBytes      Int                        @map("file_size_bytes")
+  verificationStatus StaffDocVerificationStatus @default(PENDING_VERIFICATION) @map("verification_status")
+  verifiedByUserId   String?                    @map("verified_by_user_id") @db.Uuid
+  verifiedAt         DateTime?                  @map("verified_at")
+  rejectionReason    String?                    @map("rejection_reason")
+  createdAt          DateTime                   @default(now()) @map("created_at")
+  updatedAt          DateTime                   @updatedAt @map("updated_at")
+
+  @@index([staffId])
+  @@index([staffId, verificationStatus])
+  @@map("staff_identity_document")
 }
 

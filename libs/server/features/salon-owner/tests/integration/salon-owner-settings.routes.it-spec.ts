@@ -29,6 +29,12 @@ describe('Salon owner settings routes', () => {
     updateBusinessRole: jest.fn(),
     deleteBusinessRole: jest.fn(),
     listSystemPermissions: jest.fn(),
+    getStaffPersonalDetails: jest.fn(),
+    updateStaffPersonalDetails: jest.fn(),
+    selfUpdateStaffContact: jest.fn(),
+    listStaffIdentityDocuments: jest.fn(),
+    uploadStaffIdentityDocument: jest.fn(),
+    verifyStaffIdentityDocument: jest.fn(),
   };
   const customers = {
     createCustomer: jest.fn(),
@@ -274,5 +280,43 @@ describe('Salon owner settings routes', () => {
 
     await request(app.getHttpServer()).get('/partner/permissions').expect(200);
     expect(catalog.listSystemPermissions).toHaveBeenCalled();
+  });
+
+  it('routes personal HR details, self contact, and identity document requests to catalog service', async () => {
+    const staffId = '11111111-1111-4111-8111-111111111111';
+    const docId = '22222222-2222-4222-8222-222222222222';
+    catalog.getStaffPersonalDetails.mockResolvedValue({ staffId, employmentType: 'FULL_TIME' });
+    catalog.updateStaffPersonalDetails.mockResolvedValue({ staffId, employmentType: 'FULL_TIME' });
+    catalog.selfUpdateStaffContact.mockResolvedValue({ success: true });
+    catalog.listStaffIdentityDocuments.mockResolvedValue([]);
+    catalog.uploadStaffIdentityDocument.mockResolvedValue({ id: docId });
+    catalog.verifyStaffIdentityDocument.mockResolvedValue({ id: docId, verificationStatus: 'VERIFIED' });
+
+    await request(app.getHttpServer()).get(`/partner/staff/${staffId}/personal`).expect(200);
+    expect(catalog.getStaffPersonalDetails).toHaveBeenCalled();
+
+    await request(app.getHttpServer())
+      .put(`/partner/staff/${staffId}/personal`)
+      .send({ employmentType: 'FULL_TIME', hireDate: '2022-01-01', payoutMethod: 'CASH' })
+      .expect(200);
+    expect(catalog.updateStaffPersonalDetails).toHaveBeenCalled();
+
+    await request(app.getHttpServer()).put('/partner/staff/self/contact').send({ phone: '09012345678' }).expect(200);
+    expect(catalog.selfUpdateStaffContact).toHaveBeenCalled();
+
+    await request(app.getHttpServer()).get(`/partner/staff/${staffId}/documents`).expect(200);
+    expect(catalog.listStaffIdentityDocuments).toHaveBeenCalled();
+
+    await request(app.getHttpServer())
+      .post(`/partner/staff/${staffId}/documents`)
+      .send({ documentType: 'DRIVERS_LICENSE', fileKey: 'key', mimeType: 'image/jpeg', fileSizeBytes: 1024 })
+      .expect(201);
+    expect(catalog.uploadStaffIdentityDocument).toHaveBeenCalled();
+
+    await request(app.getHttpServer())
+      .put(`/partner/staff/${staffId}/documents/${docId}/verify`)
+      .send({ verificationStatus: 'VERIFIED' })
+      .expect(200);
+    expect(catalog.verifyStaffIdentityDocument).toHaveBeenCalled();
   });
 });
