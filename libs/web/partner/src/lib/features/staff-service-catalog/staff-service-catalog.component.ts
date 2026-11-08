@@ -105,6 +105,9 @@ export class StaffServiceCatalogComponent {
   protected readonly hasStaff = computed(() => this.staff().length > 0);
   protected readonly hasServices = computed(() => this.services().length > 0);
   protected readonly selectedTabIndex = signal(this.initialTabIndex());
+  protected readonly isServicesMode = computed(() => this.selectedTabIndex() === 1);
+  protected readonly isStaffMode = computed(() => this.selectedTabIndex() === 0);
+  protected readonly pageTitle = computed(() => (this.isServicesMode() ? 'Service Catalog' : 'Staff Management'));
 
   protected readonly staffForm = this.fb.nonNullable.group({
     branchIds: this.fb.nonNullable.control<string[]>([], Validators.required),

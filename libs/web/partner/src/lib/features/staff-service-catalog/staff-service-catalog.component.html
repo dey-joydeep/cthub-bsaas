@@ -4,7 +4,7 @@
   }
 
   <header class="catalog-header">
-    <h1 class="catalog-title">Staff & Services</h1>
+    <h1 class="catalog-title">{{ pageTitle() }}</h1>
   </header>
 
   @if (message()) {
@@ -20,539 +20,535 @@
     </div>
   }
 
-  <mat-tab-group [selectedIndex]="selectedTabIndex()" (selectedIndexChange)="selectedTabIndex.set($event)">
-    <mat-tab label="Staff">
-      <div class="staff-workspace-layout">
-        <!-- MASTER SIDEBAR (LEFT) -->
-        <aside class="staff-master-sidebar">
-          <div class="master-toolbar">
-            <mat-form-field appearance="outline" class="staff-search-field" subscriptSizing="dynamic">
-              <mat-icon matPrefix>search</mat-icon>
-              <mat-label>Search staff</mat-label>
-              <input matInput [value]="staffSearchTerm()" (input)="onStaffSearch($event)" placeholder="Search by name, email, phone..." />
-              @if (staffSearchTerm()) {
-                <button matSuffix mat-icon-button type="button" aria-label="Clear search" (click)="clearStaffSearch()">
-                  <mat-icon>close</mat-icon>
-                </button>
-              }
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="staff-branch-filter" subscriptSizing="dynamic">
-              <mat-icon matPrefix>filter_list</mat-icon>
-              <mat-label>Branch filter</mat-label>
-              <mat-select [value]="staffBranchFilter()" (selectionChange)="onStaffBranchFilterChange($event.value)">
-                <mat-option value="ALL">All Branches</mat-option>
-                @for (branch of branches(); track branch.id) {
-                  <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-
-            <button mat-flat-button color="primary" type="button" class="add-staff-action-btn" (click)="newStaff()">
-              <mat-icon>person_add</mat-icon>
-              <span>Add Staff Member</span>
-            </button>
-          </div>
-
-          <div class="staff-card-list list">
-            @for (member of filteredStaff(); track member.id) {
-              <button type="button" class="list-row staff-master-card" [class.selected]="selectedStaff()?.id === member.id" (click)="selectStaff(member)">
-                <div class="staff-avatar-badge">{{ getInitials(member.displayName) }}</div>
-                <div class="list-row-main">
-                  <span class="list-row-title">{{ member.displayName }}</span>
-                  <small class="list-row-subtitle">{{ member.email || member.phone }}</small>
-                  <div class="list-row-roles">
-                    @for (role of memberStaffRoles(member); track role) {
-                      <span class="staff-role-chip">{{ role }}</span>
-                    }
-                  </div>
-                </div>
-                <div class="list-row-aside">
-                  <span class="salon-pill" [class.salon-pill-brand]="member.status === 'ACTIVE'" [class.salon-pill-neutral]="member.status !== 'ACTIVE'">
-                    {{ member.status }}
-                  </span>
-                  <small>{{ member.branchIds.length }} branch{{ member.branchIds.length === 1 ? '' : 'es' }}</small>
-                </div>
+  @if (isStaffMode()) {
+    <div class="staff-workspace-layout">
+      <!-- MASTER SIDEBAR (LEFT) -->
+      <aside class="staff-master-sidebar">
+        <div class="master-toolbar">
+          <mat-form-field appearance="outline" class="staff-search-field" subscriptSizing="dynamic">
+            <mat-icon matPrefix>search</mat-icon>
+            <mat-label>Search staff</mat-label>
+            <input matInput [value]="staffSearchTerm()" (input)="onStaffSearch($event)" placeholder="Search by name, email, phone..." />
+            @if (staffSearchTerm()) {
+              <button matSuffix mat-icon-button type="button" aria-label="Clear search" (click)="clearStaffSearch()">
+                <mat-icon>close</mat-icon>
               </button>
-            } @empty {
-              <div class="empty-staff-state">
-                <mat-icon class="empty-icon">person_search</mat-icon>
-                <p class="empty">No staff members match the selected criteria.</p>
-              </div>
             }
-          </div>
-        </aside>
+          </mat-form-field>
 
-        <!-- DETAIL WORKSPACE (RIGHT) -->
-        <main class="staff-detail-workspace">
-          <header class="detail-header-card">
-            @if (selectedStaff(); as current) {
-              <div class="detail-header-info">
-                <div class="staff-avatar-lg">{{ getInitials(current.displayName) }}</div>
-                <div class="detail-header-text">
-                  <div class="detail-title-row">
-                    <h2 class="detail-display-name">{{ current.displayName }}</h2>
-                    <span class="salon-pill" [class.salon-pill-brand]="current.status === 'ACTIVE'" [class.salon-pill-neutral]="current.status !== 'ACTIVE'">
-                      {{ current.status }}
-                    </span>
-                  </div>
-                  <div class="detail-meta-row">
-                    <span class="meta-item"><mat-icon>phone</mat-icon> {{ current.phone }}</span>
-                    @if (current.email) {
-                      <span class="meta-item"><mat-icon>email</mat-icon> {{ current.email }}</span>
-                    }
-                    <span class="meta-item"><mat-icon>storefront</mat-icon> {{ staffBranchNames(current) }}</span>
-                  </div>
+          <mat-form-field appearance="outline" class="staff-branch-filter" subscriptSizing="dynamic">
+            <mat-icon matPrefix>filter_list</mat-icon>
+            <mat-label>Branch filter</mat-label>
+            <mat-select [value]="staffBranchFilter()" (selectionChange)="onStaffBranchFilterChange($event.value)">
+              <mat-option value="ALL">All Branches</mat-option>
+              @for (branch of branches(); track branch.id) {
+                <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <button mat-flat-button color="primary" type="button" class="add-staff-action-btn" (click)="newStaff()">
+            <mat-icon>person_add</mat-icon>
+            <span>Add Staff Member</span>
+          </button>
+        </div>
+
+        <div class="staff-card-list list">
+          @for (member of filteredStaff(); track member.id) {
+            <button type="button" class="list-row staff-master-card" [class.selected]="selectedStaff()?.id === member.id" (click)="selectStaff(member)">
+              <div class="staff-avatar-badge">{{ getInitials(member.displayName) }}</div>
+              <div class="list-row-main">
+                <span class="list-row-title">{{ member.displayName }}</span>
+                <small class="list-row-subtitle">{{ member.email || member.phone }}</small>
+                <div class="list-row-roles">
+                  @for (role of memberStaffRoles(member); track role) {
+                    <span class="staff-role-chip">{{ role }}</span>
+                  }
                 </div>
               </div>
-            } @else {
-              <div class="detail-header-info">
-                <div class="staff-avatar-lg new-avatar"><mat-icon>person_add</mat-icon></div>
-                <div class="detail-header-text">
-                  <h2 class="detail-display-name">New Staff Profile</h2>
-                  <p class="detail-subtitle">Fill in operational details to onboard a new team member.</p>
+              <div class="list-row-aside">
+                <span class="salon-pill" [class.salon-pill-brand]="member.status === 'ACTIVE'" [class.salon-pill-neutral]="member.status !== 'ACTIVE'">
+                  {{ member.status }}
+                </span>
+                <small>{{ member.branchIds.length }} branch{{ member.branchIds.length === 1 ? '' : 'es' }}</small>
+              </div>
+            </button>
+          } @empty {
+            <div class="empty-staff-state">
+              <mat-icon class="empty-icon">person_search</mat-icon>
+              <p class="empty">No staff members match the selected criteria.</p>
+            </div>
+          }
+        </div>
+      </aside>
+
+      <!-- DETAIL WORKSPACE (RIGHT) -->
+      <main class="staff-detail-workspace">
+        <header class="detail-header-card">
+          @if (selectedStaff(); as current) {
+            <div class="detail-header-info">
+              <div class="staff-avatar-lg">{{ getInitials(current.displayName) }}</div>
+              <div class="detail-header-text">
+                <div class="detail-title-row">
+                  <h2 class="detail-display-name">{{ current.displayName }}</h2>
+                  <span class="salon-pill" [class.salon-pill-brand]="current.status === 'ACTIVE'" [class.salon-pill-neutral]="current.status !== 'ACTIVE'">
+                    {{ current.status }}
+                  </span>
+                </div>
+                <div class="detail-meta-row">
+                  <span class="meta-item"><mat-icon>phone</mat-icon> {{ current.phone }}</span>
+                  @if (current.email) {
+                    <span class="meta-item"><mat-icon>email</mat-icon> {{ current.email }}</span>
+                  }
+                  <span class="meta-item"><mat-icon>storefront</mat-icon> {{ staffBranchNames(current) }}</span>
                 </div>
               </div>
-            }
-          </header>
+            </div>
+          } @else {
+            <div class="detail-header-info">
+              <div class="staff-avatar-lg new-avatar"><mat-icon>person_add</mat-icon></div>
+              <div class="detail-header-text">
+                <h2 class="detail-display-name">New Staff Profile</h2>
+                <p class="detail-subtitle">Fill in operational details to onboard a new team member.</p>
+              </div>
+            </div>
+          }
+        </header>
 
-          <mat-tab-group class="staff-subtab-group" [selectedIndex]="selectedStaffSubTabIndex()" (selectedIndexChange)="selectedStaffSubTabIndex.set($event)">
-            <!-- SUB-TAB 1: PROFILE & HR -->
-            <mat-tab label="Profile & HR">
-              <mat-card class="subtab-content-card">
+        <mat-tab-group class="staff-subtab-group" [selectedIndex]="selectedStaffSubTabIndex()" (selectedIndexChange)="selectedStaffSubTabIndex.set($event)">
+          <!-- SUB-TAB 1: PROFILE & HR -->
+          <mat-tab label="Profile & HR">
+            <mat-card class="subtab-content-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar class="card-header-icon">badge</mat-icon>
+                <mat-card-title>Staff Profile</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <form [formGroup]="staffForm" class="form-grid" (ngSubmit)="saveStaff()">
+                  <mat-form-field appearance="outline" class="col-span-full">
+                    <mat-label>Branches</mat-label>
+                    <mat-select formControlName="branchIds" multiple id="staffBranches">
+                      @for (branch of branches(); track branch.id) {
+                        <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Display name</mat-label>
+                    <input matInput formControlName="displayName" id="staffDisplayName" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Status</mat-label>
+                    <mat-select formControlName="status" id="staffStatus">
+                      <mat-option value="ACTIVE">Active</mat-option>
+                      <mat-option value="INACTIVE">Inactive</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Phone</mat-label>
+                    <input matInput formControlName="phone" id="staffPhone" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Email</mat-label>
+                    <input matInput formControlName="email" id="staffEmail" />
+                  </mat-form-field>
+
+                  <!-- HR EXPANSION PANEL -->
+                  <mat-expansion-panel class="col-span-full hr-expansion-panel">
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>
+                        <mat-icon class="panel-icon">lock</mat-icon>
+                        <span>Confidential Personal & Employment Details (HR)</span>
+                      </mat-panel-title>
+                      <mat-panel-description> Owner & HR access only </mat-panel-description>
+                    </mat-expansion-panel-header>
+                    <div class="hr-panel-body">
+                      <div class="hr-notice-banner">
+                        <mat-icon>shield</mat-icon>
+                        <span>Personal identification, payroll, and residential address are encrypted and strictly restricted to authorized HR/Owner personnel.</span>
+                      </div>
+                      <div class="hr-fields-preview-grid">
+                        <div class="hr-preview-item">
+                          <span class="hr-label">Legal Name</span>
+                          <span class="hr-value-placeholder">{{ selectedStaff()?.displayName || 'As per government photo ID' }}</span>
+                        </div>
+                        <div class="hr-preview-item">
+                          <span class="hr-label">Employment Type</span>
+                          <span class="hr-value-placeholder">Full-Time (Standard)</span>
+                        </div>
+                        <div class="hr-preview-item">
+                          <span class="hr-label">Compensation / Payout</span>
+                          <span class="hr-value-placeholder">Bank Transfer (Configured on file)</span>
+                        </div>
+                        <div class="hr-preview-item">
+                          <span class="hr-label">Identity Document Status</span>
+                          <span class="salon-pill salon-pill-brand">VERIFIED</span>
+                        </div>
+                      </div>
+                    </div>
+                  </mat-expansion-panel>
+
+                  <div class="form-actions col-span-full">
+                    <button mat-flat-button color="primary" type="submit" [disabled]="saving() || !hasBranches()">
+                      <mat-icon>save</mat-icon>
+                      Save staff
+                    </button>
+                  </div>
+                </form>
+              </mat-card-content>
+            </mat-card>
+          </mat-tab>
+
+          <!-- SUB-TAB 2: ROLES & CAPABILITIES -->
+          <mat-tab label="Roles & Capabilities">
+            <mat-card class="subtab-content-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar class="card-header-icon">admin_panel_settings</mat-icon>
+                <mat-card-title>Roles & Capabilities</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <form [formGroup]="roleForm" class="role-assignment-form" (ngSubmit)="saveRoles()">
+                  <mat-form-field appearance="outline" class="col-span-full">
+                    <mat-label>Assigned Business Roles</mat-label>
+                    <mat-select formControlName="roleIds" multiple id="staffRolesSelect">
+                      @for (role of roles(); track role.id) {
+                        <mat-option [value]="role.id">{{ role.name }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <div class="form-actions col-span-full">
+                    <button mat-flat-button color="primary" type="submit" [disabled]="saving() || !selectedStaff()">
+                      <mat-icon>security</mat-icon>
+                      Save roles
+                    </button>
+                  </div>
+                </form>
+
+                @if (selectedRolesSummary().length > 0) {
+                  <div class="role-guide-panel mt-3">
+                    <div class="role-guide-header">
+                      <mat-icon class="guide-icon">shield</mat-icon>
+                      <span class="guide-title">Assigned Roles & Capabilities</span>
+                    </div>
+                    <div class="role-cards-grid">
+                      @for (role of selectedRolesSummary(); track role.id) {
+                        <div class="role-summary-card">
+                          <div class="role-card-header">
+                            <div class="role-name-row">
+                              <span class="role-display-name">{{ role.name }}</span>
+                              @if (role.roleCode) {
+                                <span class="role-code-badge">{{ role.roleCode }}</span>
+                              }
+                              @if (role.isSystemDefault) {
+                                <span class="role-system-badge">System</span>
+                              }
+                            </div>
+                          </div>
+                          @if (role.description) {
+                            <p class="role-description">{{ role.description }}</p>
+                          }
+                          <div class="role-permissions-list">
+                            <span class="permissions-label">Granted capabilities:</span>
+                            <div class="permission-pills">
+                              @for (permCode of role.permissions; track permCode) {
+                                <span class="permission-pill" [title]="getPermissionDescription(permCode)">
+                                  <mat-icon class="perm-check">check</mat-icon>
+                                  {{ getPermissionName(permCode) }}
+                                </span>
+                              } @empty {
+                                <span class="permission-pill-empty">Standard operational privileges</span>
+                              }
+                            </div>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </mat-card-content>
+            </mat-card>
+          </mat-tab>
+
+          <!-- SUB-TAB 3: SERVICES & SKILLS -->
+          <mat-tab label="Services & Skills">
+            <mat-card class="subtab-content-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar class="card-header-icon">content_cut</mat-icon>
+                <mat-card-title>Services & Skills</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <form [formGroup]="skillForm" class="skill-assignment-form" (ngSubmit)="saveSkills()">
+                  <mat-form-field appearance="outline" class="col-span-full">
+                    <mat-label>Qualified Services</mat-label>
+                    <mat-select formControlName="serviceIds" multiple id="staffSkillsSelect">
+                      @for (service of services(); track service.id) {
+                        <mat-option [value]="service.id">{{ service.name }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <div class="form-actions col-span-full">
+                    <button mat-flat-button color="primary" type="submit" [disabled]="saving() || !selectedStaff()">
+                      <mat-icon>check_circle</mat-icon>
+                      Save skills
+                    </button>
+                  </div>
+                </form>
+              </mat-card-content>
+            </mat-card>
+          </mat-tab>
+
+          <!-- SUB-TAB 4: SCHEDULE & LEAVE -->
+          <mat-tab label="Schedule & Leave">
+            <div class="schedule-tab-content">
+              <!-- WEEKLY SHIFT CARD -->
+              <mat-card class="schedule-card">
                 <mat-card-header>
-                  <mat-icon mat-card-avatar class="card-header-icon">badge</mat-icon>
-                  <mat-card-title>Staff Profile</mat-card-title>
+                  <mat-icon mat-card-avatar class="card-header-icon">schedule</mat-icon>
+                  <mat-card-title>Weekly Working Shift</mat-card-title>
+                  <mat-card-subtitle>Configure regular working hours by branch and day</mat-card-subtitle>
                 </mat-card-header>
                 <mat-card-content>
-                  <form [formGroup]="staffForm" class="form-grid" (ngSubmit)="saveStaff()">
+                  <form [formGroup]="shiftForm" class="form-grid" (ngSubmit)="saveShift()">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Branch</mat-label>
+                      <mat-select formControlName="branchId" id="shiftBranch">
+                        @for (branch of branches(); track branch.id) {
+                          <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Timezone</mat-label>
+                      <input matInput formControlName="timezone" id="shiftTimezone" readonly [tabIndex]="-1" />
+                      <mat-hint>Auto-inherited from branch</mat-hint>
+                    </mat-form-field>
+
                     <mat-form-field appearance="outline" class="col-span-full">
-                      <mat-label>Branches</mat-label>
-                      <mat-select formControlName="branchIds" multiple id="staffBranches">
+                      <mat-label>Day</mat-label>
+                      <mat-select formControlName="dayOfWeek" id="shiftDay">
+                        @for (day of weekdays; track $index) {
+                          <mat-option [value]="$index">{{ day }}</mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Start time</mat-label>
+                      <input matInput formControlName="start" id="shiftStart" placeholder="09:00" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>End time</mat-label>
+                      <input matInput formControlName="end" id="shiftEnd" placeholder="17:00" />
+                    </mat-form-field>
+                    <div class="form-actions col-span-full">
+                      <button mat-flat-button color="primary" type="submit" [disabled]="saving() || !selectedStaff()">
+                        <mat-icon>update</mat-icon>
+                        Save shift
+                      </button>
+                    </div>
+                  </form>
+                </mat-card-content>
+              </mat-card>
+
+              <!-- LEAVE BLOCKS CARD -->
+              <mat-card class="schedule-card">
+                <mat-card-header>
+                  <mat-icon mat-card-avatar class="card-header-icon">event_busy</mat-icon>
+                  <mat-card-title>Staff Leave Blocks</mat-card-title>
+                  <mat-card-subtitle>Schedule leaves, holidays, or time off</mat-card-subtitle>
+                </mat-card-header>
+                <mat-card-content>
+                  <form [formGroup]="leaveForm" class="form-grid" (ngSubmit)="saveLeave()">
+                    <mat-form-field appearance="outline" class="col-span-full">
+                      <mat-label>Branch</mat-label>
+                      <mat-select formControlName="branchId" id="leaveBranch">
+                        <mat-option [value]="null">All Branches (Full Salon)</mat-option>
                         @for (branch of branches(); track branch.id) {
                           <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
                         }
                       </mat-select>
                     </mat-form-field>
                     <mat-form-field appearance="outline">
-                      <mat-label>Display name</mat-label>
-                      <input matInput formControlName="displayName" id="staffDisplayName" />
+                      <mat-label>Starts at</mat-label>
+                      <input matInput type="datetime-local" formControlName="startsAt" id="leaveStartsAt" />
                     </mat-form-field>
                     <mat-form-field appearance="outline">
-                      <mat-label>Status</mat-label>
-                      <mat-select formControlName="status" id="staffStatus">
-                        <mat-option value="ACTIVE">Active</mat-option>
-                        <mat-option value="INACTIVE">Inactive</mat-option>
-                      </mat-select>
+                      <mat-label>Ends at</mat-label>
+                      <input matInput type="datetime-local" formControlName="endsAt" id="leaveEndsAt" />
                     </mat-form-field>
-                    <mat-form-field appearance="outline">
-                      <mat-label>Phone</mat-label>
-                      <input matInput formControlName="phone" id="staffPhone" />
-                    </mat-form-field>
-                    <mat-form-field appearance="outline">
-                      <mat-label>Email</mat-label>
-                      <input matInput formControlName="email" id="staffEmail" />
-                    </mat-form-field>
-
-                    <!-- HR EXPANSION PANEL -->
-                    <mat-expansion-panel class="col-span-full hr-expansion-panel">
-                      <mat-expansion-panel-header>
-                        <mat-panel-title>
-                          <mat-icon class="panel-icon">lock</mat-icon>
-                          <span>Confidential Personal & Employment Details (HR)</span>
-                        </mat-panel-title>
-                        <mat-panel-description> Owner & HR access only </mat-panel-description>
-                      </mat-expansion-panel-header>
-                      <div class="hr-panel-body">
-                        <div class="hr-notice-banner">
-                          <mat-icon>shield</mat-icon>
-                          <span>Personal identification, payroll, and residential address are encrypted and strictly restricted to authorized HR/Owner personnel.</span>
-                        </div>
-                        <div class="hr-fields-preview-grid">
-                          <div class="hr-preview-item">
-                            <span class="hr-label">Legal Name</span>
-                            <span class="hr-value-placeholder">{{ selectedStaff()?.displayName || 'As per government photo ID' }}</span>
-                          </div>
-                          <div class="hr-preview-item">
-                            <span class="hr-label">Employment Type</span>
-                            <span class="hr-value-placeholder">Full-Time (Standard)</span>
-                          </div>
-                          <div class="hr-preview-item">
-                            <span class="hr-label">Compensation / Payout</span>
-                            <span class="hr-value-placeholder">Bank Transfer (Configured on file)</span>
-                          </div>
-                          <div class="hr-preview-item">
-                            <span class="hr-label">Identity Document Status</span>
-                            <span class="salon-pill salon-pill-brand">VERIFIED</span>
-                          </div>
-                        </div>
-                      </div>
-                    </mat-expansion-panel>
-
-                    <div class="form-actions col-span-full">
-                      <button mat-flat-button color="primary" type="submit" [disabled]="saving() || !hasBranches()">
-                        <mat-icon>save</mat-icon>
-                        Save staff
-                      </button>
-                    </div>
-                  </form>
-                </mat-card-content>
-              </mat-card>
-            </mat-tab>
-
-            <!-- SUB-TAB 2: ROLES & CAPABILITIES -->
-            <mat-tab label="Roles & Capabilities">
-              <mat-card class="subtab-content-card">
-                <mat-card-header>
-                  <mat-icon mat-card-avatar class="card-header-icon">admin_panel_settings</mat-icon>
-                  <mat-card-title>Roles & Capabilities</mat-card-title>
-                </mat-card-header>
-                <mat-card-content>
-                  <form [formGroup]="roleForm" class="role-assignment-form" (ngSubmit)="saveRoles()">
                     <mat-form-field appearance="outline" class="col-span-full">
-                      <mat-label>Assigned Business Roles</mat-label>
-                      <mat-select formControlName="roleIds" multiple id="staffRolesSelect">
-                        @for (role of roles(); track role.id) {
-                          <mat-option [value]="role.id">{{ role.name }}</mat-option>
-                        }
-                      </mat-select>
+                      <mat-label>Reason</mat-label>
+                      <textarea matInput formControlName="reason" id="leaveReason" rows="3" placeholder="e.g. Vacation, medical leave, personal days"></textarea>
                     </mat-form-field>
-
                     <div class="form-actions col-span-full">
                       <button mat-flat-button color="primary" type="submit" [disabled]="saving() || !selectedStaff()">
-                        <mat-icon>security</mat-icon>
-                        Save roles
+                        <mat-icon>add_alarm</mat-icon>
+                        Create leave
                       </button>
                     </div>
                   </form>
 
-                  @if (selectedRolesSummary().length > 0) {
-                    <div class="role-guide-panel mt-3">
-                      <div class="role-guide-header">
-                        <mat-icon class="guide-icon">shield</mat-icon>
-                        <span class="guide-title">Assigned Roles & Capabilities</span>
-                      </div>
-                      <div class="role-cards-grid">
-                        @for (role of selectedRolesSummary(); track role.id) {
-                          <div class="role-summary-card">
-                            <div class="role-card-header">
-                              <div class="role-name-row">
-                                <span class="role-display-name">{{ role.name }}</span>
-                                @if (role.roleCode) {
-                                  <span class="role-code-badge">{{ role.roleCode }}</span>
-                                }
-                                @if (role.isSystemDefault) {
-                                  <span class="role-system-badge">System</span>
-                                }
-                              </div>
-                            </div>
-                            @if (role.description) {
-                              <p class="role-description">{{ role.description }}</p>
-                            }
-                            <div class="role-permissions-list">
-                              <span class="permissions-label">Granted capabilities:</span>
-                              <div class="permission-pills">
-                                @for (permCode of role.permissions; track permCode) {
-                                  <span class="permission-pill" [title]="getPermissionDescription(permCode)">
-                                    <mat-icon class="perm-check">check</mat-icon>
-                                    {{ getPermissionName(permCode) }}
-                                  </span>
-                                } @empty {
-                                  <span class="permission-pill-empty">Standard operational privileges</span>
-                                }
-                              </div>
-                            </div>
-                          </div>
-                        }
-                      </div>
-                    </div>
-                  }
-                </mat-card-content>
-              </mat-card>
-            </mat-tab>
-
-            <!-- SUB-TAB 3: SERVICES & SKILLS -->
-            <mat-tab label="Services & Skills">
-              <mat-card class="subtab-content-card">
-                <mat-card-header>
-                  <mat-icon mat-card-avatar class="card-header-icon">content_cut</mat-icon>
-                  <mat-card-title>Services & Skills</mat-card-title>
-                </mat-card-header>
-                <mat-card-content>
-                  <form [formGroup]="skillForm" class="skill-assignment-form" (ngSubmit)="saveSkills()">
-                    <mat-form-field appearance="outline" class="col-span-full">
-                      <mat-label>Qualified Services</mat-label>
-                      <mat-select formControlName="serviceIds" multiple id="staffSkillsSelect">
-                        @for (service of services(); track service.id) {
-                          <mat-option [value]="service.id">{{ service.name }}</mat-option>
-                        }
-                      </mat-select>
-                    </mat-form-field>
-
-                    <div class="form-actions col-span-full">
-                      <button mat-flat-button color="primary" type="submit" [disabled]="saving() || !selectedStaff()">
-                        <mat-icon>check_circle</mat-icon>
-                        Save skills
-                      </button>
-                    </div>
-                  </form>
-                </mat-card-content>
-              </mat-card>
-            </mat-tab>
-
-            <!-- SUB-TAB 4: SCHEDULE & LEAVE -->
-            <mat-tab label="Schedule & Leave">
-              <div class="schedule-tab-content">
-                <!-- WEEKLY SHIFT CARD -->
-                <mat-card class="schedule-card">
-                  <mat-card-header>
-                    <mat-icon mat-card-avatar class="card-header-icon">schedule</mat-icon>
-                    <mat-card-title>Weekly Working Shift</mat-card-title>
-                    <mat-card-subtitle>Configure regular working hours by branch and day</mat-card-subtitle>
-                  </mat-card-header>
-                  <mat-card-content>
-                    <form [formGroup]="shiftForm" class="form-grid" (ngSubmit)="saveShift()">
-                      <mat-form-field appearance="outline">
-                        <mat-label>Branch</mat-label>
-                        <mat-select formControlName="branchId" id="shiftBranch">
-                          @for (branch of branches(); track branch.id) {
-                            <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
-                          }
-                        </mat-select>
-                      </mat-form-field>
-
-                      <mat-form-field appearance="outline">
-                        <mat-label>Timezone</mat-label>
-                        <input matInput formControlName="timezone" id="shiftTimezone" readonly [tabIndex]="-1" />
-                        <mat-hint>Auto-inherited from branch</mat-hint>
-                      </mat-form-field>
-
-                      <mat-form-field appearance="outline" class="col-span-full">
-                        <mat-label>Day</mat-label>
-                        <mat-select formControlName="dayOfWeek" id="shiftDay">
-                          @for (day of weekdays; track $index) {
-                            <mat-option [value]="$index">{{ day }}</mat-option>
-                          }
-                        </mat-select>
-                      </mat-form-field>
-                      <mat-form-field appearance="outline">
-                        <mat-label>Start time</mat-label>
-                        <input matInput formControlName="start" id="shiftStart" placeholder="09:00" />
-                      </mat-form-field>
-                      <mat-form-field appearance="outline">
-                        <mat-label>End time</mat-label>
-                        <input matInput formControlName="end" id="shiftEnd" placeholder="17:00" />
-                      </mat-form-field>
-                      <div class="form-actions col-span-full">
-                        <button mat-flat-button color="primary" type="submit" [disabled]="saving() || !selectedStaff()">
-                          <mat-icon>update</mat-icon>
-                          Save shift
-                        </button>
-                      </div>
-                    </form>
-                  </mat-card-content>
-                </mat-card>
-
-                <!-- LEAVE BLOCKS CARD -->
-                <mat-card class="schedule-card">
-                  <mat-card-header>
-                    <mat-icon mat-card-avatar class="card-header-icon">event_busy</mat-icon>
-                    <mat-card-title>Staff Leave Blocks</mat-card-title>
-                    <mat-card-subtitle>Schedule leaves, holidays, or time off</mat-card-subtitle>
-                  </mat-card-header>
-                  <mat-card-content>
-                    <form [formGroup]="leaveForm" class="form-grid" (ngSubmit)="saveLeave()">
-                      <mat-form-field appearance="outline" class="col-span-full">
-                        <mat-label>Branch</mat-label>
-                        <mat-select formControlName="branchId" id="leaveBranch">
-                          <mat-option [value]="null">All Branches (Full Salon)</mat-option>
-                          @for (branch of branches(); track branch.id) {
-                            <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
-                          }
-                        </mat-select>
-                      </mat-form-field>
-                      <mat-form-field appearance="outline">
-                        <mat-label>Starts at</mat-label>
-                        <input matInput type="datetime-local" formControlName="startsAt" id="leaveStartsAt" />
-                      </mat-form-field>
-                      <mat-form-field appearance="outline">
-                        <mat-label>Ends at</mat-label>
-                        <input matInput type="datetime-local" formControlName="endsAt" id="leaveEndsAt" />
-                      </mat-form-field>
-                      <mat-form-field appearance="outline" class="col-span-full">
-                        <mat-label>Reason</mat-label>
-                        <textarea matInput formControlName="reason" id="leaveReason" rows="3" placeholder="e.g. Vacation, medical leave, personal days"></textarea>
-                      </mat-form-field>
-                      <div class="form-actions col-span-full">
-                        <button mat-flat-button color="primary" type="submit" [disabled]="saving() || !selectedStaff()">
-                          <mat-icon>add_alarm</mat-icon>
-                          Create leave
-                        </button>
-                      </div>
-                    </form>
-
-                    <div class="leave-blocks-section">
-                      <h3 class="subform-heading">Active leave blocks</h3>
-                      @if (loadingLeave()) {
-                        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-                      }
-                      <div class="leave-list">
-                        @for (block of leaveBlocks(); track block.id) {
-                          <div class="leave-row salon-row">
-                            <div class="leave-info">
-                              <lib-date-range [start]="block.startsAt" [end]="block.endsAt" class="leave-dates"></lib-date-range>
-                              <div class="leave-meta">
-                                <span class="leave-scope salon-pill" [class.salon-pill-accent]="!block.branchId" [class.salon-pill-neutral]="block.branchId">
-                                  {{ leaveBranchScope(block.branchId) }}
-                                </span>
-                                <span class="leave-reason">{{ block.reason }}</span>
-                              </div>
-                            </div>
-                            <button mat-icon-button type="button" color="warn" [disabled]="saving()" (click)="deleteLeave(block.id)" aria-label="Delete leave block">
-                              <mat-icon>delete</mat-icon>
-                            </button>
-                          </div>
-                        } @empty {
-                          <p class="empty">No active leave blocks scheduled for this staff member.</p>
-                        }
-                      </div>
-                    </div>
-                  </mat-card-content>
-                </mat-card>
-              </div>
-            </mat-tab>
-          </mat-tab-group>
-        </main>
-      </div>
-    </mat-tab>
-
-    <mat-tab label="Services">
-      <div class="tab-grid">
-        <mat-card>
-          <mat-card-header>
-            <mat-icon mat-card-avatar class="card-header-icon">design_services</mat-icon>
-            <mat-card-title>Service editor</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <form [formGroup]="serviceForm" class="form-grid" (ngSubmit)="saveService()">
-              <mat-form-field appearance="outline">
-                <mat-label>Category</mat-label>
-                <mat-select formControlName="categoryId" id="serviceCategory">
-                  @for (category of categories(); track category.id) {
-                    <mat-option [value]="category.id">{{ category.name }}</mat-option>
-                  }
-                </mat-select>
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Status</mat-label>
-                <mat-select formControlName="status" id="serviceStatus">
-                  <mat-option value="ACTIVE">Active</mat-option>
-                  <mat-option value="INACTIVE">Inactive</mat-option>
-                </mat-select>
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="col-span-full">
-                <mat-label>Service name</mat-label>
-                <input matInput formControlName="name" id="serviceName" />
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Duration (minutes)</mat-label>
-                <input matInput type="number" formControlName="durationMinutes" id="serviceDuration" />
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Buffer (minutes)</mat-label>
-                <input matInput type="number" formControlName="bufferMinutes" id="serviceBuffer" />
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Base price</mat-label>
-                <input matInput formControlName="basePrice" id="serviceBasePrice" />
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Tax rate %</mat-label>
-                <input matInput formControlName="taxRatePercent" id="serviceTaxRate" />
-              </mat-form-field>
-              <div class="form-actions col-span-full">
-                <button mat-flat-button type="submit" [disabled]="saving() || categories().length === 0">Save service</button>
-              </div>
-            </form>
-
-            <div class="subforms">
-              <h3 class="subform-heading">Staff Eligibility</h3>
-              <form [formGroup]="eligibilityForm" class="compact-form" (ngSubmit)="saveEligibility()">
-                <mat-form-field appearance="outline">
-                  <mat-label>Eligible staff</mat-label>
-                  <mat-select formControlName="staffIds" multiple id="serviceEligibleStaff">
-                    @for (member of staff(); track member.id) {
-                      <mat-option [value]="member.id">{{ member.displayName }}</mat-option>
+                  <div class="leave-blocks-section">
+                    <h3 class="subform-heading">Active leave blocks</h3>
+                    @if (loadingLeave()) {
+                      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
                     }
-                  </mat-select>
-                </mat-form-field>
-                <button mat-stroked-button type="submit" [disabled]="saving() || !selectedService()">Save eligibility</button>
-              </form>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card>
-          <mat-card-header class="service-catalog-card-header">
-            <mat-icon mat-card-avatar class="card-header-icon">view_list</mat-icon>
-            <mat-card-title>Service catalog</mat-card-title>
-            <div class="card-header-actions">
-              <button mat-stroked-button type="button" (click)="newService()">
-                <mat-icon>add</mat-icon>
-                <span>Add Service</span>
-              </button>
-            </div>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="list">
-              @for (service of services(); track service.id) {
-                <button type="button" class="list-row" [class.selected]="selectedService()?.id === service.id" (click)="selectService(service)">
-                  <div class="list-row-main">
-                    <span class="list-row-title">{{ service.name }}</span>
-                    <small class="list-row-subtitle">{{ categoryName(service.categoryId) }}</small>
+                    <div class="leave-list">
+                      @for (block of leaveBlocks(); track block.id) {
+                        <div class="leave-row salon-row">
+                          <div class="leave-info">
+                            <lib-date-range [start]="block.startsAt" [end]="block.endsAt" class="leave-dates"></lib-date-range>
+                            <div class="leave-meta">
+                              <span class="leave-scope salon-pill" [class.salon-pill-accent]="!block.branchId" [class.salon-pill-neutral]="block.branchId">
+                                {{ leaveBranchScope(block.branchId) }}
+                              </span>
+                              <span class="leave-reason">{{ block.reason }}</span>
+                            </div>
+                          </div>
+                          <button mat-icon-button type="button" color="warn" [disabled]="saving()" (click)="deleteLeave(block.id)" aria-label="Delete leave block">
+                            <mat-icon>delete</mat-icon>
+                          </button>
+                        </div>
+                      } @empty {
+                        <p class="empty">No active leave blocks scheduled for this staff member.</p>
+                      }
+                    </div>
                   </div>
-                  <div class="list-row-aside">
-                    <span class="salon-pill" [class.salon-pill-brand]="service.status === 'ACTIVE'" [class.salon-pill-neutral]="service.status !== 'ACTIVE'">
-                      {{ service.status }}
-                    </span>
-                  </div>
-                </button>
-              } @empty {
-                <p class="empty">No services are configured.</p>
-              }
+                </mat-card-content>
+              </mat-card>
             </div>
-            <div class="status-actions">
-              <button mat-stroked-button type="button" [disabled]="saving() || !selectedService()" (click)="setServiceStatus('ACTIVE')">Set Active</button>
-              <button mat-stroked-button type="button" [disabled]="saving() || !selectedService()" (click)="setServiceStatus('INACTIVE')">Set Inactive</button>
-            </div>
-          </mat-card-content>
-        </mat-card>
-      </div>
-
-      <mat-card class="mt-3">
+          </mat-tab>
+        </mat-tab-group>
+      </main>
+    </div>
+  } @else if (isServicesMode()) {
+    <div class="tab-grid">
+      <mat-card>
         <mat-card-header>
-          <mat-icon mat-card-avatar class="card-header-icon">category</mat-icon>
-          <mat-card-title>Categories</mat-card-title>
+          <mat-icon mat-card-avatar class="card-header-icon">design_services</mat-icon>
+          <mat-card-title>Service editor</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          <form [formGroup]="categoryForm" class="category-form" (ngSubmit)="saveCategory()">
+          <form [formGroup]="serviceForm" class="form-grid" (ngSubmit)="saveService()">
             <mat-form-field appearance="outline">
-              <mat-label>Name</mat-label>
-              <input matInput formControlName="name" id="categoryNameInput" />
+              <mat-label>Category</mat-label>
+              <mat-select formControlName="categoryId" id="serviceCategory">
+                @for (category of categories(); track category.id) {
+                  <mat-option [value]="category.id">{{ category.name }}</mat-option>
+                }
+              </mat-select>
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>Sort order</mat-label>
-              <input matInput type="number" formControlName="sortOrder" id="categorySortOrderInput" />
+              <mat-label>Status</mat-label>
+              <mat-select formControlName="status" id="serviceStatus">
+                <mat-option value="ACTIVE">Active</mat-option>
+                <mat-option value="INACTIVE">Inactive</mat-option>
+              </mat-select>
             </mat-form-field>
-            <button mat-flat-button type="submit" [disabled]="saving()">Create category</button>
+            <mat-form-field appearance="outline" class="col-span-full">
+              <mat-label>Service name</mat-label>
+              <input matInput formControlName="name" id="serviceName" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Duration (minutes)</mat-label>
+              <input matInput type="number" formControlName="durationMinutes" id="serviceDuration" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Buffer (minutes)</mat-label>
+              <input matInput type="number" formControlName="bufferMinutes" id="serviceBuffer" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Base price</mat-label>
+              <input matInput formControlName="basePrice" id="serviceBasePrice" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Tax rate %</mat-label>
+              <input matInput formControlName="taxRatePercent" id="serviceTaxRate" />
+            </mat-form-field>
+            <div class="form-actions col-span-full">
+              <button mat-flat-button type="submit" [disabled]="saving() || categories().length === 0">Save service</button>
+            </div>
           </form>
-          <div class="chips">
-            @for (category of categories(); track category.id) {
-              <span>{{ category.sortOrder }}. {{ category.name }}</span>
-            }
+
+          <div class="subforms">
+            <h3 class="subform-heading">Staff Eligibility</h3>
+            <form [formGroup]="eligibilityForm" class="compact-form" (ngSubmit)="saveEligibility()">
+              <mat-form-field appearance="outline">
+                <mat-label>Eligible staff</mat-label>
+                <mat-select formControlName="staffIds" multiple id="serviceEligibleStaff">
+                  @for (member of staff(); track member.id) {
+                    <mat-option [value]="member.id">{{ member.displayName }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <button mat-stroked-button type="submit" [disabled]="saving() || !selectedService()">Save eligibility</button>
+            </form>
           </div>
         </mat-card-content>
       </mat-card>
-    </mat-tab>
-  </mat-tab-group>
+
+      <mat-card>
+        <mat-card-header class="service-catalog-card-header">
+          <mat-icon mat-card-avatar class="card-header-icon">view_list</mat-icon>
+          <mat-card-title>Service catalog</mat-card-title>
+          <div class="card-header-actions">
+            <button mat-stroked-button type="button" (click)="newService()">
+              <mat-icon>add</mat-icon>
+              <span>Add Service</span>
+            </button>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="list">
+            @for (service of services(); track service.id) {
+              <button type="button" class="list-row" [class.selected]="selectedService()?.id === service.id" (click)="selectService(service)">
+                <div class="list-row-main">
+                  <span class="list-row-title">{{ service.name }}</span>
+                  <small class="list-row-subtitle">{{ categoryName(service.categoryId) }}</small>
+                </div>
+                <div class="list-row-aside">
+                  <span class="salon-pill" [class.salon-pill-brand]="service.status === 'ACTIVE'" [class.salon-pill-neutral]="service.status !== 'ACTIVE'">
+                    {{ service.status }}
+                  </span>
+                </div>
+              </button>
+            } @empty {
+              <p class="empty">No services are configured.</p>
+            }
+          </div>
+          <div class="status-actions">
+            <button mat-stroked-button type="button" [disabled]="saving() || !selectedService()" (click)="setServiceStatus('ACTIVE')">Set Active</button>
+            <button mat-stroked-button type="button" [disabled]="saving() || !selectedService()" (click)="setServiceStatus('INACTIVE')">Set Inactive</button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <mat-card class="mt-3">
+      <mat-card-header>
+        <mat-icon mat-card-avatar class="card-header-icon">category</mat-icon>
+        <mat-card-title>Categories</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="categoryForm" class="category-form" (ngSubmit)="saveCategory()">
+          <mat-form-field appearance="outline">
+            <mat-label>Name</mat-label>
+            <input matInput formControlName="name" id="categoryNameInput" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Sort order</mat-label>
+            <input matInput type="number" formControlName="sortOrder" id="categorySortOrderInput" />
+          </mat-form-field>
+          <button mat-flat-button type="submit" [disabled]="saving()">Create category</button>
+        </form>
+        <div class="chips">
+          @for (category of categories(); track category.id) {
+            <span>{{ category.sortOrder }}. {{ category.name }}</span>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
 </section>
