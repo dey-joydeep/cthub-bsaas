@@ -12,7 +12,7 @@ Define the unified visual and interaction design patterns for operational feedba
 - [Error Message Catalog](../../shared/error-message-catalog.md)
 - [Staff Wireframes](./staff.md)
 - [Service Catalog Wireframes](./service-catalog.md)
-- [Global Stylesheet](file:///apps/web/partner/src/styles.css)
+- [Global Stylesheet](../../../../apps/web/partner/src/styles.css)
 
 ## Verified Penpot Board
 

@@ -72,7 +72,7 @@ Define role permissions and scope rules for Salon Owner MVP implementation.
 
 ## Master and Business Semi-Master Architecture (ADR-0005)
 
-As defined in [ADR-0005](../../architecture/decisions/0005-database-driven-role-master-and-semi-master.md):
+As defined in [ADR-0005](../../../architecture/decisions/0005-database-driven-role-master-and-semi-master.md):
 1. **Global Presets (`RoleMaster` & `PermissionMaster`):** The capability rows in this matrix define the platform's `PermissionMaster` catalog. The default columns define the system `RoleMaster` presets seeded to new businesses on onboarding.
 2. **Business Semi-Master (`BusinessRole`):** Each `SalonBusiness` holds its own active role records. Businesses can:
    - Rename role display names (e.g., *"Stylist"* &rarr; *"Senior Colorist"*, *"Barber"*);
