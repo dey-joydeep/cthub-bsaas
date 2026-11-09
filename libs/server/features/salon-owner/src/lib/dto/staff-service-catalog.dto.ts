@@ -387,6 +387,9 @@ export class StaffSelfContactInputDto {
   [key: string]: unknown;
 }
 
+export class UpdateStaffPersonalProfileInputDto extends StaffPersonalDetailsInputDto {}
+export class SelfUpdateStaffContactInputDto extends StaffSelfContactInputDto {}
+
 export class StaffIdentityDocumentInputDto {
   @IsIn(staffDocumentTypeValues)
   documentType!: (typeof staffDocumentTypeValues)[number];

@@ -1,4 +1,4 @@
-import { INestApplication, ValidationPipe, VersioningType } from '@nestjs/common';
+import { ForbiddenException, INestApplication, ValidationPipe, VersioningType } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 
@@ -23,6 +23,7 @@ describe('Salon owner settings routes', () => {
     replaceBranchHours: jest.fn(),
   };
   const catalog = {
+    listStaff: jest.fn(),
     createStaff: jest.fn(),
     createService: jest.fn(),
     listBusinessRoles: jest.fn(),
@@ -320,5 +321,108 @@ describe('Salon owner settings routes', () => {
       .send({ verificationStatus: 'VERIFIED' })
       .expect(200);
     expect(catalog.verifyStaffIdentityDocument).toHaveBeenCalled();
+  });
+
+  it('returns 403 Forbidden when a STYLIST role accesses staff personal details', async () => {
+    const staffId = '11111111-1111-4111-8111-111111111111';
+    catalog.getStaffPersonalDetails.mockRejectedValueOnce(new ForbiddenException('STAFF_UNAUTHORIZED_FIELD_ACCESS'));
+
+    await request(app.getHttpServer()).get(`/partner/staff/${staffId}/personal`).expect(403);
+    expect(catalog.getStaffPersonalDetails).toHaveBeenCalled();
+  });
+
+  it('allows OWNER role to retrieve and update residential address in personal profile', async () => {
+    const staffId = '11111111-1111-4111-8111-111111111111';
+    catalog.getStaffPersonalDetails.mockResolvedValueOnce({
+      staffId,
+      employmentType: 'FULL_TIME',
+      hireDate: '2022-01-01',
+      payoutMethod: 'BANK_TRANSFER',
+      address: {
+        line1: '1-2-3 Shibuya',
+        city: 'Tokyo',
+        state: 'Tokyo',
+        postalCode: '150-0002',
+        country: 'JP',
+      },
+    });
+
+    const getRes = await request(app.getHttpServer()).get(`/partner/staff/${staffId}/personal`).expect(200);
+    expect(getRes.body.data.address.line1).toBe('1-2-3 Shibuya');
+    expect(getRes.body.data.address.postalCode).toBe('150-0002');
+
+    catalog.updateStaffPersonalDetails.mockResolvedValueOnce({
+      staffId,
+      employmentType: 'FULL_TIME',
+      hireDate: '2022-01-01',
+      payoutMethod: 'CASH',
+      address: {
+        line1: '4-5-6 Harajuku',
+        city: 'Tokyo',
+        state: 'Tokyo',
+        postalCode: '150-0001',
+        country: 'JP',
+      },
+    });
+
+    const putRes = await request(app.getHttpServer())
+      .put(`/partner/staff/${staffId}/personal`)
+      .send({
+        employmentType: 'FULL_TIME',
+        hireDate: '2022-01-01',
+        payoutMethod: 'CASH',
+        address: {
+          line1: '4-5-6 Harajuku',
+          city: 'Tokyo',
+          state: 'Tokyo',
+          postalCode: '150-0001',
+          country: 'JP',
+        },
+      })
+      .expect(200);
+    expect(putRes.body.data.address.line1).toBe('4-5-6 Harajuku');
+    expect(catalog.updateStaffPersonalDetails).toHaveBeenCalled();
+  });
+
+  it('does not leak addressLine1 or personal HR profile in GET /partner/staff', async () => {
+    const staffId = '11111111-1111-4111-8111-111111111111';
+    catalog.listStaff.mockResolvedValueOnce({
+      items: [
+        {
+          id: staffId,
+          displayName: 'Stylist Kenji',
+          phone: '+81-90-1111-2222',
+          email: 'kenji@example.com',
+          status: 'ACTIVE',
+          roles: ['STYLIST'],
+          roleIds: [],
+          branchIds: [branchId],
+          skillServiceIds: [],
+          createdAt: '2026-05-26T00:00:00.000Z',
+          updatedAt: '2026-05-26T00:00:00.000Z',
+        },
+      ],
+      page: { limit: 10, nextCursor: null, hasMore: false },
+    });
+
+    const res = await request(app.getHttpServer()).get('/partner/staff').expect(200);
+    expect(res.body.data.items).toHaveLength(1);
+    expect(res.body.data.items[0].displayName).toBe('Stylist Kenji');
+    expect(res.body.data.items[0].addressLine1).toBeUndefined();
+    expect(res.body.data.items[0].address).toBeUndefined();
+    expect(res.body.data.items[0].personalProfile).toBeUndefined();
+  });
+
+  it('supports PATCH /partner/staff/:staffId/personal/contact for self contact updates', async () => {
+    const staffId = '11111111-1111-4111-8111-111111111111';
+    catalog.selfUpdateStaffContact.mockResolvedValueOnce({ success: true });
+
+    await request(app.getHttpServer()).patch(`/partner/staff/${staffId}/personal/contact`).send({ phone: '+81-90-5555-6666' }).expect(200);
+
+    expect(catalog.selfUpdateStaffContact).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ phone: '+81-90-5555-6666' }),
+      staffId,
+    );
   });
 });

@@ -25,23 +25,24 @@ This document maps feature specifications to OpenAPI operations. The executable 
 
 ## Staff
 
-| Capability               | Method | Path                                                     | Operation ID                  |
-| ------------------------ | ------ | -------------------------------------------------------- | ----------------------------- |
-| List staff               | `GET`  | `/partner/staff`                                         | `listStaff`                   |
-| Create staff             | `POST` | `/partner/staff`                                         | `createStaff`                 |
-| Get staff                | `GET`  | `/partner/staff/{staffId}`                               | `getStaff`                    |
-| Update staff             | `PUT`  | `/partner/staff/{staffId}`                               | `updateStaff`                 |
-| Get personal details     | `GET`  | `/partner/staff/{staffId}/personal`                      | `getStaffPersonalDetails`     |
-| Update personal details  | `PUT`  | `/partner/staff/{staffId}/personal`                      | `updateStaffPersonalDetails`  |
-| Self-update contact info | `PUT`  | `/partner/staff/self/contact`                            | `selfUpdateStaffContact`      |
-| Upload identity document | `POST` | `/partner/staff/{staffId}/documents`                     | `uploadStaffIdentityDocument` |
-| List identity documents  | `GET`  | `/partner/staff/{staffId}/documents`                     | `listStaffIdentityDocuments`  |
-| Verify identity document | `PUT`  | `/partner/staff/{staffId}/documents/{documentId}/verify` | `verifyStaffIdentityDocument` |
-| Replace roles            | `PUT`  | `/partner/staff/{staffId}/roles`                         | `replaceStaffRoles`           |
-| Replace skills           | `PUT`  | `/partner/staff/{staffId}/skills`                        | `replaceStaffSkills`          |
-| Get shifts               | `GET`  | `/partner/staff/{staffId}/shifts`                        | `getStaffShifts`              |
-| Replace shifts           | `PUT`  | `/partner/staff/{staffId}/shifts`                        | `replaceStaffShifts`          |
-| Create leave block       | `POST` | `/partner/staff/{staffId}/leave-blocks`                  | `createStaffLeaveBlock`       |
+| Capability                   | Method  | Path                                                     | Operation ID                  |
+| ---------------------------- | ------- | -------------------------------------------------------- | ----------------------------- |
+| List staff                   | `GET`   | `/partner/staff`                                         | `listStaff`                   |
+| Create staff                 | `POST`  | `/partner/staff`                                         | `createStaff`                 |
+| Get staff                    | `GET`   | `/partner/staff/{staffId}`                               | `getStaff`                    |
+| Update staff                 | `PUT`   | `/partner/staff/{staffId}`                               | `updateStaff`                 |
+| Get personal details         | `GET`   | `/partner/staff/{staffId}/personal`                      | `getStaffPersonalDetails`     |
+| Update personal details      | `PUT`   | `/partner/staff/{staffId}/personal`                      | `updateStaffPersonalDetails`  |
+| Self-update contact info     | `PUT`   | `/partner/staff/self/contact`                            | `selfUpdateStaffContact`      |
+| Self-update contact (scoped) | `PATCH` | `/partner/staff/{staffId}/personal/contact`              | `selfUpdateStaffContact`      |
+| Upload identity document     | `POST`  | `/partner/staff/{staffId}/documents`                     | `uploadStaffIdentityDocument` |
+| List identity documents      | `GET`   | `/partner/staff/{staffId}/documents`                     | `listStaffIdentityDocuments`  |
+| Verify identity document     | `PUT`   | `/partner/staff/{staffId}/documents/{documentId}/verify` | `verifyStaffIdentityDocument` |
+| Replace roles                | `PUT`   | `/partner/staff/{staffId}/roles`                         | `replaceStaffRoles`           |
+| Replace skills               | `PUT`   | `/partner/staff/{staffId}/skills`                        | `replaceStaffSkills`          |
+| Get shifts                   | `GET`   | `/partner/staff/{staffId}/shifts`                        | `getStaffShifts`              |
+| Replace shifts               | `PUT`   | `/partner/staff/{staffId}/shifts`                        | `replaceStaffShifts`          |
+| Create leave block           | `POST`  | `/partner/staff/{staffId}/leave-blocks`                  | `createStaffLeaveBlock`       |
 
 ## Service Catalog
 

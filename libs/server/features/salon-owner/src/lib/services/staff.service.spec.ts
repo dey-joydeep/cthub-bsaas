@@ -1591,6 +1591,23 @@ describe('StaffService', () => {
           NotFoundException,
         );
       });
+
+      it('supports self-updating contact details with target staffId parameter', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.salonOwnerStaff.update.mockResolvedValueOnce({ ...baseStaff, phone: '09012345678' });
+        prisma.staffPersonalProfile.upsert.mockResolvedValueOnce(mockProfile);
+
+        const result = await service.selfUpdateStaffContact({ user: staffUser }, { phone: '09012345678' }, 'staff-1');
+        expect(result.success).toBe(true);
+      });
+
+      it('rejects self-updating contact details for another staff member without authority', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+
+        await expect(service.selfUpdateStaffContact({ user: otherStaffUser }, { phone: '09012345678' }, 'staff-1')).rejects.toBeInstanceOf(
+          ForbiddenException,
+        );
+      });
     });
 
     describe('Staff Identity Documents', () => {

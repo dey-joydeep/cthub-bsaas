@@ -695,6 +695,10 @@ components:
               $ref: '#/components/schemas/IsoDateTime'
             updatedAt:
               $ref: '#/components/schemas/IsoDateTime'
+    StaffPersonalProfile:
+      $ref: '#/components/schemas/StaffPersonalDetailsDto'
+    UpdateStaffPersonalProfileInput:
+      $ref: '#/components/schemas/StaffPersonalDetailsInput'
     StaffSelfContactInput:
       type: object
       properties:
@@ -705,6 +709,8 @@ components:
           $ref: '#/components/schemas/StaffResidentialAddress'
         emergencyContact:
           $ref: '#/components/schemas/StaffEmergencyContact'
+    SelfUpdateStaffContactInput:
+      $ref: '#/components/schemas/StaffSelfContactInput'
     StaffDocumentType:
       type: string
       enum: [DRIVERS_LICENSE, RESIDENCE_CARD, PASSPORT, MY_NUMBER_CARD, OTHER]

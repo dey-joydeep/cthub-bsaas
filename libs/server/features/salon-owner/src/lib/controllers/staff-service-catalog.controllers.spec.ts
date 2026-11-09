@@ -109,8 +109,11 @@ describe('Staff and service catalog controllers', () => {
     await controller.createStaffLeaveBlock(user, '11111111-1111-4111-8111-111111111111', leave);
     await controller.deleteStaffLeaveBlock(user, '11111111-1111-4111-8111-111111111111', '22222222-2222-4222-8222-222222222222');
     await controller.selfUpdateStaffContact(user, selfContact);
+    await controller.selfUpdateStaffContactScoped(user, '11111111-1111-4111-8111-111111111111', selfContact);
     await controller.getStaffPersonalDetails(user, '11111111-1111-4111-8111-111111111111');
+    await controller.getStaffPersonalProfile(user, '11111111-1111-4111-8111-111111111111');
     await controller.updateStaffPersonalDetails(user, '11111111-1111-4111-8111-111111111111', personalDetails);
+    await controller.updateStaffPersonalProfile(user, '11111111-1111-4111-8111-111111111111', personalDetails);
     await controller.listStaffIdentityDocuments(user, '11111111-1111-4111-8111-111111111111');
     await controller.uploadStaffIdentityDocument(user, '11111111-1111-4111-8111-111111111111', documentInput);
     await controller.verifyStaffIdentityDocument(

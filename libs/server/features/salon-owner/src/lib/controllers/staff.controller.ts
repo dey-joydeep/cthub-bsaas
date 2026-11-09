@@ -55,6 +55,24 @@ export class StaffController {
     return this.staffService.selfUpdateStaffContact({ user }, body);
   }
 
+  @Patch(':staffId/personal/contact')
+  @Put(':staffId/personal/contact')
+  selfUpdateStaffContactScoped(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('staffId', new ParseUUIDPipe()) staffId: string,
+    @Body() body: StaffSelfContactInputDto,
+  ) {
+    return this.staffService.selfUpdateStaffContact({ user }, body, staffId);
+  }
+
+  getStaffPersonalProfile(user: AuthenticatedUser, staffId: string) {
+    return this.getStaffPersonalDetails(user, staffId);
+  }
+
+  updateStaffPersonalProfile(user: AuthenticatedUser, staffId: string, body: StaffPersonalDetailsInputDto) {
+    return this.updateStaffPersonalDetails(user, staffId, body);
+  }
+
   @Get(':staffId')
   @ApiOperation({ operationId: 'getStaff' })
   getStaff(@CurrentUser() user: AuthenticatedUser, @Param('staffId', new ParseUUIDPipe()) staffId: string) {

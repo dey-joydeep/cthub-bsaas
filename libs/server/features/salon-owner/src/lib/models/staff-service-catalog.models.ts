@@ -138,6 +138,8 @@ export interface StaffPersonalProfileModel {
   readonly updatedAt: string;
 }
 
+export type StaffPersonalProfileDto = StaffPersonalProfileModel;
+
 export interface StaffIdentityDocumentModel {
   readonly id: string;
   readonly staffId: string;

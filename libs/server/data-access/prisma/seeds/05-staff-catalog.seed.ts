@@ -368,6 +368,34 @@ export async function seedStaffAndCatalog(context: SeedContext, salon: SalonBran
     },
   });
 
+  await prisma.staffPersonalProfile.upsert({
+    where: { staffId: staffYuki.id },
+    update: {},
+    create: {
+      staffId: staffYuki.id,
+      legalName: 'Yuki Tanaka',
+      dateOfBirth: new Date('1995-08-12'),
+      gender: 'FEMALE',
+      addressLine1: '7-8-9 Roppongi',
+      city: 'Minato-ku',
+      state: 'Tokyo',
+      postalCode: '106-0032',
+      country: 'JP',
+      emergencyContactName: 'Daiki Tanaka',
+      emergencyContactRelationship: 'Brother',
+      emergencyContactPhone: '+81-90-9999-0003',
+      employmentType: 'FULL_TIME',
+      hireDate: new Date('2022-04-01'),
+      payoutMethod: 'BANK_TRANSFER',
+      bankName: 'Sumitomo Mitsui Banking Corporation',
+      branchName: 'Roppongi Branch',
+      branchCode: '780',
+      accountType: 'ORDINARY',
+      accountNumber: '9876543',
+      accountHolderName: 'YUKI TANAKA',
+    },
+  });
+
   await prisma.staffIdentityDocument.upsert({
     where: { id: '00000000-0000-4000-8000-000000000501' },
     update: {},

@@ -1010,20 +1010,30 @@ export class StaffService {
     return this.mapPersonalProfile(staffId, profile, staff.createdAt);
   }
 
-  async selfUpdateStaffContact(context: SalonOwnerRequestContext, input: StaffSelfContactInputDto): Promise<SuccessResult> {
+  async selfUpdateStaffContact(
+    context: SalonOwnerRequestContext,
+    input: StaffSelfContactInputDto,
+    staffId?: string,
+  ): Promise<SuccessResult> {
     const tenantId = this.requireTenantId(context);
     validateSelfContactInput(input);
 
     const staff = await this.prisma.salonOwnerStaff.findFirst({
-      where: {
-        business: { tenantId },
-        OR: [{ userId: context.user.id }, { id: context.user.id }, ...(context.user.email ? [{ email: context.user.email }] : [])],
-      },
+      where: staffId
+        ? { id: staffId, business: { tenantId } }
+        : {
+            business: { tenantId },
+            OR: [{ userId: context.user.id }, { id: context.user.id }, ...(context.user.email ? [{ email: context.user.email }] : [])],
+          },
       include: staffInclude,
     });
 
     if (!staff) {
       throw new NotFoundException(notFoundMessage);
+    }
+
+    if (staffId) {
+      this.assertStaffPersonalAccess(context.user, staff, { allowSelf: true });
     }
 
     await this.prisma.$transaction(async (tx) => {
