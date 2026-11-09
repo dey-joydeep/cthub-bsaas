@@ -27,10 +27,25 @@
         <div class="master-toolbar">
           <mat-form-field appearance="outline" class="staff-search-field" subscriptSizing="dynamic">
             <mat-icon matPrefix>search</mat-icon>
-            <mat-label>Search staff</mat-label>
-            <input matInput [value]="staffSearchTerm()" (input)="onStaffSearch($event)" placeholder="Search by name, email, phone..." />
+            <mat-label i18n="@@STAFF_CATALOG.LABEL_SEARCH_STAFF">Search staff</mat-label>
+            <input
+              matInput
+              [value]="staffSearchTerm()"
+              (input)="onStaffSearch($event)"
+              placeholder="Search by name, email, phone..."
+              i18n-placeholder="@@STAFF_CATALOG.PLACEHOLDER_SEARCH_STAFF"
+              aria-label="Search staff"
+              i18n-aria-label="@@STAFF_CATALOG.ARIA_SEARCH_STAFF"
+            />
             @if (staffSearchTerm()) {
-              <button matSuffix mat-icon-button type="button" aria-label="Clear search" (click)="clearStaffSearch()">
+              <button
+                matSuffix
+                mat-icon-button
+                type="button"
+                aria-label="Clear search"
+                i18n-aria-label="@@STAFF_CATALOG.ARIA_CLEAR_SEARCH"
+                (click)="clearStaffSearch()"
+              >
                 <mat-icon>close</mat-icon>
               </button>
             }
@@ -38,9 +53,9 @@
 
           <mat-form-field appearance="outline" class="staff-branch-filter" subscriptSizing="dynamic">
             <mat-icon matPrefix>filter_list</mat-icon>
-            <mat-label>Branch filter</mat-label>
+            <mat-label i18n="@@STAFF_CATALOG.LABEL_BRANCH_FILTER">Branch filter</mat-label>
             <mat-select [value]="staffBranchFilter()" (selectionChange)="onStaffBranchFilterChange($event.value)">
-              <mat-option value="ALL">All Branches</mat-option>
+              <mat-option value="ALL" i18n="@@STAFF_CATALOG.OPTION_ALL_BRANCHES">All Branches</mat-option>
               @for (branch of branches(); track branch.id) {
                 <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
               }
@@ -49,7 +64,7 @@
 
           <button mat-flat-button color="primary" type="button" class="add-staff-action-btn" (click)="newStaff()">
             <mat-icon>person_add</mat-icon>
-            <span>Add Staff Member</span>
+            <span i18n="@@STAFF_CATALOG.BTN_ADD_STAFF">Add Staff Member</span>
           </button>
         </div>
 
@@ -76,7 +91,7 @@
           } @empty {
             <div class="empty-staff-state">
               <mat-icon class="empty-icon">person_search</mat-icon>
-              <p class="empty">No staff members match the selected criteria.</p>
+              <p class="empty" i18n="@@STAFF_CATALOG.EMPTY_STAFF">No staff members match the selected criteria.</p>
             </div>
           }
         </div>
@@ -108,8 +123,8 @@
             <div class="detail-header-info">
               <div class="staff-avatar-lg new-avatar"><mat-icon>person_add</mat-icon></div>
               <div class="detail-header-text">
-                <h2 class="detail-display-name">New Staff Profile</h2>
-                <p class="detail-subtitle">Fill in operational details to onboard a new team member.</p>
+                <h2 class="detail-display-name" i18n="@@STAFF_CATALOG.NEW_STAFF_TITLE">New Staff Profile</h2>
+                <p class="detail-subtitle" i18n="@@STAFF_CATALOG.NEW_STAFF_SUBTITLE">Fill in operational details to onboard a new team member.</p>
               </div>
             </div>
           }
@@ -117,60 +132,60 @@
 
         <mat-tab-group class="staff-subtab-group" [selectedIndex]="selectedStaffSubTabIndex()" (selectedIndexChange)="selectedStaffSubTabIndex.set($event)">
           <!-- SUB-TAB 1: PROFILE & HR -->
-          <mat-tab label="Profile & HR">
+          <mat-tab label="Profile & HR" i18n-label="@@STAFF_CATALOG.TAB_PROFILE_HR">
             <mat-card class="subtab-content-card">
               <mat-card-header>
                 <mat-icon mat-card-avatar class="card-header-icon">badge</mat-icon>
-                <mat-card-title>Staff Profile</mat-card-title>
+                <mat-card-title i18n="@@STAFF_CATALOG.TITLE_STAFF_PROFILE">Staff Profile</mat-card-title>
               </mat-card-header>
               <mat-card-content>
                 <form [formGroup]="staffForm" class="form-grid" (ngSubmit)="saveStaff()">
                   <mat-form-field appearance="outline" class="col-span-full">
-                    <mat-label>Branches *</mat-label>
+                    <mat-label i18n="@@STAFF_CATALOG.LABEL_BRANCHES">Branches</mat-label>
                     <mat-select formControlName="branchIds" multiple id="staffBranches">
                       @for (branch of branches(); track branch.id) {
                         <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
                       }
                     </mat-select>
                     @if (staffForm.controls.branchIds.hasError('required')) {
-                      <mat-error>At least one branch must be assigned.</mat-error>
+                      <mat-error i18n="@@STAFF_CATALOG.ERROR_BRANCH_REQUIRED">At least one branch must be assigned.</mat-error>
                     }
                   </mat-form-field>
                   <mat-form-field appearance="outline">
-                    <mat-label>Display name *</mat-label>
+                    <mat-label i18n="@@STAFF_CATALOG.LABEL_DISPLAY_NAME">Display name</mat-label>
                     <input matInput formControlName="displayName" id="staffDisplayName" />
                     @if (staffForm.controls.displayName.hasError('required') || staffForm.controls.displayName.hasError('minlength')) {
-                      <mat-error>Display name is required (min 2 characters).</mat-error>
+                      <mat-error i18n="@@STAFF_CATALOG.ERROR_NAME_REQUIRED">Display name is required (min 2 characters).</mat-error>
                     } @else if (staffForm.controls.displayName.hasError('maxlength')) {
-                      <mat-error>Display name cannot exceed 120 characters.</mat-error>
+                      <mat-error i18n="@@STAFF_CATALOG.ERROR_NAME_MAX">Display name cannot exceed 120 characters.</mat-error>
                     }
                   </mat-form-field>
                   <mat-form-field appearance="outline">
-                    <mat-label>Status *</mat-label>
+                    <mat-label i18n="@@STAFF_CATALOG.LABEL_STATUS">Status</mat-label>
                     <mat-select formControlName="status" id="staffStatus">
-                      <mat-option value="ACTIVE">Active</mat-option>
-                      <mat-option value="INACTIVE">Inactive</mat-option>
+                      <mat-option value="ACTIVE" i18n="@@STAFF_CATALOG.STATUS_ACTIVE">Active</mat-option>
+                      <mat-option value="INACTIVE" i18n="@@STAFF_CATALOG.STATUS_INACTIVE">Inactive</mat-option>
                     </mat-select>
                     @if (staffForm.controls.status.hasError('required')) {
-                      <mat-error>Status is required.</mat-error>
+                      <mat-error i18n="@@STAFF_CATALOG.ERROR_STATUS_REQUIRED">Status is required.</mat-error>
                     }
                   </mat-form-field>
                   <mat-form-field appearance="outline">
-                    <mat-label>Phone *</mat-label>
+                    <mat-label i18n="@@STAFF_CATALOG.LABEL_PHONE">Phone</mat-label>
                     <input matInput formControlName="phone" id="staffPhone" />
                     @if (staffForm.controls.phone.hasError('required')) {
-                      <mat-error>Phone number is required.</mat-error>
+                      <mat-error i18n="@@STAFF_CATALOG.ERROR_PHONE_REQUIRED">Phone number is required.</mat-error>
                     } @else if (staffForm.controls.phone.hasError('pattern')) {
-                      <mat-error>Enter a valid phone number (e.g. +81-90-1234-5678).</mat-error>
+                      <mat-error i18n="@@STAFF_CATALOG.ERROR_PHONE_INVALID">Enter a valid phone number (e.g. +81-90-1234-5678).</mat-error>
                     } @else if (staffForm.controls.phone.hasError('maxlength')) {
-                      <mat-error>Phone number cannot exceed 30 characters.</mat-error>
+                      <mat-error i18n="@@STAFF_CATALOG.ERROR_PHONE_MAX">Phone number cannot exceed 30 characters.</mat-error>
                     }
                   </mat-form-field>
                   <mat-form-field appearance="outline">
-                    <mat-label>Email</mat-label>
+                    <mat-label i18n="@@STAFF_CATALOG.LABEL_EMAIL">Email</mat-label>
                     <input matInput formControlName="email" id="staffEmail" />
                     @if (staffForm.controls.email.hasError('email')) {
-                      <mat-error>Enter a valid email address.</mat-error>
+                      <mat-error i18n="@@STAFF_CATALOG.ERROR_EMAIL_INVALID">Enter a valid email address.</mat-error>
                     }
                   </mat-form-field>
 
@@ -179,31 +194,84 @@
                     <mat-expansion-panel-header>
                       <mat-panel-title>
                         <mat-icon class="panel-icon">lock</mat-icon>
-                        <span>Confidential Personal & Employment Details (HR)</span>
+                        <span i18n="@@STAFF_CATALOG.HR_PANEL_TITLE">Confidential Personal & Employment Details (HR)</span>
                       </mat-panel-title>
-                      <mat-panel-description> Owner & HR access only </mat-panel-description>
+                      <mat-panel-description i18n="@@STAFF_CATALOG.HR_PANEL_DESC">Owner & HR access only</mat-panel-description>
                     </mat-expansion-panel-header>
                     <div class="hr-panel-body">
                       <div class="hr-notice-banner">
                         <mat-icon>shield</mat-icon>
-                        <span>Personal identification, payroll, and residential address are encrypted and strictly restricted to authorized HR/Owner personnel.</span>
+                        <span i18n="@@STAFF_CATALOG.HR_NOTICE">Personal identification, payroll, and residential address are encrypted and strictly restricted to authorized HR/Owner personnel.</span>
+                      </div>
+
+                      <!-- RESIDENTIAL ADDRESS SUB-SECTION -->
+                      <div class="hr-section-header">
+                        <mat-icon class="sub-icon">home</mat-icon>
+                        <h4 class="sub-title" i18n="@@STAFF_CATALOG.HR_RESIDENTIAL_ADDRESS_TITLE">Residential Address</h4>
+                      </div>
+                      <div class="form-grid hr-address-grid">
+                        <mat-form-field appearance="outline">
+                          <mat-label i18n="@@STAFF_CATALOG.LABEL_POSTAL_CODE">Postal code</mat-label>
+                          <input matInput formControlName="addressPostalCode" id="staffPostalCode" placeholder="150-0002" i18n-placeholder="@@STAFF_CATALOG.PLACEHOLDER_POSTAL_CODE" />
+                          @if (staffForm.controls.addressPostalCode.hasError('pattern')) {
+                            <mat-error i18n="@@STAFF_CATALOG.ERROR_POSTAL_CODE_INVALID">Enter a valid postal code (e.g. 150-0002 or 1500002).</mat-error>
+                          }
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                          <mat-label i18n="@@STAFF_CATALOG.LABEL_STATE">State / Prefecture</mat-label>
+                          <input matInput formControlName="addressState" id="staffAddressState" placeholder="Tokyo" i18n-placeholder="@@STAFF_CATALOG.PLACEHOLDER_STATE" />
+                          @if (staffForm.controls.addressState.hasError('maxlength')) {
+                            <mat-error i18n="@@STAFF_CATALOG.ERROR_STATE_MAX">State cannot exceed 60 characters.</mat-error>
+                          }
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                          <mat-label i18n="@@STAFF_CATALOG.LABEL_CITY">City</mat-label>
+                          <input matInput formControlName="addressCity" id="staffAddressCity" placeholder="Shibuya-ku" i18n-placeholder="@@STAFF_CATALOG.PLACEHOLDER_CITY" />
+                          @if (staffForm.controls.addressCity.hasError('maxlength')) {
+                            <mat-error i18n="@@STAFF_CATALOG.ERROR_CITY_MAX">City cannot exceed 60 characters.</mat-error>
+                          }
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                          <mat-label i18n="@@STAFF_CATALOG.LABEL_ADDRESS_LINE1">Address line 1</mat-label>
+                          <input matInput formControlName="addressLine1" id="staffAddressLine1" placeholder="1-2-3 Shibuya" i18n-placeholder="@@STAFF_CATALOG.PLACEHOLDER_ADDRESS_LINE1" />
+                          @if (staffForm.controls.addressLine1.hasError('maxlength')) {
+                            <mat-error i18n="@@STAFF_CATALOG.ERROR_LINE1_MAX">Address line 1 cannot exceed 120 characters.</mat-error>
+                          }
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="col-span-full">
+                          <mat-label i18n="@@STAFF_CATALOG.LABEL_ADDRESS_LINE2">Address line 2</mat-label>
+                          <input matInput formControlName="addressLine2" id="staffAddressLine2" placeholder="Building, Apt / Room 401" i18n-placeholder="@@STAFF_CATALOG.PLACEHOLDER_ADDRESS_LINE2" />
+                          @if (staffForm.controls.addressLine2.hasError('maxlength')) {
+                            <mat-error i18n="@@STAFF_CATALOG.ERROR_LINE2_MAX">Address line 2 cannot exceed 120 characters.</mat-error>
+                          }
+                        </mat-form-field>
                       </div>
                       <div class="hr-fields-preview-grid">
                         <div class="hr-preview-item">
-                          <span class="hr-label">Legal Name</span>
-                          <span class="hr-value-placeholder">{{ selectedStaff()?.displayName || 'As per government photo ID' }}</span>
+                          <span class="hr-label" i18n="@@STAFF_CATALOG.HR_LEGAL_NAME">Legal Name</span>
+                          <span class="hr-value-placeholder">
+                            @if (selectedStaff()?.displayName) {
+                              {{ selectedStaff()?.displayName }}
+                            } @else {
+                              <ng-container i18n="@@STAFF_CATALOG.HR_LEGAL_NAME_PLACEHOLDER">As per government photo ID</ng-container>
+                            }
+                          </span>
                         </div>
                         <div class="hr-preview-item">
-                          <span class="hr-label">Employment Type</span>
-                          <span class="hr-value-placeholder">Full-Time (Standard)</span>
+                          <span class="hr-label" i18n="@@STAFF_CATALOG.HR_EMP_TYPE">Employment Type</span>
+                          <span class="hr-value-placeholder" i18n="@@STAFF_CATALOG.HR_EMP_FULLTIME">Full-Time (Standard)</span>
                         </div>
                         <div class="hr-preview-item">
-                          <span class="hr-label">Compensation / Payout</span>
-                          <span class="hr-value-placeholder">Bank Transfer (Configured on file)</span>
+                          <span class="hr-label" i18n="@@STAFF_CATALOG.HR_COMPENSATION">Compensation / Payout</span>
+                          <span class="hr-value-placeholder" i18n="@@STAFF_CATALOG.HR_PAYOUT_BANK">Bank Transfer (Configured on file)</span>
                         </div>
                         <div class="hr-preview-item">
-                          <span class="hr-label">Identity Document Status</span>
-                          <span class="salon-pill salon-pill-brand">VERIFIED</span>
+                          <span class="hr-label" i18n="@@STAFF_CATALOG.HR_DOC_STATUS">Identity Document Status</span>
+                          <span class="salon-pill salon-pill-brand" i18n="@@STAFF_CATALOG.HR_STATUS_VERIFIED">VERIFIED</span>
                         </div>
                       </div>
                     </div>
@@ -212,7 +280,7 @@
                   <div class="form-actions col-span-full">
                     <button mat-flat-button color="primary" type="submit" [disabled]="saving() || !hasBranches()">
                       <mat-icon>save</mat-icon>
-                      Save staff
+                      <span i18n="@@STAFF_CATALOG.BTN_SAVE_STAFF">Save staff</span>
                     </button>
                   </div>
                 </form>
@@ -221,16 +289,16 @@
           </mat-tab>
 
           <!-- SUB-TAB 2: ROLES & CAPABILITIES -->
-          <mat-tab label="Roles & Capabilities">
+          <mat-tab label="Roles & Capabilities" i18n-label="@@STAFF_CATALOG.TAB_ROLES">
             <mat-card class="subtab-content-card">
               <mat-card-header>
                 <mat-icon mat-card-avatar class="card-header-icon">admin_panel_settings</mat-icon>
-                <mat-card-title>Roles & Capabilities</mat-card-title>
+                <mat-card-title i18n="@@STAFF_CATALOG.TITLE_ROLES">Roles & Capabilities</mat-card-title>
               </mat-card-header>
               <mat-card-content>
                 <form [formGroup]="roleForm" class="role-assignment-form" (ngSubmit)="saveRoles()">
                   <mat-form-field appearance="outline" class="col-span-full">
-                    <mat-label>Assigned Business Roles</mat-label>
+                    <mat-label i18n="@@STAFF_CATALOG.LABEL_ASSIGNED_ROLES">Assigned Business Roles</mat-label>
                     <mat-select formControlName="roleIds" multiple id="staffRolesSelect">
                       @for (role of roles(); track role.id) {
                         <mat-option [value]="role.id">{{ role.name }}</mat-option>
@@ -241,7 +309,7 @@
                   <div class="form-actions col-span-full">
                     <button mat-flat-button color="primary" type="submit" [disabled]="saving() || !selectedStaff()">
                       <mat-icon>security</mat-icon>
-                      Save roles
+                      <span i18n="@@STAFF_CATALOG.BTN_SAVE_ROLES">Save roles</span>
                     </button>
                   </div>
                 </form>
@@ -250,7 +318,7 @@
                   <div class="role-guide-panel mt-3">
                     <div class="role-guide-header">
                       <mat-icon class="guide-icon">shield</mat-icon>
-                      <span class="guide-title">Assigned Roles & Capabilities</span>
+                      <span class="guide-title" i18n="@@STAFF_CATALOG.GUIDE_ASSIGNED_ROLES">Assigned Roles & Capabilities</span>
                     </div>
                     <div class="role-cards-grid">
                       @for (role of selectedRolesSummary(); track role.id) {
@@ -262,7 +330,7 @@
                                 <span class="role-code-badge">{{ role.roleCode }}</span>
                               }
                               @if (role.isSystemDefault) {
-                                <span class="role-system-badge">System</span>
+                                <span class="role-system-badge" i18n="@@STAFF_CATALOG.BADGE_SYSTEM">System</span>
                               }
                             </div>
                           </div>
@@ -270,7 +338,7 @@
                             <p class="role-description">{{ role.description }}</p>
                           }
                           <div class="role-permissions-list">
-                            <span class="permissions-label">Granted capabilities:</span>
+                            <span class="permissions-label" i18n="@@STAFF_CATALOG.LABEL_GRANTED_CAPABILITIES">Granted capabilities:</span>
                             <div class="permission-pills">
                               @for (permCode of role.permissions; track permCode) {
                                 <span class="permission-pill" [title]="getPermissionDescription(permCode)">
@@ -278,7 +346,7 @@
                                   {{ getPermissionName(permCode) }}
                                 </span>
                               } @empty {
-                                <span class="permission-pill-empty">Standard operational privileges</span>
+                                <span class="permission-pill-empty" i18n="@@STAFF_CATALOG.PERM_STANDARD">Standard operational privileges</span>
                               }
                             </div>
                           </div>
@@ -292,16 +360,16 @@
           </mat-tab>
 
           <!-- SUB-TAB 3: SERVICES & SKILLS -->
-          <mat-tab label="Services & Skills">
+          <mat-tab label="Services & Skills" i18n-label="@@STAFF_CATALOG.TAB_SKILLS">
             <mat-card class="subtab-content-card">
               <mat-card-header>
                 <mat-icon mat-card-avatar class="card-header-icon">content_cut</mat-icon>
-                <mat-card-title>Services & Skills</mat-card-title>
+                <mat-card-title i18n="@@STAFF_CATALOG.TITLE_SERVICES_SKILLS">Services & Skills</mat-card-title>
               </mat-card-header>
               <mat-card-content>
                 <form [formGroup]="skillForm" class="skill-assignment-form" (ngSubmit)="saveSkills()">
                   <mat-form-field appearance="outline" class="col-span-full">
-                    <mat-label>Qualified Services</mat-label>
+                    <mat-label i18n="@@STAFF_CATALOG.LABEL_QUALIFIED_SERVICES">Qualified Services</mat-label>
                     <mat-select formControlName="serviceIds" multiple id="staffSkillsSelect">
                       @for (service of services(); track service.id) {
                         <mat-option [value]="service.id">{{ service.name }}</mat-option>
@@ -312,7 +380,7 @@
                   <div class="form-actions col-span-full">
                     <button mat-flat-button color="primary" type="submit" [disabled]="saving() || !selectedStaff()">
                       <mat-icon>check_circle</mat-icon>
-                      Save skills
+                      <span i18n="@@STAFF_CATALOG.BTN_SAVE_SKILLS">Save skills</span>
                     </button>
                   </div>
                 </form>
@@ -321,64 +389,64 @@
           </mat-tab>
 
           <!-- SUB-TAB 4: SCHEDULE & LEAVE -->
-          <mat-tab label="Schedule & Leave">
+          <mat-tab label="Schedule & Leave" i18n-label="@@STAFF_CATALOG.TAB_SCHEDULE">
             <div class="schedule-tab-content">
               <!-- WEEKLY SHIFT CARD -->
               <mat-card class="schedule-card">
                 <mat-card-header>
                   <mat-icon mat-card-avatar class="card-header-icon">schedule</mat-icon>
-                  <mat-card-title>Weekly Working Shift</mat-card-title>
-                  <mat-card-subtitle>Configure regular working hours by branch and day</mat-card-subtitle>
+                  <mat-card-title i18n="@@STAFF_CATALOG.TITLE_WEEKLY_SHIFT">Weekly Working Shift</mat-card-title>
+                  <mat-card-subtitle i18n="@@STAFF_CATALOG.SUBTITLE_WEEKLY_SHIFT">Configure regular working hours by branch and day</mat-card-subtitle>
                 </mat-card-header>
                 <mat-card-content>
                   <form [formGroup]="shiftForm" class="form-grid" (ngSubmit)="saveShift()">
                     <mat-form-field appearance="outline">
-                      <mat-label>Branch *</mat-label>
+                      <mat-label i18n="@@STAFF_CATALOG.LABEL_BRANCH">Branch</mat-label>
                       <mat-select formControlName="branchId" id="shiftBranch">
                         @for (branch of branches(); track branch.id) {
                           <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
                         }
                       </mat-select>
                       @if (shiftForm.controls.branchId.hasError('required')) {
-                        <mat-error>Branch is required.</mat-error>
+                        <mat-error i18n="@@STAFF_CATALOG.ERROR_BRANCH_REQUIRED">Branch is required.</mat-error>
                       }
                     </mat-form-field>
 
                     <mat-form-field appearance="outline">
-                      <mat-label>Timezone</mat-label>
+                      <mat-label i18n="@@STAFF_CATALOG.LABEL_TIMEZONE">Timezone</mat-label>
                       <input matInput formControlName="timezone" id="shiftTimezone" readonly [tabIndex]="-1" />
-                      <mat-hint>Auto-inherited from branch</mat-hint>
+                      <mat-hint i18n="@@STAFF_CATALOG.HINT_TIMEZONE">Auto-inherited from branch</mat-hint>
                     </mat-form-field>
 
                     <mat-form-field appearance="outline" class="col-span-full">
-                      <mat-label>Day *</mat-label>
+                      <mat-label i18n="@@STAFF_CATALOG.LABEL_DAY">Day</mat-label>
                       <mat-select formControlName="dayOfWeek" id="shiftDay">
                         @for (day of weekdays; track $index) {
                           <mat-option [value]="$index">{{ day }}</mat-option>
                         }
                       </mat-select>
                       @if (shiftForm.controls.dayOfWeek.hasError('required')) {
-                        <mat-error>Day is required.</mat-error>
+                        <mat-error i18n="@@STAFF_CATALOG.ERROR_DAY_REQUIRED">Day is required.</mat-error>
                       }
                     </mat-form-field>
                     <mat-form-field appearance="outline">
-                      <mat-label>Start time *</mat-label>
+                      <mat-label i18n="@@STAFF_CATALOG.LABEL_START_TIME">Start time</mat-label>
                       <input matInput formControlName="start" id="shiftStart" placeholder="09:00" />
                       @if (shiftForm.controls.start.hasError('required')) {
-                        <mat-error>Start time is required.</mat-error>
+                        <mat-error i18n="@@STAFF_CATALOG.ERROR_START_TIME_REQUIRED">Start time is required.</mat-error>
                       }
                     </mat-form-field>
                     <mat-form-field appearance="outline">
-                      <mat-label>End time *</mat-label>
+                      <mat-label i18n="@@STAFF_CATALOG.LABEL_END_TIME">End time</mat-label>
                       <input matInput formControlName="end" id="shiftEnd" placeholder="17:00" />
                       @if (shiftForm.controls.end.hasError('required')) {
-                        <mat-error>End time is required.</mat-error>
+                        <mat-error i18n="@@STAFF_CATALOG.ERROR_END_TIME_REQUIRED">End time is required.</mat-error>
                       }
                     </mat-form-field>
                     <div class="form-actions col-span-full">
                       <button mat-flat-button color="primary" type="submit" [disabled]="saving() || !selectedStaff()">
                         <mat-icon>update</mat-icon>
-                        Save shift
+                        <span i18n="@@STAFF_CATALOG.BTN_SAVE_SHIFT">Save shift</span>
                       </button>
                     </div>
                   </form>
@@ -389,53 +457,60 @@
               <mat-card class="schedule-card">
                 <mat-card-header>
                   <mat-icon mat-card-avatar class="card-header-icon">event_busy</mat-icon>
-                  <mat-card-title>Staff Leave Blocks</mat-card-title>
-                  <mat-card-subtitle>Schedule leaves, holidays, or time off</mat-card-subtitle>
+                  <mat-card-title i18n="@@STAFF_CATALOG.TITLE_LEAVE_BLOCKS">Staff Leave Blocks</mat-card-title>
+                  <mat-card-subtitle i18n="@@STAFF_CATALOG.SUBTITLE_LEAVE_BLOCKS">Schedule leaves, holidays, or time off</mat-card-subtitle>
                 </mat-card-header>
                 <mat-card-content>
                   <form [formGroup]="leaveForm" class="form-grid" (ngSubmit)="saveLeave()">
                     <mat-form-field appearance="outline" class="col-span-full">
-                      <mat-label>Branch</mat-label>
+                      <mat-label i18n="@@STAFF_CATALOG.LABEL_LEAVE_BRANCH">Branch</mat-label>
                       <mat-select formControlName="branchId" id="leaveBranch">
-                        <mat-option [value]="null">All Branches (Full Salon)</mat-option>
+                        <mat-option [value]="null" i18n="@@STAFF_CATALOG.OPTION_ALL_BRANCHES_FULL">All Branches (Full Salon)</mat-option>
                         @for (branch of branches(); track branch.id) {
                           <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
                         }
                       </mat-select>
                     </mat-form-field>
                     <mat-form-field appearance="outline">
-                      <mat-label>Starts at *</mat-label>
+                      <mat-label i18n="@@STAFF_CATALOG.LABEL_STARTS_AT">Starts at</mat-label>
                       <input matInput type="datetime-local" formControlName="startsAt" id="leaveStartsAt" />
                       @if (leaveForm.controls.startsAt.hasError('required')) {
-                        <mat-error>Start date and time are required.</mat-error>
+                        <mat-error i18n="@@STAFF_CATALOG.ERROR_STARTS_AT_REQUIRED">Start date and time are required.</mat-error>
                       }
                     </mat-form-field>
                     <mat-form-field appearance="outline">
-                      <mat-label>Ends at *</mat-label>
+                      <mat-label i18n="@@STAFF_CATALOG.LABEL_ENDS_AT">Ends at</mat-label>
                       <input matInput type="datetime-local" formControlName="endsAt" id="leaveEndsAt" />
                       @if (leaveForm.controls.endsAt.hasError('required')) {
-                        <mat-error>End date and time are required.</mat-error>
+                        <mat-error i18n="@@STAFF_CATALOG.ERROR_ENDS_AT_REQUIRED">End date and time are required.</mat-error>
                       }
                     </mat-form-field>
                     <mat-form-field appearance="outline" class="col-span-full">
-                      <mat-label>Reason *</mat-label>
-                      <textarea matInput formControlName="reason" id="leaveReason" rows="3" placeholder="e.g. Vacation, medical leave, personal days"></textarea>
+                      <mat-label i18n="@@STAFF_CATALOG.LABEL_REASON">Reason</mat-label>
+                      <textarea
+                        matInput
+                        formControlName="reason"
+                        id="leaveReason"
+                        rows="3"
+                        placeholder="e.g. Vacation, medical leave, personal days"
+                        i18n-placeholder="@@STAFF_CATALOG.PLACEHOLDER_LEAVE_REASON"
+                      ></textarea>
                       @if (leaveForm.controls.reason.hasError('required')) {
-                        <mat-error>Reason is required.</mat-error>
+                        <mat-error i18n="@@STAFF_CATALOG.ERROR_REASON_REQUIRED">Reason is required.</mat-error>
                       } @else if (leaveForm.controls.reason.hasError('maxlength')) {
-                        <mat-error>Reason cannot exceed 160 characters.</mat-error>
+                        <mat-error i18n="@@STAFF_CATALOG.ERROR_REASON_MAX">Reason cannot exceed 160 characters.</mat-error>
                       }
                     </mat-form-field>
                     <div class="form-actions col-span-full">
                       <button mat-flat-button color="primary" type="submit" [disabled]="saving() || !selectedStaff()">
                         <mat-icon>add_alarm</mat-icon>
-                        Create leave
+                        <span i18n="@@STAFF_CATALOG.BTN_CREATE_LEAVE">Create leave</span>
                       </button>
                     </div>
                   </form>
 
                   <div class="leave-blocks-section">
-                    <h3 class="subform-heading">Active leave blocks</h3>
+                    <h3 class="subform-heading" i18n="@@STAFF_CATALOG.HEADING_ACTIVE_LEAVE">Active leave blocks</h3>
                     @if (loadingLeave()) {
                       <mat-progress-bar mode="indeterminate"></mat-progress-bar>
                     }
@@ -451,12 +526,20 @@
                               <span class="leave-reason">{{ block.reason }}</span>
                             </div>
                           </div>
-                          <button mat-icon-button type="button" color="warn" [disabled]="saving()" (click)="deleteLeave(block.id)" aria-label="Delete leave block">
+                          <button
+                            mat-icon-button
+                            type="button"
+                            color="warn"
+                            [disabled]="saving()"
+                            (click)="deleteLeave(block.id)"
+                            aria-label="Delete leave block"
+                            i18n-aria-label="@@STAFF_CATALOG.ARIA_DELETE_LEAVE"
+                          >
                             <mat-icon>delete</mat-icon>
                           </button>
                         </div>
                       } @empty {
-                        <p class="empty">No active leave blocks scheduled for this staff member.</p>
+                        <p class="empty" i18n="@@STAFF_CATALOG.EMPTY_LEAVE">No active leave blocks scheduled for this staff member.</p>
                       }
                     </div>
                   </div>
@@ -472,85 +555,85 @@
       <mat-card>
         <mat-card-header>
           <mat-icon mat-card-avatar class="card-header-icon">design_services</mat-icon>
-          <mat-card-title>Service editor</mat-card-title>
+          <mat-card-title i18n="@@STAFF_CATALOG.TITLE_SERVICE_EDITOR">Service editor</mat-card-title>
         </mat-card-header>
         <mat-card-content>
           <form [formGroup]="serviceForm" class="form-grid" (ngSubmit)="saveService()">
             <mat-form-field appearance="outline">
-              <mat-label>Category *</mat-label>
+              <mat-label i18n="@@STAFF_CATALOG.LABEL_CATEGORY">Category</mat-label>
               <mat-select formControlName="categoryId" id="serviceCategory">
                 @for (category of categories(); track category.id) {
                   <mat-option [value]="category.id">{{ category.name }}</mat-option>
                 }
               </mat-select>
               @if (serviceForm.controls.categoryId.hasError('required')) {
-                <mat-error>Category is required.</mat-error>
+                <mat-error i18n="@@STAFF_CATALOG.ERROR_CATEGORY_REQUIRED">Category is required.</mat-error>
               }
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>Status *</mat-label>
+              <mat-label i18n="@@STAFF_CATALOG.LABEL_SERVICE_STATUS">Status</mat-label>
               <mat-select formControlName="status" id="serviceStatus">
-                <mat-option value="ACTIVE">Active</mat-option>
-                <mat-option value="INACTIVE">Inactive</mat-option>
+                <mat-option value="ACTIVE" i18n="@@STAFF_CATALOG.STATUS_ACTIVE">Active</mat-option>
+                <mat-option value="INACTIVE" i18n="@@STAFF_CATALOG.STATUS_INACTIVE">Inactive</mat-option>
               </mat-select>
               @if (serviceForm.controls.status.hasError('required')) {
-                <mat-error>Status is required.</mat-error>
+                <mat-error i18n="@@STAFF_CATALOG.ERROR_STATUS_REQUIRED">Status is required.</mat-error>
               }
             </mat-form-field>
             <mat-form-field appearance="outline" class="col-span-full">
-              <mat-label>Service name *</mat-label>
+              <mat-label i18n="@@STAFF_CATALOG.LABEL_SERVICE_NAME">Service name</mat-label>
               <input matInput formControlName="name" id="serviceName" />
               @if (serviceForm.controls.name.hasError('required') || serviceForm.controls.name.hasError('minlength')) {
-                <mat-error>Service name is required (min 2 characters).</mat-error>
+                <mat-error i18n="@@STAFF_CATALOG.ERROR_SERVICE_NAME_REQUIRED">Service name is required (min 2 characters).</mat-error>
               } @else if (serviceForm.controls.name.hasError('maxlength')) {
-                <mat-error>Service name cannot exceed 120 characters.</mat-error>
+                <mat-error i18n="@@STAFF_CATALOG.ERROR_SERVICE_NAME_MAX">Service name cannot exceed 120 characters.</mat-error>
               }
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>Duration (minutes) *</mat-label>
+              <mat-label i18n="@@STAFF_CATALOG.LABEL_DURATION">Duration (minutes)</mat-label>
               <input matInput type="number" formControlName="durationMinutes" id="serviceDuration" />
               @if (serviceForm.controls.durationMinutes.hasError('required') || serviceForm.controls.durationMinutes.hasError('min') || serviceForm.controls.durationMinutes.hasError('max')) {
-                <mat-error>Duration must be between 5 and 720 minutes.</mat-error>
+                <mat-error i18n="@@STAFF_CATALOG.ERROR_DURATION_INVALID">Duration must be between 5 and 720 minutes.</mat-error>
               }
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>Buffer (minutes) *</mat-label>
+              <mat-label i18n="@@STAFF_CATALOG.LABEL_BUFFER">Buffer (minutes)</mat-label>
               <input matInput type="number" formControlName="bufferMinutes" id="serviceBuffer" />
               @if (serviceForm.controls.bufferMinutes.hasError('required') || serviceForm.controls.bufferMinutes.hasError('min')) {
-                <mat-error>Buffer must be 0 or greater.</mat-error>
+                <mat-error i18n="@@STAFF_CATALOG.ERROR_BUFFER_INVALID">Buffer must be 0 or greater.</mat-error>
               }
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>Base price *</mat-label>
+              <mat-label i18n="@@STAFF_CATALOG.LABEL_BASE_PRICE">Base price</mat-label>
               <input matInput formControlName="basePrice" id="serviceBasePrice" />
               @if (serviceForm.controls.basePrice.hasError('required') || serviceForm.controls.basePrice.hasError('pattern')) {
-                <mat-error>Enter a valid price (e.g. 50.00).</mat-error>
+                <mat-error i18n="@@STAFF_CATALOG.ERROR_PRICE_INVALID">Enter a valid price (e.g. 50.00).</mat-error>
               }
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>Tax rate % *</mat-label>
+              <mat-label i18n="@@STAFF_CATALOG.LABEL_TAX_RATE">Tax rate %</mat-label>
               <input matInput formControlName="taxRatePercent" id="serviceTaxRate" />
               @if (serviceForm.controls.taxRatePercent.hasError('required') || serviceForm.controls.taxRatePercent.hasError('pattern')) {
-                <mat-error>Enter a valid tax rate percentage (e.g. 10.00).</mat-error>
+                <mat-error i18n="@@STAFF_CATALOG.ERROR_TAX_RATE_INVALID">Enter a valid tax rate percentage (e.g. 10.00).</mat-error>
               }
             </mat-form-field>
             <div class="form-actions col-span-full">
-              <button mat-flat-button type="submit" [disabled]="saving() || categories().length === 0">Save service</button>
+              <button mat-flat-button type="submit" [disabled]="saving() || categories().length === 0" i18n="@@STAFF_CATALOG.BTN_SAVE_SERVICE">Save service</button>
             </div>
           </form>
 
           <div class="subforms">
-            <h3 class="subform-heading">Staff Eligibility</h3>
+            <h3 class="subform-heading" i18n="@@STAFF_CATALOG.HEADING_STAFF_ELIGIBILITY">Staff Eligibility</h3>
             <form [formGroup]="eligibilityForm" class="compact-form" (ngSubmit)="saveEligibility()">
               <mat-form-field appearance="outline">
-                <mat-label>Eligible staff</mat-label>
+                <mat-label i18n="@@STAFF_CATALOG.LABEL_ELIGIBLE_STAFF">Eligible staff</mat-label>
                 <mat-select formControlName="staffIds" multiple id="serviceEligibleStaff">
                   @for (member of staff(); track member.id) {
                     <mat-option [value]="member.id">{{ member.displayName }}</mat-option>
                   }
                 </mat-select>
               </mat-form-field>
-              <button mat-stroked-button type="submit" [disabled]="saving() || !selectedService()">Save eligibility</button>
+              <button mat-stroked-button type="submit" [disabled]="saving() || !selectedService()" i18n="@@STAFF_CATALOG.BTN_SAVE_ELIGIBILITY">Save eligibility</button>
             </form>
           </div>
         </mat-card-content>
@@ -559,11 +642,11 @@
       <mat-card>
         <mat-card-header class="service-catalog-card-header">
           <mat-icon mat-card-avatar class="card-header-icon">view_list</mat-icon>
-          <mat-card-title>Service catalog</mat-card-title>
+          <mat-card-title i18n="@@STAFF_CATALOG.TITLE_SERVICE_CATALOG">Service catalog</mat-card-title>
           <div class="card-header-actions">
             <button mat-stroked-button type="button" (click)="newService()">
               <mat-icon>add</mat-icon>
-              <span>Add Service</span>
+              <span i18n="@@STAFF_CATALOG.BTN_ADD_SERVICE">Add Service</span>
             </button>
           </div>
         </mat-card-header>
@@ -582,12 +665,12 @@
                 </div>
               </button>
             } @empty {
-              <p class="empty">No services are configured.</p>
+              <p class="empty" i18n="@@STAFF_CATALOG.EMPTY_SERVICES">No services are configured.</p>
             }
           </div>
           <div class="status-actions">
-            <button mat-stroked-button type="button" [disabled]="saving() || !selectedService()" (click)="setServiceStatus('ACTIVE')">Set Active</button>
-            <button mat-stroked-button type="button" [disabled]="saving() || !selectedService()" (click)="setServiceStatus('INACTIVE')">Set Inactive</button>
+            <button mat-stroked-button type="button" [disabled]="saving() || !selectedService()" (click)="setServiceStatus('ACTIVE')" i18n="@@STAFF_CATALOG.BTN_SET_ACTIVE">Set Active</button>
+            <button mat-stroked-button type="button" [disabled]="saving() || !selectedService()" (click)="setServiceStatus('INACTIVE')" i18n="@@STAFF_CATALOG.BTN_SET_INACTIVE">Set Inactive</button>
           </div>
         </mat-card-content>
       </mat-card>
@@ -596,27 +679,27 @@
     <mat-card class="mt-3">
       <mat-card-header>
         <mat-icon mat-card-avatar class="card-header-icon">category</mat-icon>
-        <mat-card-title>Categories</mat-card-title>
+        <mat-card-title i18n="@@STAFF_CATALOG.TITLE_CATEGORIES">Categories</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <form [formGroup]="categoryForm" class="category-form" (ngSubmit)="saveCategory()">
           <mat-form-field appearance="outline">
-            <mat-label>Name *</mat-label>
+            <mat-label i18n="@@STAFF_CATALOG.LABEL_CATEGORY_NAME">Category name</mat-label>
             <input matInput formControlName="name" id="categoryNameInput" />
             @if (categoryForm.controls.name.hasError('required') || categoryForm.controls.name.hasError('minlength')) {
-              <mat-error>Category name is required (min 2 characters).</mat-error>
+              <mat-error i18n="@@STAFF_CATALOG.ERROR_CAT_NAME_REQUIRED">Category name is required (min 2 characters).</mat-error>
             } @else if (categoryForm.controls.name.hasError('maxlength')) {
-              <mat-error>Category name cannot exceed 120 characters.</mat-error>
+              <mat-error i18n="@@STAFF_CATALOG.ERROR_CAT_NAME_MAX">Category name cannot exceed 120 characters.</mat-error>
             }
           </mat-form-field>
           <mat-form-field appearance="outline">
-            <mat-label>Sort order *</mat-label>
+            <mat-label i18n="@@STAFF_CATALOG.LABEL_SORT_ORDER">Sort order</mat-label>
             <input matInput type="number" formControlName="sortOrder" id="categorySortOrderInput" />
             @if (categoryForm.controls.sortOrder.hasError('required') || categoryForm.controls.sortOrder.hasError('min')) {
-              <mat-error>Sort order must be 0 or greater.</mat-error>
+              <mat-error i18n="@@STAFF_CATALOG.ERROR_SORT_ORDER_INVALID">Sort order must be 0 or greater.</mat-error>
             }
           </mat-form-field>
-          <button mat-flat-button type="submit" [disabled]="saving()">Create category</button>
+          <button mat-flat-button type="submit" [disabled]="saving()" i18n="@@STAFF_CATALOG.BTN_CREATE_CATEGORY">Create category</button>
         </form>
         <div class="chips">
           @for (category of categories(); track category.id) {

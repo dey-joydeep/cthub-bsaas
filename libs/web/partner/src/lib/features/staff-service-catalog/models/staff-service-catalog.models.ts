@@ -31,12 +31,22 @@ export interface PermissionItem {
   readonly description: string;
 }
 
+export interface StaffAddress {
+  readonly postalCode?: string | null;
+  readonly state?: string | null;
+  readonly city?: string | null;
+  readonly line1?: string | null;
+  readonly line2?: string | null;
+  readonly country?: string | null;
+}
+
 export interface StaffInput {
   readonly branchIds: readonly string[];
   readonly displayName: string;
   readonly phone: string;
   readonly email?: string;
   readonly status: StaffStatus;
+  readonly address?: StaffAddress | null;
 }
 
 export interface Staff extends StaffInput {

@@ -35,7 +35,7 @@ import { StaffServiceCatalogApi } from './staff-service-catalog.api';
 
 const staffRoles: readonly StaffRole[] = ['OWNER', 'MANAGER', 'RECEPTIONIST', 'STYLIST', 'CASHIER', 'INVENTORY_MANAGER'];
 const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
-const OWNER_PROTECTION_ERROR = 'Cannot deactivate or remove the OWNER role from the last active owner of the business.';
+const OWNER_PROTECTION_ERROR = $localize`:@@STAFF_CATALOG.ERROR_OWNER_PROTECTION:Cannot deactivate or remove the OWNER role from the last active owner of the business.`;
 
 @Component({
   selector: 'lib-staff-service-catalog',
@@ -111,7 +111,11 @@ export class StaffServiceCatalogComponent {
   protected readonly selectedTabIndex = signal(this.initialTabIndex());
   protected readonly isServicesMode = computed(() => this.selectedTabIndex() === 1);
   protected readonly isStaffMode = computed(() => this.selectedTabIndex() === 0);
-  protected readonly pageTitle = computed(() => (this.isServicesMode() ? 'Service Catalog' : 'Staff Management'));
+  protected readonly pageTitle = computed(() =>
+    this.isServicesMode()
+      ? $localize`:@@STAFF_CATALOG.TITLE_SERVICES:Service Catalog`
+      : $localize`:@@STAFF_CATALOG.TITLE_STAFF:Staff Management`,
+  );
 
   protected readonly staffForm = this.fb.nonNullable.group({
     branchIds: this.fb.nonNullable.control<string[]>([], Validators.required),
@@ -119,6 +123,11 @@ export class StaffServiceCatalogComponent {
     phone: ['', [Validators.required, phoneNumberValidator(), Validators.maxLength(30)]],
     email: ['', Validators.email],
     status: this.fb.nonNullable.control<'ACTIVE' | 'INACTIVE'>('ACTIVE', Validators.required),
+    addressPostalCode: ['', [Validators.pattern(/^\d{3}-?\d{4}$/)]],
+    addressState: ['', [Validators.maxLength(60)]],
+    addressCity: ['', [Validators.maxLength(60)]],
+    addressLine1: ['', [Validators.maxLength(120)]],
+    addressLine2: ['', [Validators.maxLength(120)]],
   });
 
   protected readonly roleForm = this.fb.nonNullable.group({
@@ -200,6 +209,11 @@ export class StaffServiceCatalogComponent {
       phone: member.phone,
       email: member.email ?? '',
       status: member.status,
+      addressPostalCode: member.address?.postalCode ?? '',
+      addressState: member.address?.state ?? '',
+      addressCity: member.address?.city ?? '',
+      addressLine1: member.address?.line1 ?? '',
+      addressLine2: member.address?.line2 ?? '',
     });
     let initialRoleIds: string[] = [];
     if (member.roleIds && member.roleIds.length > 0) {
@@ -235,6 +249,11 @@ export class StaffServiceCatalogComponent {
       phone: '',
       email: '',
       status: 'ACTIVE',
+      addressPostalCode: '',
+      addressState: '',
+      addressCity: '',
+      addressLine1: '',
+      addressLine2: '',
     });
     const defaultStylist = this.roles().find((r) => r.roleCode === 'STYLIST')?.id;
     const defaultRoleIds = defaultStylist ? [defaultStylist] : this.roles()[0] ? [this.roles()[0].id] : [];
@@ -272,7 +291,7 @@ export class StaffServiceCatalogComponent {
   protected saveStaff(): void {
     if (this.staffForm.invalid) {
       this.staffForm.markAllAsTouched();
-      this.notifyError('Please correct the highlighted fields before saving.');
+      this.notifyError($localize`:@@STAFF_CATALOG.ERROR_FORM_INVALID:Please correct the highlighted fields before saving.`);
       return;
     }
 
@@ -286,8 +305,8 @@ export class StaffServiceCatalogComponent {
         this.selectedStaff.set(member);
         this.loadCatalog(member.id);
       },
-      'Staff profile saved.',
-      'Staff profile could not be saved.',
+      $localize`:@@STAFF_CATALOG.MSG_STAFF_SAVED:Staff profile saved.`,
+      $localize`:@@STAFF_CATALOG.ERROR_STAFF_SAVE:Staff profile could not be saved.`,
       OWNER_PROTECTION_ERROR,
     );
   }
@@ -295,7 +314,7 @@ export class StaffServiceCatalogComponent {
   protected saveRoles(): void {
     const member = this.selectedStaff();
     if (!member) {
-      this.error.set('Select staff before saving roles.');
+      this.error.set($localize`:@@STAFF_CATALOG.ERROR_SELECT_STAFF_ROLES:Select staff before saving roles.`);
       return;
     }
     const roleIds = this.roleForm.controls.roleIds.value;
@@ -312,8 +331,8 @@ export class StaffServiceCatalogComponent {
         this.selectedStaff.set(updated);
         this.staff.set(this.staff().map((m) => (m.id === updated.id ? updated : m)));
       },
-      'Staff roles saved.',
-      'Staff roles could not be saved.',
+      $localize`:@@STAFF_CATALOG.MSG_ROLES_SAVED:Staff roles saved.`,
+      $localize`:@@STAFF_CATALOG.ERROR_ROLES_SAVE:Staff roles could not be saved.`,
       OWNER_PROTECTION_ERROR,
     );
   }
@@ -321,14 +340,14 @@ export class StaffServiceCatalogComponent {
   protected saveSkills(): void {
     const member = this.selectedStaff();
     if (!member) {
-      this.error.set('Select staff before saving skills.');
+      this.error.set($localize`:@@STAFF_CATALOG.ERROR_SELECT_STAFF_SKILLS:Select staff before saving skills.`);
       return;
     }
     this.persist(
       this.catalogApi.replaceStaffSkills(member.id, this.skillForm.getRawValue()),
       (updated) => this.selectedStaff.set(updated),
-      'Staff skills saved.',
-      'Staff skills could not be saved.',
+      $localize`:@@STAFF_CATALOG.MSG_SKILLS_SAVED:Staff skills saved.`,
+      $localize`:@@STAFF_CATALOG.ERROR_SKILLS_SAVE:Staff skills could not be saved.`,
     );
   }
 
@@ -336,12 +355,12 @@ export class StaffServiceCatalogComponent {
     const member = this.selectedStaff();
     if (!member) {
       this.message.set(null);
-      this.error.set('Select staff before saving shift.');
+      this.error.set($localize`:@@STAFF_CATALOG.ERROR_SELECT_STAFF_SHIFT:Select staff before saving shift.`);
       return;
     }
     if (this.shiftForm.invalid) {
       this.shiftForm.markAllAsTouched();
-      this.notifyError('Please complete the required shift fields before saving.');
+      this.notifyError($localize`:@@STAFF_CATALOG.ERROR_SHIFT_INVALID:Please complete the required shift fields before saving.`);
       return;
     }
     const value = this.shiftForm.getRawValue();
@@ -353,8 +372,8 @@ export class StaffServiceCatalogComponent {
         days: [{ dayOfWeek: value.dayOfWeek, intervals: [{ start: value.start, end: value.end }] }],
       }),
       undefined,
-      'Weekly shift saved.',
-      'Weekly shift could not be saved.',
+      $localize`:@@STAFF_CATALOG.MSG_SHIFT_SAVED:Weekly shift saved.`,
+      $localize`:@@STAFF_CATALOG.ERROR_SHIFT_SAVE:Weekly shift could not be saved.`,
     );
   }
 
@@ -362,12 +381,12 @@ export class StaffServiceCatalogComponent {
     const member = this.selectedStaff();
     if (!member) {
       this.message.set(null);
-      this.error.set('Select staff before scheduling leave.');
+      this.error.set($localize`:@@STAFF_CATALOG.ERROR_SELECT_STAFF_LEAVE:Select staff before scheduling leave.`);
       return;
     }
     if (this.leaveForm.invalid) {
       this.leaveForm.markAllAsTouched();
-      this.notifyError('Please complete the required leave fields before scheduling.');
+      this.notifyError($localize`:@@STAFF_CATALOG.ERROR_LEAVE_INVALID:Please complete the required leave fields before scheduling.`);
       return;
     }
     const value = this.leaveForm.getRawValue();
@@ -383,8 +402,8 @@ export class StaffServiceCatalogComponent {
         this.leaveForm.patchValue({ startsAt: '', endsAt: '', reason: '' });
         this.loadLeaveBlocks(member.id);
       },
-      'Leave block scheduled.',
-      'Leave block could not be scheduled.',
+      $localize`:@@STAFF_CATALOG.MSG_LEAVE_SAVED:Leave block scheduled.`,
+      $localize`:@@STAFF_CATALOG.ERROR_LEAVE_SAVE:Leave block could not be scheduled.`,
     );
   }
 
@@ -399,21 +418,21 @@ export class StaffServiceCatalogComponent {
         this.loadLeaveBlocks(member.id);
       },
       null,
-      'Leave block could not be removed.',
+      $localize`:@@STAFF_CATALOG.ERROR_LEAVE_REMOVE:Leave block could not be removed.`,
     );
   }
 
   protected saveCategory(): void {
     if (this.categoryForm.invalid) {
       this.categoryForm.markAllAsTouched();
-      this.notifyError('Please enter a valid category name and sort order.');
+      this.notifyError($localize`:@@STAFF_CATALOG.ERROR_CATEGORY_INVALID:Please enter a valid category name and sort order.`);
       return;
     }
     this.persist(
       this.catalogApi.createServiceCategory(this.categoryForm.getRawValue()),
       () => this.loadCatalog(),
-      'Service category created.',
-      'Service category could not be created.',
+      $localize`:@@STAFF_CATALOG.MSG_CATEGORY_CREATED:Service category created.`,
+      $localize`:@@STAFF_CATALOG.ERROR_CATEGORY_CREATE:Service category could not be created.`,
     );
   }
 
@@ -448,7 +467,7 @@ export class StaffServiceCatalogComponent {
   protected saveService(): void {
     if (this.serviceForm.invalid) {
       this.serviceForm.markAllAsTouched();
-      this.notifyError('Please correct the highlighted fields before saving.');
+      this.notifyError($localize`:@@STAFF_CATALOG.ERROR_FORM_INVALID:Please correct the highlighted fields before saving.`);
       return;
     }
 
@@ -461,22 +480,22 @@ export class StaffServiceCatalogComponent {
         this.selectedService.set(service);
         this.loadCatalog(undefined, service.id);
       },
-      'Service saved.',
-      'Service could not be saved.',
+      $localize`:@@STAFF_CATALOG.MSG_SERVICE_SAVED:Service saved.`,
+      $localize`:@@STAFF_CATALOG.ERROR_SERVICE_SAVE:Service could not be saved.`,
     );
   }
 
   protected saveEligibility(): void {
     const service = this.selectedService();
     if (!service) {
-      this.error.set('Select a service before saving eligibility.');
+      this.error.set($localize`:@@STAFF_CATALOG.ERROR_SELECT_SERVICE_ELIGIBILITY:Select a service before saving eligibility.`);
       return;
     }
     this.persist(
       this.catalogApi.replaceServiceStaffEligibility(service.id, this.eligibilityForm.getRawValue()),
       (updated) => this.selectedService.set(updated),
-      'Staff eligibility saved.',
-      'Staff eligibility could not be saved.',
+      $localize`:@@STAFF_CATALOG.MSG_ELIGIBILITY_SAVED:Staff eligibility saved.`,
+      $localize`:@@STAFF_CATALOG.ERROR_ELIGIBILITY_SAVE:Staff eligibility could not be saved.`,
     );
   }
 
@@ -564,12 +583,29 @@ export class StaffServiceCatalogComponent {
 
   private normalizeStaffInput(): StaffInput {
     const value = this.staffForm.getRawValue();
+    const postalCode = value.addressPostalCode.trim() || undefined;
+    const state = value.addressState.trim() || undefined;
+    const city = value.addressCity.trim() || undefined;
+    const line1 = value.addressLine1.trim() || undefined;
+    const line2 = value.addressLine2.trim() || undefined;
+    const hasAddress = Boolean(postalCode || state || city || line1 || line2);
+
     return {
       branchIds: value.branchIds,
-      displayName: value.displayName,
-      phone: value.phone,
-      email: value.email || undefined,
+      displayName: value.displayName.trim(),
+      phone: value.phone.trim(),
+      email: value.email.trim() || undefined,
       status: value.status,
+      address: hasAddress
+        ? {
+            postalCode,
+            state,
+            city,
+            line1,
+            line2,
+            country: 'JP',
+          }
+        : undefined,
     };
   }
 

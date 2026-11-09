@@ -308,6 +308,7 @@ export const partnerDevMockInterceptor: HttpInterceptorFn = (
         phone: input.phone,
         email: input.email,
         status: input.status,
+        address: input.address !== undefined ? input.address : target.address,
         updatedAt: new Date().toISOString(),
       };
       mockState.staff = mockState.staff.map((m) => (m.id === staffId ? updated : m));
@@ -341,6 +342,7 @@ export const partnerDevMockInterceptor: HttpInterceptorFn = (
         roleIds: ['role-stylist'],
         roles: ['STYLIST'],
         skillServiceIds: [],
+        address: input.address,
         createdAt: now,
         updatedAt: now,
       };

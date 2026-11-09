@@ -405,6 +405,51 @@ describe('StaffServiceCatalogComponent', () => {
     expect(hasPhoneError).toBe(true);
   });
 
+  it('flags invalid postal code with pattern error, renders mat-error, and blocks save', () => {
+    catalogApi.updateStaff.mockClear();
+    catalogApi.createStaff.mockClear();
+
+    const component = fixture.componentInstance;
+    component.staffForm.controls.addressPostalCode.setValue('invalid-postal');
+    expect(component.staffForm.controls.addressPostalCode.hasError('pattern')).toBe(true);
+
+    component.saveStaff();
+    fixture.detectChanges();
+
+    expect(component.error()).toBe('Please correct the highlighted fields before saving.');
+    expect(catalogApi.updateStaff).not.toHaveBeenCalled();
+    expect(catalogApi.createStaff).not.toHaveBeenCalled();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const matErrors = compiled.querySelectorAll('mat-error');
+    const hasPostalError = Array.from(matErrors).some((el) => el.textContent?.includes('Enter a valid postal code'));
+    expect(hasPostalError).toBe(true);
+  });
+
+  it('saves residential address when valid fields are populated', () => {
+    catalogApi.updateStaff.mockClear();
+
+    const component = fixture.componentInstance;
+    component.staffForm.controls.addressPostalCode.setValue('150-0002');
+    component.staffForm.controls.addressState.setValue('Tokyo');
+    component.staffForm.controls.addressCity.setValue('Shibuya-ku');
+    component.staffForm.controls.addressLine1.setValue('1-2-3 Shibuya');
+    component.staffForm.controls.addressLine2.setValue('Suite 401');
+
+    component.saveStaff();
+
+    expect(catalogApi.updateStaff).toHaveBeenCalledWith('staff-1', expect.objectContaining({
+      address: {
+        postalCode: '150-0002',
+        state: 'Tokyo',
+        city: 'Shibuya-ku',
+        line1: '1-2-3 Shibuya',
+        line2: 'Suite 401',
+        country: 'JP',
+      },
+    }));
+  });
+
   it('renders mat-error in DOM and displays error banner when submitting invalid serviceForm', () => {
     catalogApi.updateService.mockClear();
     catalogApi.createService.mockClear();

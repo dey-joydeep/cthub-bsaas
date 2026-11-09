@@ -124,6 +124,11 @@
     background: #eff6ff;
     border-color: #3b82f6;
     box-shadow: inset 3px 0 0 #2563eb;
+
+    .list-row-subtitle,
+    .list-row-aside small {
+      color: #334155;
+    }
   }
 }
 
@@ -301,6 +306,32 @@
       height: 18px;
       width: 18px;
     }
+  }
+
+  .hr-section-header {
+    align-items: center;
+    color: #1e293b;
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+
+    .sub-icon {
+      color: #3b82f6;
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+    }
+
+    .sub-title {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      margin: 0;
+    }
+  }
+
+  .hr-address-grid {
+    margin-top: 8px;
+    margin-bottom: 12px;
   }
 
   .hr-fields-preview-grid {
@@ -568,6 +599,11 @@
     background: #eff6ff;
     border-color: #3b82f6;
     box-shadow: inset 3px 0 0 #2563eb;
+
+    .list-row-subtitle,
+    .list-row-aside small {
+      color: #334155;
+    }
   }
 
   .list-row-main {
