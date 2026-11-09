@@ -1,6 +1,6 @@
 # Shearflow AIDD GitHub App broker
 
-**Status: deployed but disabled for regular use.** This Worker is the trusted boundary for the installed PO, QA, and Dev GitHub Apps. It is limited to `dey-joydeep/cthub-bsaas` and never returns an installation token. The D1 schema is provisioned, the Worker is deployed at `https://shearflow-aidd-broker.dey-joydeep-cse.workers.dev`, and all three App keys were uploaded as Worker secrets. Access redirects unauthenticated requests; on 2026-11-02 the owner reported a direct-browser `/v1/whoami` result with the expected administrator principal, `admin: true`, and `enabled: false`. Three role-specific Access service tokens and their Service Auth policy are provisioned; live `/v1/whoami` probes identified each role with `admin: false`. One human-approved PO comment grant was executed on issue #100, and GitHub identified its author as `shearflow-po[bot]`. The Worker was then redeployed with `BROKER_ENABLED=false`, confirmed by a live identity probe. QA writes remain untested. A human-approved Dev commit grant created [commit 2ee002c5](https://github.com/dey-joydeep/cthub-bsaas/commit/2ee002c51048ff507ddd1d0988ecc9f422358dc2) on the task branch; GitHub identifies the author as `shearflow-dev[bot]`, and the broker was redeployed disabled.
+**Status: deployed but disabled for regular use.** This Worker is the trusted boundary for the installed PO, QA, and Dev GitHub Apps. It is limited to `dey-joydeep/cthub-bsaas` and never returns an installation token. The currently deployed version supports only per-action administrator grants. The task-mandate source update and `0002_task_mandates.sql` migration are not deployed. Access redirects unauthenticated requests; the three role service tokens and App-key Worker secrets were provisioned for the earlier pilot. One PO comment and one Dev commit succeeded under their actual bot actors. QA writes and Dev PR creation remain untested live.
 
 The broker uses Cloudflare Access for caller identity and D1 for one-time grants. An Access-authenticated administrator grants one exact action, input, executor principal, and expiry. The executor submits only the grant ID. A D1 conditional update claims the grant once. A failed or uncertain GitHub write enters `needs-reconciliation`; it is never retried automatically. The App key is read from a Worker secret only after the grant is claimed.
 
@@ -34,7 +34,7 @@ Cloudflare Workers Free currently includes 100,000 requests/day with a 10 ms CPU
 
 All action routes require an authenticated Cloudflare Access context with the expected AUD. Browser-authenticated writes also require an exact same-origin `Origin` and `Content-Type: application/json`. Machine callers use a dedicated Access service token with a Service Auth policy, never the GitHub App key. Use `GET /v1/whoami` to discover the caller principal.
 
-An administrator posts to `/v1/grants`:
+The earlier pilot used administrator-created `/v1/grants` requests such as:
 
 ```json
 {
@@ -49,7 +49,35 @@ An administrator posts to `/v1/grants`:
 }
 ```
 
-The executor posts `{"grantId":"<returned-id>"}` to `/v1/execute`. The grant contains the complete GitHub action; the executor cannot replace its target, role, or body. A completed grant returns only the GitHub result URL/ID/SHA. A `needs-reconciliation` grant requires the operator to inspect GitHub and D1 before deciding whether to create a new grant. Do not reuse an uncertain grant.
+The `/v1/grants` endpoint has been removed from the new source. The executor still posts `{"grantId":"<returned-id>"}` to `/v1/execute`. A grant contains the complete GitHub action; the executor cannot replace its target, role, or body. A completed grant returns the GitHub result and verified App actor. A `needs-reconciliation` grant requires the operator to inspect GitHub and D1 before deciding whether to create a new action. Do not execute an uncertain grant again.
+
+### Task-scoped contract in source, pending deployment
+
+The owner creates one mandate with `POST /v1/mandates` from the same-origin Access administrator session:
+
+```json
+{
+  "outcome": "Deliver issue #113 within its accepted scope",
+  "approvalCode": "<six-digit code from owner's separate authenticator>",
+  "issueNumber": 113,
+  "branch": "chore/aidd-task-scoped-bots",
+  "allowedPaths": ["tools/aidd-broker/", "docs/aidd/", "scripts/aidd/", "AGENTS.md"],
+  "actions": { "dev.commit": 20, "dev.create-pr": 1, "qa.review-pr": 2, "po.comment-issue": 2 },
+  "ttlSeconds": 604800
+}
+```
+
+For PO to create the tracking issue, use `"issueNumber": null` and include `"po.create-issue": 1`; other actions wait until that issue is created and bound. The owner selects exact action limits and paths; broad top-level directory scopes are rejected. The mandate is stored in D1, not inferred from mutable issue or PR text. Creation requires both the owner's Access principal and a fresh TOTP code from a separate authenticator. The Worker secret `OWNER_APPROVAL_TOTP_KEY` must contain the matching 32-64 character uppercase Base32 seed. The owner must provision this on a device inaccessible to desktop agents before activation; never store the seed in the repo, chat, same-user agent cache, or browser profile. A code can authorize only one mandate or revocation; the broker allows at most five approval attempts per administrator per UTC day. An administrator can revoke a mandate with `POST /v1/mandates/revoke` and `{"mandateId":"<id>","approvalCode":"<fresh code>"}`. Revocation blocks unclaimed grants and new grants; a running GitHub request can still complete.
+
+The owner can open `https://shearflow-aidd-broker.dey-joydeep-cse.workers.dev/owner` in a private browser session. The Access-protected page previews the exact outcome, issue, branch, allowed paths, action limits, and lifetime before the owner checks the confirmation box and enters a current six-digit code. It also accepts a mandate ID and a fresh code for revocation. The page and its assets are available for inspection while the broker is disabled, but its buttons remain disabled and the API rejects writes. The code is excluded from the scope preview and cleared after submission. The page does not create a seed or change Worker settings; the owner installs the seed through Cloudflare's secret control after agent-visible deployment access has been removed.
+
+The assigned role caller posts `{"mandateId":"<id>","requestId":"<stable UUID for this request>","action":"dev.commit","input":{...}}` to `/v1/task-grants`, then executes the returned one-time grant ID at `/v1/execute`. The broker checks role, issue, exact branch, allowed paths, action quota, expiry, and the GitHub actor. A retry with the same request ID and payload returns the same grant and does not consume quota again. Reuse the request ID after a lost response; do not generate a new ID for that attempt. QA review also checks both PR repository identities, the task branch ref, base, closing issue, and exact head. A denied or unavailable broker action is a blocked task unit, not permission to use a personal `gh` credential.
+
+Desktop and CLI agents can call `node scripts/aidd/broker-client.mjs --command run --role dev --mandate <id> --action dev.commit --input <json-file>`. Set `SHEARFLOW_BROKER_ROLE_TOKEN_FILE` to a JSON file **outside the workspace parent** containing `{"role":"dev","clientId":"<Access client ID>","clientSecret":"<Access client secret>"}`. The client rejects a token path under the workspace parent, including sibling worktrees. The file must be readable only by its intended runtime; do not check it in, paste it into chat, or print it. Use `--command whoami --role dev` to check identity and enabled status. The client records a stable request ID in the worktree's Git metadata before network calls, so an interrupted run can reuse the same grant. It reports the grant ID for reconciliation if execution fails. Storing all three tokens under the same Windows user gives bot attribution, not strong isolation between role agents.
+
+For a Dev code change, stage only the intended regular UTF-8 additions and modifications. `node scripts/aidd/broker-commit-state.mjs prepare --branch <task-branch> --issue <number> --message "feat: description"` writes the bounded request to the worktree's Git metadata directory and reports its path. Submit it with the broker client. A successful Dev commit writes the receipt to the same Git metadata directory. Then run `node scripts/aidd/broker-commit-state.mjs sync --branch <task-branch> --input <prepared-file> --receipt <receipt-file>` to fetch the bot commit and advance the local branch without discarding unstaged work. Sync checks the receipt and independently confirms the remote commit's GitHub author is `shearflow-dev[bot]`. The first Dev commit can create the remote task branch from the exact current `main` commit. The preparation helper rejects deletions, binary files, nonregular modes, more than 20 staged files, or a checkout on the wrong branch. Do not create a local commit and then also submit the same staged changes through the broker.
+
+Activation sequence: independent Codex security reviews; `node --test tools/aidd-broker/src/*.test.mjs scripts/aidd/broker-client.test.mjs scripts/aidd/broker-commit-state.test.mjs`; apply migration `0002_task_mandates.sql` to the dedicated D1 database; deploy the reviewed Worker with `BROKER_ENABLED=false`; verify owner page and Access identity; isolate or remove every Cloudflare credential and browser session that can deploy or edit this Worker from the desktop agent's OS account and browser automation; then the owner provisions a separate-device authenticator and Worker secret; obtain owner authorization to enable the Worker through the owner-controlled Cloudflare dashboard; test denied paths, lockout, revoked/expired mandates, and all role operations. Never install the owner seed while an agent-visible deployment credential remains active: that credential could replace the Worker and extract its secrets, defeating the TOTP boundary. Do not use a product database for these checks. The owner keeps the separate PR merge decision. Observe free-tier CPU and D1 quotas during the first real task.
 
 ## Current activation gap
 

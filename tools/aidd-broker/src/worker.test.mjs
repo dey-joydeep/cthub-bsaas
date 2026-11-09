@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
-import { createPublicKey, generateKeyPairSync, sign, verify } from 'node:crypto';
+import { createHmac, createPublicKey, generateKeyPairSync, sign, verify } from 'node:crypto';
 import { describe, it } from 'node:test';
-import worker, { appJwt, perform, validateAction } from './worker.mjs';
+import worker, { appJwt, perform, validateAction, validateMandate, validateMandateAction } from './worker.mjs';
 
 const commit = {
   issueNumber: 100,
@@ -10,6 +10,26 @@ const commit = {
   message: 'feat: add salon calendar',
   files: [{ path: 'libs/web/calendar/src/index.ts', contents: 'export const label = "salon";' }],
 };
+const approvalSecret = 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP';
+function approvalCode(offset = 0) {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  let bits = 0;
+  let count = 0;
+  const bytes = [];
+  for (const letter of approvalSecret) {
+    bits = (bits << 5) | alphabet.indexOf(letter);
+    count += 5;
+    if (count >= 8) {
+      count -= 8;
+      bytes.push((bits >> count) & 255);
+    }
+  }
+  const counter = Buffer.alloc(8);
+  counter.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 30000) + offset));
+  const digest = createHmac('sha1', Buffer.from(bytes)).update(counter).digest();
+  const digestOffset = digest.at(-1) & 15;
+  return ((digest.readUInt32BE(digestOffset) & 0x7fffffff) % 1000000).toString().padStart(6, '0');
+}
 
 describe('broker action validation', () => {
   it('accepts a scoped task branch commit', () => {
@@ -44,6 +64,7 @@ describe('broker action validation', () => {
       }),
     );
     assert.throws(() => validateAction('dev.commit', { ...commit, files: [{ path: 'a.ts', contents: 'x'.repeat(150001) }] }));
+    assert.throws(() => validateAction('dev.commit', { ...commit, files: [{ path: 'a.ts', contents: 'binary\0data' }] }));
     assert.throws(() =>
       validateAction('dev.commit', {
         ...commit,
@@ -83,6 +104,242 @@ describe('broker action validation', () => {
     assert.equal(validateAction('dev.create-pr', input), 'dev');
     assert.throws(() => validateAction('dev.create-pr', { ...input, body: 'No issue link' }));
     assert.throws(() => validateAction('dev.create-pr', { ...input, expectedHeadOid: 'bad' }));
+  });
+});
+
+describe('task mandates', () => {
+  const proposal = {
+    outcome: 'Deliver the salon calendar slice',
+    issueNumber: 100,
+    branch: 'feature/salon-calendar',
+    allowedPaths: ['libs/web/calendar/', 'docs/specs/calendar/'],
+    actions: { 'dev.commit': 4, 'dev.create-pr': 1, 'qa.review-pr': 1, 'po.comment-issue': 2 },
+    ttlSeconds: 86400,
+  };
+  const active = {
+    issue_number: 100,
+    branch: proposal.branch,
+    allowed_paths_json: JSON.stringify(proposal.allowedPaths),
+    state: 'active',
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+  };
+
+  it('accepts a bounded owner scope and rejects broad or malformed scopes', () => {
+    assert.equal(validateMandate(proposal).branch, proposal.branch);
+    assert.throws(() => validateMandate({ ...proposal, branch: 'main' }), /Invalid task branch/);
+    assert.throws(() => validateMandate({ ...proposal, allowedPaths: ['libs/'] }), /Repository-wide directory scope/);
+    assert.throws(() => validateMandate({ ...proposal, allowedPaths: ['../'] }), /Invalid path/);
+    assert.throws(() => validateMandate({ ...proposal, actions: { 'dev.commit': 101 } }), /Invalid action limit/);
+    assert.deepEqual(
+      validateMandate({ ...proposal, actions: { 'dev.commit-workflow': 1 }, allowedPaths: ['.github/workflows/'] }).allowedPaths,
+      ['.github/workflows/'],
+    );
+    assert.throws(() => validateMandate({ ...proposal, ttlSeconds: 31 * 86400 }), /Invalid mandate lifetime/);
+    assert.equal(validateMandate({ ...proposal, issueNumber: null, actions: { 'po.create-issue': 1 } }).issueNumber, null);
+    assert.throws(() => validateMandate({ ...proposal, issueNumber: null }), /one PO issue action/);
+  });
+
+  it('rejects branch, issue, path, revocation and expiry escapes', () => {
+    assert.equal(validateMandateAction(active, 'dev.commit', commit), 'dev');
+    assert.throws(() => validateMandateAction(active, 'dev.commit', { ...commit, branch: 'fix/other' }), /Branch outside mandate/);
+    assert.throws(() => validateMandateAction(active, 'dev.commit', { ...commit, issueNumber: 101 }), /Issue outside mandate/);
+    assert.throws(
+      () =>
+        validateMandateAction(active, 'dev.commit', {
+          ...commit,
+          files: [{ path: 'libs/server/auth.ts', contents: 'safe' }],
+        }),
+      /Path outside mandate/,
+    );
+    assert.throws(() => validateMandateAction({ ...active, state: 'revoked' }, 'dev.commit', commit), /Mandate unavailable/);
+    assert.throws(() => validateMandateAction({ ...active, expires_at: 1 }, 'dev.commit', commit), /Mandate unavailable/);
+    assert.throws(() => validateMandateAction({ ...active, issue_number: null }, 'dev.commit', commit), /issue not created/);
+  });
+
+  it('lets the owner approve once and a role issue only its bounded grant', async () => {
+    const mandates = new Map();
+    const limits = new Map();
+    const grants = new Map();
+    const approvalSteps = new Set();
+    let approvalAttempts = 0;
+    const store = {
+      prepare(sql) {
+        return {
+          bind(...args) {
+            return {
+              async first() {
+                if (sql.startsWith('SELECT * FROM task_mandates')) return mandates.get(args[0]) ?? null;
+                if (sql.startsWith('SELECT id, request_hash, executor, state, result_json FROM grants')) {
+                  const grant = [...grants.entries()].find(([, value]) => value.mandateId === args[0] && value.requestId === args[1]);
+                  return grant
+                    ? {
+                        id: grant[0],
+                        request_hash: grant[1].requestHash,
+                        executor: grant[1].executor,
+                        state: grant[1].state ?? 'approved',
+                        result_json: grant[1].resultJson ?? null,
+                      }
+                    : null;
+                }
+                throw new Error(`Unexpected select: ${sql}`);
+              },
+              async run() {
+                if (sql.startsWith('INSERT INTO owner_approval_attempts')) {
+                  approvalAttempts += 1;
+                  return { meta: { changes: approvalAttempts <= 5 ? 1 : 0 } };
+                }
+                if (sql.startsWith('INSERT INTO task_mandates')) {
+                  const [id, outcome, issue_number, branch, allowed_paths_json, expires_at, created_by, created_at] = args;
+                  mandates.set(id, {
+                    id,
+                    outcome,
+                    issue_number,
+                    branch,
+                    allowed_paths_json,
+                    expires_at,
+                    created_by,
+                    created_at,
+                    state: 'active',
+                  });
+                } else if (sql.startsWith('INSERT INTO mandate_action_usage')) {
+                  const [id, action, max_issued] = args;
+                  limits.set(`${id}:${action}`, { max_issued, issued: 0 });
+                } else if (sql.startsWith('INSERT INTO owner_approval_steps')) {
+                  if (approvalSteps.has(args[0])) throw new Error('Approval code replay');
+                  approvalSteps.add(args[0]);
+                } else if (sql.startsWith('UPDATE mandate_action_usage')) {
+                  const [id, action] = args;
+                  const usage = limits.get(`${id}:${action}`);
+                  if (!usage || usage.issued >= usage.max_issued || !grants.has(args[2])) return { meta: { changes: 0 } };
+                  usage.issued += 1;
+                } else if (sql.startsWith('INSERT INTO grants')) {
+                  const usage = limits.get(`${args[8]}:${args[1]}`);
+                  if (!usage || usage.issued >= usage.max_issued || mandates.get(args[8])?.state !== 'active')
+                    return { meta: { changes: 0 } };
+                  grants.set(args[0], {
+                    action: args[1],
+                    executor: args[3],
+                    mandateId: args[8],
+                    requestId: args[9],
+                    requestHash: args[10],
+                  });
+                } else if (sql.startsWith("UPDATE task_mandates SET state = 'revoked'")) {
+                  const mandate = mandates.get(args[1]);
+                  if (!mandate || mandate.state !== 'active') return { meta: { changes: 0 } };
+                  mandate.state = 'revoked';
+                } else throw new Error(`Unexpected write: ${sql}`);
+                return { meta: { changes: 1 } };
+              },
+            };
+          },
+        };
+      },
+      async batch(statements) {
+        const results = [];
+        for (const statement of statements) results.push(await statement.run());
+        return results;
+      },
+    };
+    const env = {
+      BROKER_ENABLED: 'true',
+      ACCESS_AUD: 'expected',
+      ADMIN_PRINCIPAL: 'user:owner@example.com',
+      PO_CLIENT_ID: 'po-client',
+      QA_CLIENT_ID: 'qa-client',
+      DEV_CLIENT_ID: 'dev-client',
+      OWNER_APPROVAL_TOTP_KEY: approvalSecret,
+      GRANTS: store,
+    };
+    const context = (identity) => ({ access: { aud: 'expected', getIdentity: async () => identity } });
+    const admin = context({ email: 'owner@example.com' });
+    const po = context({ service_token_status: true, service_token_id: 'po-client' });
+    const dev = context({ service_token_status: true, service_token_id: 'dev-client' });
+    const qa = context({ service_token_status: true, service_token_id: 'qa-client' });
+    const post = (path, body, browser = false) =>
+      new Request(`https://broker.example${path}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', ...(browser ? { origin: 'https://broker.example' } : {}) },
+        body: JSON.stringify(body),
+      });
+    const created = await worker.fetch(post('/v1/mandates', { ...proposal, approvalCode: approvalCode() }, true), env, admin);
+    assert.equal(created.status, 201);
+    const { id } = await created.json();
+    assert.equal(mandates.get(id).created_by, 'user:owner@example.com');
+    assert.equal((await worker.fetch(post('/v1/mandates', { ...proposal, approvalCode: approvalCode() }, true), env, admin)).status, 400);
+    assert.equal((await worker.fetch(post('/v1/mandates', proposal), env, dev)).status, 403);
+    let requestNumber = 0;
+    const task = (action, input) => ({
+      mandateId: id,
+      action,
+      input,
+      requestId: `11111111-1111-4111-8111-${String(++requestNumber).padStart(12, '0')}`,
+    });
+    assert.equal((await worker.fetch(post('/v1/task-grants', task('dev.commit', commit)), env, qa)).status, 403);
+    const firstInput = task('dev.commit', commit);
+    const first = await worker.fetch(post('/v1/task-grants', firstInput), env, dev);
+    assert.equal(first.status, 201);
+    const grant = await first.json();
+    assert.equal(grants.get(grant.id).mandateId, id);
+    const reused = await worker.fetch(post('/v1/task-grants', firstInput), env, dev);
+    assert.equal((await reused.json()).id, grant.id);
+    const issueMandateId = crypto.randomUUID();
+    mandates.set(issueMandateId, { ...mandates.get(id), id: issueMandateId, issue_number: 222 });
+    const issueRequest = { ...task('po.create-issue', { title: 'Calendar issue', body: 'Tracked work' }), mandateId: issueMandateId };
+    const issueRequestHash = Buffer.from(
+      await crypto.subtle.digest(
+        'SHA-256',
+        new TextEncoder().encode(JSON.stringify({ action: issueRequest.action, input: issueRequest.input })),
+      ),
+    ).toString('base64url');
+    const issueGrantId = crypto.randomUUID();
+    grants.set(issueGrantId, {
+      mandateId: issueMandateId,
+      requestId: issueRequest.requestId,
+      requestHash: issueRequestHash,
+      executor: 'service:po-client',
+      state: 'succeeded',
+      resultJson: JSON.stringify({ number: 222, actor: 'shearflow-po[bot]' }),
+    });
+    const recoveredIssue = await worker.fetch(post('/v1/task-grants', issueRequest), env, po);
+    assert.equal(recoveredIssue.status, 200);
+    assert.deepEqual((await recoveredIssue.json()).result, { number: 222, actor: 'shearflow-po[bot]' });
+    mandates.get(issueMandateId).state = 'revoked';
+    assert.equal((await worker.fetch(post('/v1/task-grants', issueRequest), env, po)).status, 200);
+    assert.equal(
+      (await worker.fetch(post('/v1/task-grants', { ...issueRequest, input: { title: 'Changed', body: 'Tracked work' } }), env, po)).status,
+      409,
+    );
+    for (let index = 0; index < 3; index += 1) {
+      assert.equal((await worker.fetch(post('/v1/task-grants', task('dev.commit', commit)), env, dev)).status, 201);
+    }
+    assert.equal((await worker.fetch(post('/v1/task-grants', task('dev.commit', commit)), env, dev)).status, 409);
+    assert.equal(
+      (await worker.fetch(post('/v1/mandates/revoke', { mandateId: id, approvalCode: approvalCode(1) }, true), env, admin)).status,
+      200,
+    );
+    for (let index = 0; index < 2; index += 1) {
+      assert.equal((await worker.fetch(post('/v1/mandates', { ...proposal, approvalCode: '000000' }, true), env, admin)).status, 400);
+    }
+    assert.equal((await worker.fetch(post('/v1/mandates', { ...proposal, approvalCode: approvalCode() }, true), env, admin)).status, 429);
+    assert.equal(
+      (
+        await worker.fetch(
+          post(
+            '/v1/task-grants',
+            task('dev.create-pr', {
+              issueNumber: 100,
+              branch: proposal.branch,
+              expectedHeadOid: 'a'.repeat(40),
+              title: 'Calendar',
+              body: 'Closes #100',
+            }),
+          ),
+          env,
+          dev,
+        )
+      ).status,
+      400,
+    );
   });
 });
 
@@ -185,7 +442,7 @@ describe('broker request gate', () => {
     }
   });
 
-  it('binds each grant to the executor client ID for its role', async () => {
+  it('retires the legacy unscoped grant route', async () => {
     const env = {
       BROKER_ENABLED: 'true',
       ACCESS_AUD: 'expected',
@@ -210,8 +467,7 @@ describe('broker request gate', () => {
       env,
       context,
     );
-    assert.equal(response.status, 400);
-    assert.deepEqual(await response.json(), { error: 'Executor role mismatch' });
+    assert.equal(response.status, 404);
   });
 
   it('allows an authenticated identity probe while writes remain disabled', async () => {
@@ -219,6 +475,22 @@ describe('broker request gate', () => {
     const ctx = { access: { aud: 'expected', getIdentity: async () => ({ email: 'operator@example.com' }) } };
     const response = await worker.fetch(request, env, ctx);
     assert.deepEqual(await response.json(), { principal: 'user:operator@example.com', admin: true, enabled: false });
+  });
+
+  it('serves the owner page only to the verified administrator while writes remain disabled', async () => {
+    const env = { BROKER_ENABLED: 'false', ACCESS_AUD: 'expected', ADMIN_PRINCIPAL: 'user:owner@example.com' };
+    const request = new Request('https://broker.example/owner');
+    const admin = { access: { aud: 'expected', getIdentity: async () => ({ email: 'owner@example.com' }) } };
+    const other = { access: { aud: 'expected', getIdentity: async () => ({ email: 'other@example.com' }) } };
+    const response = await worker.fetch(request, env, admin);
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get('content-security-policy'), /frame-ancestors 'none'/);
+    assert.match(await response.text(), /Shearflow task approval/);
+    assert.equal((await worker.fetch(request, env, other)).status, 403);
+    assert.equal((await worker.fetch(request, env, {})).status, 403);
+    assert.equal((await worker.fetch(new Request('https://broker.example/owner.js'), env, other)).status, 403);
+    assert.equal((await worker.fetch(new Request('https://broker.example/owner.css'), env, admin)).status, 200);
+    assert.equal((await worker.fetch(new Request('https://broker.example/v1/mandates', { method: 'POST' }), env, admin)).status, 503);
   });
 
   it('rejects a body exceeding the byte limit without Content-Length', async () => {
@@ -291,9 +563,18 @@ describe('one-time grant execution', () => {
                 return { meta: { changes: 1 } };
               },
               async first() {
-                assert.equal(sql, 'SELECT action, input_json FROM grants WHERE id = ?');
+                if (sql.startsWith('SELECT * FROM task_mandates')) {
+                  return {
+                    issue_number: 100,
+                    branch: 'feature/salon-calendar',
+                    state: 'active',
+                    expires_at: Math.floor(Date.now() / 1000) + 3600,
+                    allowed_paths_json: '[]',
+                  };
+                }
+                assert.equal(sql, 'SELECT action, input_json, mandate_id FROM grants WHERE id = ?');
                 const grant = grants.get(args[0]);
-                return { action: grant.action, input_json: grant.input_json };
+                return { action: grant.action, input_json: grant.input_json, mandate_id: 'mandate-id' };
               },
             };
           },
@@ -325,6 +606,7 @@ describe('one-time grant execution', () => {
         executor: 'service:po-client',
         expires_at: expiresAt,
         state: 'approved',
+        mandate_id: 'mandate-id',
       });
     const originalFetch = globalThis.fetch;
     let githubCalls = 0;
@@ -339,7 +621,8 @@ describe('one-time grant execution', () => {
           repositories: [{ full_name: 'dey-joydeep/cthub-bsaas' }],
           permissions: { issues: 'write', metadata: 'read' },
         });
-      if (url.endsWith('/comments')) return Response.json({ id: 8, html_url: 'https://github.com/example/comment/8' });
+      if (url.endsWith('/comments'))
+        return Response.json({ id: 8, html_url: 'https://github.com/example/comment/8', user: { login: 'shearflow-po[bot]' } });
       return Response.json({ number: 100 });
     };
     try {
@@ -427,20 +710,33 @@ describe('GitHub writes', () => {
     globalThis.fetch = async (url, options) => {
       calls.push({ url, body: options.body && JSON.parse(options.body) });
       if (url.endsWith('/access_tokens')) {
+        const requested = JSON.parse(options.body).permissions;
         return Response.json({
           token: 'temporary-test-token',
           repository_selection: 'selected',
           repositories: [{ full_name: 'dey-joydeep/cthub-bsaas' }],
-          permissions: { pull_requests: 'write', metadata: 'read' },
+          permissions: { ...requested, metadata: 'read' },
         });
+      }
+      if (url.endsWith('/git/ref/heads/feature/salon-calendar')) {
+        if (calls.find((call) => call.url.endsWith('/access_tokens')).body.permissions.contents !== 'read') {
+          return Response.json({ message: 'Resource not accessible by integration' }, { status: 403 });
+        }
+        return Response.json({ ref: 'refs/heads/feature/salon-calendar', object: { sha: 'a'.repeat(40) } });
       }
       if (url.endsWith('/reviews'))
         return Response.json({
           id: 7,
           html_url: 'https://github.com/dey-joydeep/cthub-bsaas/pull/99#pullrequestreview-7',
           commit_id: 'a'.repeat(40),
+          user: { login: 'shearflow-qa[bot]' },
         });
-      return Response.json({ state: 'open', head: { sha: 'a'.repeat(40) } });
+      return Response.json({
+        state: 'open',
+        body: 'Closes #100',
+        head: { sha: 'a'.repeat(40), ref: 'feature/salon-calendar', repo: { full_name: 'dey-joydeep/cthub-bsaas' } },
+        base: { ref: 'main', repo: { full_name: 'dey-joydeep/cthub-bsaas' } },
+      });
     };
     try {
       const result = await perform(
@@ -449,11 +745,117 @@ describe('GitHub writes', () => {
         {
           QA_PRIVATE_KEY: privateKey.export({ type: 'pkcs1', format: 'pem' }).toString(),
         },
+        {
+          issue_number: 100,
+          branch: 'feature/salon-calendar',
+          state: 'active',
+          expires_at: Math.floor(Date.now() / 1000) + 600,
+          allowed_paths_json: '[]',
+        },
       );
       assert.equal(result.headOid, 'a'.repeat(40));
       assert.equal(JSON.stringify(result).includes('temporary-test-token'), false);
       assert.equal(calls.find((call) => call.url.endsWith('/reviews')).body.commit_id, 'a'.repeat(40));
       assert.equal(calls.filter((call) => call.url.endsWith('/pulls/99')).length, 2);
+      assert.equal(calls.filter((call) => call.url.endsWith('/git/ref/heads/feature/salon-calendar')).length, 1);
+      assert.deepEqual(calls.find((call) => call.url.endsWith('/access_tokens')).body.permissions, {
+        pull_requests: 'write',
+        contents: 'read',
+      });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('rejects a same-named fork PR before posting QA evidence', async () => {
+    const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+    const originalFetch = globalThis.fetch;
+    let posted = false;
+    globalThis.fetch = async (url, options) => {
+      if (url.endsWith('/access_tokens'))
+        return Response.json({
+          token: 'temporary-test-token',
+          repository_selection: 'selected',
+          repositories: [{ full_name: 'dey-joydeep/cthub-bsaas' }],
+          permissions: { pull_requests: 'write', contents: 'read', metadata: 'read' },
+        });
+      if (url.endsWith('/reviews') && options.method === 'POST') posted = true;
+      return Response.json({
+        state: 'open',
+        body: 'Closes #100',
+        head: { sha: 'a'.repeat(40), ref: 'feature/salon-calendar', repo: { full_name: 'attacker/cthub-bsaas' } },
+        base: { ref: 'main', repo: { full_name: 'dey-joydeep/cthub-bsaas' } },
+      });
+    };
+    try {
+      await assert.rejects(
+        () =>
+          perform(
+            'qa.review-pr',
+            {
+              prNumber: 99,
+              expectedHeadOid: 'a'.repeat(40),
+              body: 'QA passed',
+            },
+            { QA_PRIVATE_KEY: privateKey.export({ type: 'pkcs1', format: 'pem' }).toString() },
+            {
+              issue_number: 100,
+              branch: 'feature/salon-calendar',
+              state: 'active',
+              expires_at: Math.floor(Date.now() / 1000) + 600,
+              allowed_paths_json: '[]',
+            },
+          ),
+        /PR outside mandate/,
+      );
+      assert.equal(posted, false);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('creates a task PR only from the bound branch under the Dev App actor', async () => {
+    const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+    const originalFetch = globalThis.fetch;
+    const input = {
+      issueNumber: 100,
+      branch: 'feature/salon-calendar',
+      expectedHeadOid: 'a'.repeat(40),
+      title: 'Salon calendar',
+      body: 'Closes #100',
+    };
+    const mandate = {
+      issue_number: 100,
+      branch: input.branch,
+      state: 'active',
+      expires_at: Math.floor(Date.now() / 1000) + 600,
+      allowed_paths_json: '[]',
+    };
+    const env = { DEV_PRIVATE_KEY: privateKey.export({ type: 'pkcs1', format: 'pem' }).toString() };
+    let actor = 'shearflow-dev[bot]';
+    globalThis.fetch = async (url) => {
+      if (url.endsWith('/access_tokens'))
+        return Response.json({
+          token: 'temporary-test-token',
+          repository_selection: 'selected',
+          repositories: [{ full_name: 'dey-joydeep/cthub-bsaas' }],
+          permissions: { pull_requests: 'write', contents: 'read', metadata: 'read' },
+        });
+      if (url.includes('/git/ref/heads/'))
+        return Response.json({ ref: `refs/heads/${input.branch}`, object: { sha: input.expectedHeadOid } });
+      return Response.json({
+        number: 99,
+        html_url: 'https://github.com/dey-joydeep/cthub-bsaas/pull/99',
+        user: { login: actor },
+        head: { sha: input.expectedHeadOid, repo: { full_name: 'dey-joydeep/cthub-bsaas' } },
+        base: { repo: { full_name: 'dey-joydeep/cthub-bsaas' } },
+      });
+    };
+    try {
+      const result = await perform('dev.create-pr', input, env, mandate);
+      assert.equal(result.actor, 'shearflow-dev[bot]');
+      actor = 'dey-joydeep';
+      await assert.rejects(() => perform('dev.create-pr', input, env, mandate), /GitHub actor mismatch/);
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -492,6 +894,7 @@ describe('GitHub writes', () => {
         return Response.json({ full_name: 'dey-joydeep/cthub-bsaas', node_id: 'repository-node-id' });
       }
       if (url.endsWith('/graphql')) return Response.json({ data: { updateRefs: { clientMutationId: null } } });
+      if (url.endsWith(`/commits/${'b'.repeat(40)}`)) return Response.json({ author: { login: 'shearflow-dev[bot]' } });
       throw new Error(`Unexpected GitHub request: ${url}`);
     };
     try {
@@ -512,6 +915,7 @@ describe('GitHub writes', () => {
           'GET /git/ref/heads/feature/salon-calendar',
           'GET ',
           'POST https://api.github.com/graphql',
+          `GET /commits/${'b'.repeat(40)}`,
         ],
       );
       assert.deepEqual(requests[3].body, {
@@ -544,6 +948,56 @@ describe('GitHub writes', () => {
         requests.some((request) => request.url.endsWith('/graphql')),
         false,
       );
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('creates the remote task branch from the exact main head on first Dev commit', async () => {
+    const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+    const originalFetch = globalThis.fetch;
+    let branchReads = 0;
+    let branchCreated = false;
+    globalThis.fetch = async (url) => {
+      if (url.endsWith('/access_tokens'))
+        return Response.json({
+          token: 'temporary-test-token',
+          repository_selection: 'selected',
+          repositories: [{ full_name: 'dey-joydeep/cthub-bsaas' }],
+          permissions: { contents: 'write', metadata: 'read' },
+        });
+      if (url.endsWith('/git/ref/heads/feature/salon-calendar')) {
+        branchReads += 1;
+        if (branchReads === 1) return Response.json({ message: 'Not Found' }, { status: 404 });
+        return Response.json({ ref: 'refs/heads/feature/salon-calendar', object: { type: 'commit', sha: 'a'.repeat(40) } });
+      }
+      if (url.endsWith('/git/ref/heads/main')) return Response.json({ ref: 'refs/heads/main', object: { sha: 'a'.repeat(40) } });
+      if (url.endsWith('/git/refs')) {
+        branchCreated = true;
+        return Response.json({ ref: 'refs/heads/feature/salon-calendar', object: { type: 'commit', sha: 'a'.repeat(40) } });
+      }
+      if (url.endsWith(`/git/commits/${'a'.repeat(40)}`)) return Response.json({ tree: { sha: 'c'.repeat(40) } });
+      if (url.includes(`/git/trees/${'c'.repeat(40)}?recursive=1`)) return Response.json({ truncated: false, tree: [] });
+      if (url.endsWith('/git/trees')) return Response.json({ sha: 'd'.repeat(40) });
+      if (url.endsWith('/git/commits')) return Response.json({ sha: 'b'.repeat(40) });
+      if (url.includes('/compare/')) return Response.json({ files: [{ filename: 'docs/test.txt', status: 'added' }] });
+      if (url.endsWith('/repos/dey-joydeep/cthub-bsaas'))
+        return Response.json({ full_name: 'dey-joydeep/cthub-bsaas', node_id: 'repo-id' });
+      if (url.endsWith('/graphql')) return Response.json({ data: { updateRefs: {} } });
+      if (url.endsWith(`/commits/${'b'.repeat(40)}`)) return Response.json({ author: { login: 'shearflow-dev[bot]' } });
+      throw new Error(`Unexpected request: ${url}`);
+    };
+    try {
+      const result = await perform(
+        'dev.commit',
+        { ...commit, files: [{ path: 'docs/test.txt', contents: 'safe' }] },
+        {
+          DEV_PRIVATE_KEY: privateKey.export({ type: 'pkcs1', format: 'pem' }).toString(),
+        },
+      );
+      assert.equal(result.actor, 'shearflow-dev[bot]');
+      assert.equal(branchCreated, true);
+      assert.equal(branchReads, 2);
     } finally {
       globalThis.fetch = originalFetch;
     }

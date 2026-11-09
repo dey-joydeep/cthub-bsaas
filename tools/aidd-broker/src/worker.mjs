@@ -1,3 +1,5 @@
+import { ownerCss, ownerHtml, ownerJs } from './owner-ui.mjs';
+
 const REPOSITORY = 'dey-joydeep/cthub-bsaas';
 const APPS = {
   po: { id: '5552057', installation: '177123152', key: 'PO_PRIVATE_KEY' },
@@ -15,6 +17,7 @@ const ACTION_ROLE = {
 const BRANCH = /^(feature|fix|chore|docs|test|refactor|style|ci)\/[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SHA = /^[a-f0-9]{40}$/;
 const ACCESS_CLIENT_ID = { po: 'PO_CLIENT_ID', qa: 'QA_CLIENT_ID', dev: 'DEV_CLIENT_ID' };
+const BOT_LOGIN = { po: 'shearflow-po[bot]', qa: 'shearflow-qa[bot]', dev: 'shearflow-dev[bot]' };
 let signingKeys = { issuer: '', expiresAt: 0, keys: [] };
 
 function executorClientIds(env) {
@@ -133,6 +136,7 @@ export function validateAction(action, input) {
     for (const file of input.files) {
       assertPath(file?.path, action === 'dev.commit-workflow');
       assertString(file?.contents, 'file contents', 150000);
+      if (file.contents.includes('\0')) throw new Error('Binary file content forbidden');
       assertNoLikelySecret(file.contents);
       bytes += new TextEncoder().encode(file.contents).byteLength;
       const folded = file.path.normalize('NFC').toLowerCase();
@@ -150,6 +154,139 @@ export function validateAction(action, input) {
   }
   if (input.allowWorkflowChanges !== undefined) throw new Error('Unexpected workflow grant flag');
   return ACTION_ROLE[action];
+}
+
+function pathIsWorkflow(path) {
+  return path.toLowerCase().startsWith('.github/workflows/');
+}
+
+export function validateMandate(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Invalid mandate');
+  assertString(input.outcome, 'outcome', 2000);
+  assertBranch(input.branch);
+  if (input.issueNumber !== null && input.issueNumber !== undefined) assertIssue(input.issueNumber);
+  if (!Array.isArray(input.allowedPaths) || input.allowedPaths.length < 1 || input.allowedPaths.length > 50) {
+    throw new Error('Invalid allowed paths');
+  }
+  const paths = new Set();
+  for (const scope of input.allowedPaths) {
+    if (typeof scope !== 'string') throw new Error('Invalid allowed path');
+    const isDirectory = scope.endsWith('/');
+    const value = isDirectory ? scope.slice(0, -1) : scope;
+    assertPath(isDirectory ? `${value}/__scope__.txt` : value, pathIsWorkflow(`${value}/file`));
+    if (isDirectory && !value.includes('/')) throw new Error('Repository-wide directory scope forbidden');
+    const folded = scope.normalize('NFC').toLowerCase();
+    if (paths.has(folded)) throw new Error('Duplicate allowed path');
+    paths.add(folded);
+  }
+  if (!input.actions || typeof input.actions !== 'object' || Array.isArray(input.actions)) throw new Error('Invalid action limits');
+  const entries = Object.entries(input.actions);
+  if (!entries.length || entries.length > Object.keys(ACTION_ROLE).length) throw new Error('Invalid action limits');
+  for (const [action, limit] of entries) {
+    if (!Object.hasOwn(ACTION_ROLE, action) || !Number.isSafeInteger(limit) || limit < 1 || limit > 100) {
+      throw new Error('Invalid action limit');
+    }
+  }
+  if (input.issueNumber != null && Object.hasOwn(input.actions, 'po.create-issue')) {
+    throw new Error('Issue already assigned to mandate');
+  }
+  if (input.issueNumber == null && input.actions['po.create-issue'] !== 1) {
+    throw new Error('New issue mandate requires one PO issue action');
+  }
+  const ttl = Number(input.ttlSeconds);
+  if (!Number.isSafeInteger(ttl) || ttl < 300 || ttl > 30 * 86400) throw new Error('Invalid mandate lifetime');
+  return { ...input, issueNumber: input.issueNumber ?? null, ttlSeconds: ttl };
+}
+
+export function validateMandateAction(mandate, action, input) {
+  const role = validateAction(action, input);
+  if (!mandate || mandate.state !== 'active' || mandate.expires_at <= Math.floor(Date.now() / 1000)) {
+    throw new Error('Mandate unavailable');
+  }
+  if (action === 'po.create-issue') {
+    if (mandate.issue_number != null) throw new Error('Mandate issue already created');
+  } else {
+    if (mandate.issue_number == null) throw new Error('Mandate issue not created');
+    if (action === 'qa.review-pr') {
+      // The PR branch and issue are checked against GitHub during execution.
+    } else if (input.issueNumber !== mandate.issue_number) {
+      throw new Error('Issue outside mandate');
+    }
+  }
+  if (role === 'dev') {
+    if (input.branch !== mandate.branch) throw new Error('Branch outside mandate');
+    if (action !== 'dev.create-pr') {
+      const scopes = JSON.parse(mandate.allowed_paths_json);
+      for (const file of input.files) {
+        const path = file.path.normalize('NFC').toLowerCase();
+        if (
+          !scopes.some((scope) => {
+            const allowed = scope.normalize('NFC').toLowerCase();
+            return allowed.endsWith('/') ? path.startsWith(allowed) : path === allowed;
+          })
+        )
+          throw new Error('Path outside mandate');
+      }
+    }
+  }
+  return role;
+}
+
+function verifiedActor(login, role) {
+  if (login !== BOT_LOGIN[role]) throw new Error('GitHub actor mismatch');
+  return login;
+}
+
+function reusedGrant(grant, mandateId, action) {
+  return json({
+    id: grant.id,
+    mandateId,
+    action,
+    reused: true,
+    state: grant.state,
+    result: grant.state === 'succeeded' && grant.result_json ? JSON.parse(grant.result_json) : undefined,
+  });
+}
+
+function decodeBase32(value) {
+  if (typeof value !== 'string' || !/^[A-Z2-7]{32,64}$/.test(value)) throw new Error('Owner approval factor unavailable');
+  let bits = 0;
+  let count = 0;
+  const bytes = [];
+  for (const character of value) {
+    bits = (bits << 5) | 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'.indexOf(character);
+    count += 5;
+    if (count >= 8) {
+      count -= 8;
+      bytes.push((bits >> count) & 255);
+    }
+  }
+  return Uint8Array.from(bytes);
+}
+
+async function approvalStep(code, secret) {
+  if (typeof code !== 'string' || !/^[0-9]{6}$/.test(code)) throw new Error('Owner approval code required');
+  const key = await crypto.subtle.importKey('raw', decodeBase32(secret), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+  const current = Math.floor(Date.now() / 30000);
+  for (const step of [current, current - 1, current + 1]) {
+    const counter = new Uint8Array(8);
+    new DataView(counter.buffer).setBigUint64(0, BigInt(step));
+    const digest = new Uint8Array(await crypto.subtle.sign('HMAC', key, counter));
+    const offset = digest[digest.length - 1] & 15;
+    const number = (((digest[offset] & 127) << 24) | (digest[offset + 1] << 16) | (digest[offset + 2] << 8) | digest[offset + 3]) % 1000000;
+    if (number.toString().padStart(6, '0') === code) return step;
+  }
+  throw new Error('Invalid owner approval code');
+}
+
+async function checkedOwnerStep(env, actor, code) {
+  const attempts = await env.GRANTS.prepare(
+    'INSERT INTO owner_approval_attempts (principal, window, attempts) VALUES (?, ?, 1) ON CONFLICT(principal, window) DO UPDATE SET attempts = attempts + 1 WHERE attempts < 5',
+  )
+    .bind(actor, Math.floor(Date.now() / 86400000))
+    .run();
+  if (attempts.meta.changes !== 1) throw new Error('Owner approval temporarily locked');
+  return approvalStep(code, env.OWNER_APPROVAL_TOTP_KEY);
 }
 
 function derLength(length) {
@@ -213,7 +350,7 @@ async function installationToken(role, action, input, env) {
     action === 'po.create-issue' || action === 'po.comment-issue'
       ? { issues: 'write' }
       : action === 'qa.review-pr'
-        ? { pull_requests: 'write' }
+        ? { pull_requests: 'write', contents: 'read' }
         : action === 'dev.create-pr'
           ? { pull_requests: 'write', contents: 'read' }
           : action === 'dev.commit-workflow'
@@ -235,23 +372,39 @@ async function installationToken(role, action, input, env) {
   return token.token;
 }
 
-export async function perform(action, input, env) {
+export async function perform(action, input, env, mandate) {
   const role = validateAction(action, input);
+  if (mandate) validateMandateAction(mandate, action, input);
   const token = await installationToken(role, action, input, env);
   const repo = `/repos/${REPOSITORY}`;
   if (action === 'po.create-issue') {
     const result = await github(`${repo}/issues`, token, 'POST', { title: input.title, body: input.body });
-    return { url: result.html_url, number: result.number };
+    return { url: result.html_url, number: result.number, actor: verifiedActor(result.user?.login, role) };
   }
   if (action === 'po.comment-issue') {
     const issue = await github(`${repo}/issues/${input.issueNumber}`, token);
     if (issue.pull_request) throw new Error('PO comment target is a pull request');
     const result = await github(`${repo}/issues/${input.issueNumber}/comments`, token, 'POST', { body: input.body });
-    return { url: result.html_url, id: result.id };
+    return { url: result.html_url, id: result.id, actor: verifiedActor(result.user?.login, role) };
   }
   if (action === 'qa.review-pr') {
     const pr = await github(`${repo}/pulls/${input.prNumber}`, token);
     if (pr.head?.sha !== input.expectedHeadOid || pr.state !== 'open') throw new Error('PR head changed');
+    if (
+      mandate &&
+      (pr.head?.repo?.full_name !== REPOSITORY ||
+        pr.base?.repo?.full_name !== REPOSITORY ||
+        pr.head?.ref !== mandate.branch ||
+        pr.base?.ref !== 'main' ||
+        !new RegExp(`\\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\\s+#${mandate.issue_number}\\b`, 'i').test(pr.body ?? ''))
+    )
+      throw new Error('PR outside mandate');
+    if (mandate) {
+      const ref = await github(`${repo}/git/ref/heads/${mandate.branch}`, token);
+      if (ref.ref !== `refs/heads/${mandate.branch}` || ref.object?.sha !== input.expectedHeadOid) {
+        throw new Error('PR branch outside mandate');
+      }
+    }
     const result = await github(`${repo}/pulls/${input.prNumber}/reviews`, token, 'POST', {
       event: 'COMMENT',
       body: input.body,
@@ -259,8 +412,17 @@ export async function perform(action, input, env) {
     });
     if (result.commit_id !== input.expectedHeadOid) throw new Error('Review commit mismatch');
     const current = await github(`${repo}/pulls/${input.prNumber}`, token);
-    if (current.head?.sha !== input.expectedHeadOid) throw new Error('PR head changed after review');
-    return { url: result.html_url, id: result.id, headOid: input.expectedHeadOid };
+    if (
+      current.head?.sha !== input.expectedHeadOid ||
+      (mandate &&
+        (current.head?.repo?.full_name !== REPOSITORY ||
+          current.base?.repo?.full_name !== REPOSITORY ||
+          current.head?.ref !== mandate.branch ||
+          current.base?.ref !== 'main'))
+    ) {
+      throw new Error('PR changed after review');
+    }
+    return { url: result.html_url, id: result.id, headOid: input.expectedHeadOid, actor: verifiedActor(result.user?.login, role) };
   }
   if (action === 'dev.create-pr') {
     const branch = await github(`${repo}/git/ref/heads/${input.branch}`, token);
@@ -273,12 +435,30 @@ export async function perform(action, input, env) {
       title: input.title,
       body: input.body,
     });
-    if (result.head?.sha !== input.expectedHeadOid) throw new Error('PR head changed during creation');
-    return { url: result.html_url, number: result.number };
+    if (
+      result.head?.sha !== input.expectedHeadOid ||
+      result.head?.repo?.full_name !== REPOSITORY ||
+      result.base?.repo?.full_name !== REPOSITORY
+    )
+      throw new Error('PR head changed during creation');
+    return { url: result.html_url, number: result.number, actor: verifiedActor(result.user?.login, role) };
   }
   const refPath = `${repo}/git/ref/heads/${input.branch}`;
   const expectedRef = `refs/heads/${input.branch}`;
-  const branch = await github(refPath, token);
+  let branch;
+  try {
+    branch = await github(refPath, token);
+  } catch (error) {
+    if (error.message !== 'GitHub request failed (404)') throw error;
+    const base = await github(`${repo}/git/ref/heads/main`, token);
+    if (base.ref !== 'refs/heads/main' || base.object?.sha !== input.expectedHeadOid) {
+      throw new Error('Task branch base changed');
+    }
+    branch = await github(`${repo}/git/refs`, token, 'POST', {
+      ref: expectedRef,
+      sha: input.expectedHeadOid,
+    });
+  }
   if (branch.ref !== expectedRef || branch.object?.type !== 'commit' || branch.object.sha !== input.expectedHeadOid) {
     throw new Error('Branch head changed');
   }
@@ -345,7 +525,12 @@ export async function perform(action, input, env) {
     },
   });
   if (updated.errors?.length || !updated.data?.updateRefs) throw new Error('GitHub ref compare-and-swap failed');
-  return { url: `https://github.com/${REPOSITORY}/commit/${commit.sha}`, oid: commit.sha };
+  const published = await github(`${repo}/commits/${commit.sha}`, token);
+  return {
+    url: `https://github.com/${REPOSITORY}/commit/${commit.sha}`,
+    oid: commit.sha,
+    actor: verifiedActor(published.author?.login, role),
+  };
 }
 
 function jwtBytes(part) {
@@ -459,6 +644,30 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.pathname === '/health' && request.method === 'GET') return json({ enabled: env.BROKER_ENABLED === 'true' });
+    if (request.method === 'GET' && ['/owner', '/owner.js', '/owner.css'].includes(url.pathname)) {
+      if ((await principal(request, ctx, env)) !== env.ADMIN_PRINCIPAL || !env.ADMIN_PRINCIPAL) return fail('Admin required', 403);
+      const headers = {
+        'cache-control': 'no-store',
+        'x-content-type-options': 'nosniff',
+        'referrer-policy': 'no-referrer',
+      };
+      if (url.pathname === '/owner') {
+        return new Response(ownerHtml(), {
+          headers: {
+            ...headers,
+            'content-type': 'text/html; charset=utf-8',
+            'content-security-policy':
+              "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'",
+          },
+        });
+      }
+      return new Response(url.pathname === '/owner.js' ? ownerJs : ownerCss, {
+        headers: {
+          ...headers,
+          'content-type': url.pathname === '/owner.js' ? 'text/javascript; charset=utf-8' : 'text/css; charset=utf-8',
+        },
+      });
+    }
     if (url.pathname === '/v1/whoami' && request.method === 'GET') {
       const actor = await principal(request, ctx, env);
       if (!actor) return fail('Access required', 403);
@@ -484,24 +693,134 @@ export default {
         error.message === 'Request too large' ? 413 : 400,
       );
     }
-    if (url.pathname === '/v1/grants') {
+    if (url.pathname === '/v1/mandates') {
       if (actor !== env.ADMIN_PRINCIPAL) return fail('Admin required', 403);
       try {
-        const role = validateAction(body.action, body.input);
-        assertString(body.executor, 'executor principal', 200);
-        if (!executorClientIds(env) || body.executor !== `service:${env[ACCESS_CLIENT_ID[role]]}`) {
-          throw new Error('Executor role mismatch');
-        }
-        const ttl = Number(body.ttlSeconds);
-        if (!Number.isInteger(ttl) || ttl < 60 || ttl > 3600) throw new Error('Invalid grant lifetime');
+        const mandate = validateMandate(body);
+        const step = await checkedOwnerStep(env, actor, body.approvalCode);
         const id = crypto.randomUUID();
-        const expires = Math.floor(Date.now() / 1000) + ttl;
-        await env.GRANTS.prepare(
-          'INSERT INTO grants (id, action, role, executor, input_json, expires_at, state, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        const expires = Math.floor(Date.now() / 1000) + mandate.ttlSeconds;
+        const statements = [
+          env.GRANTS.prepare(
+            "INSERT INTO task_mandates (id, outcome, issue_number, branch, allowed_paths_json, expires_at, state, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, 'active', ?, ?)",
+          ).bind(
+            id,
+            mandate.outcome,
+            mandate.issueNumber,
+            mandate.branch,
+            JSON.stringify(mandate.allowedPaths),
+            expires,
+            actor,
+            new Date().toISOString(),
+          ),
+        ];
+        statements.push(env.GRANTS.prepare('INSERT INTO owner_approval_steps (step, mandate_id) VALUES (?, ?)').bind(step, id));
+        for (const [action, limit] of Object.entries(mandate.actions)) {
+          statements.push(
+            env.GRANTS.prepare('INSERT INTO mandate_action_usage (mandate_id, action, max_issued) VALUES (?, ?, ?)').bind(
+              id,
+              action,
+              limit,
+            ),
+          );
+        }
+        await env.GRANTS.batch(statements);
+        return json(
+          { id, issueNumber: mandate.issueNumber, branch: mandate.branch, expiresAt: new Date(expires * 1000).toISOString() },
+          201,
+        );
+      } catch (error) {
+        return fail(error.message, error.message === 'Owner approval temporarily locked' ? 429 : 400);
+      }
+    }
+    if (url.pathname === '/v1/mandates/revoke') {
+      if (actor !== env.ADMIN_PRINCIPAL) return fail('Admin required', 403);
+      if (typeof body?.mandateId !== 'string' || !/^[0-9a-f-]{36}$/.test(body.mandateId)) return fail('Invalid mandate ID');
+      try {
+        const step = await checkedOwnerStep(env, actor, body.approvalCode);
+        const [used, update] = await env.GRANTS.batch([
+          env.GRANTS.prepare('INSERT INTO owner_approval_steps (step, mandate_id) VALUES (?, ?)').bind(step, body.mandateId),
+          env.GRANTS.prepare("UPDATE task_mandates SET state = 'revoked', revoked_at = ? WHERE id = ? AND state = 'active'").bind(
+            new Date().toISOString(),
+            body.mandateId,
+          ),
+        ]);
+        return used.meta.changes === 1 && update.meta.changes === 1
+          ? json({ id: body.mandateId, state: 'revoked' })
+          : fail('Mandate unavailable', 409);
+      } catch (error) {
+        return fail(error.message, error.message === 'Owner approval temporarily locked' ? 429 : 400);
+      }
+    }
+    if (url.pathname === '/v1/task-grants') {
+      const id = body?.mandateId;
+      if (typeof id !== 'string' || !/^[0-9a-f-]{36}$/.test(id)) return fail('Invalid mandate ID');
+      try {
+        const role = validateAction(body.action, body.input);
+        if (
+          typeof body.requestId !== 'string' ||
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(body.requestId)
+        ) {
+          throw new Error('Valid idempotency request ID required');
+        }
+        if (actor !== `service:${env[ACCESS_CLIENT_ID[role]]}` || !executorClientIds(env)) {
+          return fail('Role identity required', 403);
+        }
+        const requestHash = base64url(
+          new Uint8Array(
+            await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify({ action: body.action, input: body.input }))),
+          ),
+        );
+        const existing = await env.GRANTS.prepare(
+          'SELECT id, request_hash, executor, state, result_json FROM grants WHERE mandate_id = ? AND request_id = ?',
         )
-          .bind(id, body.action, role, body.executor, JSON.stringify(body.input), expires, 'approved', actor)
-          .run();
-        return json({ id, action: body.action, role, executor: body.executor, expiresAt: new Date(expires * 1000).toISOString() }, 201);
+          .bind(id, body.requestId)
+          .first();
+        if (existing) {
+          if (existing.request_hash !== requestHash || existing.executor !== actor) return fail('Idempotency request mismatch', 409);
+          return reusedGrant(existing, id, body.action);
+        }
+        const mandate = await env.GRANTS.prepare('SELECT * FROM task_mandates WHERE id = ?').bind(id).first();
+        validateMandateAction(mandate, body.action, body.input);
+        const grantId = crypto.randomUUID();
+        const expires = Math.min(Math.floor(Date.now() / 1000) + 600, mandate.expires_at);
+        const insert = env.GRANTS.prepare(
+          "INSERT INTO grants (id, action, role, executor, input_json, expires_at, state, created_by, mandate_id, request_id, request_hash) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM mandate_action_usage WHERE mandate_id = ? AND action = ? AND issued < max_issued) AND EXISTS (SELECT 1 FROM task_mandates WHERE id = ? AND state = 'active' AND expires_at > ?)",
+        ).bind(
+          grantId,
+          body.action,
+          role,
+          actor,
+          JSON.stringify(body.input),
+          expires,
+          'approved',
+          mandate.created_by,
+          id,
+          body.requestId,
+          requestHash,
+          id,
+          body.action,
+          id,
+          Math.floor(Date.now() / 1000),
+        );
+        const increment = env.GRANTS.prepare(
+          'UPDATE mandate_action_usage SET issued = issued + 1 WHERE mandate_id = ? AND action = ? AND issued < max_issued AND EXISTS (SELECT 1 FROM grants WHERE id = ?)',
+        ).bind(id, body.action, grantId);
+        try {
+          const [created, counted] = await env.GRANTS.batch([insert, increment]);
+          if (created.meta.changes !== 1 || counted.meta.changes !== 1) return fail('Mandate action limit reached', 409);
+        } catch (error) {
+          const concurrent = await env.GRANTS.prepare(
+            'SELECT id, request_hash, executor, state, result_json FROM grants WHERE mandate_id = ? AND request_id = ?',
+          )
+            .bind(id, body.requestId)
+            .first();
+          if (concurrent?.request_hash === requestHash && concurrent.executor === actor) {
+            return reusedGrant(concurrent, id, body.action);
+          }
+          throw error;
+        }
+        return json({ id: grantId, mandateId: id, action: body.action, expiresAt: new Date(expires * 1000).toISOString() }, 201);
       } catch (error) {
         return fail(error.message);
       }
@@ -510,14 +829,23 @@ export default {
       const id = body?.grantId;
       if (typeof id !== 'string' || !/^[0-9a-f-]{36}$/.test(id)) return fail('Invalid grant ID');
       const claim = await env.GRANTS.prepare(
-        "UPDATE grants SET state = 'running', started_at = ? WHERE id = ? AND executor = ? AND state = 'approved' AND expires_at > ?",
+        "UPDATE grants SET state = 'running', started_at = ? WHERE id = ? AND executor = ? AND state = 'approved' AND expires_at > ? AND mandate_id IS NOT NULL AND EXISTS (SELECT 1 FROM task_mandates WHERE id = grants.mandate_id AND state = 'active' AND expires_at > ?)",
       )
-        .bind(new Date().toISOString(), id, actor, Math.floor(Date.now() / 1000))
+        .bind(new Date().toISOString(), id, actor, Math.floor(Date.now() / 1000), Math.floor(Date.now() / 1000))
         .run();
       if (claim.meta.changes !== 1) return fail('Grant unavailable', 409);
-      const grant = await env.GRANTS.prepare('SELECT action, input_json FROM grants WHERE id = ?').bind(id).first();
+      const grant = await env.GRANTS.prepare('SELECT action, input_json, mandate_id FROM grants WHERE id = ?').bind(id).first();
       try {
-        const result = await perform(grant.action, JSON.parse(grant.input_json), env);
+        const mandate =
+          grant.mandate_id && (await env.GRANTS.prepare('SELECT * FROM task_mandates WHERE id = ?').bind(grant.mandate_id).first());
+        if (!mandate) throw new Error('Mandate unavailable');
+        const result = await perform(grant.action, JSON.parse(grant.input_json), env, mandate);
+        if (grant.mandate_id && grant.action === 'po.create-issue') {
+          const bound = await env.GRANTS.prepare('UPDATE task_mandates SET issue_number = ? WHERE id = ? AND issue_number IS NULL')
+            .bind(result.number, grant.mandate_id)
+            .run();
+          if (bound.meta.changes !== 1) throw new Error('Mandate issue binding failed');
+        }
         await env.GRANTS.prepare("UPDATE grants SET state = 'succeeded', input_json = '{}', result_json = ?, finished_at = ? WHERE id = ?")
           .bind(JSON.stringify(result), new Date().toISOString(), id)
           .run();
@@ -540,6 +868,9 @@ export default {
               'Commit changed paths outside grant',
               'Repository identity mismatch',
               'GitHub ref compare-and-swap failed',
+              'GitHub actor mismatch',
+              'PR outside mandate',
+              'Mandate issue binding failed',
             ].includes(error.message))
             ? error.message
             : 'Unclassified action failure';
@@ -567,5 +898,14 @@ export default {
     await env.GRANTS.prepare("DELETE FROM grants WHERE state IN ('succeeded', 'needs-reconciliation') AND expires_at < ?")
       .bind(now - 30 * 86400)
       .run();
+    const cutoff = now - 30 * 86400;
+    const retired =
+      'SELECT id FROM task_mandates WHERE expires_at < ? AND NOT EXISTS (SELECT 1 FROM grants WHERE grants.mandate_id = task_mandates.id)';
+    await env.GRANTS.batch([
+      env.GRANTS.prepare('DELETE FROM owner_approval_attempts WHERE window < ?').bind(Math.floor(Date.now() / 86400000) - 30),
+      env.GRANTS.prepare(`DELETE FROM owner_approval_steps WHERE mandate_id IN (${retired})`).bind(cutoff),
+      env.GRANTS.prepare(`DELETE FROM mandate_action_usage WHERE mandate_id IN (${retired})`).bind(cutoff),
+      env.GRANTS.prepare(`DELETE FROM task_mandates WHERE id IN (${retired})`).bind(cutoff),
+    ]);
   },
 };
