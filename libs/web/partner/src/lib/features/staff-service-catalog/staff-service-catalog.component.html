@@ -131,8 +131,8 @@
         </header>
 
         <mat-tab-group class="staff-subtab-group" [selectedIndex]="selectedStaffSubTabIndex()" (selectedIndexChange)="selectedStaffSubTabIndex.set($event)">
-          <!-- SUB-TAB 1: PROFILE & HR -->
-          <mat-tab label="Profile & HR" i18n-label="@@STAFF_CATALOG.TAB_PROFILE_HR">
+          <!-- SUB-TAB 1: PROFILE -->
+          <mat-tab label="Profile" i18n-label="@@STAFF_CATALOG.TAB_PROFILE">
             <mat-card class="subtab-content-card">
               <mat-card-header>
                 <mat-icon mat-card-avatar class="card-header-icon">badge</mat-icon>
@@ -189,19 +189,19 @@
                     }
                   </mat-form-field>
 
-                  <!-- HR EXPANSION PANEL -->
+                  <!-- CONFIDENTIAL PERSONAL DETAILS PANEL -->
                   <mat-expansion-panel class="col-span-full hr-expansion-panel">
                     <mat-expansion-panel-header>
                       <mat-panel-title>
                         <mat-icon class="panel-icon">lock</mat-icon>
-                        <span i18n="@@STAFF_CATALOG.HR_PANEL_TITLE">Confidential Personal & Employment Details (HR)</span>
+                        <span i18n="@@STAFF_CATALOG.PANEL_CONFIDENTIAL_DETAILS">Confidential Personal Details</span>
                       </mat-panel-title>
-                      <mat-panel-description i18n="@@STAFF_CATALOG.HR_PANEL_DESC">Owner & HR access only</mat-panel-description>
+                      <mat-panel-description i18n="@@STAFF_CATALOG.PANEL_RESTRICTED_ACCESS">Owner & Manager access only</mat-panel-description>
                     </mat-expansion-panel-header>
                     <div class="hr-panel-body">
                       <div class="hr-notice-banner">
                         <mat-icon>shield</mat-icon>
-                        <span i18n="@@STAFF_CATALOG.HR_NOTICE">Personal identification, payroll, and residential address are encrypted and strictly restricted to authorized HR/Owner personnel.</span>
+                        <span i18n="@@STAFF_CATALOG.PANEL_RESTRICTED_NOTICE">Personal identification, payroll, and residential address are encrypted and strictly restricted to authorized salon management.</span>
                       </div>
 
                       <!-- RESIDENTIAL ADDRESS SUB-SECTION -->
