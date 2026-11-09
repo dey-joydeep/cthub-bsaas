@@ -7,17 +7,6 @@ const reviewMarker = /<!-- codex-review-state:v1 (\{[^\n]+\}) -->/;
 const toolchainPath =
   /^(?:package\.json|package-lock\.json|\.npmrc|\.nvmrc|\.github\/workflows\/ci\.yml|\.codex\/environments\/setup(?:\.test)?\.mjs|scripts\/aidd\/smoke-installed-toolchain\.mjs)$/;
 
-function latestChecks(rollup) {
-  const latest = new Map();
-  for (const check of rollup) {
-    const key = check.__typename === 'StatusContext' ? `status:${check.context}` : `run:${check.workflowName ?? ''}:${check.name ?? ''}`;
-    const time = check.startedAt ?? check.createdAt ?? check.completedAt ?? '';
-    const previous = latest.get(key);
-    if (!previous || time > previous.time) latest.set(key, { check, time });
-  }
-  return [...latest.values()].map(({ check }) => check);
-}
-
 export function assessPrAutomationEvidence(pr, comments, reviewThreads, expectedBase, changedFiles) {
   const errors = [];
   if (pr.state !== 'OPEN' || pr.isDraft) errors.push('PR must be open and ready for review');
@@ -31,7 +20,7 @@ export function assessPrAutomationEvidence(pr, comments, reviewThreads, expected
     errors.push(`PR targets ${pr.baseRefName ?? '(unknown)'}; retarget to ${expectedBase} after its dependent PRs merge`);
   }
 
-  const checks = latestChecks(pr.statusCheckRollup ?? []);
+  const checks = pr.statusCheckRollup ?? [];
   if (checks.length === 0) errors.push('No CI checks are reported for this PR head');
   if (
     !checks.some(

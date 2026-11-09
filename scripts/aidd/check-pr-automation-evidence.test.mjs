@@ -22,19 +22,6 @@ test('current green PR with resolved review passes the automation evidence check
   assert.deepEqual(assessPrAutomationEvidence(pr, [comment], [{ isResolved: true }]), []);
 });
 
-test('a newer successful workflow run supersedes an older failure on the same head', () => {
-  const failed = { ...pr.statusCheckRollup[0], startedAt: '2026-11-05T10:40:32Z', conclusion: 'FAILURE' };
-  const passed = { ...pr.statusCheckRollup[0], startedAt: '2026-11-05T10:41:23Z' };
-  assert.deepEqual(assessPrAutomationEvidence({ ...pr, statusCheckRollup: [failed, passed] }, [comment], []), []);
-  assert.deepEqual(assessPrAutomationEvidence({ ...pr, statusCheckRollup: [passed, failed] }, [comment], []), []);
-  const pending = { ...passed, startedAt: '2026-11-05T10:42:00Z', status: 'IN_PROGRESS', conclusion: null };
-  assert.ok(
-    assessPrAutomationEvidence({ ...pr, statusCheckRollup: [failed, passed, pending] }, [comment], []).some((error) =>
-      /CI check Main Workflow/.test(error),
-    ),
-  );
-});
-
 test('a later head commit invalidates a previous review', () => {
   assert.match(assessPrAutomationEvidence({ ...pr, headRefOid: 'c'.repeat(40) }, [comment], [])[0], /stale/);
 });
