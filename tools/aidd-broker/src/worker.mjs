@@ -652,12 +652,12 @@ export default {
         'referrer-policy': 'no-referrer',
       };
       if (url.pathname === '/owner') {
-        return new Response(ownerHtml(), {
+        const nonce = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))));
+        return new Response(ownerHtml({ enabled: env.BROKER_ENABLED === 'true', nonce }), {
           headers: {
             ...headers,
             'content-type': 'text/html; charset=utf-8',
-            'content-security-policy':
-              "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'",
+            'content-security-policy': `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'self'; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'`,
           },
         });
       }
