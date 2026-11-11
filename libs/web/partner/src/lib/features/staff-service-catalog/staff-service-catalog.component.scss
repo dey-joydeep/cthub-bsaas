@@ -310,35 +310,37 @@
 
   .hr-section-header {
     align-items: center;
-    color: #1e293b;
+    color: #334155;
     display: flex;
     gap: 8px;
-    margin-top: 14px;
+    margin-top: 10px;
 
     .sub-icon {
-      color: #3b82f6;
-      font-size: 20px;
-      height: 20px;
-      width: 20px;
+      color: #64748b;
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
     }
 
     .sub-title {
-      font-size: 0.9375rem;
+      font-size: 0.875rem;
       font-weight: 600;
+      letter-spacing: 0.01em;
       margin: 0;
     }
-  }
-
-  .hr-address-grid {
-    margin-top: 8px;
-    margin-bottom: 12px;
   }
 
   .hr-fields-preview-grid {
     display: grid;
     gap: 12px;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    margin-top: 6px;
+    margin-top: 4px;
+    margin-bottom: 8px;
+  }
+
+  .hr-address-grid {
+    margin-top: 4px;
+    margin-bottom: 4px;
   }
 
   .hr-preview-item {

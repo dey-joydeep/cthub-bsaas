@@ -35,17 +35,9 @@
               placeholder="Search by name, email, phone..."
               i18n-placeholder="@@STAFF_CATALOG.PLACEHOLDER_SEARCH_STAFF"
               aria-label="Search staff"
-              i18n-aria-label="@@STAFF_CATALOG.ARIA_SEARCH_STAFF"
-            />
+              i18n-aria-label="@@STAFF_CATALOG.ARIA_SEARCH_STAFF" />
             @if (staffSearchTerm()) {
-              <button
-                matSuffix
-                mat-icon-button
-                type="button"
-                aria-label="Clear search"
-                i18n-aria-label="@@STAFF_CATALOG.ARIA_CLEAR_SEARCH"
-                (click)="clearStaffSearch()"
-              >
+              <button matSuffix mat-icon-button type="button" aria-label="Clear search" i18n-aria-label="@@STAFF_CATALOG.ARIA_CLEAR_SEARCH" (click)="clearStaffSearch()">
                 <mat-icon>close</mat-icon>
               </button>
             }
@@ -204,6 +196,36 @@
                         <span i18n="@@STAFF_CATALOG.PANEL_RESTRICTED_NOTICE">Personal identification, payroll, and residential address are encrypted and strictly restricted to authorized salon management.</span>
                       </div>
 
+                      <!-- EMPLOYMENT & LEGAL IDENTIFICATION SUB-SECTION -->
+                      <div class="hr-section-header">
+                        <mat-icon class="sub-icon">badge</mat-icon>
+                        <h4 class="sub-title" i18n="@@STAFF_CATALOG.HR_EMPLOYMENT_LEGAL_TITLE">Employment & Legal Identification</h4>
+                      </div>
+                      <div class="hr-fields-preview-grid">
+                        <div class="hr-preview-item">
+                          <span class="hr-label" i18n="@@STAFF_CATALOG.HR_LEGAL_NAME">Legal Name</span>
+                          <span class="hr-value-placeholder">
+                            @if (selectedStaff()?.displayName) {
+                              {{ selectedStaff()?.displayName }}
+                            } @else {
+                              <ng-container i18n="@@STAFF_CATALOG.HR_LEGAL_NAME_PLACEHOLDER">As per government photo ID</ng-container>
+                            }
+                          </span>
+                        </div>
+                        <div class="hr-preview-item">
+                          <span class="hr-label" i18n="@@STAFF_CATALOG.HR_EMP_TYPE">Employment Type</span>
+                          <span class="hr-value-placeholder" i18n="@@STAFF_CATALOG.HR_EMP_FULLTIME">Full-Time (Standard)</span>
+                        </div>
+                        <div class="hr-preview-item">
+                          <span class="hr-label" i18n="@@STAFF_CATALOG.HR_COMPENSATION">Compensation / Payout</span>
+                          <span class="hr-value-placeholder" i18n="@@STAFF_CATALOG.HR_PAYOUT_BANK">Bank Transfer (Configured on file)</span>
+                        </div>
+                        <div class="hr-preview-item">
+                          <span class="hr-label" i18n="@@STAFF_CATALOG.HR_DOC_STATUS">Identity Document Status</span>
+                          <span class="salon-pill salon-pill-brand" i18n="@@STAFF_CATALOG.HR_STATUS_VERIFIED">VERIFIED</span>
+                        </div>
+                      </div>
+
                       <!-- RESIDENTIAL ADDRESS SUB-SECTION -->
                       <div class="hr-section-header">
                         <mat-icon class="sub-icon">home</mat-icon>
@@ -249,30 +271,6 @@
                             <mat-error i18n="@@STAFF_CATALOG.ERROR_LINE2_MAX">Address line 2 cannot exceed 120 characters.</mat-error>
                           }
                         </mat-form-field>
-                      </div>
-                      <div class="hr-fields-preview-grid">
-                        <div class="hr-preview-item">
-                          <span class="hr-label" i18n="@@STAFF_CATALOG.HR_LEGAL_NAME">Legal Name</span>
-                          <span class="hr-value-placeholder">
-                            @if (selectedStaff()?.displayName) {
-                              {{ selectedStaff()?.displayName }}
-                            } @else {
-                              <ng-container i18n="@@STAFF_CATALOG.HR_LEGAL_NAME_PLACEHOLDER">As per government photo ID</ng-container>
-                            }
-                          </span>
-                        </div>
-                        <div class="hr-preview-item">
-                          <span class="hr-label" i18n="@@STAFF_CATALOG.HR_EMP_TYPE">Employment Type</span>
-                          <span class="hr-value-placeholder" i18n="@@STAFF_CATALOG.HR_EMP_FULLTIME">Full-Time (Standard)</span>
-                        </div>
-                        <div class="hr-preview-item">
-                          <span class="hr-label" i18n="@@STAFF_CATALOG.HR_COMPENSATION">Compensation / Payout</span>
-                          <span class="hr-value-placeholder" i18n="@@STAFF_CATALOG.HR_PAYOUT_BANK">Bank Transfer (Configured on file)</span>
-                        </div>
-                        <div class="hr-preview-item">
-                          <span class="hr-label" i18n="@@STAFF_CATALOG.HR_DOC_STATUS">Identity Document Status</span>
-                          <span class="salon-pill salon-pill-brand" i18n="@@STAFF_CATALOG.HR_STATUS_VERIFIED">VERIFIED</span>
-                        </div>
                       </div>
                     </div>
                   </mat-expansion-panel>
@@ -493,8 +491,7 @@
                         id="leaveReason"
                         rows="3"
                         placeholder="e.g. Vacation, medical leave, personal days"
-                        i18n-placeholder="@@STAFF_CATALOG.PLACEHOLDER_LEAVE_REASON"
-                      ></textarea>
+                        i18n-placeholder="@@STAFF_CATALOG.PLACEHOLDER_LEAVE_REASON"></textarea>
                       @if (leaveForm.controls.reason.hasError('required')) {
                         <mat-error i18n="@@STAFF_CATALOG.ERROR_REASON_REQUIRED">Reason is required.</mat-error>
                       } @else if (leaveForm.controls.reason.hasError('maxlength')) {
@@ -526,15 +523,7 @@
                               <span class="leave-reason">{{ block.reason }}</span>
                             </div>
                           </div>
-                          <button
-                            mat-icon-button
-                            type="button"
-                            color="warn"
-                            [disabled]="saving()"
-                            (click)="deleteLeave(block.id)"
-                            aria-label="Delete leave block"
-                            i18n-aria-label="@@STAFF_CATALOG.ARIA_DELETE_LEAVE"
-                          >
+                          <button mat-icon-button type="button" color="warn" [disabled]="saving()" (click)="deleteLeave(block.id)" aria-label="Delete leave block" i18n-aria-label="@@STAFF_CATALOG.ARIA_DELETE_LEAVE">
                             <mat-icon>delete</mat-icon>
                           </button>
                         </div>
