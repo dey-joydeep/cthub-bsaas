@@ -7,15 +7,15 @@ const actions = [
   ['qa.review-pr', 'QA review PR'],
 ];
 
-export function ownerHtml() {
+export function ownerHtml({ enabled = false, nonce = '' } = {}) {
   const actionFields = actions
     .map(([action, label]) => `<label>${label} limit <input name="${action}" type="number" min="0" max="100" value="0" required></label>`)
     .join('\n');
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Shearflow task approval</title><link rel="stylesheet" href="/owner.css"><script src="/owner.js" defer></script></head>
-<body><main><h1>Shearflow task approval</h1>
-<p id="identity" role="status">Checking your identity and broker status…</p>
+<title>Shearflow task approval</title><link rel="stylesheet" href="/owner.css"></head>
+<body><main data-enabled="${enabled}"><h1>Shearflow task approval</h1>
+<p id="identity" role="status">${enabled ? 'Owner verified. Initializing approval form…' : 'Broker writes are disabled. Approval controls are disabled.'}</p>
 <p>Approve one exact task scope. The six-digit owner code is sent only with the approval request and is never shown in the preview.</p>
 <form id="create"><h2>Create a mandate</h2>
 <label>Outcome <textarea name="outcome" maxlength="2000" rows="3" required></textarea></label>
@@ -32,7 +32,7 @@ export function ownerHtml() {
 <label>Mandate ID <input name="mandateId" type="text" pattern="[0-9a-f-]{36}" required></label>
 <label>New six-digit owner code <input name="approvalCode" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></label>
 <button type="submit" disabled>Revoke mandate</button><p id="revoke-result" role="status" aria-live="polite"></p></form>
-</main></body></html>`;
+</main><script nonce="${nonce}">${ownerJs}</script></body></html>`;
 }
 
 export const ownerCss = `html{font:16px system-ui,sans-serif;color:#17212b;background:#f6f8fa}body{margin:0}main{max-width:46rem;margin:auto;padding:1rem}form{background:white;border:1px solid #ccd4dd;border-radius:.6rem;padding:1rem;margin:1.5rem 0}label{display:block;margin:.8rem 0}input:not([type=checkbox]),textarea{display:block;box-sizing:border-box;width:100%;font:inherit;padding:.6rem;margin-top:.3rem}fieldset{border:1px solid #ccd4dd}button{font:inherit;padding:.6rem 1rem}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#edf2f7;padding:1rem}#identity,#create-result,#revoke-result{overflow-wrap:anywhere}`;
@@ -122,19 +122,11 @@ export function ownerClient() {
     }
   });
   refreshScope();
-  fetch('/v1/whoami', { credentials: 'same-origin', cache: 'no-store' })
-    .then((response) => response.json())
-    .then((identity) => {
-      const usable = identity.admin === true && identity.enabled === true;
-      document.querySelector('#identity').textContent = usable
-        ? `Signed in as ${identity.principal}. Broker enabled.`
-        : 'Owner access or broker writes are unavailable. Approval controls are disabled.';
-      create.querySelector('button').disabled = !usable;
-      revoke.querySelector('button').disabled = !usable;
-    })
-    .catch(() => {
-      document.querySelector('#identity').textContent = 'Could not verify owner identity. Approval controls are disabled.';
-    });
+  if (document.querySelector('main').dataset.enabled === 'true') {
+    document.querySelector('#identity').textContent = 'Owner verified. Broker enabled.';
+    create.querySelector('button').disabled = false;
+    revoke.querySelector('button').disabled = false;
+  }
 }
 
 export const ownerJs = `(${ownerClient.toString()})();`;

@@ -12,7 +12,7 @@ afterEach(() => {
 });
 
 test('owner form previews exact scope without the code and submits one mandate', async () => {
-  const dom = new JSDOM(ownerHtml(), { url: 'https://broker.example/owner' });
+  const dom = new JSDOM(ownerHtml({ enabled: true, nonce: 'test-nonce' }), { url: 'https://broker.example/owner' });
   globalThis.document = dom.window.document;
   globalThis.FormData = dom.window.FormData;
   const calls = [];
@@ -64,7 +64,7 @@ test('owner form previews exact scope without the code and submits one mandate',
 });
 
 test('served browser script initializes the owner form', async () => {
-  const dom = new JSDOM(ownerHtml(), { url: 'https://broker.example/owner' });
+  const dom = new JSDOM(ownerHtml({ enabled: true, nonce: 'test-nonce' }), { url: 'https://broker.example/owner' });
   const fetch = async () => Response.json({ principal: 'user:owner@example.com', admin: true, enabled: true });
   runInNewContext(ownerJs, { document: dom.window.document, FormData: dom.window.FormData, fetch });
   await new Promise((resolve) => setImmediate(resolve));
@@ -72,7 +72,7 @@ test('served browser script initializes the owner form', async () => {
 });
 
 test('owner controls remain disabled when the broker is disabled', async () => {
-  const dom = new JSDOM(ownerHtml(), { url: 'https://broker.example/owner' });
+  const dom = new JSDOM(ownerHtml({ enabled: false, nonce: 'test-nonce' }), { url: 'https://broker.example/owner' });
   globalThis.document = dom.window.document;
   globalThis.FormData = dom.window.FormData;
   globalThis.fetch = async () => Response.json({ principal: 'user:owner@example.com', admin: true, enabled: false });
