@@ -13,7 +13,7 @@ function user(overrides: Partial<AuthenticatedUser> = {}): AuthenticatedUser {
   return {
     id: 'user-1',
     email: 'owner@example.com',
-    roles: [],
+    roles: [UserRole.OWNER],
     tenantId: 'tenant-1',
     ...overrides,
   };
@@ -156,6 +156,7 @@ function createPrismaMock() {
     auditEvent: {
       create: jest.fn(),
     },
+    $executeRaw: jest.fn().mockResolvedValue(1),
     $transaction: transactionMock,
   };
   transactionMock.mockImplementation((callback: (tx: unknown) => unknown) => Promise.resolve(callback(prisma)));
@@ -1821,7 +1822,7 @@ describe('StaffService', () => {
         prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
         await expect(service.getStaffPersonalDetails({ user: userObjRole }, 'staff-1')).rejects.toBeInstanceOf(ForbiddenException);
 
-        // Staff matched by email for self access
+        // Staff matched by email with different userId must be rejected for personal details
         const emailStaffUser = user({ id: 'user-diff-id', email: 'stylist@salon.test', roles: [] });
         prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce({
           ...baseStaff,
@@ -1829,8 +1830,18 @@ describe('StaffService', () => {
           email: 'stylist@salon.test',
           profile: mockProfile,
         });
-        const emailSelfDetails = await service.getStaffPersonalDetails({ user: emailStaffUser }, 'staff-1');
-        expect(emailSelfDetails.staffId).toBe('staff-1');
+        await expect(service.getStaffPersonalDetails({ user: emailStaffUser }, 'staff-1')).rejects.toBeInstanceOf(ForbiddenException);
+
+        // Staff matched by verified userId for self access
+        const selfStaffUser = user({ id: 'self-user-id', email: 'stylist@salon.test', roles: [] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce({
+          ...baseStaff,
+          userId: 'self-user-id',
+          email: 'stylist@salon.test',
+          profile: mockProfile,
+        });
+        const selfDetails = await service.getStaffPersonalDetails({ user: selfStaffUser }, 'staff-1');
+        expect(selfDetails.staffId).toBe('staff-1');
 
         // Manager with empty managedBranchIds and canManageBranches false
         const managerNoScope = user({
@@ -1841,6 +1852,206 @@ describe('StaffService', () => {
         });
         prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
         await expect(service.getStaffPersonalDetails({ user: managerNoScope }, 'staff-1')).rejects.toBeInstanceOf(ForbiddenException);
+      });
+    });
+
+    describe('Security Hardening & Remediation Verification', () => {
+      it('rejects non-owner attempts to replace staff roles', async () => {
+        const stylistUser = user({ id: 'stylist-user', roles: [UserRole.STAFF] });
+        await expect(service.replaceStaffRoles({ user: stylistUser }, 'staff-1', { roles: ['OWNER'] })).rejects.toBeInstanceOf(
+          ForbiddenException,
+        );
+      });
+
+      it('rejects non-owner attempts to create, update, or delete business roles', async () => {
+        const stylistUser = user({ id: 'stylist-user', roles: [UserRole.STAFF] });
+        await expect(
+          service.createBusinessRole({ user: stylistUser }, { name: 'Custom Role', permissions: ['staff.directory.view'] }),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+
+        await expect(
+          service.updateBusinessRole({ user: stylistUser }, 'role-1', { name: 'Updated Role', permissions: ['staff.directory.view'] }),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+
+        await expect(service.deleteBusinessRole({ user: stylistUser }, 'role-1')).rejects.toBeInstanceOf(ForbiddenException);
+      });
+
+      it('prevents stripping core permissions from system OWNER role', async () => {
+        const ownerUser = user({ roles: [UserRole.OWNER] });
+        prisma.salonBusiness.findMany.mockResolvedValueOnce([business()]);
+        prisma.businessRole.findFirst.mockResolvedValueOnce({
+          id: 'owner-role-id',
+          businessId: 'business-1',
+          roleCode: 'OWNER',
+          name: 'Owner',
+          isSystemDefault: true,
+          isActive: true,
+        });
+        await expect(
+          service.updateBusinessRole({ user: ownerUser }, 'owner-role-id', {
+            name: 'Owner',
+            permissions: ['staff.directory.view'], // Missing 'staff.roles.manage'
+          }),
+        ).rejects.toThrow('error.business.role.owner_immutable');
+      });
+
+      it('prohibits self-verification of staff identity documents', async () => {
+        const staffWithUser = staff({ id: 'staff-self', userId: 'owner-user', branches: [{ branchId: 'branch-1' }] });
+        const ownerSelfUser = user({ id: 'owner-user', roles: [UserRole.OWNER] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(staffWithUser);
+
+        await expect(
+          service.verifyStaffIdentityDocument({ user: ownerSelfUser }, 'staff-self', 'doc-1', { verificationStatus: 'VERIFIED' }),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+      });
+
+      it('rejects identity document uploads with path traversal in fileKey', async () => {
+        const ownerUser = user({ roles: [UserRole.OWNER] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(staff());
+
+        await expect(
+          service.uploadStaffIdentityDocument({ user: ownerUser }, 'staff-1', {
+            documentType: 'PASSPORT',
+            fileKey: '../../../etc/passwd',
+            mimeType: 'image/png',
+            fileSizeBytes: 2048,
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      });
+
+      it('translates duplicate phone errors to ConflictException in selfUpdateStaffContact', async () => {
+        const selfUser = user({ id: 'staff-user-id', roles: [UserRole.STAFF] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(staff({ id: 'staff-1', userId: 'staff-user-id' }));
+        prisma.salonOwnerStaff.update.mockRejectedValueOnce(prismaKnownError('P2002'));
+
+        await expect(service.selfUpdateStaffContact({ user: selfUser }, { phone: '09099999999' })).rejects.toBeInstanceOf(
+          ConflictException,
+        );
+      });
+
+      it('rejects branch managers attempting to mutate staff or skills in unassigned branches', async () => {
+        const branchManager = user({
+          id: 'bm-1',
+          roles: [{ id: 1, name: 'BRANCH_MANAGER' }],
+          managedBranchIds: ['branch-1'],
+        });
+        const otherBranchStaff = staff({ id: 'staff-2', branches: [{ branchId: 'branch-2' }] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValue(otherBranchStaff);
+
+        await expect(service.getStaff({ user: branchManager }, 'staff-2')).rejects.toBeInstanceOf(ForbiddenException);
+
+        await expect(service.replaceStaffSkills({ user: branchManager }, 'staff-2', { serviceIds: ['service-1'] })).rejects.toBeInstanceOf(
+          ForbiddenException,
+        );
+      });
+
+      it('rejects branch managers attempting to assign staff to branches outside their managedBranchIds', async () => {
+        const branchManager = user({
+          id: 'bm-1',
+          roles: [{ id: 1, name: 'BRANCH_MANAGER' }],
+          managedBranchIds: ['branch-1'],
+        });
+        prisma.salonBranch.findMany.mockResolvedValue([
+          branch({ id: 'branch-1', businessId: 'biz-1' }),
+          branch({ id: 'branch-2', businessId: 'biz-1' }),
+        ]);
+
+        await expect(
+          service.createStaff(
+            { user: branchManager },
+            { displayName: 'Alice', phone: '+819011112222', branchIds: ['branch-1', 'branch-2'], status: 'ACTIVE' },
+          ),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValue(
+          staff({ id: 'staff-1', businessId: 'biz-1', branches: [{ branchId: 'branch-1' }] }),
+        );
+        await expect(
+          service.updateStaff({ user: branchManager }, 'staff-1', {
+            displayName: 'Alice Updated',
+            phone: '+819011112222',
+            branchIds: ['branch-1', 'branch-2'],
+            status: 'ACTIVE',
+          }),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+      });
+
+      it('rejects non-owner callers with arbitrary canManageStaffPersonalDetails claim', async () => {
+        const arbitraryClaimUser = user({
+          id: 'hacker-1',
+          roles: [UserRole.STAFF],
+          canManageStaffPersonalDetails: true,
+        } as any);
+        const targetStaff = staff({ id: 'staff-2', branches: [{ branchId: 'branch-2' }] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValue(targetStaff);
+
+        await expect(service.getStaffPersonalDetails({ user: arbitraryClaimUser }, 'staff-2')).rejects.toBeInstanceOf(ForbiddenException);
+      });
+
+      it('validates self-contact input bounds for address and emergency contact', async () => {
+        const selfUser = user({ id: 'staff-user-id', roles: [UserRole.STAFF] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff({ id: 'staff-1', userId: 'staff-user-id' }));
+
+        await expect(service.selfUpdateStaffContact({ user: selfUser }, { address: { line1: 'a' } })).rejects.toBeInstanceOf(
+          UnprocessableEntityException,
+        );
+        await expect(service.selfUpdateStaffContact({ user: selfUser }, { address: { line2: 'a'.repeat(121) } })).rejects.toBeInstanceOf(
+          UnprocessableEntityException,
+        );
+        await expect(service.selfUpdateStaffContact({ user: selfUser }, { address: { city: 'a'.repeat(61) } })).rejects.toBeInstanceOf(
+          UnprocessableEntityException,
+        );
+        await expect(service.selfUpdateStaffContact({ user: selfUser }, { address: { state: 'a'.repeat(61) } })).rejects.toBeInstanceOf(
+          UnprocessableEntityException,
+        );
+        await expect(service.selfUpdateStaffContact({ user: selfUser }, { address: { postalCode: 'invalid-zip' } })).rejects.toBeInstanceOf(
+          UnprocessableEntityException,
+        );
+        await expect(service.selfUpdateStaffContact({ user: selfUser }, { address: { country: '12345678901' } })).rejects.toBeInstanceOf(
+          UnprocessableEntityException,
+        );
+
+        await expect(service.selfUpdateStaffContact({ user: selfUser }, { emergencyContact: { name: 'a' } })).rejects.toBeInstanceOf(
+          UnprocessableEntityException,
+        );
+        await expect(
+          service.selfUpdateStaffContact({ user: selfUser }, { emergencyContact: { relationship: 'a'.repeat(41) } }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+        await expect(
+          service.selfUpdateStaffContact({ user: selfUser }, { emergencyContact: { phone: '1'.repeat(31) } }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      });
+
+      it('deletes branch-scoped leave block with branch validation', async () => {
+        const ownerUser = user({ roles: [UserRole.OWNER] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(staff());
+        prisma.salonOwnerStaffLeaveBlock.findFirst.mockResolvedValueOnce({
+          id: 'block-1',
+          staffId: 'staff-1',
+          branchId: 'branch-1',
+        });
+        prisma.salonOwnerStaffLeaveBlock.delete.mockResolvedValueOnce({});
+
+        const res = await service.deleteStaffLeaveBlock({ user: ownerUser }, 'staff-1', 'block-1');
+        expect(res.success).toBe(true);
+      });
+
+      it('rethrows unexpected database errors in selfUpdateStaffContact', async () => {
+        const selfUser = user({ id: 'staff-user-id', roles: [UserRole.STAFF] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(staff({ id: 'staff-1', userId: 'staff-user-id' }));
+        prisma.salonOwnerStaff.update.mockRejectedValueOnce(new Error('Connection failure'));
+
+        await expect(service.selfUpdateStaffContact({ user: selfUser }, { phone: '09099999999' })).rejects.toThrow('Connection failure');
+      });
+
+      it('throws NotFoundException when verifying non-existent document', async () => {
+        const ownerUser = user({ roles: [UserRole.OWNER] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(staff({ id: 'staff-other', userId: 'other-user' }));
+        prisma.staffIdentityDocument.findFirst.mockResolvedValueOnce(null);
+
+        await expect(
+          service.verifyStaffIdentityDocument({ user: ownerUser }, 'staff-other', 'doc-missing', { verificationStatus: 'VERIFIED' }),
+        ).rejects.toBeInstanceOf(NotFoundException);
       });
     });
   });

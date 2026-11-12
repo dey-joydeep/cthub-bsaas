@@ -312,7 +312,7 @@ describe('Salon owner settings routes', () => {
 
     await request(app.getHttpServer())
       .post(`/partner/staff/${staffId}/documents`)
-      .send({ documentType: 'DRIVERS_LICENSE', fileKey: 'key', mimeType: 'image/jpeg', fileSizeBytes: 1024 })
+      .send({ documentType: 'DRIVERS_LICENSE', fileKey: 'tenants/test-file-key.jpg', mimeType: 'image/jpeg', fileSizeBytes: 1024 })
       .expect(201);
     expect(catalog.uploadStaffIdentityDocument).toHaveBeenCalled();
 

@@ -13,8 +13,8 @@ import {
   VERSION_NEUTRAL,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CurrentUser, ResponseEnvelopeInterceptor } from '@cthub-bsaas/server-core';
-import type { AuthenticatedUser } from '@cthub-bsaas/shared';
+import { CurrentUser, ResponseEnvelopeInterceptor, Roles } from '@cthub-bsaas/server-core';
+import { UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
 
 import {
   StaffIdentityDocumentInputDto,
@@ -32,6 +32,7 @@ import {
 import { StaffService } from '../services/staff.service';
 
 @ApiTags('Staff')
+@Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF)
 @UseInterceptors(ResponseEnvelopeInterceptor)
 @Controller({ path: 'partner/staff', version: VERSION_NEUTRAL })
 export class StaffController {
@@ -63,14 +64,6 @@ export class StaffController {
     @Body() body: StaffSelfContactInputDto,
   ) {
     return this.staffService.selfUpdateStaffContact({ user }, body, staffId);
-  }
-
-  getStaffPersonalProfile(user: AuthenticatedUser, staffId: string) {
-    return this.getStaffPersonalDetails(user, staffId);
-  }
-
-  updateStaffPersonalProfile(user: AuthenticatedUser, staffId: string, body: StaffPersonalDetailsInputDto) {
-    return this.updateStaffPersonalDetails(user, staffId, body);
   }
 
   @Get(':staffId')
@@ -130,6 +123,7 @@ export class StaffController {
   }
 
   @Put(':staffId/roles')
+  @Roles(UserRole.OWNER, UserRole.ADMIN)
   @ApiOperation({ operationId: 'replaceStaffRoles' })
   replaceStaffRoles(
     @CurrentUser() user: AuthenticatedUser,

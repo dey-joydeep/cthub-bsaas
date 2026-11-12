@@ -164,21 +164,24 @@ function isUserOwnerOrAdmin(user: AuthenticatedUser): boolean {
   return roleNames.includes('OWNER') || roleNames.includes('ADMIN');
 }
 
-function isUserAssignedBranchManager(user: AuthenticatedUser, staffBranchIds: readonly string[]): boolean {
+function isUserAssignedBranchManager(
+  user: AuthenticatedUser,
+  staffBranchIds: readonly string[],
+  options?: { requireAll?: boolean },
+): boolean {
   const roleNames = extractRoleNames(user);
   const isManager = roleNames.includes('MANAGER') || roleNames.includes('BRANCH_MANAGER') || Boolean(user.canManageBranches);
   if (!isManager) return false;
   if (!user.managedBranchIds || user.managedBranchIds.length === 0) {
     return Boolean(user.canManageBranches);
   }
-  return staffBranchIds.some((bId) => user.managedBranchIds!.includes(bId));
+  return options?.requireAll
+    ? staffBranchIds.every((bId) => user.managedBranchIds!.includes(bId))
+    : staffBranchIds.some((bId) => user.managedBranchIds!.includes(bId));
 }
 
 function isUserSelf(user: AuthenticatedUser, staff: { id: string; userId?: string | null; email?: string | null }): boolean {
-  if (staff.userId && staff.userId === user.id) return true;
-  if (staff.id === user.id) return true;
-  if (staff.email && user.email && staff.email.toLowerCase() === user.email.toLowerCase()) return true;
-  return false;
+  return Boolean(user.id && staff.userId && staff.userId === user.id);
 }
 
 function validatePersonalDetailsInput(input: StaffPersonalDetailsInputDto): void {
@@ -298,8 +301,47 @@ function validateSelfContactInput(input: StaffSelfContactInputDto): void {
   ];
 
   for (const field of forbiddenFields) {
-    if (field in input && input[field] !== undefined) {
+    if (field in input && (input as Record<string, unknown>)[field] !== undefined) {
       throw new ForbiddenException('error.staff.self_edit.forbidden_fields');
+    }
+  }
+
+  if (input.address) {
+    if (input.address.line1 !== undefined && input.address.line1 !== null) {
+      const trimmed = input.address.line1.trim();
+      if (trimmed.length < 2 || trimmed.length > 120) {
+        throw new UnprocessableEntityException('error.staff.personal.address.invalid');
+      }
+    }
+    if (input.address.line2 && input.address.line2.length > 120) {
+      throw new UnprocessableEntityException('error.staff.personal.address.invalid');
+    }
+    if (input.address.city && input.address.city.length > 60) {
+      throw new UnprocessableEntityException('error.staff.personal.address.invalid');
+    }
+    if (input.address.state && input.address.state.length > 60) {
+      throw new UnprocessableEntityException('error.staff.personal.address.invalid');
+    }
+    if (input.address.postalCode) {
+      const trimmed = input.address.postalCode.trim();
+      if (trimmed.length > 20 || !/^\d{3}-?\d{4}$/.test(trimmed)) {
+        throw new UnprocessableEntityException('error.staff.personal.postal_code.invalid');
+      }
+    }
+    if (input.address.country && input.address.country.trim().length > 10) {
+      throw new UnprocessableEntityException('error.staff.personal.address.invalid');
+    }
+  }
+
+  if (input.emergencyContact) {
+    if (input.emergencyContact.name && (input.emergencyContact.name.trim().length < 2 || input.emergencyContact.name.length > 60)) {
+      throw new UnprocessableEntityException('error.staff.personal.emergency.name.invalid');
+    }
+    if (input.emergencyContact.relationship && input.emergencyContact.relationship.length > 40) {
+      throw new UnprocessableEntityException('error.staff.personal.emergency.relationship.invalid');
+    }
+    if (input.emergencyContact.phone && input.emergencyContact.phone.length > 30) {
+      throw new UnprocessableEntityException('error.staff.personal.emergency.phone.invalid');
     }
   }
 }
@@ -314,6 +356,9 @@ function validateIdentityDocumentUpload(input: StaffIdentityDocumentInputDto): v
   }
   if (!input.fileSizeBytes || input.fileSizeBytes < 1 || input.fileSizeBytes > 10485760) {
     throw new UnprocessableEntityException('error.staff.document.file.invalid');
+  }
+  if (!input.fileKey || input.fileKey.includes('..') || !/^[a-zA-Z0-9_\-./]{8,256}$/.test(input.fileKey)) {
+    throw new UnprocessableEntityException('error.staff.document.file_key.invalid');
   }
 }
 
@@ -391,13 +436,8 @@ export class StaffService {
     const branches = await this.findBranchesInScope(context, input.branchIds);
     const businessId = this.requireSingleBusiness(branches);
 
-    // Delegated manager scoping
-    if (!isUserOwnerOrAdmin(context.user) && context.user.managedBranchIds && context.user.managedBranchIds.length > 0) {
-      const allInScope = input.branchIds.every((id) => context.user.managedBranchIds!.includes(id));
-      if (!allInScope) {
-        throw new ForbiddenException(forbiddenMessage);
-      }
-    }
+    // Delegated manager scoping - branch managers can only assign staff to branches they manage
+    this.assertStaffBranchScope(context.user, input.branchIds, { requireAll: true });
 
     try {
       const staff = await this.prisma.$transaction(async (tx) => {
@@ -415,6 +455,7 @@ export class StaffService {
         });
         return tx.salonOwnerStaff.findUniqueOrThrow({ where: { id: created.id }, include: staffInclude });
       });
+      await this.recordAuditEvent(context.user.id, context.user.tenantId, 'StaffCreated', staff.id);
       return this.mapStaff(staff);
     } catch (error) {
       if (isDuplicate(error)) {
@@ -426,20 +467,22 @@ export class StaffService {
 
   async getStaff(context: SalonOwnerRequestContext, staffId: string): Promise<StaffModel> {
     const staff = await this.findStaffInScope(context, staffId);
-    if (!isUserOwnerOrAdmin(context.user) && context.user.managedBranchIds && context.user.managedBranchIds.length > 0) {
-      const staffBranchIds = staff.branches.map((b) => b.branchId);
-      const hasOverlap = staffBranchIds.some((bId) => context.user.managedBranchIds!.includes(bId));
-      if (!hasOverlap) {
-        throw new ForbiddenException(forbiddenMessage);
-      }
-    }
+    this.assertStaffBranchScope(
+      context.user,
+      staff.branches.map((b) => b.branchId),
+    );
     return this.mapStaff(staff);
   }
 
   async updateStaff(context: SalonOwnerRequestContext, staffId: string, input: StaffInputDto): Promise<StaffModel> {
     const existing = await this.findStaffInScope(context, staffId);
+    this.assertStaffBranchScope(
+      context.user,
+      existing.branches.map((b) => b.branchId),
+    );
     const branches = await this.findBranchesInScope(context, input.branchIds);
     this.requireBusinessMatch(branches, existing.businessId);
+    this.assertStaffBranchScope(context.user, input.branchIds, { requireAll: true });
 
     const isOwner =
       existing.roles.includes('OWNER') ||
@@ -447,12 +490,11 @@ export class StaffService {
         (ra) => ra.businessRole?.roleCode === 'OWNER' || ra.businessRole?.name?.toUpperCase() === 'OWNER',
       );
 
-    if (isOwner && input.status === 'INACTIVE') {
-      await this.assertRemainingActiveOwner(existing.businessId, staffId);
-    }
-
     try {
       const staff = await this.prisma.$transaction(async (tx) => {
+        if (isOwner && input.status === 'INACTIVE') {
+          await this.assertRemainingActiveOwner(existing.businessId, staffId, tx);
+        }
         await tx.salonOwnerStaffBranch.deleteMany({ where: { staffId } });
         await tx.salonOwnerStaffBranch.createMany({
           data: unique(input.branchIds).map((branchId) => ({ staffId, branchId })),
@@ -468,6 +510,7 @@ export class StaffService {
           include: staffInclude,
         });
       });
+      await this.recordAuditEvent(context.user.id, context.user.tenantId, 'StaffUpdated', staff.id);
       return this.mapStaff(staff);
     } catch (error) {
       if (isDuplicate(error)) {
@@ -478,6 +521,9 @@ export class StaffService {
   }
 
   async replaceStaffRoles(context: SalonOwnerRequestContext, staffId: string, input: StaffRolesInputDto): Promise<StaffModel> {
+    if (!isUserOwnerOrAdmin(context.user)) {
+      throw new ForbiddenException(forbiddenMessage);
+    }
     const existing = await this.findStaffInScope(context, staffId);
     const roleIdentifiers = unique(input.roleIds ?? input.roles ?? []);
 
@@ -503,11 +549,10 @@ export class StaffService {
         (ra) => ra.businessRole?.roleCode === 'OWNER' || ra.businessRole?.name?.toUpperCase() === 'OWNER',
       ) || existing.roles.includes('OWNER');
 
-    if (wasOwner && !hasOwner) {
-      await this.assertRemainingActiveOwner(existing.businessId, staffId);
-    }
-
     const staff = await this.prisma.$transaction(async (tx) => {
+      if (wasOwner && !hasOwner) {
+        await this.assertRemainingActiveOwner(existing.businessId, staffId, tx);
+      }
       await tx.staffRoleAssignment.deleteMany({ where: { staffId } });
       await tx.staffRoleAssignment.createMany({
         data: targetRoles.map((role) => ({ staffId, businessRoleId: role.id })),
@@ -521,6 +566,7 @@ export class StaffService {
       });
     });
 
+    await this.recordAuditEvent(context.user.id, context.user.tenantId, 'StaffRolesReplaced', staff.id);
     return this.mapStaff(staff);
   }
 
@@ -554,6 +600,9 @@ export class StaffService {
   }
 
   async createBusinessRole(context: SalonOwnerRequestContext, input: BusinessRoleInputDto): Promise<BusinessRoleModel> {
+    if (!isUserOwnerOrAdmin(context.user)) {
+      throw new ForbiddenException(forbiddenMessage);
+    }
     const business = await this.resolveBusinessInScope(context);
     const name = trimRequired(input.name, 2);
 
@@ -606,6 +655,8 @@ export class StaffService {
         });
       });
 
+      await this.recordAuditEvent(context.user.id, context.user.tenantId, 'BusinessRoleCreated', created.id);
+
       return {
         id: created.id,
         businessId: created.businessId,
@@ -627,6 +678,9 @@ export class StaffService {
   }
 
   async updateBusinessRole(context: SalonOwnerRequestContext, roleId: string, input: BusinessRoleInputDto): Promise<BusinessRoleModel> {
+    if (!isUserOwnerOrAdmin(context.user)) {
+      throw new ForbiddenException(forbiddenMessage);
+    }
     const business = await this.resolveBusinessInScope(context);
     const role = await this.prisma.businessRole.findFirst({
       where: { id: roleId, businessId: business.id },
@@ -654,15 +708,6 @@ export class StaffService {
       throw new UnprocessableEntityException(invalidRolePermissionsMessage);
     }
 
-    const validPerms = await this.prisma.permissionMaster.findMany({
-      where: { code: { in: permissions } },
-      select: { code: true },
-    });
-    const validCodeSet = new Set(validPerms.map((p) => p.code));
-    if (permissions.some((code) => !validCodeSet.has(code))) {
-      throw new UnprocessableEntityException(invalidRolePermissionsMessage);
-    }
-
     const targetIsActive = input.isActive ?? role.isActive;
     if (role.isActive && !targetIsActive) {
       if (role.roleCode === 'OWNER') {
@@ -677,6 +722,19 @@ export class StaffService {
       if (assignedCount > 0) {
         throw new ConflictException(inUseRoleMessage);
       }
+    }
+
+    if (role.roleCode === 'OWNER' && !permissions.includes('staff.roles.manage')) {
+      throw new UnprocessableEntityException('error.business.role.owner_immutable');
+    }
+
+    const validPerms = await this.prisma.permissionMaster.findMany({
+      where: { code: { in: permissions } },
+      select: { code: true },
+    });
+    const validCodeSet = new Set(validPerms.map((p) => p.code));
+    if (permissions.some((code) => !validCodeSet.has(code))) {
+      throw new UnprocessableEntityException(invalidRolePermissionsMessage);
     }
 
     try {
@@ -701,6 +759,8 @@ export class StaffService {
         });
       });
 
+      await this.recordAuditEvent(context.user.id, context.user.tenantId, 'BusinessRoleUpdated', updated.id);
+
       return {
         id: updated.id,
         businessId: updated.businessId,
@@ -722,6 +782,9 @@ export class StaffService {
   }
 
   async deleteBusinessRole(context: SalonOwnerRequestContext, roleId: string): Promise<SuccessResult> {
+    if (!isUserOwnerOrAdmin(context.user)) {
+      throw new ForbiddenException(forbiddenMessage);
+    }
     const business = await this.resolveBusinessInScope(context);
     const role = await this.prisma.businessRole.findFirst({
       where: { id: roleId, businessId: business.id },
@@ -749,6 +812,8 @@ export class StaffService {
       data: { isActive: false },
     });
 
+    await this.recordAuditEvent(context.user.id, context.user.tenantId, 'BusinessRoleDeleted', roleId);
+
     return { success: true };
   }
 
@@ -766,6 +831,10 @@ export class StaffService {
 
   async replaceStaffSkills(context: SalonOwnerRequestContext, staffId: string, input: StaffSkillsInputDto): Promise<StaffModel> {
     const staff = await this.findStaffInScope(context, staffId);
+    this.assertStaffBranchScope(
+      context.user,
+      staff.branches.map((b) => b.branchId),
+    );
     const serviceIds = unique(input.serviceIds);
 
     if (serviceIds.length > 0) {
@@ -787,6 +856,8 @@ export class StaffService {
       }
       return tx.salonOwnerStaff.findUniqueOrThrow({ where: { id: staffId }, include: staffInclude });
     });
+
+    await this.recordAuditEvent(context.user.id, context.user.tenantId, 'StaffSkillsReplaced', staffId);
 
     return this.mapStaff(updated);
   }
@@ -830,11 +901,7 @@ export class StaffService {
     }
 
     // Delegated manager scoping
-    if (!isUserOwnerOrAdmin(context.user) && context.user.managedBranchIds && context.user.managedBranchIds.length > 0) {
-      if (!context.user.managedBranchIds.includes(branch.id)) {
-        throw new ForbiddenException(forbiddenMessage);
-      }
-    }
+    this.assertStaffBranchScope(context.user, [branch.id]);
 
     const days = normalizeShiftDays(input.days);
     const shift = await this.prisma.salonOwnerStaffShift.upsert({
@@ -842,6 +909,8 @@ export class StaffService {
       create: { staffId, branchId: branch.id, timezone: input.timezone, days: toJsonShiftDays(days) },
       update: { timezone: input.timezone, days: toJsonShiftDays(days) },
     });
+
+    await this.recordAuditEvent(context.user.id, context.user.tenantId, 'StaffShiftsReplaced', staffId);
 
     return { staffId, branchId: shift.branchId, timezone: shift.timezone, days };
   }
@@ -891,11 +960,12 @@ export class StaffService {
       if (branch.businessId !== staff.businessId || !staff.branches.some((assigned) => assigned.branchId === branch.id)) {
         throw new ForbiddenException(forbiddenMessage);
       }
-      if (!isUserOwnerOrAdmin(context.user) && context.user.managedBranchIds && context.user.managedBranchIds.length > 0) {
-        if (!context.user.managedBranchIds.includes(branch.id)) {
-          throw new ForbiddenException(forbiddenMessage);
-        }
-      }
+      this.assertStaffBranchScope(context.user, [branch.id]);
+    } else {
+      this.assertStaffBranchScope(
+        context.user,
+        staff.branches.map((b) => b.branchId),
+      );
     }
 
     const startsAt = new Date(input.startsAt);
@@ -914,11 +984,13 @@ export class StaffService {
       },
     });
 
+    await this.recordAuditEvent(context.user.id, context.user.tenantId, 'StaffLeaveBlockCreated', block.id);
+
     return this.mapLeaveBlock(block);
   }
 
   async deleteStaffLeaveBlock(context: SalonOwnerRequestContext, staffId: string, leaveBlockId: string): Promise<SuccessResult> {
-    await this.findStaffInScope(context, staffId);
+    const staff = await this.findStaffInScope(context, staffId);
     const existing = await this.prisma.salonOwnerStaffLeaveBlock.findFirst({
       where: { id: leaveBlockId, staffId },
     });
@@ -926,7 +998,17 @@ export class StaffService {
       throw new NotFoundException(notFoundMessage);
     }
 
+    if (existing.branchId) {
+      this.assertStaffBranchScope(context.user, [existing.branchId]);
+    } else {
+      this.assertStaffBranchScope(
+        context.user,
+        staff.branches.map((b) => b.branchId),
+      );
+    }
+
     await this.prisma.salonOwnerStaffLeaveBlock.delete({ where: { id: leaveBlockId } });
+    await this.recordAuditEvent(context.user.id, context.user.tenantId, 'StaffLeaveBlockDeleted', leaveBlockId);
     return { success: true };
   }
 
@@ -1023,7 +1105,7 @@ export class StaffService {
         ? { id: staffId, business: { tenantId } }
         : {
             business: { tenantId },
-            OR: [{ userId: context.user.id }, { id: context.user.id }, ...(context.user.email ? [{ email: context.user.email }] : [])],
+            userId: context.user.id,
           },
       include: staffInclude,
     });
@@ -1036,48 +1118,55 @@ export class StaffService {
       this.assertStaffPersonalAccess(context.user, staff, { allowSelf: true });
     }
 
-    await this.prisma.$transaction(async (tx) => {
-      if (input.phone) {
-        await tx.salonOwnerStaff.update({
-          where: { id: staff.id },
-          data: { phone: trimRequired(input.phone) },
-        });
-      }
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        if (input.phone) {
+          await tx.salonOwnerStaff.update({
+            where: { id: staff.id },
+            data: { phone: trimRequired(input.phone) },
+          });
+        }
 
-      if (input.address || input.emergencyContact) {
-        await tx.staffPersonalProfile.upsert({
-          where: { staffId: staff.id },
-          update: {
-            ...(input.address?.line1 !== undefined ? { addressLine1: optionalTrim(input.address.line1) } : {}),
-            ...(input.address?.line2 !== undefined ? { addressLine2: optionalTrim(input.address.line2) } : {}),
-            ...(input.address?.city !== undefined ? { city: optionalTrim(input.address.city) } : {}),
-            ...(input.address?.state !== undefined ? { state: optionalTrim(input.address.state) } : {}),
-            ...(input.address?.postalCode !== undefined ? { postalCode: optionalTrim(input.address.postalCode) } : {}),
-            ...(input.address?.country !== undefined ? { country: optionalTrim(input.address.country) ?? 'JP' } : {}),
-            ...(input.emergencyContact?.name !== undefined ? { emergencyContactName: optionalTrim(input.emergencyContact.name) } : {}),
-            ...(input.emergencyContact?.relationship !== undefined
-              ? { emergencyContactRelationship: optionalTrim(input.emergencyContact.relationship) }
-              : {}),
-            ...(input.emergencyContact?.phone !== undefined ? { emergencyContactPhone: optionalTrim(input.emergencyContact.phone) } : {}),
-          },
-          create: {
-            staffId: staff.id,
-            employmentType: 'FULL_TIME',
-            hireDate: staff.createdAt,
-            payoutMethod: 'CASH',
-            addressLine1: optionalTrim(input.address?.line1),
-            addressLine2: optionalTrim(input.address?.line2),
-            city: optionalTrim(input.address?.city),
-            state: optionalTrim(input.address?.state),
-            postalCode: optionalTrim(input.address?.postalCode),
-            country: optionalTrim(input.address?.country) ?? 'JP',
-            emergencyContactName: optionalTrim(input.emergencyContact?.name),
-            emergencyContactRelationship: optionalTrim(input.emergencyContact?.relationship),
-            emergencyContactPhone: optionalTrim(input.emergencyContact?.phone),
-          },
-        });
+        if (input.address || input.emergencyContact) {
+          await tx.staffPersonalProfile.upsert({
+            where: { staffId: staff.id },
+            update: {
+              ...(input.address?.line1 !== undefined ? { addressLine1: optionalTrim(input.address.line1) } : {}),
+              ...(input.address?.line2 !== undefined ? { addressLine2: optionalTrim(input.address.line2) } : {}),
+              ...(input.address?.city !== undefined ? { city: optionalTrim(input.address.city) } : {}),
+              ...(input.address?.state !== undefined ? { state: optionalTrim(input.address.state) } : {}),
+              ...(input.address?.postalCode !== undefined ? { postalCode: optionalTrim(input.address.postalCode) } : {}),
+              ...(input.address?.country !== undefined ? { country: optionalTrim(input.address.country) ?? 'JP' } : {}),
+              ...(input.emergencyContact?.name !== undefined ? { emergencyContactName: optionalTrim(input.emergencyContact.name) } : {}),
+              ...(input.emergencyContact?.relationship !== undefined
+                ? { emergencyContactRelationship: optionalTrim(input.emergencyContact.relationship) }
+                : {}),
+              ...(input.emergencyContact?.phone !== undefined ? { emergencyContactPhone: optionalTrim(input.emergencyContact.phone) } : {}),
+            },
+            create: {
+              staffId: staff.id,
+              employmentType: 'FULL_TIME',
+              hireDate: staff.createdAt,
+              payoutMethod: 'CASH',
+              addressLine1: optionalTrim(input.address?.line1),
+              addressLine2: optionalTrim(input.address?.line2),
+              city: optionalTrim(input.address?.city),
+              state: optionalTrim(input.address?.state),
+              postalCode: optionalTrim(input.address?.postalCode),
+              country: optionalTrim(input.address?.country) ?? 'JP',
+              emergencyContactName: optionalTrim(input.emergencyContact?.name),
+              emergencyContactRelationship: optionalTrim(input.emergencyContact?.relationship),
+              emergencyContactPhone: optionalTrim(input.emergencyContact?.phone),
+            },
+          });
+        }
+      });
+    } catch (error) {
+      if (isDuplicate(error)) {
+        throw new ConflictException(duplicateStaffMessage);
       }
-    });
+      throw error;
+    }
 
     await this.recordAuditEvent(context.user.id, context.user.tenantId, 'StaffSelfContactUpdated', staff.id);
     await this.dispatchUpwardChainNotification(staff, 'StaffSelfContactUpdated', 'Staff member updated contact details');
@@ -1131,6 +1220,10 @@ export class StaffService {
   ): Promise<StaffIdentityDocumentModel> {
     const staff = await this.findStaffInScope(context, staffId);
     this.assertStaffPersonalAccess(context.user, staff, { allowSelf: false });
+
+    if (isUserSelf(context.user, staff)) {
+      throw new ForbiddenException(forbiddenMessage);
+    }
 
     validateVerifyIdentityDocument(input);
 
@@ -1239,8 +1332,25 @@ export class StaffService {
     }
   }
 
-  private async assertRemainingActiveOwner(businessId: string, currentStaffId: string): Promise<void> {
-    const activeStaff = await this.prisma.salonOwnerStaff.findMany({
+  private assertStaffBranchScope(user: AuthenticatedUser, staffBranchIds: readonly string[], options?: { requireAll?: boolean }): void {
+    if (isUserOwnerOrAdmin(user)) {
+      return;
+    }
+    if (!isUserAssignedBranchManager(user, staffBranchIds, options)) {
+      throw new ForbiddenException(forbiddenMessage);
+    }
+  }
+
+  private async assertRemainingActiveOwner(businessId: string, currentStaffId: string, tx?: Prisma.TransactionClient): Promise<void> {
+    const client = tx ?? this.prisma;
+    if (typeof client.$executeRaw === 'function') {
+      try {
+        await client.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${businessId}))`;
+      } catch {
+        // Fallback for mock runners without PostgreSQL engine
+      }
+    }
+    const activeStaff = await client.salonOwnerStaff.findMany({
       where: {
         businessId,
         status: 'ACTIVE',
@@ -1265,7 +1375,7 @@ export class StaffService {
   }
 
   private assertStaffPersonalAccess(user: AuthenticatedUser, staff: StaffRecord, options: { allowSelf: boolean }): void {
-    if (isUserOwnerOrAdmin(user) || Boolean(user['canManageStaffPersonalDetails'])) {
+    if (isUserOwnerOrAdmin(user)) {
       return;
     }
     const staffBranchIds = (staff.branches ?? []).map((b) => b.branchId);

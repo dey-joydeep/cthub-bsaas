@@ -1,12 +1,13 @@
 import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Put, Query, UseInterceptors, VERSION_NEUTRAL } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CurrentUser, ResponseEnvelopeInterceptor } from '@cthub-bsaas/server-core';
-import type { AuthenticatedUser } from '@cthub-bsaas/shared';
+import { CurrentUser, ResponseEnvelopeInterceptor, Roles } from '@cthub-bsaas/server-core';
+import { UserRole, type AuthenticatedUser } from '@cthub-bsaas/shared';
 
 import { BusinessRoleInputDto, BusinessRoleQueryDto } from '../dto/staff-service-catalog.dto';
 import { StaffService } from '../services/staff.service';
 
 @ApiTags('Roles')
+@Roles(UserRole.OWNER, UserRole.ADMIN)
 @UseInterceptors(ResponseEnvelopeInterceptor)
 @Controller({ path: 'partner/roles', version: VERSION_NEUTRAL })
 export class RolesController {

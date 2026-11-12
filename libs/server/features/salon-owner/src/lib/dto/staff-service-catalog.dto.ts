@@ -270,10 +270,13 @@ export class StaffResidentialAddressDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(20)
+  @Matches(/^\d{3}-?\d{4}$/, { message: 'error.staff.personal.postal_code.invalid' })
   postalCode?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(10)
   country?: string;
 }
 
@@ -395,6 +398,8 @@ export class StaffIdentityDocumentInputDto {
   documentType!: (typeof staffDocumentTypeValues)[number];
 
   @IsString()
+  @MaxLength(256)
+  @Matches(/^[a-zA-Z0-9_\-./]{8,256}$/, { message: 'error.staff.document.file_key.invalid' })
   fileKey!: string;
 
   @IsIn(['image/jpeg', 'image/png', 'application/pdf'])
