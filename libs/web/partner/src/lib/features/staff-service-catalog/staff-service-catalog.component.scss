@@ -349,12 +349,14 @@
   }
 
   .hr-preview-item {
+    align-items: flex-start;
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
+    justify-content: center;
     padding: 10px 12px;
   }
 
