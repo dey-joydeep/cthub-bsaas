@@ -291,6 +291,18 @@ mat-table {
   margin-bottom: 10px;
   padding: 8px 12px;
   justify-content: space-between;
+  scroll-margin-top: 90px;
+}
+
+mat-form-field,
+.mat-mdc-form-field {
+  scroll-margin-top: 90px;
+}
+
+mat-error,
+.mat-mdc-form-field-error {
+  color: #b91c1c !important;
+  font-weight: 500;
 }
 
 .salon-banner .banner-content {

@@ -545,14 +545,32 @@ export class StaffServiceCatalogComponent {
   protected onStaffSearch(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.staffSearchTerm.set(target.value);
+    this.syncSelectionWithFilteredStaff();
   }
 
   protected clearStaffSearch(): void {
     this.staffSearchTerm.set('');
+    this.syncSelectionWithFilteredStaff();
   }
 
   protected onStaffBranchFilterChange(branchId: string): void {
     this.staffBranchFilter.set(branchId);
+    this.syncSelectionWithFilteredStaff();
+  }
+
+  private syncSelectionWithFilteredStaff(): void {
+    const current = this.selectedStaff();
+    if (!current) {
+      return;
+    }
+    const visibleStaff = this.filteredStaff();
+    if (!visibleStaff.some((m) => m.id === current.id)) {
+      if (visibleStaff.length > 0) {
+        this.selectStaff(visibleStaff[0]);
+      } else {
+        this.selectedStaff.set(null);
+      }
+    }
   }
 
   protected getInitials(name: string): string {

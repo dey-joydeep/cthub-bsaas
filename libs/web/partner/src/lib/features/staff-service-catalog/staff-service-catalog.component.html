@@ -79,7 +79,7 @@
                 <small class="list-row-subtitle">{{ member.email || member.phone }}</small>
                 <div class="list-row-roles">
                   @for (role of memberStaffRoles(member); track role) {
-                    <span class="staff-role-chip">{{ role }}</span>
+                    <span class="staff-role-chip" [title]="role">{{ role }}</span>
                   }
                 </div>
               </div>
