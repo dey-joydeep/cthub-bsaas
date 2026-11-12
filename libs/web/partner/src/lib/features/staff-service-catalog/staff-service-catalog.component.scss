@@ -781,6 +781,10 @@
     gap: 8px;
     padding: 10px 12px;
 
+    @media (max-width: 480px) {
+      grid-template-columns: 1fr;
+    }
+
     .add-staff-action-btn {
       grid-column: 1 / -1;
       height: 38px;
