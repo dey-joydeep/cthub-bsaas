@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, ViewChild } from '@angular/core';
+import { FormBuilder, FormGroupDirective, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -67,6 +67,9 @@ export class StaffServiceCatalogComponent {
   private readonly catalogApi = inject(StaffServiceCatalogApi);
   private readonly route = inject(ActivatedRoute);
   private readonly snackBar = inject(MatSnackBar);
+
+  @ViewChild('staffNgForm') private staffNgForm?: FormGroupDirective;
+  private messageTimer?: ReturnType<typeof setTimeout>;
 
   protected readonly staffRoles = staffRoles;
   protected readonly weekdays = weekdays;
@@ -202,8 +205,10 @@ export class StaffServiceCatalogComponent {
   }
 
   protected selectStaff(member: Staff): void {
+    this.message.set(null);
+    this.error.set(null);
     this.selectedStaff.set(member);
-    this.staffForm.reset({
+    const staffFormValue = {
       branchIds: [...member.branchIds],
       displayName: member.displayName,
       phone: member.phone,
@@ -214,7 +219,12 @@ export class StaffServiceCatalogComponent {
       addressCity: member.address?.city ?? '',
       addressLine1: member.address?.line1 ?? '',
       addressLine2: member.address?.line2 ?? '',
-    });
+    };
+    if (this.staffNgForm) {
+      this.staffNgForm.resetForm(staffFormValue);
+    } else {
+      this.staffForm.reset(staffFormValue);
+    }
     let initialRoleIds: string[] = [];
     if (member.roleIds && member.roleIds.length > 0) {
       initialRoleIds = [...member.roleIds];
@@ -240,21 +250,28 @@ export class StaffServiceCatalogComponent {
   }
 
   protected newStaff(): void {
+    this.message.set(null);
+    this.error.set(null);
     this.selectedStaff.set(null);
     this.leaveBlocks.set([]);
     const firstBranch = this.branches()[0];
-    this.staffForm.reset({
+    const initialStaffValue = {
       branchIds: firstBranch ? [firstBranch.id] : [],
       displayName: '',
       phone: '',
       email: '',
-      status: 'ACTIVE',
+      status: 'ACTIVE' as const,
       addressPostalCode: '',
       addressState: '',
       addressCity: '',
       addressLine1: '',
       addressLine2: '',
-    });
+    };
+    if (this.staffNgForm) {
+      this.staffNgForm.resetForm(initialStaffValue);
+    } else {
+      this.staffForm.reset(initialStaffValue);
+    }
     const defaultStylist = this.roles().find((r) => r.roleCode === 'STYLIST')?.id;
     const defaultRoleIds = defaultStylist ? [defaultStylist] : this.roles()[0] ? [this.roles()[0].id] : [];
     this.selectedRoleIds.set(defaultRoleIds);
@@ -271,6 +288,15 @@ export class StaffServiceCatalogComponent {
       reason: '',
     });
     this.selectedStaffSubTabIndex.set(0);
+  }
+
+  protected cancelNewStaff(): void {
+    this.message.set(null);
+    this.error.set(null);
+    const fallback = this.staff()[0];
+    if (fallback) {
+      this.selectStaff(fallback);
+    }
   }
 
   protected loadLeaveBlocks(staffId: string): void {
@@ -685,8 +711,14 @@ export class StaffServiceCatalogComponent {
     request.subscribe({
       next: (value) => {
         onSuccess?.(value);
+        if (this.messageTimer) {
+          clearTimeout(this.messageTimer);
+        }
         this.message.set(successMessage);
         if (successMessage) {
+          this.messageTimer = setTimeout(() => {
+            this.message.set(null);
+          }, 4000);
           this.snackBar.open(successMessage, 'Close', {
             duration: 3500,
             horizontalPosition: 'center',

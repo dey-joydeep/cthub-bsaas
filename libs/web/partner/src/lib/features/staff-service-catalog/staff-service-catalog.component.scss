@@ -257,6 +257,11 @@
 
 .staff-subtab-group {
   margin-top: 2px;
+  overflow-x: hidden;
+
+  ::ng-deep .mat-mdc-tab-body-wrapper {
+    overflow-x: hidden;
+  }
 }
 
 .subtab-content-card {
@@ -411,9 +416,15 @@
 }
 
 .form-actions {
+  align-items: center;
   display: flex;
-  gap: 8px;
+  gap: 12px;
   margin-top: 8px;
+
+  .cancel-staff-btn {
+    border-color: #cbd5e1;
+    color: #475569;
+  }
 }
 
 .compact-form {
@@ -744,7 +755,7 @@
 @media (max-width: 1100px) {
   .staff-workspace-layout {
     gap: 16px;
-    grid-template-columns: 320px minmax(0, 1fr);
+    grid-template-columns: 300px minmax(0, 1fr);
   }
 
   .schedule-tab-content {
@@ -756,14 +767,28 @@
   }
 }
 
-@media (max-width: 860px) {
+@media (max-width: 900px) {
   .staff-workspace-layout {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .master-toolbar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 10px 12px;
+
+    .add-staff-action-btn {
+      grid-column: 1 / -1;
+      height: 38px;
+    }
   }
 
   .staff-card-list {
-    max-height: 320px;
+    max-height: 230px;
     min-height: auto;
+    padding: 6px;
   }
 
   .catalog-shell {

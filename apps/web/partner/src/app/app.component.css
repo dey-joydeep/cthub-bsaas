@@ -23,7 +23,7 @@
   font-weight: 700;
   margin-bottom: 2rem;
   letter-spacing: 1px;
-  color: #fff;
+  color: var(--primary, #0f172a);
 }
 .sidebar nav {
   display: flex;
@@ -84,7 +84,7 @@
 .logo a {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--primary, #0f172a);
   text-decoration: none;
   display: flex;
   align-items: center;

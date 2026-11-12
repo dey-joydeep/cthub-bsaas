@@ -290,6 +290,31 @@ mat-table {
   font-weight: 500;
   margin-bottom: 10px;
   padding: 8px 12px;
+  justify-content: space-between;
+}
+
+.salon-banner .banner-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.salon-banner .banner-dismiss-btn {
+  height: 28px;
+  width: 28px;
+  line-height: 28px;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.salon-banner .banner-dismiss-btn:hover {
+  opacity: 1;
+}
+
+.salon-banner .banner-dismiss-btn mat-icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
 }
 
 .salon-banner-error {
