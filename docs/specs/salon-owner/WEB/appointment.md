@@ -2,7 +2,7 @@
 
 ## Route And Screen
 
-- Route: `/owner/appointments`
+- Route: `/business/appointments`
 - Primary screens: calendar, availability search, appointment create/edit, appointment detail, status actions.
 - Wireframes: [Appointment Calendar Wireframes](../WIREFRAMES/appointment-calendar.md).
 

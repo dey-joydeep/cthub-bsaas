@@ -256,7 +256,10 @@ export class AuthService implements AuthStatePort {
     };
 
     if (candidate.canManageBranches === undefined) {
-      candidate.canManageBranches = hasManagerCapability(candidate);
+      return {
+        ...candidate,
+        canManageBranches: hasManagerCapability(candidate),
+      };
     }
 
     return candidate;

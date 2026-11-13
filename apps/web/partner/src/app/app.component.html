@@ -1,8 +1,44 @@
 <!-- Main Application Layout -->
 <header class="app-header">
   <div class="header-content">
-    <div class="logo">
-      <a routerLink="/">BeautySaaS</a>
+    <div class="header-brand-group">
+      @if (isLoggedIn) {
+        <button mat-icon-button [matMenuTriggerFor]="mobileNavMenu" class="mobile-nav-trigger" aria-label="Open navigation menu" i18n-aria-label="@@APP.MOBILE_NAV_MENU">
+          <mat-icon>menu</mat-icon>
+        </button>
+        <mat-menu #mobileNavMenu="matMenu" class="mobile-nav-dropdown">
+          <a mat-menu-item routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+            <mat-icon>home</mat-icon>
+            <span i18n="@@APP.NAV_HOME">Home</span>
+          </a>
+          <a mat-menu-item routerLink="/salons" routerLinkActive="active">
+            <mat-icon>store</mat-icon>
+            <span i18n="@@APP.NAV_SALONS">Salons</span>
+          </a>
+          <a mat-menu-item routerLink="/business/staff" routerLinkActive="active">
+            <mat-icon>people</mat-icon>
+            <span i18n="@@APP.NAV_STAFF">Staff</span>
+          </a>
+          <a mat-menu-item routerLink="/business/services" routerLinkActive="active">
+            <mat-icon>design_services</mat-icon>
+            <span i18n="@@APP.NAV_SERVICES">Services</span>
+          </a>
+          <a mat-menu-item routerLink="/appointments" routerLinkActive="active">
+            <mat-icon>event</mat-icon>
+            <span i18n="@@APP.NAV_APPOINTMENTS">Appointments</span>
+          </a>
+          @if (isAdmin) {
+            <mat-divider />
+            <a mat-menu-item routerLink="/admin/dashboard">
+              <mat-icon>dashboard</mat-icon>
+              <span i18n="@@APP.NAV_ADMIN_DASHBOARD">Admin Dashboard</span>
+            </a>
+          }
+        </mat-menu>
+      }
+      <div class="logo">
+        <a routerLink="/">BeautySaaS</a>
+      </div>
     </div>
     @if (isLoggedIn) {
       <nav class="main-nav">
@@ -13,6 +49,14 @@
         <a routerLink="/salons" routerLinkActive="active">
           <mat-icon>store</mat-icon>
           <span>Salons</span>
+        </a>
+        <a routerLink="/business/staff" routerLinkActive="active">
+          <mat-icon>people</mat-icon>
+          <span>Staff</span>
+        </a>
+        <a routerLink="/business/services" routerLinkActive="active">
+          <mat-icon>design_services</mat-icon>
+          <span>Services</span>
         </a>
         <a routerLink="/appointments" routerLinkActive="active">
           <mat-icon>event</mat-icon>
@@ -51,10 +95,10 @@
     }
     @if (isLoggedIn) {
       <div class="user-actions">
-        <button mat-button [matMenuTriggerFor]="userMenu" class="user-menu-trigger">
+        <button mat-button [matMenuTriggerFor]="userMenu" class="user-menu-trigger" aria-label="User account menu" i18n-aria-label="@@APP.USER_ACCOUNT_MENU">
           <mat-icon>account_circle</mat-icon>
           @if (currentUser?.firstName || currentUser?.lastName) {
-            <span class="user-name"> {{ currentUser?.firstName }} {{ currentUser?.lastName }} </span>
+            <span class="user-name"> {{ currentUser.firstName }} {{ currentUser.lastName }} </span>
           }
         </button>
         <mat-menu #userMenu="matMenu" class="user-dropdown">

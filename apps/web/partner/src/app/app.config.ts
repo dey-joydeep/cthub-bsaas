@@ -11,6 +11,7 @@ import {
 import { DOCUMENT } from '@angular/common';
 import { ApplicationConfig, ErrorHandler, importProvidersFrom, inject, provideAppInitializer } from '@angular/core';
 import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { PreloadAllModules, provideRouter, withComponentInputBinding, withPreloading } from '@angular/router';
@@ -32,6 +33,7 @@ import {
   REGISTER_API,
   type RegisterApiPort,
 } from '@cthub-bsaas/web-partner/auth';
+import { partnerDevMockInterceptor } from '@cthub-bsaas/web-partner';
 import { routes } from './app.routes';
 
 function createPartnerApiBaseUrl(apiUrl: string): string {
@@ -78,6 +80,13 @@ const partnerApiXsrfInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>,
   );
 };
 
+const appInterceptors: HttpInterceptorFn[] = [
+  ...(!environment.production ? [partnerDevMockInterceptor] : []),
+  partnerApiXsrfInterceptor,
+  loadingInterceptor,
+  ssrInterceptor,
+];
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideClientHydration(withEventReplay()),
@@ -90,7 +99,7 @@ export const appConfig: ApplicationConfig = {
         cookieName: 'XSRF-TOKEN',
         headerName: 'X-XSRF-TOKEN',
       }),
-      withInterceptors([partnerApiXsrfInterceptor, loadingInterceptor, ssrInterceptor]),
+      withInterceptors(appInterceptors),
       withFetch(),
     ),
     { provide: PARTNER_API_BASE_URL, useValue: partnerApiBaseUrl },
@@ -98,6 +107,13 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     importProvidersFrom([MatNativeDateModule]),
     { provide: MAT_DATE_LOCALE, useValue: 'en-US' },
+    {
+      provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
+      useValue: {
+        appearance: 'outline',
+        subscriptSizing: 'dynamic',
+      },
+    },
     { provide: ErrorHandler, useClass: ErrorHandlerService },
     { provide: AUTH_STATE_PORT, useExisting: AuthService },
     provideAppInitializer(() => {

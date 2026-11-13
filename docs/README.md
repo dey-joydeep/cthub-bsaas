@@ -16,6 +16,7 @@ This directory contains product, architecture, implementation-planning, quality,
 | Architecture decisions               | [architecture/decisions/README.md](architecture/decisions/README.md)                                             |
 | Salon Owner MVP specs                | [specs/salon-owner/README.md](specs/salon-owner/README.md)                                                       |
 | Auth specs                           | [specs/auth/README.md](specs/auth/README.md)                                                                     |
+| Frontend development principles      | [quality-standards/frontend-development-principles.md](quality-standards/frontend-development-principles.md)     |
 | Production documentation rules       | [quality-standards/production-documentation-standard.md](quality-standards/production-documentation-standard.md) |
 | Visual collaboration rules           | [quality-standards/visual-collaboration-guideline.md](quality-standards/visual-collaboration-guideline.md)       |
 | Infrastructure upgrade planning      | [infra-upgrade/20260501/README.md](infra-upgrade/20260501/README.md)                                             |

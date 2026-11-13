@@ -6,7 +6,7 @@
 /* Layout Structure */
 :root {
   --header-height: 4rem;
-  --content-padding: 1.5rem;
+  --content-padding: 1rem 2rem;
 }
 /* Base Layout */
 body {
@@ -37,7 +37,7 @@ body {
   flex: 1;
   margin-top: var(--header-height);
   padding: var(--content-padding);
-  max-width: 1200px;
+  max-width: 1680px;
   width: 100%;
   margin-left: auto;
   margin-right: auto;
@@ -144,7 +144,8 @@ body {
   height: 100%;
   margin: 0;
   font-family: Roboto, 'Helvetica Neue', sans-serif;
-  background-color: #f5f5f5;
+  background-color: #f8f7f5;
+  color: #1e293b;
 }
 /* Basic typography */
 h1,
@@ -154,7 +155,8 @@ h4,
 h5,
 h6 {
   margin: 8px 0;
-  font-weight: 400;
+  font-weight: 500;
+  color: #0f172a;
 }
 /* Layout */
 .app-container {
@@ -182,23 +184,185 @@ img {
 form {
   mat-form-field {
     width: 100%;
-    margin-bottom: 8px;
+    margin-bottom: 2px;
   }
 }
-/* Basic button styling */
-button[mat-button],
-button[mat-raised-button],
-button[mat-stroked-button] {
-  margin: 8px;
-}
+
 /* Card styling */
-mat-card {
-  margin: 8px;
+mat-card.mat-mdc-card {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  background-color: #ffffff;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: box-shadow 0.2s ease;
 }
+
+mat-card-header.mat-mdc-card-header {
+  padding: 14px 16px 8px;
+  display: flex;
+  align-items: center;
+}
+
+mat-card-title.mat-mdc-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+mat-card-content.mat-mdc-card-content {
+  padding: 12px 16px 16px;
+}
+
+/* Button styling inside forms and cards */
+form button[mat-button],
+form button[mat-raised-button],
+form button[mat-stroked-button],
+form button[mat-flat-button] {
+  margin: 0;
+  font-weight: 500;
+}
+
 /* Table styling */
 mat-table {
   width: 100%;
 }
+
+/* Global Salon Interactive Row Utilities */
+.salon-row {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  transition: all 0.15s ease-in-out;
+
+  &:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+  }
+
+  &.selected {
+    background: #f0f7ff;
+    border-color: #3b82f6;
+    box-shadow: inset 3px 0 0 #2563eb;
+  }
+}
+
+/* Global Status & Scope Pills */
+.salon-pill {
+  align-items: center;
+  align-self: flex-start;
+  border-radius: 9999px;
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.25;
+  padding: 2px 8px;
+  width: fit-content;
+}
+
+.salon-pill-neutral {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.salon-pill-brand {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+}
+
+.salon-pill-accent {
+  background-color: #fef3c7;
+  border: 1px solid #fde68a;
+  color: #b45309;
+}
+
+/* Global Status Banners */
+.salon-banner {
+  align-items: center;
+  border-radius: 6px;
+  display: flex;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  justify-content: space-between;
+  scroll-margin-top: 90px;
+}
+
+mat-form-field,
+.mat-mdc-form-field {
+  scroll-margin-top: 90px;
+}
+
+mat-error,
+.mat-mdc-form-field-error {
+  color: #b91c1c !important;
+  font-weight: 500;
+}
+
+.salon-banner .banner-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.salon-banner .banner-dismiss-btn {
+  height: 28px;
+  width: 28px;
+  line-height: 28px;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.salon-banner .banner-dismiss-btn:hover {
+  opacity: 1;
+}
+
+.salon-banner .banner-dismiss-btn mat-icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+}
+
+.salon-banner-error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.salon-banner-success {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+.salon-banner-warning {
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #b45309;
+}
+
+.salon-banner-info {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+}
+
+/* Touch accessibility on mobile */
+@media (max-width: 768px) {
+  button[mat-icon-button] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
 /* Responsive utilities */
 @media (max-width: 599px) {
   .hide-xs {

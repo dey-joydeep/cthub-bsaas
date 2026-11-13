@@ -2,7 +2,7 @@
 
 ## Route And Screen
 
-- Route: `/owner/pos`
+- Route: `/business/pos`
 - Primary screens: sale draft, appointment checkout, product/service line selection, discount, payment, invoice.
 - Wireframes: [POS Checkout Wireframes](../WIREFRAMES/pos-checkout.md).
 

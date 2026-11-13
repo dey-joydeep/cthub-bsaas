@@ -2,7 +2,7 @@
 
 ## Route And Screen
 
-- Route: `/owner/dashboard`
+- Route: `/business/dashboard`
 - Primary screens: owner overview, branch performance, staff performance, revenue, appointment summary, inventory alerts.
 - Wireframes: [Dashboard Wireframes](../WIREFRAMES/dashboard.md).
 

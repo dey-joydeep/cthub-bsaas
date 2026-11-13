@@ -40,6 +40,11 @@ For a merge gate, the Codex reviewer must be independent of the implementer. Sec
 - [ ] Loading, empty, error, validation, and success states are handled.
 - [ ] Shared UI was not duplicated in persona-specific libraries.
 - [ ] Accessibility and keyboard behavior were considered for UI changes.
+- [ ] Canvas & Viewport Ergonomics: Operational SaaS pages use fluid or high-ceiling responsive containers (`max-width: 1680px` or `100%`), avoiding narrow marketing-width bottlenecks (`max-width: 1200px`) that create dead whitespace gutters (>20% of desktop viewport).
+- [ ] Vertical Viewport Budget & Fold: Operational headers, banners, and tab bars do not exceed $120\text{px}$ combined height. No marketing hero banners or descriptive paragraphs on operational pages. Primary workspace controls (search, filter, list items, first form card) are visible above the fold on desktop viewports without scrolling.
+- [ ] Action Deduplication & Scoping: Primary actions have a single logical home. No duplicate creation buttons between parent headers and child toolbars. Scoped creation actions belong to their active tab or list sidebar.
+- [ ] Micro-Alignment & Baseline Centering: All icon + text pairings use `display: inline-flex; align-items: center; gap: 0.5rem;` (or Tailwind `inline-flex items-center gap-2`) with explicit matching icon dimensions (`20px` / `1.25rem`), eliminating baseline drift or staggered misalignment.
+- [ ] 5-Point Visual Heuristic Audit: The rendered UI was visually inspected via screenshot on a desktop viewport against the 5-point checklist (Fold visibility, Action deduplication, Micro-alignment, Negative space/density, Contextual scoping). Form inputs (especially `datetime-local` and dropdowns) meet minimum readable widths ($\ge 220\text{px}$) without truncation or clipping. Text-only DOM accessibility trees do not replace visual screenshot review.
 
 ## Security and privacy
 

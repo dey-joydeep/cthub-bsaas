@@ -155,6 +155,18 @@ Follow the [AIDD change scope and validation matrix](docs/aidd/change-hygiene.md
 - **Producer-Consumer Parity**: Never gate a consumer (guard, UI route, or API handler) on an optional field without verifying or implementing its active production producer (database query, token generator in `AuthService`, and session hydration).
 - **No Mock-Only Validation**: Unit tests using hand-crafted mock user objects with pre-populated capabilities are insufficient on their own; at least one integration test must verify that the actual sign-in or token-generation pipeline produces those claims.
 
+## Client-Side Security & Screen Steering Rules
+
+These guardrails prevent security findings, PII leakage, and contract mismatch bugs during screen and component development:
+
+- **Input & DTO Validation Parity**: Every Angular form control must mirror backend DTO boundaries (e.g. `Validators.maxLength(120)` for address lines, `Validators.pattern(/^\d{3}-?\d{4}$/)` for JP postal codes). Submit buttons must remain disabled while forms are invalid.
+- **Conflict & Error Contract Handling**: Forms must catch HTTP 409 Conflict (e.g., duplicate phone/email) and map it to user-visible field errors (`control.setErrors({ duplicate: true })`) rather than generic failure states.
+- **PII Boundary & Endpoint Separation**: General directory tables (`/partner/staff`, `/customers`) must NEVER request or display confidential HR/personal data (residential address, emergency contact, date of birth, bank details). Confidential data belongs exclusively in dedicated, lazily-loaded HR views gated by role.
+- **Zero-Bypass Template Policy**: Strictly prohibit `DomSanitizer.bypassSecurityTrust*` and unescaped `[innerHTML]` by default. Always use standard Angular template bindings (`{{ value }}`) or verified safe icon components.
+- **Role-Gated Action Visibility**: Never display action buttons, elevation controls, or links if the user's role cannot execute the underlying API call (e.g., hide role management controls behind `isOwner()` checks; restrict branch dropdowns to `user.managedBranchIds`).
+- **Safe Navigation & URL Hygiene**: Never pass tokens, passwords, or PII in URL query parameters. All redirect parameters (`returnUrl`) must be validated as internal relative paths before navigation (`url.startsWith('/') && !url.startsWith('//')`).
+- **Clean Production Artifacts**: Strip all debugging `console.log(response)` statements to prevent credential/PII dumps in browser DevTools.
+
 ## Git And Commits
 
 - The user has authorized routine commits and pushes on a task branch for a user-requested or previously approved AIDD work item, including future work items. Record the owning issue, accepted outcome and scope, branch, and assigned writable paths before the first push. An issue created by an agent does not by itself authorize a new product objective.

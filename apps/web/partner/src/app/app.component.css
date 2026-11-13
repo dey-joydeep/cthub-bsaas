@@ -23,7 +23,7 @@
   font-weight: 700;
   margin-bottom: 2rem;
   letter-spacing: 1px;
-  color: #fff;
+  color: var(--primary, #0f172a);
 }
 .sidebar nav {
   display: flex;
@@ -74,17 +74,28 @@
   padding: 0.75rem 0;
 }
 .header-content {
-  max-width: 1200px;
+  box-sizing: border-box;
+  max-width: 1680px;
+  width: 100%;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1.5rem;
+  padding: 0 2rem;
+}
+.header-brand-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.mobile-nav-trigger {
+  display: none;
+  color: #1e293b;
 }
 .logo a {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--primary, #0f172a);
   text-decoration: none;
   display: flex;
   align-items: center;
@@ -102,6 +113,15 @@
   padding: 0.5rem 0;
   position: relative;
   transition: color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.main-nav a mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
 }
 .main-nav a:hover,
 .main-nav a.active {
@@ -123,7 +143,7 @@
   gap: 1rem;
 }
 .user-menu-trigger {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
@@ -132,6 +152,12 @@
   &:hover {
     background-color: rgba(0, 0, 0, 0.04);
   }
+}
+.user-menu-trigger mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
 }
 .user-name {
   font-weight: 500;
@@ -193,8 +219,8 @@
 }
 /* Main content styles */
 .app-content {
-  padding: 1.5rem;
-  max-width: 1200px;
+  padding: 1.25rem 2rem;
+  max-width: 1680px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
@@ -209,9 +235,14 @@
   border-left: 4px solid var(--error, #d32f2f);
 }
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 960px) {
   .main-nav {
     display: none;
+  }
+  .mobile-nav-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
   .app-content {
     padding: 1rem;

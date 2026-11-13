@@ -5,9 +5,9 @@ import { routes } from './app.routes';
 import { UnauthorizedComponent } from './unauthorized.component';
 
 describe('partner app routes', () => {
-  it('guards owner settings routes behind authenticated owner access', () => {
-    const ownerSettingsRoute = routes.find((route) => route.path === 'owner/settings');
-    const ownerBranchesRoute = routes.find((route) => route.path === 'owner/branches');
+  it('guards business settings routes behind authenticated owner access', () => {
+    const businessSettingsRoute = routes.find((route) => route.path === 'business/settings');
+    const businessBranchesRoute = routes.find((route) => route.path === 'business/branches');
     const settingsAliasRoute = routes.find((route) => route.path === 'settings');
     const unauthorizedRoute = routes.find((route) => route.path === 'unauthorized');
 
@@ -15,20 +15,51 @@ describe('partner app routes', () => {
       path: 'unauthorized',
       component: UnauthorizedComponent,
     });
-    expect(ownerSettingsRoute?.canMatch).toEqual([authCanMatch]);
-    expect(ownerBranchesRoute?.canMatch).toEqual([authCanMatch]);
-    expect(ownerSettingsRoute?.canActivate).toEqual([roleGuard]);
-    expect(ownerBranchesRoute?.canActivate).toEqual([roleGuard]);
-    expect(ownerSettingsRoute?.data).toEqual({ roles: [UserRole.OWNER, UserRole.ADMIN] });
-    expect(ownerBranchesRoute?.data).toEqual({
+    expect(businessSettingsRoute?.canMatch).toEqual([authCanMatch]);
+    expect(businessBranchesRoute?.canMatch).toEqual([authCanMatch]);
+    expect(businessSettingsRoute?.canActivate).toEqual([roleGuard]);
+    expect(businessBranchesRoute?.canActivate).toEqual([roleGuard]);
+    expect(businessSettingsRoute?.data).toEqual({ roles: [UserRole.OWNER, UserRole.ADMIN] });
+    expect(businessBranchesRoute?.data).toEqual({
       roles: [UserRole.OWNER, UserRole.STAFF],
       requireManagerCapability: true,
       redirectUrl: '/unauthorized',
     });
     expect(settingsAliasRoute).toEqual({
       path: 'settings',
-      redirectTo: 'owner/settings',
+      redirectTo: 'business/settings',
       pathMatch: 'full',
     });
+  });
+
+  it('guards business staff and services routes behind authenticated access', () => {
+    const staffRoute = routes.find((route) => route.path === 'business/staff');
+    const servicesRoute = routes.find((route) => route.path === 'business/services');
+
+    expect(staffRoute?.canMatch).toEqual([authCanMatch]);
+    expect(servicesRoute?.canMatch).toEqual([authCanMatch]);
+    expect(staffRoute?.canActivate).toEqual([roleGuard]);
+    expect(servicesRoute?.canActivate).toEqual([roleGuard]);
+    expect(staffRoute?.data).toEqual({
+      roles: [UserRole.OWNER, UserRole.STAFF, UserRole.ADMIN],
+      catalogTab: 'staff',
+    });
+    expect(servicesRoute?.data).toEqual({
+      roles: [UserRole.OWNER, UserRole.STAFF, UserRole.ADMIN],
+      catalogTab: 'services',
+    });
+  });
+
+  it('provides backwards-compatible redirects for legacy owner routes', () => {
+    expect(routes.find((r) => r.path === 'owner/settings')?.redirectTo).toBe('business/settings');
+    expect(routes.find((r) => r.path === 'owner/branches')?.redirectTo).toBe('business/branches');
+    expect(routes.find((r) => r.path === 'owner/staff')?.redirectTo).toBe('business/staff');
+    expect(routes.find((r) => r.path === 'owner/services')?.redirectTo).toBe('business/services');
+  });
+
+  it('provides resource shortcuts for staff and services', () => {
+    expect(routes.find((r) => r.path === 'staff')?.redirectTo).toBe('business/staff');
+    expect(routes.find((r) => r.path === 'services')?.redirectTo).toBe('business/services');
+    expect(routes.find((r) => r.path === 'branches')?.redirectTo).toBe('business/branches');
   });
 });

@@ -72,6 +72,17 @@ In most cases for new apps, **prefer signal forms**. When making a forms decisio
 - **Template-driven forms**: Use for simple forms. Read [template-driven-forms.md](references/template-driven-forms.md)
 - **Reactive forms**: Use for complex forms. Read [reactive-forms.md](references/reactive-forms.md)
 
+### Security & Form Validation Guardrails
+
+When developing screens, forms, and client services, follow these steering rules to eliminate security audit findings by construction:
+
+- **DTO Parity:** Mirror backend DTO constraints in Angular Reactive / Signal forms (`Validators.maxLength`, regex format patterns). Catch HTTP 409 Conflict to display field-level duplication errors.
+- **PII Protection:** Keep confidential HR fields (address, bank accounts, emergency contacts) out of public directory lists; load them only on authorized detail routes.
+- **Template Safety:** Prohibit `DomSanitizer.bypassSecurityTrust*` and `[innerHTML]` for user-controllable data. Rely on native Angular HTML-encoding.
+- **Action Gating:** Conditionally render mutating action buttons using Signal/service role checks to match backend `@Roles` requirements.
+- **URL Sanitation:** Validate redirect parameters (`returnUrl`) as relative internal paths before calling `Router.navigateByUrl`. Never pass PII or tokens in query parameters.
+- **Console Cleanliness:** Never leave `console.log(apiResponse)` in production components.
+
 ## Dependency Injection
 
 When implementing dependency injection in Angular, follow these guidelines:

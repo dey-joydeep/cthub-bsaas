@@ -1,0 +1,143 @@
+import type { PagedEnvelope, SalonBusinessStatus, TimeInterval } from '../../salon-owner-settings/models/salon-owner-settings.models';
+
+export type StaffRole = 'OWNER' | 'MANAGER' | 'RECEPTIONIST' | 'STYLIST' | 'CASHIER' | 'INVENTORY_MANAGER';
+export type StaffStatus = SalonBusinessStatus;
+export type ServiceStatus = SalonBusinessStatus;
+
+export interface BusinessRole {
+  readonly id: string;
+  readonly businessId: string;
+  readonly roleCode?: string | null;
+  readonly name: string;
+  readonly description?: string | null;
+  readonly permissions: readonly string[];
+  readonly isSystemDefault: boolean;
+  readonly isActive: boolean;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface BusinessRoleInput {
+  readonly name: string;
+  readonly description?: string;
+  readonly permissions: readonly string[];
+  readonly isActive?: boolean;
+}
+
+export interface PermissionItem {
+  readonly code: string;
+  readonly name: string;
+  readonly category: string;
+  readonly description: string;
+}
+
+export interface StaffAddress {
+  readonly postalCode?: string | null;
+  readonly state?: string | null;
+  readonly city?: string | null;
+  readonly line1?: string | null;
+  readonly line2?: string | null;
+  readonly country?: string | null;
+}
+
+export interface StaffInput {
+  readonly branchIds: readonly string[];
+  readonly displayName: string;
+  readonly phone: string;
+  readonly email?: string;
+  readonly status: StaffStatus;
+  readonly address?: StaffAddress | null;
+}
+
+export interface Staff extends StaffInput {
+  readonly id: string;
+  readonly roleIds?: readonly string[];
+  readonly roles: readonly string[];
+  readonly skillServiceIds: readonly string[];
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface StaffRolesInput {
+  readonly roleIds?: readonly string[];
+  readonly roles: readonly string[];
+}
+
+export interface StaffSkillsInput {
+  readonly serviceIds: readonly string[];
+}
+
+export interface StaffShiftDay {
+  readonly dayOfWeek: number;
+  readonly intervals: readonly TimeInterval[];
+}
+
+export interface StaffShiftInput {
+  readonly branchId: string;
+  readonly timezone: string;
+  readonly days: readonly StaffShiftDay[];
+}
+
+export interface StaffLeaveBlockInput {
+  readonly branchId?: string | null;
+  readonly startsAt: string;
+  readonly endsAt: string;
+  readonly reason: string;
+}
+
+export interface StaffLeaveBlock {
+  readonly id: string;
+  readonly businessId: string;
+  readonly staffId: string;
+  readonly branchId: string | null;
+  readonly startsAt: string;
+  readonly endsAt: string;
+  readonly reason: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export type StaffLeaveBlockPage = PagedEnvelope<StaffLeaveBlock>;
+
+export interface StaffLeaveBlockQuery {
+  readonly branchId?: string;
+  readonly from?: string;
+  readonly to?: string;
+}
+
+export interface ServiceCategoryInput {
+  readonly name: string;
+  readonly sortOrder: number;
+}
+
+export interface ServiceCategory extends ServiceCategoryInput {
+  readonly id: string;
+}
+
+export interface ServiceInput {
+  readonly categoryId: string;
+  readonly name: string;
+  readonly durationMinutes: number;
+  readonly bufferMinutes?: number;
+  readonly basePrice: string;
+  readonly taxRatePercent: string;
+  readonly status: ServiceStatus;
+}
+
+export interface Service extends ServiceInput {
+  readonly id: string;
+  readonly bufferMinutes: number;
+  readonly eligibleStaffIds: readonly string[];
+}
+
+export interface ServiceStatusInput {
+  readonly status: ServiceStatus;
+}
+
+export interface StaffEligibilityInput {
+  readonly staffIds: readonly string[];
+}
+
+export type StaffPage = PagedEnvelope<Staff>;
+export type ServiceCategoryPage = PagedEnvelope<ServiceCategory>;
+export type ServicePage = PagedEnvelope<Service>;

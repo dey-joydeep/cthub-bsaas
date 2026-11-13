@@ -21,7 +21,7 @@ import { RouterModule } from '@angular/router';
             <mat-card-subtitle>Manage your salon details and settings</mat-card-subtitle>
           </mat-card-header>
           <mat-card-actions>
-            <button mat-button color="primary" [routerLink]="['/owner/salon']"><mat-icon>store</mat-icon> Manage Salon</button>
+            <button mat-button color="primary" [routerLink]="['/business/salon']"><mat-icon>store</mat-icon> Manage Salon</button>
           </mat-card-actions>
         </mat-card>
 
@@ -32,7 +32,9 @@ import { RouterModule } from '@angular/router';
             <mat-card-subtitle>View and manage appointments</mat-card-subtitle>
           </mat-card-header>
           <mat-card-actions>
-            <button mat-button color="primary" [routerLink]="['/owner/appointments']"><mat-icon>event</mat-icon> View Appointments</button>
+            <button mat-button color="primary" [routerLink]="['/business/appointments']">
+              <mat-icon>event</mat-icon> View Appointments
+            </button>
           </mat-card-actions>
         </mat-card>
 
@@ -43,7 +45,7 @@ import { RouterModule } from '@angular/router';
             <mat-card-subtitle>Manage your staff members</mat-card-subtitle>
           </mat-card-header>
           <mat-card-actions>
-            <button mat-button color="primary" [routerLink]="['/owner/staff']"><mat-icon>people</mat-icon> Manage Staff</button>
+            <button mat-button color="primary" [routerLink]="['/business/staff']"><mat-icon>people</mat-icon> Manage Staff</button>
           </mat-card-actions>
         </mat-card>
       </div>

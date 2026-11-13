@@ -30,8 +30,9 @@ Current connected Penpot file:
 | Staff             | [Staff](./staff.md)                               | Penpot boards created |
 | Service Catalog   | [Service Catalog](./service-catalog.md)           | Penpot boards created |
 | Branch Settings   | [Branch Settings](./branch-settings.md)           | Penpot boards created |
-| Business Settings | [Business Settings](./business-settings.md)       | Penpot boards created |
-| Dashboard         | [Dashboard](./dashboard.md)                       | Penpot boards created |
+| Business Settings         | [Business Settings](./business-settings.md)       | Penpot boards created |
+| Dashboard                 | [Dashboard](./dashboard.md)                       | Penpot boards created |
+| Feedback & Alert Patterns | [Feedback and Alerts](./feedback-and-alerts.md)   | Penpot boards created |
 
 ## Penpot Board Naming Standard
 

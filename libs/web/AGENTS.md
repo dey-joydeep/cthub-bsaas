@@ -1,70 +1,49 @@
 # Web Guidelines
 
-Read this file before working under `libs/web/**`.
+Read this file before working under `libs/web/**` or on client-facing applications (`apps/web/**`).
 
-## Stack
+## Core Architecture & Quality Standard
 
-- Angular 22.
-- Standalone components for new code.
-- SSR enabled.
-- Angular Material v3.
-- Tailwind v4.
+All frontend development, component architecture, forms, layouts, i18n, accessibility, and testing MUST strictly adhere to:  
+👉 **[Frontend Development Principles and Architecture Standards](../../docs/quality-standards/frontend-development-principles.md)**
 
-## Architecture
+Key Pillars defined in the standard:
 
-- `libs/web/config`: web-only environment/config tokens and helpers.
-- `libs/web/core/*`: shared web capabilities such as auth, HTTP, testing.
-- `libs/web/*/auth`: app-specific Auth UX and models for Admin, Partner, and Customer.
-- `libs/web/ui`: shared design system components.
+1. **Multi-Locale Architecture**: Day-1 mandatory i18n key tagging (`i18n="@@..."`, `$localize`). Zero bare string literals in templates or code.
+2. **Enterprise 3-Tier Form Validation (ADR-0006)**: `<mat-error>` on validated controls, HTTP 422 mapping, HTTP 409 conflict banners, phone format validation (`phoneNumberValidator`), and viewport auto-scrolling (`scrollToFirstInvalidControl` + `MatSnackBar`).
+3. **Operational Viewport & Above-the-Fold Law**: $\le 120\text{px}$ combined header stack, action deduplication, micro-alignment invariants.
+4. **WCAG 2.1 AA Accessibility**: $\ge 4.5:1$ color contrast across all states, accessible button names, no double-asterisks.
+5. **High-Fidelity Testing**: Mandatory negative DOM tests, strict ban on `TestBed.overrideComponent` (Angular CLI #30127).
+6. **Screen Ergonomics & Responsive Invariants**: Mandatory zero-data empty state with primary CTA, fluid containers with responsive collapse (<1024px into drawers/slide-overs), sticky header offset (`var(--app-header-height)`), zero imperative DOM manipulation (signals only), and clean cancel/escape modal dismissal.
+7. **Frontend Security Invariants**: Closed-by-default routing (`canMatch` + `canActivate` on all feature routes), strict relative-path sanitization on return/redirect URLs, protocol whitelisting (`https://`) on `DomSanitizer.bypassSecurityTrust*`, and zero PII or tokens in URL parameters.
 
-## Import Hygiene
+## Stack & Boundaries
 
-- Web libs must not import from server libs.
-- Allowed cross-area imports: `libs/web/*` and `libs/shared/*`.
-- Import from package roots or configured path aliases.
-- Do not deep-import across packages with relative paths.
-- Keep shared UI in `libs/web/ui`; do not duplicate app-specific copies.
+- Angular 22, standalone components, SSR enabled, Angular Material v3, Tailwind v4.
+- `libs/web/config`: environment & config tokens only.
+- `libs/web/core/*`: shared cross-cutting web capabilities (auth, HTTP, testing, forms).
+- `libs/web/ui`: shared design system UI components.
+- Allowed cross-area imports: `libs/web/*` and `libs/shared/*`. **Never import from `libs/server/**`**.
 
 ## SSR Safety
 
-- Do not access browser globals at top level.
 - Guard `window`, `document`, `localStorage`, `ResizeObserver`, `navigator`, and WebAuthn APIs.
 - Use `inject(PLATFORM_ID)` and `isPlatformBrowser()` for browser-only behavior.
-- Defer DOM access to browser-safe lifecycle hooks.
-- Prefer Angular abstractions that work in SSR, such as `HttpClient`, `TransferState`, and CDK utilities.
-- Use relative API URLs unless a server-side proxy/config requires otherwise.
+- Defer DOM access to browser-safe lifecycle hooks (`afterNextRender` or `ngAfterViewInit` behind browser guards).
 
-## Internationalization (i18n)
+## Dev Tooling & Mock Isolation
 
-- Standard mechanism: use native Angular compile-time i18n (`@angular/localize` and `$localize`). Do not install or import legacy `@ngx-translate` runtime modules or pipes (`| translate`).
-- Template localization: use standard `i18n="@@KEY_ID"` attributes on HTML elements or `<ng-container i18n="@@KEY_ID">Text</ng-container>` for unwrapped text nodes.
-- Attribute localization: when localizing element attributes (`matTooltip`, `placeholder`, `aria-label`, `title`), always use the `i18n-attributeName="@@KEY_ID"` syntax (e.g., `<button matTooltip="Refresh" i18n-matTooltip="@@COMMON.REFRESH">`). Never place `<ng-container>` or other HTML tags inside attribute quotes.
-- TypeScript localization: use native tagged template literals: `$localize`:@@KEY_ID:Default English String``.
-- Testing: do not provide or mock `TranslateService`, `MockTranslateService`, or `TranslateModule` in `TestBed`. Native `$localize` tokens fall back directly to their inline English default string in unit tests; assert against the English string directly.
+- Never compile or activate dev-only mock interceptors or bypasses in production builds.
+- Check `if (environment.production) return false;` as the very first line in any dev utility.
+- Every mock/debug interceptor must have an automated test asserting it is inactive when `environment.production === true`.
 
-## Client Models And APIs
+## Pre-Commit Verification Checklist
 
-- Any object parameter or object return must use a named interface/type/model/DTO.
-- Prefer readonly UI models.
-- Keep state JSON-serializable for SSR and hydration.
-- Store dates as ISO strings in persisted or transferred state.
-- Use discriminated unions with a stable `kind` or `type` field for variants.
+Before opening a PR or declaring a web slice complete, run and pass:
 
-## UI And Accessibility
-
-- Match existing app/design-system patterns.
-- Use Angular Material and local UI components where available.
-- Avoid marketing-style layouts for operational SaaS surfaces.
-- Ensure text does not overflow or overlap on mobile/desktop.
-- Inputs need labels and accessible error descriptions.
-- Use keyboard-friendly controls and visible focus states.
-
-## Testing
-
-- Unit tests live under `src/**/*.spec.ts`.
-- Keep tests shallow and deterministic.
-- Use Angular-compatible test utilities.
-- Integration-style web service tests may live under `tests/integration/**/*.it-spec.ts` when meaningful and configured.
-- E2E belongs under app-level projects in `apps/e2e/**`.
-- For visible changes, inspect the affected route when an app can run. Check console errors, hydration, responsive layout, keyboard access, and changed states; preserve browser evidence for QA.
-- When implementing an existing design, use its source or checked-in spec. Report an unavailable design source rather than guessing precise tokens.
+1. Form Validation Audit: `npm run aidd:form-validation`
+2. Scoped Unit Tests: `npx nx test <affected-project>`
+3. Scoped Lint: `npx nx lint <affected-project>`
+4. Live Route Audit: On visible UI changes, inspect the running route with Chrome DevTools and verify Lighthouse Accessibility $\ge 95$.
+5. UI/UX Audit: Invoke `browser-uiux-auditor` on new or modified screens to verify zero-data empty states, responsive layout collapse (390px, 768px, 1280px), sticky offsets, and contrast.
+6. Frontend Security Audit: Run `node scripts/aidd/frontend-security-audit.mjs --module <affected-module>` to ensure all routes are guarded, return URLs sanitized, and zero unvalidated sanitizer bypasses exist.

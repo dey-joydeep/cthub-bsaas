@@ -15,6 +15,16 @@ Define the visual baseline for staff directory, profile editing, role/branch/ski
 - [API Endpoint Map](../API/endpoint-map.md#staff)
 - [Staff Roster Conflict Draw.io](../DIAGRAMS/drawio/staff-roster-conflict-flow.drawio)
 
+## Layout Structure
+
+The operational desktop screen implements a **Master-Detail with Sub-Tabs** layout:
+- **Master Column (Left, 320px–360px)**: Persistent directory panel featuring search, branch filter, `+ New Staff` action, and member selection cards.
+- **Detail Workspace (Right)**: Selected staff overview header and 4 dedicated operational sub-tabs:
+  1. `Profile & HR`: Contact, branch multi-select, and confidential personal HR expansion panel (single `Save Profile` button).
+  2. `Roles & Capabilities`: Role multi-select with dynamic capability guide (single `Save Roles` button).
+  3. `Services & Skills`: Service qualification checkboxes (single `Save Skills` button).
+  4. `Schedule & Leave`: Weekly shift editor (timezone inherited from branch) and leave blocks with `<textarea>` reason.
+
 ## Target Penpot Boards
 
 | Screen state      | Board name                        | Purpose                                              |
@@ -36,6 +46,10 @@ Define the visual baseline for staff directory, profile editing, role/branch/ski
 | Directory       | Select staff              | Profile edit                                    | `getStaff`                                              |
 | Directory       | Create staff              | Profile edit                                    | `createStaff`                                           |
 | Profile edit    | Save role/branches/skills | Profile or conflict                             | `replaceStaffRoles`, `replaceStaffSkills`, update staff |
+| Profile edit    | Expand Personal Details   | Personal details subform loaded                 | `getStaffPersonalDetails`                               |
+| Profile edit    | Save Personal & HR Info   | Personal details saved banner                   | `updateStaffPersonalDetails`                            |
+| Profile edit    | Upload ID Document        | Document pending verification chip              | `uploadStaffIdentityDocument`                           |
+| Self Profile    | Update contact/address    | Contact saved banner & manager notify           | `selfUpdateStaffContact`                                |
 | Schedule edit   | Save schedule             | Profile or conflict dialog                      | `replaceStaffShifts`                                    |
 | Conflict dialog | Resolve appointments      | Appointment calendar filtered to affected staff | appointment search query                                |
 
@@ -46,5 +60,8 @@ Define the visual baseline for staff directory, profile editing, role/branch/ski
 - duplicate email;
 - branch scope forbidden;
 - schedule conflict;
+- personal HR details collapsed vs expanded;
+- document upload pending, verified, and rejected status chips;
+- staff self-service view with locked legal fields and editable contact fields;
 - archived staff readonly history;
 - server error with correlation ID.

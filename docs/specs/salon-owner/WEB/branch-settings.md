@@ -2,7 +2,7 @@
 
 ## Route And Screen
 
-- Route: `/owner/branches`
+- Route: `/business/branches`
 - Primary screens: branch list, branch create/edit, hours editor, holiday calendar, branch policy panel.
 - Wireframes: [Branch Settings Wireframes](../WIREFRAMES/branch-settings.md).
 
@@ -14,12 +14,12 @@
 
 ## Access And Authorization
 
-- Route gating: `roleGuard` enforces `roles: [UserRole.OWNER, UserRole.STAFF]` and `requireManagerCapability: true` on `/owner/branches`.
+- Route gating: `roleGuard` enforces `roles: [UserRole.OWNER, UserRole.STAFF]` and `requireManagerCapability: true` on `/business/branches`.
 - Allowed actors:
   - Salon Owners (`OWNER`) and Platform Admins (`ADMIN`) have inherent access to all branch settings.
   - Staff members (`STAFF`) must possess an active manager position (`isBranchManagerPosition(position)`) yielding at least one managed branch in `managedBranchIds` and `canManageBranches: true`.
 - Unauthorized redirection: Authenticated users lacking manager capability are redirected to `/unauthorized`.
-- Navigation visibility: The Settings navigation entry routes to `/settings` for owners/admins, `/owner/branches` for branch managers, and is hidden for general non-manager staff.
+- Navigation visibility: The Settings navigation entry routes to `/settings` for owners/admins, `/business/branches` for branch managers, and is hidden for general non-manager staff.
 
 ## Components
 

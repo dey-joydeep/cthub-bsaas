@@ -173,4 +173,12 @@ describe('LoginComponent', () => {
       type: 'login',
     });
   });
+
+  it('sanitizes returnUrl and rejects external open redirect attempts', () => {
+    expect((component as any).sanitizeReturnUrl('https://evil.com')).toBe('/dashboard');
+    expect((component as any).sanitizeReturnUrl('//evil.com')).toBe('/dashboard');
+    expect((component as any).sanitizeReturnUrl('javascript:alert(1)')).toBe('/dashboard');
+    expect((component as any).sanitizeReturnUrl('/business/staff')).toBe('/business/staff');
+    expect((component as any).sanitizeReturnUrl(null)).toBe('/dashboard');
+  });
 });

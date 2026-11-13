@@ -1,0 +1,142 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable, map } from 'rxjs';
+
+import type { ResponseEnvelope as ApiEnvelope, PagedEnvelope } from '../salon-owner-settings/models/salon-owner-settings.models';
+import {
+  BusinessRole,
+  BusinessRoleInput,
+  PermissionItem,
+  Service,
+  ServiceCategory,
+  ServiceCategoryInput,
+  ServiceCategoryPage,
+  ServiceInput,
+  ServicePage,
+  ServiceStatusInput,
+  Staff,
+  StaffEligibilityInput,
+  StaffInput,
+  StaffLeaveBlock,
+  StaffLeaveBlockInput,
+  StaffLeaveBlockPage,
+  StaffPage,
+  StaffRolesInput,
+  StaffShiftInput,
+  StaffSkillsInput,
+} from './models/staff-service-catalog.models';
+
+@Injectable({ providedIn: 'root' })
+export class StaffServiceCatalogApi {
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = '/api/partner';
+
+  listRoles(includeInactive = false): Observable<PagedEnvelope<BusinessRole>> {
+    const params = includeInactive ? new HttpParams().set('includeInactive', 'true') : undefined;
+    return this.http
+      .get<ApiEnvelope<PagedEnvelope<BusinessRole>>>(`${this.baseUrl}/roles`, { params })
+      .pipe(map((response) => response.data));
+  }
+
+  createRole(input: BusinessRoleInput): Observable<BusinessRole> {
+    return this.http.post<ApiEnvelope<BusinessRole>>(`${this.baseUrl}/roles`, input).pipe(map((response) => response.data));
+  }
+
+  updateRole(roleId: string, input: BusinessRoleInput): Observable<BusinessRole> {
+    return this.http.put<ApiEnvelope<BusinessRole>>(`${this.baseUrl}/roles/${roleId}`, input).pipe(map((response) => response.data));
+  }
+
+  deleteRole(roleId: string): Observable<{ success: boolean }> {
+    return this.http.delete<ApiEnvelope<{ success: boolean }>>(`${this.baseUrl}/roles/${roleId}`).pipe(map((response) => response.data));
+  }
+
+  listPermissions(): Observable<PermissionItem[]> {
+    return this.http.get<ApiEnvelope<PermissionItem[]>>(`${this.baseUrl}/permissions`).pipe(map((response) => response.data));
+  }
+
+  listStaff(branchId?: string, businessId?: string): Observable<StaffPage> {
+    let params = new HttpParams();
+    if (branchId) params = params.set('branchId', branchId);
+    if (businessId) params = params.set('businessId', businessId);
+    return this.http.get<ApiEnvelope<StaffPage>>(`${this.baseUrl}/staff`, { params }).pipe(map((response) => response.data));
+  }
+
+  createStaff(input: StaffInput): Observable<Staff> {
+    return this.http.post<ApiEnvelope<Staff>>(`${this.baseUrl}/staff`, input).pipe(map((response) => response.data));
+  }
+
+  updateStaff(staffId: string, input: StaffInput): Observable<Staff> {
+    return this.http.patch<ApiEnvelope<Staff>>(`${this.baseUrl}/staff/${staffId}`, input).pipe(map((response) => response.data));
+  }
+
+  replaceStaffRoles(staffId: string, input: StaffRolesInput): Observable<Staff> {
+    return this.http.put<ApiEnvelope<Staff>>(`${this.baseUrl}/staff/${staffId}/roles`, input).pipe(map((response) => response.data));
+  }
+
+  replaceStaffSkills(staffId: string, input: StaffSkillsInput): Observable<Staff> {
+    return this.http.put<ApiEnvelope<Staff>>(`${this.baseUrl}/staff/${staffId}/skills`, input).pipe(map((response) => response.data));
+  }
+
+  replaceStaffShifts(staffId: string, input: StaffShiftInput): Observable<StaffShiftInput> {
+    return this.http
+      .put<ApiEnvelope<StaffShiftInput>>(`${this.baseUrl}/staff/${staffId}/shifts`, input)
+      .pipe(map((response) => response.data));
+  }
+
+  listStaffLeaveBlocks(staffId: string, branchId?: string): Observable<StaffLeaveBlockPage> {
+    const params = branchId ? new HttpParams().set('branchId', branchId) : undefined;
+    return this.http
+      .get<ApiEnvelope<StaffLeaveBlockPage>>(`${this.baseUrl}/staff/${staffId}/leave-blocks`, { params })
+      .pipe(map((response) => response.data));
+  }
+
+  createStaffLeaveBlock(staffId: string, input: StaffLeaveBlockInput): Observable<StaffLeaveBlock> {
+    return this.http
+      .post<ApiEnvelope<StaffLeaveBlock>>(`${this.baseUrl}/staff/${staffId}/leave-blocks`, input)
+      .pipe(map((response) => response.data));
+  }
+
+  deleteStaffLeaveBlock(staffId: string, leaveBlockId: string): Observable<{ success: boolean }> {
+    return this.http
+      .delete<ApiEnvelope<{ success: boolean }>>(`${this.baseUrl}/staff/${staffId}/leave-blocks/${leaveBlockId}`)
+      .pipe(map((response) => response.data));
+  }
+
+  listServiceCategories(businessId?: string): Observable<ServiceCategoryPage> {
+    const params = businessId ? new HttpParams().set('businessId', businessId) : undefined;
+    return this.http
+      .get<ApiEnvelope<ServiceCategoryPage>>(`${this.baseUrl}/service-categories`, { params })
+      .pipe(map((response) => response.data));
+  }
+
+  createServiceCategory(input: ServiceCategoryInput): Observable<ServiceCategory> {
+    return this.http.post<ApiEnvelope<ServiceCategory>>(`${this.baseUrl}/service-categories`, input).pipe(map((response) => response.data));
+  }
+
+  listServices(categoryId?: string, businessId?: string): Observable<ServicePage> {
+    let params = new HttpParams();
+    if (categoryId) params = params.set('categoryId', categoryId);
+    if (businessId) params = params.set('businessId', businessId);
+    return this.http.get<ApiEnvelope<ServicePage>>(`${this.baseUrl}/services`, { params }).pipe(map((response) => response.data));
+  }
+
+  createService(input: ServiceInput): Observable<Service> {
+    return this.http.post<ApiEnvelope<Service>>(`${this.baseUrl}/services`, input).pipe(map((response) => response.data));
+  }
+
+  updateService(serviceId: string, input: ServiceInput): Observable<Service> {
+    return this.http.patch<ApiEnvelope<Service>>(`${this.baseUrl}/services/${serviceId}`, input).pipe(map((response) => response.data));
+  }
+
+  updateServiceStatus(serviceId: string, input: ServiceStatusInput): Observable<Service> {
+    return this.http
+      .put<ApiEnvelope<Service>>(`${this.baseUrl}/services/${serviceId}/status`, input)
+      .pipe(map((response) => response.data));
+  }
+
+  replaceServiceStaffEligibility(serviceId: string, input: StaffEligibilityInput): Observable<Service> {
+    return this.http
+      .put<ApiEnvelope<Service>>(`${this.baseUrl}/services/${serviceId}/staff-eligibility`, input)
+      .pipe(map((response) => response.data));
+  }
+}

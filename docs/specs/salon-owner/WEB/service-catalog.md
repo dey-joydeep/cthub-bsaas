@@ -2,7 +2,7 @@
 
 ## Route And Screen
 
-- Route: `/owner/services`
+- Route: `/business/services`
 - Primary screens: category list, service catalog list, service create/edit, branch availability, pricing.
 - Wireframes: [Service Catalog Wireframes](../WIREFRAMES/service-catalog.md).
 

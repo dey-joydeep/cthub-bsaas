@@ -45,7 +45,13 @@
 
       <!-- User Menu -->
       @if (isAuthenticated) {
-        <button mat-icon-button [matMenuTriggerFor]="userMenu" class="user-menu-button">
+        <button
+          mat-icon-button
+          [matMenuTriggerFor]="userMenu"
+          class="user-menu-button"
+          aria-label="User account menu"
+          i18n-aria-label="@@HEADER.USER_MENU"
+        >
           <mat-icon>account_circle</mat-icon>
         </button>
         <mat-menu #userMenu="matMenu" class="user-menu">
