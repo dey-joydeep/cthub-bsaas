@@ -32,6 +32,24 @@ describe('partner app routes', () => {
     });
   });
 
+  it('guards business staff and services routes behind authenticated access', () => {
+    const staffRoute = routes.find((route) => route.path === 'business/staff');
+    const servicesRoute = routes.find((route) => route.path === 'business/services');
+
+    expect(staffRoute?.canMatch).toEqual([authCanMatch]);
+    expect(servicesRoute?.canMatch).toEqual([authCanMatch]);
+    expect(staffRoute?.canActivate).toEqual([roleGuard]);
+    expect(servicesRoute?.canActivate).toEqual([roleGuard]);
+    expect(staffRoute?.data).toEqual({
+      roles: [UserRole.OWNER, UserRole.STAFF, UserRole.ADMIN],
+      catalogTab: 'staff',
+    });
+    expect(servicesRoute?.data).toEqual({
+      roles: [UserRole.OWNER, UserRole.STAFF, UserRole.ADMIN],
+      catalogTab: 'services',
+    });
+  });
+
   it('provides backwards-compatible redirects for legacy owner routes', () => {
     expect(routes.find((r) => r.path === 'owner/settings')?.redirectTo).toBe('business/settings');
     expect(routes.find((r) => r.path === 'owner/branches')?.redirectTo).toBe('business/branches');

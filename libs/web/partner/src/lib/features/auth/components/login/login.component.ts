@@ -211,7 +211,8 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
     super.ngOnInit();
 
     // Read returnUrl from query params (set by guards)
-    this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/dashboard';
+    const rawUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    this.returnUrl = this.sanitizeReturnUrl(rawUrl);
 
     // Load saved email if in browser environment
     if (this.isBrowser) {
@@ -230,6 +231,17 @@ export class LoginComponent extends AbstractBaseComponent implements OnInit, OnD
 
     this.initForms();
     this.startCountdown();
+  }
+
+  private sanitizeReturnUrl(rawUrl: string | null): string {
+    if (!rawUrl || typeof rawUrl !== 'string') {
+      return '/dashboard';
+    }
+    // Must be a relative path starting with a single '/' (not '//') and without external schemes or backslashes
+    if (rawUrl.startsWith('/') && !rawUrl.startsWith('//') && !rawUrl.includes('\\') && !rawUrl.includes(':')) {
+      return rawUrl;
+    }
+    return '/dashboard';
   }
 
   override ngOnDestroy() {

@@ -28,12 +28,22 @@ export const routes: Routes = [
   },
   {
     path: 'business/staff',
-    data: { catalogTab: 'staff' },
+    canMatch: [authCanMatch],
+    canActivate: [roleGuard],
+    data: {
+      roles: [UserRole.OWNER, UserRole.STAFF, UserRole.ADMIN],
+      catalogTab: 'staff',
+    },
     loadChildren: () => import('@cthub-bsaas/web-partner').then((m) => m.STAFF_SERVICE_CATALOG_ROUTES),
   },
   {
     path: 'business/services',
-    data: { catalogTab: 'services' },
+    canMatch: [authCanMatch],
+    canActivate: [roleGuard],
+    data: {
+      roles: [UserRole.OWNER, UserRole.STAFF, UserRole.ADMIN],
+      catalogTab: 'services',
+    },
     loadChildren: () => import('@cthub-bsaas/web-partner').then((m) => m.STAFF_SERVICE_CATALOG_ROUTES),
   },
   // Resource path shortcuts

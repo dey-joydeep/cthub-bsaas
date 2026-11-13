@@ -1,0 +1,536 @@
+{
+  "$schema": "frontend-security-ledger-v1",
+  "version": "1.0.0",
+  "lastUpdated": "2026-11-13T12:50:06.552Z",
+  "modules": {
+    "web-partner": {
+      "files": {
+        "libs/web/partner/src/index.ts": {
+          "hash": "bd319f539935bc1acace0d21dab514b86e3dea11c68349f8d62a31a3028fd506",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/appointment-cancel-dialog/appointment-cancel-dialog.component.html": {
+          "hash": "fd4151f3fea9f51a00b84da915379e1281fb091a29035158788a0c40b9fbeeb9",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/appointment-cancel-dialog/appointment-cancel-dialog.component.ts": {
+          "hash": "e5b97fa2738213a068f8f837aa9d065d6bc9fde309c114c556431b5ad7c6dc0c",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/appointment-cancel-dialog/models/appointment-cancel-dialog.model.ts": {
+          "hash": "841c8d4fd7b4fafaafa11d1768cc49b94f998df445116040eeca33dc2a4b5222",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/appointment-create/appointment-create.component.html": {
+          "hash": "d3bcf3f4c114da2d785ea613828e3a9580cdc96d579f5c3de87ab64dedcde744",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/appointment-create/appointment-create.component.ts": {
+          "hash": "3a5d876bbeac0d9f196e3b012b2a245cc17aacc65cd7edb0533ca582affe47e7",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/appointment-create/appointment-create.service.ts": {
+          "hash": "65ec8fc795a521d991565b9f64640994833f79a8856a4f0a8ad33ca511529d2e",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/appointment-create/models/appointment-create.model.ts": {
+          "hash": "7706148bc28568ba6b19683013ca4f4476af00a954bb075adf33918402af9ace",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/appointment-detail/appointment-detail.component.html": {
+          "hash": "a3ca4d86f65bb91b56d8809811d13d54c44c43cc15c87b08e8fd7548a84c5b75",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/appointment-detail/appointment-detail.component.ts": {
+          "hash": "5ab46e80bddb8312a87ae2716a01884862d3427a1c09daa13bfd76616b8bdd76",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/appointment-detail/appointment-detail.service.ts": {
+          "hash": "3a157a0ca285de44ec07526791611ae40e6a998dbb48e0b6228ca6b6333ceb61",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/appointment-detail/models/appointment-detail.model.ts": {
+          "hash": "d54e780103a929ba3dfa0f016ac960fbee65bb6ec8d79dd6a81272ee4d58b6e9",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/appointment-list/appointment-list.component.html": {
+          "hash": "225481179a7697ab0a2e85e731912060dfe150670980d6917a326f41eca6d01c",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/appointment-list/appointment-list.component.ts": {
+          "hash": "d8b311fa935da599875c0928ceda51842da210130fc111a8ba5f9477dd995a4c",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/appointment-list/appointment-list.service.ts": {
+          "hash": "35364575c52b4218e1590ff656680c7b86f924b3867d30f62e9e2efa488a196c",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/appointment-list/models/appointment-list.model.ts": {
+          "hash": "4747fb228fd74cf2afda0b6d68750bbdd82847334029ade46d60b6c48c078aa3",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/appointment.routes.ts": {
+          "hash": "ff92468b7df098b1bd690bf4b1dca86e2746340a295ab3086f4f3bcbee5d721a",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/booking-reschedule/appointment-reschedule.component.html": {
+          "hash": "d3bb30ffdcef2f443ea5cf9c6c2bd2d601f1c26c9ff826f6ebe1536292b37bc2",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/booking-reschedule/appointment-reschedule.component.ts": {
+          "hash": "cbfb024cce11a959b5bc4e606ce351253be51726419ff28e42d7cb356f5ad474",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/booking-reschedule/appointment-reschedule.service.ts": {
+          "hash": "24b2cf9bf18f79187a85f5f5984f222b18e6e703d95a9dfc6986b8e4b252ba4e",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/appointment/booking-reschedule/models/appointment-reschedule.model.ts": {
+          "hash": "df78e3a9ef5609d67fb56ad073dee75838658ed0ad6f5ec38370d382462cd47d",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/auth.routes.ts": {
+          "hash": "22e4ec61acb0a064bad2569a26ac2e91539d70bf4d4500cebee5455bd8a3d858",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/components/forgot-password/forgot-password.component.html": {
+          "hash": "c92b0f8555e649180215ac2092c94e317efa44d00efe74fcc3b4fe90ab714171",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/components/forgot-password/forgot-password.component.ts": {
+          "hash": "1024d82331f159186b33b94780db186174354771ada95906b3f51aff84e54248",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/components/forgot-password/forgot-password.service.ts": {
+          "hash": "382a8c28adc17567e724f8a34efe49fbe17873c079fae9a6c03327915c8a2aa1",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/components/login/login.component.html": {
+          "hash": "0774ba3ac60c649a33ce482a4613621e10ca51fd283eb9d4d6c7c716c1c41951",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/components/login/login.component.spec.ts": {
+          "hash": "6710d8df6130d34e031e3c039bb0c15f767ed4ac7ef9f29192a98ba7ba18d45c",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/components/login/login.component.ts": {
+          "hash": "ebbf892b44bc300cb84ecbdb9ddf0d130f964e332639aa2f02614734148c7aac",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/components/login/login.service.spec.ts": {
+          "hash": "e5e7960c600e055e6a46aac350eef4375ccbbce3370e74f7b4a7f33224a0df73",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/components/login/login.service.ts": {
+          "hash": "76b974aa9c804446678a3bb437691e6d8946a701bed867f60f85e2cd34d28056",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/components/login/models/login.model.ts": {
+          "hash": "12b5a96ea63e666eef6d5f43b48b7e049e86ec9ad89394a60af28ef1bfe3dd16",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/components/register/models/register.model.ts": {
+          "hash": "92405ecdcf96f70cf90c2df5e308f32cf54758a625b29e86a070aa4017cbbe44",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/components/register/register.component.html": {
+          "hash": "ae99361d8a97d1ce1f9e167d88a6f662183b13aadef9d81661c122c5af39cfb6",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/components/register/register.component.spec.ts": {
+          "hash": "95b28909e3523a8b2891310cf9367390e1f031f8393a6ccec03991705e60140a",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/components/register/register.component.ts": {
+          "hash": "6dc657d976aa152eb262099a4fd58d0e31867123f7f22a372fbe67c464c52bd4",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/components/register/register.service.ts": {
+          "hash": "3d8255c84bda11e58201a3a2537fbb986ebf34cb9160488fb98cbc9c23e31574",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/index.ts": {
+          "hash": "08127cfb51050241b3539c3d237f90ebab3cb9ee768cf61113d3ece232119559",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/models/auth.models.ts": {
+          "hash": "ae024743493a1d9197b5a558d445593cf25f10490461410e834498c25780347e",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/services/auth.service.spec.ts": {
+          "hash": "c33cffb86176146988d4b1ceab90b892d592d3d4208e69c6d4b2579e7817e55f",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/services/auth.service.ts": {
+          "hash": "a4d49b35ceb35e28146db1e1c2d1b417d8e22dbae7814772a08a7472f265fd4c",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/services/login.api.ts": {
+          "hash": "dfda2c5ac57836d89634f01eab9290c7c396c094ceebcb8035b4f901f2507a92",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/tokens/login.tokens.ts": {
+          "hash": "97a376e65fa6e4141d93b266bf3bbc24327939857e15c5e65019bbe95a3fe700",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/auth/tokens/password.tokens.ts": {
+          "hash": "44220f02dbb9c8f010a039474785f1fb66cd23839bc0ac5bbf7e2a0521115f3f",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/dashboard.component.html": {
+          "hash": "73eb65ed046aca579efef992166ddfe7363775295835f57ba3814c4cb42a1bd7",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/dashboard.component.spec.ts": {
+          "hash": "84404fbe84e1cdd167c26a57417b95b907e167adf6b7768c16d0535ace641dda",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/dashboard.component.ts": {
+          "hash": "30931a471a8549b5ae3988fe4d6e409945947d75c804aa9635b397f744cf1a3d",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/dashboard.service.spec.ts": {
+          "hash": "03edc2c23409acab49ff5933505d9ff388daadd4718bb89d48d947ebacf11e48",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/dashboard.service.ts": {
+          "hash": "aa32ae36cf1cd0ed67b6fc4195042fce52f99d701d5f0172d51dc7a565832186",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/model/dashboard.model.ts": {
+          "hash": "92be92504e875ba1eac2e35770b838bde5df208d3afddf4241cb03da5cd26ad0",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/appointments-overview-widget/appointments-overview-widget.component.html": {
+          "hash": "61f5e180665397d7d5fbdfbdd4e84cfb19f1436dfcdef7b5e168618a30f2d8d2",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/appointments-overview-widget/appointments-overview-widget.component.spec.ts": {
+          "hash": "84e32ad516257f0dc1100e81d1018983ed262a6de0c15581ab4f2b188d4ecea1",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/appointments-overview-widget/appointments-overview-widget.component.ts": {
+          "hash": "9e9f58e43717798c31f5898a40856827245db5535b1711c782d1de5323075b8d",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/appointments-overview-widget/appointments-overview-widget.service.ts": {
+          "hash": "e031f6de38282edc85ac62b0d07ec41753b08edf264ee115982efa0371760b4a",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/appointments-overview-widget/models/appointments-overview-widget.model.ts": {
+          "hash": "98f5374593c83a312641cb158f4a2e8a5fbc5e51dea46f7404784e31087be7ec",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/customer-stats/customer-stats-widget.component.html": {
+          "hash": "b5a8ef42d91d099bb897be7cd0eb26342633c7b6f8f124c6e2037c5ed90ff55c",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/customer-stats/customer-stats-widget.component.ts": {
+          "hash": "0be75118511137b00d71f50cf5eea33e3f0c9ad2d9ab33b352a1211c82055c7b",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/customer-stats/customer-stats-widget.service.ts": {
+          "hash": "738b62ffefc1acd2702bd93d72b86417c92f476dfffc834edd6cb9318ce1f733",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/customer-stats/models/customer-stats-widget.model.ts": {
+          "hash": "f66579a8405539a26bb6450360e1b5d5823eac46f0e0e991b13347ddf3adbea6",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/product-sales-widget/models/product-sales-widget.model.ts": {
+          "hash": "6fafb769301265d6c8ee0687bd98a663292bb684cf64ef31b1efd8b6f23d3eb7",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.html": {
+          "hash": "c7b737cbed2c6a9d9b31c26d6cfddd1fc5bb9c8ae671abb1f0ef2a0fa2a99a62",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.spec.ts": {
+          "hash": "ded6db3d48611b8696b88023a371b7b77940aae8e9f80ceb1e806cb46b04863b",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.component.ts": {
+          "hash": "5742e9c6f453b391b651f456cd84b93c3b630c18e13f4eda9b8db3ed872354cd",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/product-sales-widget/product-sales-widget.service.ts": {
+          "hash": "2458ae252c2f1139561575c2083f8a91f5563949262bec64b951c0f8a41feb5f",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/renewals-list/models/renewals-list-widget.model.ts": {
+          "hash": "e09a6ecad748f28eeaac2f7bb616b0e6658f4284ae43070ffd0f9fce7e056683",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/renewals-list/renewals-list-widget.component.html": {
+          "hash": "e059291630879ef5c8a68d05e5611014591fc7df66f8d0a0c238a4325b4e6e12",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/renewals-list/renewals-list-widget.component.ts": {
+          "hash": "b80c6f9bbd7584f8777e26abe48a9dcd0a192d1f4bde8e3a9f62eccb77b560ad",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/renewals-list/renewals-list-widget.service.ts": {
+          "hash": "d0364d59fd7085ea80b7a5e51bc33352edfa9688a91faec523157934c04bad07",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/revenue-chart/models/revenue-chart-widget.model.ts": {
+          "hash": "29f44845c7bc238b301a28890fbe520377605e16de9da93362f59bc7fee3fe53",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/revenue-chart/models/revenue-chart.model.ts": {
+          "hash": "29f44845c7bc238b301a28890fbe520377605e16de9da93362f59bc7fee3fe53",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/revenue-chart/revenue-chart-widget.component.html": {
+          "hash": "684762c8889b7fb8f1a743621d27c18b4e810a9930228f6fe04933d73402a369",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/revenue-chart/revenue-chart-widget.component.ts": {
+          "hash": "9037ae0eb8b9e48af2db3b94d4a9451915c1bb5b23d0c9a00cb098e2687b6884",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/revenue-chart/revenue-chart-widget.service.ts": {
+          "hash": "92b34ef423c5301ea20e70b50cd454331816d863fd9d1feb9dc85856df7e85a2",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/revenue-chart/revenue-chart.component.html": {
+          "hash": "50b60718234d692f80a0f8e3aba4b93e41650dafe35a634bda5811c9e5cb4291",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/revenue-chart/revenue-chart.component.ts": {
+          "hash": "e57260a1d8b849096da5ec1260db2072285ebadadc46d5ff4aad4846cc24754a",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/stats/models/stats-widget.model.ts": {
+          "hash": "b1c4ba254553ece6b25de2ecdfb999700a6dd3aa06fdbe73939974f0adf49b5a",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/stats/stats-widget.component.html": {
+          "hash": "53c6b54587eb5166e4b1cc02581673199df5d1aaa507b334e18b49a14c564d84",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/stats/stats-widget.component.ts": {
+          "hash": "ef8999e42252fb508ba5dc1c26f0d7395bcff129ea22bf613567e4371b79ae83",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/subscription-chart/models/subscription-chart-widget.model.ts": {
+          "hash": "6c9ea20714462b1824a613e317d0ef9350e9acf2fb5996be7e5b4ae1a5b5e6f3",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/subscription-chart/subscription-chart-widget.component.html": {
+          "hash": "7c33abc5820dac34d86211fcfeb6b83f5c8411f3488726c278cc583c531bd206",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/subscription-chart/subscription-chart-widget.component.ts": {
+          "hash": "c4a310fb0d43cd221b3cbfb2d7fd558604ad59749b6254ff09b209b54cce7025",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/dashboard/widgets/subscription-chart/subscription-chart-widget.service.ts": {
+          "hash": "209d2c2d7de1a82d993e8737620a02c1c47c2b0e7d3478aa16a3433474156186",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/owner/appointment-management/appointment-management.component.ts": {
+          "hash": "0d092ea1e033187ca752627ae8481ef2df6d15ad07505b155a043b0eee4c851e",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/owner/appointment-management/appointment-management.service.ts": {
+          "hash": "e908de79684e250046ba3fd04e9cdb75d36651c4510a86d062c3f0e0ab2dd3b2",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/owner/appointment-management/models/appointment-management.model.ts": {
+          "hash": "4a3164e64246f7a5588ecb8e35111083786096f7ff24c74f04ce394d3e242f53",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/owner/owner-dashboard/models/owner-dashboard.model.ts": {
+          "hash": "9c4679d49f7b1695876aabae895a7c94afadee7debc0c5a8c121491bed2f6aba",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/owner/owner-dashboard/owner-dashboard.component.ts": {
+          "hash": "98ea64eb5978edf04aeda87d90140fca903a172960c283b9a310a7073139bae2",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/owner/owner.routes.ts": {
+          "hash": "8e3f151e26110748cc6e2f37d655f066e1977c2f36f1c5f12e2cbdbf13b69c0f",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/owner/salon-management/models/salon-management.model.ts": {
+          "hash": "e4a70e1d08ac81331c8c85c26d5a1d9bad7687efdd25d8588101606ae591990b",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/owner/salon-management/salon-management.component.ts": {
+          "hash": "473be0a326d1407bec0498af7cb2a3430bd90bfd117a7e1a752393c11ee0704b",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/owner/staff-management/models/staff-management.model.ts": {
+          "hash": "d6e0b4b483177012930505eb15679e5f24f5d81533a6d3eea54ff2a652761965",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/owner/staff-management/staff-form-dialog/staff-form-dialog.component.ts": {
+          "hash": "efafe1726bbfaad3466cb1e9064c5164fcdb5fbdb8c6aaa3b81e2b0ca5ce6bd9",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/owner/staff-management/staff-management.component.ts": {
+          "hash": "a707101e3be31cc75c6c04bbd09a367be034a0b2e2345a6a1fef2f56a6eb4055",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/owner/staff-management/staff-management.service.ts": {
+          "hash": "f47cf1887f3d1e36454fa32eb3552e89a4140d1cdc137c6533e9fd8dced9c6c8",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/partner-products/models/product-management.model.ts": {
+          "hash": "5a0ab26c0c718908f8a753d06264fa7f9bb290db73b1f8451e888079dc3688f7",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/partner-products/models/product-params.model.ts": {
+          "hash": "7b43dc3ae86244224a116187089eeac427af7ec6a1a46eb11a4ac717767bddfb",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/partner-products/product-management.html": {
+          "hash": "20288158eccc4fb5f5bdead3f0ec89dea37384aa1e53d3f2fe91331b970dbb98",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/partner-products/product-management.service.ts": {
+          "hash": "3d1587ccf52bb1f921f1e1be8cf796d06c1bd1f4b4ddc9be2909c4db8cf80b5f",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/partner-products/product-management.spec.ts": {
+          "hash": "f7139d762dc8094f7d74dec314ebe9d6e6818a0a91f3f3f247ea93274061b4e3",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/partner-products/product-management.ts": {
+          "hash": "602cbdb05e5830b26cea315ff6ecb284212fdf54a2cb16b0c5d9d77a34fa0cce",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/portfolio/models/portfolio-params.model.ts": {
+          "hash": "807cfe260971e8f3762932947f813ab719af79cfec7b8d65db5a1bab5689a373",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/portfolio/models/portfolio.model.ts": {
+          "hash": "cc1f8042aead96f202161a9a0821fe4becae4539cd1d3d112d98d14af8b0a8da",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/portfolio/portfolio.component.html": {
+          "hash": "7fa9e9913a0f952432012fdde881cc825c37672bd3379feb192757fd2aadf583",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/portfolio/portfolio.component.spec.ts": {
+          "hash": "19a602a73e92490754c58bba2954c0b48693c83ee3facf1cd12737cb4375951c",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/portfolio/portfolio.component.ts": {
+          "hash": "4eb929f538f3b50e18795839ebe83f6273dfa29dcf45b70f48c95328bf917a4e",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/portfolio/portfolio.service.spec.ts": {
+          "hash": "0b81308dcdcad3ac14e07cc84bcefec35eb75d38d61d3c929ef3f59f946b3243",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/portfolio/portfolio.service.ts": {
+          "hash": "004f4697ceda0d0865c1ce13a6f199de532a31c8e2fa32c3282c33cf677d6de7",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/profile/profile.component.html": {
+          "hash": "ec4e6271ef7313fdb78480a952203120276137b478385919de78c54cf36d303b",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/profile/profile.component.ts": {
+          "hash": "8d6d52bba07fc06d5a2e81aa63b3a4fe0f5c4347bd4bd5ea0e0a33eee373e46b",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/reviews/models/review.model.ts": {
+          "hash": "7dbab092d06051179f6fa8f7801e25796567d1492460a8341b666b933d01ba23",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/salon-owner-settings/models/salon-owner-settings.models.ts": {
+          "hash": "97c1e21731b72c6a9ab850d97b1d48c9152a8edd1ae817ba1a7d6b06629679a1",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/salon-owner-settings/salon-owner-settings.api.spec.ts": {
+          "hash": "71806825542ed64e89513cbf4db5c3d8728dc4446fd1eb2cb839c2bdb99febae",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/salon-owner-settings/salon-owner-settings.api.ts": {
+          "hash": "d5f791d8a948f71de4371dda120bfa2ebc699fb9a96b1120f595d89a4279b1e7",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/salon-owner-settings/salon-owner-settings.component.html": {
+          "hash": "4bcc3c73d7e66d3450c50899bb3e9530b3700bd388e91ed96457b661d6857717",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/salon-owner-settings/salon-owner-settings.component.scss": {
+          "hash": "9ef248572cfa2d06a81d1c457518bf8aa94e58e3901cedf00a8ed4a0e974ba4b",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/salon-owner-settings/salon-owner-settings.component.spec.ts": {
+          "hash": "cfc87a7db5a0e54150bf40774993fc31ec4ea1a3bbc712b7e945cc033445b2bf",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/salon-owner-settings/salon-owner-settings.component.ts": {
+          "hash": "8dc4a25b837c6e61b74a9d6a829d5c3ac43ec5a7340b31b62a17b28dadfb19a7",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/salon-owner-settings/salon-owner-settings.routes.ts": {
+          "hash": "48e4e778722086931d7331be6c68e20ae50210e7c5a0a2a241cbcd2db4f1b4c7",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/staff-service-catalog/models/staff-service-catalog.models.ts": {
+          "hash": "8efb554e6b88bf44c9ee42c05fb2d966c379db82cbbd83ffa5d06e571cda4bed",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/staff-service-catalog/staff-service-catalog.api.spec.ts": {
+          "hash": "abf5c69e88c3e541a1309e12b1ba032320eb5fb88ec2e191fa8d8805fb087cbe",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/staff-service-catalog/staff-service-catalog.api.ts": {
+          "hash": "6b126ea0f7615172f5f9ad9374b318cf01c74790e17e9ad16fe8ffbf4ed430de",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/staff-service-catalog/staff-service-catalog.component.html": {
+          "hash": "89cbeced57d211d4d6a91b35d7b2db789883c2db77d388864cf186880f4ad331",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/staff-service-catalog/staff-service-catalog.component.scss": {
+          "hash": "f591f3cb3030ad7a4861afc7e42b71e8ba159a9d8381a0bd80e20322d2557255",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/staff-service-catalog/staff-service-catalog.component.spec.ts": {
+          "hash": "27868513f3eaffaf063a8941f60f8eabb32c2a1f1792b276d06251c93e552057",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/staff-service-catalog/staff-service-catalog.component.ts": {
+          "hash": "0c05004006fe37d323062a85f7929c9f360445fe4796d1eb05fa3add8d206141",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/features/staff-service-catalog/staff-service-catalog.routes.ts": {
+          "hash": "c22dcdd609b616706398370212704f78fe0b5b2475bded05f174fce4c0a82ba2",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/mock/partner-dev-mock.data.ts": {
+          "hash": "935a32f3b33a816e8d31d07a283c6442cb1417e9279dc92aec500658f515b541",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/mock/partner-dev-mock.interceptor.spec.ts": {
+          "hash": "162648e786e66360375778d6ae855a1e5ee5cd8a5e866751f0fd6774dd9d3467",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/mock/partner-dev-mock.interceptor.ts": {
+          "hash": "52eb5c2717dff825e9a357f7b16e036bc721233e00a5e399b2af669a70b61e8b",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/partner.routes.ts": {
+          "hash": "b32d946fe3d0d8f7641da291e4acac1f8fb35da1520bd2c7a5116af4ba5bcabe",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/lib/shared/test-setup.ts": {
+          "hash": "adac4962ce489f75def5b03265748800aa6c65d30cde252ff9e0b98c835350a0",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/web/partner/src/test-setup.ts": {
+          "hash": "9bde630bb6fb75c542afa742289922f3281e61ef95cf4a991fa9d222c58b4091",
+          "status": "VERIFIED_CLEAN"
+        }
+      },
+      "findings": {}
+    }
+  }
+}
