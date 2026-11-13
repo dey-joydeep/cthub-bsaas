@@ -1,0 +1,120 @@
+{
+  "$schema": "backend-security-ledger-v1",
+  "version": "1.0.0",
+  "lastUpdated": "2026-11-13T01:28:00Z",
+  "modules": {
+    "salon-owner": {
+      "lastAuditedCommit": "9eb4e9d2cad0ef77160e8743e529e6a6f6ffcf9e",
+      "lastAuditedAt": "2026-11-13T01:28:00Z",
+      "auditor": "Senior Security Engineer (Antigravity Subagent)",
+      "files": {
+        "libs/server/features/salon-owner/src/lib/controllers/roles.controller.ts": {
+          "hash": "bbfe10d3caca83ed20b5bb9ede9e7dca5185b174abaaf7a13d247e2526633bda",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/server/features/salon-owner/src/lib/controllers/staff.controller.ts": {
+          "hash": "27f338ca60a19b0776cb3b49490e5bcef6dffd99311e7bb13b35e062b8cbc88b",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/server/features/salon-owner/src/lib/dto/staff-service-catalog.dto.ts": {
+          "hash": "06f16d5ccd9fd30353fdd86696ede9a0aa62f997e8109e94551062051ed7537a",
+          "status": "VERIFIED_CLEAN"
+        },
+        "libs/server/features/salon-owner/src/lib/services/staff.service.ts": {
+          "hash": "2af43ea09f76ea4e1164cd792ca22965b2f9824038de79ebb2f6f1e550d34a90",
+          "status": "VERIFIED_CLEAN"
+        }
+      },
+      "findings": {
+        "SEC-ST-01": {
+          "severity": "Critical",
+          "title": "Missing RBAC & Authority Checks in replaceStaffRoles",
+          "cwe": "CWE-285",
+          "status": "RESOLVED",
+          "resolvedAt": "2026-11-13T01:27:27Z",
+          "verificationCommit": "9eb4e9d2cad0ef77160e8743e529e6a6f6ffcf9e"
+        },
+        "SEC-ST-02": {
+          "severity": "Critical",
+          "title": "Unprotected Role Management Endpoints in RolesController",
+          "cwe": "CWE-285",
+          "status": "RESOLVED",
+          "resolvedAt": "2026-11-13T01:27:27Z",
+          "verificationCommit": "9eb4e9d2cad0ef77160e8743e529e6a6f6ffcf9e"
+        },
+        "SEC-ST-03": {
+          "severity": "High",
+          "title": "Insecure Identity Resolution in selfUpdateStaffContact",
+          "cwe": "CWE-639",
+          "status": "RESOLVED",
+          "resolvedAt": "2026-11-13T01:27:27Z",
+          "verificationCommit": "9eb4e9d2cad0ef77160e8743e529e6a6f6ffcf9e"
+        },
+        "SEC-ST-04": {
+          "severity": "High",
+          "title": "Broken Delegated Boundaries for Branch Managers",
+          "cwe": "CWE-862",
+          "status": "RESOLVED",
+          "resolvedAt": "2026-11-13T01:27:27Z",
+          "verificationCommit": "9eb4e9d2cad0ef77160e8743e529e6a6f6ffcf9e"
+        },
+        "SEC-ST-05": {
+          "severity": "High",
+          "title": "TOCTOU Race Condition in Last Active Owner Invariant",
+          "cwe": "CWE-367",
+          "status": "RESOLVED",
+          "resolvedAt": "2026-11-13T01:27:27Z",
+          "verificationCommit": "9eb4e9d2cad0ef77160e8743e529e6a6f6ffcf9e"
+        },
+        "SEC-ST-06": {
+          "severity": "High",
+          "title": "Arbitrary Storage fileKey Injection and Separation-of-Duties Bypass",
+          "cwe": "CWE-22",
+          "status": "RESOLVED",
+          "resolvedAt": "2026-11-13T01:27:27Z",
+          "verificationCommit": "9eb4e9d2cad0ef77160e8743e529e6a6f6ffcf9e"
+        },
+        "SEC-ST-07": {
+          "severity": "Medium",
+          "title": "PII Access Authorization Bypass via Arbitrary User Claims",
+          "cwe": "CWE-359",
+          "status": "RESOLVED",
+          "resolvedAt": "2026-11-13T01:27:27Z",
+          "verificationCommit": "9eb4e9d2cad0ef77160e8743e529e6a6f6ffcf9e"
+        },
+        "SEC-ST-08": {
+          "severity": "Medium",
+          "title": "Audit Trail Deficit Across 10 Critical Mutation Operations",
+          "cwe": "CWE-778",
+          "status": "RESOLVED",
+          "resolvedAt": "2026-11-13T01:27:27Z",
+          "verificationCommit": "9eb4e9d2cad0ef77160e8743e529e6a6f6ffcf9e"
+        },
+        "SEC-ST-09": {
+          "severity": "Medium",
+          "title": "Unbounded Address Input Fields Bypassing Validation",
+          "cwe": "CWE-20",
+          "status": "RESOLVED",
+          "resolvedAt": "2026-11-13T01:27:27Z",
+          "verificationCommit": "9eb4e9d2cad0ef77160e8743e529e6a6f6ffcf9e"
+        },
+        "SEC-ST-10": {
+          "severity": "Low",
+          "title": "Unhandled Unique Constraint Violation on Phone Update",
+          "cwe": "CWE-755",
+          "status": "RESOLVED",
+          "resolvedAt": "2026-11-13T01:27:27Z",
+          "verificationCommit": "9eb4e9d2cad0ef77160e8743e529e6a6f6ffcf9e"
+        },
+        "SEC-ST-11": {
+          "severity": "Informational",
+          "title": "Dead Code & Specification Discrepancies in StaffController",
+          "cwe": "CWE-1164",
+          "status": "RESOLVED",
+          "resolvedAt": "2026-11-13T01:27:27Z",
+          "verificationCommit": "9eb4e9d2cad0ef77160e8743e529e6a6f6ffcf9e"
+        }
+      }
+    }
+  }
+}

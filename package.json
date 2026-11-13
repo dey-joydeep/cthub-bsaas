@@ -121,6 +121,8 @@
     "aidd:format:changed": "node scripts/aidd/check-changed-format.mjs",
     "aidd:format:test": "node --test scripts/aidd/check-changed-format.test.mjs",
     "aidd:db-guard:test": "node --import tsx --test scripts/aidd/test-database-target.test.mjs",
+    "aidd:security-audit": "node scripts/aidd/backend-security-audit.mjs",
+    "aidd:security-audit:test": "node --test scripts/aidd/backend-security-audit.test.mjs",
     "sonar": "sonar-scanner-npm",
     "sonar:branch": "pwsh -NoProfile -Command \"npx sonar-scanner-npm -Dsonar.branch.name=(git branch --show-current)\""
   },
