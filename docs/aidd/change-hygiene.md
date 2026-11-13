@@ -8,12 +8,12 @@ For a PR spanning multiple product slices or a broad platform migration, record 
 
 ## Include and exclude
 
-| Include when affected                                                                     | Keep out of the change                                                 |
-| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Source, configuration, tests, and fixtures needed for the accepted behavior               | Unrelated refactors, formatting, and renames                           |
-| User stories, specs, API contracts, validation plans, and web docs whose behavior changed | Local output and editor state                                          |
-| Meaningful Prisma migrations and a lockfile when dependencies change                      | Secrets, credentials, and customer exports                             |
-| AIDD recovery snapshot when the task uses it                                              | Binary artifacts unless they are an explicit versioned source of truth |
+| Include when affected                                                                                     | Keep out of the change                                                 |
+| --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Source, configuration, tests, and fixtures needed for the accepted behavior                               | Unrelated refactors, formatting, and renames                           |
+| User stories, specs, API contracts, validation plans, and web docs whose behavior changed                 | Local output and editor state                                          |
+| Meaningful Prisma migrations, domain seeds under prisma/seeds/**, and a lockfile when dependencies change | Secrets, credentials, and customer exports                             |
+| AIDD recovery snapshot when the task uses it                                                              | Binary artifacts unless they are an explicit versioned source of truth |
 
 `.env.example`, `.env.sample`, and `.env.template` may be versioned with placeholders. The existing tracked `.env.test` is a test fixture exception: keep only nonsecret local test values there, inspect its diff whenever it changes, and never use it for production credentials. Git ignore rules do not protect files that are already tracked. A source checkpoint captures all nonignored working-tree paths, so review its preview for unrelated files and sensitive content before publishing.
 

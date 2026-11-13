@@ -121,8 +121,12 @@
     "aidd:format:changed": "node scripts/aidd/check-changed-format.mjs",
     "aidd:format:test": "node --test scripts/aidd/check-changed-format.test.mjs",
     "aidd:db-guard:test": "node --import tsx --test scripts/aidd/test-database-target.test.mjs",
-    "sonar": "sonar-scanner-npm",
-    "sonar:branch": "pwsh -NoProfile -Command \"npx sonar-scanner-npm -Dsonar.branch.name=(git branch --show-current)\""
+    "aidd:security-audit": "node scripts/aidd/backend-security-audit.mjs",
+    "aidd:security-audit:test": "node --test scripts/aidd/backend-security-audit.test.mjs",
+    "aidd:integrated-security-audit": "node scripts/aidd/integrated-security-audit.mjs",
+    "aidd:integrated-security-audit:test": "node --test scripts/aidd/integrated-security-audit.test.mjs",
+    "sonar": "sonar-scanner",
+    "sonar:branch": "pwsh -NoProfile -Command \"npx sonar-scanner -Dsonar.branch.name=(git branch --show-current)\""
   },
   "devDependencies": {
     "@analogjs/vite-plugin-angular": "2.7.5",

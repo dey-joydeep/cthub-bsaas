@@ -1,0 +1,2058 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
+import { ConflictException, ForbiddenException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { AuthenticatedUser, UserRole } from '@cthub-bsaas/shared';
+import type { PrismaService } from '@cthub-bsaas/server-data-access';
+import type { StaffPersonalProfileModel } from '../models/staff-service-catalog.models';
+
+import { StaffService } from './staff.service';
+
+const now = new Date('2026-05-26T00:00:00.000Z');
+
+function user(overrides: Partial<AuthenticatedUser> = {}): AuthenticatedUser {
+  return {
+    id: 'user-1',
+    email: 'owner@example.com',
+    roles: [UserRole.OWNER],
+    tenantId: 'tenant-1',
+    ...overrides,
+  };
+}
+
+function business(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'business-1',
+    tenantId: 'tenant-1',
+    displayName: 'Salon One',
+    legalName: 'Salon One Legal',
+    status: 'ACTIVE',
+    createdAt: now,
+    updatedAt: now,
+    ...overrides,
+  };
+}
+
+function branch(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'branch-1',
+    businessId: 'business-1',
+    name: 'Main Branch',
+    phone: '1234567890',
+    email: 'branch@example.com',
+    timezone: 'Asia/Tokyo',
+    currency: 'JPY',
+    address: {},
+    createdAt: now,
+    updatedAt: now,
+    ...overrides,
+  };
+}
+
+function staff(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'staff-1',
+    businessId: 'business-1',
+    displayName: 'Stylist One',
+    phone: '09000000001',
+    email: 'stylist@example.com',
+    status: 'ACTIVE',
+    roles: [],
+    roleAssignments: [],
+    branches: [{ staffId: 'staff-1', branchId: 'branch-1' }],
+    skills: [],
+    createdAt: now,
+    updatedAt: now,
+    ...overrides,
+  };
+}
+
+function prismaKnownError(code: string): Prisma.PrismaClientKnownRequestError {
+  return new Prisma.PrismaClientKnownRequestError('known request error', {
+    code,
+    clientVersion: 'test',
+  });
+}
+
+function createPrismaMock() {
+  const transactionMock = jest.fn();
+  const prisma = {
+    salonBusiness: {
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+    },
+    salonBranch: {
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+    },
+    salonOwnerStaff: {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      count: jest.fn(),
+      findUniqueOrThrow: jest.fn(),
+    },
+    salonOwnerStaffBranch: {
+      createMany: jest.fn(),
+      deleteMany: jest.fn(),
+    },
+    salonOwnerStaffSkill: {
+      createMany: jest.fn(),
+      deleteMany: jest.fn(),
+    },
+    salonOwnerStaffShift: {
+      findFirst: jest.fn(),
+      upsert: jest.fn(),
+    },
+    salonOwnerStaffLeaveBlock: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      delete: jest.fn(),
+    },
+    salonOwnerServiceCategory: {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
+    },
+    salonOwnerService: {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      count: jest.fn(),
+      findUniqueOrThrow: jest.fn(),
+    },
+    businessRole: {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      findUniqueOrThrow: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      count: jest.fn(),
+    },
+    businessRolePermission: {
+      createMany: jest.fn(),
+      deleteMany: jest.fn(),
+    },
+    permissionMaster: {
+      findMany: jest.fn(),
+    },
+    staffRoleAssignment: {
+      deleteMany: jest.fn(),
+      createMany: jest.fn(),
+      count: jest.fn(),
+    },
+    staffPersonalProfile: {
+      findUnique: jest.fn(),
+      upsert: jest.fn(),
+    },
+    staffIdentityDocument: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
+    },
+    auditEvent: {
+      create: jest.fn(),
+    },
+    $executeRaw: jest.fn().mockResolvedValue(1),
+    $transaction: transactionMock,
+  };
+  transactionMock.mockImplementation((callback: (tx: unknown) => unknown) => Promise.resolve(callback(prisma)));
+  return prisma;
+}
+
+describe('StaffService', () => {
+  let prisma: ReturnType<typeof createPrismaMock>;
+  let service: StaffService;
+
+  beforeEach(() => {
+    prisma = createPrismaMock();
+    service = new StaffService(prisma as unknown as PrismaService);
+
+    prisma.businessRole.findMany.mockResolvedValue([
+      {
+        id: 'role-stylist-1',
+        businessId: 'business-1',
+        roleCode: 'STYLIST',
+        name: 'Stylist',
+        description: 'Stylist role',
+        isSystemDefault: true,
+        isActive: true,
+        permissions: [{ permissionCode: 'appointment.view' }],
+        createdAt: now,
+        updatedAt: now,
+      },
+    ]);
+    prisma.permissionMaster.findMany.mockResolvedValue([
+      { code: 'appointment.create', name: 'Create appointments', category: 'Appointments', description: 'desc' },
+      { code: 'appointment.view', name: 'View appointments', category: 'Appointments', description: 'desc' },
+    ]);
+    prisma.staffRoleAssignment.deleteMany.mockResolvedValue({ count: 0 });
+    prisma.staffRoleAssignment.createMany.mockResolvedValue({ count: 1 });
+    prisma.staffRoleAssignment.count.mockResolvedValue(0);
+    prisma.salonOwnerService.findMany.mockResolvedValue([{ id: 'service-1' }]);
+  });
+
+  it('lists staff by authenticated tenant and optional branch', async () => {
+    prisma.salonBranch.findFirst.mockResolvedValue(branch());
+    prisma.salonOwnerStaff.count.mockResolvedValue(1);
+    prisma.salonOwnerStaff.findMany.mockResolvedValue([staff()]);
+
+    const result = await service.listStaff({ user: user() }, { branchId: 'branch-1', q: 'stylist', page: 2, pageSize: 25 });
+
+    expect(prisma.salonOwnerStaff.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          business: { tenantId: 'tenant-1' },
+          branches: { some: { branchId: 'branch-1' } },
+          OR: expect.arrayContaining([expect.objectContaining({ displayName: expect.objectContaining({ contains: 'stylist' }) })]),
+        }),
+        skip: 25,
+        take: 25,
+      }),
+    );
+    expect(result.items[0]).toMatchObject({ id: 'staff-1', branchIds: ['branch-1'] });
+    expect(result.page).toMatchObject({ page: 2, pageSize: 25, total: 1 });
+  });
+
+  it('requires tenant scope', async () => {
+    await expect(service.listStaff({ user: user({ tenantId: undefined }) })).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('creates staff after validating all assigned branches are in one business', async () => {
+    prisma.salonBranch.findMany.mockResolvedValue([branch()]);
+    prisma.salonOwnerStaff.create.mockResolvedValue({ id: 'staff-1' });
+    prisma.salonOwnerStaff.findUniqueOrThrow.mockResolvedValue(staff({ displayName: 'Trimmed' }));
+
+    const result = await service.createStaff(
+      { user: user() },
+      {
+        branchIds: ['branch-1', 'branch-1'],
+        displayName: ' Trimmed ',
+        phone: ' 09000000001 ',
+        email: ' stylist@example.com ',
+        status: 'ACTIVE',
+      },
+    );
+
+    expect(result.displayName).toBe('Trimmed');
+    expect(prisma.salonOwnerStaffBranch.createMany).toHaveBeenCalledWith({
+      data: [{ staffId: 'staff-1', branchId: 'branch-1' }],
+    });
+  });
+
+  it('maps duplicate staff phone numbers to conflict', async () => {
+    prisma.salonBranch.findMany.mockResolvedValue([branch()]);
+    prisma.salonOwnerStaff.create.mockRejectedValue(prismaKnownError('P2002'));
+
+    await expect(
+      service.createStaff(
+        { user: user() },
+        { branchIds: ['branch-1'], displayName: 'Stylist One', phone: '09000000001', status: 'ACTIVE' },
+      ),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('maps transaction-wrapped duplicate staff phone numbers to conflict', async () => {
+    prisma.salonBranch.findMany.mockResolvedValue([branch()]);
+    prisma.$transaction.mockRejectedValue(new Error('A unique constraint was violated'));
+
+    await expect(
+      service.createStaff(
+        { user: user() },
+        { branchIds: ['branch-1'], displayName: 'Stylist One', phone: '09000000001', status: 'ACTIVE' },
+      ),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('rejects staff display names that are too short after trimming', async () => {
+    prisma.salonBranch.findMany.mockResolvedValue([branch()]);
+
+    await expect(
+      service.createStaff({ user: user() }, { branchIds: ['branch-1'], displayName: ' A ', phone: '09000000001', status: 'ACTIVE' }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    expect(prisma.salonOwnerStaff.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects staff assignments across businesses', async () => {
+    prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff());
+    prisma.salonBranch.findMany.mockResolvedValue([branch({ id: 'branch-1' }), branch({ id: 'branch-2', businessId: 'business-2' })]);
+
+    await expect(
+      service.updateStaff({ user: user() }, 'staff-1', {
+        branchIds: ['branch-1', 'branch-2'],
+        displayName: 'Stylist One',
+        phone: '09000000001',
+        status: 'ACTIVE',
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('replaces roles, skills, shifts, and leave blocks with scope validation', async () => {
+    prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff());
+    prisma.salonOwnerStaff.update.mockResolvedValue(staff({ roles: ['STYLIST'] }));
+    prisma.salonOwnerService.count.mockResolvedValue(1);
+    prisma.salonOwnerStaff.findUniqueOrThrow.mockResolvedValue(staff({ skills: [{ staffId: 'staff-1', serviceId: 'service-1' }] }));
+    prisma.salonBranch.findFirst.mockResolvedValue(branch());
+    prisma.salonOwnerStaffShift.upsert.mockResolvedValue({
+      id: 'shift-1',
+      staffId: 'staff-1',
+      branchId: 'branch-1',
+      timezone: 'Asia/Tokyo',
+      days: [],
+      createdAt: now,
+      updatedAt: now,
+    });
+    prisma.salonOwnerStaffLeaveBlock.create.mockResolvedValue({
+      id: 'leave-1',
+      staffId: 'staff-1',
+      branchId: 'branch-1',
+      startsAt: new Date('2026-05-26T01:00:00.000Z'),
+      endsAt: new Date('2026-05-26T02:00:00.000Z'),
+      reason: 'Personal',
+      createdAt: now,
+    });
+
+    await expect(service.replaceStaffRoles({ user: user() }, 'staff-1', { roles: ['STYLIST', 'STYLIST'] })).resolves.toMatchObject({
+      roles: ['STYLIST'],
+    });
+    await expect(service.replaceStaffSkills({ user: user() }, 'staff-1', { serviceIds: ['service-1'] })).resolves.toMatchObject({
+      skillServiceIds: ['service-1'],
+    });
+    await expect(
+      service.replaceStaffShifts({ user: user() }, 'staff-1', {
+        branchId: 'branch-1',
+        timezone: 'Asia/Tokyo',
+        days: [{ dayOfWeek: 1, intervals: [{ start: '09:00', end: '17:00' }] }],
+      }),
+    ).resolves.toMatchObject({ staffId: 'staff-1', branchId: 'branch-1' });
+    await expect(
+      service.createStaffLeaveBlock({ user: user() }, 'staff-1', {
+        branchId: 'branch-1',
+        startsAt: '2026-05-26T01:00:00.000Z',
+        endsAt: '2026-05-26T02:00:00.000Z',
+        reason: ' Personal ',
+      }),
+    ).resolves.toMatchObject({ id: 'leave-1', reason: 'Personal' });
+  });
+
+  it('manages staff leave block lifecycle with filtering and deletion', async () => {
+    prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff());
+    prisma.salonBranch.findFirst.mockResolvedValue(branch());
+    prisma.salonOwnerStaffLeaveBlock.create.mockResolvedValue({
+      id: 'leave-global',
+      staffId: 'staff-1',
+      branchId: null,
+      startsAt: new Date('2026-06-01T00:00:00.000Z'),
+      endsAt: new Date('2026-06-05T00:00:00.000Z'),
+      reason: 'Vacation',
+      createdAt: now,
+    });
+    prisma.salonOwnerStaffLeaveBlock.findMany.mockResolvedValue([
+      {
+        id: 'leave-global',
+        staffId: 'staff-1',
+        branchId: null,
+        startsAt: new Date('2026-06-01T00:00:00.000Z'),
+        endsAt: new Date('2026-06-05T00:00:00.000Z'),
+        reason: 'Vacation',
+        createdAt: now,
+      },
+    ]);
+    prisma.salonOwnerStaffLeaveBlock.findFirst.mockResolvedValue({
+      id: 'leave-global',
+      staffId: 'staff-1',
+    });
+    prisma.salonOwnerStaffLeaveBlock.delete.mockResolvedValue({ id: 'leave-global' });
+
+    // Global leave creation (null branchId)
+    await expect(
+      service.createStaffLeaveBlock({ user: user() }, 'staff-1', {
+        startsAt: '2026-06-01T00:00:00.000Z',
+        endsAt: '2026-06-05T00:00:00.000Z',
+        reason: 'Vacation',
+      }),
+    ).resolves.toMatchObject({ id: 'leave-global', branchId: null, reason: 'Vacation' });
+
+    // List leave blocks with from/to query
+    await expect(
+      service.listStaffLeaveBlocks({ user: user() }, 'staff-1', {
+        from: '2026-06-01T00:00:00.000Z',
+        to: '2026-06-30T23:59:59.000Z',
+      }),
+    ).resolves.toMatchObject({
+      items: [{ id: 'leave-global', branchId: null }],
+    });
+
+    // Delete leave block
+    await expect(service.deleteStaffLeaveBlock({ user: user() }, 'staff-1', 'leave-global')).resolves.toEqual({
+      success: true,
+    });
+  });
+
+  it('rejects invalid leave block query parameters and missing delete targets', async () => {
+    prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff());
+
+    await expect(service.listStaffLeaveBlocks({ user: user() }, 'staff-1', { from: 'invalid-date' })).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+
+    await expect(service.listStaffLeaveBlocks({ user: user() }, 'staff-1', { to: 'invalid-date' })).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+
+    await expect(
+      service.listStaffLeaveBlocks({ user: user() }, 'staff-1', {
+        from: '2026-07-01T00:00:00.000Z',
+        to: '2026-06-01T00:00:00.000Z',
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    prisma.salonOwnerStaffLeaveBlock.findFirst.mockResolvedValue(null);
+    await expect(service.deleteStaffLeaveBlock({ user: user() }, 'staff-1', 'missing-leave')).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('enforces BR-ST-11 final owner protection on role changes and deactivations', async () => {
+    const ownerStaff = staff({ roles: ['OWNER'], status: 'ACTIVE' });
+    prisma.salonOwnerStaff.findFirst.mockResolvedValue(ownerStaff);
+    prisma.salonOwnerStaff.findMany.mockResolvedValueOnce([]); // No other active owner
+    prisma.salonOwnerStaff.count.mockResolvedValue(1); // Only 1 active owner
+
+    // Attempting to remove OWNER role when only 1 active owner exists
+    await expect(service.replaceStaffRoles({ user: user() }, 'staff-1', { roles: ['STYLIST'] })).rejects.toBeInstanceOf(ConflictException);
+
+    // Attempting to deactivate the only active owner
+    prisma.salonBranch.findMany.mockResolvedValue([branch()]);
+    prisma.salonOwnerStaff.findMany.mockResolvedValueOnce([]);
+    await expect(
+      service.updateStaff({ user: user() }, 'staff-1', {
+        branchIds: ['branch-1'],
+        displayName: 'Stylist One',
+        phone: '09000000001',
+        status: 'INACTIVE',
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    // When another active owner exists (count = 2), removal and deactivation succeed
+    prisma.salonOwnerStaff.count.mockResolvedValue(2);
+    prisma.salonOwnerStaff.findMany.mockResolvedValueOnce([staff({ id: 'owner-2', roles: ['OWNER'] })]);
+    prisma.salonOwnerStaff.update.mockResolvedValue(staff({ roles: ['STYLIST'] }));
+    await expect(service.replaceStaffRoles({ user: user() }, 'staff-1', { roles: ['STYLIST'] })).resolves.toMatchObject({
+      roles: ['STYLIST'],
+    });
+
+    prisma.salonOwnerStaff.findMany.mockResolvedValueOnce([staff({ id: 'owner-2', roles: ['OWNER'] })]);
+    prisma.salonOwnerStaff.update.mockResolvedValue(staff({ status: 'INACTIVE' }));
+    prisma.salonOwnerStaff.findUniqueOrThrow.mockResolvedValue(staff({ status: 'INACTIVE' }));
+    await expect(
+      service.updateStaff({ user: user() }, 'staff-1', {
+        branchIds: ['branch-1'],
+        displayName: 'Stylist One',
+        phone: '09000000001',
+        status: 'INACTIVE',
+      }),
+    ).resolves.toMatchObject({ status: 'INACTIVE' });
+  });
+
+  it('filters staff list by businessId when provided', async () => {
+    prisma.salonBusiness.findFirst.mockResolvedValue(business({ id: 'business-1' }));
+    prisma.salonOwnerStaff.count.mockResolvedValue(1);
+    prisma.salonOwnerStaff.findMany.mockResolvedValue([staff()]);
+
+    await expect(service.listStaff({ user: user() }, { businessId: 'business-1' })).resolves.toMatchObject({
+      items: [{ id: 'staff-1' }],
+    });
+
+    prisma.salonBusiness.findFirst.mockResolvedValue(null);
+    await expect(service.listStaff({ user: user() }, { businessId: 'missing-business' })).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('rejects invalid shift and leave intervals', async () => {
+    prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff());
+    prisma.salonBranch.findFirst.mockResolvedValue(branch());
+
+    await expect(
+      service.replaceStaffShifts({ user: user() }, 'staff-1', {
+        branchId: 'branch-1',
+        timezone: 'Asia/Tokyo',
+        days: [{ dayOfWeek: 1, intervals: [{ start: '17:00', end: '09:00' }] }],
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    await expect(
+      service.createStaffLeaveBlock({ user: user() }, 'staff-1', {
+        branchId: 'branch-1',
+        startsAt: '2026-05-26T02:00:00.000Z',
+        endsAt: '2026-05-26T01:00:00.000Z',
+        reason: 'Personal',
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('rejects staff shifts that do not match the branch timezone', async () => {
+    prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff());
+    prisma.salonBranch.findFirst.mockResolvedValue(branch());
+
+    await expect(
+      service.replaceStaffShifts({ user: user() }, 'staff-1', {
+        branchId: 'branch-1',
+        timezone: 'UTC',
+        days: [{ dayOfWeek: 1, intervals: [{ start: '09:00', end: '17:00' }] }],
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  describe('Staff Shifts and Delegated Branch Management', () => {
+    it('returns empty shift defaults when no shift record exists', async () => {
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff({ branches: [{ staffId: 'staff-1', branchId: 'branch-1' }] }));
+      prisma.salonOwnerStaffShift.findFirst.mockResolvedValue(null);
+
+      const result = await service.getStaffShifts({ user: user() }, 'staff-1');
+      expect(result).toEqual({
+        staffId: 'staff-1',
+        branchId: 'branch-1',
+        timezone: 'Asia/Tokyo',
+        days: [],
+      });
+    });
+
+    it('returns empty branchId when staff has no assigned branches and no shift exists', async () => {
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff({ branches: [] }));
+      prisma.salonOwnerStaffShift.findFirst.mockResolvedValue(null);
+
+      const result = await service.getStaffShifts({ user: user() }, 'staff-1');
+      expect(result.branchId).toBe('');
+    });
+
+    it('returns staff shift with mapped days and intervals', async () => {
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff());
+      prisma.salonOwnerStaffShift.findFirst.mockResolvedValue({
+        id: 'shift-1',
+        staffId: 'staff-1',
+        branchId: 'branch-1',
+        timezone: 'Asia/Tokyo',
+        days: [
+          { dayOfWeek: 1, intervals: [{ start: '09:00', end: '17:00' }] },
+          { dayOfWeek: 2, intervals: null },
+        ],
+      });
+
+      const result = await service.getStaffShifts({ user: user() }, 'staff-1');
+      expect(result.days).toHaveLength(2);
+      expect(result.days[0].intervals).toEqual([{ start: '09:00', end: '17:00' }]);
+      expect(result.days[1].intervals).toEqual([]);
+    });
+
+    it('handles non-array days in shift record', async () => {
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff());
+      prisma.salonOwnerStaffShift.findFirst.mockResolvedValue({
+        id: 'shift-1',
+        staffId: 'staff-1',
+        branchId: 'branch-1',
+        timezone: 'Asia/Tokyo',
+        days: 'invalid-json' as any,
+      });
+
+      const result = await service.getStaffShifts({ user: user() }, 'staff-1');
+      expect(result.days).toEqual([]);
+    });
+
+    it('allows branch manager to get shifts when branch is in managedBranchIds', async () => {
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff());
+      prisma.salonOwnerStaffShift.findFirst.mockResolvedValue({
+        id: 'shift-1',
+        staffId: 'staff-1',
+        branchId: 'branch-1',
+        timezone: 'Asia/Tokyo',
+        days: [],
+      });
+
+      const managerUser = user({ roles: [UserRole.STAFF], managedBranchIds: ['branch-1'] });
+      const result = await service.getStaffShifts({ user: managerUser }, 'staff-1');
+      expect(result.staffId).toBe('staff-1');
+    });
+
+    it('rejects branch manager from getting shifts for branch outside managedBranchIds', async () => {
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff());
+      prisma.salonOwnerStaffShift.findFirst.mockResolvedValue({
+        id: 'shift-1',
+        staffId: 'staff-1',
+        branchId: 'branch-2',
+        timezone: 'Asia/Tokyo',
+        days: [],
+      });
+
+      const managerUser = user({ roles: [UserRole.STAFF], managedBranchIds: ['branch-1'] });
+      await expect(service.getStaffShifts({ user: managerUser }, 'staff-1')).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('rejects branch manager from replacing shifts for branch outside managedBranchIds', async () => {
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff({ branches: [{ staffId: 'staff-1', branchId: 'branch-2' }] }));
+      prisma.salonBranch.findFirst.mockResolvedValue(branch({ id: 'branch-2' }));
+
+      const managerUser = user({ roles: [UserRole.STAFF], managedBranchIds: ['branch-1'] });
+      await expect(
+        service.replaceStaffShifts({ user: managerUser }, 'staff-1', { branchId: 'branch-2', timezone: 'Asia/Tokyo', days: [] }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('enforces delegated manager scoping on listStaff, createStaff, getStaff, and createStaffLeaveBlock', async () => {
+      const managerUser = user({ roles: [UserRole.STAFF], managedBranchIds: ['branch-1'] });
+
+      // listStaff with out-of-scope branchId
+      prisma.salonBranch.findFirst.mockResolvedValue(branch({ id: 'branch-2' }));
+      await expect(service.listStaff({ user: managerUser }, { branchId: 'branch-2' })).rejects.toBeInstanceOf(ForbiddenException);
+
+      // createStaff with out-of-scope branchId
+      prisma.salonBranch.findMany.mockResolvedValue([branch({ id: 'branch-2' })]);
+      await expect(
+        service.createStaff(
+          { user: managerUser },
+          { branchIds: ['branch-2'], displayName: 'Stylist Out', phone: '09012345678', status: 'ACTIVE' },
+        ),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+
+      // getStaff where staff has no overlapping branch with manager
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff({ branches: [{ staffId: 'staff-1', branchId: 'branch-2' }] }));
+      await expect(service.getStaff({ user: managerUser }, 'staff-1')).rejects.toBeInstanceOf(ForbiddenException);
+
+      // createStaffLeaveBlock where branch is outside manager's scope
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff({ branches: [{ staffId: 'staff-1', branchId: 'branch-2' }] }));
+      prisma.salonBranch.findFirst.mockResolvedValue(branch({ id: 'branch-2' }));
+      await expect(
+        service.createStaffLeaveBlock({ user: managerUser }, 'staff-1', {
+          branchId: 'branch-2',
+          startsAt: '2026-05-26T01:00:00.000Z',
+          endsAt: '2026-05-26T02:00:00.000Z',
+          reason: 'Personal',
+        }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('enforces multiple business resolution and branch business consistency', async () => {
+      // resolveBusinessInScope with multiple businesses and no ID
+      prisma.salonBusiness.findMany.mockResolvedValue([business(), business({ id: 'business-2' })]);
+      await expect(service.listBusinessRoles({ user: user() })).rejects.toBeInstanceOf(ForbiddenException);
+
+      // requireSingleBusiness with multiple businesses
+      prisma.salonBranch.findMany.mockResolvedValue([
+        branch({ id: 'branch-1', businessId: 'business-1' }),
+        branch({ id: 'branch-2', businessId: 'business-2' }),
+      ]);
+      await expect(
+        service.createStaff(
+          { user: user() },
+          { branchIds: ['branch-1', 'branch-2'], displayName: 'Stylist Multi', phone: '09012345678', status: 'ACTIVE' },
+        ),
+      ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+      // assertRemainingActiveOwner when other owner is assigned via roleAssignments
+      const ownerStaff = staff({ roles: ['OWNER'], status: 'ACTIVE' });
+      prisma.salonOwnerStaff.findFirst.mockResolvedValue(ownerStaff);
+      prisma.salonOwnerStaff.findMany.mockResolvedValueOnce([
+        staff({
+          id: 'owner-2',
+          roles: [],
+          roleAssignments: [{ staffId: 'owner-2', businessRoleId: 'owner-role-id', businessRole: { roleCode: 'OWNER', name: 'Owner' } }],
+        }),
+      ]);
+      prisma.salonOwnerStaff.update.mockResolvedValue(staff({ roles: ['STYLIST'] }));
+      await expect(service.replaceStaffRoles({ user: user() }, 'staff-1', { roles: ['STYLIST'] })).resolves.toMatchObject({
+        roles: ['STYLIST'],
+      });
+    });
+  });
+
+  it('covers staff retrieval, updates, empty skill/eligibility replacements, and error branches', async () => {
+    prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff({ email: null }));
+    await expect(service.getStaff({ user: user() }, 'staff-1')).resolves.toMatchObject({ id: 'staff-1' });
+
+    prisma.salonBranch.findMany.mockResolvedValueOnce([branch({ id: 'branch-2', businessId: 'business-2' })]);
+    await expect(
+      service.updateStaff({ user: user() }, 'staff-1', {
+        branchIds: ['branch-2'],
+        displayName: 'Stylist One',
+        phone: '09000000001',
+        status: 'ACTIVE',
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    prisma.salonBranch.findMany.mockResolvedValue([branch()]);
+    prisma.salonOwnerStaff.update.mockResolvedValue(staff({ displayName: 'Updated Stylist' }));
+    prisma.salonOwnerStaff.findUniqueOrThrow.mockResolvedValue(staff({ displayName: 'Updated Stylist' }));
+    await expect(
+      service.updateStaff({ user: user() }, 'staff-1', {
+        branchIds: ['branch-1'],
+        displayName: 'Updated Stylist',
+        phone: '09000000001',
+        status: 'ACTIVE',
+      }),
+    ).resolves.toMatchObject({ displayName: 'Updated Stylist' });
+
+    prisma.salonOwnerStaff.update.mockRejectedValueOnce(prismaKnownError('P2002'));
+    await expect(
+      service.updateStaff({ user: user() }, 'staff-1', {
+        branchIds: ['branch-1'],
+        displayName: 'Updated Stylist',
+        phone: '09000000001',
+        status: 'ACTIVE',
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    prisma.salonOwnerStaff.update.mockRejectedValueOnce(new Error('unexpected staff update error'));
+    await expect(
+      service.updateStaff({ user: user() }, 'staff-1', {
+        branchIds: ['branch-1'],
+        displayName: 'Updated Stylist',
+        phone: '09000000001',
+        status: 'ACTIVE',
+      }),
+    ).rejects.toThrow('unexpected staff update error');
+
+    prisma.salonOwnerStaff.create.mockRejectedValueOnce(new Error('unexpected staff create error'));
+    await expect(
+      service.createStaff(
+        { user: user() },
+        { branchIds: ['branch-1'], displayName: 'Stylist One', phone: '09000000001', status: 'ACTIVE' },
+      ),
+    ).rejects.toThrow('unexpected staff create error');
+
+    await expect(service.replaceStaffSkills({ user: user() }, 'staff-1', { serviceIds: [] })).resolves.toMatchObject({ id: 'staff-1' });
+    prisma.salonOwnerService.findMany.mockResolvedValueOnce([]);
+    await expect(service.replaceStaffSkills({ user: user() }, 'staff-1', { serviceIds: ['missing-service'] })).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it('covers shift/leave validation and not-found/conflict error branches across catalog operations', async () => {
+    prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff());
+    prisma.salonBranch.findFirst.mockResolvedValue(branch());
+    prisma.salonOwnerStaffShift.upsert.mockResolvedValue({
+      id: 'shift-1',
+      staffId: 'staff-1',
+      branchId: 'branch-1',
+      timezone: 'Asia/Tokyo',
+      days: [],
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await expect(
+      service.replaceStaffShifts({ user: user() }, 'staff-1', {
+        branchId: 'branch-1',
+        timezone: 'Invalid/Timezone',
+        days: [],
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    await expect(
+      service.replaceStaffShifts({ user: user() }, 'staff-1', {
+        branchId: 'branch-1',
+        timezone: 'Asia/Tokyo',
+        days: [{ dayOfWeek: 1, intervals: [{ start: '25:00', end: '26:00' }] }],
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    await expect(
+      service.replaceStaffShifts({ user: user() }, 'staff-1', {
+        branchId: 'branch-1',
+        timezone: 'Asia/Tokyo',
+        days: [
+          {
+            dayOfWeek: 1,
+            intervals: [
+              { start: '13:00', end: '15:00' },
+              { start: '09:00', end: '14:00' },
+            ],
+          },
+        ],
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    await expect(
+      service.replaceStaffShifts({ user: user() }, 'staff-1', {
+        branchId: 'branch-1',
+        timezone: 'Asia/Tokyo',
+        days: [
+          { dayOfWeek: 1, intervals: [{ start: '09:00', end: '12:00' }] },
+          { dayOfWeek: 1, intervals: [{ start: '13:00', end: '17:00' }] },
+        ],
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    await expect(
+      service.replaceStaffShifts({ user: user() }, 'staff-1', {
+        branchId: 'branch-1',
+        timezone: 'Asia/Tokyo',
+        days: [
+          { dayOfWeek: 2, intervals: [{ start: '09:00', end: '12:00' }] },
+          { dayOfWeek: 1, intervals: [{ start: '09:00', end: '12:00' }] },
+        ],
+      }),
+    ).resolves.toMatchObject({ days: [{ dayOfWeek: 1 }, { dayOfWeek: 2 }] });
+
+    prisma.salonBranch.findFirst.mockResolvedValueOnce(branch({ id: 'branch-unassigned' }));
+    await expect(
+      service.replaceStaffShifts({ user: user() }, 'staff-1', {
+        branchId: 'branch-unassigned',
+        timezone: 'Asia/Tokyo',
+        days: [],
+      }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+
+    prisma.salonBranch.findFirst.mockResolvedValueOnce(branch({ id: 'branch-unassigned' }));
+    await expect(
+      service.createStaffLeaveBlock({ user: user() }, 'staff-1', {
+        branchId: 'branch-unassigned',
+        startsAt: '2026-05-26T01:00:00.000Z',
+        endsAt: '2026-05-26T02:00:00.000Z',
+        reason: 'Personal',
+      }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+
+    prisma.salonBranch.findFirst.mockResolvedValueOnce(null);
+    await expect(service.listStaff({ user: user() }, { branchId: 'missing-branch' })).rejects.toBeInstanceOf(NotFoundException);
+
+    await expect(
+      service.createStaff({ user: user() }, { branchIds: [], displayName: 'Stylist One', phone: '09000000001', status: 'ACTIVE' }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    prisma.salonBranch.findMany.mockResolvedValueOnce([]);
+    await expect(
+      service.createStaff(
+        { user: user() },
+        { branchIds: ['missing-branch'], displayName: 'Stylist One', phone: '09000000001', status: 'ACTIVE' },
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(null);
+    await expect(service.getStaff({ user: user() }, 'missing-staff')).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('manages business roles and system permissions with validation and invariants', async () => {
+    prisma.salonBusiness.findMany.mockResolvedValue([business()]);
+    prisma.permissionMaster.findMany.mockResolvedValue([
+      { code: 'appointment.create', name: 'Create appointments', category: 'Appointments', description: 'desc' },
+      { code: 'appointment.view', name: 'View appointments', category: 'Appointments', description: 'desc' },
+    ]);
+
+    // listSystemPermissions
+    const permissions = await service.listSystemPermissions();
+    expect(permissions).toHaveLength(2);
+    expect(permissions[0]).toEqual({
+      code: 'appointment.create',
+      name: 'Create appointments',
+      category: 'Appointments',
+      description: 'desc',
+    });
+
+    // listBusinessRoles with default query (active only)
+    const mockRole = {
+      id: 'role-1',
+      businessId: 'business-1',
+      roleCode: 'CUSTOM',
+      name: 'Colorist',
+      description: 'Colorist role',
+      isSystemDefault: false,
+      isActive: true,
+      permissions: [{ permissionCode: 'appointment.create' }],
+      createdAt: now,
+      updatedAt: now,
+    };
+    prisma.businessRole.findMany.mockResolvedValue([mockRole]);
+    const roles = await service.listBusinessRoles({ user: user() });
+    expect(roles).toHaveLength(1);
+    expect(roles[0]).toMatchObject({ name: 'Colorist', permissions: ['appointment.create'] });
+    expect(prisma.businessRole.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ isActive: true }),
+      }),
+    );
+
+    // listBusinessRoles with includeInactive
+    await service.listBusinessRoles({ user: user() }, { includeInactive: true });
+    expect(prisma.businessRole.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ businessId: 'business-1' }),
+      }),
+    );
+
+    // createBusinessRole success
+    prisma.businessRole.findFirst.mockResolvedValue(null);
+    prisma.businessRole.create.mockResolvedValue(mockRole);
+    prisma.businessRole.findUniqueOrThrow.mockResolvedValue(mockRole);
+    const createdRole = await service.createBusinessRole(
+      { user: user() },
+      {
+        name: 'Colorist',
+        description: 'Colorist role',
+        permissions: ['appointment.create'],
+        isActive: true,
+      },
+    );
+    expect(createdRole).toMatchObject({ name: 'Colorist' });
+
+    // createBusinessRole validation errors
+    await expect(service.createBusinessRole({ user: user() }, { name: ' ', permissions: ['appointment.create'] })).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+
+    await expect(service.createBusinessRole({ user: user() }, { name: 'Colorist', permissions: [] })).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+
+    // invalid permissions (not in permissionMaster)
+    prisma.permissionMaster.findMany.mockResolvedValueOnce([]);
+    await expect(service.createBusinessRole({ user: user() }, { name: 'Colorist', permissions: ['invalid.perm'] })).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+
+    // duplicate name conflict
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole);
+    await expect(
+      service.createBusinessRole({ user: user() }, { name: 'Colorist', permissions: ['appointment.create'] }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    // P2002 duplicate error during create
+    prisma.businessRole.findFirst.mockResolvedValueOnce(null);
+    prisma.businessRole.create.mockRejectedValueOnce(prismaKnownError('P2002'));
+    await expect(
+      service.createBusinessRole({ user: user() }, { name: 'Colorist', permissions: ['appointment.create'] }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    // unexpected error during create
+    prisma.businessRole.findFirst.mockResolvedValueOnce(null);
+    prisma.businessRole.create.mockRejectedValueOnce(new Error('unexpected create error'));
+    await expect(service.createBusinessRole({ user: user() }, { name: 'Colorist', permissions: ['appointment.create'] })).rejects.toThrow(
+      'unexpected create error',
+    );
+
+    // updateBusinessRole not found
+    prisma.businessRole.findFirst.mockResolvedValueOnce(null);
+    await expect(
+      service.updateBusinessRole({ user: user() }, 'missing-role', { name: 'Updated', permissions: ['appointment.create'] }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    // updateBusinessRole name collision
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole).mockResolvedValueOnce({ ...mockRole, id: 'role-2', name: 'Duplicate' });
+    await expect(
+      service.updateBusinessRole({ user: user() }, 'role-1', { name: 'Duplicate', permissions: ['appointment.create'] }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    // updateBusinessRole invalid permissions
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole);
+    await expect(service.updateBusinessRole({ user: user() }, 'role-1', { name: 'Colorist', permissions: [] })).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole);
+    prisma.permissionMaster.findMany.mockResolvedValueOnce([]);
+    await expect(
+      service.updateBusinessRole({ user: user() }, 'role-1', { name: 'Colorist', permissions: ['invalid.perm'] }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    // updateBusinessRole BR-ST-06.1: cannot deactivate OWNER role
+    const ownerRole = { ...mockRole, roleCode: 'OWNER', name: 'Owner' };
+    prisma.businessRole.findFirst.mockResolvedValueOnce(ownerRole);
+    await expect(
+      service.updateBusinessRole({ user: user() }, 'role-1', { name: 'Owner', permissions: ['appointment.create'], isActive: false }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    // updateBusinessRole BR-ST-13: cannot deactivate in-use role
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole);
+    prisma.staffRoleAssignment.count.mockResolvedValueOnce(1);
+    await expect(
+      service.updateBusinessRole({ user: user() }, 'role-1', { name: 'Colorist', permissions: ['appointment.create'], isActive: false }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    // updateBusinessRole success
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole);
+    prisma.businessRole.update.mockResolvedValue(mockRole);
+    prisma.businessRole.findUniqueOrThrow.mockResolvedValue(mockRole);
+    const updatedRole = await service.updateBusinessRole({ user: user() }, 'role-1', {
+      name: 'Colorist',
+      description: 'Updated description',
+      permissions: ['appointment.create'],
+      isActive: true,
+    });
+    expect(updatedRole).toMatchObject({ name: 'Colorist' });
+
+    // updateBusinessRole P2002 duplicate
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole);
+    prisma.businessRole.update.mockRejectedValueOnce(prismaKnownError('P2002'));
+    await expect(
+      service.updateBusinessRole({ user: user() }, 'role-1', { name: 'Colorist', permissions: ['appointment.create'] }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    // updateBusinessRole unexpected error
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole);
+    prisma.businessRole.update.mockRejectedValueOnce(new Error('unexpected update error'));
+    await expect(
+      service.updateBusinessRole({ user: user() }, 'role-1', { name: 'Colorist', permissions: ['appointment.create'] }),
+    ).rejects.toThrow('unexpected update error');
+
+    // deleteBusinessRole not found
+    prisma.businessRole.findFirst.mockResolvedValueOnce(null);
+    await expect(service.deleteBusinessRole({ user: user() }, 'missing-role')).rejects.toBeInstanceOf(NotFoundException);
+
+    // deleteBusinessRole cannot delete OWNER role
+    prisma.businessRole.findFirst.mockResolvedValueOnce(ownerRole);
+    await expect(service.deleteBusinessRole({ user: user() }, 'role-owner')).rejects.toBeInstanceOf(ConflictException);
+
+    // deleteBusinessRole cannot delete in-use role
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole);
+    prisma.staffRoleAssignment.count.mockResolvedValueOnce(2);
+    await expect(service.deleteBusinessRole({ user: user() }, 'role-1')).rejects.toBeInstanceOf(ConflictException);
+
+    // deleteBusinessRole success
+    prisma.businessRole.findFirst.mockResolvedValueOnce(mockRole);
+    prisma.staffRoleAssignment.count.mockResolvedValueOnce(0);
+    const deleteResult = await service.deleteBusinessRole({ user: user() }, 'role-1');
+    expect(deleteResult).toEqual({ success: true });
+    expect(prisma.businessRole.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'role-1' }, data: { isActive: false } }),
+    );
+  });
+
+  it('handles replaceStaffRoles with roleIds, validation, and mappings', async () => {
+    const activeStaff = staff({ roles: ['STYLIST'], status: 'ACTIVE' });
+    prisma.salonOwnerStaff.findFirst.mockResolvedValue(activeStaff);
+
+    const mockRole = {
+      id: '11111111-1111-4111-8111-111111111111',
+      businessId: 'business-1',
+      roleCode: 'STYLIST',
+      name: 'Stylist',
+      description: null,
+      isSystemDefault: true,
+      isActive: true,
+      permissions: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    // replaceStaffRoles with roleIds
+    prisma.businessRole.findMany.mockResolvedValueOnce([mockRole]);
+    prisma.salonOwnerStaff.update.mockResolvedValue({
+      ...activeStaff,
+      roleAssignments: [{ staffId: 'staff-1', businessRoleId: mockRole.id, businessRole: mockRole }],
+    });
+    const result = await service.replaceStaffRoles({ user: user() }, 'staff-1', {
+      roleIds: [mockRole.id],
+    });
+    expect(result.roleIds).toEqual([mockRole.id]);
+    expect(result.roles).toEqual(['STYLIST']);
+
+    // replaceStaffRoles with roleIds where not found in business
+    prisma.businessRole.findMany.mockResolvedValueOnce([]);
+    await expect(service.replaceStaffRoles({ user: user() }, 'staff-1', { roleIds: ['missing-role-id'] })).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+
+    // replaceStaffRoles with roles where not found
+    prisma.businessRole.findMany.mockResolvedValueOnce([]);
+    await expect(service.replaceStaffRoles({ user: user() }, 'staff-1', { roles: ['MISSING_ROLE'] })).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+
+    // replaceStaffRoles with empty input (neither roleIds nor roles)
+    await expect(service.replaceStaffRoles({ user: user() }, 'staff-1', {})).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    // mapStaff with roleAssignments where businessRole has no roleCode (uses name)
+    const customRole = { ...mockRole, roleCode: null, name: 'Lead Colorist' };
+    prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce({
+      ...activeStaff,
+      roleAssignments: [{ staffId: 'staff-1', businessRoleId: customRole.id, businessRole: customRole }],
+    });
+    const staffWithCustom = await service.getStaff({ user: user() }, 'staff-1');
+    expect(staffWithCustom.roles).toEqual(['Lead Colorist']);
+    expect(staffWithCustom.roleIds).toEqual([customRole.id]);
+
+    // BR-ST-06.1 when owner status is derived from roleAssignments instead of legacy roles array
+    const assignedOwnerStaff = {
+      ...activeStaff,
+      roles: [],
+      roleAssignments: [{ staffId: 'staff-1', businessRoleId: 'owner-role-id', businessRole: { roleCode: 'OWNER', name: 'Owner' } }],
+    };
+    prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(assignedOwnerStaff);
+    prisma.salonBranch.findMany.mockResolvedValueOnce([branch()]);
+    prisma.salonOwnerStaff.findMany.mockResolvedValueOnce([]); // final owner
+    prisma.salonOwnerStaff.count.mockResolvedValueOnce(1); // final owner
+    await expect(
+      service.updateStaff({ user: user() }, 'staff-1', {
+        branchIds: ['branch-1'],
+        displayName: 'Owner Staff',
+        phone: '09000000001',
+        status: 'INACTIVE',
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(assignedOwnerStaff);
+    prisma.businessRole.findMany.mockResolvedValueOnce([mockRole]); // role without OWNER
+    prisma.salonOwnerStaff.findMany.mockResolvedValueOnce([]); // final owner
+    prisma.salonOwnerStaff.count.mockResolvedValueOnce(1); // final owner
+    await expect(service.replaceStaffRoles({ user: user() }, 'staff-1', { roleIds: [mockRole.id] })).rejects.toBeInstanceOf(
+      ConflictException,
+    );
+  });
+
+  describe('Staff Personal HR Details and Identity Documents', () => {
+    const ownerUser = user({ roles: [UserRole.OWNER] });
+    const managerUser = user({ id: 'manager-1', roles: [{ id: 1, name: 'MANAGER' }], managedBranchIds: ['branch-1'] });
+    const otherManagerUser = user({ id: 'manager-2', roles: [{ id: 1, name: 'MANAGER' }], managedBranchIds: ['branch-99'] });
+    const staffUser = user({ id: 'user-stylist', email: 'stylist@example.com', roles: [UserRole.STAFF] });
+    const otherStaffUser = user({ id: 'user-other', email: 'other@example.com', roles: [UserRole.STAFF] });
+
+    const baseStaff = staff({
+      id: 'staff-1',
+      userId: 'user-stylist',
+      email: 'stylist@example.com',
+      branches: [{ staffId: 'staff-1', branchId: 'branch-1' }],
+    });
+
+    const mockProfile = {
+      staffId: 'staff-1',
+      legalName: 'Elena Vance',
+      dateOfBirth: new Date('1990-05-15'),
+      gender: 'FEMALE',
+      addressLine1: '1-2-3 Shibuya',
+      addressLine2: 'Apt 101',
+      city: 'Shibuya',
+      state: 'Tokyo',
+      postalCode: '150-0002',
+      country: 'JP',
+      emergencyContactName: 'Marcus Vance',
+      emergencyContactRelationship: 'Spouse',
+      emergencyContactPhone: '09099990001',
+      employmentType: 'FULL_TIME',
+      hireDate: new Date('2020-01-10'),
+      terminationDate: null,
+      payoutMethod: 'BANK_TRANSFER',
+      bankName: 'Mizuho Bank',
+      branchName: 'Shibuya Branch',
+      branchCode: '210',
+      accountType: 'ORDINARY',
+      accountNumber: '1234567',
+      accountHolderName: 'ELENA VANCE',
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const mockDoc = {
+      id: 'doc-1',
+      staffId: 'staff-1',
+      documentType: 'DRIVERS_LICENSE',
+      fileKey: 'secure/doc-1.pdf',
+      mimeType: 'application/pdf',
+      fileSizeBytes: 1048576,
+      verificationStatus: 'PENDING_VERIFICATION',
+      verifiedByUserId: null,
+      verifiedAt: null,
+      rejectionReason: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    describe('getStaffPersonalDetails', () => {
+      it('allows owner to get staff personal details', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.staffPersonalProfile.findUnique.mockResolvedValueOnce(mockProfile);
+
+        const result = await service.getStaffPersonalDetails({ user: ownerUser }, 'staff-1');
+        expect(result.staffId).toBe('staff-1');
+        expect(result.legalName).toBe('Elena Vance');
+        expect(result.payoutMethod).toBe('BANK_TRANSFER');
+        expect(result.bankDetails?.bankName).toBe('Mizuho Bank');
+      });
+
+      it('allows assigned branch manager to get staff personal details', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.staffPersonalProfile.findUnique.mockResolvedValueOnce(mockProfile);
+
+        const result = await service.getStaffPersonalDetails({ user: managerUser }, 'staff-1');
+        expect(result.staffId).toBe('staff-1');
+
+        // Global manager with canManageBranches: true and no specific managedBranchIds
+        const globalManager = user({ id: 'manager-global', roles: [{ id: 1, name: 'MANAGER' }], canManageBranches: true });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.staffPersonalProfile.findUnique.mockResolvedValueOnce(mockProfile);
+        const globalResult = await service.getStaffPersonalDetails({ user: globalManager }, 'staff-1');
+        expect(globalResult.staffId).toBe('staff-1');
+      });
+
+      it('forbids manager not assigned to staff branch', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+
+        await expect(service.getStaffPersonalDetails({ user: otherManagerUser }, 'staff-1')).rejects.toBeInstanceOf(ForbiddenException);
+      });
+
+      it('allows staff member to view own personal details', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.staffPersonalProfile.findUnique.mockResolvedValueOnce(mockProfile);
+
+        const result = await service.getStaffPersonalDetails({ user: staffUser }, 'staff-1');
+        expect(result.staffId).toBe('staff-1');
+
+        // Match self by staff.id === user.id
+        const staffSameId = staff({ id: 'staff-same-id', userId: null, email: null });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(staffSameId);
+        prisma.staffPersonalProfile.findUnique.mockResolvedValueOnce(null);
+        const resSameId = await service.getStaffPersonalDetails({ user: user({ id: 'staff-same-id' }) }, 'staff-same-id');
+        expect(resSameId.staffId).toBe('staff-same-id');
+
+        // Match self by staff.email === user.email
+        const staffSameEmail = staff({ id: 'staff-diff', userId: null, email: 'same@example.com' });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(staffSameEmail);
+        prisma.staffPersonalProfile.findUnique.mockResolvedValueOnce(null);
+        const resSameEmail = await service.getStaffPersonalDetails(
+          { user: user({ id: 'user-diff', email: 'same@example.com' }) },
+          'staff-diff',
+        );
+        expect(resSameEmail.staffId).toBe('staff-diff');
+
+        // Role as object in AuthenticatedUser
+        const userWithObjectRole = user({ roles: [{ id: 1, name: 'owner' }] as any });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.staffPersonalProfile.findUnique.mockResolvedValueOnce(mockProfile);
+        const resObjRole = await service.getStaffPersonalDetails({ user: userWithObjectRole }, 'staff-1');
+        expect(resObjRole.staffId).toBe('staff-1');
+      });
+
+      it('forbids other staff member from viewing personal details', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+
+        await expect(service.getStaffPersonalDetails({ user: otherStaffUser }, 'staff-1')).rejects.toBeInstanceOf(ForbiddenException);
+      });
+
+      it('returns default profile if not yet created in database', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.staffPersonalProfile.findUnique.mockResolvedValueOnce(null);
+
+        const result = await service.getStaffPersonalDetails({ user: ownerUser }, 'staff-1');
+        expect(result.staffId).toBe('staff-1');
+        expect(result.legalName).toBeNull();
+        expect(result.employmentType).toBe('FULL_TIME');
+        expect(result.payoutMethod).toBe('CASH');
+      });
+    });
+
+    describe('updateStaffPersonalDetails', () => {
+      const validBankInput = {
+        legalName: 'Elena Vance',
+        dateOfBirth: '1990-05-15',
+        gender: 'FEMALE' as const,
+        address: {
+          line1: '1-2-3 Shibuya',
+          city: 'Shibuya',
+          state: 'Tokyo',
+          postalCode: '150-0002',
+          country: 'JP',
+        },
+        emergencyContact: {
+          name: 'Marcus Vance',
+          relationship: 'Spouse',
+          phone: '09099990001',
+        },
+        employmentType: 'FULL_TIME' as const,
+        hireDate: '2020-01-10',
+        payoutMethod: 'BANK_TRANSFER' as const,
+        bankDetails: {
+          bankName: 'Mizuho Bank',
+          branchName: 'Shibuya Branch',
+          branchCode: '210',
+          accountType: 'ORDINARY' as const,
+          accountNumber: '1234567',
+          accountHolder: 'ELENA VANCE',
+        },
+      };
+
+      it('updates personal details with bank transfer details for owner', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.staffPersonalProfile.upsert.mockResolvedValueOnce(mockProfile);
+
+        const result = await service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', validBankInput);
+        expect(result.staffId).toBe('staff-1');
+        expect(prisma.staffPersonalProfile.upsert).toHaveBeenCalled();
+        expect(prisma.auditEvent.create).toHaveBeenCalled();
+      });
+
+      it('updates personal details with cash payout for assigned manager', async () => {
+        const cashInput = {
+          ...validBankInput,
+          payoutMethod: 'CASH' as const,
+          bankDetails: undefined,
+          terminationDate: '2028-01-01',
+        };
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.staffPersonalProfile.upsert.mockResolvedValueOnce({
+          ...mockProfile,
+          payoutMethod: 'CASH',
+          terminationDate: new Date('2028-01-01'),
+        });
+
+        const result = await service.updateStaffPersonalDetails({ user: managerUser }, 'staff-1', cashInput);
+        expect(result.payoutMethod).toBe('CASH');
+        expect(result.terminationDate).toBe('2028-01-01');
+
+        // Minimal input without address, emergencyContact, dateOfBirth
+        const minimalInput = {
+          employmentType: 'CONTRACTOR' as const,
+          hireDate: '2023-01-01',
+          payoutMethod: 'CASH' as const,
+        };
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.staffPersonalProfile.upsert.mockResolvedValueOnce({
+          staffId: 'staff-1',
+          legalName: null,
+          dateOfBirth: null,
+          gender: null,
+          addressLine1: null,
+          addressLine2: null,
+          city: null,
+          state: null,
+          postalCode: null,
+          country: 'JP',
+          emergencyContactName: null,
+          emergencyContactRelationship: null,
+          emergencyContactPhone: null,
+          employmentType: 'CONTRACTOR',
+          hireDate: new Date('2023-01-01'),
+          terminationDate: null,
+          payoutMethod: 'CASH',
+          bankName: null,
+          branchName: null,
+          branchCode: null,
+          accountType: null,
+          accountNumber: null,
+          accountHolderName: null,
+          createdAt: now,
+          updatedAt: now,
+        });
+        const minResult = await service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', minimalInput);
+        expect(minResult.employmentType).toBe('CONTRACTOR');
+        expect(minResult.address).toBeUndefined();
+        expect(minResult.emergencyContact).toBeUndefined();
+        expect(minResult.bankDetails).toBeUndefined();
+      });
+
+      it('forbids staff self-update on the full personal endpoint', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+
+        await expect(service.updateStaffPersonalDetails({ user: staffUser }, 'staff-1', validBankInput)).rejects.toBeInstanceOf(
+          ForbiddenException,
+        );
+      });
+
+      it('validates legal name bounds', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', { ...validBankInput, legalName: 'X' }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      });
+
+      it('validates date of birth minimum age (15 years)', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', { ...validBankInput, dateOfBirth: '2025-01-01' }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', { ...validBankInput, dateOfBirth: 'invalid-date' }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      });
+
+      it('validates gender and employment type enums', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', { ...validBankInput, gender: 'INVALID' as any }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', { ...validBankInput, employmentType: 'INVALID' as any }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', { ...validBankInput, payoutMethod: 'INVALID' as any }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      });
+
+      it('validates hire date and termination date logic', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', { ...validBankInput, hireDate: 'invalid' }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', {
+            ...validBankInput,
+            hireDate: '2022-01-01',
+            terminationDate: '2020-01-01',
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      });
+
+      it('validates bank transfer required fields (BR-ST-18)', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', { ...validBankInput, bankDetails: undefined }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', {
+            ...validBankInput,
+            bankDetails: { ...validBankInput.bankDetails, bankName: '' },
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', {
+            ...validBankInput,
+            bankDetails: { ...validBankInput.bankDetails, branchName: '', branchCode: '' },
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', {
+            ...validBankInput,
+            bankDetails: { ...validBankInput.bankDetails, accountType: 'INVALID' as any },
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', {
+            ...validBankInput,
+            bankDetails: { ...validBankInput.bankDetails, accountNumber: '123' }, // < 4 digits
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', {
+            ...validBankInput,
+            bankDetails: { ...validBankInput.bankDetails, accountHolder: '' },
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      });
+
+      it('validates address and emergency contact length constraints', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', {
+            ...validBankInput,
+            address: { line1: 'a'.repeat(125) },
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', {
+            ...validBankInput,
+            address: { line2: 'b'.repeat(125) },
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', {
+            ...validBankInput,
+            address: { city: 'c'.repeat(65) },
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', {
+            ...validBankInput,
+            address: { state: 's'.repeat(65) },
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', {
+            ...validBankInput,
+            address: { postalCode: 'p'.repeat(25) },
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', {
+            ...validBankInput,
+            emergencyContact: { name: 'A' }, // < 2 chars
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', {
+            ...validBankInput,
+            emergencyContact: { relationship: 'r'.repeat(45) },
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', {
+            ...validBankInput,
+            emergencyContact: { phone: '0'.repeat(35) },
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      });
+
+      it('gracefully handles audit event write error', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.staffPersonalProfile.upsert.mockResolvedValueOnce(mockProfile);
+        prisma.auditEvent.create.mockRejectedValueOnce(new Error('Audit failure'));
+
+        const result = await service.updateStaffPersonalDetails({ user: ownerUser }, 'staff-1', validBankInput);
+        expect(result.staffId).toBe('staff-1');
+      });
+    });
+
+    describe('selfUpdateStaffContact (BR-ST-16 & BR-ST-17)', () => {
+      it('allows staff to self-update phone, address, and emergency contact', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.salonOwnerStaff.update.mockResolvedValueOnce({ ...baseStaff, phone: '09012345678' });
+        prisma.staffPersonalProfile.upsert.mockResolvedValueOnce(mockProfile);
+
+        const result = await service.selfUpdateStaffContact(
+          { user: staffUser },
+          {
+            phone: '09012345678',
+            address: { line1: 'New Address', city: 'Tokyo', postalCode: '150-0001' },
+            emergencyContact: { name: 'New Contact', phone: '09088887777' },
+          },
+        );
+
+        expect(result.success).toBe(true);
+        expect(prisma.salonOwnerStaff.update).toHaveBeenCalled();
+        expect(prisma.staffPersonalProfile.upsert).toHaveBeenCalled();
+        expect(prisma.auditEvent.create).toHaveBeenCalled();
+
+        // Update only phone
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.salonOwnerStaff.update.mockResolvedValueOnce({ ...baseStaff, phone: '09055556666' });
+        const resPhoneOnly = await service.selfUpdateStaffContact({ user: staffUser }, { phone: '09055556666' });
+        expect(resPhoneOnly.success).toBe(true);
+
+        // Update only address
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.staffPersonalProfile.upsert.mockResolvedValueOnce(mockProfile);
+        const resAddressOnly = await service.selfUpdateStaffContact({ user: staffUser }, { address: { line1: 'Only Address' } });
+        expect(resAddressOnly.success).toBe(true);
+
+        // Update only emergency contact
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.staffPersonalProfile.upsert.mockResolvedValueOnce(mockProfile);
+        const resEmergencyOnly = await service.selfUpdateStaffContact(
+          { user: staffUser },
+          { emergencyContact: { name: 'Only Emergency' } },
+        );
+        expect(resEmergencyOnly.success).toBe(true);
+
+        // Map personal profile with no defaultHireDate
+        const mappedNullProfile = (service as any).mapPersonalProfile('staff-1', null);
+        expect(mappedNullProfile.employmentType).toBe('FULL_TIME');
+      });
+
+      it('rejects forbidden fields in self-service edit with 403 (BR-ST-16)', async () => {
+        await expect(service.selfUpdateStaffContact({ user: staffUser }, { legalName: 'Hacker Name' } as any)).rejects.toBeInstanceOf(
+          ForbiddenException,
+        );
+
+        await expect(service.selfUpdateStaffContact({ user: staffUser }, { employmentType: 'PART_TIME' } as any)).rejects.toBeInstanceOf(
+          ForbiddenException,
+        );
+
+        await expect(service.selfUpdateStaffContact({ user: staffUser }, { roles: ['OWNER'] } as any)).rejects.toBeInstanceOf(
+          ForbiddenException,
+        );
+
+        await expect(service.selfUpdateStaffContact({ user: staffUser }, { branchIds: ['branch-2'] } as any)).rejects.toBeInstanceOf(
+          ForbiddenException,
+        );
+      });
+
+      it('throws NotFoundException if calling user has no staff profile', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(null);
+
+        await expect(service.selfUpdateStaffContact({ user: otherStaffUser }, { phone: '09011112222' })).rejects.toBeInstanceOf(
+          NotFoundException,
+        );
+      });
+
+      it('supports self-updating contact details with target staffId parameter', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.salonOwnerStaff.update.mockResolvedValueOnce({ ...baseStaff, phone: '09012345678' });
+        prisma.staffPersonalProfile.upsert.mockResolvedValueOnce(mockProfile);
+
+        const result = await service.selfUpdateStaffContact({ user: staffUser }, { phone: '09012345678' }, 'staff-1');
+        expect(result.success).toBe(true);
+      });
+
+      it('rejects self-updating contact details for another staff member without authority', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+
+        await expect(service.selfUpdateStaffContact({ user: otherStaffUser }, { phone: '09012345678' }, 'staff-1')).rejects.toBeInstanceOf(
+          ForbiddenException,
+        );
+      });
+    });
+
+    describe('Staff Identity Documents', () => {
+      const validDocInput = {
+        documentType: 'DRIVERS_LICENSE' as const,
+        fileKey: 'secure/doc-1.pdf',
+        mimeType: 'application/pdf',
+        fileSizeBytes: 1048576,
+      };
+
+      it('uploads identity document for owner, manager, or self', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.staffIdentityDocument.create.mockResolvedValueOnce(mockDoc);
+
+        const result = await service.uploadStaffIdentityDocument({ user: staffUser }, 'staff-1', validDocInput);
+        expect(result.id).toBe('doc-1');
+        expect(result.verificationStatus).toBe('PENDING_VERIFICATION');
+        expect(result.downloadUrl).toContain('/documents/doc-1/download');
+      });
+
+      it('validates document upload file format and size limits', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.uploadStaffIdentityDocument({ user: staffUser }, 'staff-1', {
+            ...validDocInput,
+            documentType: 'INVALID' as any,
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.uploadStaffIdentityDocument({ user: staffUser }, 'staff-1', {
+            ...validDocInput,
+            mimeType: 'text/plain',
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.uploadStaffIdentityDocument({ user: staffUser }, 'staff-1', {
+            ...validDocInput,
+            fileSizeBytes: 20000000, // > 10MB
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      });
+
+      it('lists identity documents for authorized users', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.staffIdentityDocument.findMany.mockResolvedValueOnce([mockDoc]);
+
+        const list = await service.listStaffIdentityDocuments({ user: ownerUser }, 'staff-1');
+        expect(list).toHaveLength(1);
+        expect(list[0].id).toBe('doc-1');
+      });
+
+      it('verifies identity document by owner or manager', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.staffIdentityDocument.findFirst.mockResolvedValueOnce(mockDoc);
+        prisma.staffIdentityDocument.update.mockResolvedValueOnce({
+          ...mockDoc,
+          verificationStatus: 'VERIFIED',
+          verifiedByUserId: 'user-1',
+          verifiedAt: now,
+        });
+
+        const verified = await service.verifyStaffIdentityDocument({ user: ownerUser }, 'staff-1', 'doc-1', {
+          verificationStatus: 'VERIFIED',
+        });
+        expect(verified.verificationStatus).toBe('VERIFIED');
+      });
+
+      it('rejects verification by self (staff member without manager role)', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+
+        await expect(
+          service.verifyStaffIdentityDocument({ user: staffUser }, 'staff-1', 'doc-1', {
+            verificationStatus: 'VERIFIED',
+          }),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+      });
+
+      it('requires rejection reason when document is rejected', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+
+        await expect(
+          service.verifyStaffIdentityDocument({ user: ownerUser }, 'staff-1', 'doc-1', {
+            verificationStatus: 'REJECTED',
+            rejectionReason: '',
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(
+          service.verifyStaffIdentityDocument({ user: ownerUser }, 'staff-1', 'doc-1', {
+            verificationStatus: 'PENDING_VERIFICATION' as any,
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      });
+
+      it('throws NotFoundException if document does not exist', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.staffIdentityDocument.findFirst.mockResolvedValueOnce(null);
+
+        await expect(
+          service.verifyStaffIdentityDocument({ user: ownerUser }, 'staff-1', 'doc-missing', {
+            verificationStatus: 'VERIFIED',
+          }),
+        ).rejects.toBeInstanceOf(NotFoundException);
+      });
+
+      it('verifies identity document rejection by owner with valid reason', async () => {
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        prisma.staffIdentityDocument.findFirst.mockResolvedValueOnce(mockDoc);
+        prisma.staffIdentityDocument.update.mockResolvedValueOnce({
+          ...mockDoc,
+          verificationStatus: 'REJECTED',
+          verifiedByUserId: 'user-1',
+          verifiedAt: now,
+          rejectionReason: 'Blurry document image',
+        });
+
+        const rejected = await service.verifyStaffIdentityDocument(
+          { user: user({ id: 'user-1', roles: [UserRole.OWNER] }) },
+          'staff-1',
+          'doc-1',
+          {
+            verificationStatus: 'REJECTED',
+            rejectionReason: 'Blurry document image',
+          },
+        );
+        expect(rejected.verificationStatus).toBe('REJECTED');
+        expect(rejected.rejectionReason).toBe('Blurry document image');
+      });
+
+      it('maps personal profile with partial address, partial emergency, and partial bank details', async () => {
+        type ServiceInternals = {
+          mapPersonalProfile: (staffId: string, profile: unknown) => StaffPersonalProfileModel;
+          recordAuditEvent: (userId?: string, tenantId?: string, action?: string, targetId?: string) => Promise<void>;
+        };
+        const internals = service as unknown as ServiceInternals;
+
+        const partialProfile1 = {
+          staffId: 'staff-1',
+          legalName: 'Test',
+          dateOfBirth: null,
+          gender: null,
+          addressLine1: null,
+          addressLine2: null,
+          city: 'Tokyo',
+          state: null,
+          postalCode: null,
+          country: null,
+          emergencyContactName: null,
+          emergencyContactRelationship: null,
+          emergencyContactPhone: '09012345678',
+          employmentType: 'FULL_TIME' as const,
+          hireDate: new Date('2025-01-01'),
+          terminationDate: null,
+          payoutMethod: 'BANK_TRANSFER' as const,
+          bankName: null,
+          branchName: null,
+          branchCode: null,
+          accountType: null,
+          accountNumber: '1234567',
+          accountHolderName: null,
+          createdAt: new Date('2025-01-01'),
+          updatedAt: new Date('2025-01-01'),
+        };
+
+        const res1 = internals.mapPersonalProfile('staff-1', partialProfile1);
+        expect(res1.address?.city).toBe('Tokyo');
+        expect(res1.address?.line1).toBeUndefined();
+        expect(res1.address?.country).toBe('JP');
+        expect(res1.emergencyContact?.phone).toBe('09012345678');
+        expect(res1.emergencyContact?.name).toBeUndefined();
+        expect(res1.bankDetails?.accountNumber).toBe('1234567');
+        expect(res1.bankDetails?.bankName).toBeUndefined();
+
+        const partialProfile2 = {
+          ...partialProfile1,
+          addressLine1: 'Line 1',
+          city: null,
+          country: 'US',
+          emergencyContactName: 'Jane',
+          emergencyContactPhone: null,
+          bankName: 'Bank',
+          accountNumber: null,
+        };
+        const res2 = internals.mapPersonalProfile('staff-1', partialProfile2);
+        expect(res2.address?.line1).toBe('Line 1');
+        expect(res2.address?.city).toBeUndefined();
+        expect(res2.address?.country).toBe('US');
+        expect(res2.emergencyContact?.name).toBe('Jane');
+        expect(res2.emergencyContact?.phone).toBeUndefined();
+        expect(res2.bankDetails?.bankName).toBe('Bank');
+        expect(res2.bankDetails?.accountNumber).toBeUndefined();
+
+        // Exercise recordAuditEvent with undefined user and tenant
+        await internals.recordAuditEvent(undefined, undefined, 'TestFallback', 'target-x');
+      });
+
+      it('handles user role extraction and self-checks with edge cases', async () => {
+        // User with no roles
+        const userNoRoles = user({ id: 'user-no-role', roles: [] });
+        (userNoRoles as { roles?: unknown }).roles = undefined;
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce({ ...baseStaff, branches: undefined });
+        await expect(service.getStaffPersonalDetails({ user: userNoRoles }, 'staff-1')).rejects.toBeInstanceOf(ForbiddenException);
+
+        // User with object roles with undefined name
+        const userObjRole = user({ id: 'user-obj', roles: [{ id: 1, name: undefined as unknown as string }] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(service.getStaffPersonalDetails({ user: userObjRole }, 'staff-1')).rejects.toBeInstanceOf(ForbiddenException);
+
+        // Staff matched by email with different userId must be rejected for personal details
+        const emailStaffUser = user({ id: 'user-diff-id', email: 'stylist@salon.test', roles: [] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce({
+          ...baseStaff,
+          userId: 'diff-user-id',
+          email: 'stylist@salon.test',
+          profile: mockProfile,
+        });
+        await expect(service.getStaffPersonalDetails({ user: emailStaffUser }, 'staff-1')).rejects.toBeInstanceOf(ForbiddenException);
+
+        // Staff matched by verified userId for self access
+        const selfStaffUser = user({ id: 'self-user-id', email: 'stylist@salon.test', roles: [] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce({
+          ...baseStaff,
+          userId: 'self-user-id',
+          email: 'stylist@salon.test',
+          profile: mockProfile,
+        });
+        const selfDetails = await service.getStaffPersonalDetails({ user: selfStaffUser }, 'staff-1');
+        expect(selfDetails.staffId).toBe('staff-1');
+
+        // Manager with empty managedBranchIds and canManageBranches false
+        const managerNoScope = user({
+          id: 'mgr-1',
+          roles: [{ id: 1, name: 'BRANCH_MANAGER' }],
+          managedBranchIds: [],
+          canManageBranches: false,
+        });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(baseStaff);
+        await expect(service.getStaffPersonalDetails({ user: managerNoScope }, 'staff-1')).rejects.toBeInstanceOf(ForbiddenException);
+      });
+    });
+
+    describe('Security Hardening & Remediation Verification', () => {
+      it('rejects non-owner attempts to replace staff roles', async () => {
+        const stylistUser = user({ id: 'stylist-user', roles: [UserRole.STAFF] });
+        await expect(service.replaceStaffRoles({ user: stylistUser }, 'staff-1', { roles: ['OWNER'] })).rejects.toBeInstanceOf(
+          ForbiddenException,
+        );
+      });
+
+      it('rejects non-owner attempts to create, update, or delete business roles', async () => {
+        const stylistUser = user({ id: 'stylist-user', roles: [UserRole.STAFF] });
+        await expect(
+          service.createBusinessRole({ user: stylistUser }, { name: 'Custom Role', permissions: ['staff.directory.view'] }),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+
+        await expect(
+          service.updateBusinessRole({ user: stylistUser }, 'role-1', { name: 'Updated Role', permissions: ['staff.directory.view'] }),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+
+        await expect(service.deleteBusinessRole({ user: stylistUser }, 'role-1')).rejects.toBeInstanceOf(ForbiddenException);
+      });
+
+      it('prevents stripping core permissions from system OWNER role', async () => {
+        const ownerUser = user({ roles: [UserRole.OWNER] });
+        prisma.salonBusiness.findMany.mockResolvedValueOnce([business()]);
+        prisma.businessRole.findFirst.mockResolvedValueOnce({
+          id: 'owner-role-id',
+          businessId: 'business-1',
+          roleCode: 'OWNER',
+          name: 'Owner',
+          isSystemDefault: true,
+          isActive: true,
+        });
+        await expect(
+          service.updateBusinessRole({ user: ownerUser }, 'owner-role-id', {
+            name: 'Owner',
+            permissions: ['staff.directory.view'], // Missing 'staff.roles.manage'
+          }),
+        ).rejects.toThrow('error.business.role.owner_immutable');
+      });
+
+      it('prohibits self-verification of staff identity documents', async () => {
+        const staffWithUser = staff({ id: 'staff-self', userId: 'owner-user', branches: [{ branchId: 'branch-1' }] });
+        const ownerSelfUser = user({ id: 'owner-user', roles: [UserRole.OWNER] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(staffWithUser);
+
+        await expect(
+          service.verifyStaffIdentityDocument({ user: ownerSelfUser }, 'staff-self', 'doc-1', { verificationStatus: 'VERIFIED' }),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+      });
+
+      it('rejects identity document uploads with path traversal in fileKey', async () => {
+        const ownerUser = user({ roles: [UserRole.OWNER] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(staff());
+
+        await expect(
+          service.uploadStaffIdentityDocument({ user: ownerUser }, 'staff-1', {
+            documentType: 'PASSPORT',
+            fileKey: '../../../etc/passwd',
+            mimeType: 'image/png',
+            fileSizeBytes: 2048,
+          }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      });
+
+      it('translates duplicate phone errors to ConflictException in selfUpdateStaffContact', async () => {
+        const selfUser = user({ id: 'staff-user-id', roles: [UserRole.STAFF] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(staff({ id: 'staff-1', userId: 'staff-user-id' }));
+        prisma.salonOwnerStaff.update.mockRejectedValueOnce(prismaKnownError('P2002'));
+
+        await expect(service.selfUpdateStaffContact({ user: selfUser }, { phone: '09099999999' })).rejects.toBeInstanceOf(
+          ConflictException,
+        );
+      });
+
+      it('rejects branch managers attempting to mutate staff or skills in unassigned branches', async () => {
+        const branchManager = user({
+          id: 'bm-1',
+          roles: [{ id: 1, name: 'BRANCH_MANAGER' }],
+          managedBranchIds: ['branch-1'],
+        });
+        const otherBranchStaff = staff({ id: 'staff-2', branches: [{ branchId: 'branch-2' }] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValue(otherBranchStaff);
+
+        await expect(service.getStaff({ user: branchManager }, 'staff-2')).rejects.toBeInstanceOf(ForbiddenException);
+
+        await expect(service.replaceStaffSkills({ user: branchManager }, 'staff-2', { serviceIds: ['service-1'] })).rejects.toBeInstanceOf(
+          ForbiddenException,
+        );
+      });
+
+      it('rejects branch managers attempting to assign staff to branches outside their managedBranchIds', async () => {
+        const branchManager = user({
+          id: 'bm-1',
+          roles: [{ id: 1, name: 'BRANCH_MANAGER' }],
+          managedBranchIds: ['branch-1'],
+        });
+        prisma.salonBranch.findMany.mockResolvedValue([
+          branch({ id: 'branch-1', businessId: 'biz-1' }),
+          branch({ id: 'branch-2', businessId: 'biz-1' }),
+        ]);
+
+        await expect(
+          service.createStaff(
+            { user: branchManager },
+            { displayName: 'Alice', phone: '+819011112222', branchIds: ['branch-1', 'branch-2'], status: 'ACTIVE' },
+          ),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+
+        prisma.salonOwnerStaff.findFirst.mockResolvedValue(
+          staff({ id: 'staff-1', businessId: 'biz-1', branches: [{ branchId: 'branch-1' }] }),
+        );
+        await expect(
+          service.updateStaff({ user: branchManager }, 'staff-1', {
+            displayName: 'Alice Updated',
+            phone: '+819011112222',
+            branchIds: ['branch-1', 'branch-2'],
+            status: 'ACTIVE',
+          }),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+      });
+
+      it('rejects non-owner callers with arbitrary canManageStaffPersonalDetails claim', async () => {
+        const arbitraryClaimUser = user({
+          id: 'hacker-1',
+          roles: [UserRole.STAFF],
+          canManageStaffPersonalDetails: true,
+        } as any);
+        const targetStaff = staff({ id: 'staff-2', branches: [{ branchId: 'branch-2' }] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValue(targetStaff);
+
+        await expect(service.getStaffPersonalDetails({ user: arbitraryClaimUser }, 'staff-2')).rejects.toBeInstanceOf(ForbiddenException);
+      });
+
+      it('validates self-contact input bounds for address and emergency contact', async () => {
+        const selfUser = user({ id: 'staff-user-id', roles: [UserRole.STAFF] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValue(staff({ id: 'staff-1', userId: 'staff-user-id' }));
+
+        await expect(service.selfUpdateStaffContact({ user: selfUser }, { address: { line1: 'a' } })).rejects.toBeInstanceOf(
+          UnprocessableEntityException,
+        );
+        await expect(service.selfUpdateStaffContact({ user: selfUser }, { address: { line2: 'a'.repeat(121) } })).rejects.toBeInstanceOf(
+          UnprocessableEntityException,
+        );
+        await expect(service.selfUpdateStaffContact({ user: selfUser }, { address: { city: 'a'.repeat(61) } })).rejects.toBeInstanceOf(
+          UnprocessableEntityException,
+        );
+        await expect(service.selfUpdateStaffContact({ user: selfUser }, { address: { state: 'a'.repeat(61) } })).rejects.toBeInstanceOf(
+          UnprocessableEntityException,
+        );
+        await expect(service.selfUpdateStaffContact({ user: selfUser }, { address: { postalCode: 'invalid-zip' } })).rejects.toBeInstanceOf(
+          UnprocessableEntityException,
+        );
+        await expect(service.selfUpdateStaffContact({ user: selfUser }, { address: { country: '12345678901' } })).rejects.toBeInstanceOf(
+          UnprocessableEntityException,
+        );
+
+        await expect(service.selfUpdateStaffContact({ user: selfUser }, { emergencyContact: { name: 'a' } })).rejects.toBeInstanceOf(
+          UnprocessableEntityException,
+        );
+        await expect(
+          service.selfUpdateStaffContact({ user: selfUser }, { emergencyContact: { relationship: 'a'.repeat(41) } }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+        await expect(
+          service.selfUpdateStaffContact({ user: selfUser }, { emergencyContact: { phone: '1'.repeat(31) } }),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      });
+
+      it('deletes branch-scoped leave block with branch validation', async () => {
+        const ownerUser = user({ roles: [UserRole.OWNER] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(staff());
+        prisma.salonOwnerStaffLeaveBlock.findFirst.mockResolvedValueOnce({
+          id: 'block-1',
+          staffId: 'staff-1',
+          branchId: 'branch-1',
+        });
+        prisma.salonOwnerStaffLeaveBlock.delete.mockResolvedValueOnce({});
+
+        const res = await service.deleteStaffLeaveBlock({ user: ownerUser }, 'staff-1', 'block-1');
+        expect(res.success).toBe(true);
+      });
+
+      it('rethrows unexpected database errors in selfUpdateStaffContact', async () => {
+        const selfUser = user({ id: 'staff-user-id', roles: [UserRole.STAFF] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(staff({ id: 'staff-1', userId: 'staff-user-id' }));
+        prisma.salonOwnerStaff.update.mockRejectedValueOnce(new Error('Connection failure'));
+
+        await expect(service.selfUpdateStaffContact({ user: selfUser }, { phone: '09099999999' })).rejects.toThrow('Connection failure');
+      });
+
+      it('throws NotFoundException when verifying non-existent document', async () => {
+        const ownerUser = user({ roles: [UserRole.OWNER] });
+        prisma.salonOwnerStaff.findFirst.mockResolvedValueOnce(staff({ id: 'staff-other', userId: 'other-user' }));
+        prisma.staffIdentityDocument.findFirst.mockResolvedValueOnce(null);
+
+        await expect(
+          service.verifyStaffIdentityDocument({ user: ownerUser }, 'staff-other', 'doc-missing', { verificationStatus: 'VERIFIED' }),
+        ).rejects.toBeInstanceOf(NotFoundException);
+      });
+    });
+  });
+});

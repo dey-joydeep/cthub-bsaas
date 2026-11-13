@@ -1,7 +1,7 @@
 import { ConflictException, ForbiddenException, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { Prisma, SalonOwnerStatus as PrismaSalonOwnerStatus } from '@prisma/client';
 import { AppointmentStatus, COMMON_MESSAGE_KEYS, UserRole, isBranchManagerPosition, type AuthenticatedUser } from '@cthub-bsaas/shared';
-import { PrismaService } from '@cthub-bsaas/server-data-access';
+import { cloneDefaultRolesForBusiness, PrismaService } from '@cthub-bsaas/server-data-access';
 import { CorrelationId } from '@cthub-bsaas/server-core';
 import { createHash, randomUUID } from 'crypto';
 
@@ -387,6 +387,7 @@ export class SalonOwnerSettingsService {
             status: input.status,
           },
         });
+        await cloneDefaultRolesForBusiness(tx, created.id);
         await this.recordIdempotentCreate(tx, context, tenantId, 'salon_owner.business.create.idempotency', requestHash, created.id);
         await this.createAuditEvent(tx, context, tenantId, 'salon_owner.business.create', created.id);
         return created;
