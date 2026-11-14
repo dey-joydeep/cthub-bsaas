@@ -1,6 +1,6 @@
 # Shearflow GitHub App broker activation and recovery
 
-**Status (2026-11-14):** The three Apps are installed, the broker is enabled, and the role identities authenticate. The owner reports deploying the merged owner-page repair as Worker version `bd9de75d-d542-4d2d-b1fe-0ad226a8c4f9`; live browser initialization and the exact deployed source commit still need verification. No task-mandate PO, Dev, or QA write has been verified. Do not claim the bot rollout is complete.
+**Status (2026-11-14):** The three Apps are installed, the broker is enabled, and the role identities authenticate. The owner reports deploying the merged owner-page repair as Worker version `bd9de75d-d542-4d2d-b1fe-0ad226a8c4f9`; fresh owner sign-in and scope-preview behavior now work; the exact deployed source commit is not independently mapped to this version. No task-mandate PO, Dev, or QA write has been verified. Do not claim the bot rollout is complete.
 
 **Tracking:** [Rollout #113](https://github.com/dey-joydeep/cthub-bsaas/issues/113); [this runbook #119](https://github.com/dey-joydeep/cthub-bsaas/issues/119). Update this status and the evidence log after every deployment or live probe.
 
@@ -47,7 +47,7 @@ The role client IDs, audience, and issuer are in `tools/aidd-broker/wrangler.jso
 
 PR #114 prepared the mandate broker; PR #116 prepared owner UI; PR #117 repaired its runtime bundling failure. Consult their merged diffs before changing the trust boundary. QA review and Dev PR creation have not been tested live. No mandate-based role write has succeeded yet.
 
-| 2026-11-14       | Owner reported deploying Worker version `bd9de75d-d542-4d2d-b1fe-0ad226a8c4f9` with Wrangler 4.162.0. | Terminal output showed `GRANTS` bound to `shearflow-aidd-grants`, `BROKER_ENABLED ("true")`, and successful Wrangler logout. The exact deployed source commit, Connected Application revocation, fresh Access login, and owner-page preview are still pending verification. |
+| 2026-11-14       | Owner reported deploying Worker version `bd9de75d-d542-4d2d-b1fe-0ad226a8c4f9` with Wrangler 4.162.0. | Terminal output showed `GRANTS` bound to `shearflow-aidd-grants`, `BROKER_ENABLED ("true")`, and successful Wrangler logout. Fresh `/v1/whoami` showed the exact owner principal with `admin:true, enabled:true`; `/owner` showed “Owner verified. Broker enabled.” and a responsive scope preview. The owner reported revoking Wrangler in Connected Applications. The exact deployed source commit is not independently mapped to this version. |
 
 ## Recover the setup on another machine
 
@@ -130,7 +130,8 @@ The role client persists a stable request ID in Git metadata. If a response is l
 - **2026-11-14:** Initial reconstruction from merged PRs, issue history, owner CLI output, Access/browser evidence, and current repository docs. The source fix is merged; at this entry's time, deployment and task-scoped write probes remained pending.
 - **2026-11-14:** Created [pilot issue #121](https://github.com/dey-joydeep/cthub-bsaas/issues/121) for the four mandate-based role writes. No mandate or pilot PR exists yet. Issues #119 and #121 were verified on the cthub Project with statuses In review and Backlog, respectively.
 - **2026-11-14:** The owner reported Worker version `bd9de75d-d542-4d2d-b1fe-0ad226a8c4f9` from Wrangler 4.162.0, with the expected D1 binding, `BROKER_ENABLED=true`, and successful logout. The exact deployed source commit was not independently checked; fresh browser behavior and Connected Application revocation are awaiting owner confirmation.
-- **Next entry:** Record fresh `/v1/whoami` and `/owner` results, scope-preview behavior, any console failure, and the credential revocation check.
+- **2026-11-14:** Fresh incognito `/v1/whoami` returned `user:dey.joydeep.cse@gmail.com`, `admin:true`, and `enabled:true`. The `/owner` page showed “Owner verified. Broker enabled.” and its JSON scope preview updated with issue #121, the task branch, and the single allowed file. The owner reported revoking Wrangler in Connected Applications after logout. No owner TOTP was entered for this browser check.
+- **Next entry:** Record mandate ID and expiry without its TOTP code; then record each role grant, GitHub actor, result URL, exact PR head, and any reconciliation.
 - **Then:** Record pilot issue and mandate ID, four action result URLs/actors, PR head and CI/review result, and revocation or expiry.
 
 Official references: [Wrangler login and logout](https://developers.cloudflare.com/workers/wrangler/commands/general/), [GitHub App installation authentication](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation), [GitHub App key handling](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/managing-private-keys-for-github-apps), [Cloudflare Access One-time PIN](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/), [Wrangler deploy](https://developers.cloudflare.com/workers/wrangler/commands/workers/#deploy).
