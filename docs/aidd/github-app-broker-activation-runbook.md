@@ -97,9 +97,9 @@ The earlier `wrangler deploy --var BROKER_ENABLED:true --keep-vars` attempt warn
 
 **What:** Prove one bounded write per role without merging its test PR. **Why:** Installation, identity, and earlier per-action pilots do not prove the task mandate, grant, quota, GitHub action, and actor chain. **How:**
 
-1. Create or reuse a dedicated pilot issue under #113 with acceptance criteria for the probes. Use its **actual** number below; do not bind the pilot PR to parent #113, which should remain open. Add the pilot issue to the Project.
+1. Use [pilot issue #121](https://github.com/dey-joydeep/cthub-bsaas/issues/121) under #113. Bind the pilot PR to #121, not parent #113, which should remain open. Add #121 to the private cthub Project with a Status before the write probe.
 2. Create a clean task branch `chore/broker-live-role-probes`. Confirm the target head and exact allowed file `docs/status/aidd/broker-live-role-probes.md`.
-3. On `/owner`, enter outcome “Verify PO, Dev, and QA bot writes for pilot issue #<actual>; leave its PR unmerged”, the actual issue number, that branch, and only that file path. Set limits: `po.comment-issue:1`, `dev.commit:1`, `dev.create-pr:1`, `qa.review-pr:1`; all others zero; lifetime one day. Inspect the JSON preview, tick confirmation, and enter a fresh six-digit Okta Verify code **only on the owner page**. Record the returned mandate ID, never the code.
+3. On `/owner`, enter outcome “Verify PO, Dev, and QA bot writes for pilot issue #121; leave its PR unmerged”, issue number 121, that branch, and only that file path. Set limits: `po.comment-issue:1`, `dev.commit:1`, `dev.create-pr:1`, `qa.review-pr:1`; all others zero; lifetime one day. Inspect the JSON preview, tick confirmation, and enter a fresh six-digit Okta Verify code **only on the owner page**. Record the returned mandate ID, never the code.
 4. Execute the PO comment, Dev commit, Dev PR, and QA review with their own service-token callers and the client contract in the broker README. Bind each call to the current issue, branch, PR, and expected head. Use the prepared-commit/sync helpers for Dev; do not make a duplicate personal commit.
 5. Independently inspect GitHub: issue comment by `shearflow-po[bot]`; commit and PR by `shearflow-dev[bot]`; review by `shearflow-qa[bot]` on the exact PR head. Confirm the PR remains unmerged, CI status, grant receipts, and quota use. Add evidence links and versions to this log, the pilot issue, and #113.
 6. Test denied cross-role/branch/path attempts and revoked or expired mandate behavior only with bounded, reviewed test inputs. Revoke with a fresh owner code if the pilot scope is no longer needed. Reconcile any in-flight action first.
@@ -126,6 +126,7 @@ The role client persists a stable request ID in Git metadata. If a response is l
 ## Update log
 
 - **2026-11-14:** Initial reconstruction from merged PRs, issue history, owner CLI output, Access/browser evidence, and current repository docs. The source fix is merged; deployment and task-scoped write probes remain pending.
+- **2026-11-14:** Created [pilot issue #121](https://github.com/dey-joydeep/cthub-bsaas/issues/121) for the four mandate-based role writes. No mandate or pilot PR exists yet. Project board assignment remains to be verified.
 - **Next entry:** Record deployment commit, Wrangler version, Worker version, runtime `BROKER_ENABLED`, Access result, owner-page preview result, credential revocation check, and any failure.
 - **Then:** Record pilot issue and mandate ID, four action result URLs/actors, PR head and CI/review result, and revocation or expiry.
 
