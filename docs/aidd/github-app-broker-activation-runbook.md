@@ -60,7 +60,7 @@ PR #114 prepared the mandate broker; PR #116 prepared owner UI; PR #117 repaired
 
 **Prerequisite:** Verify a clean checkout of `a06b07fe78846e49ff022a2b5e671d568d11a309` or a later reviewed `main` commit containing PR #117. The existing `E:\workspace\cthub-bsaas-broker-owner-ui` worktree was created for earlier owner UI work and must **not** be deployed from its old head. Use a clean deployment worktree; keep unrelated checkouts intact.
 
-**What:** Deploy the repaired owner page while preserving the live enabled state and Worker secrets. **Why:** The tracked `wrangler.jsonc` intentionally says `BROKER_ENABLED=false`; a normal deploy can switch off the live broker. **How:** An owner-controlled terminal, with desktop agent processes closed, checks the exact commit and creates a temporary config outside Git:
+**What:** Deploy the repaired owner page while preserving the live enabled state and Worker secrets. **Why:** The tracked `wrangler.jsonc` intentionally says `BROKER_ENABLED=false`; a normal deploy can switch off the live broker. **How:** An owner-controlled terminal, with desktop agent processes closed, checks the exact commit and creates a temporary config in the deployment worktree and removes it immediately afterward:
 
 ```powershell
 git status --short
