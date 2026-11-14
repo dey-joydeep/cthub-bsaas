@@ -27,25 +27,26 @@ For Antigravity execution, also apply `.agents/AGENTS.md` and the selected `.age
 
 ## Documents
 
-| Document                                                        | Use                                                                                           |
-| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| [Development Life Cycle](development-lifecycle.md)              | Shared product-to-release process, roles, routing, and gates.                                 |
-| [Role and Directory Access](role-directory-access.md)           | Repository map, role-specific read/write scope, and verification ownership.                   |
-| [Autonomous Recovery](autonomous-recovery.md)                   | Local work-unit ledger, checkpoints, interruption recovery, and stale-evidence rules.         |
-| [Agent Dispatch and Resume](agent-dispatch-and-resume.md)       | Quota-aware dispatch, provider sessions, pause states, and cross-machine handoff.             |
-| [Parallel Worktrees](parallel-worktrees.md)                     | Branch and worktree ownership, isolation, integration, recovery, and retirement.              |
-| [Dependency Change Policy](dependency-policy.md)                | npm change ownership, forbidden bypasses, lockfile, audit, and install-script review.         |
-| [Change Scope and Validation](change-hygiene.md)                | Inclusion rules and required checks for each changed area.                                    |
-| [Database Access Policy](database-access-policy.md)             | Environment profiles, test isolation, DBA ownership, and migration gates.                     |
-| [Backend Reliability Evidence](backend-reliability-evidence.md) | PostgreSQL contention proof, capacity profiles, and CPU-work decisions.                       |
-| [Agent Activation](agent-activation.md)                         | How shared roles map to Antigravity and Codex profiles and how coordinators invoke them.      |
-| [GitHub App Identities](github-app-identities.md)               | Registered bot identities, role boundaries, and current activation status.                    |
-| [Codex Operating Model](codex-operating-model.md)               | Repository-specific workflow for analysis, design, implementation, validation, and reporting. |
-| [Codex Task Policy](codex-task-policy.md)                       | Depth, stop conditions, and completion expectations by task type.                             |
-| [Codex Review Checklist](codex-review-checklist.md)             | Checklist for PR reviews and self-review before handoff.                                      |
-| [Codex Validation Commands](codex-validation-commands.md)       | Current validation commands and reporting rules.                                              |
-| [MCP Configuration Policy](mcp-configuration-policy.md)         | Repository-vs-global MCP configuration split and safety policy.                               |
-| [Codex CLI Operator Guide](codex-cli-operator-guide.md)         | Practical local Codex commands and operator prompts.                                          |
+| Document                                                             | Use                                                                                           |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| [Development Life Cycle](development-lifecycle.md)                   | Shared product-to-release process, roles, routing, and gates.                                 |
+| [Role and Directory Access](role-directory-access.md)                | Repository map, role-specific read/write scope, and verification ownership.                   |
+| [Autonomous Recovery](autonomous-recovery.md)                        | Local work-unit ledger, checkpoints, interruption recovery, and stale-evidence rules.         |
+| [Agent Dispatch and Resume](agent-dispatch-and-resume.md)            | Quota-aware dispatch, provider sessions, pause states, and cross-machine handoff.             |
+| [Parallel Worktrees](parallel-worktrees.md)                          | Branch and worktree ownership, isolation, integration, recovery, and retirement.              |
+| [Dependency Change Policy](dependency-policy.md)                     | npm change ownership, forbidden bypasses, lockfile, audit, and install-script review.         |
+| [Change Scope and Validation](change-hygiene.md)                     | Inclusion rules and required checks for each changed area.                                    |
+| [Database Access Policy](database-access-policy.md)                  | Environment profiles, test isolation, DBA ownership, and migration gates.                     |
+| [Backend Reliability Evidence](backend-reliability-evidence.md)      | PostgreSQL contention proof, capacity profiles, and CPU-work decisions.                       |
+| [Agent Activation](agent-activation.md)                              | How shared roles map to Antigravity and Codex profiles and how coordinators invoke them.      |
+| [GitHub App Identities](github-app-identities.md)                    | Registered bot identities, role boundaries, and current activation status.                    |
+| [GitHub App Broker Runbook](github-app-broker-activation-runbook.md) | Setup, recovery, owner deployment, live probes, unsafe choices, and evidence.                 |
+| [Codex Operating Model](codex-operating-model.md)                    | Repository-specific workflow for analysis, design, implementation, validation, and reporting. |
+| [Codex Task Policy](codex-task-policy.md)                            | Depth, stop conditions, and completion expectations by task type.                             |
+| [Codex Review Checklist](codex-review-checklist.md)                  | Checklist for PR reviews and self-review before handoff.                                      |
+| [Codex Validation Commands](codex-validation-commands.md)            | Current validation commands and reporting rules.                                              |
+| [MCP Configuration Policy](mcp-configuration-policy.md)              | Repository-vs-global MCP configuration split and safety policy.                               |
+| [Codex CLI Operator Guide](codex-cli-operator-guide.md)              | Practical local Codex commands and operator prompts.                                          |
 
 ## Repository AIDD Assets
 
@@ -57,7 +58,7 @@ For Antigravity execution, also apply `.agents/AGENTS.md` and the selected `.age
 - `scripts/aidd/check-changed-format.mjs` checks supported files changed by a PR.
 - `scripts/aidd/check-dependency-policy.mjs`, `check-dependency-change.mjs`, and `check-branch-policy.mjs` validate dependency and branch evidence before a PR handoff.
 - `scripts/aidd/track-issue.mjs` previews or applies standalone issue Project updates; `project-tracking.mjs` supplies the read-only premerge membership gate. The Epic initializer remains under `.agents/skills/aidd-project-tracker/`.
-- The [GitHub App identity guide](github-app-identities.md) records the installed PO, QA, and Dev Apps and the task-scoped dispatch contract. The [Cloudflare broker](../../tools/aidd-broker/README.md) was enabled by the owner on 2026-11-10; a role write still requires an active owner-approved mandate. Live task-scoped write probes and owner-page repair remain pending. Agents must verify the actual writer and must not guess a bot name.
+- The [GitHub App identity guide](github-app-identities.md) records the installed PO, QA, and Dev Apps and the task-scoped dispatch contract. The [broker activation runbook](github-app-broker-activation-runbook.md) records deployment, recovery, and live probe evidence. The [Cloudflare broker](../../tools/aidd-broker/README.md) is enabled. Under the owner's one-day pilot mandate for issue #121, PO, Dev, and QA completed their bounded GitHub actions with verified bot actors; [PR #122](https://github.com/dey-joydeep/cthub-bsaas/pull/122) remains unmerged. The owner then revoked the mandate, and a fresh grant-only probe returned `400 Mandate unavailable`. The owner reported deploying PR #117's repair as Worker version `bd9de75d-d542-4d2d-b1fe-0ad226a8c4f9` on 2026-11-14; fresh owner sign-in and scope-preview behavior work. The exact deployed source-to-version mapping remains unverified. Agents must verify the actual writer and must not guess a bot name.
 - `.agents/skills/*` contains reusable Antigravity and Codex workflows where applicable.
 - `.codex/agents/*.toml` contains Codex reviewer and implementation helper agents.
 - `.codex/environments/environment.toml` points at the repo bootstrap command for fresh Codex worktrees.

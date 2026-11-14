@@ -1,0 +1,164 @@
+# Shearflow GitHub App broker activation and recovery
+
+**Status (2026-11-14):** The three Apps are installed, the broker is enabled, and PO, Dev, and QA each completed a task-mandate GitHub write with verified bot actors. The owner reports deploying the merged owner-page repair as Worker version `bd9de75d-d542-4d2d-b1fe-0ad226a8c4f9`; fresh owner sign-in and scope-preview behavior work. The owner revoked the pilot mandate, and a fresh grant-only probe returned `400 Mandate unavailable`. The exact deployed source commit is not independently mapped to this version. The pilot PR is open and unmerged.
+
+**Tracking:** [Rollout #113](https://github.com/dey-joydeep/cthub-bsaas/issues/113); [this runbook #119](https://github.com/dey-joydeep/cthub-bsaas/issues/119). Update this status and the evidence log after every deployment or live probe.
+
+## Objective and trust boundary
+
+Give PO, Dev, and QA distinct, verifiable GitHub actors for bounded AIDD tasks without distributing GitHub App private keys to desktop agents. The human owner decides the task outcome and scope once; role agents can then perform only the allowed actions. A successful bot write is evidence of **which App wrote it**, not product approval, independent QA, a security review, or permission to merge.
+
+The flow is:
+
+1. The owner signs into Cloudflare Access with the allowed email and uses a separate Okta Verify TOTP code to create a task mandate on `/owner`. D1 stores its issue, branch, paths, action quotas, and expiry.
+2. A role caller authenticates with its own Cloudflare Access service token. It requests a grant for one exact action within that mandate, using a stable request ID.
+3. The Worker claims that grant once, uses only the corresponding App key stored as a Worker secret, requests a scoped GitHub installation token, performs the GitHub action, and records the verified actor and result.
+4. The coordinator checks the resulting issue, commit, PR, or QA review against the mandate and the actual GitHub author. The human owner separately decides merge and deployment.
+
+The [broker README](../../tools/aidd-broker/README.md) defines the API and client commands. The [identity guide](github-app-identities.md) records exact App permissions and the role boundary. This runbook records operational order, current evidence, recovery, and unsafe choices.
+
+## Verified inventory
+
+| Component             | Current evidence                                                                                             | Required check before reuse                                                                 |
+| --------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| PO App                | `shearflow-po`, App 5552057, installation 177123152; Issues write                                            | Installation remains limited to `dey-joydeep/cthub-bsaas`                                   |
+| QA App                | `shearflow-qa`, App 5552133, installation 177125278; Contents read, PRs and Checks write                     | Same selected repository; review actor must be `shearflow-qa[bot]`                          |
+| Dev App               | `shearflow-dev`, App 5563672, installation 177419051; Contents, PRs, Workflows write; Issues read            | Same selected repository; workflow changes need an explicit workflow grant                  |
+| Broker                | `shearflow-aidd-broker.dey-joydeep-cse.workers.dev`; live `BROKER_ENABLED=true`                              | Check `/v1/whoami` and deployed version; never infer state from tracked `wrangler.jsonc`    |
+| D1                    | `shearflow-aidd-grants`, binding `GRANTS`; migrations `0001_grants.sql` and `0002_task_mandates.sql` applied | Inspect migration state; do not blindly reapply                                             |
+| Access                | Human Allow policy for `dey.joydeep.cse@gmail.com`; Service Auth policy for three role tokens                | Verify exact selectors and the expected audience before any policy change                   |
+| Secrets               | Worker secrets `PO_PRIVATE_KEY`, `QA_PRIVATE_KEY`, `DEV_PRIVATE_KEY`, `OWNER_APPROVAL_TOTP_KEY`              | Check names and controlled rotation; never display values                                   |
+| Key backup            | Three App private keys verified in OneDrive Personal Vault; same-user local PEM cache removed                | Keep Vault locked during agent work; verify a backup only in an operator-controlled session |
+| Repository visibility | GitHub reported **public** on 2026-11-14                                                                     | Do not call recovery refs or issue data private while visibility is public                  |
+
+The role client IDs, audience, and issuer are in `tools/aidd-broker/wrangler.jsonc`. Client IDs are identifiers; service-token secrets, App keys, OAuth codes, Access cookies, and the TOTP seed are credentials. Do not place credential values in this document, terminal transcripts, PRs, or chat.
+
+## What has happened
+
+| Date             | What and why                                                                                                              | How it was checked; remaining limit                                                                                                                                                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-01       | Created and installed three selected-repository GitHub Apps with distinct permissions.                                    | `scripts/aidd/verify-github-app-installation.mjs` verified IDs, slugs, installation IDs, scope, and permissions.                                                                                                                                                |
+| 2026-11-01 to 02 | Provisioned Worker keys, Access role callers, and D1. Tested the earlier per-action grant path.                           | A PO comment on issue #100 and Dev commit `2ee002c5` have verified bot authors. These **do not test task mandates**.                                                                                                                                            |
+| 2026-11-10       | Applied mandate migration and enabled the task-scoped broker with a separate-device owner TOTP secret.                    | All three role callers returned `admin:false, enabled:true`. A PO caller was denied owner mandate creation and a grant without a mandate.                                                                                                                       |
+| 2026-11-14       | Repaired human Access sign-in. The old Cloudflare identity provider failed to fetch account membership.                   | In the Access application's **Login methods**, `Accept all available identity providers` was off; only **One-time PIN** was selected, Cloudflare unchecked. Fresh incognito `/v1/whoami` returned the expected owner principal with `admin:true, enabled:true`. |
+| 2026-11-14       | Owner deployed Worker version `d4848b3e-b417-47d2-a9d8-121a66503fd2` enabled.                                             | Wrangler reported `BROKER_ENABLED ("true")`. This version still has the broken owner page. Wrangler logout and temporary config deletion were reported; revocation of the Wrangler Connected Application is **not yet independently verified**.                 |
+| 2026-11-14       | Diagnosed owner page stuck at “Owner verified. Initializing approval form…”.                                              | Browser console showed `ReferenceError: __name is not defined` at `owner:50`. The scope preview stayed empty and Create mandate disabled; this is a page script fault, not bad TOTP.                                                                            |
+| 2026-11-14       | Merged PR #117, commit `a06b07fe78846e49ff022a2b5e671d568d11a309`, to serve a static owner script with a regression test. | CI and current-head Codex review passed before merge. The owner later reported a deployment; exact source-to-version mapping still needs confirmation.                                                                                                          |
+
+PR #114 prepared the mandate broker; PR #116 prepared owner UI; PR #117 repaired its runtime bundling failure. Consult their merged diffs before changing the trust boundary.
+
+On 2026-11-14, the owner reported deploying Worker version `bd9de75d-d542-4d2d-b1fe-0ad226a8c4f9` with Wrangler 4.162.0. Terminal output showed `GRANTS` bound to `shearflow-aidd-grants`, `BROKER_ENABLED ("true")`, and successful logout. Fresh `/v1/whoami` showed the exact owner principal with `admin:true, enabled:true`; `/owner` showed “Owner verified. Broker enabled.” and a responsive scope preview. The owner reported revoking Wrangler in Connected Applications. The exact deployed source commit is not independently mapped to this version.
+
+The owner then created a one-day mandate for issue #121. All four task-scoped role actions succeeded on 2026-11-14; the result links and limits are recorded below. The pilot PR remains open and unmerged.
+
+## Recover the setup on another machine
+
+1. **What:** Read this file, the broker README, the identity guide, issue #113, and current PR/commit status. **Why:** A merged fix and a deployed Worker are different states. **How:** Record the checked-out commit, Git status, remote repository, Worker version, Access policy, and `/v1/whoami` result. Preserve unrelated work; use a clean task worktree.
+2. **What:** Confirm repository visibility and installation scope. **Why:** The repo was public on 2026-11-14 although older docs assumed private. Recovery refs and issues are visible according to current visibility. **How:** Inspect GitHub repository visibility and each App's “Only select repositories” installation. Restore private visibility only by an explicit owner decision.
+3. **What:** Confirm the D1 binding and migration state. **Why:** Replaying an already applied schema change can fail or damage operational state. **How:** Use owner-controlled Cloudflare D1 tools to inspect `shearflow-aidd-grants` and the migration ledger before applying any missing migration. Never point these checks at the salon product or test database.
+4. **What:** Confirm Access identity. **Why:** A healthy Worker cannot authorize an owner or role caller without the correct Access policy and login method. **How:** In a fresh browser, visit `/v1/whoami` and require the exact owner principal, `admin:true`, and `enabled:true`. For role callers, use `node scripts/aidd/broker-client.mjs --command whoami --role <po|qa|dev>` with each protected token file and require distinct `service:<client-id>` principals, `admin:false`, `enabled:true`.
+5. **What:** Restore secrets only if missing or rotating. **Why:** Desktop-readable PEMs bypass the broker; the owner TOTP seed must remain separate from desktop agents. **How:** Unlock the Personal Vault only in an operator session, verify the correct App/key match with the read-only verifier, provision Worker secrets through an owner-controlled Cloudflare session, then lock the Vault and remove any same-user cache. Never create a local role token file beneath the workspace parent.
+6. **What:** Resume at the first unverified item in the evidence log. **Why:** An expired grant, stale checkpoint, or successful identity check is not proof of the next GitHub action. **How:** Keep the issue/PR, exact head SHA, grant ID, actor, result URL, and timestamp in the tracking issue; keep credentials out.
+
+## Recover lost role service-token secrets
+
+The GitHub App PEM backups in Personal Vault are **not** the Cloudflare Access service-token credentials used by `broker-client.mjs`. The Worker already has its App keys. On 2026-11-14, no role-token JSON files were found in Downloads or the existing local Shearflow configuration folder; the earlier temporary Access management API token returned 401. Treat the PO, Dev, and QA client secrets as unavailable until each new local file passes `whoami`.
+
+**What:** Rotate the three existing Access service-token secrets, keeping their Client IDs. **Why:** Cloudflare shows a Client Secret only when created or rotated; rotating preserves its Client ID, so the Access policy and Worker allowlist do not need new IDs. Creating replacement tokens would require policy and Worker configuration changes. **How:** In Cloudflare Zero Trust, open **Access controls → Service credentials → Service Tokens**. Match each Shearflow role token to the Client ID recorded in `tools/aidd-broker/wrangler.jsonc`. For each matching token, select **⋯ → Rotate secret → Revoke immediately → Rotate**. Copy the new secret only into that role's local JSON file; never send it in chat or a screenshot. Stop if a Client ID or role name differs.
+
+On Windows, use `%LOCALAPPDATA%\Shearflow\broker-role-tokens\po.json`, `dev.json`, and `qa.json` outside `E:\workspace`. Each file has the shape `{"role":"po","clientId":"<configured PO Client ID>","clientSecret":"<new secret>"}`, with the matching role and ID for Dev or QA. The `clientSecret` field must be a valid JSON string; validate each file with `ConvertFrom-Json` without printing its contents. Keep file access limited to the intended Windows user and remember that agents under that same user can read these role credentials by design. Verify each with `node scripts/aidd/broker-client.mjs --command whoami --role <role>` while `SHEARFLOW_BROKER_ROLE_TOKEN_FILE` points to its matching file. Expect `service:<client-id>`, `admin:false`, and `enabled:true`.
+
+For cross-machine recovery, back up the three role-token JSON files in an owner-controlled encrypted vault after verification, and copy them into the protected local cache on a new PC. Do not put them in Git, a submodule, an AIDD checkpoint, a shared OneDrive folder outside Personal Vault, or a workspace sibling. If a file is lost, rotate only that role's existing service-token secret again. This does not rotate the GitHub App PEM or owner TOTP seed. The [Cloudflare service-token guide](https://developers.cloudflare.com/cloudflare-one/access-controls/service-credentials/service-tokens/) documents rotation and unchanged Client IDs.
+
+## Owner-only deployment procedure and current verification
+
+**Prerequisite:** Verify a clean checkout of `a06b07fe78846e49ff022a2b5e671d568d11a309` or a later reviewed `main` commit containing PR #117. The existing `E:\workspace\cthub-bsaas-broker-owner-ui` worktree was created for earlier owner UI work and must **not** be deployed from its old head. Use a clean deployment worktree; keep unrelated checkouts intact. A separate PS7 window under the same Windows user is **not** an isolation boundary: an active desktop agent with that user's filesystem access could read Wrangler credentials while login is active. Close Codex and Antigravity for the owner login/deploy/logout window, then revoke the connected Wrangler authorization before reopening them. A separate Windows account or device offers stronger isolation.
+
+**What:** Deploy the repaired owner page while preserving the live enabled state and Worker secrets. **Why:** The tracked `wrangler.jsonc` intentionally says `BROKER_ENABLED=false`; a normal deploy can switch off the live broker. **How:** An owner-controlled terminal, with desktop agent processes closed, checks the exact commit and creates a temporary config in the deployment worktree and removes it immediately afterward:
+
+```powershell
+git status --short
+git fetch origin main
+git switch --detach a06b07fe78846e49ff022a2b5e671d568d11a309
+git rev-parse HEAD
+Set-Location .\tools\aidd-broker
+$source = Get-Content -LiteralPath '.\wrangler.jsonc' -Raw
+if ($source -notmatch '"BROKER_ENABLED": "false"') { throw 'Unexpected broker config; stop.' }
+$source.Replace('"BROKER_ENABLED": "false"', '"BROKER_ENABLED": "true"') |
+  Set-Content -LiteralPath '.\wrangler.deploy.jsonc' -NoNewline
+Select-String -Path '.\wrangler.deploy.jsonc' -Pattern 'BROKER_ENABLED'
+try {
+  npx --yes wrangler@4.162.0 login
+  if ($LASTEXITCODE -ne 0) { throw 'Wrangler login failed.' }
+  npx --yes wrangler@4.162.0 deploy --config .\wrangler.deploy.jsonc --keep-vars
+  if ($LASTEXITCODE -ne 0) { throw 'Wrangler deploy failed.' }
+} finally {
+  npx --yes wrangler@4.162.0 logout
+  if (Test-Path -LiteralPath '.\wrangler.deploy.jsonc') {
+    Remove-Item -LiteralPath '.\wrangler.deploy.jsonc'
+  }
+  git status --short
+}
+```
+
+Stop if `git status --short` is not empty, the head is wrong, the target account/Worker is wrong, the diff proposes `BROKER_ENABLED=false`, a secret value appears, or the deployment binding is not `shearflow-aidd-grants`. Review Wrangler's remote/local diff **before** answering its continue prompt. In the 2026-11-14 successful deployment, the diff only added `database_name` and `migrations_dir`; a changed diff requires fresh review. `--keep-vars` preserves remote variables; it is not permission to ignore the displayed changes. After logout, revoke the temporary Wrangler authorization under Cloudflare **My Profile → Access Management → Connected Applications** and verify it is gone before reopening desktop agents.
+
+**Verify:** In fresh browser sessions, check `/v1/whoami`, then `/owner`. The page must finish initialization, render a nonempty “Scope to approve” preview as fields change, and enable Create mandate only after valid fields, confirmation, and code. Do **not** enter a TOTP code just to test page rendering. Record the browser result, exact source commit if independently available, Connected Application revocation, and any console error here. If deployment fails or the page still stalls, leave mandates unissued and investigate the new version; do not deploy the old worktree.
+
+The earlier `wrangler deploy --var BROKER_ENABLED:true --keep-vars` attempt warned that local `false` would replace remote `true`; the owner correctly chose **N** to continue and **N** to update the tracked local config, then logged out. Do not assume the CLI `--var` overrides the tracked value in this setup.
+
+## Live mandate and role probe after page verification
+
+**What:** Prove one bounded write per role without merging its test PR. **Why:** Installation, identity, and earlier per-action pilots do not prove the task mandate, grant, quota, GitHub action, and actor chain. **How:**
+
+1. Use [pilot issue #121](https://github.com/dey-joydeep/cthub-bsaas/issues/121) under #113. Bind the pilot PR to #121, not parent #113, which should remain open. Add #121 to the private cthub Project with a Status before the write probe.
+2. Create a clean task branch `chore/broker-live-role-probes`. Confirm the target head and exact allowed file `docs/status/aidd/broker-live-role-probes.md`.
+3. On `/owner`, enter outcome “Verify PO, Dev, and QA bot writes for pilot issue #121; leave its PR unmerged”, issue number 121, that branch, and only that file path. Set limits: `po.comment-issue:1`, `dev.commit:1`, `dev.create-pr:1`, `qa.review-pr:1`; all others zero; lifetime one day. Inspect the JSON preview, tick confirmation, and enter a fresh six-digit Okta Verify code **only on the owner page**. Keep the returned mandate ID in owner-controlled notes for execution and revocation; do not publish the full ID or the code in this public repository.
+4. Execute the PO comment, Dev commit, Dev PR, and QA review with their own service-token callers and the client contract in the broker README. Bind each call to the current issue, branch, PR, and expected head. Use the prepared-commit/sync helpers for Dev; do not make a duplicate personal commit.
+5. Independently inspect GitHub: issue comment by `shearflow-po[bot]`; commit and PR by `shearflow-dev[bot]`; review by `shearflow-qa[bot]` on the exact PR head. Confirm the PR remains unmerged, CI status, grant receipts, and quota use. Add evidence links and versions to this log, the pilot issue, and #113.
+6. Test denied cross-role/branch/path attempts and revoked or expired mandate behavior only with bounded, reviewed test inputs. Revoke with a fresh owner code if the pilot scope is no longer needed. Reconcile any in-flight action first.
+
+The role client persists a stable request ID in Git metadata. If a response is lost, reuse that ID with the same payload; do not create a second action. A grant marked `needs-reconciliation` needs GitHub and D1 inspection. Never blindly execute it again.
+
+### Pilot result, 2026-11-14
+
+The owner rotated the three Cloudflare Access role-token secrets and saved them in separate local files outside the workspace. The broker client verified PO, Dev, and QA as their expected service principals with `admin:false, enabled:true`. Their Client IDs stayed unchanged. The owner later reported copying the three role-token JSON files into OneDrive Personal Vault for cross-machine backup; the agent did not inspect the Vault copies or confirm that the Vault was locked afterward. No App PEM or owner TOTP seed was used by the desktop agent.
+
+| Action           | Evidence                                                                                                       | Verified result                                                                                                                                    |
+| ---------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PO issue comment | [Issue #121 comment](https://github.com/dey-joydeep/cthub-bsaas/issues/121#issuecomment-6876479207)            | `shearflow-po[bot]` posted on the mandated issue.                                                                                                  |
+| Dev commit       | [Commit `ad8fefc`](https://github.com/dey-joydeep/cthub-bsaas/commit/ad8fefc379d635104012ffca24e37f56f4079662) | `shearflow-dev[bot]` changed only the mandated status file; the prepared local worktree was reconciled to the remote head.                         |
+| Dev PR           | [PR #122](https://github.com/dey-joydeep/cthub-bsaas/pull/122)                                                 | Opened by the Dev App from `chore/broker-live-role-probes` to `main`, closing pilot issue #121 only if merged. It remains open and unmerged.       |
+| QA review        | [PR #122 review](https://github.com/dey-joydeep/cthub-bsaas/pull/122#pullrequestreview-5904062072)             | `shearflow-qa[bot]` submitted a COMMENT at exact head `ad8fefc379d635104012ffca24e37f56f4079662`; this is bounded QA evidence, not merge approval. |
+
+The [PR #122 CI run](https://github.com/dey-joydeep/cthub-bsaas/actions/runs/43589468206) completed successfully at that head. The Windows toolchain smoke job was skipped. `git show --check` passed. The four broker responses reported the expected actor; no uncertain response required reconciliation. The mandate's four allowed action counts were used. Direct grant-only probes returned `400 Path outside mandate`, `400 Branch outside mandate`, and `403 Role identity required` for a QA caller attempting a Dev action; no rejected probe executed a GitHub write. The owner then revoked the mandate through `/owner` with a fresh code. A later grant-only request using the correct Dev role, branch, issue, and path returned `400 Mandate unavailable`, independently confirming the revocation took effect. The former expiry was 2026-11-15 10:04:12 UTC (19:04:12 JST); it is no longer an active authorization. Never publish its full identifier or grant identifiers.
+
+## Wrong choices and cautions
+
+| Do not                                                                                                                                          | Why; correct choice                                                                                                                                                                 |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Deploy the old owner UI worktree or assume merged means live.                                                                                   | The deployed version still contains the `__name` page fault. Verify source commit and Worker version separately.                                                                    |
+| Accept a Wrangler diff that changes `BROKER_ENABLED` to `false`, or casually sync remote values into tracked config.                            | It can disable the broker or hide the intentional fail-closed default. Use a reviewed temporary true config and `--keep-vars`.                                                      |
+| Use Cloudflare as the human login provider for this application while the membership error persists.                                            | Fresh login failed before reaching the Worker. The verified application login method is One-time PIN, with the exact-email Allow policy.                                            |
+| Select “all repositories” for the Apps or “all identity providers” for Access.                                                                  | This broadens reach and can reintroduce the failed login path. Keep the selected repository and explicit login method.                                                              |
+| Put App PEMs, service-token secrets, owner seed, or deployment OAuth in a workspace, submodule, local same-user cache, command output, or chat. | Desktop agents could bypass the broker or owner approval. Use Worker secrets, protected role-token files outside the workspace parent, and an owner-controlled Vault/authenticator. |
+| Use a dummy Git author or personal `gh` session to claim bot authorship.                                                                        | Names do not prove GitHub identity. Require the actual `shearflow-<role>[bot]` actor; report any coordinator bootstrap write as the real account.                                   |
+| Infer bot activation from `admin:false, enabled:true` or the old issue #100 pilots.                                                             | These prove identity/earlier actions, not a successful task mandate and all four current actions. Complete the live probe.                                                          |
+| Retry a consumed or uncertain grant with a new request ID.                                                                                      | It may duplicate a write. Reuse the stable ID for a lost response and reconcile `needs-reconciliation`.                                                                             |
+| Share or reuse an Okta code, or submit repeated guesses.                                                                                        | The code is owner-only, single-use for approval/revocation, and approval attempts are limited.                                                                                      |
+| Treat current repository refs as private.                                                                                                       | GitHub reported the repository public on 2026-11-14. Recheck visibility before storing sensitive process state. Never store credentials in any ref.                                 |
+| Let a role agent merge, tag, deploy, or change workflow files through an ordinary Dev grant.                                                    | These are separate authorities. The owner explicitly decides merge/deploy; workflow edits need their dedicated action and reviewed scope.                                           |
+| Run broker probes against a salon product or test database.                                                                                     | The broker uses its dedicated D1 database only. Keep product data and database verification separate.                                                                               |
+
+## Update log
+
+- **2026-11-14:** Initial reconstruction from merged PRs, issue history, owner CLI output, Access/browser evidence, and current repository docs. The source fix is merged; at this entry's time, deployment and task-scoped write probes remained pending.
+- **2026-11-14:** Created [pilot issue #121](https://github.com/dey-joydeep/cthub-bsaas/issues/121) for the four mandate-based role writes. No mandate or pilot PR exists yet. Issues #119 and #121 were verified on the cthub Project with statuses In review and Backlog, respectively.
+- **2026-11-14:** The owner reported Worker version `bd9de75d-d542-4d2d-b1fe-0ad226a8c4f9` from Wrangler 4.162.0, with the expected D1 binding, `BROKER_ENABLED=true`, and successful logout. The exact deployed source commit was not independently checked; fresh browser behavior and Connected Application revocation are awaiting owner confirmation.
+- **2026-11-14:** Fresh incognito `/v1/whoami` returned `user:dey.joydeep.cse@gmail.com`, `admin:true`, and `enabled:true`. The `/owner` page showed “Owner verified. Broker enabled.” and its JSON scope preview updated with issue #121, the task branch, and the single allowed file. The owner reported revoking Wrangler in Connected Applications after logout. No owner TOTP was entered for this browser check.
+- **2026-11-14:** The owner created the one-day mandate for issue #121, branch `chore/broker-live-role-probes`, and only `docs/status/aidd/broker-live-role-probes.md`, with one each of PO comment, Dev commit, Dev PR, and QA review; all other action limits were zero. It expires at 2026-11-15 10:04:12 UTC (19:04:12 JST). The full mandate ID is retained outside this public repository for execution and revocation; no TOTP code was shared.
+- **2026-11-14:** The three role service-token JSON files were not found in Downloads or the existing local Shearflow configuration folder; the previous temporary Access management token returned 401. The owner rotated all three existing Access token secrets, saved them in protected local files outside the workspace, and the client authenticated each role as its expected service principal. The original Client IDs were retained.
+- **2026-11-14:** All four mandate actions succeeded with separate bot actors. Grant-only negative probes denied a wrong path, wrong branch, and cross-role action. Evidence links, exact PR head, and CI result are recorded above. No personal GitHub credential was used for the four role writes. The pilot PR remains open for the owner; no merge was performed.
+- **2026-11-15 JST:** The owner revoked the pilot mandate; a fresh otherwise valid Dev grant request returned `400 Mandate unavailable`. The owner also reported backing up the three local role-token JSON files in OneDrive Personal Vault. Their Vault contents and lock state were not independently inspected. The local copies remain available for role callers; a lost or changed file should be rotated and reverified before use.
+
+Official references: [Wrangler login and logout](https://developers.cloudflare.com/workers/wrangler/commands/general/), [GitHub App installation authentication](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation), [GitHub App key handling](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/managing-private-keys-for-github-apps), [Cloudflare Access One-time PIN](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/), [Wrangler deploy](https://developers.cloudflare.com/workers/wrangler/commands/workers/#deploy).
