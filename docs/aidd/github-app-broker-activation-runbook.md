@@ -126,7 +126,7 @@ The role client persists a stable request ID in Git metadata. If a response is l
 ## Update log
 
 - **2026-11-14:** Initial reconstruction from merged PRs, issue history, owner CLI output, Access/browser evidence, and current repository docs. The source fix is merged; deployment and task-scoped write probes remain pending.
-- **2026-11-14:** Created [pilot issue #121](https://github.com/dey-joydeep/cthub-bsaas/issues/121) for the four mandate-based role writes. No mandate or pilot PR exists yet. Project board assignment remains to be verified.
+- **2026-11-14:** Created [pilot issue #121](https://github.com/dey-joydeep/cthub-bsaas/issues/121) for the four mandate-based role writes. No mandate or pilot PR exists yet. Issues #119 and #121 were verified on the cthub Project with statuses In review and Backlog, respectively.
 - **Next entry:** Record deployment commit, Wrangler version, Worker version, runtime `BROKER_ENABLED`, Access result, owner-page preview result, credential revocation check, and any failure.
 - **Then:** Record pilot issue and mandate ID, four action result URLs/actors, PR head and CI/review result, and revocation or expiry.
 
