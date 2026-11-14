@@ -40,6 +40,7 @@ For Antigravity execution, also apply `.agents/AGENTS.md` and the selected `.age
 | [Backend Reliability Evidence](backend-reliability-evidence.md) | PostgreSQL contention proof, capacity profiles, and CPU-work decisions.                       |
 | [Agent Activation](agent-activation.md)                         | How shared roles map to Antigravity and Codex profiles and how coordinators invoke them.      |
 | [GitHub App Identities](github-app-identities.md)               | Registered bot identities, role boundaries, and current activation status.                    |
+| [GitHub App Broker Runbook](github-app-broker-activation-runbook.md) | Setup, recovery, owner deployment, live probes, unsafe choices, and evidence.                  |
 | [Codex Operating Model](codex-operating-model.md)               | Repository-specific workflow for analysis, design, implementation, validation, and reporting. |
 | [Codex Task Policy](codex-task-policy.md)                       | Depth, stop conditions, and completion expectations by task type.                             |
 | [Codex Review Checklist](codex-review-checklist.md)             | Checklist for PR reviews and self-review before handoff.                                      |
@@ -57,7 +58,7 @@ For Antigravity execution, also apply `.agents/AGENTS.md` and the selected `.age
 - `scripts/aidd/check-changed-format.mjs` checks supported files changed by a PR.
 - `scripts/aidd/check-dependency-policy.mjs`, `check-dependency-change.mjs`, and `check-branch-policy.mjs` validate dependency and branch evidence before a PR handoff.
 - `scripts/aidd/track-issue.mjs` previews or applies standalone issue Project updates; `project-tracking.mjs` supplies the read-only premerge membership gate. The Epic initializer remains under `.agents/skills/aidd-project-tracker/`.
-- The [GitHub App identity guide](github-app-identities.md) records the installed PO, QA, and Dev Apps and the task-scoped dispatch contract. The [Cloudflare broker](../../tools/aidd-broker/README.md) was enabled by the owner on 2026-11-10; a role write still requires an active owner-approved mandate. Live task-scoped write probes and owner-page repair remain pending. Agents must verify the actual writer and must not guess a bot name.
+- The [GitHub App identity guide](github-app-identities.md) records the installed PO, QA, and Dev Apps and the task-scoped dispatch contract. The [broker activation runbook](github-app-broker-activation-runbook.md) records what was deployed, what is only merged, owner deployment steps, and live probe evidence. The [Cloudflare broker](../../tools/aidd-broker/README.md) is enabled, but task-scoped role writes still need an owner mandate. The owner-page repair was merged in PR #117 on 2026-11-14 and awaits deployment. Agents must verify the actual writer and must not guess a bot name.
 - `.agents/skills/*` contains reusable Antigravity and Codex workflows where applicable.
 - `.codex/agents/*.toml` contains Codex reviewer and implementation helper agents.
 - `.codex/environments/environment.toml` points at the repo bootstrap command for fresh Codex worktrees.
