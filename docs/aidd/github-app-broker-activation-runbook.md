@@ -1,6 +1,6 @@
 # Shearflow GitHub App broker activation and recovery
 
-**Status (2026-11-14):** The three Apps are installed, the broker is enabled, and the role identities authenticate. The owner reports deploying the merged owner-page repair as Worker version `bd9de75d-d542-4d2d-b1fe-0ad226a8c4f9`; fresh owner sign-in and scope-preview behavior now work; the exact deployed source commit is not independently mapped to this version. No task-mandate PO, Dev, or QA write has been verified. Do not claim the bot rollout is complete.
+**Status (2026-11-14):** The three Apps are installed, the broker is enabled, and PO, Dev, and QA each completed a task-mandate GitHub write with verified bot actors. The owner reports deploying the merged owner-page repair as Worker version `bd9de75d-d542-4d2d-b1fe-0ad226a8c4f9`; fresh owner sign-in and scope-preview behavior work. The exact deployed source commit is not independently mapped to this version, and mandate revocation or expiry remains to be verified. The pilot PR is open and unmerged.
 
 **Tracking:** [Rollout #113](https://github.com/dey-joydeep/cthub-bsaas/issues/113); [this runbook #119](https://github.com/dey-joydeep/cthub-bsaas/issues/119). Update this status and the evidence log after every deployment or live probe.
 
