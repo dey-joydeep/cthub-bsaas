@@ -71,17 +71,17 @@ Set-Location .\tools\aidd-broker
 $source = Get-Content -LiteralPath '.\wrangler.jsonc' -Raw
 if ($source -notmatch '"BROKER_ENABLED": "false"') { throw 'Unexpected broker config; stop.' }
 $source.Replace('"BROKER_ENABLED": "false"', '"BROKER_ENABLED": "true"') |
-  Set-Content -LiteralPath '.\wrangler.owner-deploy.jsonc' -NoNewline
-Select-String -Path '.\wrangler.owner-deploy.jsonc' -Pattern 'BROKER_ENABLED'
+  Set-Content -LiteralPath '.\wrangler.deploy.jsonc' -NoNewline
+Select-String -Path '.\wrangler.deploy.jsonc' -Pattern 'BROKER_ENABLED'
 try {
   npx --yes wrangler@4.162.0 login
   if ($LASTEXITCODE -ne 0) { throw 'Wrangler login failed.' }
-  npx --yes wrangler@4.162.0 deploy --config .\wrangler.owner-deploy.jsonc --keep-vars
+  npx --yes wrangler@4.162.0 deploy --config .\wrangler.deploy.jsonc --keep-vars
   if ($LASTEXITCODE -ne 0) { throw 'Wrangler deploy failed.' }
 } finally {
   npx --yes wrangler@4.162.0 logout
-  if (Test-Path -LiteralPath '.\wrangler.owner-deploy.jsonc') {
-    Remove-Item -LiteralPath '.\wrangler.owner-deploy.jsonc'
+  if (Test-Path -LiteralPath '.\wrangler.deploy.jsonc') {
+    Remove-Item -LiteralPath '.\wrangler.deploy.jsonc'
   }
   git status --short
 }
