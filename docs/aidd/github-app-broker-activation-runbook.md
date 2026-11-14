@@ -2,7 +2,7 @@
 
 **Status (2026-11-15 JST):** The three Apps are installed, the broker is enabled, and PO, Dev, and QA each completed a task-mandate GitHub write with verified bot actors. The owner reports deploying the merged owner-page repair as Worker version `bd9de75d-d542-4d2d-b1fe-0ad226a8c4f9`; fresh owner sign-in and scope-preview behavior work. The owner revoked the pilot mandate, and a fresh grant-only probe returned `400 Mandate unavailable`. The exact deployed source commit is not independently mapped to this version. PRs #120 and #122 were squash-merged on 2026-11-15 JST; issues #119 and #121 are closed.
 
-**Tracking:** [Rollout #113](https://github.com/dey-joydeep/cthub-bsaas/issues/113); [this runbook #119](https://github.com/dey-joydeep/cthub-bsaas/issues/119). Update this status and the evidence log after every deployment or live probe.
+**Tracking:** [Rollout #113](https://github.com/dey-joydeep/cthub-bsaas/issues/113); [runbook #119](https://github.com/dey-joydeep/cthub-bsaas/issues/119); [post-merge status #124](https://github.com/dey-joydeep/cthub-bsaas/issues/124). Update this status and the evidence log after every deployment or live probe.
 
 ## Objective and trust boundary
 
