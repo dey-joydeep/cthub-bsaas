@@ -4,6 +4,12 @@ import { runInNewContext } from 'node:vm';
 import { JSDOM } from 'jsdom';
 import { ownerClient, ownerHtml, ownerJs } from './owner-ui.mjs';
 
+test('browser script is static and stays aligned with the tested owner client', () => {
+  assert.equal(ownerJs, `(${ownerClient.toString()})();`);
+  assert.doesNotMatch(ownerJs, /__name/);
+  assert.doesNotMatch(ownerJs, /<\/script/i);
+});
+
 const original = { document: globalThis.document, FormData: globalThis.FormData, fetch: globalThis.fetch };
 afterEach(() => {
   globalThis.document = original.document;
