@@ -1,6 +1,6 @@
 # Shearflow GitHub App broker activation and recovery
 
-**Status (2026-11-14):** The three Apps are installed, the broker is enabled, and the role identities authenticate. The owner page repair is merged into `main` but has **not** been deployed. No task-mandate PO, Dev, or QA write has been verified. Do not claim the bot rollout is complete.
+**Status (2026-11-14):** The three Apps are installed, the broker is enabled, and the role identities authenticate. The owner reports deploying the merged owner-page repair as Worker version `bd9de75d-d542-4d2d-b1fe-0ad226a8c4f9`; live browser initialization and the exact deployed source commit still need verification. No task-mandate PO, Dev, or QA write has been verified. Do not claim the bot rollout is complete.
 
 **Tracking:** [Rollout #113](https://github.com/dey-joydeep/cthub-bsaas/issues/113); [this runbook #119](https://github.com/dey-joydeep/cthub-bsaas/issues/119). Update this status and the evidence log after every deployment or live probe.
 
@@ -43,9 +43,11 @@ The role client IDs, audience, and issuer are in `tools/aidd-broker/wrangler.jso
 | 2026-11-14       | Repaired human Access sign-in. The old Cloudflare identity provider failed to fetch account membership.                   | In the Access application's **Login methods**, `Accept all available identity providers` was off; only **One-time PIN** was selected, Cloudflare unchecked. Fresh incognito `/v1/whoami` returned the expected owner principal with `admin:true, enabled:true`. |
 | 2026-11-14       | Owner deployed Worker version `d4848b3e-b417-47d2-a9d8-121a66503fd2` enabled.                                             | Wrangler reported `BROKER_ENABLED ("true")`. This version still has the broken owner page. Wrangler logout and temporary config deletion were reported; revocation of the Wrangler Connected Application is **not yet independently verified**.                 |
 | 2026-11-14       | Diagnosed owner page stuck at “Owner verified. Initializing approval form…”.                                              | Browser console showed `ReferenceError: __name is not defined` at `owner:50`. The scope preview stayed empty and Create mandate disabled; this is a page script fault, not bad TOTP.                                                                            |
-| 2026-11-14       | Merged PR #117, commit `a06b07fe78846e49ff022a2b5e671d568d11a309`, to serve a static owner script with a regression test. | CI and current-head Codex review passed before merge. **Source is fixed; the live Worker has not received this commit.**                                                                                                                                        |
+| 2026-11-14       | Merged PR #117, commit `a06b07fe78846e49ff022a2b5e671d568d11a309`, to serve a static owner script with a regression test. | CI and current-head Codex review passed before merge. The owner later reported a deployment; exact source-to-version mapping still needs confirmation.                                                                                                                                        |
 
 PR #114 prepared the mandate broker; PR #116 prepared owner UI; PR #117 repaired its runtime bundling failure. Consult their merged diffs before changing the trust boundary. QA review and Dev PR creation have not been tested live. No mandate-based role write has succeeded yet.
+
+| 2026-11-14       | Owner reported deploying Worker version `bd9de75d-d542-4d2d-b1fe-0ad226a8c4f9` with Wrangler 4.162.0. | Terminal output showed `GRANTS` bound to `shearflow-aidd-grants`, `BROKER_ENABLED ("true")`, and successful Wrangler logout. The exact deployed source commit, Connected Application revocation, fresh Access login, and owner-page preview are still pending verification. |
 
 ## Recover the setup on another machine
 
@@ -56,7 +58,7 @@ PR #114 prepared the mandate broker; PR #116 prepared owner UI; PR #117 repaired
 5. **What:** Restore secrets only if missing or rotating. **Why:** Desktop-readable PEMs bypass the broker; the owner TOTP seed must remain separate from desktop agents. **How:** Unlock the Personal Vault only in an operator session, verify the correct App/key match with the read-only verifier, provision Worker secrets through an owner-controlled Cloudflare session, then lock the Vault and remove any same-user cache. Never create a local role token file beneath the workspace parent.
 6. **What:** Resume at the first unverified item in the evidence log. **Why:** An expired grant, stale checkpoint, or successful identity check is not proof of the next GitHub action. **How:** Keep the issue/PR, exact head SHA, grant ID, actor, result URL, and timestamp in the tracking issue; keep credentials out.
 
-## Next owner-only deployment: merged owner-page repair
+## Owner-only deployment procedure and current verification
 
 **Prerequisite:** Verify a clean checkout of `a06b07fe78846e49ff022a2b5e671d568d11a309` or a later reviewed `main` commit containing PR #117. The existing `E:\workspace\cthub-bsaas-broker-owner-ui` worktree was created for earlier owner UI work and must **not** be deployed from its old head. Use a clean deployment worktree; keep unrelated checkouts intact. A separate PS7 window under the same Windows user is **not** an isolation boundary: an active desktop agent with that user's filesystem access could read Wrangler credentials while login is active. Close Codex and Antigravity for the owner login/deploy/logout window, then revoke the connected Wrangler authorization before reopening them. A separate Windows account or device offers stronger isolation.
 
@@ -89,7 +91,7 @@ try {
 
 Stop if `git status --short` is not empty, the head is wrong, the target account/Worker is wrong, the diff proposes `BROKER_ENABLED=false`, a secret value appears, or the deployment binding is not `shearflow-aidd-grants`. Review Wrangler's remote/local diff **before** answering its continue prompt. In the 2026-11-14 successful deployment, the diff only added `database_name` and `migrations_dir`; a changed diff requires fresh review. `--keep-vars` preserves remote variables; it is not permission to ignore the displayed changes. After logout, revoke the temporary Wrangler authorization under Cloudflare **My Profile → Access Management → Connected Applications** and verify it is gone before reopening desktop agents.
 
-**Verify:** In fresh browser sessions, check `/v1/whoami`, then `/owner`. The page must finish initialization, render a nonempty “Scope to approve” preview as fields change, and enable Create mandate only after valid fields, confirmation, and code. Do **not** enter a TOTP code just to test page rendering. Record the new Worker version, time, browser result, and any console error here. If deployment fails or the page still stalls, leave mandates unissued and investigate the new version; do not deploy the old worktree.
+**Verify:** In fresh browser sessions, check `/v1/whoami`, then `/owner`. The page must finish initialization, render a nonempty “Scope to approve” preview as fields change, and enable Create mandate only after valid fields, confirmation, and code. Do **not** enter a TOTP code just to test page rendering. Record the browser result, exact source commit if independently available, Connected Application revocation, and any console error here. If deployment fails or the page still stalls, leave mandates unissued and investigate the new version; do not deploy the old worktree.
 
 The earlier `wrangler deploy --var BROKER_ENABLED:true --keep-vars` attempt warned that local `false` would replace remote `true`; the owner correctly chose **N** to continue and **N** to update the tracked local config, then logged out. Do not assume the CLI `--var` overrides the tracked value in this setup.
 
@@ -125,9 +127,10 @@ The role client persists a stable request ID in Git metadata. If a response is l
 
 ## Update log
 
-- **2026-11-14:** Initial reconstruction from merged PRs, issue history, owner CLI output, Access/browser evidence, and current repository docs. The source fix is merged; deployment and task-scoped write probes remain pending.
+- **2026-11-14:** Initial reconstruction from merged PRs, issue history, owner CLI output, Access/browser evidence, and current repository docs. The source fix is merged; at this entry's time, deployment and task-scoped write probes remained pending.
 - **2026-11-14:** Created [pilot issue #121](https://github.com/dey-joydeep/cthub-bsaas/issues/121) for the four mandate-based role writes. No mandate or pilot PR exists yet. Issues #119 and #121 were verified on the cthub Project with statuses In review and Backlog, respectively.
-- **Next entry:** Record deployment commit, Wrangler version, Worker version, runtime `BROKER_ENABLED`, Access result, owner-page preview result, credential revocation check, and any failure.
+- **2026-11-14:** The owner reported Worker version `bd9de75d-d542-4d2d-b1fe-0ad226a8c4f9` from Wrangler 4.162.0, with the expected D1 binding, `BROKER_ENABLED=true`, and successful logout. The exact deployed source commit was not independently checked; fresh browser behavior and Connected Application revocation are awaiting owner confirmation.
+- **Next entry:** Record fresh `/v1/whoami` and `/owner` results, scope-preview behavior, any console failure, and the credential revocation check.
 - **Then:** Record pilot issue and mandate ID, four action result URLs/actors, PR head and CI/review result, and revocation or expiry.
 
 Official references: [Wrangler login and logout](https://developers.cloudflare.com/workers/wrangler/commands/general/), [GitHub App installation authentication](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation), [GitHub App key handling](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/managing-private-keys-for-github-apps), [Cloudflare Access One-time PIN](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/), [Wrangler deploy](https://developers.cloudflare.com/workers/wrangler/commands/workers/#deploy).
