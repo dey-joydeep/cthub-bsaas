@@ -73,10 +73,18 @@ if ($source -notmatch '"BROKER_ENABLED": "false"') { throw 'Unexpected broker co
 $source.Replace('"BROKER_ENABLED": "false"', '"BROKER_ENABLED": "true"') |
   Set-Content -LiteralPath '.\wrangler.owner-deploy.jsonc' -NoNewline
 Select-String -Path '.\wrangler.owner-deploy.jsonc' -Pattern 'BROKER_ENABLED'
-npx --yes wrangler@4.162.0 login
-npx --yes wrangler@4.162.0 deploy --config .\wrangler.owner-deploy.jsonc --keep-vars
-npx --yes wrangler@4.162.0 logout
-Remove-Item -LiteralPath '.\wrangler.owner-deploy.jsonc'
+try {
+  npx --yes wrangler@4.162.0 login
+  if ($LASTEXITCODE -ne 0) { throw 'Wrangler login failed.' }
+  npx --yes wrangler@4.162.0 deploy --config .\wrangler.owner-deploy.jsonc --keep-vars
+  if ($LASTEXITCODE -ne 0) { throw 'Wrangler deploy failed.' }
+} finally {
+  npx --yes wrangler@4.162.0 logout
+  if (Test-Path -LiteralPath '.\wrangler.owner-deploy.jsonc') {
+    Remove-Item -LiteralPath '.\wrangler.owner-deploy.jsonc'
+  }
+  git status --short
+}
 ```
 
 Stop if `git status --short` is not empty, the head is wrong, the target account/Worker is wrong, the diff proposes `BROKER_ENABLED=false`, a secret value appears, or the deployment binding is not `shearflow-aidd-grants`. Review Wrangler's remote/local diff **before** answering its continue prompt. In the 2026-11-14 successful deployment, the diff only added `database_name` and `migrations_dir`; a changed diff requires fresh review. `--keep-vars` preserves remote variables; it is not permission to ignore the displayed changes. After logout, revoke the temporary Wrangler authorization under Cloudflare **My Profile → Access Management → Connected Applications** and verify it is gone before reopening desktop agents.
